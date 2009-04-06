@@ -195,7 +195,7 @@ class UsersTable(database.KeyedTable):
 
             userId = self.new(username = username,
                               fullName = fullName,
-                              salt = salt,
+                              salt = cu.binary(salt),
                               passwd = passwd,
                               email = email,
                               displayEmail = displayEmail,

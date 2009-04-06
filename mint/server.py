@@ -773,6 +773,8 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
+        now = time.time()
+
         # make sure the shortname, version, and prodtype are valid, and
         # validate the hostname also in case it ever splits from being
         # the same as the short name
@@ -822,7 +824,7 @@ class MintServer(object):
                 creatorId=self.auth.userId, description=desc, hostname=hostname,
                 domainname=domainname, namespace=namespace,
                 isAppliance=applianceValue, projecturl=projecturl,
-                timeModified=time.time(), timeCreated=time.time(),
+                timeModified=now, timeCreated=now,
                 shortname=shortname, prodtype=prodtype, version=version,
                 commit=False)
             project = projects.Project(self, projectId)
@@ -890,6 +892,8 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
+        now = time.time()
+
         # make sure the hostname is valid
         if not domainname:
             domainname = self.cfg.projectDomainName
@@ -908,8 +912,9 @@ class MintServer(object):
         try:
             # create the project entry
             projectId = self.projects.new(name=name, creatorId=self.auth.userId, description='',
-                hostname=hostname, domainname=domainname, projecturl='', external=1,
-                timeModified=time.time(), timeCreated=time.time(),
+                shortname=hostname, hostname=hostname, domainname=domainname,
+                projecturl='', external=1,
+                timeModified=now, timeCreated=now,
                 commit=False)
 
             # create the projectUsers entry
@@ -3354,13 +3359,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 else:
                     self.db.rollback()
                     raise ValueError
-                cu.execute("INSERT INTO BuildFiles VALUES(NULL, ?, ?, NULL, ?, ?, ?)", buildId, idx, title, size, sha1)
+                cu.execute("""INSERT INTO BuildFiles (buildId, idx, title,
+                        size, sha1) VALUES(?, ?, ?, ?, ?)""",
+                        buildId, idx, title, size, sha1)
                 fileId = cu.lastrowid
-                cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
-                    urltypes.LOCAL, fileName)
+                cu.execute("""INSERT INTO FilesUrls (urlType, url)
+                        VALUES (?, ?)""", urltypes.LOCAL, fileName)
                 urlId = cu.lastrowid
-                cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
-                        fileId, urlId)
+                cu.execute("""INSERT INTO BuildFilesUrlsMap (fileId, urlId)
+                        VALUES(?, ?)""", fileId, urlId)
                 imageFiles.append((fileName, downloadUrlTemplate % fileId))
         except:
             self.db.rollback()
@@ -4690,11 +4697,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         projects._validateProductVersion(name)
         
         try:
-            # XXX: Should this add an entry to the labels table?
-            return self.productVersions.new(projectId = projectId,
-                                                 namespace = namespace,
-                                                 name = name,
-                                                 description = description) 
+            return self.productVersions.new(projectId=projectId,
+                    namespace=namespace, name=name, description=description,
+                    timeCreated=time.time())
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
 

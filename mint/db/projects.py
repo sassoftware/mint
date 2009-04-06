@@ -522,7 +522,7 @@ class LabelsTable(database.KeyedTable):
             username, password, entitlement)
                 VALUES (?, ?, ?, ?, ?, ?, ?)""", projectId, label, url,
                     authType, username, password, entitlement)
-        return cu._cursor.lastrowid
+        return cu.lastid()
 
     @database.dbWriter
     def editLabel(self, cu, labelId, label, url, authType='none',

@@ -21,7 +21,7 @@ class TargetsTable(database.KeyedTable):
             raise mint_error.TargetExists( \
                     "Target named '%s' of type '%s' already exists",
                     targetName, targetType)
-        cu = cu.execute("INSERT INTO Targets (targetType, targetName) VALUES(?, ?)", targetType, targetName)
+        cu.execute("INSERT INTO Targets (targetType, targetName) VALUES(?, ?)", targetType, targetName)
         self.db.commit()
         return cu.lastid()
 

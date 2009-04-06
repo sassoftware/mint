@@ -124,7 +124,7 @@ class RepNameMapTable(database.DatabaseTable):
     @database.dbWriter
     def new(self, cu, fromName, toName):
         cu.execute("INSERT INTO RepNameMap VALUES (?, ?)", fromName, toName)
-        return cu._cursor.lastrowid
+        return cu.lastid()
     
     def getCountByFromName(self, fromName):
         cu = self.db.cursor()

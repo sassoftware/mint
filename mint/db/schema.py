@@ -24,7 +24,7 @@ from conary.dbstore import sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(46, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(46, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -40,33 +40,32 @@ def _createUsers(db):
     if 'Users' not in db.tables:
         cu.execute("""
         CREATE TABLE Users (
-            userId          %(PRIMARYKEY)s,
-            username        CHAR(128) UNIQUE,
-            fullName        CHAR(128),
-            salt            %(BINARY4)s NOT NULL,
-            passwd          %(BINARY254)s NOT NULL,
-            email           CHAR(128),
-            displayEmail    TEXT,
-            timeCreated     NUMERIC(14,3),
-            timeAccessed    NUMERIC(14,3),
-            active          INT,
-            blurb           TEXT
+            userId              %(PRIMARYKEY)s,
+            username            varchar(128)    NOT NULL    UNIQUE,
+            fullName            varchar(128)    NOT NULL    DEFAULT '',
+            salt                %(BINARY4)s,
+            passwd              varchar(254),
+            email               varchar(128),
+            displayEmail        text,
+            timeCreated         numeric(14,3),
+            timeAccessed        numeric(14,3),
+            active              smallint,
+            blurb               text
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
         commit = True
-    # XXX this index seems redundant
-    commit |= db.createIndex('Users', 'UsersUsernameIdx', 'username',
-        unique=True)
-    # XXX need to check to see if we need an index on username, active
     commit |= db.createIndex('Users', 'UsersActiveIdx', 'username, active')
 
     if 'UserData' not in db.tables:
         cu.execute("""
         CREATE TABLE UserData (
-            userId          INTEGER,
-            name            CHAR(32),
-            value           TEXT,
-            dataType        INTEGER
+            userId              integer         NOT NULL
+                REFERENCES Users ON DELETE CASCADE,
+            name                varchar(32)     NOT NULL,
+            value               text,
+            dataType            integer,
+
+            PRIMARY KEY ( userId, name )
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserData'] = []
         commit = True
@@ -75,19 +74,21 @@ def _createUsers(db):
     if 'UserGroups' not in db.tables:
         cu.execute("""
         CREATE TABLE UserGroups (
-            userGroupId     %(PRIMARYKEY)s,
-            userGroup       CHAR(128) UNIQUE
+            userGroupId         %(PRIMARYKEY)s,
+            userGroup           varchar(128)    NOT NULL    UNIQUE
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroups'] = []
         commit = True
-    commit |= db.createIndex('UserGroups', 'UserGroupsIndex', 'userGroup',
-            unique = True)
 
     if 'UserGroupMembers' not in db.tables:
         cu.execute("""
         CREATE TABLE UserGroupMembers (
-            userGroupId     INTEGER,
-            userId          INTEGER
+            userGroupId         integer         NOT NULL
+                REFERENCES UserGroups ON DELETE CASCADE,
+            userId              integer         NOT NULL
+                REFERENCES Users ON DELETE CASCADE,
+
+            PRIMARY KEY ( userGroupId, userId )
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroupMembers'] = []
         commit = True
@@ -95,9 +96,10 @@ def _createUsers(db):
     if 'Confirmations' not in db.tables:
         cu.execute("""
         CREATE TABLE Confirmations (
-            userId          %(PRIMARYKEY)s,
-            timeRequested   INT,
-            confirmation    CHAR(255)
+            userId              integer         NOT NULL
+                REFERENCES Users ON DELETE CASCADE,
+            timeRequested       integer,
+            confirmation        varchar(255)
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Confirmations'] = []
         commit = True
@@ -114,14 +116,15 @@ def _createLabels(db):
     if 'Labels' not in db.tables:
         cu.execute("""
         CREATE TABLE Labels (
-            labelId         %(PRIMARYKEY)s,
-            projectId       INT,
-            label           VARCHAR(255),
-            url             VARCHAR(255),
-            authType        VARCHAR(32),
-            username        VARCHAR(255),
-            password        VARCHAR(255),
-            entitlement     VARCHAR(254)
+            labelId             %(PRIMARYKEY)s,
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            label               varchar(255)    NOT NULL,
+            url                 varchar(255)    NOT NULL,
+            authType            varchar(32)     NOT NULL    DEFAULT 'none',
+            username            varchar(255),
+            password            varchar(255),
+            entitlement         varchar(254)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Labels'] = []
         commit = True
@@ -139,25 +142,26 @@ def _createProjects(db):
     if 'Projects' not in db.tables:
         cu.execute("""
         CREATE TABLE Projects (
-            projectId       %(PRIMARYKEY)s,
-            creatorId       INT,
-            name            varchar(128) UNIQUE,
-            hostname        varchar(128) UNIQUE,
-            shortname       varchar(128),
-            domainname      varchar(128) DEFAULT '' NOT NULL,
-            namespace       varchar(16),
-            projecturl      varchar(128) DEFAULT '' NOT NULL,
-            description     text,
-            disabled        INT DEFAULT 0,
-            hidden          INT DEFAULT 0,
-            external        INT DEFAULT 0,
-            isAppliance     INT,
-            timeCreated     INT,
-            timeModified    INT DEFAULT 0,
-            commitEmail     varchar(128) DEFAULT '',
-            prodtype        varchar(128) DEFAULT '',
-            version         varchar(128) DEFAULT '',
-            backupExternal  INT DEFAULT 0
+            projectId           %(PRIMARYKEY)s,
+            creatorId           integer
+                REFERENCES Users ( userId ) ON DELETE SET NULL,
+            name                varchar(128)    NOT NULL    UNIQUE,
+            hostname            varchar(64)     NOT NULL    UNIQUE,
+            shortname           varchar(64)     NOT NULL    UNIQUE,
+            domainname          varchar(128)    NOT NULL    DEFAULT '',
+            namespace           varchar(16),
+            projecturl          varchar(128)    DEFAULT ''  NOT NULL,
+            description         text,
+            disabled            smallint        NOT NULL    DEFAULT 0,
+            hidden              smallint        NOT NULL    DEFAULT 0,
+            external            smallint        NOT NULL    DEFAULT 0,
+            isAppliance         smallint        NOT NULL    DEFAULT 1,
+            timeCreated         numeric(14,3),
+            timeModified        numeric(14,3),
+            commitEmail         varchar(128)                DEFAULT '',
+            prodtype            varchar(128)                DEFAULT '',
+            version             varchar(128)                DEFAULT '',
+            backupExternal      smallint        NOT NULL    DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
         commit = True
@@ -169,14 +173,16 @@ def _createProjects(db):
     if 'ProjectUsers' not in db.tables:
         cu.execute("""
         CREATE TABLE ProjectUsers (
-            projectId       INT,
-            userId          INT,
-            level           INT
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            userId              integer         NOT NULL
+                REFERENCES Users ON DELETE CASCADE,
+            level               smallint        NOT NULL,
+
+            PRIMARY KEY ( projectId, userId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProjectUsers'] = []
         commit = True
-    commit |= db.createIndex('ProjectUsers',
-        'ProjectUsersIdx', 'projectId, userId', unique = True)
     commit |= db.createIndex('ProjectUsers',
         'ProjectUsersProjectIdx', 'projectId')
     commit |= db.createIndex('ProjectUsers', 'ProjectUsersUserIdx', 'userId')
@@ -184,10 +190,13 @@ def _createProjects(db):
     if 'MembershipRequests' not in db.tables:
         cu.execute("""
         CREATE TABLE MembershipRequests (
-            projectId       INTEGER,
-            userId          INTEGER,
-            comments        TEXT,
-            PRIMARY KEY(projectId, userId)
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            userId              integer         NOT NULL
+                REFERENCES Users ON DELETE CASCADE,
+            comments            text,
+
+            PRIMARY KEY ( projectId, userId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['MembershipRequests'] = []
         commit = True
@@ -195,19 +204,9 @@ def _createProjects(db):
     if 'ReposDatabases' not in db.tables:
         cu.execute("""
         CREATE TABLE ReposDatabases (
-            databaseId      %(PRIMARYKEY)s,
-            driver          VARCHAR(64),
-            path            VARCHAR(255)
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['ReposDatabases'] = []
-        commit = True
-
-    if 'ReposDatabases' not in db.tables:
-        cu.execute("""
-        CREATE TABLE ReposDatabases (
-            databaseId      %(PRIMARYKEY)s,
-            driver          VARCHAR(64),
-            path            VARCHAR(255)
+            databaseId          %(PRIMARYKEY)s,
+            driver              varchar(64)     NOT NULL,
+            path                varchar(255)    NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ReposDatabases'] = []
         commit = True
@@ -215,8 +214,12 @@ def _createProjects(db):
     if 'ProjectDatabase' not in db.tables:
         cu.execute("""
         CREATE TABLE ProjectDatabase (
-            projectId       INT NOT NULL,
-            databaseId      INT NOT NULL
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            databaseId          integer         NOT NULL
+                REFERENCES ReposDatabases ON DELETE CASCADE,
+
+            PRIMARY KEY ( projectId, databaseId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProjectDatabase'] = []
         commit = True
@@ -224,9 +227,10 @@ def _createProjects(db):
     if 'CommunityIds' not in db.tables:
         cu.execute("""
         CREATE TABLE CommunityIds (
-            projectId           INTEGER,
-            communityType       INTEGER,
-            communityId         VARCHAR(255)
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            communityType       integer,
+            communityId         varchar(255)
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['CommunityIds'] = []
         commit = True
@@ -244,18 +248,22 @@ def _createBuilds(db):
         cu.execute("""
         CREATE TABLE PublishedReleases (
             pubReleaseId        %(PRIMARYKEY)s,
-            projectId           INTEGER,
-            name                VARCHAR(255),
-            version             VARCHAR(32),
-            description         TEXT,
-            timeCreated         NUMERIC(14,3),
-            createdBy           INTEGER,
-            timeUpdated         NUMERIC(14,3),
-            updatedBy           INTEGER,
-            timePublished       NUMERIC(14,3),
-            publishedBy         INTEGER,
-            shouldMirror        INTEGER NOT NULL DEFAULT 0,
-            timeMirrored        INTEGER
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            name                varchar(255)    NOT NULL    DEFAULT '',
+            version             varchar(32)     NOT NULL    DEFAULT '',
+            description         text,
+            timeCreated         numeric(14,3),
+            createdBy           integer
+                REFERENCES Users ( userId ) ON DELETE SET NULL,
+            timeUpdated         numeric(14,3),
+            updatedBy           integer
+                REFERENCES Users ( userId ) ON DELETE SET NULL,
+            timePublished       numeric(14,3),
+            publishedBy         integer
+                REFERENCES Users ( userId ) ON DELETE SET NULL,
+            shouldMirror        smallint        NOT NULL    DEFAULT 0,
+            timeMirrored        numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
         commit = True
@@ -265,24 +273,29 @@ def _createBuilds(db):
     if 'Builds' not in db.tables:
         cu.execute("""
         CREATE TABLE Builds (
-            buildId              %(PRIMARYKEY)s,
-            projectId            INTEGER NOT NULL,
-            pubReleaseId         INTEGER,
-            buildType            INTEGER,
-            name                 VARCHAR(255),
-            description          TEXT,
-            troveName            VARCHAR(128),
-            troveVersion         VARCHAR(255),
-            troveFlavor          VARCHAR(4096),
-            troveLastChanged     INTEGER,
-            timeCreated          NUMERIC(14,3),
-            createdBy            INTEGER,
-            timeUpdated          NUMERIC(14,3),
-            updatedBy            INTEGER,
-            deleted              INTEGER DEFAULT '0',
-            buildCount           INTEGER,
-            productVersionId     INTEGER DEFAULT 0,
-            stageName            VARCHAR(255) DEFAULT ''
+            buildId             %(PRIMARYKEY)s,
+            projectId            integer        NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            pubReleaseId         integer
+                REFERENCES PublishedReleases ON DELETE SET NULL,
+            buildType            integer,
+            name                 varchar(255),
+            description          text,
+            troveName            varchar(128),
+            troveVersion         varchar(255),
+            troveFlavor          varchar(4096),
+            troveLastChanged     integer,
+            timeCreated          numeric(14,3),
+            createdBy            integer
+                REFERENCES Users ( userId ) ON DELETE SET NULL,
+            timeUpdated          numeric(14,3),
+            updatedBy            integer
+                REFERENCES Users ( userId ) ON DELETE SET NULL,
+            deleted              smallint       NOT NULL    DEFAULT 0,
+            buildCount           integer        NOT NULL    DEFAULT 0,
+            productVersionId     integer
+                REFERENCES ProductVersions ON DELETE SET NULL,
+            stageName            varchar(255)               DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         commit = True
@@ -300,29 +313,27 @@ def _createBuilds(db):
     if 'BuildData' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildData (
-            buildId         INTEGER,
-            name            CHAR(32),
-            value           TEXT,
-            dataType        INTEGER
+            buildId             integer         NOT NULL
+                REFERENCES Builds ON DELETE CASCADE,
+            name                varchar(32)     NOT NULL,
+            value               text            NOT NULL,
+            dataType            smallint        NOT NULL,
+
+            PRIMARY KEY ( buildId, name )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildData'] = []
         commit = True
-    commit |= db.createIndex('BuildData', 'BuildDataIdx', 'buildId, name',
-        unique = True)
 
-    # Nota Bummer: the filename column is deprecated, so don't use it.
-    # We need to get rid of it once we adopt a migration scheme that 
-    # doesn't produce different results from InitialCreation vs. Migration.
     if 'BuildFiles' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildFiles (
-            fileId       %(PRIMARYKEY)s,
-            buildId      INT,
-            idx          INT,
-            filename     VARCHAR(255),
-            title        CHAR(255) DEFAULT '',
-            size         BIGINT,
-            sha1         CHAR(40)
+            fileId              %(PRIMARYKEY)s,
+            buildId             integer         NOT NULL
+                REFERENCES Builds ON DELETE CASCADE,
+            idx                 smallint        NOT NULL    DEFAULT 0,
+            title               varchar(255)    NOT NULL    DEFAULT '',
+            size                bigint,
+            sha1                char(40)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFiles'] = []
         commit = True
@@ -330,9 +341,9 @@ def _createBuilds(db):
     if 'FilesUrls' not in db.tables:
         cu.execute("""
         CREATE TABLE FilesUrls (
-            urlId       %(PRIMARYKEY)s,
-            urlType     SMALLINT,
-            url         VARCHAR(255)
+            urlId               %(PRIMARYKEY)s,
+            urlType             smallint        NOT NULL,
+            url                 varchar(255)    NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FilesUrls'] = []
         commit = True
@@ -340,24 +351,23 @@ def _createBuilds(db):
     if 'BuildFilesUrlsMap' not in db.tables:
         cu.execute("""
         CREATE TABLE BuildFilesUrlsMap (
-            fileId  INT,
-            urlId   INT,
-            CONSTRAINT bfum_f_fk FOREIGN KEY(fileId)
-                REFERENCES BuildFiles (fileId) ON DELETE CASCADE,
-            CONSTRAINT bfum_u_fk FOREIGN KEY(urlId)
-                REFERENCES FilesUrls(urlId) ON DELETE CASCADE
+            fileId              integer         NOT NULL
+                REFERENCES BuildFiles ON DELETE CASCADE,
+            urlId               integer         NOT NULL
+                REFERENCES FilesUrls ON DELETE CASCADE,
+
+            PRIMARY KEY ( fileId, urlId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFilesUrlsMap'] = []
         commit = True
-    commit |= db.createIndex("BuildFilesUrlsMap", "BuildFilesUrlsMap_f_u_idx",
-                   "fileId, urlId", unique = True)
 
     if 'UrlDownloads' not in db.tables:
         cu.execute("""
         CREATE TABLE UrlDownloads (
-            urlId               INTEGER NOT NULL,
-            timeDownloaded      NUMERIC(14,3) NOT NULL DEFAULT 0,
-            ip                  CHAR(15)
+            urlId               integer         NOT NULL
+                REFERENCES FilesUrls ON DELETE CASCADE,
+            timeDownloaded      numeric(14,3)   NOT NULL    DEFAULT 0,
+            ip                  varchar(64)     NOT NULL
         )""" % db.keywords)
         db.tables['UrlDownloads'] = []
         commit = True
@@ -374,11 +384,13 @@ def _createCommits(db):
     if 'Commits' not in db.tables:
         cu.execute("""
         CREATE TABLE Commits (
-            projectId       INT,
-            timestamp       INT,
-            troveName       CHAR(255),
-            version         TEXT,
-            userId          INT
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            timestamp           numeric(14,3),
+            troveName           varchar(255),
+            version             varchar(255),
+            userId              integer
+                REFERENCES Users ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Commits'] = []
         commit = True
@@ -401,7 +413,7 @@ def _createGroupTroves(db):
             creatorId       INT,
             recipeName      CHAR(200),
             upstreamVersion CHAR(128),
-            description     TEXT,
+            description     text,
             timeCreated     INT,
             timeModified    INT,
             autoResolve     INT,
@@ -420,8 +432,8 @@ def _createGroupTroves(db):
             groupTroveId        INT,
             creatorId           INT,
             trvName             CHAR(128),
-            trvVersion          TEXT,
-            trvFlavor           TEXT,
+            trvVersion          text,
+            trvFlavor           text,
             subGroup            CHAR(128),
             versionLock         INT,
             useLock             INT,
@@ -473,10 +485,10 @@ def _createJobs(db):
             owner           BIGINT,
             userId          INT,
             status          INT,
-            statusMessage   TEXT,
-            timeSubmitted   NUMERIC(14,3),
-            timeStarted     NUMERIC(14,3),
-            timeFinished    NUMERIC(14,3)
+            statusMessage   text,
+            timeSubmitted   numeric(14,3),
+            timeStarted     numeric(14,3),
+            timeFinished    numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Jobs'] = []
         commit = True
@@ -487,10 +499,10 @@ def _createJobs(db):
     if 'JobData' not in db.tables:
         cu.execute("""
         CREATE TABLE JobData (
-            jobId           INTEGER,
+            jobId           integer,
             name            CHAR(32),
-            value           TEXT,
-            valueType       INTEGER
+            value           text,
+            valueType       integer
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['JobData'] = []
         commit = True
@@ -509,13 +521,14 @@ def _createPackageIndex(db):
     if 'PackageIndex' not in db.tables:
         cu.execute("""
         CREATE TABLE PackageIndex (
-            pkgId       %(PRIMARYKEY)s,
-            projectId   INT,
-            name        CHAR(255),
-            version     CHAR(255),
-            serverName  VARCHAR(254) NOT NULL,
-            branchName  VARCHAR(254) NOT NULL,
-            isSource    INT DEFAULT '0'
+            pkgId               %(PRIMARYKEY)s,
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            name                varchar(255)    NOT NULL,
+            version             varchar(255)    NOT NULL,
+            serverName          varchar(254)    NOT NULL,
+            branchName          varchar(254)    NOT NULL,
+            isSource            integer         NOT NULL    DEFAULT '0'
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
         commit = True
@@ -529,7 +542,7 @@ def _createPackageIndex(db):
     if 'PackageIndexMark' not in db.tables:
         cu.execute("""
         CREATE TABLE PackageIndexMark (
-            mark            INTEGER NOT NULL
+            mark                integer         NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndexMark'] = []
         cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
@@ -547,12 +560,12 @@ def _createNewsCache(db):
     if 'NewsCache' not in db.tables:
         cu.execute("""
         CREATE TABLE NewsCache (
-            itemId          %(PRIMARYKEY)s,
-            title           CHAR(255),
-            pubDate         INT,
-            content         TEXT,
-            link            CHAR(255),
-            category        CHAR(255)
+            itemId              %(PRIMARYKEY)s,
+            title               varchar(255),
+            pubDate             numeric(14,3),
+            content             text,
+            link                varchar(255),
+            category            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCache'] = []
         commit = True
@@ -560,8 +573,8 @@ def _createNewsCache(db):
     if 'NewsCacheInfo' not in db.tables:
         cu.execute("""
         CREATE TABLE NewsCacheInfo (
-            age             INT,
-            feedLink        CHAR(255)
+            age                 numeric(14,3),
+            feedLink            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCacheInfo'] = []
         commit = True
@@ -577,19 +590,17 @@ def _createMirrorInfo(db):
 
     if 'InboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE InboundMirrors (
-            inboundMirrorId %(PRIMARYKEY)s,
-            targetProjectId INT NOT NULL,
-            sourceLabels    VARCHAR(767) NOT NULL,
-            sourceUrl       VARCHAR(767) NOT NULL,
-            sourceAuthType  VARCHAR(32) NOT NULL,
-            sourceUsername  VARCHAR(254),
-            sourcePassword  VARCHAR(254),
-            sourceEntitlement   VARCHAR(254),
-            mirrorOrder     INT DEFAULT 0,
-            allLabels       INT DEFAULT 0,
-            CONSTRAINT InboundMirrors_targetProjectId_fk
-                FOREIGN KEY (targetProjectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            inboundMirrorId     %(PRIMARYKEY)s,
+            targetProjectId     integer         NOT NULL
+                REFERENCES Projects ( projectId ) ON DELETE CASCADE,
+            sourceLabels        varchar(767)    NOT NULL,
+            sourceUrl           varchar(767)    NOT NULL,
+            sourceAuthType      varchar(32)     NOT NULL,
+            sourceUsername      varchar(254),
+            sourcePassword      varchar(254),
+            sourceEntitlement   varchar(254),
+            mirrorOrder         integer                     DEFAULT 0,
+            allLabels           integer                     DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['InboundMirrors'] = []
         commit = True
@@ -599,31 +610,27 @@ def _createMirrorInfo(db):
     if 'UpdateServices' not in db.tables:
         cu.execute("""
         CREATE TABLE UpdateServices (
-            updateServiceId         %(PRIMARYKEY)s,
-            hostname                VARCHAR(767) NOT NULL,
-            description             TEXT,
-            mirrorUser              VARCHAR(254) NOT NULL,
-            mirrorPassword          VARCHAR(254) NOT NULL
+            updateServiceId     %(PRIMARYKEY)s,
+            hostname            varchar(767)    NOT NULL    UNIQUE,
+            description         text,
+            mirrorUser          varchar(254)    NOT NULL,
+            mirrorPassword      varchar(254)    NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UpdateServices'] = []
         commit = True
-    commit |= db.createIndex('UpdateServices', 'UpdateServiceHostnameIdx',
-            'hostname', unique = True)
 
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
-            outboundMirrorId %(PRIMARYKEY)s,
-            sourceProjectId  INT NOT NULL,
-            targetLabels     VARCHAR(767) NOT NULL,
-            allLabels        INT NOT NULL DEFAULT 0,
-            recurse          INT NOT NULL DEFAULT 0,
-            matchStrings     VARCHAR(767) NOT NULL DEFAULT '',
-            mirrorOrder      INT DEFAULT 0,
-            fullSync         INT NOT NULL DEFAULT 0,
-            useReleases      INTEGER NOT NULL DEFAULT 0,
-            CONSTRAINT OutboundMirrors_sourceProjectId_fk
-                FOREIGN KEY (sourceProjectId) REFERENCES Projects(projectId)
-                ON DELETE CASCADE ON UPDATE CASCADE
+            outboundMirrorId    %(PRIMARYKEY)s,
+            sourceProjectId     integer         NOT NULL
+                REFERENCES Projects ( projectId ) ON DELETE CASCADE,
+            targetLabels        varchar(767)    NOT NULL,
+            allLabels           smallint        NOT NULL    DEFAULT 0,
+            recurse             smallint        NOT NULL    DEFAULT 0,
+            matchStrings        varchar(767)    NOT NULL    DEFAULT '',
+            mirrorOrder         integer                     DEFAULT 0,
+            fullSync            smallint        NOT NULL    DEFAULT 0,
+            useReleases         integer         NOT NULL    DEFAULT 0
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrors'] = []
         commit = True
@@ -633,21 +640,15 @@ def _createMirrorInfo(db):
     if 'OutboundMirrorsUpdateServices' not in db.tables:
         cu.execute("""
         CREATE TABLE OutboundMirrorsUpdateServices (
-            outboundMirrorId        INT NOT NULL,
-            updateServiceId         INT NOT NULL,
-            CONSTRAINT omt_omi_fk
-                FOREIGN KEY (outboundMirrorId)
-                    REFERENCES OutboundMirrors(outboundMirrorId)
-                ON DELETE CASCADE,
-            CONSTRAINT omt_usi_fk
-                FOREIGN KEY (updateServiceId)
-                    REFERENCES UpdateServices(updateServiceId)
-                ON DELETE CASCADE
+            outboundMirrorId    integer         NOT NULL
+                REFERENCES OutboundMirrors ON DELETE CASCADE,
+            updateServiceId     integer         NOT NULL
+                REFERENCES UpdateServices ON DELETE CASCADE,
+
+            PRIMARY KEY ( outboundMirrorId, updateServiceId )
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrorsUpdateServices'] = []
         commit = True
-    commit |= db.createIndex('OutboundMirrorsUpdateServices', 'omt_omi_usi_uq',
-            'outboundMirrorId, updateServiceId', unique = True)
 
     if commit:
         db.commit()
@@ -661,14 +662,17 @@ def _createRepNameMap(db):
     if 'RepNameMap' not in db.tables:
         cu.execute("""
         CREATE TABLE RepNameMap (
-            fromName        VARCHAR(254),
-            toName          VARCHAR(254),
-            PRIMARY KEY(fromName, toName)
+            fromName            varchar(254)    NOT NULL,
+            toName              varchar(254)    NOT NULL,
+
+            PRIMARY KEY ( fromName, toName )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['RepNameMap'] = []
         commit = True
     commit |= db.createIndex('RepNameMap', 'RepNameMap_fromName_idx',
         'fromName')
+    commit |= db.createIndex('RepNameMap', 'RepNameMap_toName_idx',
+        'toName')
 
     if commit:
         db.commit()
@@ -729,11 +733,9 @@ def _createFrontPageStats(db):
     if 'LatestCommit' not in db.tables:
         cu.execute("""
         CREATE TABLE LatestCommit (
-            projectId   INTEGER NOT NULL,
-            commitTime  INTEGER NOT NULL,
-            CONSTRAINT LatestCommit_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                    ON DELETE CASCADE
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            commitTime          numeric(14,3)   NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['LatestCommit'] = []
         commit = True
@@ -743,11 +745,9 @@ def _createFrontPageStats(db):
     if 'PopularProjects' not in db.tables:
         cu.execute("""
         CREATE TABLE PopularProjects (
-            projectId   INTEGER NOT NULL,
-            rank        INTEGER NOT NULL,
-            CONSTRAINT PopularProjects_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                    ON DELETE CASCADE
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            rank                integer         NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PopularProjects'] = []
         commit = True
@@ -755,11 +755,9 @@ def _createFrontPageStats(db):
     if 'TopProjects' not in db.tables:
         cu.execute("""
         CREATE TABLE TopProjects (
-            projectId   INTEGER NOT NULL,
-            rank        INTEGER NOT NULL,
-            CONSTRAINT TopProjects_projectId_fk
-                FOREIGN KEY (projectId) REFERENCES Projects(projectId)
-                    ON DELETE CASCADE
+            projectId           integer         NOT NULL
+                REFERENCES Projects ON DELETE CASCADE,
+            rank                integer         NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TopProjects'] = []
         commit = True
@@ -778,13 +776,13 @@ def _createEC2Data(db):
         CREATE TABLE BlessedAMIs (
             blessedAMIId        %(PRIMARYKEY)s,
             ec2AMIId            CHAR(12) NOT NULL,
-            buildId             INTEGER,
-            shortDescription    VARCHAR(128),
-            helptext            TEXT,
-            instanceTTL         INTEGER NOT NULL,
-            mayExtendTTLBy      INTEGER,
-            isAvailable         INTEGER NOT NULL DEFAULT 1,
-            userDataTemplate    TEXT,
+            buildId             integer,
+            shortDescription    varchar(128),
+            helptext            text,
+            instanceTTL         integer NOT NULL,
+            mayExtendTTLBy      integer,
+            isAvailable         integer NOT NULL DEFAULT 1,
+            userDataTemplate    text,
             CONSTRAINT ba_fk_b FOREIGN KEY (buildId)
                 REFERENCES Builds(buildId) ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
@@ -796,14 +794,14 @@ def _createEC2Data(db):
         cu.execute("""
         CREATE Table LaunchedAMIs (
             launchedAMIId       %(PRIMARYKEY)s,
-            blessedAMIId        INTEGER NOT NULL,
+            blessedAMIId        integer NOT NULL,
             launchedFromIP      CHAR(15) NOT NULL,
             ec2InstanceId       CHAR(10) NOT NULL,
             raaPassword         CHAR(8) NOT NULL,
-            launchedAt          NUMERIC(14,3) NOT NULL,
-            expiresAfter        NUMERIC(14,3) NOT NULL,
-            isActive            INTEGER NOT NULL DEFAULT 1,
-            userData            TEXT,
+            launchedAt          numeric(14,3) NOT NULL,
+            expiresAfter        numeric(14,3) NOT NULL,
+            isActive            integer NOT NULL DEFAULT 1,
+            userData            text,
             CONSTRAINT la_bai_fk FOREIGN KEY (blessedAMIId)
                 REFERENCES BlessedAMIs(blessedAMIId) ON DELETE RESTRICT
         ) %(TABLEOPTS)s """ % db.keywords)
@@ -826,13 +824,12 @@ def _createSessions(db):
     if 'Sessions' not in db.tables:
         cu.execute("""
         CREATE TABLE Sessions (
-            sessIdx     %(PRIMARYKEY)s,
-            sid         CHAR(64),
-            data        TEXT
+            sessIdx             %(PRIMARYKEY)s,
+            sid                 varchar(64)         NOT NULL    UNIQUE,
+            data                text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Sessions'] = []
         commit = True
-    commit |= db.createIndex('Sessions', 'sessionSidIdx', 'sid')
 
     if commit:
         db.commit()
@@ -847,16 +844,16 @@ def _createProductVersions(db):
         cu.execute("""
             CREATE TABLE ProductVersions (
                 productVersionId    %(PRIMARYKEY)s,
-                projectId           INT NOT NULL,
-                namespace           VARCHAR(16),
-                name                VARCHAR(16),
-                description         TEXT,
-            CONSTRAINT pv_pid_fk FOREIGN KEY (projectId)
-                REFERENCES Projects(projectId) ON DELETE CASCADE
+                projectId       integer             NOT NULL
+                    REFERENCES Projects ON DELETE CASCADE,
+                namespace           varchar(16)     NOT NULL,
+                name                varchar(16)     NOT NULL,
+                description         text,
+                timeCreated         numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
         commit = True
-    commit |= db.createIndex('ProductVersions', 'ProductVersionsNamespacesProjects',
+    commit |= db.createIndex('ProductVersions', 'ProductVersions_uq',
             'projectId,namespace,name', unique = True)
 
     if commit:
@@ -869,9 +866,9 @@ def _createTargets(db):
     if 'Targets' not in db.tables:
         cu.execute("""
             CREATE TABLE Targets (
-                targetId   %(PRIMARYKEY)s,
-                targetType VARCHAR(255),
-                targetName VARCHAR(255)
+                targetId        %(PRIMARYKEY)s,
+                targetType      varchar(255)        NOT NULL,
+                targetName      varchar(255)        NOT NULL    UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Targets'] = []
         commit = True
@@ -879,9 +876,12 @@ def _createTargets(db):
     if 'TargetData' not in db.tables:
         cu.execute("""
             CREATE TABLE TargetData (
-                targetId  INT NOT NULL,
-                name      VARCHAR(255),
-                value     TEXT
+                targetId        integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                name            varchar(255)        NOT NULL,
+                value           text,
+
+                PRIMARY KEY ( targetId, name )
             ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TargetData'] = []
         commit = True
@@ -895,8 +895,9 @@ def createSchema(db):
     if not hasattr(db, "tables"):
         db.loadSchema()
     _createUsers(db)
-    _createLabels(db)
     _createProjects(db)
+    _createLabels(db)
+    _createProductVersions(db)
     _createBuilds(db)
     _createCommits(db)
     _createGroupTroves(db)
@@ -909,7 +910,6 @@ def createSchema(db):
     _createFrontPageStats(db)
     _createEC2Data(db)
     _createSessions(db)
-    _createProductVersions(db)
     _createTargets(db)
 
 

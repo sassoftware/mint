@@ -53,7 +53,7 @@ class GroupTroveTable(database.KeyedTable):
         except versions.ParseError:
             raise GroupTroveVersionError
 
-        timeStamp = time.time()
+        timeStamp = int(time.time())
         return self.new(
                  projectId = projectId,
                  creatorId = creatorId,

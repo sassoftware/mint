@@ -731,6 +731,22 @@ class SQLServerFixtureCache(FixtureCache):
     def _getConnectStringForDb(self, dbName = "%s"):
         return os.path.join(self.harness.conn, dbName)
 
+    def newMintCfg(self, name):
+        dbName = ("mf%s" % name).lower()
+        self.keepDbs.append(dbName)
+        db = self.harness.getDB(dbName)
+
+        cfg = FixtureCache.newMintCfg(self, name)
+        cfg.dbDriver = cfg.reposDBDriver = self.driver
+        cfg.dbPath = self._getConnectStringForDb(dbName)
+        cfg.reposDBPath = self._getConnectStringForDb()
+
+        from mint.db import schema
+        schema.loadSchema(db.connect(), cfg)
+        db.stop()
+
+        return cfg
+
 
 class MySqlFixtureCache(SQLServerFixtureCache):
     keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
@@ -744,19 +760,6 @@ class MySqlFixtureCache(SQLServerFixtureCache):
         load = subprocess.Popen(input, stdin = dump.stdout)
         load.communicate()
         
-    def newMintCfg(self, name):
-        cfg = super(self.__class__,self).newMintCfg(name)
-        dbName = "mf%s" % name
-        self.keepDbs.append(dbName.lower())
-        db = self.harness.getDB(dbName)
-        cfg.dbDriver = cfg.reposDBDriver = "mysql"
-        cfg.dbPath = self._getConnectStringForDb(dbName)
-        cfg.reposDBPath = self._getConnectStringForDb()
-        from mint.db import schema
-        schema.loadSchema(db.connect(), cfg)
-        db.stop()
-        return cfg
-
     def loadFixture(self, name):
         ret = super(self.__class__, self).loadFixture(name)
         # save repos tables off for later
@@ -837,17 +840,6 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
             stderr=fd)
         load.communicate()
         fd.close()
-
-    def newMintCfg(self, name):
-        cfg = super(self.__class__, self).newMintCfg(name)
-        cfg.reposDBDriver = 'postgresql'
-        cfg.dbDriver = 'sqlite'
-        cfg.dbPath = os.path.join(cfg.dataPath, 'mintdb')
-        cfg.reposDBPath = self._getConnectStringForDb()
-        db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
-        from mint.db import schema
-        schema.loadSchema(db, cfg)
-        return cfg
 
     def loadFixture(self, name):
         ret = super(self.__class__, self).loadFixture(name)
@@ -1040,7 +1032,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
         MCPTestMixin.setUp(self)
 
     def tearDown(self):
-        if server.dbConnection:
+        if getattr(server, 'dbConnection', None):
             server.dbConnection.close()
         server.dbConnection = None
         testhelp.TestCase.tearDown(self)

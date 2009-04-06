@@ -114,7 +114,7 @@ class ImageManager(object):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
         cu.execute('''SELECT fileId, buildId,
-                      filename, title, size, sha1
+                      title, size, sha1
                       FROM BuildFiles
                       JOIN Builds USING(buildId)
                       JOIN Projects USING(projectId)
@@ -246,15 +246,15 @@ class ImageManager(object):
                                 str(imageId), os.path.basename(fileName))
             else:
                 raise ValueError
-            cu.execute("INSERT INTO BuildFiles "
-                        "VALUES(NULL, ?, ?, NULL, ?, ?, ?)", 
-                        imageId, idx, title, size, sha1)
+            cu.execute("""INSERT INTO BuildFiles ( buildId, idx, title,
+                    size, sha1) VALUES (?, ?, ?, ?, ?)""",
+                    imageId, idx, title, size, sha1)
             fileId = cu.lastrowid
-            cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
-                urltypes.LOCAL, fileName)
+            cu.execute("""INSERT INTO FilesUrls ( urlType, url )
+                    VALUES (?, ?)""", urltypes.LOCAL, fileName)
             urlId = cu.lastrowid
-            cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
-                       fileId, urlId)
+            cu.execute("""INSERT INTO BuildFilesUrlsMap ( fileId, urlId )
+                    VALUES(?, ?)""", fileId, urlId)
 
     def stopImageJob(self, imageId):
         mcpClient = self._getMcpClient()

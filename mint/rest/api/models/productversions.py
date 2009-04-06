@@ -17,6 +17,7 @@ class ProductVersion(Model):
     namespace = fields.CharField(displayName='nameSpace')
     description = fields.CharField()
     platformLabel = fields.CharField()
+    timeCreated = fields.DateTimeField(editable=False)
     platform = fields.UrlField('products.versions.platform', 
                                 ('hostname', 'name'))
     stages = fields.UrlField('products.versions.stages', ('hostname', 'name'))
@@ -42,12 +43,9 @@ class ProductVersionList(Model):
         name = 'productVersions'
 
     versions = fields.ListField(ProductVersion, displayName='productVersion')
-    def addProductVersion(self, versionId, namespace, name, description,
-                          hostname):
-        self.versions.append(ProductVersion(versionId=versionId, 
-                                            namespace=namespace,
-                                            name=name, description=description,
-                                            hostname=hostname))
+    def addProductVersion(self, *args, **kwargs):
+        self.versions.append(ProductVersion(*args, **kwargs))
+
 
 class Stage(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)

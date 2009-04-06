@@ -7,6 +7,7 @@ import sys
 import weakref
 
 from conary.dbstore import sqlerrors
+from conary.dbstore import sqllib
 
 from mint.mint_error import *
 
@@ -63,8 +64,11 @@ class TableObject(object):
         return d
 
     def _loadData(self, data={}):
-        for key, val in data.items():
-            self.__setattr__(key, val)
+        data = sqllib.CaselessDict(data)
+        for x in set(self.__slots__):
+            setattr(self, x, data.pop(x, None))
+        if data:
+            raise AttributeError("Unknown keys: %s" % (" ".join(data.keys())))
 
     def __init__(self, server, id, initialData=None):
         """@param server: a L{mint.server.MintServer} object
@@ -221,7 +225,7 @@ class KeyedTable(DatabaseTable):
         except sqlerrors.ColumnNotUnique:
             raise DuplicateItem(self.name)
 
-        return cu._cursor.lastrowid
+        return cu.lastid()
 
     @dbWriter
     def update(self, cu, id, **kwargs):

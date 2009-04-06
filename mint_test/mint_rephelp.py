@@ -198,25 +198,24 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
     cfg.basePath = '/'
 
     sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-    if sqldriver == 'sqlite' or sqldriver == 'postgresql':
+    if sqldriver == 'sqlite':
         cfg.dbPath = reposDir + '/mintdb'
     elif sqldriver == 'mysql':
-        cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % reposDB.port
+        cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % reposDbPort
+    elif sqldriver == 'postgresql':
+        cfg.dbPath = '%s@localhost.localdomain:%s/%%s' % ( pwd.getpwuid(os.getuid())[0], reposDbPort)
     else:
         raise AssertionError("Invalid database type")
 
-    if sqldriver == 'postgresql':
-        cfg.dbDriver = 'sqlite'
-    else:
-        cfg.dbDriver = sqldriver
+    cfg.dbDriver = sqldriver
 
     reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
     if reposdriver == 'sqlite':
         cfg.reposDBPath = reposDir + "/repos/%s/sqldb"
     elif reposdriver == 'mysql':
-        cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % reposDB.port
+        cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % reposDbPort
     elif sqldriver == 'postgresql':
-        cfg.reposDBPath = '%s@localhost.localdomain:%s/%%s' % ( pwd.getpwuid(os.getuid())[0], reposDB.port)
+        cfg.reposDBPath = '%s@localhost.localdomain:%s/%%s' % ( pwd.getpwuid(os.getuid())[0], reposDbPort)
     cfg.reposDBDriver = reposdriver
     cfg.reposPath = reposDir + "/repos/"
     cfg.reposContentsDir = " ".join([reposDir + "/contents1/%s/", reposDir + "/contents2/%s/"])
@@ -712,30 +711,14 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         return client, userId
 
     def quickMintAdmin(self, username, password, email = "test@example.com"):
-        # manipulate the UserGroups and UserGroup
-        cu = self.db.cursor()
-
-        cu.execute("""SELECT COUNT(*) FROM UserGroups
-                          WHERE UserGroup = 'MintAdmin'""")
-        if cu.fetchone()[0] == 0:
-            cu.execute("""SELECT COALESCE(MAX(userGroupId) + 1, 1)
-                             FROM UserGroups""")
-            groupId = cu.fetchone()[0]
-            cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
-                       groupId)
-            self.db.commit()
-        else:
-            cu.execute("""SELECT userGroupId FROM UserGroups
-                              WHERE UserGroup = 'MintAdmin'""")
-            groupId = cu.fetchone()[0]
         client, userId = self.quickMintUser(username, password, email = email)
         client.server._server.mcpClient = self.mcpClient
 
-        cu.execute("SELECT userId from Users where username=?", username)
-        authUserId = cu.fetchone()[0]
-
-        cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
-                   groupId, authUserId)
+        adminClient = self.openMintClient(('mintauth', 'mintpass'))
+        try:
+            adminClient.promoteUserToAdmin(userId)
+        except mint_error.UserAlreadyAdmin:
+            pass
         self.db.commit()
 
         return client, userId

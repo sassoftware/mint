@@ -20,7 +20,6 @@ class FileUrl(Model):
 class ImageFile(Model):
     fileId   = fields.IntegerField()
     imageId  = fields.IntegerField()
-    filename = fields.CharField()
     title    = fields.CharField()
     size     = fields.IntegerField()
     sha1     = fields.CharField()

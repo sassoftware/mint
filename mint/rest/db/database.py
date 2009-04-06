@@ -167,14 +167,14 @@ class Database(DBInterface):
             hostname, domainname = hostname.split('.', 1)
         cu = self.db.cursor()
         cu.execute('''SELECT productVersionId as versionId, 
-                          PVTable.namespace, PVTable.name, PVTable.description  
+                          PVTable.namespace, PVTable.name, PVTable.description,
+                          PVTable.timeCreated
                       FROM Projects 
                       JOIN ProductVersions as PVTable USING (projectId)
                       WHERE Projects.hostname=?''', hostname)
         pvl = models.ProductVersionList()
-        for versionId, namespace, name, description in cu:
-            pvl.addProductVersion(versionId, namespace, name, description,
-                                  hostname)
+        for row in cu:
+            pvl.addProductVersion(**row)
         return pvl
 
     @readonly

@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+from conary.dbstore import sqllib
 from xobj import xobj
 
 from mint.rest.modellib import options
@@ -119,38 +120,42 @@ class Model(object):
     """
     __metaclass__ = ModelMeta
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kwargs):
         fields = list(self._fields)
         cls = self.__class__
+        className = self.__class__
+        args = list(args)
+        kwargs = sqllib.CaselessDict(kwargs)
 
         if len(args) > len(self._fields):
             raise TypeError(
-                '%s() takes at most %s arguments (%s given)'  % (cls.__name__, 
+                '%s() takes at most %s arguments (%s given)' % (cls.__name__, 
                                                         len(fields), len(args)))
 
-        for (arg, field) in zip(args, fields):
-            setattr(self, field, arg)
-        kwfields = set(fields[len(args):])
-        for kwarg, value in kw.items():
-            className = cls.__name__
-            if kwarg not in kwfields:
-                if kwarg in fields:
-                    raise TypeError('%s() got multiple values for keyword argument %r' % (className, kwarg))
-                else:
-                    # XXX we need to find the proper way to pass a model 
-                    # additional data that is not displayed into the model
-                    setattr(self, kwarg, value)
-                    continue
-                    raise TypeError('%s() got an unexpected keyword argument %r' % (className, kwarg))
-            kwfields.remove(kwarg)
-            setattr(self, kwarg, value)
-        for fieldName in kwfields:
+        for fieldName in fields:
             field = getattr(cls, fieldName)
-            if field.required:
-                raise TypeError('%s is a required parameter for %s()' % (fieldName, cls.__name__))
-            if isinstance(field.default, list):
-                default = list(field.default)
+            if args:
+                if fieldName in kwargs:
+                    raise TypeError('%s() got multiple values for keyword '
+                            'argument %r' % (className, fieldName))
+                value = args.pop(0)
+            elif fieldName in kwargs:
+                value = kwargs.pop(fieldName)
+            elif field.required:
+                raise TypeError('%s is a required parameter for %s()'
+                        % (fieldName, className))
+            elif isinstance(field.default, list):
+                value = list(field.default)
             else:
-                default = field.default
-            setattr(self, fieldName, default)
+                value = field.default
 
+            setattr(self, fieldName, value)
+
+        assert not args # checked above
+        if kwargs:
+            # XXX we need to find the proper way to pass a model 
+            # additional data that is not displayed into the model
+            #raise TypeError('%s() got an unexpected keyword argument %r'
+            #        % (className, kwarg))
+            for fieldName, value in kwargs.items():
+                setattr(self, fieldName, value)

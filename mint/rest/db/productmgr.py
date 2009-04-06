@@ -121,17 +121,15 @@ class ProductManager(object):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
         cu.execute('''SELECT productVersionId as versionId, 
-                          PVTable.namespace, PVTable.name, PVTable.description  
+                          PVTable.namespace, PVTable.name, PVTable.description,
+                          PVTable.timeCreated
                       FROM Projects 
                       JOIN ProductVersions as PVTable USING (projectId)
                       WHERE Projects.hostname=? AND PVTable.name=?''', 
                       hostname, versionName)
         results = self.db._getOne(cu, errors.ProductVersionNotFound, 
                                   (hostname, versionName))
-        versionId, namespace, name, description = results
-        return models.ProductVersion(versionId=versionId, hostname=hostname,
-                                     namespace=namespace, name=name, 
-                                     description=description)
+        return models.ProductVersion(**results)
 
     def createProduct(self, name, description, hostname,
                       domainname, namespace, isAppliance,
@@ -172,13 +170,11 @@ class ProductManager(object):
         cu = self.db.cursor()
         createTime = time.time()
         cu.execute('''INSERT INTO Projects (name, creatorId, description,
-                                            hostname, domainname, projecturl,
-                                            external, timeModified,
-                                            timeCreated, backupExternal)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                      title, self.auth.userId, '', hostname,
-                      domainname, '', 1, createTime, createTime, 
-                      backupExternal)
+                shortname, hostname, domainname, projecturl, external,
+                timeModified, timeCreated, backupExternal)
+                VALUES (?, ?, '', ?, ?, ?, '', 1, ?, ?, ?)''',
+                title, self.auth.userId, hostname, hostname, domainname,
+                createTime, createTime, int(backupExternal))
         productId = cu.lastrowid
         if mirror:
             self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
@@ -293,10 +289,9 @@ class ProductManager(object):
         self.setProductVersionDefinition(fqdn, version, prodDef)
         
         try:
-            versionId = self.db.db.productVersions.new(projectId = projectId,
-                                               namespace = namespace,
-                                               name = version,
-                                               description = description)
+            versionId = self.db.db.productVersions.new(projectId=projectId,
+                    namespace=namespace, name=version, description=description,
+                    timeCreated=time.time())
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
 

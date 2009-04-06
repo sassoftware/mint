@@ -26,13 +26,14 @@ class SchemaMigration(migration.SchemaMigration):
         self.msg = msg
 
 # Helper functions
-def add_columns(cu, table, *columns):
+def add_columns(db, table, *columns):
     '''
     Add each column while ignoring existing columns.
 
-    >>> add_columns(cu, 'Table', 'something INTEGER',
+    >>> add_columns(db, 'Table', 'something INTEGER',
     ...     'somethingelse STRING')
     '''
+    cu = db.cursor()
 
     for column in columns:
         try:
@@ -40,12 +41,13 @@ def add_columns(cu, table, *columns):
         except sqlerrors.DuplicateColumnName:
             pass
 
-def drop_tables(cu, *tables):
+def drop_tables(db, *tables):
     '''
     Drop each table, ignoring any missing tables.
 
-    >>> drop_tables(cu, 'sometable', 'anothertable')
+    >>> drop_tables(db, 'sometable', 'anothertable')
     '''
+    cu = db.cursor()
 
     for table in tables:
         try:
@@ -215,15 +217,13 @@ class MigrateTo_44(SchemaMigration):
     # 44.0
     # - Drop rMake related tables
     def migrate(self):
-        cu = self.db.cursor()
-        drop_tables(cu, 'rMakeBuild', 'rMakeBuildItems')
+        drop_tables(self.db, 'rMakeBuild', 'rMakeBuildItems')
         return True
 
     # 44.1
     # - Add backupExternal column to Projects table
     def migrate1(self):
-        cu = self.db.cursor()
-        add_columns(cu, 'Projects', 'backupExternal INT DEFAULT 0')
+        add_columns(self.db, 'Projects', 'backupExternal INT DEFAULT 0')
         return True
 
 # SCHEMA VERSION 45
@@ -316,7 +316,7 @@ class MigrateTo_45(SchemaMigration):
                           updateServiceId)
 
         # Kill old vestigial tables
-        drop_tables(cu, 'rAPAPasswords', 'OutboundMirrorTargets')
+        drop_tables(self.db, 'rAPAPasswords', 'OutboundMirrorTargets')
 
         # Create versions table if needed
         if 'ProductVersions' not in self.db.tables:
@@ -336,9 +336,7 @@ class MigrateTo_45(SchemaMigration):
     # 45.1
     # - Add columns that got dropped from the migration in a merge
     def migrate1(self):
-        cu = self.db.cursor()
-
-        add_columns(cu, 'Projects', "shortname VARCHAR(128)",
+        add_columns(self.db, 'Projects', "shortname VARCHAR(128)",
                                     "prodtype VARCHAR(128) DEFAULT ''",
                                     "version VARCHAR(128) DEFAULT ''")
 
@@ -347,10 +345,10 @@ class MigrateTo_45(SchemaMigration):
     # 45.2
     # - Add columns to support mirroring of published releases
     def migrate2(self):
-        cu = self.db.cursor()
-        add_columns(cu, 'PublishedReleases', "shouldMirror INTEGER NOT NULL DEFAULT 0",
-                                             "timeMirrored INTEGER")
-        add_columns(cu, 'OutboundMirrors',
+        add_columns(self.db, 'PublishedReleases',
+                "shouldMirror INTEGER NOT NULL DEFAULT 0",
+                "timeMirrored INTEGER")
+        add_columns(self.db, 'OutboundMirrors',
             "useReleases INTEGER NOT NULL DEFAULT 0")
         return True
     
@@ -365,8 +363,8 @@ class MigrateTo_45(SchemaMigration):
     # 45.4
     # - Store the namespace with the Product Version
     def migrate4(self):
-        cu = self.db.cursor()
-        add_columns(cu, 'ProductVersions', 'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
+        add_columns(self.db, 'ProductVersions',
+                'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
         #Drop and readd the unique index
         self.db.dropIndex('ProductVersions', 'ProductVersionsProjects')
         self.db.createIndex('ProductVersions', 'ProductVersionsNamespacesProjects',
@@ -376,8 +374,8 @@ class MigrateTo_45(SchemaMigration):
     # 45.5
     # - Add namespace column to Project
     def migrate5(self):
-        cu = self.db.cursor()
-        add_columns(cu, 'Projects', 'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
+        add_columns(self.db, 'Projects',
+                'namespace VARCHAR(16) DEFAULT %r' % self.cfg.namespace)
         return True
 
     # 45.6
@@ -456,16 +454,23 @@ class MigrateTo_45(SchemaMigration):
 
 # SCHEMA VERSION 46
 class MigrateTo_46(SchemaMigration):
-    Version = (46, 0)
+    Version = (46, 1)
 
     # 46.0
     # - Add versionId and stage columns to Builds
     def migrate(self):
-        cu = self.db.cursor()
-        add_columns(cu, 'Builds', 
+        add_columns(self.db, 'Builds', 
                      'productVersionId INTEGER DEFAULT 0',
                      'stageName VARCHAR(255) DEFAULT ""', 
                     )
+        return True
+
+    # 46.1
+    # - Add timeCreated column to ProductVersions
+    def migrate1(self):
+        add_columns(self.db, 'ProductVersions',
+                'timeCreated numeric(14,3)')
+        cu.execute('UPDATE ProductVersions SET timeCreated = 0')
         return True
         
 

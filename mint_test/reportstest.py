@@ -98,28 +98,23 @@ class ReportTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
     def testActiveUsersReport(self, db, data):
         adminClient = self.getClient("admin")
+        projectId = data['projectId']
         userId = data['owner']
         adminId = data['admin']
         report = adminClient.server.getReport('active_users')
-        self.failIf(report['data'] != [],
-                    "active users report should have been empty")
+        self.failUnlessEqual(report['data'], [])
 
         cu = db.cursor()
-        cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
-                   time.time(), userId)
-        cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
-                   time.time(), adminId)
-        cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
-                   time.time(), adminId)
-
+        for id_ in (userId, adminId, adminId):
+            cu.execute("INSERT INTO Commits (projectId, timestamp, userId) "
+                    "VALUES(?, ?,?)", projectId, time.time(), id_)
         db.commit()
 
         report = adminClient.server.getReport('active_users')
 
-        self.failIf(report['data'] != \
+        self.failUnlessEqual(sorted(report['data']),
                     [['admin', 'A User Named admin', 'admin@example.com', 2],
-                     ['owner', 'A User Named owner', 'owner@example.com', 1]],
-                    "user activity report wasn't properly computed")
+                     ['owner', 'A User Named owner', 'owner@example.com', 1]])
 
     @fixtures.fixture('Full')
     def testGetRepObj(self, db, data):

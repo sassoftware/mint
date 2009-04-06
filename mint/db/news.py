@@ -82,8 +82,10 @@ class NewsCacheTable(database.KeyedTable):
                 content = item.find("{http://purl.org/rss/1.0/modules/content/}encoded").text
                 pubDate = toUnixTime(item.find("pubDate").text)
             
-                query = "INSERT INTO NewsCache VALUES (NULL, ?, ?, ?, ?, ?)"
-                cu.execute(query, title, pubDate, content, link, category)
+                cu.execute("""INSERT INTO NewsCache (
+                        title, pubDate, content, link, category )
+                            VALUES (?, ?, ?, ?, ?)""",
+                        title, pubDate, content, link, category)
         except:
             self.db.rollback()
             raise

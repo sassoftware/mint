@@ -57,7 +57,7 @@ class BuildsTable(database.KeyedTable):
                                           troveLastChanged=?
                       WHERE buildId=?""",
                    troveName, troveVersion,
-                   troveFlavor, time.time(),
+                   troveFlavor, int(time.time()),
                    buildId)
         self.db.commit()
         return 0

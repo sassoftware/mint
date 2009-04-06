@@ -76,6 +76,7 @@ class PlatformTest(restbase.BaseRestTest):
     <releaseId>1</releaseId>
     <hostname>testproject</hostname>
     <name>Release Name</name>
+    <version></version>
     <description></description>
     <published>false</published>
     <images href="http://%(server)s:%(port)s/api/products/testproject/releases/1/images"/>
