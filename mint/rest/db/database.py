@@ -174,7 +174,7 @@ class Database(DBInterface):
                       WHERE Projects.hostname=?''', hostname)
         pvl = models.ProductVersionList()
         for row in cu:
-            pvl.addProductVersion(**row)
+            pvl.addProductVersion(**dict(row))
         return pvl
 
     @readonly
