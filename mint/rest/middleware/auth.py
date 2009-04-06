@@ -102,7 +102,7 @@ class AuthenticationCallback(object):
 
         if not mintAuth:
             # No authentication was successful.
-            request.auth = None
+            request.auth = request.mintClient = request.mintAuth = None
             return
 
         request.mintClient = mintClient
