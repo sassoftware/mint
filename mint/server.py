@@ -5206,6 +5206,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 troveDict.get('implicitTroves', []))
 
     @requiresAuth
+    def addApplianceSearchPaths(self, sessionHandle, searchPaths):
+        pc = self.getApplianceCreatorClient()
+        return pc.addSearchPaths(sessionHandle, searchPaths)
+
+    @requiresAuth
+    def listApplianceSearchPaths(self, sessionHandle):
+        pc = self.getApplianceCreatorClient()
+        return pc.listSearchPaths(sessionHandle)
+
+    @requiresAuth
     def listApplianceTroves(self, projectId, sessionHandle):
         pc = self.getApplianceCreatorClient()
         project = projects.Project(self, projectId)
