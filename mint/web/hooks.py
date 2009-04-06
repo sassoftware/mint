@@ -235,7 +235,9 @@ def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
         protocol = 'https'
     else:
         protocol = 'http'
-    myUrlBase = proxyServer.basicUrl % {'protocol':protocol}
+    port = req.connection.local_addr[1]
+    myUrlBase = proxyServer.basicUrl % {'protocol':protocol,
+                                        'port':port}
     myUrlBase += 'repos/%s/' %(projectHostName)
 
     # translate the response
