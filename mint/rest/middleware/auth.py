@@ -96,8 +96,9 @@ class AuthenticationCallback(object):
             request.auth = basicToken
         if not mintAuth:
             cookieToken = self.getCookieAuth(request)
-            mintClient, mintAuth = self._checkAuth(cookieToken)
-            request.auth = cookieToken
+            if cookieToken:
+                mintClient, mintAuth = self._checkAuth(cookieToken)
+                request.auth = cookieToken
 
         if not mintAuth:
             # No authentication was successful.
