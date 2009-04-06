@@ -21,6 +21,7 @@ def setup_paths():
     proddefPath     = os.getenv('PRODUCT_DEFINITION_PATH',     os.path.realpath(curDir + '../../rpath-product-definition'))
     catalogServicePath = os.getenv('CATALOG_SERVICE_PATH', os.path.realpath(curDir + '../../catalog-service'))
     restlibPath = os.getenv('RESTLIB_PATH', os.path.realpath(curDir + '../../restlib'))
+    crestPath = os.getenv('CONARY_REST_PATH', os.path.realpath(curDir + '../../conary-rest'))
     xobjPath = os.getenv('XOBJ_PATH', os.path.realpath(curDir + '../../xobj'))
     storagePath = os.getenv('STORAGE_PATH', os.path.realpath(curDir + '../../rpath-storage'))
 
@@ -38,8 +39,8 @@ def setup_paths():
         mcpPath, mcpTestPath, jobslavePath, conaryPath, conaryTestPath,
         raaPath, raaTestPath, raaPluginsPath, proddefPath,
         packageCreatorPath, conaryFactoryTestPath, catalogServicePath,
-        restlibPath, rmakePath, rmakePrivatePath, xobjPath, storagePath)] \
-                + sys.path
+        restlibPath, rmakePath, rmakePrivatePath, xobjPath, storagePath,
+        crestPath)] + sys.path
     os.environ.update(dict(CONARY_PATH=conaryPath,
         RESTLIB_PATH=restlibPath,
         XOBJ_PATH=xobjPath,
@@ -52,6 +53,7 @@ def setup_paths():
         PACKAGE_CREATOR_SERVICE_PATH=packageCreatorPath,
         CONARY_FACTORY_TEST_PATH=conaryFactoryTestPath,
         CATALOG_SERVICE_PATH=catalogServicePath,
+        CONARY_REST_PATH=crestPath,
         PYTHONPATH=(':'.join(sys.path))))
 
 _initialized = False
