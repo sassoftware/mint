@@ -154,8 +154,8 @@ class InstallClass(BaseInstallClass):
         # Configure the first device for dhcp and onboot.
         firstDev = network.getFirstDeviceName()
         dev = devices[firstDev]
-        dev.set('onboot', 'yes')
-        dev.set('bootproto', 'dhcp')
+        dev.set(('onboot', 'yes'))
+        dev.set(('bootproto', 'dhcp'))
 
         # Write out final config.
         network.write(anaconda.rootPath)
