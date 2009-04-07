@@ -478,10 +478,9 @@ class MigrateTo_46(SchemaMigration):
     # - Add status, statusMessage to Builds
     def migrate2(self):
         cu = self.db.cursor()
-        add_columns(self.db, 'ProductVersions',
+        add_columns(self.db, 'Builds',
                 'status INTEGER DEFAULT -1',
                 'statusMessage VARCHAR(255) DEFAULT ""')
-        cu.execute('UPDATE ProductVersions SET timeCreated = 0')
         return True
 
         
