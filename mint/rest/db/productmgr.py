@@ -60,7 +60,7 @@ class ProductManager(object):
         p = models.Product(**d)
         return p
 
-    def listProducts(self, start=0, limit=None, search=None, role=None):
+    def listProducts(self, start=0, limit=None, search=None, roles=None):
         cu = self.db.cursor()
 
         query = '''
@@ -78,9 +78,10 @@ class ProductManager(object):
         args = [self.auth.userId]
         clauses = []
 
-        if role:
-            clauses.append('member.level = ?')
-            args.append(userlevels.idsByName[role.lower()])
+        if roles is not None:
+            roles = ', '.join('%d' % userlevels.idsByName[x.lower()]
+                    for x in roles)
+            clauses.append('member.level IN ( %s )' % roles)
         elif not self.auth.isAdmin:
             # Non-admins can't see hidden projects they aren't a member of
             clauses.append('( p.hidden = 0 OR member.level IS NOT NULL )')
