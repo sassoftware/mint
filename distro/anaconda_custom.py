@@ -127,11 +127,6 @@ class InstallClass(BaseInstallClass):
 
         iutil.execWithRedirect('/sbin/bootman', [], root=anaconda.rootPath)
 
-        from flags import flags
-        if flags.debug:
-            import debugger
-            debugger.debugger.set_trace()
-
         # If in advanced mode the user had the opportunity to configure
         # networking already.
         if not self.in_advanced_mode:
