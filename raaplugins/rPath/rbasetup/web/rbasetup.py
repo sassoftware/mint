@@ -258,4 +258,4 @@ class rBASetup(rAAWebPlugin):
         self.wizardDone()
         
         # redirect to the rbuilder itself
-        raa.web.raiseHttpRedirect(raa.web.baseUrl())
+        raa.web.raiseHttpRedirect("http://" + raa.web.getRequestHostname() + "/")
