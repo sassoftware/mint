@@ -6,9 +6,7 @@
 #
 
 import sys
-if '..' not in sys.path: sys.path.append('..')
-import testsuite
-testsuite.setup()
+import testsetup
 import mint_rephelp
 import mock
 import webprojecttest
@@ -571,5 +569,5 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
 
 
 if __name__ == "__main__":
-    testsuite.main()
+    testsetup.main()
 
