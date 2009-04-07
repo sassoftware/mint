@@ -90,6 +90,14 @@ def commitafter(fn, self, *args, **kw):
     return self._commitAfter(fn, self, *args, **kw)
 
 @decorator.decorator
+def commitmaybe(fn, self, *args, **kw):
+    inTransaction = self.inTransaction(default=False)
+    rv = fn(self, *args, **kw)
+    if not inTransaction and self.inTransaction(default=True):
+        self.commit()
+    return rv
+
+@decorator.decorator
 def readonly(fn, self, *args, **kw):
     inTransaction = self.inTransaction(default=False)
     rv = fn(self, *args, **kw)
@@ -253,7 +261,7 @@ class Database(DBInterface):
         d = dict(self._getOne(cu, errors.UserNotFound, username))
         return models.User(**d)
 
-    @readonly    
+    @readonly
     def listMembershipsForUser(self, username):
         self.auth.requireUserReadAccess(username)
         cu = self.db.cursor()
@@ -440,24 +448,24 @@ class Database(DBInterface):
                                  version=version))
         return stageList
 
-    @readonly    
-    def listImagesForProductVersion(self, hostname, version):
+    def listImagesForProductVersion(self, hostname, version, update=False):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersion(hostname, version)
 
-    @readonly    
-    def listImagesForProductVersionStage(self, hostname, version, 
-                                            stageName):
+    def listImagesForProductVersionStage(self, hostname, version, stageName,
+                                         update=False):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listImagesForProductVersionStage(hostname, version, stageName)
+        return self.imageMgr.listImagesForProductVersionStage(hostname,
+                                                        version, stageName)
 
-    @readonly    
-    def getProductVersionStageBuildDefinitions(self, hostname, version, stageName):
+    @readonly
+    def getProductVersionStageBuildDefinitions(self, hostname, version,
+                                               stageName):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionStageBuildDefinitions(
             hostname, version, stageName)
 
-    @readonly    
+    @readonly
     def getProductVersionDefinition(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.productMgr.getProductVersionDefinition(hostname, version)
@@ -468,26 +476,16 @@ class Database(DBInterface):
         return self.productMgr.setProductVersionDefinition(hostname, version, pd)
 
     @commitafter
-    def rebaseProductVersionPlatform(self, hostname, version, 
+    def rebaseProductVersionPlatform(self, hostname, version,
                                      platformLabel=None):
         self.auth.requireProductDeveloper(hostname)
-        self.productMgr.rebaseProductVersionPlatform(hostname, version, 
+        self.productMgr.rebaseProductVersionPlatform(hostname, version,
                                                      platformLabel)
 
     @commitafter
     def setProductVersionBuildDefinitions(self, hostname, version, model):
         self.auth.requireProductDeveloper(hostname)
         return self.productMgr.setProductVersionBuildDefinitions(hostname, version, model)
-
-    @readonly    
-    def listImagesForProduct(self, hostname):
-        self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listImagesForProduct(hostname)
-
-    @readonly    
-    def getImageForProduct(self, hostname, imageId):
-        self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.getImageForProduct(hostname, imageId)
 
     def stopImageJob(self, hostname, imageId):
         self.auth.requireProductOwner(hostname)
@@ -526,17 +524,30 @@ class Database(DBInterface):
         self.releaseMgr.unpublishRelease(releaseId)
 
 
-    @readonly    
-    def listImagesForTrove(self, hostname, name, version, flavor):
+    @commitmaybe
+    def listImagesForTrove(self, hostname, name, version, flavor, update=False):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listImagesForTrove(hostname, name, version, flavor)
+        return self.imageMgr.listImagesForTrove(hostname, name, version,
+                flavor, update=update)
 
-    @readonly    
-    def listImagesForRelease(self, hostname, releaseId):
+    @commitmaybe
+    def listImagesForRelease(self, hostname, releaseId, update=False):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listImagesForRelease(hostname, releaseId)
+        return self.imageMgr.listImagesForRelease(hostname, releaseId,
+                update=update)
 
-    @readonly    
+    @commitmaybe
+    def listImagesForProduct(self, hostname, update=False):
+        self.auth.requireProductReadAccess(hostname)
+        return self.imageMgr.listImagesForProduct(hostname, update=update)
+
+    @commitmaybe
+    def getImageForProduct(self, hostname, imageId, update=False):
+        self.auth.requireProductReadAccess(hostname)
+        return self.imageMgr.getImageForProduct(hostname, imageId,
+                update=update)
+
+    @readonly
     def listFilesForImage(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listFilesForImage(hostname, imageId)

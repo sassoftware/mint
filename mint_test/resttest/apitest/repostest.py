@@ -24,18 +24,6 @@ class ReposTest(restbase.BaseRestTest):
         restbase.BaseRestTest.setUp(self)
         self.setupProduct()
 
-    def testGetRepos(self):
-        uriTemplate = 'products/%s/repos'
-        uri = uriTemplate % (self.productShortName, )
-        client = self.getRestClient(uri)
-        response = client.request('GET')
-        # This is less than helpful.
-        exp = """\
-Index.
-"""
-        self.failUnlessEqual(response.read(),
-             exp % dict(port = client.port, server = client.server))
-
     def testReposSearch(self):
         uriTemplate = 'products/%s/repos/search'
         uri = uriTemplate % (self.productShortName, )
@@ -194,8 +182,8 @@ Index.
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>401</status>
-    <statusMessage>No job</statusMessage>
+    <status>-1</status>
+    <statusMessage>Unknown</statusMessage>
     <files>
       <file>
         <fileId>1</fileId>
@@ -223,8 +211,8 @@ Index.
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>401</status>
-    <statusMessage>No job</statusMessage>
+    <status>-1</status>
+    <statusMessage>Unknown</statusMessage>
     <files>
       <file>
         <fileId>2</fileId>
