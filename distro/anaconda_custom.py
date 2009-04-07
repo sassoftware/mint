@@ -146,7 +146,7 @@ class InstallClass(BaseInstallClass):
         # Iterate over available devs to find if any have already been
         # configured, possibly through kickstart.
         for dev in devices.itervalues():
-            if dev.get('onboot').lower() == 'yes':
+            if dev.get('onboot').lower() == 'yes' and dev.get('bootproto'):
                 # Someone has configured a device, don't mess with the
                 # network config.
                 return
