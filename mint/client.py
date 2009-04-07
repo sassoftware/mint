@@ -506,6 +506,12 @@ class MintClient:
     def listApplianceTroves(self, projectId, sessionHandle):
         return self.server.listApplianceTroves(projectId, sessionHandle)
 
+    def addApplianceSearchPaths(self, sessionHandle, searchPaths):
+        return self.server.addApplianceSearchPaths(sessionHandle, searchPaths)
+
+    def listApplianceSearchPaths(self, sessionHandle):
+        return self.server.listApplianceSearchPaths(sessionHandle)
+
     def getBuildFilenames(self, buildId):
         """
         Returns a list of files and related data associated with a buildId

@@ -113,16 +113,17 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         imageMgr = imagemgr.ImageManager(self.mintCfg, db, db.auth)
         imageMgr.mcpClient = mock.MockObject()
         imageMgr.mcpClient.jobStatus._mock.setDefaultReturn(('xx', 'foo'))
-        imageMgr._addImageStatus(image)
+        imageMgr._updateStatusForImageList([image])
         assert(image.status == 'xx')
         assert(image.statusMessage == 'foo')
         imageMgr.mcpClient.jobStatus._mock.raiseErrorOnAccess(
                                 mcp_error.NetworkError)
-        imageMgr._addImageStatus(image)
+        imageMgr._updateStatusForImageList([image])
         assert(image.status == jobstatus.NO_JOB)
         assert(image.statusMessage == jobstatus.statusNames[jobstatus.NO_JOB])
+        image.status = jobstatus.WAITING
         mock.mockMethod(image.hasBuild, False)
-        imageMgr._addImageStatus(image)
+        imageMgr._updateStatusForImageList([image])
         assert(image.status == jobstatus.FINISHED)
         assert(image.statusMessage == jobstatus.statusNames[jobstatus.FINISHED])
 

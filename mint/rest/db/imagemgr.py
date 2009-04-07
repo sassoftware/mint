@@ -34,7 +34,7 @@ class ImageManager(object):
             self.mcpClient.disconnect()
 
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
-                   extraArgs=None, getOne=False):
+                   extraArgs=None, getOne=False, update=False):
         hostname = fqdn.split('.')[0]
         # TODO: pull amiId out of here and move into builddata dict ASAP
         sql = '''SELECT Builds.buildId as imageId, hostname,
@@ -42,13 +42,13 @@ class ImageManager(object):
                buildType as imageType, Builds.name, Builds.description, 
                troveName, troveVersion, troveFlavor, troveLastChanged,
                Builds.timeCreated, CreateUser.username as creator, 
-               Builds.timeUpdated, 
+               Builds.timeUpdated, Builds.status, Builds.statusMessage,
                ProductVersions.name as version, stageName as stage,
                UpdateUser.username as updater, buildCount, 
                BuildData.value as amiId
-            FROM Builds 
-            %(join)s
+            FROM Builds
             JOIN Projects USING(projectId)
+            %(join)s
             LEFT JOIN ProductVersions 
                 ON(Builds.productVersionId=ProductVersions.productVersionId)
             JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
@@ -75,39 +75,117 @@ class ImageManager(object):
             row['imageType'] = buildtypes.typeNamesShort.get(row['imageType'],
                     'Unknown')
             image = models.Image(**row)
-            image.files = self.listFilesForImage(hostname, image.imageId)
-            self._addImageStatus(image)
+            image.statusMessage = jobstatus.statusNames[image.status]
             images.append(image)
+
+        # Now add files for the images.
+        filesById = {}
+        filesByImageId = {}
+        sql = '''SELECT fileId, Builds.buildId, title, size, sha1, urlType, url
+               FROM Builds
+               JOIN Projects USING(projectId)
+               JOIN BuildFiles ON(Builds.buildId = BuildFiles.buildId)
+            %(join)s
+            JOIN BuildFilesUrlsMap USING(fileId)
+            JOIN FilesUrls USING(urlId)
+            LEFT JOIN ProductVersions
+                ON(Builds.productVersionId=ProductVersions.productVersionId)
+            WHERE hostname=? AND deleted=0 %(where)s'''
+        sql = sql % dict(where=extraWhere, join=extraJoin)
+        args = (hostname,)
+        if extraArgs:
+            args += tuple(extraArgs)
+        rows = self.db.cursor().execute(sql, *args)
+        for row in rows:
+            d = dict(row)
+            urlType = d.pop('urlType')
+            url = d.pop('url')
+            if d['fileId'] not in filesById:
+                d['imageId'] = d.pop('buildId')
+                file = models.ImageFile(**d)
+                filesById[file] = file
+                file.urls = []
+                filesByImageId.setdefault(file.imageId, []).append(file)
+            else:
+                file = filesById[d['fileId']]
+            url = self.cfg.basePath + 'downloadImage?fileId=%d' % (file.fileId)
+            if urlType not in (urltypes.LOCAL, self.cfg.redirectUrlType):
+                url += '&urlType=%d' % urlType
+            file.urls.append(models.FileUrl(url=url, urlType=urlType))
+
+        imagesById = dict((x.imageId, x) for x in images)
+        for image in images:
+            files = filesByImageId.get(image.imageId, [])
+            image.files = models.ImageFileList(files)
+        if update:
+            self._updateStatusForImageList(images)
         if getOne:
             return images[0]
         return models.ImageList(images)
 
-    def listImagesForProduct(self, fqdn):
-        return self._getImages(fqdn)
 
-    def getImageForProduct(self, fqdn, imageId):
+    def _updateStatusForImageList(self, imageList):
+        changed = []
+        for image in imageList:
+            if image.status in jobstatus.stoppedStatuses:
+                continue
+            oldStatus = image.status
+            oldMessage = image.statusMessage
+
+            if image.hasBuild():
+                uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
+                                  self.cfg.externalDomainName, image.imageId, 
+                                  image.buildCount)
+                try:
+                    mc = self._getMcpClient()
+                    status = mc.jobStatus(uuid)
+                except (mcp_error.UnknownJob, mcp_error.NetworkError):
+                    image.status = jobstatus.NO_JOB
+                    image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
+                else:
+                    image.status, image.statusMessage = status
+            else:
+                image.status = jobstatus.FINISHED
+                image.statusMessage = jobstatus.statusNames[jobstatus.FINISHED]
+            if (oldStatus, oldMessage) != (image.status, image.statusMessage):
+                changed.append(image)
+        if changed:
+            cu = self.db.cursor()
+            for image in changed:
+                cu.execute('UPDATE Builds SET status=?, statusMessage=?'
+                           ' WHERE buildId=?',
+                           image.status, image.statusMessage, image.imageId)
+
+    def listImagesForProduct(self, fqdn, update=False):
+        return self._getImages(fqdn, update=update)
+
+    def getImageForProduct(self, fqdn, imageId, update=False):
         return self._getImages(fqdn, '', 'AND Builds.buildId=?', [imageId],
-                getOne=True)
+                                getOne=True, update=update)
 
-    def listImagesForRelease(self, fqdn, releaseId):
-        return self._getImages(fqdn, '', ' AND pubReleaseId=?', 
-                               [releaseId])
+    def listImagesForRelease(self, fqdn, releaseId, update=False):
+        return self._getImages(fqdn, '', ' AND pubReleaseId=?',
+                               [releaseId], update=update)
 
-    def listImagesForProductVersion(self, fqdn, version):
+    def listImagesForProductVersion(self, fqdn, version, update=False):
         return self._getImages(fqdn, '',
-                               ' AND ProductVersions.name=?', [version])
-    
-    def listImagesForTrove(self, fqdn, name, version, flavor):
-        images =  self._getImages(fqdn, '', 
+                               ' AND ProductVersions.name=?', [version],
+                               update=update)
+
+    def listImagesForTrove(self, fqdn, name, version, flavor, update=False):
+        images =  self._getImages(fqdn, '',
                                   ' AND troveName=? AND troveFlavor=?',
-                                    [name, flavor.freeze()])
-        images.images = [ x for x in images.images 
+                                    [name, flavor.freeze()],
+                                    update=False)
+        images.images = [ x for x in images.images
                           if x.troveVersion == version ]
+        if update:
+            self._updateStatusForImageList(images.images)
         return images
 
     def listImagesForProductVersionStage(self, fqdn, version, stageName):
         return self._getImages(fqdn, '',
-                              ' AND ProductVersions.name=? AND stageName=?', 
+                              ' AND ProductVersions.name=? AND stageName=?',
                               [version, stageName])
 
     def listFilesForImage(self, fqdn, imageId):
@@ -142,23 +220,6 @@ class ImageManager(object):
                 urls.append(models.FileUrl(**d))
             file.urls = urls
         return models.ImageFileList(imageFiles)
-
-    def _addImageStatus(self, image):
-        if image.hasBuild():
-            uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
-                              self.cfg.externalDomainName, image.imageId, 
-                              image.buildCount)
-            try:
-                mc = self._getMcpClient()
-                status = mc.jobStatus(uuid)
-            except (mcp_error.UnknownJob, mcp_error.NetworkError):
-                image.status = jobstatus.NO_JOB
-                image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
-            else:
-                image.status, image.statusMessage = status
-        else:
-            image.status = jobstatus.FINISHED
-            image.statusMessage = jobstatus.statusNames[jobstatus.FINISHED]
 
     def _getMcpClient(self):
         if not self.mcpClient:

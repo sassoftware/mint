@@ -110,6 +110,33 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
         client.makeApplianceTrove(sesH)
         self.failIf(not self.called, "Expected makeApplianceTrove to be called")
 
+    @fixtures.fixture('Full')
+    def testAddApplianceSearchPaths(self, db, data):
+        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
+                public(lambda *args, **kwargs: 'ses-123'))
+
+        self.setCall = []
+
+        @public
+        def MockedAddApplianceSearchPaths(x, sesH, searchPaths):
+            self.setCall.extend(searchPaths)
+            return self.setCall
+        self.mock(pcreator.backend.BaseBackend,
+                '_addSearchPaths', MockedAddApplianceSearchPaths)
+        @public
+        def MockedListApplianceSearchPaths(x, sesH):
+            return ['a', 'b', 'c']
+        self.mock(pcreator.backend.BaseBackend,
+                '_listSearchPaths', MockedListApplianceSearchPaths)
+
+        client = self.getClient('owner')
+        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        ret = client.addApplianceSearchPaths(sesH, ['test1=foo@bar:1'])
+        self.failUnlessEqual(ret, ['test1=foo@bar:1'])
+
+        ret = client.listApplianceSearchPaths(sesH)
+        self.failUnlessEqual(ret, ['a', 'b', 'c'])
+
 class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
     """ Unit Tests the MintClient and corresponding MintServer methods,
     TroveBuilder is generally mocked out."""

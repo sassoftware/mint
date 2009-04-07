@@ -454,7 +454,7 @@ class MigrateTo_45(SchemaMigration):
 
 # SCHEMA VERSION 46
 class MigrateTo_46(SchemaMigration):
-    Version = (46, 1)
+    Version = (46, 2)
 
     # 46.0
     # - Add versionId and stage columns to Builds
@@ -473,6 +473,16 @@ class MigrateTo_46(SchemaMigration):
                 'timeCreated numeric(14,3)')
         cu.execute('UPDATE ProductVersions SET timeCreated = 0')
         return True
+
+    # 46.2
+    # - Add status, statusMessage to Builds
+    def migrate2(self):
+        cu = self.db.cursor()
+        add_columns(self.db, 'Builds',
+                'status INTEGER DEFAULT -1',
+                'statusMessage VARCHAR(255) DEFAULT ""')
+        return True
+
         
 
 #### SCHEMA MIGRATIONS END HERE #############################################
