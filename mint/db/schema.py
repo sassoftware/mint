@@ -24,7 +24,7 @@ from conary.dbstore import sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(46, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(46, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -295,7 +295,9 @@ def _createBuilds(db):
             buildCount           integer        NOT NULL    DEFAULT 0,
             productVersionId     integer
                 REFERENCES ProductVersions ON DELETE SET NULL,
-            stageName            varchar(255)               DEFAULT ''
+            stageName            varchar(255)               DEFAULT '',
+            status               integer DEFAULT -1,
+            statusMessage        varchar(255) DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         commit = True

@@ -2,6 +2,7 @@ import time
 
 from mint import buildtypes
 from mint import helperfuncs
+from mint import jobstatus
 from mint.lib import data
 from mint.lib import database
 from mint.mint_error import *
@@ -27,7 +28,8 @@ class BuildsTable(database.KeyedTable):
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
-              'deleted', 'buildCount', 'productVersionId', 'stageName']
+              'deleted', 'buildCount', 'productVersionId', 'stageName',
+              'status', 'statusMessage']
 
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given
@@ -137,8 +139,12 @@ class BuildsTable(database.KeyedTable):
         if res:
             count = res[0][0] + 1
             cu.execute("""UPDATE Builds
-                              SET buildCount=?
-                              WHERE buildId=?""", count, buildId)
+                              SET buildCount=?,
+                              status=?,
+                              statusMessage=?
+                              WHERE buildId=?""", count, jobstatus.WAITING,
+                              jobstatus.statusNames[jobstatus.WAITING],
+                              buildId)
             return count
         else:
             return None

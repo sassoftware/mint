@@ -21,6 +21,7 @@ import StringIO
 from mint import buildtypes
 try:
     from mint import charts
+    raise ImportError
 except ImportError:
     charts = None
 import mint.db.database
@@ -2179,10 +2180,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         jsversion = self._getJSVersion()
         buildId = self.builds.new(projectId = projectId,
-                                  name = productName,
-                                  timeCreated = time.time(),
-                                  buildCount = 0,
-                                  createdBy = self.auth.userId)
+                      name = productName,
+                      timeCreated = time.time(),
+                      buildCount = 0,
+                      createdBy = self.auth.userId,
+                      status = jobstatus.WAITING,
+                      statusMessage = jobstatus.statusNames[jobstatus.WAITING])
         self.buildData.setDataValue(buildId, 'jsversion',
             jsversion, data.RDT_STRING)
 
@@ -2356,10 +2359,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Make sure we convert from Unicode to UTF-8
         buildName = buildName.encode('UTF-8')
         buildId = self.builds.new(projectId = projectId,
-                                      name = buildName,
-                                      timeCreated = time.time(),
-                                      buildCount = 0,
-                                      createdBy = self.auth.userId)
+                      name = buildName,
+                      timeCreated = time.time(),
+                      buildCount = 0,
+                      createdBy = self.auth.userId,
+                      status = jobstatus.WAITING,
+                      statusMessage=jobstatus.statusNames[jobstatus.WAITING])
         self.buildData.setDataValue(buildId, 'jsversion', jsversion,
             data.RDT_STRING)
 
@@ -3618,11 +3623,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         buildType = buildDict['buildType'] 
         count = buildDict['buildCount']
+        oldStatus = buildDict['status']
+        oldMessage = buildDict['statusMessage']
 
         uuid = '%s.%s-build-%d-%d' %(self.cfg.hostName,
                                   self.cfg.externalDomainName, buildId, count)
 
-        if buildType != buildtypes.IMAGELESS:
+        if (buildType != buildtypes.IMAGELESS 
+            and oldStatus not in jobstatus.stoppedStatuses):
             try:
                 mc = self._getMcpClient()
                 status, message = mc.jobStatus(uuid)
@@ -3633,7 +3641,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # status is always finished since no build is actually done
             status, message = jobstatus.FINISHED, \
                 jobstatus.statusNames[jobstatus.FINISHED]
-
+            self.db.builds.update(buildId, status=status,
+                                  statusMessage=message)
         return { 'status' : status, 'message' : message }
 
     @typeCheck(unicode)

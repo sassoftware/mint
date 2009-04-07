@@ -126,8 +126,8 @@ class PlatformTest(restbase.BaseRestTest):
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>401</status>
-    <statusMessage>No job</statusMessage>
+    <status>-1</status>
+    <statusMessage>Unknown</statusMessage>
     <files>
       <file>
         <fileId>1</fileId>
@@ -155,8 +155,8 @@ class PlatformTest(restbase.BaseRestTest):
     <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>401</status>
-    <statusMessage>No job</statusMessage>
+    <status>-1</status>
+    <statusMessage>Unknown</statusMessage>
     <files>
       <file>
         <fileId>2</fileId>

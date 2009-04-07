@@ -18,9 +18,12 @@ statuses = {
     'NO_JOB'   : 401
     }
 
+
 sys.modules[__name__].__dict__.update(statuses)
 statusNames = dict([(statuses[x[0]], x[0].capitalize().replace('_', ' ')) \
                         for x in statuses.iteritems()])
+
+stoppedStatuses = [ NO_JOB, KILLED, ERROR, FAILED, FINISHED ]
 
 statusCodeNames = dict([(x[1], 'STATUS_' + x[0].replace('_', '')) \
                             for x in statuses.iteritems()])
