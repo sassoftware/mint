@@ -12,23 +12,35 @@ class TimingDataField(fields.Field):
             return '%0.4f seconds (%d/second)' % (value, 1.0/value)
         return 'No time'
 
+class NamedTimingData(modellib.Model):
+    name = fields.CharField(isAttribute=True)
+    time = TimingDataField(isAttribute=True)
+
 class SqlQuery(modellib.Model):
     time = TimingDataField(isAttribute=True)
     query = fields.CharField(isText=True)
 
+class Note(modellib.Model):
+    text = fields.CharField(isAttribute=True)
+
 class ProfileData(modellib.Model):
     responseTime   = TimingDataField()
-    sqlTime        = TimingDataField()
+    otherTimes     = fields.ListField(NamedTimingData, displayName='time')
     numQueries     = fields.IntegerField()
     sqlQueries     = fields.ListField(SqlQuery)
     repositoryTime = TimingDataField()
     convertTime    = TimingDataField()
+    notes          = fields.ListField(Note)
+    sqlTime        = TimingDataField()
+    references     = fields.IntegerField()
+    openFds        = fields.IntegerField()
 
     def __init__(self, *args, **kw):
         modellib.Model.__init__(self, *args, **kw)
         self._startResponse = None
         self._startSql = None
         self._startRepos = None
+        self._time = {}
         self.numQueries = 0
 
     def startResponse(self):
@@ -53,6 +65,22 @@ class ProfileData(modellib.Model):
     def stopRepos(self):
         reposTime = time.time() - self._startRepos
         self.repositoryTime += reposTime
+
+    def startTime(self, name):
+        self._time[name] = time.time()
+
+    def stopTime(self, name):
+        finalTime = time.time() - self._time.pop(name)
+        for timeData in self.otherTimes:
+            if timeData.name == name:
+                timeData.time += finalTime
+        else:
+            timeData = NamedTimingData(name=name)
+            timeData.time += finalTime
+            self.otherTimes.append(timeData)
+
+    def addNote(self, txt):
+        self.notes.append(Note(txt))
 
     def attachDb(self, db):
         if not hasattr(db, 'oldCursor'):

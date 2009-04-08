@@ -19,8 +19,10 @@ from testrunner import testhelp
 from testrunner import resources
 
 
-from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, PFQDN
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN
+from mint_rephelp import PFQDN, resetCache
 
+import mint.db.database
 from mint import shimclient
 from mint import config
 from mint import buildtypes
@@ -923,10 +925,12 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
         """
 
         # reset the cached db connection
+        mint.db.database.dbConnection = None
         self.cfg, fixtureData = fixtureCache.load(name)
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         # this is so fugly it makes me wanna cry --gafton
-        server.dbConnection = db
+        mint.db.database.dbConnection = db
+        mint.db.database.tables = None
         return db, fixtureData
 
     def getAdminClient(self):
@@ -1030,6 +1034,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
     def setUp(self):
         testhelp.TestCase.setUp(self)
         MCPTestMixin.setUp(self)
+        resetCache()
 
     def tearDown(self):
         if getattr(server, 'dbConnection', None):

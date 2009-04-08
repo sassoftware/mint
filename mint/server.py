@@ -24,6 +24,7 @@ try:
 except ImportError:
     charts = None
 import mint.db.database
+import mint.rest.db.reposmgr
 from mint.db import grouptrove
 from mint import users
 from mint.lib import data
@@ -2079,6 +2080,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _generateConaryRcFile(self):
         if not self.cfg.createConaryRcFile:
             return False
+        mint.rest.db.reposmgr._cachedCfg = None
 
         repoMaps = self._getFullRepositoryMap()
 
@@ -5600,8 +5602,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
                                    'deleteSession')
 
-        if self.db.tablesReloaded:
-            self._generateConaryRcFile()
+        # Why do this when reloading the tables?  Certainly seems
+        # unnecessary when we're reloading the tables for every request.
+        #if self.db.tablesReloaded:
+        #    self._generateConaryRcFile()
         self.newsCache.refresh()
         
     def _gracefulHttpd(self):

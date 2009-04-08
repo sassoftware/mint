@@ -4,8 +4,10 @@
 # All Rights Reserved
 #
 
+import copy
 from cStringIO import StringIO
 import os
+import weakref
 
 from mint import helperfuncs
 from mint import userlevels
@@ -25,13 +27,16 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.server import schema
 
+_cachedCfg = None
+_cachedServerCfgs = {}
+
 class RepositoryManager(object):
     def __init__(self, cfg, db, reposDB, auth):
         self.cfg = cfg
         self.reposDB = reposDB
         self.db = db
         self.auth = auth
-        self.profiler = None
+        self._reposCache = {}
 
     def _getProductFQDN(self, hostname):
         #FIXME: this breaks when the project is external.
@@ -203,28 +208,43 @@ class RepositoryManager(object):
             repo = self.profiler.wrapRepository(repo)
         return repo
 
+    def close(self):
+        for server in self._reposCache.values():
+            if server:
+                server().db.close()
+        self._reposCache = {}
+
     def _getRepositoryServer(self, fqdn):
         if '.' not in fqdn:
             fqdn = self._getProductFQDN(fqdn)
-        dbPath = os.path.join(self.cfg.reposPath, fqdn)
-        tmpPath = os.path.join(dbPath, 'tmp')
-        cfg = netserver.ServerConfig()
-        cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn))
-        cfg.tmpDir = tmpPath
-        cfg.serverName = str(fqdn)
-        cfg.repositoryMap = {}
-        cfg.authCacheTimeout = self.cfg.authCacheTimeout
-        cfg.externalPasswordURL = self.cfg.externalPasswordURL
+        repos = self._reposCache.get(fqdn, None)
+        if repos:
+            return repos()
+        if fqdn in _cachedServerCfgs:
+            cfg = _cachedServerCfgs[fqdn]
+        else:
+            dbPath = os.path.join(self.cfg.reposPath, fqdn)
+            tmpPath = os.path.join(dbPath, 'tmp')
+            cfg = netserver.ServerConfig()
+            cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn))
+            cfg.tmpDir = tmpPath
+            cfg.serverName = str(fqdn)
+            cfg.repositoryMap = {}
+            cfg.authCacheTimeout = self.cfg.authCacheTimeout
+            cfg.externalPasswordURL = self.cfg.externalPasswordURL
 
-        contentsDirs = self.cfg.reposContentsDir
-        cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
+            contentsDirs = self.cfg.reposContentsDir
+            cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
+            _cachedServerCfgs[fqdn] = cfg
         repos = shimclient.NetworkRepositoryServer(cfg, '')
+        self._reposCache[fqdn] = weakref.ref(repos)
         return repos
-
-    def getConaryConfig(self, admin=False):
-        if self.auth.isAdmin:
-            admin = True
-
+    
+    def _getBaseConfig(self):
+        global _cachedCfg
+        if _cachedCfg:
+            _cachedCfg.user = copy.deepcopy(_cachedCfg._origUser)
+            return _cachedCfg
         cfg = self._getGeneratedConaryConfig()
         if self.cfg.useInternalConaryProxy:
             cfg.conaryProxy = self.cfg.getInternalProxies()
@@ -238,6 +258,14 @@ class RepositoryManager(object):
                 cfg.entitlement.addEntitlement(host, entitlement)
             for host, username, password in userMap:
                 cfg.user.addServerGlob(host, username, password)
+        cfg._origUser = copy.deepcopy(cfg.user)
+        _cachedCfg = cfg
+        return cfg
+
+    def getConaryConfig(self, admin=False):
+	cfg = self._getBaseConfig()
+        if self.auth.isAdmin:
+            admin = True
         if admin:
             cfg.user.addServerGlob('*', self.cfg.authUser, 
                                    self.cfg.authPass)
@@ -403,8 +431,10 @@ class RepositoryManager(object):
         return cfg
 
     def _generateConaryrcFile(self):
+        global _cachedCfg
+        _cachedCfg = None
         if not self.cfg.createConaryRcFile:
-            return 
+            return
         repoMaps = self._getFullRepositoryMap()
 
         fObj_v0 = unixutils.atomicOpen(self.cfg.conaryRcFile, 
