@@ -53,7 +53,8 @@ Copyright (c) 2006-2009 rPath, Inc.
                     <ul id="statusList">
                         <li id="statusList_step1" class="currentState">Creating initial rBuilder administrative account</li>
                         <li id="statusList_step2">Configuring rMake</li>
-                        <li id="statusList_step3">Setting up initial platforms</li>
+                        <li id="statusList_step3">Entitling rBuilder</li>
+                        <li id="statusList_step4">Setting up initial platforms</li>
                     </ul>
                 </div>
                 <div class="page-section-content-bottom">

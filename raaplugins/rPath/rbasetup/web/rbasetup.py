@@ -243,6 +243,12 @@ class rBASetup(rAAWebPlugin):
                     new_email=self.getPropertyValue('FTS_ADMINEMAIL', ''))
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
+    @raa.web.require(raa.authorization.LocalhostOnly())
+    def setNewEntitlement(self, key):
+        self.plugins['/configure/Entitlements'].doSaveKey(key)
+        return True
+
+    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def finalize(self):
         # remove gunk
         self.deletePropertyValue('FTS_ADMINUSER', commit=False)
