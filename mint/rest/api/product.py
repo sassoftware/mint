@@ -57,7 +57,7 @@ class ProductController(base.BaseController):
         if isinstance(role, basestring):
             role = [role]
         return self.db.listProducts(limit=limit, start=start, search=search,
-                roles=tuple(role))
+                roles=role)
 
     @auth.public
     def get(self, request, hostname):
