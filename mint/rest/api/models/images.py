@@ -69,6 +69,7 @@ class Image(Model):
     hostname = fields.CharField()
     release = fields.UrlField('products.releases', ['hostname', 'release']) 
     imageType = fields.CharField()
+    imageTypeName = fields.CharField()
     name = fields.CharField()
     description = fields.CharField()
     troveName = fields.CharField()
@@ -97,7 +98,7 @@ class Image(Model):
         return ('products.images', self.hostname, str(self.imageId))
 
     def hasBuild(self):
-        return self.imageType not in (None, buildtypes.IMAGELESS)
+        return self.imageType not in (None, 'imageless')
 
     def getNameVersionFlavor(self):
         return self.troveName, self.troveVersion, self.troveFlavor

@@ -69,11 +69,12 @@ class ImageManager(object):
         images = []
         for row in rows:
             row = dict(row)
+            imageType = row['imageType']
             row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
             row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
             row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
-            row['imageType'] = buildtypes.typeNamesShort.get(row['imageType'],
-                    'Unknown')
+            row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
+            row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
             image = models.Image(**row)
             image.statusMessage = jobstatus.statusNames[image.status]
             images.append(image)
