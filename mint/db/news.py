@@ -6,10 +6,13 @@
 
 import calendar
 from elementtree import ElementTree
+import socket
+import sys
 import time
 import rfc822
 import urllib2
 
+from mint import logerror
 from mint.lib import database
 
 REFRESH_TIME = 600 # seconds
@@ -60,11 +63,20 @@ class NewsCacheTable(database.KeyedTable):
         if (time.time() - REFRESH_TIME) < self.ageTable.getAge():
             return False
 
+        timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(3)
         try:
-            url = urllib2.urlopen(self.cfg.newsRssFeed)
-            data = url.read()
-        except urllib2.URLError:
-            return False
+            try:
+                url = urllib2.urlopen(self.cfg.newsRssFeed)
+                data = url.read()
+            except urllib2.URLError:
+                e_type, e_value, e_tb = sys.exc_info()
+                logerror.logErrorAndEmail(self.cfg, e_type, e_value, e_tb,
+                        'RSS feed reader', dict(url=self.cfg.newsRssFeed),
+                        doEmail=False)
+                return False
+        finally:
+            socket.setdefaulttimeout(timeout)
 
         if purge:
             cu = self.db.cursor()
@@ -87,8 +99,11 @@ class NewsCacheTable(database.KeyedTable):
                             VALUES (?, ?, ?, ?, ?)""",
                         title, pubDate, content, link, category)
         except:
+            e_type, e_value, e_tb = sys.exc_info()
+            logerror.logErrorAndEmail(self.cfg, e_type, e_value, e_tb,
+                    'RSS feed reader', {}, doEmail=False)
             self.db.rollback()
-            raise
+            return False
         else:
             self.db.commit()
             
