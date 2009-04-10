@@ -79,7 +79,7 @@ class ReleaseManager(object):
             self._addBuildToRelease(hostname, releaseId, buildId)
         return releaseId
 
-    def updateRelease(self, fqdn, releaseId, name, description, version, 
+    def updateRelease(self, fqdn, releaseId, name, description, version,
                       buildIds):
         if self._isPublished(releaseId):
             raise mint_error.PublishedReleasePublished
@@ -90,6 +90,10 @@ class ReleaseManager(object):
             WHERE pubReleaseId=?'''
         cu.execute(sql, name, description, version, time.time(),
                    self.auth.userId, releaseId)
+        cu.execute("""UPDATE Builds SET pubReleaseId = NULL
+                      WHERE pubReleaseId = ?""", releaseId)
+        for buildId in buildIds:
+            self._addBuildToRelease(fqdn, releaseId, buildId)
 
     def _addBuildToRelease(self, hostname, releaseId, imageId):
         image = self.db.getImageForProduct(hostname, imageId)
@@ -122,7 +126,7 @@ class ReleaseManager(object):
             raise mint_error.PublishedReleasePublished
         cu = self.db.cursor()
         cu.execute("""UPDATE Builds SET pubReleaseId = NULL
-                      WHERE pubReleaseId = ?""", id)
+                      WHERE pubReleaseId = ?""", releaseId)
         cu.execute("""DELETE FROM PublishedReleases WHERE pubReleaseId = ?""",
                    releaseId)
 

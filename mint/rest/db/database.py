@@ -517,7 +517,7 @@ class Database(DBInterface):
     def deleteRelease(self, hostname, releaseId):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.releaseMgr.deleteRelease(hostname, releaseId)
+        self.releaseMgr.deleteRelease(releaseId)
 
     @commitafter
     def updateRelease(self, hostname, releaseId, name, description, version,
@@ -525,10 +525,10 @@ class Database(DBInterface):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireReleaseOnHost(hostname, releaseId)
         self.auth.requireBuildsOnHost(hostname, buildIds)
-        releaseId = self.releaseMgr.updateRelease(hostname, name, description,
+        releaseId = self.releaseMgr.updateRelease(hostname, releaseId,
+                                                  name, description, version,
                                                   buildIds)
         return releaseId
-
 
     @commitafter
     def publishRelease(self, hostname, releaseId, shouldMirror):

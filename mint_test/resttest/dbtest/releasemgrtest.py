@@ -22,8 +22,10 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         self.setImageFiles(db, 'foo', imageId)
         imageId2 = self.createImage(db, 'foo', buildtypes.TARBALL)
         self.setImageFiles(db, 'foo', imageId2)
-        releaseId = db.createRelease('foo', 'Release 1', 'desc1', [imageId])
-        releaseId2 = db.createRelease('foo', 'Release 2', 'desc2', [imageId2])
+        releaseId = db.createRelease('foo', 'Release 1', 'desc1', '1.0',
+                                     [imageId])
+        releaseId2 = db.createRelease('foo', 'Release 2', 'desc2', '2.0',
+                                      [imageId2])
         releases = db.listReleasesForProduct('foo').releases
         release1 = [ x for x in releases if x.releaseId == releaseId ][0]
         release2 = [ x for x in releases if x.releaseId == releaseId2 ][0]
@@ -39,6 +41,45 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(release1.publisher == 'admin')
         assert(release1.timePublished)
         assert(release1.shouldMirror == 1)
+
+    def testDeleteRelease(self):
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.setDbUser(db, 'admin')
+        self.createProduct('foo', db=db)
+        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
+        self.setImageFiles(db, 'foo', imageId)
+        releaseId = db.createRelease('foo', 'Release 1', 'desc1', 'version',
+                                     [imageId])
+        image = db.getImageForProduct('foo', imageId)
+        assert(image.release == releaseId)
+        db.deleteRelease('foo', releaseId)
+        image = db.getImageForProduct('foo', imageId)
+        assert(image.release is None)
+
+    def testUpdateRelease(self):
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.setDbUser(db, 'admin')
+        self.createProduct('foo', db=db)
+        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
+        self.setImageFiles(db, 'foo', imageId)
+        imageId2 = self.createImage(db, 'foo', buildtypes.TARBALL)
+        self.setImageFiles(db, 'foo', imageId2)
+        releaseId = db.createRelease('foo', 'Release 1', 'desc1', 'version',
+                                     [imageId])
+        imageIds = [ x.imageId for x in
+                     db.listImagesForRelease('foo', releaseId).images ]
+        assert(imageIds == [imageId])
+        db.updateRelease('foo', releaseId, 'Updated Name', 'updated desc',
+                          'updated version', [imageId2])
+        release = db.getReleaseForProduct('foo', releaseId)
+        assert(release.name == 'Updated Name')
+        assert(release.description == 'updated desc')
+        assert(release.version == 'updated version')
+        imageIds = [ x.imageId for x in
+                     db.listImagesForRelease('foo', releaseId).images ]
+        assert(imageIds == [imageId2])
 
     def testGetReleaseForProduct(self):
         db = self.openMintDatabase(createRepos=False)
