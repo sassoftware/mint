@@ -308,6 +308,8 @@ class Database(DBInterface):
     @commitafter
     def createProduct(self, product):
         self.auth.requireProductCreationRights()
+        if not product.name:
+            raise errors.InvalidItem("Product name must be specified")
         if self.cfg.rBuilderOnline or not product.domainname:
             product.domainname = self.cfg.projectDomainName.split(':')[0]
         projects._validateShortname(product.shortname, product.domainname, 
