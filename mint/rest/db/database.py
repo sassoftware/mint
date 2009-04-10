@@ -506,20 +506,37 @@ class Database(DBInterface):
         return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
 
     @commitafter
-    def createRelease(self, hostname, name, description, buildIds):
+    def createRelease(self, hostname, name, description, version, buildIds):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireBuildsOnHost(hostname, buildIds)
         releaseId = self.releaseMgr.createRelease(hostname, name, description,
+                                                  version, buildIds)
+        return releaseId
+
+    @commitafter
+    def deleteRelease(self, hostname, releaseId):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.releaseMgr.deleteRelease(hostname, releaseId)
+
+    @commitafter
+    def updateRelease(self, hostname, releaseId, name, description, version,
+                      buildIds):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.auth.requireBuildsOnHost(hostname, buildIds)
+        releaseId = self.releaseMgr.updateRelease(hostname, name, description,
                                                   buildIds)
         return releaseId
 
-    @commitafter    
+
+    @commitafter
     def publishRelease(self, hostname, releaseId, shouldMirror):
         self.auth.requireReleaseOnHost(hostname, releaseId)
         self.auth.requireProductOwner(hostname)
         self.releaseMgr.publishRelease(releaseId, shouldMirror)
 
-    @commitafter    
+    @commitafter
     def unpublishRelease(self, hostname, releaseId):
         self.auth.requireReleaseOnHost(hostname, releaseId)
         self.auth.requireProductOwner(hostname)
