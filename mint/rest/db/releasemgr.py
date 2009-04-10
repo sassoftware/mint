@@ -64,19 +64,32 @@ class ReleaseManager(object):
                                    (hostname, releaseId)))
         return models.Release(**row)
 
-    def createRelease(self, fqdn, name, description, buildIds):
+    def createRelease(self, fqdn, name, description, version, buildIds):
         hostname = fqdn.split('.')[0]
         sql = '''
         INSERT INTO PublishedReleases 
-            (projectId, name, description, timeCreated, createdBy)
-            SELECT projectId, ?, ?, ?, ? FROM Projects WHERE hostname=?
+            (projectId, name, description, version, timeCreated, createdBy)
+            SELECT projectId, ?, ?, ?, ?, ? FROM Projects WHERE hostname=?
         '''
         cu = self.db.cursor()
-        cu.execute(sql, name, description, time.time(), self.auth.userId, hostname)
+        cu.execute(sql, name, description, version, time.time(), 
+                   self.auth.userId, hostname)
         releaseId = cu.lastrowid
         for buildId in buildIds:
             self._addBuildToRelease(hostname, releaseId, buildId)
         return releaseId
+
+    def updateRelease(self, fqdn, releaseId, name, description, version, 
+                      buildIds):
+        if self._isPublished(releaseId):
+            raise mint_error.PublishedReleasePublished
+        cu = self.db.cursor()
+        sql = '''
+        UPDATE PublishedReleases SET
+            name=?, description=?, version=?, timeUpdated=?, updatedBy=?
+            WHERE pubReleaseId=?'''
+        cu.execute(sql, name, description, version, time.time(),
+                   self.auth.userId, releaseId)
 
     def _addBuildToRelease(self, hostname, releaseId, imageId):
         image = self.db.getImageForProduct(hostname, imageId)
@@ -103,6 +116,15 @@ class ReleaseManager(object):
                       time.time(), self.auth.userId, 
                       int(shouldMirror), releaseId)
         self.publisher.notify('ReleasePublished', releaseId)
+
+    def deleteRelease(self, releaseId):
+        if self._isPublished(releaseId):
+            raise mint_error.PublishedReleasePublished
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Builds SET pubReleaseId = NULL
+                      WHERE pubReleaseId = ?""", id)
+        cu.execute("""DELETE FROM PublishedReleases WHERE pubReleaseId = ?""",
+                   releaseId)
 
     def _isPublished(self, releaseId):
         cu = self.db.cursor()
