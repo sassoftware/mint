@@ -127,7 +127,7 @@ class Database(DBInterface):
                                                            self.auth))
             subscribers.append(awshandler.AWSHandler(self.cfg, self.db))
         for subscriber in subscribers:
-            self.publisher.subscribe(subscribers)
+            self.publisher.subscribe(subscriber)
 
         # Don't instantiate things that go outside the core database
         # connection if dbOnly is set.
