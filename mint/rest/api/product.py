@@ -6,6 +6,8 @@
 
 from restlib import response
 
+from mint import mint_error
+from mint.rest import errors
 from mint.rest.api import base
 from mint.rest.api import images
 from mint.rest.api import models
@@ -54,8 +56,10 @@ class ProductController(base.BaseController):
             limit = int(limit)
         if start:
             start = int(start)
+        if isinstance(role, basestring):
+            role = [role]
         return self.db.listProducts(limit=limit, start=start, search=search,
-                role=role)
+                roles=role)
 
     @auth.public
     def get(self, request, hostname):
@@ -63,5 +67,9 @@ class ProductController(base.BaseController):
 
     @requires('product', models.Product)
     def create(self, request, product):
-        self.db.createProduct(product)
+        try:
+            self.db.createProduct(product)
+        except (mint_error.InvalidShortname, mint_error.InvalidHostname), e:
+            raise errors.InvalidItem(str(e))
+
         return self.get(request, product.hostname)

@@ -853,8 +853,9 @@ class RecipeManipulationTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testRecipeManipulation(self, data, db):
         client = self.getClient('owner')
-        sesH = client.createPackageTmpDir()
-        dataPath = os.path.join(self.cfg.dataPath, 'tmp', 'owner', sesH)
+        # Fake a session handle
+        sesH = "Blah-blah-blah"
+        dataPath = os.path.join(self.cfg.dataPath, 'tmp', 'users', 'owner', sesH)
         conary.lib.util.mkdirChain(dataPath)
         modePath = os.path.join(dataPath, 'mode')
         for mode in ('package-creator', 'appliance-creator'):

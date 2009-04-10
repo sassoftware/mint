@@ -28,12 +28,12 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.setImageFiles(db, 'foo', imageId)
         self.createImage(db, 'foo2', buildtypes.INSTALLABLE_ISO)
         image, = db.listImagesForProduct('foo').images
-        assert(str(image) == 
-           "models.Image(1, 'Inst CD/DVD', 'foo=/localhost@test:1/0.1-1-1[]')")
+        self.failUnlessEqual(str(image),
+           "models.Image(1, 'installableIsoImage', 'foo=/localhost@test:1/0.1-1-1[]')")
         image, = db.listImagesForProduct('foo2').images
-        assert(image.imageId == 2)
-        assert(image.hostname == 'foo2')
-        
+        self.failUnlessEqual(image.imageId, 2)
+        self.failUnlessEqual(image.hostname, 'foo2')
+
     def testListImagesForRelease(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)

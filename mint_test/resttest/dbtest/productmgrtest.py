@@ -86,7 +86,12 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         self.assertEqual(products[1].shortname, 'foo')
 
         # List by role
-        products = db.listProducts(role='Owner').products
+        products = db.listProducts(roles=('Owner',)).products
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].shortname, 'foo')
+
+        products = db.listProducts(
+                roles=['Owner', 'Developer', 'User']).products
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].shortname, 'foo')
 

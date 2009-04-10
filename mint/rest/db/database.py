@@ -155,9 +155,9 @@ class Database(DBInterface):
         return self._getOne(cu, errors.UserNotFound, userId)[0]
 
     @readonly
-    def listProducts(self, start=0, limit=None, search=None, role=None):
+    def listProducts(self, start=0, limit=None, search=None, roles=None):
         return self.productMgr.listProducts(start=start, limit=limit,
-                search=search, role=role)
+                search=search, roles=roles)
 
     @readonly
     def getProductFQDNFromId(self, productId):
@@ -312,6 +312,8 @@ class Database(DBInterface):
     @commitafter
     def createProduct(self, product):
         self.auth.requireProductCreationRights()
+        if not product.name:
+            raise errors.InvalidItem("Product name must be specified")
         if self.cfg.rBuilderOnline or not product.domainname:
             product.domainname = self.cfg.projectDomainName.split(':')[0]
         projects._validateShortname(product.shortname, product.domainname, 
@@ -508,20 +510,37 @@ class Database(DBInterface):
         return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
 
     @commitafter
-    def createRelease(self, hostname, name, description, buildIds):
+    def createRelease(self, hostname, name, description, version, buildIds):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireBuildsOnHost(hostname, buildIds)
         releaseId = self.releaseMgr.createRelease(hostname, name, description,
+                                                  version, buildIds)
+        return releaseId
+
+    @commitafter
+    def deleteRelease(self, hostname, releaseId):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.releaseMgr.deleteRelease(hostname, releaseId)
+
+    @commitafter
+    def updateRelease(self, hostname, releaseId, name, description, version,
+                      buildIds):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.auth.requireBuildsOnHost(hostname, buildIds)
+        releaseId = self.releaseMgr.updateRelease(hostname, name, description,
                                                   buildIds)
         return releaseId
 
-    @commitafter    
+
+    @commitafter
     def publishRelease(self, hostname, releaseId, shouldMirror):
         self.auth.requireReleaseOnHost(hostname, releaseId)
         self.auth.requireProductOwner(hostname)
         self.releaseMgr.publishRelease(releaseId, shouldMirror)
 
-    @commitafter    
+    @commitafter
     def unpublishRelease(self, hostname, releaseId):
         self.auth.requireReleaseOnHost(hostname, releaseId)
         self.auth.requireProductOwner(hostname)

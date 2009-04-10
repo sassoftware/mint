@@ -9,7 +9,8 @@ from mint import config
 
 log = logging.getLogger('raa.server.rbasetup')
 
-FTS_STEP_INITIAL, FTS_STEP_ADMINACCT, FTS_STEP_RMAKE, FTS_STEP_INITEXTERNAL, FTS_STEP_COMPLETE = range(5)
+(FTS_STEP_INITIAL, FTS_STEP_ADMINACCT, FTS_STEP_RMAKE, FTS_STEP_ENTITLE,
+        FTS_STEP_INITEXTERNAL, FTS_STEP_COMPLETE) = range(6)
 
 def readRBAConfig(configFileName):
     """

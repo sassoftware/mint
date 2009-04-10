@@ -8,14 +8,13 @@ from mint import buildtypes
 
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
- 
+
 class FileUrl(Model):
     urlType = fields.IntegerField(isAttribute=True)
     url = fields.CharField(isText=True)
 
     def __repr__(self):
         return "images.FileUrl(url=%r, urlType=%r)" % (self.url, self.urlType)
-
 
 class ImageFile(Model):
     fileId   = fields.IntegerField()
@@ -34,8 +33,13 @@ class ImageFileList(Model):
 
     files = fields.ListField(ImageFile, displayName='file')
 
+class ImageId(Model):
+    class Meta(object):
+        name = 'image'
+    imageId = fields.IntegerField()
 
-  
+class PublishOptions(Model):
+    shouldMirror = fields.BooleanField()
 
 class Release(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
@@ -45,6 +49,7 @@ class Release(Model):
     version = fields.CharField()
     description = fields.CharField()
     published = fields.BooleanField()
+    imageIds = fields.ListField(ImageId)
     images = fields.UrlField('products.releases.images', 
                               ['hostname', 'releaseId'])
     creator = fields.UrlField('users', 'creator') 
@@ -63,12 +68,26 @@ class Release(Model):
         return "models.Release(%r, %r, %r)" % (self.hostname, self.releaseId, 
                                                self.name)
 
+class NewRelease(Model):
+    class Meta(object):
+        name = 'release'
+    hostname = fields.CharField()
+    name = fields.CharField()
+    version = fields.CharField()
+    description = fields.CharField()
+    imageIds = fields.ListField(ImageId)
+
+class UpdateRelease(NewRelease):
+    releaseId = fields.IntegerField()
+
+
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
     hostname = fields.CharField()
     release = fields.UrlField('products.releases', ['hostname', 'release']) 
     imageType = fields.CharField()
+    imageTypeName = fields.CharField()
     name = fields.CharField()
     description = fields.CharField()
     troveName = fields.CharField()
@@ -97,7 +116,7 @@ class Image(Model):
         return ('products.images', self.hostname, str(self.imageId))
 
     def hasBuild(self):
-        return self.imageType not in (None, buildtypes.IMAGELESS)
+        return self.imageType not in (None, 'imageless')
 
     def getNameVersionFlavor(self):
         return self.troveName, self.troveVersion, self.troveFlavor

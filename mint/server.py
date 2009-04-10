@@ -280,9 +280,14 @@ class MintServer(object):
                 # grab authToken from a session id if passed a session id
                 # the session id from the client is a hmac-signed string
                 # containing the actual session id.
-                if type(authToken) == str:
-                    if len(authToken) == 64: # signed cookie
-                        sig, val = authToken[:32], authToken[32:]
+                if isinstance(authToken, basestring):
+                    # Until the session is proven valid, assume anonymous
+                    # access -- we don't want a broken session preventing
+                    # anonymous access or logins.
+                    sid, authToken = authToken, ('anonymous', 'anonymous')
+                    if len(sid) == 64:
+                        # signed cookie
+                        sig, val = sid[:32], sid[32:]
 
                         mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
                         mac.update(val)
@@ -290,17 +295,18 @@ class MintServer(object):
                             raise mint_error.PermissionDenied
 
                         sid = val
-                    elif len(authToken) == 32: # unsigned cookie
-                        sid = authToken
+                    elif len(sid) == 32:
+                        # unsigned cookie
+                        pass
                     else:
-                        raise mint_error.PermissionDenied
+                        # unknown
+                        sid = None
 
-                    d = self.sessions.load(sid)
-                    if not d:
-                        # Loading the session returns False if the session ID
-                        # was bad.
-                        raise mint_error.PermissionDenied
-                    authToken = d['_data']['authToken']
+                    if sid:
+                        d = self.sessions.load(sid)
+                        if d:
+                            if d.get('_data', []).get('authToken', None):
+                                authToken = d['_data']['authToken']
 
                 auth = self.users.checkAuth(authToken)
                 self.authToken = authToken

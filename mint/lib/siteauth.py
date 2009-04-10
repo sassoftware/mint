@@ -215,7 +215,9 @@ class SiteAuthorization(object):
 
         url = self.cfg.keyUrl
         req = urllib2.Request(url, doc.toxml(), {'Content-type': 'text/xml'})
-        log.debug("Posting %s=%s to %s", name, version, url)
+
+        log.info("Requesting entitlement for %s=%s from %s",
+                name, version, url)
 
         err = None
         try:
@@ -225,7 +227,7 @@ class SiteAuthorization(object):
             return None
 
         self._copySaveXML(fObj)
-        return self.xml.entitlement.credentials.key
+        return str(self.xml.entitlement.credentials.key)
 
     def update(self):
         """
@@ -278,12 +280,21 @@ class SiteAuthorization(object):
         self.save()
 
     # Accessors
-    def isKeySet(self):
-        # For script usage only; don't call on the hot path (e.g. in a
-        # web handler) because it may load a conary configuration.
+    def isSystemKeySet(self):
+        """
+        Does the system have an entitlement key?
+
+        For script use only. Do not call from a web handler.
+        """
         return self._getKeyFromSystem() is not None
 
+    def isConfigured(self):
+        "Does the authorization exist and contain an entitlement key?"
+        return (self.xml is not None
+                and self.xml.entitlement.credentials.key is not None)
+
     def isValid(self):
+        "Does the authorization exist and contain a non-expired entitlement?"
         if self.xml:
             expired = self.xml.entitlement.identity.serviceLevel.expired
             if expired is True or (expired and expired.lower() == 'true'):
@@ -295,6 +306,11 @@ class SiteAuthorization(object):
             daysRemaining = self.xml.entitlement.identity.serviceLevel.daysRemaining
             if daysRemaining >= 0:
                 return daysRemaining
+        return None
+
+    def getRbuilderId(self):
+        if self.xml:
+            return str(self.xml.entitlement.identity.rbuilderId)
         return None
 
     def getIdentityXML(self):

@@ -114,7 +114,8 @@ class PlatformTest(restbase.BaseRestTest):
     <imageId>1</imageId>
     <hostname>testproject</hostname>
     <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">1</release>
-    <imageType>Inst CD/DVD</imageType>
+    <imageType>installableIsoImage</imageType>
+    <imageTypeName>Installable CD/DVD</imageTypeName>
     <name>Image 1</name>
     <troveName>group-foo</troveName>
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
@@ -143,7 +144,8 @@ class PlatformTest(restbase.BaseRestTest):
     <imageId>2</imageId>
     <hostname>testproject</hostname>
     <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">1</release>
-    <imageType>Tar</imageType>
+    <imageType>tarballImage</imageType>
+    <imageTypeName>TAR File</imageTypeName>
     <name>Image 2</name>
     <troveName>group-foo</troveName>
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>

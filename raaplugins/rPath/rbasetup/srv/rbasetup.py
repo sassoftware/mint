@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 import traceback
+from conary import conarycfg
 
 from raa.modules.raasrvplugin import rAASrvPlugin
 
@@ -18,8 +19,10 @@ from mint import config
 from mint import helperfuncs
 from mint import rmake_setup
 from mint import shimclient
+from mint.lib.siteauth import SiteAuthorization
 
-from mint.mint_error import RmakeRepositoryExistsError, UserAlreadyExists
+from mint.mint_error import (RmakeRepositoryExistsError, UserAlreadyExists,
+        UserAlreadyAdmin)
 
 from conary.lib.cfgtypes import CfgBool
 
@@ -41,20 +44,25 @@ class rBASetup(rAASrvPlugin):
         shmclnt = shimclient.ShimMintClient(mintcfg,
                 (mintcfg.authUser, mintcfg.authPass))
         try:
-            userId = shmclnt.registerNewUser(adminUsername, adminPassword,
-                "Administrator", adminEmail, "", "", active=True)
-            log.info("Created initial rBuilder account %s (id=%d)" % \
-                    (adminUsername, userId))
-            shmclnt.promoteUserToAdmin(userId)
-            log.info("Promoted initial rBuilder account to admin level")
-            return True
-        except UserAlreadyExists:
-            log.error("rBuilder user %s already exists!")
-            return False
-        except Exception, e:
-            log.error("Failed to create rBuilder admin account %s (reason: %s)" % \
-                    (adminUsername, str(e)))
-            log.error(traceback.format_exc(sys.exc_info()[2]))
+            try:
+                userId = shmclnt.registerNewUser(adminUsername, adminPassword,
+                    "Administrator", adminEmail, "", "", active=True)
+                log.info("Created initial rBuilder account %s (id=%d)",
+                        adminUsername, userId)
+            except UserAlreadyExists:
+                log.warning("rBuilder user %s already exists!")
+                userId = shmclnt.getUserIdByName(adminUsername)
+
+            try:
+                shmclnt.promoteUserToAdmin(userId)
+                log.info("Promoted initial rBuilder account to admin level",
+                        adminUsername)
+            except UserAlreadyAdmin:
+                log.warning("rBuilder user %s is already an admin!",
+                        adminUsername)
+        except:
+            log.exception("Failed to create rBuilder admin account %s :",
+                    adminUsername)
             return False
 
         return True
@@ -92,7 +100,7 @@ class rBASetup(rAASrvPlugin):
                 tempfile.mkstemp(suffix='.log', prefix='setupRMake-')
         os.close(childLogFd)
         os.chown(childLogFn, apacheUID, apacheGID)
-        log.info("Attempting to setup rMake - logging to %s" % childLogFn)
+        log.info("Attempting to setup rMake - logging to %s", childLogFn)
 
         pid = os.fork()
         if not pid: # child
@@ -111,13 +119,15 @@ class rBASetup(rAASrvPlugin):
                     os.setuid(apacheUID)
                     childLog.info("Setting up the rMake repository")
                     rmake_setup.setupRmake(mintcfg, config.RBUILDER_RMAKE_CONFIG)
-                    childLog.info("rMake repository setup complete; we need to restart rmake and rmake-node services")
+                    childLog.info("rMake repository setup complete; we need "
+                            "to restart rmake and rmake-node services")
                     rc = 0
                 except RmakeRepositoryExistsError:
                     childLog.warn("rMake Repository already exists, skipping")
                     rc = -1
                 except Exception, e:
-                    childLog.error("Unexpected error occurred when attempting to create the rMake repository: %s" % str(e))
+                    childLog.error("Unexpected error occurred when attempting "
+                            "to create the rMake repository: %s" % str(e))
                     traceback.print_exc(file=childLogFn)
                     rc = -2
             finally:
@@ -141,6 +151,28 @@ class rBASetup(rAASrvPlugin):
                          "the appliance for changes to take effect.")
 
         return True
+
+    def _generateEntitlement(self, mintCfg):
+        log.info("Generating rBuilder site entitlement ...")
+
+        try:
+            conaryCfg = conarycfg.ConaryConfiguration(True)
+            auth = SiteAuthorization(mintCfg.siteAuthCfgPath, conaryCfg)
+            if auth.isConfigured():
+                log.warning("Entitlement is already set; "
+                        "keeping rBuilder ID %s .", auth.getRbuilderId())
+                return True
+
+            newKey = auth.generate()
+            self.server.setNewEntitlement(newKey)
+
+            rbuilderId = auth.getRbuilderId()
+            log.info("Key successfully generated; your new rBuilder ID is %s .",
+                    rbuilderId)
+            return True
+        except:
+            log.exception("Failed to generate entitlement")
+            return False
 
     def _setupExternalProjects(self):
         """
@@ -230,6 +262,11 @@ class rBASetup(rAASrvPlugin):
         # underlying code will not create duplicate repositories.
         self.server.setFirstTimeSetupState(lib.FTS_STEP_RMAKE)
         self._setupRMake(newCfg)
+
+        # Generate an entitlement
+        self.server.setFirstTimeSetupState(lib.FTS_STEP_ENTITLE)
+        if not self._generateEntitlement(newCfg):
+            return False
 
         # Setup the initial external projects
         self.server.setFirstTimeSetupState(lib.FTS_STEP_INITEXTERNAL)
