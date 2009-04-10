@@ -275,7 +275,7 @@ class RepositoryTest(MintRepositoryHelper):
         assert(nc.troveNames(self.cfg.buildLabel) == [])
 
         # delete anon access
-        nc.deleteRole(self.cfg.buildLabel, 'anonymous')
+        nc.deleteUserByName(self.cfg.buildLabel, 'anonymous')
 
         # now make an anon client
         labels = [x[0] for x in cfg.user]

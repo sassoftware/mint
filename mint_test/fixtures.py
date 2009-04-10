@@ -934,9 +934,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
         return db, fixtureData
 
     def getAdminClient(self):
-        if not self.adminClient:
-            self.adminClient = shimclient.ShimMintClient(self.cfg, ('mintauth', 'mintpass'))
-        return self.adminClient
+        return shimclient.ShimMintClient(self.cfg, ('mintauth', 'mintpass'))
 
     def getClient(self, username, password=None):
         if password is None:

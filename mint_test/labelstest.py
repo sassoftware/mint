@@ -15,6 +15,15 @@ from mint.projects import LabelMissing
 import fixtures
 
 class LabelsTest(fixtures.FixturedUnitTest):
+
+    def _getHostMap(self, labelMap):
+        hostMap = {}
+        for label, labelId in labelMap.items():
+            host = label.split('@', 1)[0]
+            hostMap[host] = labelId
+        return hostMap
+
+
     @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
@@ -24,10 +33,9 @@ class LabelsTest(fixtures.FixturedUnitTest):
         newLabelId = project.addLabel("bar.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
             "http://%s/repos/bar/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
 
-        assert(project.getLabelIdMap() ==\
-             {'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                 adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1,
-             'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId})
+        assert(self._getHostMap(project.getLabelIdMap()) ==\
+             {'foo.%s' % MINT_PROJECT_DOMAIN : 1,
+              'bar.%s' % MINT_PROJECT_DOMAIN : newLabelId})
 
         project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
             "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "userpass",
@@ -42,10 +50,8 @@ class LabelsTest(fixtures.FixturedUnitTest):
                     )
 
         project.removeLabel(newLabelId)
-        assert(project.getLabelIdMap() ==\
-            {'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                 adminClient.server._server.cfg.namespace + ':foo-1.0-devel': 1})
-
+        assert(self._getHostMap(project.getLabelIdMap()) ==\
+              {'foo.%s' % MINT_PROJECT_DOMAIN : 1 })
         try:
             adminClient.server.getLabel(newLabelId)
             self.fail("label should not exist")

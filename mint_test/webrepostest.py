@@ -454,12 +454,13 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('--Nobody--' not in page.body, 'Error PGP Admin Page.')
         # User List
         page = page.fetch('/repos/testproject/userlist')
-        self.failIf('<B>testuser</B>' not in page.body, 'Incorrect user list')
+        self.failIf('<B>rb_owner</B>' not in page.body, 'Error in user list')
         # addPermForm
         page = page.fetch('/repos/testproject/addPermForm')
         self.failIf('testuser' not in page.body, 'Error in addPermForm')
         # manageRoleForm
-        page = page.fetch('/repos/testproject/manageRoleForm?roleName=testuser')
+        page = page.fetch('/repos/testproject/manageRoleForm?roleName=rb_owner')
+        self.failIf('"testuser"' not in page.body, 'Incorrect user list')
         self.failIf('Edit Role' not in page.body, 'Error in manageRoleForm')
         # addRoleForm
         page = page.fetch('/repos/testproject/addRoleForm')
@@ -517,7 +518,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page.fetch('/repos/testproject/addPermForm')
         page.fetch('/repos/testproject/addPerm')
         page.fetch('/repos/testproject/addRoleForm')
-        page.fetch('/repos/testproject/manageRoleForm?roleName=testuser')
+        page.fetch('/repos/testproject/manageRoleForm?roleName=rb_user')
         page.fetch('/repos/testproject/manageRole')
         page.fetch('/repos/testproject/addRole')
         page.fetch('/repos/testproject/deletePerm')

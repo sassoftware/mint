@@ -164,16 +164,15 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         salt, password = db.userMgr._getPassword(otherId)
 
         reposMgr.addUserByMd5._mock.assertCalled(
-                                      'foo.rpath.local2', 'other', 
+                                      'foo.rpath.local2', 'other',
                                        password, salt,
-                                       write=False, mirror=False, admin=False)
+                                       userlevels.USER)
         publisher.notify._mock.assertCalled('UserProductAdded', 
                                             otherId, productId, 
                                             userlevels.USER)
         db.setMemberLevel('foo', 'other', 'developer')
         reposMgr.editUser._mock.assertCalled('foo.rpath.local2', 'other', 
-                                             write=True, mirror=False,
-                                             admin=False)
+                                             userlevels.DEVELOPER)
         publisher.notify._mock.assertCalled('UserProductChanged', 
                                             otherId, productId, 
                                     userlevels.USER, userlevels.DEVELOPER)
@@ -183,8 +182,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
                           db.setMemberLevel, 'foo', 'owner', 'developer')
         db.setMemberLevel('foo', 'other', 'owner')
         reposMgr.editUser._mock.assertCalled('foo.rpath.local2', 'other', 
-                                             write=True, mirror=True,
-                                             admin=True)
+                                             userlevels.OWNER)
         publisher.notify._mock.assertCalled('UserProductChanged', 
                                             otherId, productId, 
                                     userlevels.DEVELOPER, userlevels.OWNER)
