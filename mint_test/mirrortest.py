@@ -31,8 +31,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
     def createMirrorUser(self, repos,
                          labelStr = "localhost.other.host@rpl:devel"):
         label = versions.Label(labelStr)
-        user = 'mirror'
-        helperfuncs.addUserToRepository(repos, user, user, user, label)
+        repos.addRole(label, "mirror")
+        repos.addUser(label, "mirror", "mirror")
+        repos.addRoleMember(label, "mirror", "mirror")
         repos.addAcl(label, "mirror", None, None, write=True, remove=False)
         repos.setRoleCanMirror(label, "mirror", True)
 

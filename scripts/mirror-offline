@@ -107,19 +107,21 @@ class MirrorOffline(SingletonScript):
                                  targCfg.repositoryDB[0])
             util.mkdirChain(os.path.join(baseDir, 'tmp'))
             schema.loadSchema(db)
+	    # FIXME: can we get this to use the reposmgr interface?
+	    # We'd need to have the ability to add extra roles/users.
             netRepos = netserver.NetworkRepositoryServer(targCfg, targetUrl)
 
-            try:
-                helperfuncs.addUserToRepository(netRepos, userName, userPass, 
-                    userName)
-                netRepos.auth.addAcl(userName, None, None, 
-                                     write=True, remove=False)
-                netRepos.auth.setAdmin(userName, True)
-                netRepos.auth.setMirror(userName, True)
-            except errors.GroupAlreadyExists:
-                # assume user is already present--probably due to a previous
-                # run being aborted.
-                pass
+	    try:
+		repos.auth.addRole(role)
+	    except RoleAlreadyExists:
+		# who cares
+		pass
+	    netRepos.auth.addAcl(userName, None, None, 
+				 write=True, remove=False)
+	    netRepos.auth.addUser(username, password)
+	    netRepos.auth.addRoleMember(role, username)
+	    netRepos.auth.setAdmin(userName, True)
+	    netRepos.auth.setMirror(userName, True)
 
             pid = os.fork()
             if not pid:

@@ -400,8 +400,7 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
         addTestTrove(groupTrove, "testcase", trvVersion = trvVersion)
         addTestTrove(groupTrove, "testcase2", trvVersion = trvVersion)
         assert (groupTrove.getLabelPath() == [
-                'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                    client.server._server.cfg.namespace + ':foo-1.0-devel',
+            'foo.' + MINT_PROJECT_DOMAIN + '@rpl:2',
                 'foo.' + MINT_PROJECT_DOMAIN + '@rpl:devel'])
 
     @fixtures.fixture("Full")
@@ -668,8 +667,7 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(data['groupTroveId'])
         assert groupTrove.getLabelPath() == [
-                'foo.' + MINT_PROJECT_DOMAIN + '@' +
-                    client.server._server.cfg.namespace + ':foo-1.0-devel']
+                'foo.' + MINT_PROJECT_DOMAIN + '@rpl:2' ]
 
         client = self.getClient('user')
         # bogus call to prime client

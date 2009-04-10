@@ -13,6 +13,7 @@ from mint import ec2
 from mint.db import grouptrove
 from mint.db import jobs
 from mint import mint_error
+from mint.rest import errors as rest_error
 from mint import projects
 from mint import pubreleases
 from mint import users
@@ -890,7 +891,8 @@ class MintClient:
                 amiId, amiManifestName)
 
     def addProductVersion(self, projectId, namespace, name, description=''):
-        return self.server.addProductVersion(projectId, namespace, name, description)
+        return self.server.addProductVersion(projectId, namespace, name,
+                                             description)
 
     def getProductVersion(self, versionId):
         return self.server.getProductVersion(versionId)
@@ -1002,6 +1004,9 @@ class _Method(xmlrpclib._Method):
         exceptionName, exceptionArgs = result
         if exceptionName in mint_error.__all__:
             cls = getattr(mint_error, exceptionName)
+            raise cls.thaw(exceptionArgs)
+        elif exceptionName in rest_error.__all__:
+            cls = getattr(rest_error, exceptionName)
             raise cls.thaw(exceptionArgs)
         else:
             raise mint_error.UnknownException(exceptionName, exceptionArgs)

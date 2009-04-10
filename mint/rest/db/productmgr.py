@@ -209,10 +209,10 @@ class ProductManager(object):
         fqdn = self._getProductFQDN(projectId)
         username = self.db.userMgr._getUsername(userId)
         isMember, oldLevel = self._getMemberLevel(projectId, userId)
-        write = level in userlevels.WRITERS
-        mirror = level == userlevels.OWNER
-        admin = level == userlevels.OWNER and self.cfg.projectAdmin
 
+        if level != userlevels.USER:
+            self.db.db.membershipRequests.deleteRequest(projectId, userId,
+                                                        commit=False)
         if isMember:
             if level == oldLevel:
                 return
@@ -226,8 +226,7 @@ class ProductManager(object):
             cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
                 projectId=?""", level, userId, projectId)
             if not self.reposMgr._isProductExternal(fqdn):
-                self.reposMgr.editUser(fqdn, username, write=write,
-                                       mirror=mirror, admin=admin)
+                self.reposMgr.editUser(fqdn, username, level)
             if notify:
                 self.publisher.notify('UserProductChanged', userId, projectId, 
                                       oldLevel, level)
@@ -238,8 +237,7 @@ class ProductManager(object):
             if not self.reposMgr._isProductExternal(fqdn):
                 password, salt = self.db.userMgr._getPassword(userId)
                 self.reposMgr.addUserByMd5(fqdn, username, salt, password, 
-                                           write=write, mirror=mirror, 
-                                           admin=admin)
+                                           level)
             if notify:
                 self.publisher.notify('UserProductAdded', userId,
                                       projectId, level)
@@ -296,16 +294,17 @@ class ProductManager(object):
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
 
-        groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
-        className = util.convertPackageNameToClassName(groupName)
-        # convert from unicode
-        recipeStr = str(templates.write(groupTemplate,
-                        cfg = self.cfg,
-                        groupApplianceLabel=platformLabel,
-                        groupName=groupName,
-                        recipeClassName=className,
-                        version=version) + '\n')
-        self.reposMgr.createSourceTrove(fqdn, groupName,
+        if product.isAppliance:
+            groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
+            className = util.convertPackageNameToClassName(groupName)
+            # convert from unicode
+            recipeStr = str(templates.write(groupTemplate,
+                            cfg = self.cfg,
+                            groupApplianceLabel=platformLabel,
+                            groupName=groupName,
+                            recipeClassName=className,
+                            version=version) + '\n')
+            self.reposMgr.createSourceTrove(fqdn, groupName,
                                     label, version,
                                     {'%s.recipe' % groupName: recipeStr},
                                     'Initial appliance image group template')

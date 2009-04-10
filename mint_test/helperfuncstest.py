@@ -602,32 +602,6 @@ Much like Powdermilk Biscuits[tm]."""
         newBuildId = getBuildIdFromUuid(uuid)
         self.assertTrue(newBuildId == buildId)
 
-    def testAddUserToRepository(self):
-        
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = self.newProject(client)
-        project = client.getProject(projectId)
-        label = versions.Label(project.getLabel()) 
-
-        self.startMintServer()
-        repos = self.openRepository()
-
-        # add a user via label
-        user = "me"
-        passwd = "foo"
-        role = "metoo"
-        addUserToRepository(repos, user, passwd, role, label)
-        self.assertTrue(role in repos.listRoles(label))
-        self.assertTrue(self.userExists(project, user))
-
-        # add user by md5 via label
-        user = "me2"
-        passwd = "foo2"
-        role = "metoo2"
-        addUserByMD5ToRepository(repos, user, passwd, "mysalt!!", role, label)
-        self.assertTrue(role in repos.listRoles(label))
-        self.assertTrue(self.userExists(project, user))
-        
     def testCollateDictByKeyPrefix(self):
                 
         class KlassToStr(object):

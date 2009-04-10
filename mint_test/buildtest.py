@@ -867,6 +867,7 @@ class BuildTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testDownloadChart(self, db, data):
+        raise testsuite.SkipTestException('We dont actually use charts')
         client = self.getClient('admin')
 
         build = client.getBuild(data['pubReleaseFinalId'])
