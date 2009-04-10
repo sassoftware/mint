@@ -3,8 +3,9 @@
 #
 # All Rights Reserved
 #
-
+from mint.rest.api import requires
 from mint.rest.api import base
+from mint.rest.api import models
 from mint.rest.middleware import auth
 
 class ProductImageFilesController(base.BaseController):
