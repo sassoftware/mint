@@ -170,11 +170,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertNotContent("/project/rpath2/",
             "To preload this external %s as a local mirror"%pText)
 
-    def setupUser(self, repos, reposLabel, user, pw, troves, label):
-        helperfuncs.addUserToRepository(repos, user, pw, user, reposLabel)
-        repos.addAcl(reposLabel, user, troves, label, write=False, remove=False)
+    def setupUser(self, repos, reposLabel, user, pw):
+        repos.addRole(reposLabel, user)
+        repos.addUser(reposLabel, user, pw)
+        repos.addRoleMember(reposLabel, user, user)
+        repos.addAcl(reposLabel, user, None, None, write=False, remove=False)
         repos.setRoleCanMirror(reposLabel, user, True)
-
         return self.getRepositoryClient(user = user, password = pw)
 
     def testCreateExternalProjectEntitlement(self):
@@ -184,7 +185,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         entClass = 'entitlementclass'
         entKey = 'entitlementkey'
         repos = self.openRepository(1)
-        userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar', None, None)
+        userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar')
 
         repos.addEntitlementClass('localhost1', entClass, 'user')
         repos.addEntitlementKeys('localhost1', entClass, [entKey])
@@ -216,7 +217,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         entClass = 'entitlementclass'
         entKey = 'entitlementkey'
         repos = self.openRepository(1)
-        userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar', None, None)
+        userRepos = self.setupUser(repos, 'localhost1@rpl:devel', 'user', 'bar')
 
         repos.addEntitlementClass('localhost1', entClass, 'user')
         repos.addEntitlementKeys('localhost1', entClass, [entKey])

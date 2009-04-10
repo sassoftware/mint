@@ -4,8 +4,10 @@
 # All Rights Reserved
 #
 
+import copy
 from cStringIO import StringIO
 import os
+import weakref
 
 from mint import helperfuncs
 from mint import userlevels
@@ -25,12 +27,18 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.server import schema
 
+_cachedCfg = None
+_cachedServerCfgs = {}
+
 class RepositoryManager(object):
+    ADMIN_LEVEL = object()
+
     def __init__(self, cfg, db, reposDB, auth):
         self.cfg = cfg
         self.reposDB = reposDB
         self.db = db
         self.auth = auth
+        self._reposCache = {}
         self.profiler = None
 
     def _getProductFQDN(self, hostname):
@@ -38,14 +46,14 @@ class RepositoryManager(object):
         cu = self.db.cursor()
         cu.execute('SELECT hostname, domainname FROM Projects WHERE'
                    ' hostname=?', hostname)
-        hostname, domainname = self.db._getOne(cu, errors.ProductNotFound, 
+        hostname, domainname = self.db._getOne(cu, errors.ProductNotFound,
                                                hostname)
         if domainname:
             return '%s.%s' % (hostname, domainname)
         return hostname
-        
-    def createRepository(self, productId, hostname, domainname, 
-                         isPrivate=False):
+
+    def createRepository(self, productId, hostname, domainname,
+                         isPrivate=False, createMaps=True):
         if domainname:
             fqdn = "%s.%s" % (hostname, domainname)
         else:
@@ -65,18 +73,28 @@ class RepositoryManager(object):
         db.commit()
         db.close()
 
-        authInfo = models.AuthInfo('userpass', self.cfg.authUser, 
+        authInfo = models.AuthInfo('userpass', self.cfg.authUser,
                                    self.cfg.authPass)
-        self._setLabel(productId, fqdn, self._getRepositoryUrl(fqdn), authInfo)
+        if createMaps:
+            self._setLabel(productId, fqdn, self._getRepositoryUrl(fqdn),
+                           authInfo)
 
         if not isPrivate:
-            self.addUser(fqdn, 'anonymous', password='anonymous')
+            self.addUser(fqdn, 'anonymous', password='anonymous',
+                         level=userlevels.USER)
+
+        # here we automatically create the USER or DEVELOPER level?
+        # This avoids the chance of paying a high price for adding
+        # them later - instead we amortize the cost over every commit
+        repos = self._getRepositoryServer(fqdn)
+        self._getRoleForLevel(repos, userlevels.USER)
+        self._getRoleForLevel(repos, userlevels.DEVELOPER)
 
         # add the auth user so we can add additional permissions
         # to this repository
-        self.addUser(fqdn, self.cfg.authUser, 
+        self.addUser(fqdn, self.cfg.authUser,
                      password=self.cfg.authPass,
-                     write=True, mirror=True, admin=True)
+                     level=self.ADMIN_LEVEL)
 
     def deleteRepository(self, fqdn):
         self.reposDB.delete(fqdn)
@@ -84,70 +102,62 @@ class RepositoryManager(object):
     def setProfiler(self, profiler):
         self.profiler = profiler
 
-    def addUserByMd5(self, fqdn, username, salt, password, 
-                     write=False, mirror=False,
-                     admin=False):
+    def _getRoleForLevel(self, repos, level):
+        """
+        Gets the role name for the given level, creating the role on
+        the fly if necessary
+        """
+        rolePerms = {
+        self.ADMIN_LEVEL:     ('rb_internal_admin', True, True, True),
+        userlevels.OWNER:     ('rb_owner',  True, True, self.cfg.projectAdmin),
+        userlevels.DEVELOPER: ('rb_developer', True, False, False),
+        userlevels.USER:      ('rb_user', False, False, False),
+        }
+        roleName, write, mirror, admin = rolePerms[level]
+        try:
+            repos.auth.addRole(roleName)
+        except reposerrors.RoleAlreadyExists:
+            # assume that everything is good.
+            return roleName
+        else:
+            repos.auth.addAcl(roleName, trovePattern=None, label=None,
+                              write=write, remove=False)
+            repos.auth.setMirror(roleName, mirror)
+            repos.auth.setAdmin(roleName, admin)
+        return roleName
+
+    def addUserByMd5(self, fqdn, username, salt, password, level):
         repos = self._getRepositoryServer(fqdn)
+        role = self._getRoleForLevel(repos, level)
         try:
             repos.auth.addUserByMD5(username, salt, password)
         except reposerrors.UserAlreadyExists:
-            repos.auth.deleteUserByName(username)
+            repos.auth.deleteUserByName(username, deleteRole=False)
             repos.auth.addUserByMD5(username, salt, password)
-        self._setUserPermissions(fqdn, username, write=write, 
-                                 mirror=mirror, admin=admin)
+        repos.auth.setUserRoles(username, [role])
 
-    def addUser(self, fqdn, username, password, write=False, mirror=False,
-                admin=False):
+    def addUser(self, fqdn, username, password, level):
         repos = self._getRepositoryServer(fqdn)
+        role = self._getRoleForLevel(repos, level)
         try:
             repos.auth.addUser(username, password)
         except reposerrors.UserAlreadyExists:
-            repos.auth.deleteUserByName(username)
+            repos.auth.deleteUserByName(username, deleteRole=False)
             repos.auth.addUser(username, password)
+        repos.auth.setUserRoles(username, [role])
 
-        self._setUserPermissions(fqdn, username, write=write, 
-                                 mirror=mirror, admin=admin)
-
-    def editUser(self, fqdn, username, write=False, mirror=False,
-                 admin=False):
-        self._setUserPermissions(fqdn, username, write=write, 
-                                 mirror=mirror, admin=admin)
+    def editUser(self, fqdn, username, level):
+        repos = self._getRepositoryServer(fqdn)
+        role = self._getRoleForLevel(repos, level)
+        repos.auth.setUserRoles(username, [role])
 
     def deleteUser(self, fqdn, username):
         repos = self._getRepositoryServer(fqdn)
-        repos.auth.deleteUserByName(username)
-        try:
-            # TODO: This will go away when using role-based permissions
-            # instead of one-role-per-user. Without this, admin users'
-            # roles would not be deleted due to CNY-2775
-            repos.auth.deleteRole(username)
-        except reposerrors.RoleNotFound:
-            # Conary deleted the (unprivileged) role for us
-            pass
+        repos.auth.deleteUserByName(username, deleteRole=False)
 
     def changePassword(self, fqdn, username, password):
         repos = self._getRepositoryServer(fqdn)
         repos.auth.changePassword(username, password)
-
-    def _setUserPermissions(self, fqdn, username, write=False, mirror=False,
-                            admin=False):
-
-        repos = self._getRepositoryServer(fqdn)
-
-        # create a role with the same name as this user
-        # with the permissions we want.
-        role = username
-        try:
-            repos.auth.addRole(role)
-        except reposerrors.RoleAlreadyExists:
-            # this clears all acls associated with this group.
-            repos.auth.deleteRole(role)
-            repos.auth.addRole(role)
-        repos.auth.addAcl(role, trovePattern=None, label=None, 
-                          write=write, remove=False)
-        repos.auth.addRoleMember(role, username)
-        repos.auth.setMirror(role, mirror)
-        repos.auth.setAdmin(role, admin)
 
     def _isProductExternal(self, hostname):
         cu = self.db.cursor()
@@ -193,7 +203,7 @@ class RepositoryManager(object):
         if admin:
             authToken = (self.cfg.authUser, self.cfg.authPass, None, None)
         else:
-            authToken = self.auth.authToken + (None, None)
+            authToken = tuple(self.auth.authToken) + (None, None)
 
         repo = shimclient.ShimNetClient(server, protocol, port,
             authToken,
@@ -203,28 +213,48 @@ class RepositoryManager(object):
             repo = self.profiler.wrapRepository(repo)
         return repo
 
+    def close(self):
+        for server in self._reposCache.values():
+            server = server()
+            if server:
+                server.db.close()
+        self._reposCache = {}
+
     def _getRepositoryServer(self, fqdn):
         if '.' not in fqdn:
             fqdn = self._getProductFQDN(fqdn)
-        dbPath = os.path.join(self.cfg.reposPath, fqdn)
-        tmpPath = os.path.join(dbPath, 'tmp')
-        cfg = netserver.ServerConfig()
-        cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn))
-        cfg.tmpDir = tmpPath
-        cfg.serverName = str(fqdn)
-        cfg.repositoryMap = {}
-        cfg.authCacheTimeout = self.cfg.authCacheTimeout
-        cfg.externalPasswordURL = self.cfg.externalPasswordURL
+        repos = self._reposCache.get(fqdn, None)
+        if repos:
+            repos = repos()
+            if repos:
+                repos.db.close()
+        if False and fqdn in _cachedServerCfgs:
+            cfg = _cachedServerCfgs[fqdn]
+        else:
+            dbPath = os.path.join(self.cfg.reposPath, fqdn)
+            tmpPath = os.path.join(dbPath, 'tmp')
+            cfg = netserver.ServerConfig()
+            cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn))
+            cfg.tmpDir = tmpPath
+            cfg.serverName = str(fqdn)
+            cfg.repositoryMap = {}
+            cfg.authCacheTimeout = self.cfg.authCacheTimeout
+            cfg.externalPasswordURL = self.cfg.externalPasswordURL
 
-        contentsDirs = self.cfg.reposContentsDir
-        cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
+            contentsDirs = self.cfg.reposContentsDir
+            cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
+            _cachedServerCfgs[fqdn] = cfg
         repos = shimclient.NetworkRepositoryServer(cfg, '')
+        # used for making sure that all database connections 
+        # are closed at the end of a restDb's life.
+        self._reposCache[fqdn] = weakref.ref(repos)
         return repos
 
-    def getConaryConfig(self, admin=False):
-        if self.auth.isAdmin:
-            admin = True
-
+    def _getBaseConfig(self):
+        global _cachedCfg
+        if _cachedCfg:
+            _cachedCfg.user = copy.deepcopy(_cachedCfg._origUser)
+            return _cachedCfg
         cfg = self._getGeneratedConaryConfig()
         if self.cfg.useInternalConaryProxy:
             cfg.conaryProxy = self.cfg.getInternalProxies()
@@ -238,6 +268,14 @@ class RepositoryManager(object):
                 cfg.entitlement.addEntitlement(host, entitlement)
             for host, username, password in userMap:
                 cfg.user.addServerGlob(host, username, password)
+        cfg._origUser = copy.deepcopy(cfg.user)
+        _cachedCfg = cfg
+        return cfg
+
+    def getConaryConfig(self, admin=False):
+	cfg = self._getBaseConfig()
+        if self.auth.isAdmin:
+            admin = True
         if admin:
             cfg.user.addServerGlob('*', self.cfg.authUser, 
                                    self.cfg.authPass)
@@ -359,7 +397,7 @@ class RepositoryManager(object):
                       authUser, authPass, entitlement)
 
         hostname = fqdn.split('.', 1)[0]
-        localFqdn = hostname + "." + self.cfg.siteDomainName.split(':')[0]
+        localFqdn = hostname + "." + self.cfg.projectDomainName.split(':')[0]
         if fqdn != localFqdn:
             self.db.db.repNameMap.new(localFqdn, fqdn)
         self._generateConaryrcFile()
@@ -403,8 +441,10 @@ class RepositoryManager(object):
         return cfg
 
     def _generateConaryrcFile(self):
+        global _cachedCfg
+        _cachedCfg = None
         if not self.cfg.createConaryRcFile:
-            return 
+            return
         repoMaps = self._getFullRepositoryMap()
 
         fObj_v0 = unixutils.atomicOpen(self.cfg.conaryRcFile, 

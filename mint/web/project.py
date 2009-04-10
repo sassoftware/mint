@@ -1461,7 +1461,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             if isNew:
                 try:
                     id = self.client.addProductVersion(self.project.id,
-                            namespace, name, description)
+                                            namespace, name, description)
                 except ProductVersionInvalid, e:
                     self._addErrors(str(e))
             else:

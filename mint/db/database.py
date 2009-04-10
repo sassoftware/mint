@@ -163,7 +163,7 @@ class Database(object):
         # call to getTables
         reloadTables = False
 
-        if (dbDriver in ["mysql", "postgresql", "pgpool"]
+        if (dbDriver in ["mysql", "postgresql", "pgpool", "sqlite"]
                 and dbConnection and (not alwaysReload)):
             db = dbConnection
         else:

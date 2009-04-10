@@ -3,9 +3,11 @@
 # All Rights Reserved
 #
 
+from mint.db import database
+from mint.rest.db import database as restDatabase
 from mint import config, client
 from mint.lib import scriptlibrary, copyutils
-from mint.helperfuncs import getProjectText, addUserToRepository
+from mint.helperfuncs import getProjectText
 from mint.mint_error import *
 from conary.lib import util
 from conary.repository.netrepos import netserver
@@ -175,22 +177,12 @@ class LoadMirror:
         return found
 
     def _addUsers(self, serverName, mintCfg):
-        cfg = netserver.ServerConfig()
-        cfg.repositoryDB = (mintCfg.dbDriver, mintCfg.reposDBPath % serverName)
-        cfg.serverName = serverName
-        cfg.contentsDir = os.path.join(mintCfg.dataPath, "repos", serverName, "contents")
-        repos = netserver.NetworkRepositoryServer(cfg, '')
-
-        anon = "anonymous"
-        addUserToRepository(repos, anon, anon, anon)
-        repos.auth.addAcl(anon, None, None, False, False, False)
-
-        # add the mint auth user so we can add additional permissions
-        # to this repository
-        addUserToRepository(repos, mintCfg.authUser, mintCfg.authPass,
-            mintCfg.authUser)
-        repos.auth.addAcl(mintCfg.authUser, None, None, True, False, True)
-        repos.auth.setMirror(mintCfg.authUser, True)
+        mintDb = database.Database(mintCfg)
+        restDb = restDatabase.Database(mintDb)
+        restDb.productMgr.reposMgr.addUser(serverName, 'anonymous',
+                                          'anonymous', userlevel.USER)
+        restDb.productMgr.reposMgr.addUser(serverName, mintCfg.authUser,
+                                           mintCfg.authPass, userlevel.ADMIN)
 
     def copyFiles(self, serverName, project, targetOwner = None, callback = None):
         labelIdMap, _, _, _ = self.client.getLabelsForProject(project.id)

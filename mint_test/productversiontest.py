@@ -294,12 +294,6 @@ class ProjectVersionWebTest(mint_rephelp.WebRepositoryHelper):
         # stub out an empty product definition version
         # XXX this is messy; this should be done in the addProductVersion
         #     call
-        pd = proddef.ProductDefinition()
-        pd = helperfuncs.sanitizeProductDefinition('Foo',
-                '', 'testproject', MINT_PROJECT_DOMAIN, 'testproject',
-                'foo', 'foo version', 'foons')
-        client.setProductDefinitionForVersion(versionId, pd)
-
         page = self.fetchWithRedirect(
            '/project/testproject/editVersion?id=%d'%versionId,
            server=self.getProjectServerHostname())

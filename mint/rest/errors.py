@@ -6,9 +6,10 @@
 
 from mint import mint_error
 
-class ItemNotFound(mint_error.MintError):
+class ItemNotFound(mint_error.ItemNotFound):
     def __init__(self, *args, **kw):
         #bypass mint error handling
+        self.item = args
         Exception.__init__(self, *args, **kw)
 
     def __str__(self):
@@ -83,3 +84,9 @@ class ExternalRepositoryAccessError(Exception):
             msg = ("Error contacting remote repository."
                    " Please ensure entitlement is correct."
                    " (%s)" % str(e))
+
+import inspect
+__all__ = []
+for name, obj in locals().copy().iteritems():
+    if inspect.isclass(obj) and issubclass(obj, Exception):
+        __all__.append(name)

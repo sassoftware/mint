@@ -26,8 +26,10 @@ from webunit import webunittest
 from mint.web import hooks
 from mint.db import builds
 from mint.db import jobs
+import mint.db.database
 from mint.lib import data
 import mint.client
+from mint.rest.db import reposmgr
 from mint import config
 from mint import cooktypes
 from mint import server
@@ -459,8 +461,14 @@ rephelp._cleanUp = _cleanUp
 
 _reposDir = None
 
+def resetCache():
+    mint.db.database.dbConnection = None
+    reposmgr._cachedCfg = None
+    reposmgr._cachedServerCfgs = {}
+
 class RestDBMixIn(object):
     def setUp(self):
+        resetCache()
         self.mintDb = None
         self.mintCfg = None
 

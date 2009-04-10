@@ -11,8 +11,7 @@ import time
 from mint import buildtypes
 from mint.lib import database
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse, configureClientProxies, getProjectText, \
-        addUserToRepository
+        hostPortParse, configureClientProxies, getProjectText
 from mint import helperfuncs
 from mint import mailinglists
 from mint import searcher
@@ -317,74 +316,6 @@ class ProjectsTable(database.KeyedTable):
         self.db.commit()
 
         return [x[1] for x in [(x[2].lower(),x) for x in ids]], count
-
-    def createRepos(self, reposPath, contentsDirs, hostname, domainname, username = None, password = None):
-        dbPath = os.path.join(reposPath, hostname + "." + domainname)
-        tmpPath = os.path.join(dbPath, 'tmp')
-        util.mkdirChain(tmpPath)
-
-        cfg = netserver.ServerConfig()
-
-        name = "%s.%s" % (hostname, domainname)
-        self.reposDB.create(name)
-
-        cfg.repositoryDB = self.reposDB.getRepositoryDB(name)
-        cfg.tmpDir = tmpPath
-        cfg.serverName = hostname + "." + domainname
-        cfg.repositoryMap = {}
-        cfg.contentsDir = " ".join(x % name for x in contentsDirs.split(" "))
-
-        # create the initial repository schema
-        db = dbstore.connect(cfg.repositoryDB[1], cfg.repositoryDB[0])
-        from conary.server import schema
-        schema.loadSchema(db)
-        db.commit()
-
-        repos = netserver.NetworkRepositoryServer(cfg, '', db)
-
-        if username:
-            addUserToRepository(repos, username, password, username)
-            repos.auth.addAcl(username, None, None, write=True, remove=False)
-            repos.auth.setAdmin(username, True)
-
-        anon = "anonymous"
-        addUserToRepository(repos, anon, anon, anon)
-        repos.auth.addAcl(anon, None, None, write=False, remove=False)
-
-        # make it possible to use the auth user account to create a project
-        # used to create the rMake repository (RBL-3810)
-        if username != self.cfg.authUser:
-            # add the mint auth user so we can add additional permissions
-            # to this repository
-            addUserToRepository(repos, self.cfg.authUser, self.cfg.authPass,
-                self.cfg.authUser)
-            repos.auth.addAcl(self.cfg.authUser, None, None, write=True,
-                remove=False)
-        repos.auth.setAdmin(self.cfg.authUser, True)
-        repos.auth.setMirror(self.cfg.authUser, True)
-        if username:
-            repos.auth.setMirror(username, True)
-
-        db.close()
-
-    def addProjectRepositoryUser(self, username, password, hostName, 
-                                 domainName, reposPath, contentsDir):
-        name = "%s.%s" % (hostName, domainName)
-        dbPath = os.path.join(reposPath, name)
-
-        cfg = netserver.ServerConfig()
-        cfg.serverName = name
-        cfg.tmpDir = os.path.join(dbPath, 'tmp')
-        cfg.repositoryMap = {}
-        cfg.contentsDir = " ".join(x % name for x in contentsDir.split(" "))
-        cfg.repositoryDB = self.reposDB.getRepositoryDB(name)
-
-        repos = netserver.NetworkRepositoryServer(cfg, '')
-        addUserToRepository(repos, username, password, username)
-        repos.auth.addAcl(username, None, None, write=True, remove=False)
-        repos.auth.setAdmin(username, True)
-
-        return username
 
     @database.dbWriter
     def hide(self, cu, projectId):

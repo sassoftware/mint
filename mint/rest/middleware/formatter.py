@@ -3,7 +3,27 @@
 #
 # All Rights Reserved
 #
+import os
 import time
+
+profilers = {}
+def get():
+    return profilers.get(os.getpid(), None)
+
+def trace(fn):
+    def _traceWrapper(self, *args, **kw):
+        profiler = get()
+        if profiler:
+            profiler.startTime(fn.func_name)
+            try:
+                rc = fn(self, *args, **kw)
+            finally:
+                profiler.stopTime(fn.func_name)
+            return rc
+        else:
+            return fn(self, *args, **kw)
+    return _traceWrapper
+
 
 from restlib import response
 
@@ -26,6 +46,7 @@ class FormatCallback(object):
 
     def processRequest(self, request):
         request.profile = profile.ProfileData()
+        profilers[os.getpid()] = request.profile
         request.profile.startResponse()
         responseType = None
         extension = None
@@ -74,21 +95,25 @@ class FormatCallback(object):
     def processResponse(self, request, res):
         if not isinstance(res, response.Response):
             request.profile.stopResponse()
-                        
             startConvert = time.time()
             text = converter.toText(request.responseType, res,
                                     self.controller, request)
             convertTime = time.time() - startConvert
             if False and request.contentType == 'text/plain':
+                import gc
                 class Results(modellib.Model):
                     profile = fields.ModelField(profile.ProfileData)
                     results = fields.ModelField(res.__class__,
                                                 displayName=res._meta.name)
+                request.profile.otherTimes.sort(key = lambda x: x.time)
                 request.profile.convertTime = convertTime
+                gc.collect()
+                request.profile.references =  len(gc.get_objects())
                 res = Results(profile=request.profile, 
                               results=res)
                 text = converter.toText(request.responseType, res,
                                         self.controller, request)
             res = response.Response(text, content_type=request.contentType)
         res.headers['Cache-Control'] = 'private, must-revalidate, max-age=0'
+        request.rootController.db.close()
         return res

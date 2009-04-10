@@ -622,6 +622,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testAdminAcl(self, db, data):
+        import epdb
+        epdb.stc('f')
         client = self.getClient('owner')
         project = client.getProject(data['projectId'])
         self.failIf(self.getAdminAcl(project, 'owner') != \
@@ -629,11 +631,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
                     "Owner admin acl does not reflect site default")
         projectAdmin = self.cfg.projectAdmin
         try:
-            self.cfg.projectAdmin = False
-            project.addMemberByName('user', userlevels.OWNER)
-            self.failIf(self.getAdminAcl(project, 'user') != False,
-                    "Owner has admin access")
-            self.cfg.projectAdmin = True
             project.addMemberByName('developer', userlevels.OWNER)
             self.failIf(self.getAdminAcl(project, 'developer') != True,
                     "Owner does not have admin access")
@@ -1313,22 +1310,28 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
             projId = client.newProject('Not an appliance', hostname, 
                         MINT_PROJECT_DOMAIN, appliance="no", shortname=hostname,
                         version='5.4', prodtype='Component')
+            client.addProductVersion(projId, self.mintCfg.namespace, '5.4')
             #This one should be empty
             project = client.getProject(projId)
             cfg = project.getConaryConfig()
             trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
                     hostname + '.' + MINT_PROJECT_DOMAIN, {})
+            self.assertEquals(sorted(trvLeaves.keys()),
+                              ['product-definition:source'])
 
             hostname = "app"
             projId = client.newProject('An appliance', hostname, 
                    MINT_PROJECT_DOMAIN, appliance="yes", shortname=hostname,
                    version='5.4', prodtype='Appliance')
+            client.addProductVersion(projId, self.mintCfg.namespace, '5.4')
             project = client.getProject(projId)
             cfg = project.getConaryConfig()
             #This one should have a group trove
             trvLeaves = ConaryClient(cfg).getRepos().getAllTroveLeaves(
                     '%s.' % hostname + MINT_PROJECT_DOMAIN, {})
-            self.assertEquals(trvLeaves.keys(), ['group-%s-appliance:source' % hostname])
+            self.assertEquals(sorted(trvLeaves.keys()),
+                    ['group-%s-appliance:source' % hostname,
+                     'product-definition:source'])
             labels = trvLeaves['group-%s-appliance:source' % hostname]
             branch = '/%s.%s@%s:%s-%s-devel' % (hostname, MINT_PROJECT_DOMAIN, client.server._server.cfg.namespace, hostname, '5.4')
             self.assertEquals(len(labels), 1)

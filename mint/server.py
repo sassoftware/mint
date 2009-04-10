@@ -21,9 +21,12 @@ import StringIO
 from mint import buildtypes
 try:
     from mint import charts
+    raise ImportError
 except ImportError:
     charts = None
 import mint.db.database
+import mint.rest.db.reposmgr
+import mint.rest.db.database
 from mint.db import grouptrove
 from mint import users
 from mint.lib import data
@@ -309,6 +312,9 @@ class MintServer(object):
                 self.authToken = authToken
                 self.auth = users.Authorization(**auth)
 
+                self.restDb = mint.rest.db.database.Database(self.cfg, self.db,
+                                                             dbOnly=True)
+                self.restDb.setAuth(self.auth, authToken)
                 try:
                     maintenance.enforceMaintenanceMode(self.cfg, self.auth)
                 except mint_error.MaintenanceMode:
@@ -349,6 +355,8 @@ class MintServer(object):
                 return (False, r)
         finally:
             prof.stopXml(methodName)
+            if self.restDb:
+                self.restDb.productMgr.reposMgr.close()
 
     def __getattr__(self, key):
         if key[0] != '_':
@@ -779,8 +787,6 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
 
-        now = time.time()
-
         # make sure the shortname, version, and prodtype are valid, and
         # validate the hostname also in case it ever splits from being
         # the same as the short name
@@ -805,81 +811,19 @@ class MintServer(object):
         else:
             appliance = "no"
             applianceValue = 0
-
-        # initial product definition
-        pd = helperfuncs.sanitizeProductDefinition(projectName,
-                desc, hostname, domainname, shortname, version,
-                '', namespace)
-
-        label = pd.getDefaultLabel()
-
-        # validate the label, which will be added later.  This is done
-        # here so the project is not created before this error occurs
-        if projects.validLabel.match(label) == None:
-            raise mint_error.InvalidLabel(label)
-
-        # All database operations must abort cleanly, especially when
-        # creating the repository fails. Otherwise, we'll end up with
-        # a completely broken project that may not even delete cleanly.
-        #
-        # No database operation inside this block may commit the
-        # transaction.
-        self.db.transaction()
-        try:
-            projectId = self.projects.new(name=projectName,
-                creatorId=self.auth.userId, description=desc, hostname=hostname,
-                domainname=domainname, namespace=namespace,
-                isAppliance=applianceValue, projecturl=projecturl,
-                timeModified=now, timeCreated=now,
-                shortname=shortname, prodtype=prodtype, version=version,
-                commit=False)
-            project = projects.Project(self, projectId)
-
-            self.projectUsers.new(userId=self.auth.userId, projectId=projectId,
-                level=userlevels.OWNER, commit=False)
-
-            # add to RepNameMap if projectDomainName != domainname
-            projectDomainName = self.cfg.projectDomainName.split(':')[0]
-            if domainname != projectDomainName:
-                self.repNameMap.new(fromName='%s.%s' % (hostname, projectDomainName),
-                    toName=fqdn, commit=False)
-
-            self.labels.addLabel(projectId, label,
-                "http://%s%srepos/%s/" % (
-                    self.cfg.projectSiteHost, self.cfg.basePath, hostname),
-                'userpass', self.cfg.authUser, self.cfg.authPass, commit=False)
-
-            if commitEmail:
-                self.projects.update(projectId, commitEmail=commitEmail, commit=False)
-
-            self.projects.createRepos(self.cfg.reposPath,
-                self.cfg.reposContentsDir, hostname, domainname,
-                self.authToken[0], self.authToken[1])
-            
-            # TODO: put an additional try/except around this to delete
-            # the repository if further setup fails.
-            if self.cfg.hideNewProjects or isPrivate:
-                repos = self._getProjectRepo(project)
-                helperfuncs.deleteUserFromRepository(repos, 'anonymous', label)
-                self.projects.hide(projectId, commit=False)
-        except:
-            self.db.rollback()
-            raise
-        self.db.commit()
-
-        # Product now exists and is complete -- failures below here
-        # won't result in inconsistencies or information leaks.
-
-        if applianceValue:
-            try:
-                self._createGroupTemplate(project, label, version, 
-                                          groupApplianceLabel=platformLabel)
-            except GroupTroveTemplateExists:
-                pass # really, this is OK -- and even if it weren't,
-                     # there's nothing you can do about it, anyway
-
-        if self.cfg.createConaryRcFile:
-            self._generateConaryRcFile()
+        isPrivate = isPrivate or self.cfg.hideNewProjects
+        projectId = self.restDb.productMgr.createProduct(name=projectName,
+                                  description=desc,
+                                  hostname=hostname,
+                                  domainname=domainname,
+                                  namespace=namespace,
+                                  isAppliance=applianceValue,
+                                  projecturl=projecturl,
+                                  shortname=shortname, 
+                                  prodtype=prodtype,
+                                  version=version, 
+                                  commitEmail=commitEmail,
+                                  isPrivate=isPrivate)
         return projectId
 
     @typeCheck(int, str, str)
@@ -887,9 +831,10 @@ class MintServer(object):
     @private
     def addProjectRepositoryUser(self, projectId, username, password):
         project = projects.Project(self, projectId)
-        return self.projects.addProjectRepositoryUser(username, 
-            password, project.getHostname(), project.getDomainname(),
-            self.cfg.reposPath, self.cfg.reposContentsDir)
+        self.restDb.productMgr.reposMgr.addUser(project.getFQDN(),
+                                                username, password,
+                                                userlevels.OWNER)
+        return username
 
     @typeCheck(str, str, str, str, str, bool)
     @requiresAdmin
@@ -935,8 +880,9 @@ class MintServer(object):
             if mirrored:
                 parts = versions.Label(label).getHost().split(".")
                 hostname, domainname = parts[0], ".".join(parts[1:])
-                self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
-                    hostname, domainname, None, None)
+                self.restDb.productMgr.reposMgr.createRepository(projectId,
+                        hostname, domainname, isPrivate=False,
+                        createMaps=False)
         except:
             self.db.rollback()
             raise
@@ -1071,70 +1017,23 @@ class MintServer(object):
     def addMember(self, projectId, userId, username, level):
         self._filterProjectAccess(projectId)
         assert(level in userlevels.LEVELS)
-
-        project = projects.Project(self, projectId)
-        label = versions.Label(project.getLabel())
-
-        cu = self.db.cursor()
         if username and not userId:
+            cu = self.db.cursor()
             cu.execute("""SELECT userId FROM Users
                               WHERE username=? AND active=1""", username)
             r = cu.fetchone()
             if not r:
-                raise mint_error.ItemNotFound("username")
+                raise mint_error.ItemNotFound(username)
             else:
                 userId = r[0]
-        elif userId and not username:
-            cu.execute("""SELECT username FROM Users
-                              WHERE userId=? AND active=1""", userId)
+        else:
+            cu = self.db.cursor()
+            cu.execute("""SELECT userId FROM Users
+                          WHERE userId=? AND active=1""", userId)
             r = cu.fetchone()
             if not r:
-                raise mint_error.ItemNotFound("userId")
-            else:
-                username = r[0]
-
-        try:
-            self.db.transaction()
-            try:
-                self.projectUsers.new(projectId, userId, level,
-                                      commit=False)
-            except mint_error.DuplicateItem:
-                self.db.rollback()
-                return self.setUserLevel(userId, projectId, level)
-
-            if level != userlevels.USER:
-                self.membershipRequests.deleteRequest(projectId, userId,
-                                                      commit=False)
-
-            self.amiPerms.addMemberToProject(userId, projectId)
-
-            if not project.external:
-                password = ''
-                salt = ''
-                query = "SELECT salt, passwd FROM Users WHERE username=?"
-                cu.execute(query, username)
-                try:
-                    salt, password = cu.fetchone()
-                except TypeError:
-                    raise mint_error.ItemNotFound("username")
-                repos = self._getProjectRepo(project)
-                helperfuncs.addUserByMD5ToRepository(repos, username,
-                    password, salt, username, label)
-                repos.addAcl(label, username, None, None,
-                             write=(level in userlevels.WRITERS),
-                             remove=False)
-                repos.setRoleIsAdmin(label, username,
-                          self.cfg.projectAdmin and level == userlevels.OWNER)
-                repos.setRoleCanMirror(label, username,
-                                       int(level == userlevels.OWNER))
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-
-        self._notifyUser('Added', self.getUser(userId),
-                         projects.Project(self,projectId), level)
+                raise mint_error.ItemNotFound(userId)
+        self.restDb.productMgr.setMemberLevel(projectId, userId, level)
         return True
 
     typeCheck(int, int)
@@ -1208,17 +1107,8 @@ class MintServer(object):
             self.db.commit()
 
         if not project.external:
-            helperfuncs.deleteUserFromRepository(repos, 
-                            user['username'], label)
-            try:
-                # TODO: This will go away when using role-based permissions
-                # instead of one-role-per-user. Without this, admin users'
-                # roles would not be deleted due to CNY-2775
-                repos.deleteRole(label, user['username'])
-            except RoleNotFound:
-                # Conary deleted the (unprivileged) role for us
-                pass
-
+            self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
+                                                       user['username'])
         return True
 
     def _notifyUser(self, action, user, project, userlevel=None):
@@ -1343,11 +1233,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, projectId)
         self.amiPerms.hideProject(projectId)
 
-        # Remove the anonymous user from the project's repository
-        repos = self._getProjectRepo(project)
-        helperfuncs.deleteUserFromRepository(repos, 'anonymous',
-            project.getLabel())
-
+        self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
+                                                   'anonymous')
         # Hide the project
         self.projects.hide(projectId)
 
@@ -1357,19 +1244,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     @private
     def unhideProject(self, projectId):
-
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise mint_error.PermissionDenied
 
         self.amiPerms.unhideProject(projectId)
         project = projects.Project(self, projectId)
-        repos = self._getProjectRepo(project)
-        label = versions.Label(project.getLabel())
-        username = 'anonymous'
-        helperfuncs.addUserToRepository(repos, username, username, username,
-            label)
-        repos.addAcl(label, username, None, None, write=False, remove=False)
-
+        fqdn = project.getFQDN()
+        self.restDb.productMgr.reposMgr.addUser(fqdn, 'anonymous', 
+                                                password='anonymous',
+                                                level=userlevels.USER)
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
         return True
@@ -1451,42 +1334,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.projectUsers.onlyOwner(projectId, userId) and \
                (level != userlevels.OWNER):
             raise mint_error.LastOwner
-
-        # given that we use UPDATE below we can be pretty
-        # the user already exists.
-        oldLevel = self.db.projectUsers.getUserlevelForProjectMember(projectId,
-                                                                     userId)
-
-        try:
-            self.db.transaction()
-            #update the level on the project
-            project = projects.Project(self, projectId)
-            user = self.getUser(userId)
-            if not project.external:
-                repos = self._getProjectRepo(project)
-                label = versions.Label(project.getLabel())
-                repos.editAcl(label, user['username'], "ALL", None,
-                              None, None, write=(level in userlevels.WRITERS),
-                              canRemove=False)
-                repos.setRoleIsAdmin(label, user['username'],
-                        self.cfg.projectAdmin and level == userlevels.OWNER)
-                repos.setRoleCanMirror(label, 
-                         user['username'], int(level == userlevels.OWNER))
-
-            #Ok, now update the mint db
-            if level in userlevels.WRITERS:
-                self.deleteJoinRequest(projectId, userId)
-            cu = self.db.cursor()
-            cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
-                projectId=?""", level, userId, projectId)
-            self.amiPerms.setMemberLevel(userId, projectId, oldLevel, level)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-
-        self._notifyUser('Changed', user, project, level)
+        self.restDb.productMgr.setMemberLevel(projectId, userId, level)
         return True
 
     @typeCheck(int)
@@ -2085,6 +1933,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _generateConaryRcFile(self):
         if not self.cfg.createConaryRcFile:
             return False
+        mint.rest.db.reposmgr._cachedCfg = None
 
         repoMaps = self._getFullRepositoryMap()
 
@@ -4112,8 +3961,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         fqdn = versions.Label(sourceLabels[0]).getHost()
         if not os.path.exists(os.path.join(self.cfg.reposPath, fqdn)):
-            self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
-                fqdn.split(".")[0], ".".join(fqdn.split(".")[1:]))
+            hostname = fqdn.split(".")[0]
+            domainname = ".".join(fqdn.split(".")[1:])
+            self.restDb.productMgr.reposMgr.createRepository(targetProjectId,
+                    hostname, domainname, isPrivate=False, createMaps=False)
 
         self._generateConaryRcFile()
         return x
@@ -4699,23 +4550,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @requiresAuth
-    @typeCheck(int, str, str, ((str, unicode),))
+    @typeCheck(int, str, str, ((str, unicode),), str)
     def addProductVersion(self, projectId, namespace, name, description):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise mint_error.PermissionDenied
-        
         # Check the namespace
         projects._validateNamespace(namespace)
         # make sure it is a valid product version
         projects._validateProductVersion(name)
-        
-        try:
-            return self.productVersions.new(projectId=projectId,
-                    namespace=namespace, name=name, description=description,
-                    timeCreated=time.time())
-        except mint_error.DuplicateItem:
-            raise mint_error.DuplicateProductVersion
+        project = projects.Project(self, projectId)
+        versionId = self.restDb.productMgr.createProductVersion(
+                                                 project.getFQDN(),
+                                                 name, namespace, description,
+                                                 None)
+        return versionId
 
     @private
     @requiresAuth
@@ -5579,6 +5428,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.req = req
         self.mcpClient = None
         self.db = mint.db.database.Database(cfg, db=db, alwaysReload=alwaysReload)
+        self.restDb = None
         self.platformNameCache = PlatformNameCache(
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
                 helperfuncs.getBasicConaryConfiguration(self.cfg), self)
@@ -5606,8 +5456,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
                                    'deleteSession')
 
-        if self.db.tablesReloaded:
-            self._generateConaryRcFile()
+        # Why do this when reloading the tables?  Certainly seems
+        # unnecessary when we're reloading the tables for every request.
+        #if self.db.tablesReloaded:
+        #    self._generateConaryRcFile()
         self.newsCache.refresh()
         
     def _gracefulHttpd(self):

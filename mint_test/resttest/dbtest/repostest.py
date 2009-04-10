@@ -9,6 +9,7 @@ from conary_test import auth_helper
 
 from mint.rest.api import models
 from mint import mint_error
+from mint import userlevels
 from mint.rest import errors
 import mint_rephelp
 
@@ -42,10 +43,11 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         assert(repos.troveNames(label) == ['foo:run'])
         self.assertRaises(reposerrors.InsufficientPermission, self.addComponent,
                          'foo:dev=bar.rpath.local2@rpl:1', repos=repos)
-        reposMgr.editUser('bar.rpath.local2', 'user', write=True)
+        reposMgr.editUser('bar.rpath.local2', 'user',
+                           level=userlevels.DEVELOPER)
         db.commit()
         self.addComponent('foo:dev=bar.rpath.local2@rpl:1', repos=repos)
-        reposMgr.editUser('bar.rpath.local2', 'user', write=False)
+        reposMgr.editUser('bar.rpath.local2', 'user', level=userlevels.USER)
         self.assertRaises(reposerrors.InsufficientPermission, self.addComponent,
                          'foo:other=bar.rpath.local2@rpl:1', repos=repos)
         reposMgr.deleteUser('bar.rpath.local2', 'user')
@@ -177,7 +179,8 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         assert(not repos.troveNames(label))
         # adding anonymous will make a bad password work.
         # NOTE: anonymous fallback doesn't work for owners.
-        reposMgr.addUser('bar.rpath.local2', 'anonymous', password='anonymous')
+        reposMgr.addUser('bar.rpath.local2', 'anonymous', password='anonymous',
+                         level=userlevels.USER)
         assert(repos.troveNames(label) == ['foo:run'])
 
 
