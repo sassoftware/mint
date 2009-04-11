@@ -123,6 +123,7 @@ def getRepository(projectName, repName, dbName, cfg,
     nscfg.authCacheTimeout = cfg.authCacheTimeout
     nscfg.requireSigs = requireSigs
     nscfg.serializeCommits = cfg.serializeCommits
+    nscfg.readOnlyRepository = cfg.readOnlyRepositories
 
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
