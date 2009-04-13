@@ -90,7 +90,7 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         self.setImageFiles(db, 'foo', imageId)
         imageId2 = self.createImage(db, 'foo', buildtypes.TARBALL)
         self.setImageFiles(db, 'foo', imageId2)
-        releaseId = db.createRelease('foo', 'Release 1', 'desc1', [imageId])
+        releaseId = db.createRelease('foo', 'Release 1', 'desc1', 'v1', [imageId])
         release1 = db.getReleaseForProduct('foo', releaseId)
         assert(release1.creator == 'admin')
         assert(release1.name == 'Release 1')
@@ -114,19 +114,19 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
         # try to add an empty build to a release.
         self.assertRaises(mint_error.BuildEmpty,
-                          db.createRelease, 'foo', 'Release 1', 'desc1', [imageId])
+                          db.createRelease, 'foo', 'Release 1', 'desc1', 'v1', [imageId])
         self.setImageFiles(db, 'foo', imageId)
-        db.createRelease('foo', 'Release 1', 'desc1', [imageId])
+        db.createRelease('foo', 'Release 1', 'desc1', 'v1', [imageId])
         # try to add a build to two releases.
         self.assertRaises(mint_error.BuildPublished,
-                          db.createRelease, 'foo', 'Release 2', 'desc2', [imageId])
+                          db.createRelease, 'foo', 'Release 2', 'desc2', 'v1', [imageId])
         # don't have permissions to create a release.
         # imageId is not in the right project.
         imageId = self.createImage(db, 'foo', buildtypes.TARBALL)
         self.setImageFiles(db, 'foo', imageId)
         self.setDbUser(db, 'user')
         self.assertRaises(errors.PermissionDeniedError,
-                          db.createRelease, 'foo', 'Release 2', 'desc2', [imageId])
+                          db.createRelease, 'foo', 'Release 2', 'desc2', 'v1', [imageId])
 
     def testPublishUnpublishRelease(self):
         db = self.openMintDatabase(createRepos=False)
@@ -135,7 +135,7 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createProduct('foo', db=db)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
         self.setImageFiles(db, 'foo', imageId)
-        releaseId = db.createRelease('foo', 'Release 1', 'desc1', [imageId])
+        releaseId = db.createRelease('foo', 'Release 1', 'desc1', 'v1', [imageId])
         mock.mockMethod(db.releaseMgr.publisher.notify)
         db.publishRelease('foo', releaseId, True)
         db.releaseMgr.publisher.notify._mock.assertCalled('ReleasePublished', releaseId)
@@ -157,7 +157,7 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createProduct('bar', db=db)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
         self.setImageFiles(db, 'foo', imageId)
-        releaseId = db.createRelease('foo', 'Release 1', 'desc1', [imageId])
+        releaseId = db.createRelease('foo', 'Release 1', 'desc1', 'v1', [imageId])
         # release is not in the right project.
         self.assertRaises(errors.ReleaseNotFound,
                           db.publishRelease, 'bar', releaseId, False)
@@ -170,7 +170,7 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         db.unpublishRelease('foo', releaseId)
         self.assertRaises(mint_error.PublishedReleaseNotPublished,
                           db.unpublishRelease, 'foo', releaseId)
-        releaseId = db.createRelease('foo', 'Release 2', 'desc2', [])
+        releaseId = db.createRelease('foo', 'Release 2', 'desc2', 'v1', [])
         self.assertRaises(mint_error.PublishedReleaseEmpty,
                           db.publishRelease, 'foo', releaseId, False)
 

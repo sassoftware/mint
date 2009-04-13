@@ -52,7 +52,8 @@ class PlatformTest(restbase.BaseRestTest):
             self.setImageFiles(db, self.productShortName, imageId)
             imageIds.append(imageId)
 
-        releaseId = db.createRelease(self.productShortName, 'Release Name', '', imageIds)
+        releaseId = db.createRelease(self.productShortName, 'Release Name', '',
+                'v1', imageIds)
 
     def testGetReleases(self):
         return self._testGetReleases()
