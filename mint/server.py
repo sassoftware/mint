@@ -5103,24 +5103,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 pkgs.append(x)
         return pkgs
 
-
-    def _cacheAvailablePackages(self, sesH, pkgs):
-        filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
-        import cPickle as pickle
-        f = open(filen, 'wb')
-        pickle.dump(pkgs, f)
-        f.close()
-
-    def _loadAvailablePackages(self, sesH):
-        filen = os.path.join(self.cfg.dataPath, 'tmp', 'avail-pack-%s' % sesH)
-        if os.path.exists(filen):
-            import cPickle as pickle
-            f = open(filen, 'rb')
-            loaded = pickle.load(f)
-            return loaded
-        else:
-            return None
-
     @requiresAuth
     def getProductVersionSourcePackages(self, projectId, versionId):
         project = projects.Project(self, projectId)
@@ -5159,14 +5141,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @requiresAuth
     def getAvailablePackages(self, sessionHandle):
-        pkgs = self._loadAvailablePackages(sessionHandle)
-        if pkgs is None:
-            pc = self.getPackageCreatorClient()
-            # Call the method that doesn't thaw the versions or flavors since
-            # we'd just have to thaw them again
-            pkgs =  pc.getAvailablePackagesFrozen(sessionHandle)
-            self._cacheAvailablePackages(sessionHandle, pkgs)
-        return pkgs
+        pc = self.getPackageCreatorClient()
+        return pc.getAvailablePackagesFrozen(sessionHandle)
 
     @typeCheck(str, str, dict)
     @requiresAdmin
