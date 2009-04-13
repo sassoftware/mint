@@ -137,7 +137,7 @@ class Database(DBInterface):
                     cfgPath=cfg.siteAuthCfgPath)
 
     def close(self):
-        DBInterface.close(self)
+        #DBInterface.close(self)
         self.productMgr.reposMgr.close()
 
     def setAuth(self, auth, authToken):
