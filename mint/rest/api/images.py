@@ -52,13 +52,15 @@ class ProductReleasesController(base.BaseController):
     def create(self, request, hostname, release):
         releaseId = self.db.createRelease(hostname, release.name,
                                           release.description,
-                                          [ x.imageId for x in release.images])
+                                          release.version,
+                                          [ x.imageId for x in release.imageIds])
         return self.get(request, hostname, releaseId)
 
     @requires('release', models.UpdateRelease)
     def update(self, request, hostname, releaseId, release):
-        self.db.updateRelease(hostname, releaseId, release.name, 
+        self.db.updateRelease(hostname, releaseId, release.name,
                               release.description,
+                              release.version,
                               [x.imageId for x in release.images])
         return self.get(request, hostname, releaseId)
 
