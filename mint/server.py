@@ -5079,6 +5079,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return pc.listSearchPaths(sessionHandle)
 
     @requiresAuth
+    def removeApplianceSearchPaths(self, sessionHandle, searchPaths):
+        pc = self.getApplianceCreatorClient()
+        return pc.removeSearchPaths(sessionHandle, searchPaths)
+
+    @requiresAuth
     def listApplianceTroves(self, projectId, sessionHandle):
         pc = self.getApplianceCreatorClient()
         project = projects.Project(self, projectId)
