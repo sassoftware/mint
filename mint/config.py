@@ -167,6 +167,7 @@ class MintConfig(ConfigFile):
     # Repositories and built-in proxy
     injectUserAuth          = (CfgBool, True,
                                 "Inject user authentication into proxy requests")
+    readOnlyRepositories    = (CfgBool, False)
     reposContentsDir        = (CfgString, '/srv/rbuilder/repos/%s/contents/')
     reposPath               = (CfgPath, None)
     requireSigs             = (CfgBool, None,
