@@ -69,7 +69,7 @@ class NewsCacheTable(database.KeyedTable):
             try:
                 url = urllib2.urlopen(self.cfg.newsRssFeed)
                 data = url.read()
-            except urllib2.URLError:
+            except (urllib2.URLError, socket.error):
                 e_type, e_value, e_tb = sys.exc_info()
                 logerror.logErrorAndEmail(self.cfg, e_type, e_value, e_tb,
                         'RSS feed reader', dict(url=self.cfg.newsRssFeed),

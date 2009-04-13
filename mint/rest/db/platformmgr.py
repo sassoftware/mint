@@ -42,8 +42,9 @@ class PlatformManager(object):
         availablePlatforms = []
         for platformLabel, platformName, enabled in self._iterPlatforms():
             plat = models.Platform(label = platformLabel,
-                                   platformName = platformName,
-                                   enabled = enabled)
+                           platformName = platformName,
+                           hostname=platformLabel.split('.')[0],
+                           enabled = enabled)
             availablePlatforms.append(plat)
         return models.Platforms(availablePlatforms)
 
