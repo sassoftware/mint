@@ -183,8 +183,9 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
             page.protocol, page.server, page.port),
             transport = Transport("pysid=%s" % cookie))
         ret = conn.checkAuth('RBUILDER_CLIENT:8')
-        self.failUnless(ret[0])
-        self.failUnlessEqual(ret[1], ['PermissionDenied', 'Permission Denied'])
+        self.failIf(ret[0])
+        # checkAuth allows anonymous access.
+        self.failUnlessEqual(ret[1], {'userId': -1, 'authorized': False})
 
     def testProcessUserAction(self):
         client, userId = self.quickMintUser('foouser','foopass')
