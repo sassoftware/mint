@@ -102,7 +102,7 @@ class ReleaseManager(object):
         image = self.db.getImageForProduct(hostname, imageId)
         if image.release and releaseId != image.release:
             raise mint_error.BuildPublished()
-        if (image.imageType not in (buildtypes.AMI, buildtypes.IMAGELESS)
+        if (image.imageType not in ('amiImage', 'imageless')
                 and not image.files.files):
             raise mint_error.BuildEmpty()
         cu = self.db.cursor()
