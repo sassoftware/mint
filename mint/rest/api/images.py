@@ -36,7 +36,8 @@ class ProductReleasesController(base.BaseController):
     modelName = 'releaseId'
 
     urls = {'images' : {'GET' : 'images',
-                        'POST' : 'addImage'},
+                        'POST' : 'addImage',
+                        'PUT'  : 'setImages'},
             'publish' : {'POST' : 'publish'},
             'unpublish' : {'POST' : 'unpublish'}}
 
@@ -81,4 +82,10 @@ class ProductReleasesController(base.BaseController):
     @requires('image', models.ImageId)
     def addImage(self, request, hostname, releaseId, image):
         self.db.addImageToRelease(hostname, releaseId, image.imageId)
+        return self.get(request, hostname, releaseId)
+
+    @requires('images', models.ImageList)
+    def setImages(self, request, hostname, releaseId, images):
+        self.db.updateImagesForRelease(hostname, releaseId,
+                                       [images.images.imageId for x in images])
         return self.get(request, hostname, releaseId)

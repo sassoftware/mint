@@ -36,10 +36,20 @@ class ReleaseManager(object):
         WHERE hostname=?'''
         cu.execute(sql, hostname)
         releases = models.ReleaseList()
+        releasesById = {}
         for row in cu:
             row = dict(row)
             row['published'] = bool(row['timePublished'])
-            releases.releases.append(models.Release(**row))
+            release = models.Release(**row)
+            releasesById[release.releaseId] = release
+            releases.releases.append(release)
+        cu.execute('''
+        SELECT pubReleaseId,imageId FROM PublishedReleases
+            JOIN Images (USING pubReleaseId)
+            WHERE hostname=?
+        ''', hostname)
+        for releaseId, imageId in cu:
+            releasesById[releaseId].imageIds.append(models.ImageId(imageId))
         return releases
 
     def getReleaseForProduct(self, fqdn, releaseId):
@@ -79,6 +89,12 @@ class ReleaseManager(object):
             self._addBuildToRelease(hostname, releaseId, buildId)
         return releaseId
 
+    def updateImagesForRelease(self, fqdn, releaseId, imageIds):
+        cu.execute("""UPDATE Builds SET pubReleaseId = NULL
+                          WHERE pubReleaseId = ?""", releaseId)
+        for imageId in imageIds:
+            self._addBuildToRelease(fqdn, releaseId, imageId)
+
     def updateRelease(self, fqdn, releaseId, name, description, version,
                       imageIds):
         if self._isPublished(releaseId):
@@ -90,10 +106,8 @@ class ReleaseManager(object):
             WHERE pubReleaseId=?'''
         cu.execute(sql, name, description, version, time.time(),
                    self.auth.userId, releaseId)
-        cu.execute("""UPDATE Builds SET pubReleaseId = NULL
-                      WHERE pubReleaseId = ?""", releaseId)
-        for imageId in imageIds:
-            self._addBuildToRelease(fqdn, releaseId, imageId)
+        if imageIds is not None:
+            self.updateImagesForRelease(fqdn, releaseId, imageIds)
 
     def addImageToRelease(self, fqdn, releaseId, imageId):
         self._addBuildToRelease(fqdn, releaseId, imageId)

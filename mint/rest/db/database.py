@@ -525,14 +525,20 @@ class Database(DBInterface):
 
     @commitafter
     def updateRelease(self, hostname, releaseId, name, description, version,
-                      buildIds):
+                      imageIds):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.auth.requireBuildsOnHost(hostname, imageIds)
+        self.releaseMgr.updateRelease(hostname, releaseId,
+                                      name, description, version,
+                                      imageIds)
+
+    @commitafter
+    def updateImagesForRelease(self, hostname, releaseId, imageIds):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireReleaseOnHost(hostname, releaseId)
         self.auth.requireBuildsOnHost(hostname, buildIds)
-        releaseId = self.releaseMgr.updateRelease(hostname, releaseId,
-                                                  name, description, version,
-                                                  buildIds)
-        return releaseId
+        self.releaseMgr.updateImagesForRelease(hostname, releaseId, imageIds)
 
     @commitafter
     def addImageToRelease(self, hostname, releaseId, imageId):

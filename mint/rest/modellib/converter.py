@@ -165,7 +165,7 @@ class XobjConverter(Converter):
                 for fieldData in self.walkModelClassAndObject(modelClass, 
                                                               xobject):
                     name, field, value, childModel = fieldData
-                    if field.isList():
+                    if field.isList() and value is not None:
                         # Lists get automatically processed by their children,
                         # by appending to the value of parentDict (which is
                         # now a list :-/ )

@@ -17,6 +17,11 @@ class ReleaseModelTest(mint_rephelp.MintDatabaseHelper):
         release = converter.fromText('xml', data, models.UpdateRelease, None, None)
         assert(release.imageIds[0].imageId == 1)
 
+    def testImageListModel(self):
+        images = converter.fromText('xml', imageList, models.ImageList, None, 
+                                    None)
+        assert(images.images[0].imageId == 1)
+
 data = """<?xml version='1.0' encoding='UTF-8'?>
 <release id="http://%(server)s:%(port)s/api/products/testproject/releases/1">
 <hostname>testproject</hostname>
@@ -25,6 +30,14 @@ data = """<?xml version='1.0' encoding='UTF-8'?>
 <imageId>1</imageId>
 </imageIds>
 </release>
+"""
+
+imageList = """<?xml version='1.0' encoding='UTF-8'?>
+<images>
+<image>
+<imageId>1</imageId>
+</image>
+</images>
 """
 
 if __name__ == "__main__":
