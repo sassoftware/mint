@@ -535,6 +535,13 @@ class Database(DBInterface):
         return releaseId
 
     @commitafter
+    def addImageToRelease(self, hostname, releaseId, imageId):
+        self.auth.requireProductDeveloper(hostname)
+        self.auth.requireReleaseOnHost(hostname, releaseId)
+        self.auth.requireBuildsOnHost(hostname, [imageId])
+        self.releaseMgr.updateRelease(hostname, releaseId, imageId)
+
+    @commitafter
     def publishRelease(self, hostname, releaseId, shouldMirror):
         self.auth.requireReleaseOnHost(hostname, releaseId)
         self.auth.requireProductOwner(hostname)

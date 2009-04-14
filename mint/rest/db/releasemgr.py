@@ -80,7 +80,7 @@ class ReleaseManager(object):
         return releaseId
 
     def updateRelease(self, fqdn, releaseId, name, description, version,
-                      buildIds):
+                      imageIds):
         if self._isPublished(releaseId):
             raise mint_error.PublishedReleasePublished
         cu = self.db.cursor()
@@ -92,8 +92,11 @@ class ReleaseManager(object):
                    self.auth.userId, releaseId)
         cu.execute("""UPDATE Builds SET pubReleaseId = NULL
                       WHERE pubReleaseId = ?""", releaseId)
-        for buildId in buildIds:
-            self._addBuildToRelease(fqdn, releaseId, buildId)
+        for imageId in imageIds:
+            self._addBuildToRelease(fqdn, releaseId, imageId)
+
+    def addImageToRelease(self, fqdn, releaseId, imageId):
+        self._addBuildToRelease(fqdn, releaseId, imageId)
 
     def _addBuildToRelease(self, hostname, releaseId, imageId):
         image = self.db.getImageForProduct(hostname, imageId)
