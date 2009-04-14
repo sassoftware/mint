@@ -92,6 +92,8 @@ class ReleaseManager(object):
     def updateImagesForRelease(self, fqdn, releaseId, imageIds):
         cu.execute("""UPDATE Builds SET pubReleaseId = NULL
                           WHERE pubReleaseId = ?""", releaseId)
+        if self._isPublished(releaseId):
+            raise mint_error.PublishedReleasePublished
         for imageId in imageIds:
             self._addBuildToRelease(fqdn, releaseId, imageId)
 
