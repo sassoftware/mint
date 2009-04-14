@@ -59,7 +59,7 @@ class ReleaseManager(object):
         LEFT JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
         LEFT JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
         LEFT JOIN Users as PublishUser ON (publishedBy=PublishUser.userId)
-        WHERE hostname=? and releaseId=?'''
+        WHERE hostname=? and pubReleaseId=?'''
         cu.execute(sql, hostname, releaseId)
         row = dict(self.db._getOne(cu, errors.ReleaseNotFound, 
                                    (hostname, releaseId)))
@@ -90,7 +90,7 @@ class ReleaseManager(object):
             self._addBuildToRelease(fqdn, releaseId, imageId)
 
     def updateRelease(self, fqdn, releaseId, name, description, version,
-                      imageIds):
+                      published, shouldMirror, imageIds):
         if self._isPublished(releaseId):
             raise mint_error.PublishedReleasePublished
         cu = self.db.cursor()
@@ -102,6 +102,16 @@ class ReleaseManager(object):
                    self.auth.userId, releaseId)
         if imageIds is not None:
             self.updateImagesForRelease(fqdn, releaseId, imageIds)
+        if published is not None:
+            isPublished, = cu.execute(
+                        '''SELECT timePublished from PublishedReleases
+                          WHERE pubReleaseId=?''', releaseId).fetchone()
+            isPublished = bool(isPublished)
+            if bol(isPublished) != bool(published):
+                if published:
+                    self.publishRelease(releaseId, shouldMirror)
+                else:
+                    self.unpublishRelease(releaseId)
 
     def addImageToRelease(self, fqdn, releaseId, imageId):
         self._addBuildToRelease(fqdn, releaseId, imageId)

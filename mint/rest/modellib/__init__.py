@@ -33,7 +33,7 @@ class Field(object):
     handleNone = False
     def __init__(self, default=None, required=False, visibility=None,
                  editable=None, isAttribute=False, isText=False,
-                 displayName=None):
+                 displayName=None, display=True):
         self.displayName = displayName
         if default is not None:
             self.default = default
@@ -41,6 +41,7 @@ class Field(object):
         self.visibility = visibility
         self.isAttribute = isAttribute
         self.isText = isText
+        self.display = display
         _registerField(self)
         if editable is not None:
             self.editable = editable
@@ -80,20 +81,27 @@ class Field(object):
 class ModelMeta(type):
     def __new__(mcs, name, bases, attrs):
         new_class = type.__new__(mcs, name, bases, attrs)
-        new_class._fields =  _sortRegisteredFields(attrs) 
+        all_attrs = {}
+        for superclass in bases:
+            all_attrs.update((x, getattr(new_class, x)) for x in
+                                  getattr(superclass, '_fields', []))
+        all_attrs.update(attrs)
+        new_class._fields =  _sortRegisteredFields(all_attrs) 
         for fieldName in new_class._fields:
+            if fieldName not in attrs:
+                continue
             field = attrs[fieldName]
             if not field.displayName:
                 field.displayName = fieldName
-        new_class._attributes = [ attrs[x].displayName 
+        new_class._attributes = [ all_attrs[x].displayName 
                                   for x in new_class._fields 
-                                  if attrs[x].isAttribute ]
-        new_class._elements = [ attrs[x].displayName 
+                                  if all_attrs[x].isAttribute ]
+        new_class._elements = [ all_attrs[x].displayName 
                                   for x in new_class._fields 
-                                  if not attrs[x].isAttribute
-                                     and not attrs[x].isText ]
+                                  if not all_attrs[x].isAttribute
+                                     and not all_attrs[x].isText ]
         new_class._text =  [ x for x in new_class._fields 
-                             if attrs[x].isText ]
+                             if all_attrs[x].isText ]
         new_class._meta = options.Options(new_class, attrs.pop('Meta', None))
         return new_class
 
@@ -153,9 +161,5 @@ class Model(object):
 
         assert not args # checked above
         if kwargs:
-            # XXX we need to find the proper way to pass a model 
-            # additional data that is not displayed into the model
-            #raise TypeError('%s() got an unexpected keyword argument %r'
-            #        % (className, kwarg))
-            for fieldName, value in kwargs.items():
-                setattr(self, fieldName, value)
+            raise TypeError('%s() got an unexpected keyword argument %r'
+                    % (className, kwargs))

@@ -11,6 +11,9 @@ from rpath_common.proddef import imageTypes
 
 class _DisplayField(Model):
     "Base field class"
+    hostname = fields.CharField(display=False)
+    version = fields.CharField(display=False)
+    stageName = fields.CharField(display=False)
 
 class Architecture(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)
@@ -19,7 +22,7 @@ class Architecture(_DisplayField):
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "architectures", self.id)
+                'architectures', self.id)
 
 class FlavorSet(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)
@@ -28,7 +31,7 @@ class FlavorSet(_DisplayField):
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "flavorSets", self.id)
+                'flavorSets', self.id)
 
 class ImageModelMeta(ModelMeta):
     # This is a bit twisted - we're copying the class definition from
@@ -55,15 +58,15 @@ class ContainerFormat(_DisplayField):
 
     def get_absolute_url(self):
         return ('products.versions', self.hostname, self.version,
-            "containers", self.id)
+                'containers', self.id)
 
-class StageHref(Model):
+class StageHref(_DisplayField):
     href = fields.AbsoluteUrlField(isAttribute = True)
     def get_absolute_url(self):
         return ('products.versions.stages', self.hostname, self.version,
             self.href)
 
-class BuildDefinition(Model):
+class BuildDefinition(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()
@@ -84,7 +87,7 @@ class BuildDefinitions(Model):
         name = "imageDefinitions"
     buildDefinitions = fields.ListField(BuildDefinition, displayName = 'imageDefinition')
 
-class BuildTemplate(Model):
+class BuildTemplate(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)
     name = fields.CharField()
     displayName = fields.CharField()

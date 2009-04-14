@@ -76,6 +76,8 @@ class UpdateRelease(Model):
     version = fields.CharField()
     description = fields.CharField()
     imageIds = fields.ListField(ImageId)
+    published = fields.BoolField()
+    shouldMirror = fields.BoolField()
 
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
