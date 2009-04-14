@@ -38,17 +38,21 @@ class ProjectsTable(database.KeyedTable):
     fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname',
         'namespace', 'projecturl', 'description', 'disabled', 'hidden',
         'external', 'isAppliance', 'timeCreated', 'timeModified',
-        'commitEmail', 'backupExternal', 'shortname', 'prodtype', 'version']
+        'commitEmail', 'backupExternal', 'shortname', 'prodtype', 'version',
+        'fqdn', 'database']
 
     def __init__(self, db, cfg):
         self.cfg = cfg
 
         # poor excuse for a switch statement
+        # XXX: This doesn't even begin to handle alternates; it's only
+        # hanging around until it gets replaced with the new repo logic.
+        defaultDriver = self.cfg.database[self.cfg.defaultDatabase][0]
         self.reposDB = {'sqlite': SqliteRepositoryDatabase,
                         'mysql':  MySqlRepositoryDatabase,
                         'postgresql':  PostgreSqlRepositoryDatabase,
                         'pgpool': PGPoolRepositoryDatabase,
-                       }[self.cfg.reposDBDriver](cfg)
+                       }[defaultDriver](cfg)
         # call init last so that we can use reposDB during schema upgrades
         database.DatabaseTable.__init__(self, db)
 
@@ -56,6 +60,7 @@ class ProjectsTable(database.KeyedTable):
         try:
             id = database.KeyedTable.new(self, **kwargs)
         except DuplicateItem, e:
+            self.db.rollback()
             cu = self.db.cursor()
             cu.execute("SELECT projectId FROM Projects WHERE hostname=?", kwargs['hostname'])
             results = cu.fetchall()
@@ -478,21 +483,15 @@ class LabelsTable(database.KeyedTable):
             if commit:
                 self.db.commit()
 
-class Databases(database.KeyedTable):
-    name = "ReposDatabases"
-    key = "databaseId"
-
-    fields = ['databaseId', 'driver', 'path']
-
-
-class ProjectDatabase(database.DatabaseTable):
-    name = "ProjectDatabase"
-    fields = ['projectId', 'databaseId']
-
 
 class RepositoryDatabase:
     def __init__(self, cfg):
         self.cfg = cfg
+
+    def _getTemplate(self):
+        # This is wrong, but it will hold us over until this is properly
+        # integrated with the new logic.
+        return self.cfg.database[self.cfg.defaultDatabase]
 
     def create(self, name):
         # this used to pre-initialize the cache for test suite purposes
@@ -502,19 +501,19 @@ class RepositoryDatabase:
     def getRepositoryDB(self, name, db = None):
         if db:
             cu = db.cursor()
-            cu.execute("""SELECT driver, path
-                FROM ReposDatabases JOIN ProjectDatabase USING (databaseId)
-                WHERE projectId=(SELECT projectId FROM Projects WHERE hostname=?)""", name.split(".")[0])
-
-            r = cu.fetchone()
+            cu.execute("SELECT database FROM Projects WHERE hostname = ?", name.split('.')[0])
+            database = cu.fetchone()[0]
         else:
-            r = None
+            database = self.cfg.defaultDatabase
 
-        if r:
-            return r[0], r[1]
+        if ' ' in database:
+            driver, path = database.split(' ', 1)
         else:
-            name = self.translate(name)
-            return self.cfg.reposDBDriver, self.cfg.reposDBPath % name
+            driver, path = self.cfg.database[database]
+
+        if '%s' in path:
+            path %= self.translate(name)
+        return driver, path
 
     def translate(self, x):
         return x
@@ -524,11 +523,11 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
     driver = "sqlite"
 
     def create(self, name):
-        util.mkdirChain(os.path.dirname(self.cfg.reposDBPath % name))
+        util.mkdirChain(os.path.dirname(self._getTemplate()[1] % name))
         RepositoryDatabase.create(self, name)
         
     def delete(self, name):
-        path = self.cfg.reposDBPath % name
+        path = self._getTemplate()[1] % name
         if os.path.exists(path):
             util.rmtree(path)
 
@@ -541,7 +540,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
         return x.translate(transTables[self.driver])
 
     def create(self, name):
-        path = self.cfg.reposDBPath % 'postgres'
+        path = self._getTemplate()[1] % 'postgres'
         db = dbstore.connect(path, self.driver)
 
         dbName = self.translate(name)
@@ -560,7 +559,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
                     pass
 
                 reposDb = dbstore.connect(
-                        self.cfg.reposDBPath % dbName, self.driver)
+                        self._getTemplate()[1] % dbName, self.driver)
                 reposDb.loadSchema()
                 reposCu = reposDb.cursor()
                 tableList = []
@@ -578,7 +577,7 @@ class PostgreSqlRepositoryDatabase(RepositoryDatabase):
         RepositoryDatabase.create(self, name)
         
     def delete(self, name):
-        path = self.cfg.reposDBPath % 'postgres'
+        path = self._getTemplate()[1] % 'postgres'
         db = dbstore.connect(path, 'postgresql')
         reposName = self.translate(name)
 
@@ -599,7 +598,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         return x.translate(transTables['mysql'])
 
     def create(self, name):
-        path = self.cfg.reposDBPath % 'mysql'
+        path = self._getTemplate()[1] % 'mysql'
         db = dbstore.connect(path, 'mysql')
 
         dbName = self.translate(name)
@@ -619,7 +618,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         RepositoryDatabase.create(self, name)
         
     def delete(self, name):
-        path = self.cfg.reposDBPath % 'mysql'
+        path = self._getTemplate()[1] % 'mysql'
         db = dbstore.connect(path, 'mysql')
         reposName = self.translate(name)
 

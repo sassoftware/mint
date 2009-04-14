@@ -71,10 +71,6 @@ class TableCache(object):
         self.targets = targets.TargetsTable(db)
         self.targetData = targets.TargetDataTable(db)
 
-        # tables for per-project repository db connections
-        self.projectDatabase = projects.ProjectDatabase(db)
-        self.databases = projects.Databases(db)
-
         self.users.confirm_table.db = db
         self.newsCache.ageTable.db = db
         self.projects.reposDB.cfg = cfg
@@ -144,9 +140,6 @@ class Database(object):
         self.targets = tables.targets
         self.targetData = tables.targetData
 
-        # tables for per-project repository db connections
-        self.projectDatabase = tables.projectDatabase
-        self.databases = tables.databases
         if self.tablesReloaded:
             self.normalizeMirrorOrder()
 

@@ -687,9 +687,12 @@ class SqliteFixtureCache(FixtureCache):
 
     def newMintCfg(self, name):
         cfg = FixtureCache.newMintCfg(self, name)
-        cfg.dbDriver = cfg.reposDBDriver = 'sqlite'
+        cfg.dbDriver = 'sqlite'
         cfg.dbPath = os.path.join(cfg.dataPath, 'mintdb')
-        cfg.reposDBPath = os.path.join(cfg.dataPath, 'repos', '%s', 'sqldb')
+
+        reposDBPath = os.path.join(cfg.dataPath, 'repos', '%s', 'sqldb')
+        cfg.configLine('database default sqlite ' + reposDBPath)
+
         from mint.db import schema
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         schema.loadSchema(db, cfg)
@@ -708,7 +711,8 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.dbPath = os.path.join(testCfg.dataPath, 'mintdb')
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
-        testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
+        reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
+        testCfg.configLine('database default sqlite ' + reposDBPath)
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
@@ -739,9 +743,11 @@ class SQLServerFixtureCache(FixtureCache):
         db = self.harness.getDB(dbName)
 
         cfg = FixtureCache.newMintCfg(self, name)
-        cfg.dbDriver = cfg.reposDBDriver = self.driver
+        cfg.dbDriver = self.driver
         cfg.dbPath = self._getConnectStringForDb(dbName)
-        cfg.reposDBPath = self._getConnectStringForDb()
+
+        reposDBPath = self._getConnectStringForDb()
+        cfg.configLine('database default %s %s' % (self.driver, reposDBPath))
 
         from mint.db import schema
         schema.loadSchema(db.connect(), cfg)

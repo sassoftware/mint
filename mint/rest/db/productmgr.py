@@ -139,12 +139,18 @@ class ProductManager(object):
         if namespace is None:
             namespace = self.cfg.namespace
         createTime = time.time()
+        if self.auth.userId > 0:
+            creatorId = self.auth.userId
+        else:
+            creatorId = None
         projectId = self.db.db.projects.new(
             name=name,
-            creatorId=self.auth.userId, 
+            creatorId=creatorId,
             description=description, 
             hostname=hostname,
             domainname=domainname, 
+            fqdn='%s.%s' % (hostname, domainname),
+            database=self.cfg.defaultDatabase,
             namespace=namespace,
             isAppliance=isAppliance, 
             projecturl=projecturl,
@@ -153,7 +159,7 @@ class ProductManager(object):
             shortname=shortname, 
             prodtype=prodtype, 
             commitEmail=commitEmail, 
-            hidden=isPrivate,
+            hidden=int(isPrivate),
             version=version,
             commit=False)
 
@@ -170,12 +176,15 @@ class ProductManager(object):
                               authInfo, mirror=False, backupExternal=False):
         cu = self.db.cursor()
         createTime = time.time()
+        creatorId = self.auth.userId > 0 and self.auth.userId or None
         cu.execute('''INSERT INTO Projects (name, creatorId, description,
-                shortname, hostname, domainname, projecturl, external,
-                timeModified, timeCreated, backupExternal)
-                VALUES (?, ?, '', ?, ?, ?, '', 1, ?, ?, ?)''',
-                title, self.auth.userId, hostname, hostname, domainname,
-                createTime, createTime, int(backupExternal))
+                shortname, hostname, domainname, fqdn, projecturl, external,
+                timeModified, timeCreated, backupExternal, database)
+                VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                title, creatorId, hostname, hostname, domainname,
+                '%s.%s' % (hostname, domainname),
+                createTime, createTime, int(backupExternal),
+                self.cfg.defaultDatabase)
         productId = cu.lastrowid
         if mirror:
             self.reposMgr.addIncomingMirror(productId, hostname, domainname, 

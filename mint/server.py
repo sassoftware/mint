@@ -856,17 +856,25 @@ class MintServer(object):
         except conary_errors.ParseError:
             raise mint_error.ParameterError("Not a valid Label")
 
+        fqdn = label.split('@')[0]
         if not url:
-            url = 'http://' + label.split('@')[0] + '/conary/'
+            url = 'https://%s/conary/' % (fqdn,)
+
+        database = None
+        if mirrored:
+            database = self.cfg.defaultDatabase
+
+        creatorId = self.auth.userId > 0 and self.auth.userId or None
 
         self.db.transaction()
         try:
             # create the project entry
-            projectId = self.projects.new(name=name, creatorId=self.auth.userId, description='',
-                shortname=hostname, hostname=hostname, domainname=domainname,
-                projecturl='', external=1,
-                timeModified=now, timeCreated=now,
-                commit=False)
+            projectId = self.projects.new(name=name, creatorId=creatorId,
+                    description='', shortname=hostname, fqdn=fqdn,
+                    hostname=hostname, domainname=domainname, projecturl='',
+                    external=1, timeModified=now, timeCreated=now,
+                    database=database,
+                    commit=False)
 
             # create the projectUsers entry
             self.projectUsers.new(userId = self.auth.userId,

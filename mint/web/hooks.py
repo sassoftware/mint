@@ -115,7 +115,7 @@ def getRepositoryMap(cfg):
     else:
         return {}
 
-def getRepository(projectName, repName, dbName, cfg,
+def getRepository(projectName, repName, cfg,
         req, conaryDb, dbTuple, localMirror, requireSigs, commitEmail):
 
     nscfg = netserver.ServerConfig()
@@ -295,8 +295,9 @@ def conaryHandler(req, cfg, pathInfo):
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     # resolve the conary repository names
-    projectHostName, projectId, actualRepName, external, localMirror, commitEmail = \
-            _resolveProjectRepos(db, hostName, domainName)
+    (projectHostName, projectId, actualRepName, external, database,
+            localMirror, commitEmail
+            ) = _resolveProjectRepos(db, hostName, domainName)
 
     # do not require signatures when committing to a local mirror
     if localMirror:
@@ -317,8 +318,18 @@ def conaryHandler(req, cfg, pathInfo):
         # no need to proxy a rest request..
         proxyRestRequest = False
 
-        dbName = actualRepName.translate(transTables[cfg.reposDBDriver])
-        dbTuple = getReposDB(db, dbName, projectId, cfg)
+        if ' ' in database:
+            driver, path = database.split(' ', 1)
+        else:
+            if database not in cfg.database:
+                raise mint_error.RepositoryDatabaseError(
+                        "Database alias %r is not defined" % (database,))
+            driver, path = cfg.database[database]
+
+        if '%s' in path:
+            path %= actualRepName.translate(transTables[driver])
+        dbTuple = driver, path
+
         repHash = (actualRepName, req.hostname, dbTuple)
 
         # Check for a cached connection.
@@ -330,12 +341,12 @@ def conaryHandler(req, cfg, pathInfo):
             try:
                 reposDb = dbstore.connect(dbTuple[1], dbTuple[0])
             except sqlerrors.DatabaseError, err:
-                req.log_error("Error opening database %s: %s" %
-                        (dbName, str(err)))
+                req.log_error("Error opening database %r: %s" %
+                        (dbTuple, str(err)))
                 raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
-                    actualRepName, dbName, cfg, req, reposDb, dbTuple,
+                    actualRepName, cfg, req, reposDb, dbTuple,
                     localMirror, requireSigs, commitEmail)
 
             # Cache non-pooled connections by way of their repository
@@ -429,19 +440,6 @@ urls = (
 )
 
 
-def getReposDB(db, dbName, projectId, cfg):
-    cu = db.cursor()
-    cu.execute("""SELECT driver, path
-        FROM ReposDatabases JOIN ProjectDatabase USING (databaseId)
-        WHERE projectId=?""", projectId)
-    r = cu.fetchone()
-    if r:
-        apache.log_error("using alternate database connection: %s %s" % (r[0], r[1]), apache.APLOG_INFO)
-        return r[0], r[1]
-    else:
-        return cfg.reposDBDriver, cfg.reposDBPath % dbName
-
-
 def _updateUserSet(db, cfgObj):
     cu = db.cursor()
     cu.execute("""SELECT label, authType, username, password, entitlement
@@ -467,6 +465,7 @@ def _resolveProjectRepos(db, hostname, domainname):
     projectHostName = None
     projectDomainName = None
     projectId = None
+    database = None
     actualRepName = possibleRepName = None
     commitEmail = None
 
@@ -477,14 +476,14 @@ def _resolveProjectRepos(db, hostname, domainname):
 
     # Determine if the project is local by checking the projects table
     cu = db.cursor()
-    cu.execute("""SELECT projectId, domainname, external,
+    cu.execute("""SELECT projectId, domainname, external, database,
                      EXISTS(SELECT * FROM InboundMirrors
                      WHERE projectId=targetProjectId) AS localMirror, commitEmail
                   FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
     try:
         rs = cu.fetchone()
         if rs:
-            projectId, projectDomainName, external, localMirror, commitEmail = rs
+            projectId, projectDomainName, external, database, localMirror, commitEmail = rs
             projectHostName = hostname
             possibleRepName = "%s.%s" % (projectHostName, projectDomainName)
 
@@ -510,14 +509,14 @@ def _resolveProjectRepos(db, hostname, domainname):
                 projectHostName = fromName[0:fromName.find('.')]
                 projectDomainName = fromName[fromName.find('.')+1:]
 
-                cu.execute("""SELECT projectId, external,
+                cu.execute("""SELECT projectId, external, database,
                                 EXISTS(SELECT * FROM InboundMirrors
                                             WHERE projectId=targetProjectId) AS localMirror
                               FROM Projects WHERE hostname=? AND domainname=?""",
                               projectHostName, projectDomainName)
                 rs = cu.fetchone()
                 if rs:
-                    projectId, external, localMirror = rs
+                    projectId, external, database, localMirror = rs
                     actualRepName = possibleRepName
 
     except (IndexError, TypeError):
@@ -528,7 +527,7 @@ def _resolveProjectRepos(db, hostname, domainname):
             apache.log_error(line, apache.APLOG_DEBUG)
         actualRepName = None
 
-    return projectHostName, projectId, actualRepName, external, localMirror, commitEmail
+    return projectHostName, projectId, actualRepName, external, database, localMirror, commitEmail
 
 
 def handler(req):

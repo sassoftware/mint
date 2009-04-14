@@ -455,7 +455,8 @@ class RepositoryTest(MintRepositoryHelper):
 
     def testPerProjectRepositoryDatabases(self):
         # create a project
-        if self.mintCfg.reposDBDriver != "sqlite":
+        driver, path = self.mintCfg.database['default']
+        if driver != "sqlite":
             raise testsuite.SkipTestException("Only test in sqlite")
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
@@ -464,12 +465,12 @@ class RepositoryTest(MintRepositoryHelper):
 
         # move the repository database to a different location
         dbName = "testproject." + MINT_PROJECT_DOMAIN
-        newPath = os.path.dirname(self.mintCfg.reposDBPath % dbName) + "/newdb"
-        os.rename(self.mintCfg.reposDBPath % dbName, newPath)
+        newPath = tempfile.mktemp()
+        os.rename(path % dbName, newPath)
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ReposDatabases VALUES (NULL, 'sqlite', ?)", newPath)
-        cu.execute("INSERT INTO ProjectDatabase VALUES (?, 1)", projectId)
+        cu.execute("UPDATE Projects SET database = ? WHERE projectId = ?",
+                'sqlite ' + newPath, projectId)
         self.db.commit()
 
         # make sure we can still access the repository

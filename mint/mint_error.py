@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-class MintError(Exception):
+class InternalMintError(Exception):
     msg = "An unknown error occured in mint"
     def __init__(self, msg=None, *args):
         if msg is not None:
@@ -43,6 +43,17 @@ class MintError(Exception):
             ret.msg = blob
             return ret
         return cls(*tuple(blob))
+
+
+### Internal errors -- these are fatal if uncaught
+class RepositoryDatabaseError(InternalMintError):
+    "Unable to open the repository database"
+
+
+### Marshallable errors -- these go over XMLRPC
+class MintError(InternalMintError):
+    pass
+
 
 class AdminSelfDemotion(MintError): "You cannot demote yourself."
 class AlreadyConfirmed(MintError):

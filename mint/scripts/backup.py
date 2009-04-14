@@ -35,7 +35,12 @@ def backup(cfg, out, backupMirrors = False):
     extraArgs = ""
     if not backupMirrors:
         extraArgs = " WHERE NOT external OR backupExternal"
-    if cfg.reposDBDriver == 'sqlite':
+
+    # XXX: Wrong, but no more wrong than before. Integrate this with the new
+    # repository logic and do dumps on a per-project configuration.
+    defaultDriver, defaultPath = cfg.database[cfg.defaultDatabase]
+
+    if defaultDriver == 'sqlite':
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         cu = db.cursor()
         cu.execute("SELECT hostname, domainname FROM Projects%s" % extraArgs)
@@ -44,21 +49,21 @@ def backup(cfg, out, backupMirrors = False):
                     reposDir)
             res = cu.fetchone()
             reposDir = res and res[0] or reposDir
-            reposDBPath = cfg.reposDBPath % reposDir
+            reposDBPath = defaultPath % reposDir
             dumpPath = os.path.join(backupPath, '%s.dump' % reposDir)
             if os.path.exists(reposDBPath):
                 util.execute("echo '.dump' | sqlite3 %s > %s" % \
                               (reposDBPath, dumpPath))
                 print >> out, reposContentsDir[0] % reposDir
-    elif cfg.reposDBDriver == 'postgresql':
+    elif defaultDriver == 'postgresql':
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         cu = db.cursor()
         cu.execute("SELECT hostname, domainname FROM Projects%s" % extraArgs)
         for reposDir in ['.'.join(x) for x in cu.fetchall()]:
             reposDbName = reposDir.translate(projects.transTables['postgresql'])
-            dbUser = cfg.reposDBPath.split('@')[0]
+            dbUser = defaultPath.split('@')[0]
             dumpPath = os.path.join(backupPath, '%s.dump' % reposDbName)
-            rdb = dbstore.connect(cfg.reposDBPath % 'postgres', 'postgresql')
+            rdb = dbstore.connect(defaultPath % 'postgres', 'postgresql')
             rcu = rdb.cursor()
             rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
                          reposDbName)
@@ -90,6 +95,11 @@ def restore(cfg):
         util.execute("sqlite3 %s < %s" % (cfg.dbPath, dumpPath))
     db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
     schema.loadSchema(db, cfg, should_migrate=True)
+
+    # XXX: Wrong, but no more wrong than before. Integrate this with the new
+    # repository logic and do dumps on a per-project configuration.
+    defaultDriver, defaultPath = cfg.database[cfg.defaultDatabase]
+
     cu = db.cursor()
     cu.execute("SELECT hostname, domainname, projectId FROM Projects")
     for hostname, domainname, projectId in [x for x in cu.fetchall()]:
@@ -98,23 +108,23 @@ def restore(cfg):
         r = cu.fetchone()
         if r:
             repo = r[0]
-        dumpPath =  os.path.join(backupPath, repo).translate(projects.transTables[cfg.reposDBDriver]) + '.dump'
+        dumpPath =  os.path.join(backupPath, repo).translate(projects.transTables[defaultDriver]) + '.dump'
         reposPath = os.path.join(cfg.reposPath, repo)
         if os.path.exists(dumpPath):
             util.mkdirChain(os.path.join(reposPath, 'tmp'))
-            if cfg.reposDBDriver == 'sqlite':
-                dbPath = cfg.reposDBPath % repo
+            if defaultDriver == 'sqlite':
+                dbPath = defaultPath % repo
                 if os.path.exists(dbPath):
                     os.unlink(dbPath)
                 util.execute('sqlite3 %s < %s' % (dbPath, dumpPath))
-                rdb = dbstore.connect(dbPath, cfg.reposDBDriver)
+                rdb = dbstore.connect(dbPath, defaultDriver)
                 conary.server.schema.loadSchema(rdb, doMigrate=True)
                 rdb.close()
-            elif cfg.reposDBDriver == 'postgresql':
+            elif defaultDriver == 'postgresql':
                 pgRepo = repo.translate(projects.transTables['postgresql'])
-                dbPath = cfg.reposDBPath % pgRepo
-                rdb = dbstore.connect('%s' % (cfg.reposDBPath % 'postgres'),
-                                      cfg.reposDBDriver)
+                dbPath = defaultPath % pgRepo
+                rdb = dbstore.connect('%s' % (defaultPath % 'postgres'),
+                                      defaultDriver)
                 rcu = rdb.cursor()
                 rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
                              pgRepo)
@@ -123,10 +133,10 @@ def restore(cfg):
                 rcu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % pgRepo)
                 rdb.close()
 
-                dbUser = cfg.reposDBPath.split('@')[0]
+                dbUser = defaultPath.split('@')[0]
                 util.execute('psql -f %s -U %s -p 5439 %s'% (dumpPath, dbUser, pgRepo))
-                rdb = dbstore.connect('%s' % (cfg.reposDBPath % pgRepo),
-                                      cfg.reposDBDriver)
+                rdb = dbstore.connect('%s' % (defaultPath % pgRepo),
+                                      defaultDriver)
                 conary.server.schema.loadSchema(rdb, doMigrate=True)
                 rdb.close()
         else:

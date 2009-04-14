@@ -213,12 +213,13 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
 
     reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
     if reposdriver == 'sqlite':
-        cfg.reposDBPath = reposDir + "/repos/%s/sqldb"
-    elif reposdriver == 'mysql':
-        cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % reposDbPort
+        cfg.configLine('database default sqlite ' + reposDir + '/repos/%s/sqldb')
     elif sqldriver == 'postgresql':
-        cfg.reposDBPath = '%s@localhost.localdomain:%s/%%s' % ( pwd.getpwuid(os.getuid())[0], reposDbPort)
-    cfg.reposDBDriver = reposdriver
+        cfg.configLine('database default postgresql '
+                '%s@localhost.localdomain:%s/%%s' % (
+                    pwd.getpwuid(os.getuid())[0], reposDbPort))
+    else:
+        assert False
     cfg.reposPath = reposDir + "/repos/"
     cfg.reposContentsDir = " ".join([reposDir + "/contents1/%s/", reposDir + "/contents2/%s/"])
 

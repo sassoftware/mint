@@ -24,7 +24,7 @@ from conary.dbstore import sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(46, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(47, 0)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -35,7 +35,7 @@ def _createTrigger(db, table, column = "changed"):
 
 def _createUsers(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'Users' not in db.tables:
         cu.execute("""
@@ -53,8 +53,8 @@ def _createUsers(db):
             blurb               text
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
-        commit = True
-    commit |= db.createIndex('Users', 'UsersActiveIdx', 'username, active')
+        changed = True
+    changed |= db.createIndex('Users', 'UsersActiveIdx', 'username, active')
 
     if 'UserData' not in db.tables:
         cu.execute("""
@@ -68,8 +68,8 @@ def _createUsers(db):
             PRIMARY KEY ( userId, name )
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserData'] = []
-        commit = True
-    commit |= db.createIndex('UserData', 'UserDataIdx', 'userId')
+        changed = True
+    changed |= db.createIndex('UserData', 'UserDataIdx', 'userId')
 
     if 'UserGroups' not in db.tables:
         cu.execute("""
@@ -78,7 +78,7 @@ def _createUsers(db):
             userGroup           varchar(128)    NOT NULL    UNIQUE
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroups'] = []
-        commit = True
+        changed = True
 
     if 'UserGroupMembers' not in db.tables:
         cu.execute("""
@@ -91,7 +91,7 @@ def _createUsers(db):
             PRIMARY KEY ( userGroupId, userId )
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UserGroupMembers'] = []
-        commit = True
+        changed = True
 
     if 'Confirmations' not in db.tables:
         cu.execute("""
@@ -102,16 +102,14 @@ def _createUsers(db):
             confirmation        varchar(255)
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Confirmations'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createLabels(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'Labels' not in db.tables:
         cu.execute("""
@@ -127,17 +125,15 @@ def _createLabels(db):
             entitlement         varchar(254)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Labels'] = []
-        commit = True
-    commit |= db.createIndex('Labels', 'LabelsPackageIdx', 'projectId')
+        changed = True
+    changed |= db.createIndex('Labels', 'LabelsPackageIdx', 'projectId')
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createProjects(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'Projects' not in db.tables:
         cu.execute("""
@@ -146,9 +142,10 @@ def _createProjects(db):
             creatorId           integer
                 REFERENCES Users ( userId ) ON DELETE SET NULL,
             name                varchar(128)    NOT NULL    UNIQUE,
-            hostname            varchar(64)     NOT NULL    UNIQUE,
-            shortname           varchar(64)     NOT NULL    UNIQUE,
+            hostname            varchar(63)     NOT NULL    UNIQUE,
+            shortname           varchar(63)     NOT NULL    UNIQUE,
             domainname          varchar(128)    NOT NULL    DEFAULT '',
+            fqdn                varchar(255)    NOT NULL,
             namespace           varchar(16),
             projecturl          varchar(128)    DEFAULT ''  NOT NULL,
             description         text,
@@ -161,14 +158,15 @@ def _createProjects(db):
             commitEmail         varchar(128)                DEFAULT '',
             prodtype            varchar(128)                DEFAULT '',
             version             varchar(128)                DEFAULT '',
-            backupExternal      smallint        NOT NULL    DEFAULT 0
+            backupExternal      smallint        NOT NULL    DEFAULT 0,
+            database            varchar(128)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Projects'] = []
-        commit = True
-    commit |= db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
-    commit |= db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
-    commit |= db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
-    commit |= db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
+        changed = True
+    changed |= db.createIndex('Projects', 'ProjectsHostnameIdx', 'hostname')
+    changed |= db.createIndex('Projects', 'ProjectsShortnameIdx', 'shortname')
+    changed |= db.createIndex('Projects', 'ProjectsDisabledIdx', 'disabled')
+    changed |= db.createIndex('Projects', 'ProjectsHiddenIdx', 'hidden')
 
     if 'ProjectUsers' not in db.tables:
         cu.execute("""
@@ -182,10 +180,10 @@ def _createProjects(db):
             PRIMARY KEY ( projectId, userId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProjectUsers'] = []
-        commit = True
-    commit |= db.createIndex('ProjectUsers',
+        changed = True
+    changed |= db.createIndex('ProjectUsers',
         'ProjectUsersProjectIdx', 'projectId')
-    commit |= db.createIndex('ProjectUsers', 'ProjectUsersUserIdx', 'userId')
+    changed |= db.createIndex('ProjectUsers', 'ProjectUsersUserIdx', 'userId')
 
     if 'MembershipRequests' not in db.tables:
         cu.execute("""
@@ -199,30 +197,7 @@ def _createProjects(db):
             PRIMARY KEY ( projectId, userId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['MembershipRequests'] = []
-        commit = True
-
-    if 'ReposDatabases' not in db.tables:
-        cu.execute("""
-        CREATE TABLE ReposDatabases (
-            databaseId          %(PRIMARYKEY)s,
-            driver              varchar(64)     NOT NULL,
-            path                varchar(255)    NOT NULL
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['ReposDatabases'] = []
-        commit = True
-
-    if 'ProjectDatabase' not in db.tables:
-        cu.execute("""
-        CREATE TABLE ProjectDatabase (
-            projectId           integer         NOT NULL
-                REFERENCES Projects ON DELETE CASCADE,
-            databaseId          integer         NOT NULL
-                REFERENCES ReposDatabases ON DELETE CASCADE,
-
-            PRIMARY KEY ( projectId, databaseId )
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['ProjectDatabase'] = []
-        commit = True
+        changed = True
 
     if 'CommunityIds' not in db.tables:
         cu.execute("""
@@ -233,16 +208,14 @@ def _createProjects(db):
             communityId         varchar(255)
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['CommunityIds'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createBuilds(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'PublishedReleases' not in db.tables:
         cu.execute("""
@@ -266,8 +239,8 @@ def _createBuilds(db):
             timeMirrored        numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PublishedReleases'] = []
-        commit = True
-    commit |= db.createIndex('PublishedReleases', 'PubReleasesProjectIdIdx',
+        changed = True
+    changed |= db.createIndex('PublishedReleases', 'PubReleasesProjectIdIdx',
             'projectId')
 
     if 'Builds' not in db.tables:
@@ -300,17 +273,17 @@ def _createBuilds(db):
             statusMessage        varchar(255) DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
-        commit = True
+        changed = True
 
-    commit |= db.createIndex('Builds', 'BuildProjectIdIdx', 'projectId')
-    commit |= db.createIndex('Builds', 'BuildPubReleaseIdIdx', 'pubReleaseId')
+    changed |= db.createIndex('Builds', 'BuildProjectIdIdx', 'projectId')
+    changed |= db.createIndex('Builds', 'BuildPubReleaseIdIdx', 'pubReleaseId')
 
     if 'BuildsView' not in db.views:
         cu.execute("""
         CREATE VIEW BuildsView AS
             SELECT * FROM Builds WHERE deleted = 0
         """)
-        commit = True
+        changed = True
 
     if 'BuildData' not in db.tables:
         cu.execute("""
@@ -324,7 +297,7 @@ def _createBuilds(db):
             PRIMARY KEY ( buildId, name )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildData'] = []
-        commit = True
+        changed = True
 
     if 'BuildFiles' not in db.tables:
         cu.execute("""
@@ -338,7 +311,7 @@ def _createBuilds(db):
             sha1                char(40)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFiles'] = []
-        commit = True
+        changed = True
 
     if 'FilesUrls' not in db.tables:
         cu.execute("""
@@ -348,7 +321,7 @@ def _createBuilds(db):
             url                 varchar(255)    NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FilesUrls'] = []
-        commit = True
+        changed = True
 
     if 'BuildFilesUrlsMap' not in db.tables:
         cu.execute("""
@@ -361,27 +334,25 @@ def _createBuilds(db):
             PRIMARY KEY ( fileId, urlId )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BuildFilesUrlsMap'] = []
-        commit = True
+        changed = True
 
     if 'UrlDownloads' not in db.tables:
         cu.execute("""
         CREATE TABLE UrlDownloads (
             urlId               integer         NOT NULL
                 REFERENCES FilesUrls ON DELETE CASCADE,
-            timeDownloaded      numeric(14,3)   NOT NULL    DEFAULT 0,
+            timeDownloaded      numeric(14,0)   NOT NULL    DEFAULT 0,
             ip                  varchar(64)     NOT NULL
         )""" % db.keywords)
         db.tables['UrlDownloads'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createCommits(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'Commits' not in db.tables:
         cu.execute("""
@@ -395,130 +366,124 @@ def _createCommits(db):
                 REFERENCES Users ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Commits'] = []
-        commit = True
-    commit |= db.createIndex('Commits', 'CommitsProjectIdx', 'projectId')
+        changed = True
+    changed |= db.createIndex('Commits', 'CommitsProjectIdx', 'projectId')
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createGroupTroves(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'GroupTroves' not in db.tables:
         cu.execute("""
         CREATE TABLE GroupTroves(
             groupTroveId    %(PRIMARYKEY)s,
-            projectId       INT,
-            creatorId       INT,
-            recipeName      CHAR(200),
-            upstreamVersion CHAR(128),
+            projectId       integer,
+            creatorId       integer,
+            recipeName      varchar(200),
+            upstreamVersion varchar(128),
             description     text,
-            timeCreated     INT,
-            timeModified    INT,
-            autoResolve     INT,
+            timeCreated     integer,
+            timeModified    integer,
+            autoResolve     integer,
             cookCount       INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['GroupTroves'] = []
-        commit = True
-    commit |= db.createIndex('GroupTroves', 'GroupTrovesProjectIdx',
+        changed = True
+    changed |= db.createIndex('GroupTroves', 'GroupTrovesProjectIdx',
         'projectId')
-    commit |= db.createIndex('GroupTroves', 'GroupTrovesUserIdx', 'creatorId')
+    changed |= db.createIndex('GroupTroves', 'GroupTrovesUserIdx', 'creatorId')
 
     if 'GroupTroveItems' not in db.tables:
         cu.execute("""
         CREATE TABLE GroupTroveItems(
             groupTroveItemId    %(PRIMARYKEY)s,
-            groupTroveId        INT,
-            creatorId           INT,
-            trvName             CHAR(128),
+            groupTroveId        integer,
+            creatorId           integer,
+            trvName             varchar(128),
             trvVersion          text,
             trvFlavor           text,
-            subGroup            CHAR(128),
-            versionLock         INT,
-            useLock             INT,
+            subGroup            varchar(128),
+            versionLock         integer,
+            useLock             integer,
             instSetLock         INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['GroupTroveItems'] = []
-        commit = True
-    commit |= db.createIndex('GroupTroveItems', 'GroupTroveItemsUserIdx',
+        changed = True
+    changed |= db.createIndex('GroupTroveItems', 'GroupTroveItemsUserIdx',
         'creatorId')
 
     if 'ConaryComponents' not in db.tables:
         cu.execute("""
         CREATE TABLE ConaryComponents(
              componentId    %(PRIMARYKEY)s,
-             component      CHAR(128)
+             component      varchar(128)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ConaryComponents'] = []
-        commit = True
-    commit |= db.createIndex('ConaryComponents', 'ConaryComponentsIdx',
+        changed = True
+    changed |= db.createIndex('ConaryComponents', 'ConaryComponentsIdx',
             'component', unique = True)
 
     if 'GroupTroveRemovedComponents' not in db.tables:
         cu.execute("""
         CREATE TABLE GroupTroveRemovedComponents(
-             groupTroveId   INT,
+             groupTroveId   integer,
              componentId    INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['GroupTroveRemovedComponents'] = []
-        commit = True
-    commit |= db.createIndex('GroupTroveRemovedComponents',
+        changed = True
+    changed |= db.createIndex('GroupTroveRemovedComponents',
             'GroupTroveRemovedComponentIdx', 'groupTroveId, componentId',
             unique = True)
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createJobs(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'Jobs' not in db.tables:
         cu.execute("""
         CREATE TABLE Jobs (
             jobId           %(PRIMARYKEY)s,
-            buildId         INT,
-            groupTroveId    INT,
-            owner           BIGINT,
-            userId          INT,
-            status          INT,
+            buildId         integer,
+            groupTroveId    integer,
+            owner           bigint,
+            userId          integer,
+            status          integer,
             statusMessage   text,
             timeSubmitted   numeric(14,3),
             timeStarted     numeric(14,3),
             timeFinished    numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Jobs'] = []
-        commit = True
-    commit |= db.createIndex('Jobs', 'JobsBuildIdx', 'buildId')
-    commit |= db.createIndex('Jobs', 'JobsGroupTroveIdx', 'groupTroveId')
-    commit |= db.createIndex('Jobs', 'JobsUserIdx', 'userId')
+        changed = True
+    changed |= db.createIndex('Jobs', 'JobsBuildIdx', 'buildId')
+    changed |= db.createIndex('Jobs', 'JobsGroupTroveIdx', 'groupTroveId')
+    changed |= db.createIndex('Jobs', 'JobsUserIdx', 'userId')
 
     if 'JobData' not in db.tables:
         cu.execute("""
         CREATE TABLE JobData (
             jobId           integer,
-            name            CHAR(32),
+            name            varchar(32),
             value           text,
             valueType       integer
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['JobData'] = []
-        commit = True
-    commit |= db.createIndex('JobData', 'JobDataIdx', 'jobId, name',
+        changed = True
+    changed |= db.createIndex('JobData', 'JobDataIdx', 'jobId, name',
         unique = True)
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createPackageIndex(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'PackageIndex' not in db.tables:
         cu.execute("""
@@ -533,12 +498,12 @@ def _createPackageIndex(db):
             isSource            integer         NOT NULL    DEFAULT '0'
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
-        commit = True
-    commit |= db.createIndex("PackageIndex", "PackageIndexNameIdx",
+        changed = True
+    changed |= db.createIndex("PackageIndex", "PackageIndexNameIdx",
         "name, version")
-    commit |= db.createIndex("PackageIndex", "PackageIndexProjectIdx",
+    changed |= db.createIndex("PackageIndex", "PackageIndexProjectIdx",
         "projectId")
-    commit |= db.createIndex("PackageIndex", "PackageIndexServerBranchName",
+    changed |= db.createIndex("PackageIndex", "PackageIndexServerBranchName",
         "serverName, branchName")
 
     if 'PackageIndexMark' not in db.tables:
@@ -548,16 +513,14 @@ def _createPackageIndex(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndexMark'] = []
         cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createNewsCache(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'NewsCache' not in db.tables:
         cu.execute("""
@@ -570,7 +533,7 @@ def _createNewsCache(db):
             category            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCache'] = []
-        commit = True
+        changed = True
 
     if 'NewsCacheInfo' not in db.tables:
         cu.execute("""
@@ -579,16 +542,14 @@ def _createNewsCache(db):
             feedLink            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['NewsCacheInfo'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createMirrorInfo(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'InboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE InboundMirrors (
@@ -605,8 +566,8 @@ def _createMirrorInfo(db):
             allLabels           integer                     DEFAULT 0
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['InboundMirrors'] = []
-        commit = True
-    commit |= db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
+        changed = True
+    changed |= db.createIndex('InboundMirrors', 'InboundMirrorsProjectIdIdx',
             'targetProjectId')
 
     if 'UpdateServices' not in db.tables:
@@ -619,7 +580,7 @@ def _createMirrorInfo(db):
             mirrorPassword      varchar(254)    NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['UpdateServices'] = []
-        commit = True
+        changed = True
 
     if 'OutboundMirrors' not in db.tables:
         cu.execute("""CREATE TABLE OutboundMirrors (
@@ -635,8 +596,8 @@ def _createMirrorInfo(db):
             useReleases         integer         NOT NULL    DEFAULT 0
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrors'] = []
-        commit = True
-    commit |= db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
+        changed = True
+    changed |= db.createIndex('OutboundMirrors', 'OutboundMirrorsProjectIdIdx',
             'sourceProjectId')
 
     if 'OutboundMirrorsUpdateServices' not in db.tables:
@@ -650,16 +611,14 @@ def _createMirrorInfo(db):
             PRIMARY KEY ( outboundMirrorId, updateServiceId )
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['OutboundMirrorsUpdateServices'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createRepNameMap(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'RepNameMap' not in db.tables:
         cu.execute("""
@@ -670,67 +629,63 @@ def _createRepNameMap(db):
             PRIMARY KEY ( fromName, toName )
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['RepNameMap'] = []
-        commit = True
-    commit |= db.createIndex('RepNameMap', 'RepNameMap_fromName_idx',
+        changed = True
+    changed |= db.createIndex('RepNameMap', 'RepNameMap_fromName_idx',
         'fromName')
-    commit |= db.createIndex('RepNameMap', 'RepNameMap_toName_idx',
+    changed |= db.createIndex('RepNameMap', 'RepNameMap_toName_idx',
         'toName')
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createApplianceSpotlight(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'ApplianceSpotlight' not in db.tables:
         cu.execute("""
         CREATE TABLE ApplianceSpotlight (
             itemId          %(PRIMARYKEY)s,
-            title           CHAR(255),
-            text            CHAR(255),
-            link            CHAR(255),
-            logo            CHAR(255),
-            showArchive     INT,
-            startDate       INT,
+            title           varchar(255),
+            text            varchar(255),
+            link            varchar(255),
+            logo            varchar(255),
+            showArchive     integer,
+            startDate       integer,
             endDate         INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ApplianceSpotlight'] = []
-        commit = True
+        changed = True
 
     if 'FrontPageSelections' not in db.tables:
         cu.execute("""
         CREATE TABLE FrontPageSelections (
             itemId          %(PRIMARYKEY)s,
-            name            CHAR(255),
-            link            CHAR(255),
+            name            varchar(255),
+            link            varchar(255),
             rank            INT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['FrontPageSelections'] = []
-        commit = True
+        changed = True
 
     # XXX: delete this in a future schema upgrade; leaving dormant for now
     if 'UseIt' not in db.tables:
         cu.execute("""
         CREATE TABLE UseIt (
             itemId         %(PRIMARYKEY)s,
-            name            CHAR(255),
-            link            CHAR(255)
+            name            varchar(255),
+            link            varchar(255)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['UseIt'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createFrontPageStats(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'LatestCommit' not in db.tables:
         cu.execute("""
@@ -740,8 +695,8 @@ def _createFrontPageStats(db):
             commitTime          numeric(14,3)   NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['LatestCommit'] = []
-        commit = True
-    commit |= db.createIndex('LatestCommit', 'LatestCommitTimestamp',
+        changed = True
+    changed |= db.createIndex('LatestCommit', 'LatestCommitTimestamp',
             'projectId, commitTime')
 
     if 'PopularProjects' not in db.tables:
@@ -752,7 +707,7 @@ def _createFrontPageStats(db):
             rank                integer         NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PopularProjects'] = []
-        commit = True
+        changed = True
 
     if 'TopProjects' not in db.tables:
         cu.execute("""
@@ -762,22 +717,20 @@ def _createFrontPageStats(db):
             rank                integer         NOT NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TopProjects'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createEC2Data(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'BlessedAMIs' not in db.tables:
         cu.execute("""
         CREATE TABLE BlessedAMIs (
             blessedAMIId        %(PRIMARYKEY)s,
-            ec2AMIId            CHAR(12) NOT NULL,
+            ec2AMIId            varchar(12) NOT NULL,
             buildId             integer,
             shortDescription    varchar(128),
             helptext            text,
@@ -789,39 +742,37 @@ def _createEC2Data(db):
                 REFERENCES Builds(buildId) ON DELETE SET NULL
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['BlessedAMIs'] = []
-        commit = True
-    commit |= db.createIndex('BlessedAMIs', 'BlessedAMIEc2AMIIdIdx', 'ec2AMIId')
+        changed = True
+    changed |= db.createIndex('BlessedAMIs', 'BlessedAMIEc2AMIIdIdx', 'ec2AMIId')
 
     if 'LaunchedAMIs' not in db.tables:
         cu.execute("""
         CREATE Table LaunchedAMIs (
             launchedAMIId       %(PRIMARYKEY)s,
             blessedAMIId        integer NOT NULL,
-            launchedFromIP      CHAR(15) NOT NULL,
-            ec2InstanceId       CHAR(10) NOT NULL,
-            raaPassword         CHAR(8) NOT NULL,
-            launchedAt          numeric(14,3) NOT NULL,
-            expiresAfter        numeric(14,3) NOT NULL,
+            launchedFromIP      varchar(15) NOT NULL,
+            ec2InstanceId       varchar(10) NOT NULL,
+            raaPassword         varchar(8) NOT NULL,
+            launchedAt          numeric(14,0) NOT NULL,
+            expiresAfter        numeric(14,0) NOT NULL,
             isActive            integer NOT NULL DEFAULT 1,
             userData            text,
             CONSTRAINT la_bai_fk FOREIGN KEY (blessedAMIId)
                 REFERENCES BlessedAMIs(blessedAMIId) ON DELETE RESTRICT
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['LaunchedAMIs'] = []
-        commit = True
-    commit |= db.createIndex('LaunchedAMIs', 'LaunchedAMIsExpiresActive',
+        changed = True
+    changed |= db.createIndex('LaunchedAMIs', 'LaunchedAMIsExpiresActive',
             'isActive,expiresAfter')
-    commit |= db.createIndex('LaunchedAMIs', 'LaunchedAMIsIPsActive',
+    changed |= db.createIndex('LaunchedAMIs', 'LaunchedAMIsIPsActive',
             'isActive,launchedFromIP')
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createSessions(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'Sessions' not in db.tables:
         cu.execute("""
@@ -831,16 +782,14 @@ def _createSessions(db):
             data                text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Sessions'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 
 def _createProductVersions(db):
     cu = db.cursor()
-    commit = False
+    changed = False
 
     if 'ProductVersions' not in db.tables:
         cu.execute("""
@@ -854,17 +803,15 @@ def _createProductVersions(db):
                 timeCreated         numeric(14,3)
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['ProductVersions'] = []
-        commit = True
-    commit |= db.createIndex('ProductVersions', 'ProductVersions_uq',
+        changed = True
+    changed |= db.createIndex('ProductVersions', 'ProductVersions_uq',
             'projectId,namespace,name', unique = True)
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 def _createTargets(db):
     cu = db.cursor()
-    commit = False
+    changed = False
     if 'Targets' not in db.tables:
         cu.execute("""
             CREATE TABLE Targets (
@@ -873,7 +820,7 @@ def _createTargets(db):
                 targetName      varchar(255)        NOT NULL    UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Targets'] = []
-        commit = True
+        changed = True
 
     if 'TargetData' not in db.tables:
         cu.execute("""
@@ -886,33 +833,45 @@ def _createTargets(db):
                 PRIMARY KEY ( targetId, name )
             ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TargetData'] = []
-        commit = True
+        changed = True
 
-    if commit:
-        db.commit()
-        db.loadSchema()
+    return changed
 
 # create the (permanent) server repository schema
-def createSchema(db):
+def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
         db.loadSchema()
-    _createUsers(db)
-    _createProjects(db)
-    _createLabels(db)
-    _createProductVersions(db)
-    _createBuilds(db)
-    _createCommits(db)
-    _createGroupTroves(db)
-    _createJobs(db)
-    _createPackageIndex(db)
-    _createNewsCache(db)
-    _createMirrorInfo(db)
-    _createRepNameMap(db)
-    _createApplianceSpotlight(db)
-    _createFrontPageStats(db)
-    _createEC2Data(db)
-    _createSessions(db)
-    _createTargets(db)
+
+    if doCommit:
+        db.transaction()
+
+    changed = False
+    changed |= _createUsers(db)
+    changed |= _createProjects(db)
+    changed |= _createLabels(db)
+    changed |= _createProductVersions(db)
+    changed |= _createBuilds(db)
+    changed |= _createCommits(db)
+    changed |= _createGroupTroves(db)
+    changed |= _createJobs(db)
+    changed |= _createPackageIndex(db)
+    changed |= _createNewsCache(db)
+    changed |= _createMirrorInfo(db)
+    changed |= _createRepNameMap(db)
+    changed |= _createApplianceSpotlight(db)
+    changed |= _createFrontPageStats(db)
+    changed |= _createEC2Data(db)
+    changed |= _createSessions(db)
+    changed |= _createTargets(db)
+
+    if doCommit:
+        if changed:
+            db.commit()
+            db.loadSchema()
+        else:
+            db.rollback()
+
+    return changed
 
 
 #############################################################################
@@ -954,7 +913,6 @@ def loadSchema(db, cfg=None, should_migrate=False):
     # expedite the initial repo creation
     if version == 0:
         createSchema(db)
-        db.loadSchema()
         setVer = migrate.majorMinor(RBUILDER_DB_VERSION.major)
         return db.setVersion(setVer)
 

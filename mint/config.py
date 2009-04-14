@@ -11,6 +11,7 @@ from mint import urltypes
 from mint import mint_error
 
 from conary.conarycfg import ConfigFile, CfgProxy
+from conary.dbstore import CfgDriver
 from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
         CfgList, CfgPath, CfgString)
 
@@ -30,8 +31,8 @@ keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'projectDomainName', 'externalDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',
-                           'requireSigs', 'authPass', 'reposDBDriver', 
-                           'reposDBPath']
+                           'requireSigs', 'authPass',
+                           ]
 
 _templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
@@ -165,6 +166,9 @@ class MintConfig(ConfigFile):
     reposLog                = (CfgBool, True)
 
     # Repositories and built-in proxy
+    database                = (CfgDict(CfgDriver),
+            {'default': ('postgresql', 'postgres@localhost.localdomain:5439/%s')},
+            "Aliases for repositoryDB connect string templates.")
     injectUserAuth          = (CfgBool, True,
                                 "Inject user authentication into proxy requests")
     readOnlyRepositories    = (CfgBool, False)
@@ -173,7 +177,6 @@ class MintConfig(ConfigFile):
     requireSigs             = (CfgBool, None,
                                "Require that all commits to local "
                                "repositories be signed by an OpenPGP key.")
-    serializeCommits        = (CfgBool, True)
     useInternalConaryProxy  = (CfgBool, False)
 
     proxyContentsDir        = (CfgPath, RBUILDER_DATA + '/proxy-contents/')
@@ -181,11 +184,11 @@ class MintConfig(ConfigFile):
     proxyChangesetCacheDir  = (CfgPath, RBUILDER_DATA + '/cscache/')
 
     # Project defaults
-    hideNewProjects         = (CfgBool, False)
-    reposDBDriver           = (CfgString, 'sqlite')
-    reposDBPath             = (CfgString, '/srv/rbuilder/repos/%s/sqldb')
+    defaultDatabase         = (CfgString, 'default',
+            "The default database pool for new projects")
     defaultBranch           = (CfgString, 'rpl:devel',
             "The default namespace and tag used by products you create in rBuilder") # mostly deprecated
+    hideNewProjects         = (CfgBool, False)
     namespace               = (CfgString, '',
             "The default namespace used by products you create in rBuilder")
     groupApplianceLabel     = (CfgString, 'rap.rpath.com@rpath:linux-1',
@@ -253,6 +256,7 @@ class MintConfig(ConfigFile):
     localAddrs              = (CfgList(CfgString), ['127.0.0.1'])
     bannersPerPage          = (CfgInt, 5)
     displaySha1             = (CfgBool, True)
+    serializeCommits        = (CfgBool, True)
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
@@ -268,6 +272,10 @@ class MintConfig(ConfigFile):
     ec2DefaultInstanceTTL   = 600
     ec2DefaultMayExtendTTLBy= 2700
     ec2UseNATAddressing     = (CfgBool, False)
+
+    # Repository databases -- migrated in schema (47, 0)
+    reposDBDriver           = CfgString
+    reposDBPath             = CfgString
 
     # *** END DEPRECATED VALUES ***
 

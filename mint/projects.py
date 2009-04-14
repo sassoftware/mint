@@ -26,7 +26,8 @@ class Project(database.TableObject):
     __slots__ = ('projectId', 'creatorId', 'name', 'description', 'hostname',
         'domainname', 'namespace', 'projecturl', 'hidden', 'external',
         'isAppliance', 'disabled', 'timeCreated', 'timeModified',
-        'commitEmail', 'shortname', 'prodtype', 'version', 'backupExternal')
+        'commitEmail', 'shortname', 'prodtype', 'version', 'backupExternal',
+        'fqdn', 'database')
 
     def getItem(self, id):
         return self.server.getProject(id)

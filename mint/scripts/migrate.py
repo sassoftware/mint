@@ -41,6 +41,7 @@ def add_columns(db, table, *columns):
         except sqlerrors.DuplicateColumnName:
             pass
 
+
 def drop_tables(db, *tables):
     '''
     Drop each table, ignoring any missing tables.
@@ -50,10 +51,67 @@ def drop_tables(db, *tables):
     cu = db.cursor()
 
     for table in tables:
-        try:
+        if table in db.tables:
             cu.execute('DROP TABLE %s' % (table,))
-        except sqlerrors.InvalidTable:
-            pass
+            del db.tables[table]
+
+    db.loadSchema()
+
+
+def rebuild_table(db, table, fieldsOut, fieldsIn=None):
+    """
+    SQLite offers no way to alter, drop, or change constraints on columns.
+    So instead we have to rename it out of the way, build a new table, and
+    drop the old one.
+    """
+    cu = db.cursor()
+
+    tmpTable = None
+    if table in db.tables:
+        for index in db.tables[table]:
+            db.dropIndex(table, index)
+
+        tmpTable = table + '_tmp'
+        cu.execute("ALTER TABLE %s RENAME TO %s" % (table, tmpTable))
+        del db.tables[table]
+
+    assert schema.createSchema(db, doCommit=False)
+
+    if fieldsIn is None:
+        fieldsIn = fieldsOut
+    assert len(fieldsIn) == len(fieldsOut)
+
+    if tmpTable:
+        fieldsOut = ', '.join(fieldsOut)
+        placeHolders = ' ,'.join('?' for x in fieldsOut)
+
+        hasChoices = max(isinstance(x, (tuple, list)) for x in fieldsIn)
+        if hasChoices:
+            # This block is something resembling a portable way to pick
+            # which of a list of possible field names is actually in the
+            # table. All of the items in fieldsIn that are a list or tuple
+            # of choices will be replaced with a single item that was found
+            # in the table.
+            cu.execute("SELECT * FROM %s LIMIT 1" % tmpTable)
+            allFields = set(x.lower() for x in cu.fields())
+            for n, field in enumerate(fieldsIn):
+                if isinstance(field, (tuple, list)):
+                    for choice in field:
+                        if choice.lower() in allFields:
+                            fieldsIn[n] = choice
+                            break
+                    else:
+                        raise RuntimeError("None of the fields %r are in "
+                                "table %s %r" % (tuple(field), table,
+                                    tuple(allFields)))
+
+        fieldsIn = ', '.join(fieldsIn)
+        cu.execute("INSERT INTO %s ( %s ) SELECT %s FROM %s"
+                % (table, fieldsOut, fieldsIn, tmpTable))
+        cu.execute("DROP TABLE %s" % tmpTable)
+
+    db.loadSchema()
+
 
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
 
@@ -460,7 +518,7 @@ class MigrateTo_46(SchemaMigration):
     # - Add versionId and stage columns to Builds
     def migrate(self):
         add_columns(self.db, 'Builds', 
-                     'productVersionId INTEGER DEFAULT 0',
+                     'productVersionId INTEGER',
                      'stageName VARCHAR(255) DEFAULT ""', 
                     )
         return True
@@ -483,7 +541,64 @@ class MigrateTo_46(SchemaMigration):
                 'statusMessage VARCHAR(255) DEFAULT ""')
         return True
 
-        
+class MigrateTo_47(SchemaMigration):
+    Version = (47, 0)
+
+    # 47.0
+    # - Fixups for migration to PostgreSQL
+    # - Added "database" and "fqdn" columns to Projects
+    # - Populated fqdn column from Labels table
+    # - Migrated ReposDatabases/ProjectDatabase into database column and
+    #   dropped those tables.
+    def migrate(self):
+        cu = self.db.cursor()
+
+        # Begin fixups
+        if self.db.driver == 'sqlite':
+            rebuild_table(self.db, "UrlDownloads",
+                    ['urlId', 'timeDownloaded', 'ip'])
+            rebuild_table(self.db, "JobData",
+                    ['jobId', 'name', 'value', 'valueType'],
+                    ['jobId', 'name', 'value', ('valueType', 'dataType')])
+            rebuild_table(self.db, "BuildFiles",
+                    ['fileId', 'buildId', 'idx', 'title', 'size', 'sha1'])
+
+        cu.execute("UPDATE Projects SET isAppliance = 1 WHERE isAppliance IS NULL")
+        cu.execute("UPDATE Projects SET shortname = hostname WHERE shortname IS NULL")
+        cu.execute("UPDATE Projects SET creatorId = NULL WHERE creatorId = -1")
+        cu.execute("UPDATE Builds SET productVersionId = NULL WHERE productVersionId = 0")
+        # End fixups
+
+        add_columns(self.db, 'Projects', "database varchar(128)",
+                "fqdn varchar(255)")
+
+        cu.execute("""SELECT p.projectId, p.external, r.driver, r.path,
+                    l.label,
+                    EXISTS (
+                        SELECT * FROM InboundMirrors m
+                        WHERE p.projectId = m.targetProjectId
+                    ) AS localMirror
+                FROM Projects p
+                LEFT JOIN Labels l USING ( projectId )
+                LEFT JOIN ProjectDatabase d USING ( projectId )
+                LEFT JOIN ReposDatabases r USING ( databaseId )""")
+        cu2 = self.db.cursor()
+        for projectId, isExternal, driver, path, label, isLocalMirror in cu:
+            fqdn = label.split('@')[0]
+            if isExternal and not isLocalMirror:
+                # No database: leave column NULL
+                database = None
+            if driver:
+                # "Alternate" database: set column to the full connect string
+                database = '%s %s' % (driver, path)
+            else:
+                # "Default" database: set column to 'default'
+                database = 'default'
+            cu2.execute("""UPDATE Projects SET fqdn = ?, database = ?
+                    WHERE projectId = ?""", fqdn, database, projectId)
+        drop_tables(self.db, 'ProjectDatabase', 'ReposDatabases')
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -3,34 +3,60 @@
 # Copyright (c) 2008 rPath, Inc.
 #
 
+import logging
 import os
 import sys
 
 from mint import config
+from mint.lib import scriptlibrary
+
 
 def migrate():
+    scriptlibrary.setupScriptLogger('/var/log/rbuilder/scripts.log',
+            consoleLevel=logging.INFO, logfileLevel=logging.DEBUG)
+    log = scriptlibrary.getScriptLogger()
+
     # read the configuration
     cfg = config.MintConfig()
     namespaceDfl = cfg.namespace
-    cfg.read(config.RBUILDER_GENERATED_CONFIG)
+    cfg.read(config.RBUILDER_CONFIG)
 
-    if cfg.configured and cfg.namespace == namespaceDfl:
-        print "Setting namespace from default branch '%s'" % \
-               cfg.defaultBranch
-        try:
-            branch, tag = cfg.defaultBranch.replace(' ', '').split(':')
-        except Exception, e:
-            msg = "Failed parsing default branch '%s': %s" % \
-                  (cfg.defaultBranch, str(e))
-            raise Exception(msg)
-    
+    if not cfg.configured:
+        log.info("Not migrating rBuilder configuration: not configured.")
+        return 0
+
+    changed = False
+
+    # defaultBranch -> namespace
+    if cfg.namespace == namespaceDfl:
+        branch = cfg.defaultBranch.split(':')[0].strip()
         if branch:
             cfg.namespace = branch
-            f = file(config.RBUILDER_GENERATED_CONFIG, 'w')
-            for k in config.keysForGeneratedConfig:
-                cfg.displayKey(k, out = f)
-            f.close()
-            print "Namespace has been set to '%s'" % cfg.namespace
+            log.info("Namespace has been set to %r", branch)
+            changed = True
+
+    # reposDBDriver/reposDBPath -> database
+    poolName = 'default'
+    if cfg.reposDBDriver and cfg.isDefault('database'):
+        cfg.database[poolName] = pool = (cfg.reposDBDriver, cfg.reposDBPath)
+
+        # Write to a separate file so it can easily be changed
+        # in the future.
+        fObj = open(config.RBUILDER_DATA + 'config/config.d/25_default-database.conf', 'w')
+        cfg.displayKey('database', out=fObj)
+        fObj.close()
+
+        log.info("Set default db %r to %r", poolName, pool)
+
+        # Make sure the config gets re-written without reposDBDriver.
+        changed = True
+
+    if changed:
+        f = file(config.RBUILDER_GENERATED_CONFIG, 'w')
+        for k in config.keysForGeneratedConfig:
+            cfg.displayKey(k, out = f)
+        f.close()
+        print "New configuration written to", config.RBUILDER_GENERATED_CONFIG
     
     return 0
 
