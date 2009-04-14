@@ -124,8 +124,18 @@ class Model(object):
         fields = list(self._fields)
         cls = self.__class__
         className = self.__class__
+
+        if args and isinstance(args[0], (dict, sqllib.Row)):
+            # A dictionary as a single, positional argument.
+            assert not kwargs and len(args) == 1
+            kwargs = args[0]
+            args = []
+
         args = list(args)
-        kwargs = sqllib.CaselessDict(kwargs)
+        if isinstance(kwargs, sqllib.Row):
+            kwargs = sqllib.CaselessDict(zip(kwargs.fields, kwargs.data))
+        else:
+            kwargs = sqllib.CaselessDict(kwargs)
 
         if len(args) > len(self._fields):
             raise TypeError(

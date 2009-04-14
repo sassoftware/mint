@@ -50,14 +50,14 @@ class ProductManager(object):
             WHERE hostname=?
         '''
         cu.execute(sql, self.auth.userId, hostname)
-        d = dict(self.db._getOne(cu, errors.ProductNotFound, hostname))
+        d = self.db._getOne(cu, errors.ProductNotFound, hostname)
 
         level = d.pop('level', None)
         if level is not None:
             d['role'] = userlevels.names[level]
 
         d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
-        p = models.Product(**d)
+        p = models.Product(d)
         return p
 
     def listProducts(self, start=0, limit=None, search=None, roles=None):
@@ -104,15 +104,13 @@ class ProductManager(object):
         cu.execute(query, *args)
 
         results = models.ProductSearchResultList()
-        for row in cu:
-            d = dict(row)
-
+        for d in cu:
             role = d.pop('role')
             if role is not None:
                 d['role'] = userlevels.names[role]
             d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
 
-            p = models.Product(**d)
+            p = models.Product(d)
             results.products.append(p)
         return results
 
@@ -128,9 +126,9 @@ class ProductManager(object):
                       JOIN ProductVersions as PVTable USING (projectId)
                       WHERE Projects.hostname=? AND PVTable.name=?''', 
                       hostname, versionName)
-        results = self.db._getOne(cu, errors.ProductVersionNotFound, 
+        row = self.db._getOne(cu, errors.ProductVersionNotFound, 
                                   (hostname, versionName))
-        return models.ProductVersion(**dict(results))
+        return models.ProductVersion(results)
 
     def createProduct(self, name, description, hostname,
                       domainname, namespace, isAppliance,

@@ -37,9 +37,8 @@ class ReleaseManager(object):
         cu.execute(sql, hostname)
         releases = models.ReleaseList()
         for row in cu:
-            row = dict(row)
             row['published'] = bool(row['timePublished'])
-            release = models.Release(**row)
+            release = models.Release(row)
             releases.releases.append(release)
         return releases
 
@@ -61,9 +60,9 @@ class ReleaseManager(object):
         LEFT JOIN Users as PublishUser ON (publishedBy=PublishUser.userId)
         WHERE hostname=? and releaseId=?'''
         cu.execute(sql, hostname, releaseId)
-        row = dict(self.db._getOne(cu, errors.ReleaseNotFound, 
-                                   (hostname, releaseId)))
-        return models.Release(**row)
+        row = self.db._getOne(cu, errors.ReleaseNotFound,
+                (hostname, releaseId))
+        return models.Release(row)
 
     def createRelease(self, fqdn, name, description, version, buildIds):
         hostname = fqdn.split('.')[0]

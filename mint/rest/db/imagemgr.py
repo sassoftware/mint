@@ -68,14 +68,13 @@ class ImageManager(object):
 
         images = []
         for row in rows:
-            row = dict(row)
             imageType = row['imageType']
             row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
             row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
             row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
             row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
             row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
-            image = models.Image(**row)
+            image = models.Image(row)
             image.statusMessage = jobstatus.statusNames[image.status]
             images.append(image)
 
@@ -97,13 +96,12 @@ class ImageManager(object):
         if extraArgs:
             args += tuple(extraArgs)
         rows = self.db.cursor().execute(sql, *args)
-        for row in rows:
-            d = dict(row)
+        for d in rows:
             urlType = d.pop('urlType')
             url = d.pop('url')
             if d['fileId'] not in filesById:
                 d['imageId'] = d.pop('buildId')
-                file = models.ImageFile(**d)
+                file = models.ImageFile(d)
                 filesById[file] = file
                 file.urls = []
                 filesByImageId.setdefault(file.imageId, []).append(file)
@@ -200,10 +198,9 @@ class ImageManager(object):
                       WHERE buildId=? and hostname=?
                       ORDER BY idx''', imageId, hostname)
         imageFiles = []
-        for row in cu:
-            d = dict(row)
+        for d in cu:
             d['imageId'] = d.pop('buildId')
-            file = models.ImageFile(**d)
+            file = models.ImageFile(d)
             imageFiles.append(file)
         for file in imageFiles:
             cu.execute('''SELECT urlType, url
@@ -211,14 +208,13 @@ class ImageManager(object):
                           JOIN FilesUrls USING(urlId)
                           WHERE fileId=?''', file.fileId)
             urls = []
-            for row in cu:
-                d = dict(row)
+            for d in cu:
                 d['url'] = self.cfg.basePath + 'downloadImage?fileId=%d' % (
                                                                 file.fileId)
                 if d['urlType'] not in (urltypes.LOCAL, 
                                         self.cfg.redirectUrlType):
                     d['url'] += '&urlType=%d' % d['urlType']
-                urls.append(models.FileUrl(**d))
+                urls.append(models.FileUrl(d))
             file.urls = urls
         return models.ImageFileList(imageFiles)
 

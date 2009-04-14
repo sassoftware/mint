@@ -186,7 +186,7 @@ class Database(DBInterface):
                       WHERE Projects.hostname=?''', hostname)
         pvl = models.ProductVersionList()
         for row in cu:
-            pvl.addProductVersion(**dict(row))
+            pvl.addProductVersion(row)
         return pvl
 
     @readonly
@@ -262,8 +262,8 @@ class Database(DBInterface):
                                  displayEmail, blurb 
                            FROM Users WHERE username=? AND active=1""", 
                            username)
-        d = dict(self._getOne(cu, errors.UserNotFound, username))
-        return models.User(**d)
+        d = self._getOne(cu, errors.UserNotFound, username)
+        return models.User(d)
 
     @readonly
     def listMembershipsForUser(self, username):
@@ -291,7 +291,7 @@ class Database(DBInterface):
                              active, blurb FROM Users""")
         userList = models.UserList()
         for d in cu:
-            userList.users.append(models.User(**dict(d)))
+            userList.users.append(models.User(d))
         return userList
 
     @readonly    
