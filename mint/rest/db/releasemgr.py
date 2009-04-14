@@ -36,20 +36,11 @@ class ReleaseManager(object):
         WHERE hostname=?'''
         cu.execute(sql, hostname)
         releases = models.ReleaseList()
-        releasesById = {}
         for row in cu:
             row = dict(row)
             row['published'] = bool(row['timePublished'])
             release = models.Release(**row)
-            releasesById[release.releaseId] = release
             releases.releases.append(release)
-        cu.execute('''
-        SELECT pubReleaseId,imageId FROM PublishedReleases
-            JOIN Images (USING pubReleaseId)
-            WHERE hostname=?
-        ''', hostname)
-        for releaseId, imageId in cu:
-            releasesById[releaseId].imageIds.append(models.ImageId(imageId))
         return releases
 
     def getReleaseForProduct(self, fqdn, releaseId):
@@ -90,6 +81,7 @@ class ReleaseManager(object):
         return releaseId
 
     def updateImagesForRelease(self, fqdn, releaseId, imageIds):
+	cu = self.db.cursor()
         cu.execute("""UPDATE Builds SET pubReleaseId = NULL
                           WHERE pubReleaseId = ?""", releaseId)
         if self._isPublished(releaseId):

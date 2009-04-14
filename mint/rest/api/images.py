@@ -87,5 +87,5 @@ class ProductReleasesController(base.BaseController):
     @requires('images', models.ImageList)
     def setImages(self, request, hostname, releaseId, images):
         self.db.updateImagesForRelease(hostname, releaseId,
-                                       [images.images.imageId for x in images])
+			       [x.imageId for x in images.images])
         return self.get(request, hostname, releaseId)
