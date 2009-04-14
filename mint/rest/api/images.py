@@ -62,7 +62,7 @@ class ProductReleasesController(base.BaseController):
         self.db.updateRelease(hostname, releaseId, release.name,
                               release.description,
                               release.version,
-                              [x.imageId for x in release.images])
+                              [x.imageId for x in release.imageIds])
         return self.get(request, hostname, releaseId)
 
     @requires('publishOptions', models.PublishOptions)
