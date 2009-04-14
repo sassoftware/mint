@@ -7,6 +7,7 @@ import testsuite
 testsuite.setup()
 
 import os
+import re
 import sys
 import time
 import tempfile
@@ -21,6 +22,7 @@ from mint.mint_error import *
 from mint import builds
 from mint.server import deriveBaseFunc
 from mint import helperfuncs
+from mint import notices_store
 from mint import urltypes
 from mint import userlevels
 from mint import jobstatus
@@ -37,6 +39,18 @@ from rpath_common.proddef import api1 as proddef
 import fixtures
 
 class BuildTest(fixtures.FixturedUnitTest):
+    def setUp(self):
+        class Counter(object):
+            counter = 0
+            def _generateString(slf, length):
+                slf.__class__.counter += 1
+                return str(slf.counter)
+        # Predictable IDs
+        self.counter = counter = Counter()
+        self.mock(notices_store.DiskStorage, '_generateString',
+                  counter._generateString)
+        fixtures.FixturedUnitTest.setUp(self)
+
     @testsuite.context("quick")
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
@@ -690,10 +704,23 @@ class BuildTest(fixtures.FixturedUnitTest):
             XML-RPC limits. (RBL-2789) """
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
-        
+
         client.server._server.setBuildFilenames(build.id,
                                                 [['reallybigfile', '3 GB build',
                                                  '3147483647', 'F'*40 ]])
+        storagePath = os.path.join(self.cfg.dataPath, 'notices', 'users',
+            'owner', 'notices', 'builder')
+        notices = sorted(os.listdir(storagePath))
+        self.failUnlessEqual(notices, ['1', '2', '3', '4', '5'])
+        # Test one of the notices
+        npath = os.path.join(storagePath, '5', 'content')
+        contents = file(npath).read()
+        contents = re.sub('Created On:&lt;/b&gt; .*</desc',
+            'Created On:&lt;/b&gt; @CREATED-ON@</desc', contents)
+        contents = re.sub('<date>.*</date>',
+            '<date>@DATE@</date>', contents)
+        self.failUnlessEqual(contents, """\
+<item><title>Image `Test Build' built (Foo version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; Foo&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; Stub Image&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; reallybigfile&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://test.rpath.local2/downloadImage?fileId=5"&gt;http://test.rpath.local2/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>http://test.rpath.local2/api/users/owner/notices/contexts/builder/5</guid></item>""")
 
     def _testSetBuildFilenamesSafe(self, db, data, hidden):
         ownerClient = self.getClient('owner')

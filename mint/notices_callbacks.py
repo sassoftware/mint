@@ -16,8 +16,8 @@ from mint import packagecreator
 class PackageNoticesCallback(packagecreator.callbacks.Callback):
     context = "builder"
 
-    _labelTroveName = "Trove Name"
-    _labelTroveVersion = "Trove Version"
+    _labelTroveName = "Name"
+    _labelTroveVersion = "Version"
     _labelTitle = "Package Build"
 
     _lineSep = "<br/>"
@@ -112,7 +112,7 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
     @classmethod
     def getJobInformation(cls, job, troveBinaries):
         if not troveBinaries:
-            return "No troves built"
+            return "No packages built"
         template = "<b>%s:</b> %s"
         ret = []
         for trvName, trvVersion in troveBinaries:
@@ -159,9 +159,12 @@ class ApplianceNoticesCallback(PackageNoticesCallback):
 
 class ImageNotices(PackageNoticesCallback):
     _template = "<b>%s:</b> %s"
-    def notify_built(self, buildName, buildType, buildTime, imageFiles):
+    def notify_built(self, buildName, buildType, buildTime,
+                     projectName, projectVersion, imageFiles):
         category = ((buildName == "Failed build log") and "error") or "success"
         lines = []
+        lines.append(self._template % ("Appliance Name", projectName))
+        lines.append(self._template % ("Appliance Major Version", projectVersion))
         if buildType:
             lines.append(self._template % ("Image Type", buildType))
         for ent in imageFiles:
@@ -169,7 +172,8 @@ class ImageNotices(PackageNoticesCallback):
         lines.append(self._template % ("Created On", self.formatTime(buildTime)))
         description = self._lineSep.join(lines)
 
-        title = "Image `%s' built" % buildName
+        title = "Image `%s' built (%s version %s)" % (buildName, projectName,
+            projectVersion)
         buildDate = self.formatRFC822Time(buildTime)
         self._storeNotice(title, description, category, buildDate)
 

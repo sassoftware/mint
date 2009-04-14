@@ -3157,7 +3157,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildType = buildtypes.typeNamesMarketing.get(bld.buildType)
 
         notices = notices_callbacks.AMIImageNotices(self.cfg, username)
-        notices.notify_built(bld.name, buildType, time.time(), [ amiId ])
+        notices.notify_built(bld.name, buildType, time.time(),
+            project.name, project.version, [ amiId ])
 
         return True
 
@@ -3243,7 +3244,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
 
         notices = notices_callbacks.ImageNotices(self.cfg, username)
-        notices.notify_built(buildName, buildType, buildTime, imageFiles)
+        notices.notify_built(buildName, buildType, buildTime,
+                project.name, project.version, imageFiles)
         return True
 
     @typeCheck(int, int, int, str)
