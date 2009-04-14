@@ -131,7 +131,8 @@ class ProductVersionDefinition(base.BaseController):
 
     def index(self, request, hostname, version):
         pd = self.db.getProductVersionDefinition(hostname, version)
-        return response.Response(self._fromProddef(pd))
+        return response.Response(self._fromProddef(pd),
+                content_type='text/xml')
 
     def update(self, request, hostname, version):
         pd = self._toProddef(request)
