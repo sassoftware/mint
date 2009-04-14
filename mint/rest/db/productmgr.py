@@ -128,7 +128,7 @@ class ProductManager(object):
                       hostname, versionName)
         row = self.db._getOne(cu, errors.ProductVersionNotFound, 
                                   (hostname, versionName))
-        return models.ProductVersion(results)
+        return models.ProductVersion(row)
 
     def createProduct(self, name, description, hostname,
                       domainname, namespace, isAppliance,
