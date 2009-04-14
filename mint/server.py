@@ -5153,9 +5153,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return sesH
 
     @requiresAuth
-    def getAvailablePackages(self, sessionHandle):
+    def getAvailablePackages(self, sessionHandle, refresh = False):
         pc = self.getPackageCreatorClient()
-        return pc.getAvailablePackagesFrozen(sessionHandle)
+        return pc.getAvailablePackagesFrozen(sessionHandle, refresh)
 
     @typeCheck(str, str, dict)
     @requiresAdmin

@@ -962,10 +962,10 @@ class MintClient:
     def getAllBuildsByType(self, buildType):
         return self.server.getAllBuildsByType(buildType)
 
-    def getAvailablePackages(self, sessionHandle):
+    def getAvailablePackages(self, sessionHandle, refresh = False):
         from conary import versions as conaryver
         from conary.deps import deps as conarydeps
-        pkgs = self.server.getAvailablePackages(sessionHandle)
+        pkgs = self.server.getAvailablePackages(sessionHandle, refresh)
         ret = []
         for label in pkgs:
             ret.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
