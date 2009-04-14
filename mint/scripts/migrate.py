@@ -572,8 +572,8 @@ class MigrateTo_47(SchemaMigration):
         add_columns(self.db, 'Projects', "database varchar(128)",
                 "fqdn varchar(255)")
 
-        cu.execute("""SELECT p.projectId, p.external, r.driver, r.path,
-                    l.label,
+        cu.execute("""SELECT p.projectId, p.external, p.hostname, p.domainname,
+                    r.driver, r.path, l.label,
                     EXISTS (
                         SELECT * FROM InboundMirrors m
                         WHERE p.projectId = m.targetProjectId
@@ -583,19 +583,23 @@ class MigrateTo_47(SchemaMigration):
                 LEFT JOIN ProjectDatabase d USING ( projectId )
                 LEFT JOIN ReposDatabases r USING ( databaseId )""")
         cu2 = self.db.cursor()
-        for projectId, isExternal, driver, path, label, isLocalMirror in cu:
-            fqdn = label.split('@')[0]
-            if isExternal and not isLocalMirror:
+        for row in cu:
+            if row['label']:
+                fqdn = row['label'].split('@')[0]
+            else:
+                fqdn = '%s.%s' % (row['hostname'], row['domainname'])
+
+            if row['external'] and not row['localMirror']:
                 # No database: leave column NULL
                 database = None
-            if driver:
+            if row['driver']:
                 # "Alternate" database: set column to the full connect string
-                database = '%s %s' % (driver, path)
+                database = '%s %s' % (row['driver'], row['path'])
             else:
                 # "Default" database: set column to 'default'
                 database = 'default'
             cu2.execute("""UPDATE Projects SET fqdn = ?, database = ?
-                    WHERE projectId = ?""", fqdn, database, projectId)
+                    WHERE projectId = ?""", fqdn, database, row['projectId'])
         drop_tables(self.db, 'ProjectDatabase', 'ReposDatabases')
         return True
 
