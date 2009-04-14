@@ -62,6 +62,8 @@ class ProductReleasesController(base.BaseController):
         self.db.updateRelease(hostname, releaseId, release.name,
                               release.description,
                               release.version,
+                              release.published,
+                              release.shouldMirror,
                               [x.imageId for x in release.imageIds])
         return self.get(request, hostname, releaseId)
 

@@ -129,6 +129,8 @@ class XobjConverter(Converter):
             xobjClass = xobject.__class__
             for entry in self.walkModelInstance(modelInstance, context):
                 name, field, value, childModel = entry
+                if not field.display:
+                    continue
                 if field.isText:
                     _xobj = xobject._xobj
                     xobject._xobj = xobj.XObjMetadata(
