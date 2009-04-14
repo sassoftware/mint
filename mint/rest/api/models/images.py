@@ -68,7 +68,7 @@ class Release(Model):
         return "models.Release(%r, %r, %r)" % (self.hostname, self.releaseId, 
                                                self.name)
 
-class NewRelease(Model):
+class UpdateRelease(Model):
     class Meta(object):
         name = 'release'
     hostname = fields.CharField()
@@ -76,10 +76,6 @@ class NewRelease(Model):
     version = fields.CharField()
     description = fields.CharField()
     imageIds = fields.ListField(ImageId)
-
-class UpdateRelease(NewRelease):
-    releaseId = fields.IntegerField()
-
 
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
