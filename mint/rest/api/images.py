@@ -49,6 +49,9 @@ class ProductReleasesController(base.BaseController):
     def get(self, request, hostname, releaseId):
         return self.db.getReleaseForProduct(hostname, releaseId)
 
+    def destroy(self, request, hostname, releaseId):
+        return self.db.deleteRelease(hostname, releaseId)
+
     @requires('release', models.UpdateRelease)
     def create(self, request, hostname, release):
         releaseId = self.db.createRelease(hostname, release.name,

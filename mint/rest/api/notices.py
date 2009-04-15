@@ -45,7 +45,7 @@ class NoticesContextController(BaseController):
 
     def process(self, req, context = None):
         # Only admins are allowed to push notices
-        if not req.mintAuth.admin:
+        if not (req.mintAuth and req.mintAuth.admin):
             return Response(status = 403)
         data = req.read()
         # Parse the data that was sent our way

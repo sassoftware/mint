@@ -15,25 +15,31 @@ from conary import conaryclient
 from conary.lib import util
 from mint import buildtypes
 
+import mint_rephelp
 import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class PlatformTest(restbase.BaseRestTest):
+class ImagesTest(restbase.BaseRestTest):
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
-        self.setupProduct()
         self.setupReleases()
 
+    @mint_rephelp.restFixturize('apitest.setupReleases')
     def setupReleases(self):
+        self.setupProduct()
         # Add a group
         label = self.productDefinition.getDefaultLabel()
-        self.addComponent("foo:bin=%s" % label)
-        self.addCollection("foo=%s" % label, ['foo:bin'])
-        groupTrv = self.addCollection("group-foo=%s" % label, ['foo'])
+        db = self.openRestDatabase()
+        self.setDbUser(db, 'adminuser')
+        client = db.productMgr.reposMgr.getConaryClientForProduct(self.productShortName)
+        repos = client.getRepos()
+        self.addComponent("foo:bin=%s" % label, repos=repos)
+        self.addCollection("foo=%s" % label, ['foo:bin'], repos=repos)
+        groupTrv = self.addCollection("group-foo=%s" % label, ['foo'],
+                                      repos=repos)
 
         # Let's add some images
-        db = self.openRestDatabase()
         images = [
             ('Image 1', buildtypes.INSTALLABLE_ISO),
             ('Image 2', buildtypes.TARBALL),
@@ -62,26 +68,23 @@ class PlatformTest(restbase.BaseRestTest):
         return self._testGetReleases(notLoggedIn = True)
 
     def _testGetReleases(self, notLoggedIn = False):
-        uriTemplate = 'products/testproject/releases'
-        uri = uriTemplate
-        kw = {}
-        if notLoggedIn:
-            kw['username'] = None
-        client = self.getRestClient(uri, **kw)
-        response = client.request('GET')
+        client = self.getRestClient()
+        req, results = client.call('GET', 'products/testproject/releases')
+        txt = client.convert('xml', req, results)
+
         # We have not added releases, we're mainly testing auth vs. nonauth
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <releases>
-  <release id="http://%(server)s:%(port)s/api/products/testproject/releases/1">
+  <release id="http://localhost:8000/api/products/testproject/releases/1">
     <releaseId>1</releaseId>
     <hostname>testproject</hostname>
     <name>Release Name</name>
-    <version></version>
+    <version>v1</version>
     <description></description>
     <published>false</published>
-    <images href="http://%(server)s:%(port)s/api/products/testproject/releases/1/images"/>
-    <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
+    <images href="http://localhost:8000/api/products/testproject/releases/1/images"/>
+    <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
     <updater/>
     <publisher/>
     <timeCreated></timeCreated>
@@ -89,21 +92,17 @@ class PlatformTest(restbase.BaseRestTest):
   </release>
 </releases>
 """
-        resp = response.read()
         for pat in [ "timeCreated", "timeModified" ]:
-            resp = re.sub("<%s>.*</%s>" % (pat, pat),
+            txt = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
-            resp)
-        self.failUnlessEqual(resp,
-             exp % dict(port = client.port, server = client.server))
+            txt)
+        self.failUnlessEqual(txt, 
+            exp % dict(server = 'localhost', port = '8000'))
 
         # These tests are very expensive, so cram the image test here as well
-        uriTemplate = 'products/testproject/releases/1/images'
-        uri = uriTemplate
-
-        self.newConnection(client, uri)
-        response = client.request('GET')
-        resp = response.read()
+        req, results = client.call('GET',
+                'products/testproject/releases/1/images')
+        resp = client.convert('xml', req, results)
         for pat in [ "timeCreated", "timeModified" ]:
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
@@ -175,7 +174,7 @@ class PlatformTest(restbase.BaseRestTest):
 """
 
         self.failUnlessEqual(resp,
-            exp % dict(server = client.server, port = client.port))
+            exp % dict(server = 'localhost', port = '8000'))
 
 if __name__ == "__main__":
         testsetup.main()
