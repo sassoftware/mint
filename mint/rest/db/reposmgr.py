@@ -108,12 +108,14 @@ class RepositoryManager(object):
         the fly if necessary
         """
         rolePerms = {
-        self.ADMIN_LEVEL:     ('rb_internal_admin', True, True, True),
-        userlevels.OWNER:     ('rb_owner',  True, True, self.cfg.projectAdmin),
-        userlevels.DEVELOPER: ('rb_developer', True, False, False),
-        userlevels.USER:      ('rb_user', False, False, False),
+                # level                 role name           write   admin
+                self.ADMIN_LEVEL:     ('rb_internal_admin', True,   True),
+                userlevels.OWNER:     ('rb_owner',          True,   True),
+                userlevels.DEVELOPER: ('rb_developer',      True,   False),
+                userlevels.USER:      ('rb_user',           False,  False),
         }
-        roleName, write, mirror, admin = rolePerms[level]
+        roleName, canWrite, canAdmin = rolePerms[level]
+
         try:
             repos.auth.addRole(roleName)
         except reposerrors.RoleAlreadyExists:
@@ -121,9 +123,9 @@ class RepositoryManager(object):
             return roleName
         else:
             repos.auth.addAcl(roleName, trovePattern=None, label=None,
-                              write=write, remove=False)
-            repos.auth.setMirror(roleName, mirror)
-            repos.auth.setAdmin(roleName, admin)
+                    write=canWrite, remove=canAdmin)
+            repos.auth.setMirror(roleName, canAdmin)
+            repos.auth.setAdmin(roleName, canAdmin)
         return roleName
 
     def addUserByMd5(self, fqdn, username, salt, password, level):

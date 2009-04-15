@@ -626,16 +626,12 @@ class ProjectTest(fixtures.FixturedUnitTest):
         epdb.stc('f')
         client = self.getClient('owner')
         project = client.getProject(data['projectId'])
-        self.failIf(self.getAdminAcl(project, 'owner') != \
-                    self.cfg.projectAdmin,
-                    "Owner admin acl does not reflect site default")
-        projectAdmin = self.cfg.projectAdmin
-        try:
-            project.addMemberByName('developer', userlevels.OWNER)
-            self.failIf(self.getAdminAcl(project, 'developer') != True,
-                    "Owner does not have admin access")
-        finally:
-            self.cfg.projectAdmin = projectAdmin
+        self.failUnless(self.getAdminAcl(project, 'owner'),
+                "Owner does not have admin access")
+
+        project.addMemberByName('developer', userlevels.OWNER)
+        self.failIf(self.getAdminAcl(project, 'developer') != True,
+                "Owner does not have admin access")
 
     @fixtures.fixture("Empty")
     def testAdminNewProject(self, db, data):

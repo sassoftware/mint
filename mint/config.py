@@ -153,7 +153,6 @@ class MintConfig(ConfigFile):
     # User authorization
     adminNewProjects        = (CfgBool, False, "Whether project creation is restricted to site admins")
     adminNewUsers           = (CfgBool, False, "Whether new users should have site admin privileges")
-    projectAdmin            = (CfgBool, True, "Whether project owners should be repos admins")
 
     # Downloads
     redirectUrlType         = (CfgInt, urltypes.AMAZONS3)
@@ -257,6 +256,7 @@ class MintConfig(ConfigFile):
     bannersPerPage          = (CfgInt, 5)
     displaySha1             = (CfgBool, True)
     serializeCommits        = (CfgBool, True)
+    projectAdmin            = (CfgBool, True)
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
