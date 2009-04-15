@@ -125,14 +125,16 @@ class MintDatabase:
 
 class SqliteMintDatabase(MintDatabase):
 
-    def __init__(self, path):
+    def __init__(self, path, initialized=False):
         MintDatabase.__init__(self, path)
         self.driver = 'sqlite'
+        self.initialized = initialized
 
     def _reset(self):
-        # this is faster than dropping tables, and forces a reopen
-        # which avoids sqlite problems with changing the schema
-        self.close()
+        if not self.initialized:
+            # this is faster than dropping tables, and forces a reopen
+            # which avoids sqlite problems with changing the schema
+            self.close()
         return self.connect()
 
     def start(self):
@@ -486,7 +488,7 @@ class RestDBMixIn(object):
             self.mintCfg = getMintCfg(self.workDir, 0, 0, dbPort, False)
         from mint.rest.db import database as restdb
         from mint.db import database
-        db = database.Database(self.mintCfg)
+        db = database.Database(self.mintCfg, alwaysReload=True)
         db = restdb.Database(self.mintCfg, db, subscribers=[])
         db.auth.isAdmin = True
         # We should probably get a real user ID here, instead of hardcoding 2
@@ -545,17 +547,19 @@ class RestDBMixIn(object):
 
     def createProduct(self, shortname, description=None,
                       owners=None, developers=None, users=None, 
-                      private=False, domainname=None, db=None):
+                      private=False, domainname=None, name=None,
+                      db=None):
         if db is None:
             db = self.openRestDatabase()
+        if name is None:
+            name = 'Project %s' % shortname
 
         oldUser = None
         if owners and db.auth.username not in owners:
             oldUser = db.auth.username
             self.setDbUser(db, owners[0])
         try:
-            prd = models.Product(name='Project %s' % shortname,
-                                 hostname=shortname,
+            prd = models.Product(name=name, hostname=shortname,
                                  shortname=shortname, prodtype='Appliance',
                                  domainname=domainname, hidden=private,
                                  description=description)
@@ -621,7 +625,59 @@ class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
         RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)
 
+    def loadRestFixture(self, name, fn=None):
+        import fixtures
+        if fn is None:
+            from mint_test.resttest import restfixtures
+            fixture = restfixtures.fixtures[name](self)
+            fn = fixture.load
+        name = 'rest_' + name
+        cfg, data = fixtures.fixtureCache.load(name, fn)
+        self.mintCfg = cfg
+        self.mintDb = SqliteMintDatabase(self.mintCfg.dbPath, 
+                                         initialized=True)
+        self.mintDb.start()
+        return data
+
+    def assertXMLEquals(self, first, second):
+        self.failUnlessEqual(normalizeXML(first),
+                             normalizeXML(second))
+
     openMintDatabase = RestDBMixIn.openRestDatabase
+
+def restFixturize(name=None):
+    if name is None:
+        name = fn.func_name
+    def deco(fn):
+        def wrapper(self, *args, **kw):
+            def loader(mintCfg):
+                self.mintCfg = mintCfg
+                return mintCfg, fn(self, *args, **kw)
+            if self.mintCfg and 'fixture' in self.mintCfg.dataPath:
+                return fn(self)
+            data = self.loadRestFixture(name, loader)
+            return data
+
+        return wrapper
+    return deco
+
+def restfixture(name):
+    def deco(func):
+        def wrapper(self, *args, **kw):
+            self.loadRestFixture(name)
+            return func(self, *args, **kw)
+        wrapper.__name__ = func.__name__
+        wrapper.__dict__.update(func.__dict__)
+        return wrapper
+    return deco
+
+def normalizeXML(data):
+    """lxml will produce the header with single quotes for its attributes,
+    while xmllint uses double quotes. This function normalizes the data"""
+    return data.replace(
+        "<?xml version='1.0' encoding='UTF-8'?>",
+        '<?xml version="1.0" encoding="UTF-8"?>').strip()
+
 
 
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
@@ -633,6 +689,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         global _reposDir
         _reposDir = rephelp.getReposDir(_reposDir, 'rbuildertest')
         return _reposDir
+
+    def assertXMLEquals(self, first, second):
+        self.failUnlessEqual(normalizeXML(first),
+                             normalizeXML(second))
 
     def openMintDatabase(self):
         return dbstore.connect(self.mintCfg.dbPath,
@@ -971,17 +1031,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         # HACK
         os.system("ipcs  -s  | awk '/^0x00000000/ {print $2}' | xargs -n1 -r ipcrm -s")
 
-    @staticmethod
-    def normalizeXML(data):
-        """lxml will produce the header with single quotes for its attributes,
-        while xmllint uses double quotes. This function normalizes the data"""
-        return data.replace(
-            "<?xml version='1.0' encoding='UTF-8'?>",
-            '<?xml version="1.0" encoding="UTF-8"?>').strip()
-
-    def assertXMLEquals(self, first, second):
-        self.failUnlessEqual(self.normalizeXML(first),
-                             self.normalizeXML(second))
 
 class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def getServerData(self):

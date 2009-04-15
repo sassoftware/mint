@@ -68,17 +68,23 @@ class FixtureCache(object):
         return dict([(x.replace('fixture', ''),
                       self.__getattribute__(x).__doc__) for x in fixtureNames])
 
-    def loadFixture(self, key):
-        name = 'fixture' + key
+    def loadFixture(self, key, loadFn=None):
+        if not loadFn:
+            name = 'fixture' + key
+            loadFn = self.__getattribute__(name)
         if key not in self._fixtures:
-            fixture = self.__getattribute__(name)
-            self._fixtures[key] = fixture(self.newMintCfg(key))
+            self._fixtures[key] = loadFn(self.newMintCfg(key))
         return self._fixtures[key]
 
-    def load(self, name):
+    def load(self, name, loadFn=None):
         raise NotImplementedError
 
     def newMintCfg(self, name):
+        # IDEA: If fixtures did things differently
+        # and instead of creating a new config for you
+        # to use just used the existing config
+        # and froze at the end, we could stack
+        # fixtures, making them less expensive to create.
         cfg = config.MintConfig()
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
@@ -699,8 +705,8 @@ class SqliteFixtureCache(FixtureCache):
 
         return cfg
 
-    def load(self, name):
-        cfg, data = self.loadFixture(name)
+    def load(self, name, loadFn=None):
+        cfg, data = self.loadFixture(name, loadFn=loadFn)
 
         # make a copy of the data directory and update the cfg
         testDataPath = tempfile.mkdtemp(prefix = "fixture%s" % name, suffix = '.copy')
@@ -768,8 +774,8 @@ class MySqlFixtureCache(SQLServerFixtureCache):
         load = subprocess.Popen(input, stdin = dump.stdout)
         load.communicate()
         
-    def loadFixture(self, name):
-        ret = super(self.__class__, self).loadFixture(name)
+    def loadFixture(self, name, loadFn=None):
+        ret = super(self.__class__, self).loadFixture(name, loadFn=loadFn)
         # save repos tables off for later
         db = self.harness.getRootDB()
         cu = db.cursor()
@@ -782,8 +788,8 @@ class MySqlFixtureCache(SQLServerFixtureCache):
                 self.keepDbs.append(newName)
         return ret
 
-    def load(self, name):
-        cfg, data = self.loadFixture(name)
+    def load(self, name, loadFn=None):
+        cfg, data = self.loadFixture(name, loadFn=loadFn)
 
         # get a random name for this particular instance of the fixture
         # in order to create unique copies
@@ -849,8 +855,8 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
         load.communicate()
         fd.close()
 
-    def loadFixture(self, name):
-        ret = super(self.__class__, self).loadFixture(name)
+    def loadFixture(self, name, loadFn=None):
+        ret = super(self.__class__, self).loadFixture(name, loadFn=loadFn)
         # save repos tables off for later
         db = self.harness.getRootDB()
         cu = db.cursor()
@@ -863,8 +869,8 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
                 self.keepDbs.append(newName.lower())
         return ret
 
-    def load(self, name):
-        cfg, data = self.loadFixture(name)
+    def load(self, name, loadFn=None):
+        cfg, data = self.loadFixture(name, loadFn=loadFn)
 
         # get a random name for this particular instance of the fixture
         # in order to create unique copies
@@ -921,7 +927,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
     def listFixtures(self):
         return fixtureCache.list()
 
-    def loadFixture(self, name):
+    def loadFixture(self, name, loadFn=None):
         """
         Loads the fixture for the unit test.
         @param name: the name of the fixture (e.g. "Full")
@@ -932,7 +938,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
 
         # reset the cached db connection
         mint.db.database.dbConnection = None
-        self.cfg, fixtureData = fixtureCache.load(name)
+        self.cfg, fixtureData = fixtureCache.load(name, loadFn=loadFn)
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         # this is so fugly it makes me wanna cry --gafton
         mint.db.database.dbConnection = db

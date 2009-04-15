@@ -33,8 +33,9 @@ class ProductVersionTest(restbase.BaseRestTest):
     def testGetProductVersion(self):
         uriTemplate = 'products/%s/versions/%s/'
         uri = uriTemplate % (self.productShortName, self.productVersion)
-        client = self.getRestClient(uri)
-        response = client.request('GET')
+        client = self.getRestClient()
+        req, response = client.call('GET', uri)
+        resp = client.convert('xml', req, response)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <productVersion id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">
@@ -53,7 +54,6 @@ class ProductVersionTest(restbase.BaseRestTest):
   <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/images"/>
 </productVersion>
 """
-        resp = response.read()
         for pat in [ "timeCreated", "timeModified" ]:
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
@@ -64,19 +64,19 @@ class ProductVersionTest(restbase.BaseRestTest):
     def testGetProductDefinition(self):
         uriTemplate = 'products/%s/versions/%s/definition'
         uri = uriTemplate % (self.productShortName, self.productVersion)
-        client = self.getRestClient(uri)
-        response = client.request('GET')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('GET', uri)
         sio = StringIO.StringIO()
         self.productDefinition.serialize(sio)
-        self.failUnlessEqual(response.read(), sio.getvalue())
+        self.failUnlessEqual(response.get(), sio.getvalue())
 
     def testGetStageImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/stages/%s/imageDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion,
         'Development')
-
-        client = self.getRestClient(uri)
-        response = client.request('GET')
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('GET', uri, convert = True)
 
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -167,15 +167,16 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageDefinition>
 </imageDefinitions>
 """
-        self.failUnlessEqual(response.read(),
+        self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
     def testGetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion)
 
-        client = self.getRestClient(uri)
-        response = client.request('GET')
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('GET', uri, convert=True)
 
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -266,15 +267,16 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageDefinition>
 </imageDefinitions>
 """
-        self.failUnlessEqual(response.read(),
+        self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
     def testGetImageTypeDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageTypeDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion)
 
-        client = self.getRestClient(uri)
-        response = client.request('GET')
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('GET', uri, convert = True)
 
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -641,14 +643,15 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageTypeDefinition>
 </imageTypeDefinitions>
 """
-        self.failUnlessEqual(response.read(),
+        self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
     def testGetProductVersionStages(self):
         uriTemplate = 'products/%s/versions/%s/stages'
         uri = uriTemplate % (self.productShortName, self.productVersion)
-        client = self.getRestClient(uri)
-        response = client.request('GET')
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('GET', uri, convert = True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <stages>
@@ -678,15 +681,16 @@ class ProductVersionTest(restbase.BaseRestTest):
   </stage>
 </stages>
 """
-        self.failUnlessEqual(response.read(),
+        self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
     def testSetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion)
 
-        client = self.getRestClient(uri, admin = True)
-        response = client.request('PUT', imageSet1)
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser', admin=True)
+        req, response = client.call('PUT', uri, convert = True, body=imageSet1)
 
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -752,13 +756,12 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageDefinition>
 </imageDefinitions>
 """
-        self.failUnlessEqual(response.read(),
+        self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
         # Make sure we're fetching the same thing
-        self.newConnection(client, uri)
-        response = client.request('GET')
-        self.failUnlessEqual(response.read(),
+        req, response = client.call('GET', uri, convert=True)
+        self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
 
@@ -768,25 +771,26 @@ class ProductVersionTest(restbase.BaseRestTest):
 
         uriTemplate = 'products'
         uri = uriTemplate
-        client = self.getRestClient(uri, admin = True)
+        client = self.getRestClient(admin = True, username='foouser')
 
-        response = client.request('POST', newProduct1 % dict(
+        req, response = client.call('POST', uri, body=newProduct1 % dict(
                 name = productName,
-                description = productDescription))
-        newUri = self.makeUri(client, "products/%s" % productName)
-        self.failUnless(('id="%s"' % newUri) in response.read())
+                description = productDescription),
+                convert=True)
+        newUri = 'http://localhost:8000/api/products/%s' % productName
+        self.failUnless(('id="%s"' % newUri) in response)
 
         productVersion = '3.0'
 
         uriTemplate = 'products/%s/versions'
         uri = uriTemplate % (productName, )
 
-        self.newConnection(client, uri)
-        response = client.request('POST', newProductVersion1
-                % dict(version = productVersion))
-        newUri = self.makeUri(client, "products/%s/versions/%s"
-                % (productName, productVersion))
-        self.failUnless(('id="%s"' % newUri) in response.read())
+        req, response = client.call('POST', uri, body=newProductVersion1
+                % dict(version = productVersion),
+                convert=True)
+        newUri = ("http://localhost:8000/api/products/%s/versions/%s"
+                  % (productName, productVersion))
+        self.failUnless(('id="%s"' % newUri) in response)
 
     def testGetProducts(self):
         return self._testGetProducts()
@@ -801,8 +805,11 @@ class ProductVersionTest(restbase.BaseRestTest):
         kw = {}
         if notLoggedIn:
             kw['username'] = None
-        client = self.getRestClient(uri, **kw)
-        response = client.request('GET')
+        else:
+            self.createUser('foouser2')
+            kw['username'] = 'foouser2'
+        client = self.getRestClient(**kw)
+        req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <products>
@@ -818,8 +825,8 @@ class ProductVersionTest(restbase.BaseRestTest):
     <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
     <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
     <description></description>
-    <isAppliance>false</isAppliance>
-    <prodtype>Component</prodtype>
+    <isAppliance>true</isAppliance>
+    <prodtype>Appliance</prodtype>
     <commitEmail></commitEmail>
     <backupExternal>false</backupExternal>
     <timeCreated></timeCreated>
@@ -832,7 +839,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </product>
 </products>
 """
-        resp = response.read()
+        resp = response
         for pat in [ "timeCreated", "timeModified" ]:
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
@@ -853,8 +860,11 @@ class ProductVersionTest(restbase.BaseRestTest):
         kw = {}
         if notLoggedIn:
             kw['username'] = None
-        client = self.getRestClient(uri, **kw)
-        response = client.request('GET')
+        else:
+            self.createUser('foouser')
+            kw['username'] = 'foouser'
+        client = self.getRestClient(**kw)
+        req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <product id="http://%(server)s:%(port)s/api/products/testproject">
@@ -869,8 +879,8 @@ class ProductVersionTest(restbase.BaseRestTest):
   <repositoryUrl href="http://%(server)s:%(port)s/repos/testproject/api"/>
   <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/testproject/browse"/>
   <description></description>
-  <isAppliance>false</isAppliance>
-  <prodtype>Component</prodtype>
+  <isAppliance>true</isAppliance>
+  <prodtype>Appliance</prodtype>
   <commitEmail></commitEmail>
   <backupExternal>false</backupExternal>
   <timeCreated></timeCreated>
@@ -883,7 +893,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
 </product>
 """
-        resp = response.read()
+        resp = response
         for pat in [ "timeCreated", "timeModified" ]:
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
@@ -904,8 +914,11 @@ class ProductVersionTest(restbase.BaseRestTest):
         kw = {}
         if notLoggedIn:
             kw['username'] = None
-        client = self.getRestClient(uri, **kw)
-        response = client.request('GET')
+        else:
+            self.createUser('foouser')
+            kw['username'] = 'foouser'
+        client = self.getRestClient(**kw)
+        req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <productVersions>
@@ -926,7 +939,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </productVersion>
 </productVersions>
 """
-        resp = response.read()
+        resp = response
         for pat in [ "timeCreated", "timeModified" ]:
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),

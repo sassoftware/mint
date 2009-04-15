@@ -21,12 +21,12 @@ import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class PlatformTest(restbase.BaseRestTest):
+class SiteTest(restbase.BaseRestTest):
     def testGetInfo(self):
         uriTemplate = ''
         uri = uriTemplate
-        client = self.getRestClient(uri)
-        response = client.request('GET')
+        client = self.getRestClient()
+        req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <rbuilderStatus id="http://%(server)s:%(port)s/api">
@@ -43,7 +43,7 @@ class PlatformTest(restbase.BaseRestTest):
   <platforms href="http://%(server)s:%(port)s/api/platforms"/>
 </rbuilderStatus>
 """
-        self.failUnlessEqual(response.read(),
+        self.failUnlessEqual(response,
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
                          conaryversion=conaryConstants.version))

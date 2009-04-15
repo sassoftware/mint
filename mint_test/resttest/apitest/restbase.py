@@ -11,14 +11,17 @@ import os
 import re
 import time
 
-from restlib import client as restClient
+from restlib.http import request
 from mint import helperfuncs
+from mint import users
+from mint.rest.api import site
+from mint.rest.modellib import converter
 
 import mint_rephelp
 
 URLQUOTE_RE = re.compile('%([A-Z0-9]{2})')
 
-class BaseRestTest(mint_rephelp.WebRepositoryHelper):
+class BaseRestTest(mint_rephelp.MintDatabaseHelper):
     buildDefs = [
         ('Citrix XenServer 32-bit', 'xen', 'x86', 'xenOvaImage'),
         ('Citrix XenServer 64-bit', 'xen', 'x86_64', 'xenOvaImage'),
@@ -28,22 +31,31 @@ class BaseRestTest(mint_rephelp.WebRepositoryHelper):
     productVersion = '1.0'
     productName = 'Project 1'
     productShortName = 'testproject'
-    productDomainName = mint_rephelp.MINT_PROJECT_DOMAIN
     productVersionDescription = 'Version description'
+    productDomainName = mint_rephelp.MINT_PROJECT_DOMAIN
     productHostname = "%s.%s" % (productShortName, productDomainName)
 
     def setupProduct(self):
+        pd = self._setupProduct()
+        self.productDefinition = pd
+
+    @mint_rephelp.restFixturize('apitest.setupProduct')
+    def _setupProduct(self):
         version = self.productVersion
         projectName = self.productName
         shortName = self.productShortName
         domainName = self.productDomainName
         description = self.productVersionDescription
-
-        self.quickMintAdmin('adminuser', 'adminpass')
-        ownerClient = self.openMintClient(authToken = ('adminuser', 'adminpass'))
-        projectId = self.projectId = self.newProject(ownerClient, projectName)
-        versionId = self.versionId = ownerClient.addProductVersion(projectId,
-            self.mintCfg.namespace, version, description=description)
+        db = self.openRestDatabase()
+        self.createUser('adminuser', admin=True)
+        self.setDbUser(db, 'adminuser')
+        self.createProduct(shortName,
+                           name=projectName,
+                           domainname=domainName, db=db)
+        self.createProductVersion(db, shortName,
+                                  version,
+                                  description=description,
+                                  namespace=self.mintCfg.namespace)
         pd = helperfuncs.sanitizeProductDefinition(
             projectName, '', shortName, domainName,
             shortName, version, '', self.mintCfg.namespace)
@@ -55,46 +67,16 @@ class BaseRestTest(mint_rephelp.WebRepositoryHelper):
                 architectureRef = archRef,
                 containerTemplateRef = containerTemplateRef,
                 stages = stageRefs)
+        client = db.productMgr.reposMgr.getConaryClientForProduct(shortName)
+        pd.saveToRepository(client, 'Product Definition commit\n')
+        return pd
 
-        ret = ownerClient.setProductDefinitionForVersion(versionId, pd)
-        # Make sure we get something back
-        self.productDefinition = ownerClient.getProductDefinitionForVersion(versionId)
-
-    def getRestClient(self, uri, username = 'foouser', password = 'foopass',
-                      admin = False, **kwargs):
-        # Launch a mint server
-        defUser = username or 'foouser'
-        defPass = password or 'foopass'
-        if admin:
-            client, userId = self.quickMintAdmin(defUser, defPass)
+    def getRestClient(self, **kw):
+        if 'db' in kw:
+            db = kw.pop('db')
         else:
-            client, userId = self.quickMintUser(defUser, defPass)
-        page = self.webLogin(defUser, defPass)
-        if username is not None:
-            pysid = page.headers['Set-Cookie'].split(';', 1)[0]
-            headers = { 'Cookie' : page.headers['Set-Cookie'] }
-        else:
-            headers = {}
-            # Unauthenticated request
-        baseUrl = "http://%s:%s/api" % (page.server, page.port)
-        client = Client(baseUrl, headers)
-        client.server = page.server
-        client.port = page.port
-        client.baseUrl = baseUrl
-        client.username = username
-        client.password = password
-
-        # Hack. Do the macro expansion in the URI - so we call __init__ again
-        uri = self.makeUri(client, uri)
-        client.__init__(uri, headers)
-        client.connect()
-        return client
-
-    def newConnection(self, client, uri):
-        uri = self.makeUri(client, uri)
-        client.__init__(uri, client.headers)
-        client.connect()
-        return client
+            db = self.openRestDatabase()
+        return Controller(self.mintCfg, db, **kw)
 
     def escapeURLQuotes(self, foo):
         """
@@ -103,17 +85,84 @@ class BaseRestTest(mint_rephelp.WebRepositoryHelper):
         """
         return URLQUOTE_RE.sub('%%\\1', foo)
 
-    def makeUri(self, client, uri):
-        if uri.startswith('http://') or uri.startswith('https://'):
-            return uri
-        replDict = dict(username = client.username, password =
-            client.password, port = client.port, server = client.server)
+    def getTestProjectRepos(self):
+        reposMgr = self.openMintDatabase().productMgr.reposMgr
+        return reposMgr.getRepositoryClientForProduct('testproject')
 
-        uri = client.baseUrl + '/' + uri
-        uri = self.escapeURLQuotes(uri)
-        return uri % replDict
+class Controller(object):
+    def __init__(self, cfg, restDb, username=None, admin=False):
+        self.server = 'localhost'
+        self.port = '8000'
+        self.controller = site.RbuilderRestServer(cfg, restDb)
+        self.restDb = restDb
+        if username:
+            cu = self.restDb.cursor()
+            cu.execute("select userId from Users where username=?", username)
+            userId = cu.fetchone()
+            if userId:
+                userId = userId[0]
+            else:
+                userId = 1
+            self.auth = users.Authorization(authorized=True, admin=admin,
+                                            userId=userId,
+                                            username=username)
+        else:
+            self.auth = users.Authorization(authoried=False, admin=False,
+                                           userId=-1)
 
-class Client(restClient.Client):
-    pass
 
+    def call(self, method, uri, body=None, convert=False):
+        request = MockRequest(method, uri, body=body)
+        request.rootController = self.controller
+        if self.auth.authorized:
+            request.mintAuth = self.auth
+        else:
+            request.mintAuth = None
+        request.auth = (self.auth.username, self.auth.username)
+        fn, remainder, args, kw = self.controller.getView(method,
+                                                request.unparsedPath)
+        request.unparsedPath = remainder
+        self.restDb.setAuth(self.auth, request.auth)
+        if hasattr(fn, 'model'):
+            modelName, model = fn.model
+            kw[modelName] = converter.fromText('xml',
+                                               body,
+                                               model, self.controller, request)
+        response = fn(request, *args, **kw)
+        if convert:
+            response = converter.toText('xml', response, self.controller,
+                                        request)
+        return request, response
 
+    def convert(self, type, request, object):
+        return converter.toText(type, object, self.controller, request)
+
+class MockRequest(request.Request):
+    def __init__(self, method, uri, username=None, admin=False,
+                 body=None):
+        self.method = method
+        self.uri = uri
+        request.Request.__init__(self, None, uri)
+        self.extension = None
+        self.body = body
+
+    def _getBaseUrl(self):
+        return 'http://localhost:8000/api/'
+
+    def _getHttpMethod(self):
+        return self.method
+
+    def _getFullPath(self):
+        return '/api/' + self.uri
+
+    def _getHeaders(self):
+        return {}
+
+    def _getHost(self):
+        return 'localhost'
+
+    def read(self):
+        return self.body
+
+    def _getPostData(self):
+        return {}

@@ -15,6 +15,7 @@ import time
 from conary.lib import util
 
 import restbase
+from mint.rest import errors as resterrors
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
@@ -26,41 +27,39 @@ class ProductVersionTest(restbase.BaseRestTest):
         ('VMware ESX 64-bit', 'vmware', 'x86_64', 'vmwareEsxImage'),
     ]
 
-    def setUp(self):
-        restbase.BaseRestTest.setUp(self)
-
     def testCreateProductErrors(self):
         errors = [
             (dict(shortname = "", hostname = "", name = ""),
-                "InvalidItem: Product name must be specified\n"),
+                "Product name must be specified"),
             (dict(shortname = "a_b", hostname = "a", name = "a"),
-                "InvalidItem: Invalid short name: must start with a letter and contain only letters, numbers, and hyphens.\n"),
+                "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."),
             (dict(shortname = "-a", hostname = "a", name = "a"),
-                "InvalidItem: Invalid short name: must start with a letter and contain only letters, numbers, and hyphens.\n"),
+                "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."),
             (dict(shortname = "a", hostname = "a_b", name = "a"),
-                "InvalidItem: Invalid hostname: must start with a letter and contain only letters, numbers, and hyphens.\n"),
+                "Invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."),
             (dict(shortname = "a", hostname = "-a", name = "a"),
-                "InvalidItem: Invalid hostname: must start with a letter and contain only letters, numbers, and hyphens.\n"),
+                "Invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."),
             (dict(shortname = "a", hostname = "a", name = ""),
-                "InvalidItem: Product name must be specified\n"),
+                "Product name must be specified"),
         ]
-        uriTemplate = 'products'
-        uri = uriTemplate
-        client = self.getRestClient(uri)
+        client = self.getRestClient()
         for uhash, errmsg in errors:
-            resp = self.failUnlessRaises(ResponseError,
-                client.request, 'POST', newProduct1 % uhash)
-            self.failUnlessEqual(resp.status, 400)
-            self.failUnlessEqual(resp.contents, errmsg)
+            err = self.assertRaises(resterrors.InvalidItem, 
+                                    client.call,'POST', 'products', 
+                                    body=newProduct1 % uhash)
+            self.failUnlessEqual(str(err), errmsg)
 
     def testCreateProduct(self):
         productShortName = "foobar"
         uriTemplate = 'products'
         uri = uriTemplate
-        client = self.getRestClient(uri)
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('foouser')
+        client = self.getRestClient(username='foo', db=db)
         data = newProduct1 % dict(shortname = "foobar",
             hostname = "foobar", name = "foobar appliance")
-        response = client.request('POST', data)
+        req, response = client.call('POST', uri, data)
+        resp = client.convert('xml', req, response)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <product id="http://%(server)s:%(port)s/api/products/foobar">
@@ -89,14 +88,13 @@ class ProductVersionTest(restbase.BaseRestTest):
   <images href="http://%(server)s:%(port)s/api/products/foobar/images/"/>
 </product>
 """
-        resp = response.read()
         for pat in [ "timeCreated", "timeModified" ]:
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s>WHITEOUT</%s>" % (pat, pat),
             resp)
 
         self.failUnlessEqual(resp,
-             exp % dict(port = client.port, server = client.server))
+             exp % dict(port = 8000, server = 'localhost'))
 
 newProduct1 = """
 <product>

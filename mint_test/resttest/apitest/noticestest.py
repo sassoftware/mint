@@ -18,12 +18,10 @@ from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
 class NoticesTest(restbase.BaseRestTest):
-    def tearDown(self):
-        restbase.BaseRestTest.tearDown(self)
-        util.rmtree(os.path.join(self.mintCfg.dataPath, 'notices'),
-                    ignore_errors = True)
 
     def getStore(self, userId = None):
+        if not self.mintCfg:
+            self.openRestDatabase()
         return notices_store.createStore(
             os.path.join(self.mintCfg.dataPath, "notices"), userId = userId)
 
@@ -37,9 +35,10 @@ class NoticesTest(restbase.BaseRestTest):
 
         uri = 'notices/aggregation'
 
-        client = self.getRestClient(uri, username = None)
-        response = client.request('GET')
-        self.assertXMLEquals(response.read(), """<?xml version='1.0' encoding='UTF-8'?>
+        client = self.getRestClient()
+        req, response = client.call('GET', 'notices/aggregation')
+
+        self.assertXMLEquals(response.get(), """<?xml version='1.0' encoding='UTF-8'?>
 <rss version="2.0"><channel title="Global Notices"><one /><two /><three /></channel></rss>""")
 
     def testGlobalNoticesDefaultContext(self):
@@ -52,15 +51,14 @@ class NoticesTest(restbase.BaseRestTest):
 
         uri = 'notices/contexts/default'
 
-        client = self.getRestClient(uri, username = None)
-        response = client.request('GET')
-        self.assertXMLEquals(response.read(), """<?xml version='1.0' encoding='UTF-8'?>
+        client = self.getRestClient(username = None)
+        req, response = client.call('GET', uri)
+        self.assertXMLEquals(response.get(), """<?xml version='1.0' encoding='UTF-8'?>
 <rss version="2.0"><channel title="Global notices for context default"><one /><two /><three /></channel></rss>""")
 
         # Try a non-public context
         uri = 'notices/contexts/aaa'
-        self.newConnection(client, uri)
-        response = self.failUnlessRaises(ResponseError, client.request, 'GET')
+        req, response = client.call('GET', uri)
         self.failUnlessEqual(response.status, 403)
 
     def testGlobalNoticesAddNoCreds(self):
@@ -68,10 +66,11 @@ class NoticesTest(restbase.BaseRestTest):
 
         uri = 'notices/contexts/default'
 
-        client = self.getRestClient(uri)
+        client = self.getRestClient()
+        client.call('POST', uri)
 
         reqData = '<four />'
-        response = self.failUnlessRaises(ResponseError, client.request, 'POST', body = reqData)
+        req, response = client.call('POST', uri, body = reqData)
         self.failUnlessEqual(response.status, 403)
 
     def testGlobalNoticesAdd(self):
@@ -80,43 +79,38 @@ class NoticesTest(restbase.BaseRestTest):
 
         uri = 'notices/contexts/default'
 
-        client = self.getRestClient(uri, admin = True)
+        client = self.getRestClient(username='user', admin = True)
 
         reqData = '<four><guid>upstream-guid</guid></four>'
 
-        response = client.request('POST', body = reqData)
-        data = response.read()
+        req, response = client.call('POST', uri, body = reqData)
+        data = response.get()
 
         notice = [ x for x in store.enumerateStoreGlobal("default") ][0]
-        guid = self.makeUri(client, 'notices/contexts/%s' % notice.id)
-        source = self.makeUri(client, 'notices/contexts/default')
+        guid = 'http://localhost:8000/api/notices/contexts/%s' % notice.id
+        source = 'http://localhost:8000/api/notices/contexts/default'
 
         self.failUnlessEqual(data,
             '<four><guid-upstream>upstream-guid</guid-upstream><guid>%s</guid><source url="%s"/></four>' % (guid, source))
 
         # Individually fetch the notice
-        uri = 'notices/contexts/%s' % notice.id
-        self.newConnection(client, uri)
-        response = client.request('GET')
-        self.failUnlessEqual(response.read(), data)
+        req, response = client.call('GET', 'notices/contexts/%s' % notice.id)
+        self.failUnlessEqual(response.get(), data)
 
         # Check 404
-        self.newConnection(client, uri + "adefadf")
-        response = self.failUnlessRaises(ResponseError, client.request, 'GET')
+        req, response = client.call('GET',
+                                    'notices/contexts/%sadefadf' % notice.id)
         self.failUnlessEqual(response.status, 404)
 
-        self.newConnection(client, uri)
-        response = client.request('DELETE')
-        self.failUnlessEqual(response.read(), data)
+        req, response = client.call('DELETE', 'notices/contexts/%s' % notice.id)
+        self.failUnlessEqual(response.get(), data)
 
         # resource should no longer be available
-        response = self.failUnlessRaises(ResponseError, client.request, 'GET')
+        req, response = client.call('GET', 'notices/contexts/%s' % notice.id)
         self.failUnlessEqual(response.status, 404)
 
         # You should not be able to delete a context
-        uri = 'notices/contexts/default'
-        self.newConnection(client, uri)
-        response = self.failUnlessRaises(ResponseError, client.request, 'DELETE')
+        req, response = client.call('DELETE', 'notices/contexts/default')
         self.failUnlessEqual(response.status, 403)
 
     def testUserNoticesAggregation(self):
@@ -129,81 +123,81 @@ class NoticesTest(restbase.BaseRestTest):
         store.storeGlobal("default", "<four />", modified = now - 2)
         store.storeUser("default", "<five />", modified = now - 1)
 
-        uri = 'users/%(username)s/notices/aggregation'
+        username = 'JeanValjean'
+        uri = 'users/%s/notices/aggregation' % username
 
-        client = self.getRestClient(uri, username = 'JeanValjean')
-        response = client.request('GET')
-        self.assertXMLEquals(response.read(), """<?xml version='1.0' encoding='UTF-8'?>
+        client = self.getRestClient(username = username)
+        req, response = client.call('GET', uri)
+        self.assertXMLEquals(response.get(), """<?xml version='1.0' encoding='UTF-8'?>
 <rss version="2.0"><channel title="Notices for user JeanValjean"><one /><two /><three /><four /><five /></channel></rss>""")
 
     def testUserNoticesAddNoCreds(self):
         store = self.getStore()
 
-        uri = 'users/%(username)s/notices/contexts/default'
+        username = 'JeanValjean'
+        uri = 'users/%(username)s/notices/contexts/default' % dict(username=username)
 
-        client = self.getRestClient(uri)
+        client = self.getRestClient()
 
         reqData = '<four />'
-        response = self.failUnlessRaises(ResponseError, client.request, 'POST', body = reqData)
+        req, response = client.call('POST', uri, body = reqData)
         self.failUnlessEqual(response.status, 403)
 
     def testUserNoticesAdd(self):
         store = self.getStore(userId = 'JeanValjean')
 
-        uri = 'users/%(username)s/notices/contexts/default'
+        uri = 'users/JeanValjean/notices/contexts/default'
 
-        client = self.getRestClient(uri, username = 'JeanValjean',
-            admin = True)
+        client = self.getRestClient(username = 'JeanValjean',
+                                    admin = True)
 
         reqData = '<four />'
 
-        response = client.request('POST', body = reqData)
-        data = response.read()
+        req, response = client.call('POST', uri, body = reqData)
+        data = response.get()
 
         notice = [ x for x in store.enumerateStoreUser("default") ][0]
-        guid = self.makeUri(client, 'users/%(username)s/notices/contexts/'
-            + notice.id)
-        source = self.makeUri(client, 'users/%(username)s/notices/contexts/default')
+        guid = 'http://localhost:8000/api/users/%(username)s/notices/contexts/' + notice.id
+        source = 'http://localhost:8000/api/users/%(username)s/notices/contexts/default'
+        subs = dict(username='JeanValjean')
+        guid = guid % subs
+        source = source % subs
 
         self.failUnlessEqual(data,
             '<four><guid>%s</guid><source url="%s"/></four>' % (guid, source))
 
         # Individually fetch the notice
-        uri = 'users/%(username)s/notices/contexts/' + notice.id
-        self.newConnection(client, uri)
-        response = client.request('GET')
-        self.failUnlessEqual(response.read(), data)
+        uri = 'users/%(username)s/notices/contexts/' % subs + notice.id
+        req, response = client.call('GET', uri)
+        self.failUnlessEqual(response.get(), data)
 
         # Check 404
-        self.newConnection(client, uri + 'adefadf')
-        response = self.failUnlessRaises(ResponseError, client.request, 'GET')
+        req, response = client.call('GET', uri + 'adefadf')
         self.failUnlessEqual(response.status, 404)
 
-        self.newConnection(client, uri)
-        response = client.request('DELETE')
-        self.failUnlessEqual(response.read(), data)
+        req, response = client.call('DELETE', uri)
+        self.failUnlessEqual(response.get(), data)
 
         # resource should no longer be available
-        response = self.failUnlessRaises(ResponseError, client.request, 'GET')
+        req, response = client.call('GET', uri)
         self.failUnlessEqual(response.status, 404)
 
         # You should not be able to delete a context
         uri = 'notices/contexts/default'
-        self.newConnection(client, uri)
-        response = self.failUnlessRaises(ResponseError, client.request, 'DELETE')
+        req, response = client.call('DELETE', uri)
         self.failUnlessEqual(response.status, 403)
-
 
     def testNoCrossoverUsers(self):
         # Create notice for our user
+        subs = dict(username='JeanValjean')
         store = self.getStore(userId = "JeanValjean")
         notice = store.storeUser("default", "<one />")
 
-        uri = 'users/%(username)s/notices/contexts/' + notice.id
-        client = self.getRestClient(uri, username = "JeanValjean")
+        uri = 'users/%(username)s/notices/contexts/' % subs + notice.id
+        client = self.getRestClient(username = "JeanValjean")
 
-        response = client.request('GET')
-        self.failUnlessEqual(response.read(), notice.content)
+        req, response = client.call('GET', uri)
+        self.failUnlessEqual(response.get(), notice.content)
 
         # Delete the notice, make sure it's gone
         self.failUnless(store.userStore.exists(notice.id))
@@ -215,15 +209,13 @@ class NoticesTest(restbase.BaseRestTest):
         notice = store.storeUser("default", "<one />")
 
         # We should not have access to it
-        response = self.failUnlessRaises(ResponseError, client.request, 'GET')
+        req, response = client.call('GET', uri)
         self.failUnlessEqual(response.status, 404)
 
         # Nothing in the enumeration either
-        uri = 'users/%(username)s/notices/contexts/default'
-        self.newConnection(client, uri)
-
-        response = client.request('GET')
-        self.failUnlessEqual(response.read(), """\
+        uri = 'users/%(username)s/notices/contexts/default' % subs
+        req, response = client.call('GET', uri)
+        self.failUnlessEqual(response.get(), """\
 <?xml version='1.0' encoding='UTF-8'?>
 <rss version="2.0"><channel title="Global notices for context default"></channel></rss>""")
 

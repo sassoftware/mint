@@ -51,7 +51,7 @@ class ImageManager(object):
             %(join)s
             LEFT JOIN ProductVersions 
                 ON(Builds.productVersionId=ProductVersions.productVersionId)
-            JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
+            LEFT JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
             LEFT JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
             LEFT JOIN BuildData ON (BuildData.buildId=Builds.buildId 
                                     AND BuildData.name='amiId')
