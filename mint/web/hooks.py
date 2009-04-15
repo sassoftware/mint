@@ -254,7 +254,7 @@ def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
     # translate the response
     l = []
     for line in f:
-        # rewrite hrefs to point at outself
+        # rewrite hrefs to point at ourself
         l.append(line.replace(urlBase, myUrlBase))
     buf = ''.join(l)
     req.headers_out['Content-length'] = str(len(buf))
@@ -391,7 +391,7 @@ def conaryHandler(req, cfg, pathInfo):
             if ':' in cfg.siteDomainName:
                 domain = cfg.siteDomainName
             else:
-                domain = cfg.siteDomainName + '%(port)d'
+                domain = cfg.siteDomainName + ':%(port)d'
             urlBase = "%%(protocol)s://%s.%s/" % \
                     (cfg.hostName, domain)
             proxyServer = proxy_repository = proxy.ProxyRepositoryServer(
