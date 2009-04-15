@@ -64,7 +64,7 @@ class ReleaseManager(object):
                 (hostname, releaseId))
         return models.Release(row)
 
-    def createRelease(self, fqdn, name, description, version, buildIds):
+    def createRelease(self, fqdn, name, description, version, imageIds):
         hostname = fqdn.split('.')[0]
         sql = '''
         INSERT INTO PublishedReleases 
@@ -75,7 +75,7 @@ class ReleaseManager(object):
         cu.execute(sql, name, description, version, time.time(), 
                    self.auth.userId, hostname)
         releaseId = cu.lastrowid
-        for buildId in buildIds:
+        for buildId in imageIds:
             self._addBuildToRelease(hostname, releaseId, buildId)
         return releaseId
 
@@ -106,7 +106,7 @@ class ReleaseManager(object):
                         '''SELECT timePublished from PublishedReleases
                           WHERE pubReleaseId=?''', releaseId).fetchone()
             isPublished = bool(isPublished)
-            if bol(isPublished) != bool(published):
+            if bool(isPublished) != bool(published):
                 if published:
                     self.publishRelease(releaseId, shouldMirror)
                 else:
