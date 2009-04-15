@@ -92,7 +92,7 @@ class Image(Model):
     troveVersion = fields.VersionField()
     trailingVersion = fields.CharField()
     troveFlavor = fields.FlavorField()
-    troveLastChanged = fields.IntegerField()
+    troveLastChanged = fields.DateTimeField()
     version = fields.UrlField('products.versions', 
                              ['hostname', 'version'])
     stage = fields.UrlField('products.versions.stages', 
