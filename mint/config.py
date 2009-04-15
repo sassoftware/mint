@@ -31,7 +31,7 @@ keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'projectDomainName', 'externalDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',
-                           'requireSigs', 'authPass',
+                           'requireSigs', 'authPass', 'dbDriver', 'dbPath',
                            ]
 
 _templatePath = os.path.dirname(sys.modules['mint'].__file__)
@@ -324,3 +324,20 @@ class MintConfig(ConfigFile):
 
         return {'http': 'http://localhost',
                 'https': 'https://localhost'}
+
+    def writeGeneratedConfig(self, path=RBUILDER_GENERATED_CONFIG, fObj=None):
+        """
+        Write all the options in keysForGeneratedConfig to
+        rbuilder-generated.conf
+        """
+        if not fObj:
+            fObj = open(path, 'w')
+
+        for key in keysForGeneratedConfig:
+            self.displayKey(key, out=fObj)
+
+        # Only write the 'default' database alias, anything
+        # else came from somewhere else.
+        if 'default' in self.database:
+            self._options['database'].write(fObj,
+                    {'default': self.database['default']}, {})

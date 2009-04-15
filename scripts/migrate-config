@@ -37,26 +37,14 @@ def migrate():
 
     # reposDBDriver/reposDBPath -> database
     poolName = 'default'
-    if cfg.reposDBDriver and cfg.isDefault('database'):
+    if cfg.reposDBDriver:
         cfg.database[poolName] = pool = (cfg.reposDBDriver, cfg.reposDBPath)
-
-        # Write to a separate file so it can easily be changed
-        # in the future.
-        fObj = open(config.RBUILDER_DATA + 'config/config.d/25_default-database.conf', 'w')
-        cfg.displayKey('database', out=fObj)
-        fObj.close()
-
-        log.info("Set default db %r to %r", poolName, pool)
-
-        # Make sure the config gets re-written without reposDBDriver.
+        log.info("Set database alias %r to %r", poolName, pool)
         changed = True
 
-    if changed:
-        f = file(config.RBUILDER_GENERATED_CONFIG, 'w')
-        for k in config.keysForGeneratedConfig:
-            cfg.displayKey(k, out = f)
-        f.close()
-        print "New configuration written to", config.RBUILDER_GENERATED_CONFIG
+    path = config.RBUILDER_GENERATED_CONFIG
+    cfg.writeGeneratedConfig(path)
+    log.info("Migrated configuration written to %s", path)
     
     return 0
 

@@ -207,11 +207,7 @@ class SqliteToPgsql(rAASrvPlugin):
         #Save a backup of the original file
         util.copyfile(config.RBUILDER_GENERATED_CONFIG, config.RBUILDER_GENERATED_CONFIG + ".backup")
         #Write the new list of config items
-        f = open(config.RBUILDER_GENERATED_CONFIG, 'w')
-
-        for k in config.keysForGeneratedConfig:
-            cfg.displayKey(k, out=f)
-        f.close()
+        cfg.writeGeneratedConfig()
 
     def doTask(self, schedId, execId):
         '''

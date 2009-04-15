@@ -30,21 +30,16 @@ def writeRBAGeneratedConfig(newCfg, generatedConfigFileName):
     """
     Writes the generated configuration file.
     """
-    f = None
     try:
-        try:
-            f = file(generatedConfigFileName, 'w')
-            for k in config.keysForGeneratedConfig:
-                newCfg.displayKey(k, out = f)
-            log.info("Wrote new generated configuration to %s" %
-                    generatedConfigFileName)
-            return True
-        except Exception, e:
-            log.error("Failed to write configuration to %s, reason %s" %
-                    (generatedConfigFileName, str(e)))
-            return False
-    finally:
-        if f: f.close()
+        newCfg.writeGeneratedConfig(generatedConfigFileName)
+        log.info("Wrote new generated configuration to %s" %
+                generatedConfigFileName)
+        return True
+    except Exception, e:
+        log.error("Failed to write configuration to %s, reason %s" %
+                (generatedConfigFileName, str(e)))
+        return False
+
 
 def getRBAConfiguration():
     """
