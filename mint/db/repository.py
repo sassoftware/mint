@@ -33,7 +33,7 @@ def cached(method):
     #pylint: disable-msg=W0212,W0612
     name = method.func_name
     def wrapper(self, *args, **kwargs):
-        key = (name, args, kwargs)
+        key = (name, args, tuple(sorted(kwargs.items())))
         if key not in self._cache:
             self._cache[key] = method(self, *args, **kwargs)
         return self._cache[key]
@@ -50,6 +50,11 @@ def withNetServer(method):
 
 
 class RepositoryManager(object):
+    __slots__ = (
+            'cfg', 'db',
+            'authToken', 'requestFQDN', 'reposDBCache',
+            'repos', '_cache', '__weakref__',
+            )
     def __init__(self, cfg, db, authToken=None, requestFQDN=None):
         self.cfg = cfg
         self.db = db
@@ -110,11 +115,15 @@ class RepositoryManager(object):
             if reposDB.poolmode:
                 reposDB.close()
                 del self.reposDBCache[key]
+            elif reposDB.inTransaction(default=True):
+                reposDB.rollback()
+        self._cache = {}
 
     def close(self):
         while self.reposDBCache:
             reposDB = self.reposDBCache.popitem()[1]
             reposDB.close()
+        self._cache = {}
 
     def getServerProxy(self, fqdn, url=None, user=None, entitlement=None):
         """
@@ -153,11 +162,20 @@ class RepositoryHandle(object):
         self._projectInfo = projectInfo
         self._cache = {}
 
+    def __repr__(self):
+        try:
+            return '%s(%r)' % (type(self).__name__,
+                    self._projectInfo['fqdn'])
+        except:
+            return object.__repr__(self)
 
     # Properties
     @property
     def commitEmail(self):
         return self._projectInfo['commitEmail']
+    @property
+    def dbTuple(self):
+        return self._getReposDBParams()
     @property
     def fqdn(self):
         return self._projectInfo['fqdn']
@@ -204,6 +222,7 @@ class RepositoryHandle(object):
             return '%s://%s:%d/repos/%s/' % (protocol, host, port,
                     self.shortName)
 
+    @cached
     def _getReposDBParams(self):
         """
         Return the "database tuple" for this project. Don't call this
@@ -224,7 +243,7 @@ class RepositoryHandle(object):
                         "Database alias %r is not defined" % (database,))
             driver, path = self._cfg.database[database]
 
-        dbName = self.fqdn
+        dbName = self.fqdn.lower()
         if driver != 'sqlite':
             for badchar in '-.':
                 dbName = dbName.replace(badchar, '_')
@@ -243,6 +262,8 @@ class RepositoryHandle(object):
         if params in self._manager().reposDBCache and not skipCache:
             db = self._manager().reposDBCache[params]
             db.reopen()
+            if db.inTransaction(True):
+                db.rollback()
         else:
             driver, path = params
             db = dbstore.connect(path, driver)

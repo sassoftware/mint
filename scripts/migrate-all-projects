@@ -9,14 +9,13 @@ import logging
 import os
 import optparse
 import sys
-import tempfile
 import time
 import traceback
 
 from mint import config
 from mint import maintenance
 from mint.lib import scriptlibrary
-from mint.db.projects import transTables
+from mint.db import repository
 from conary import dbstore
 from conary.lib import tracelog, formattrace, util
 from conary.server import schema
@@ -79,50 +78,44 @@ class MigrateAllProjects(scriptlibrary.SingletonScript):
 
         self.log.info("Migrating Conary repository databases...")
 
-        db = dbstore.connect(self.cfg.dbPath, driver = self.cfg.dbDriver)
-        cu = db.cursor()
-
-        # get repname map used to help find the local Conary repository
-        # for external locally-mirrored projects
-        repnamemap = {}
-        cu.execute("SELECT fromname, toname FROM RepNameMap")
-        for fromName, toName in cu.fetchall():
-            fromName = fromName.translate(transTables[self.cfg.reposDBDriver])
-            toName = toName.translate(transTables[self.cfg.reposDBDriver])
-            repnamemap[fromName] = toName
-
-        # get all projects which are not external OR are external,
-        # but are locally mirrored
-        cu.execute("""SELECT hostname, domainname FROM Projects WHERE
-                      external = 0 or EXISTS(SELECT * FROM InboundMirrors 
-                      WHERE Projects.projectId=InboundMirrors.targetProjectId)""")
-
         # hijack the logMe method
         tracelog.logMe = self._newLogMe
 
-        dbNames = [(x[0] + "." + x[1]).translate(transTables[self.cfg.reposDBDriver]) for x in cu.fetchall()]
+        db = dbstore.connect(self.cfg.dbPath, driver = self.cfg.dbDriver)
+        repoManager = repository.RepositoryManager(self.cfg, db)
+        cu = db.cursor()
+
+        handles = []
+        cu.execute("SELECT projectId FROM Projects")
+        for projectId, in cu:
+            handle = repoManager.getRepositoryFromProjectId(projectId)
+            if not handle.hasDatabase:
+                continue
+            handles.append(handle)
+        total = len(handles)
 
         errorLogFiles = {}
         errors = 0
-        for dbName, count in zip(dbNames, range(1,len(dbNames)+1)):
-            # lookup things in the repnamemap to resolve external local
-            # mirrors
-            actualDbName = repnamemap.get(dbName, dbName)
-            self.currentProjectName = dbName.split('.')[0]
+        for n, handle in enumerate(handles):
+            self.currentProjectName = handle.shortName
+            self.log.info('[%s] Migrating (%d of %d)',
+                    self.currentProjectName, n + 1, total)
+            self.log.info('[%s] Using database %r',
+                    self.currentProjectName, handle.dbTuple)
+
             try:
-                db_path = self.cfg.reposDBPath % actualDbName
-                reposDb = dbstore.connect(db_path, driver = self.cfg.reposDBDriver)
-                self.log.info('[%s] Migrating (%d of %d)' % \
-                        (self.currentProjectName, count, len(dbNames)))
-                self.log.info('[%s] Using database at %s' % \
-                        (self.currentProjectName, db_path))
+                reposDb = handle.getReposDB(skipCache=True)
                 schema.loadSchema(reposDb, doMigrate=True)
             except:
                 errors += 1
                 exc, e, tb = sys.exc_info()
                 if str(e).startswith('Unknown database'):
+                    self.log.error('[%s] Database is missing; continuing.',
+                            self.currentProjectName)
                     continue
                 if str(e) == 'unable to open database file':
+                    self.log.error('[%s] Could not open database; continuing.',
+                            self.currentProjectName)
                     continue
                 fn = os.path.join(self.cfg.logPath, 'migration-errors',
                         self.currentProjectName + '.log')
@@ -138,14 +131,16 @@ class MigrateAllProjects(scriptlibrary.SingletonScript):
                 formattrace.formatTrace(exc, e, tb, stream = errorLog,
                         withLocals = True)
                 errorLog.close()
-                self.log.error("[%s] %s" % (self.currentProjectName,
+                self.log.error("[%s] Failed to migrate: %s" % (self.currentProjectName,
                     str(e)))
                 self.log.error("[%s] Full traceback appended to: %s" % \
                         (self.currentProjectName, fn))
                 errorLogFiles[self.currentProjectName] = fn
 
-            self.log.info("[%s] Completed (%d of %d)" % \
-                    (self.currentProjectName, count, len(dbNames)))
+            self.log.info("[%s] Completed (%d of %d)",
+                    self.currentProjectName, n + 1, total)
+
+            repoManager.close()
 
         if errors:
             self.log.error("Conary repository migration completed with errors.")
