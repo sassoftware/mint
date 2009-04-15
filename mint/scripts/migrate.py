@@ -608,7 +608,7 @@ class MigrateTo_47(SchemaMigration):
     def migrate1(self):
         cu = self.db.cursor()
 
-        if db.driver == 'postgresql':
+        if self.db.driver == 'postgresql':
             # postgres won't modify a column that's referenced by a view
             cu.execute("DROP VIEW BuildsView")
             del db.views['BuildsView']
@@ -617,7 +617,7 @@ class MigrateTo_47(SchemaMigration):
                     ALTER COLUMN troveLastChanged TYPE numeric(14,3)""")
 
             # recreate BuildsView
-            schema.createSchema(db, doCommit=False)
+            schema.createSchema(self.db, doCommit=False)
 
         return True
 
