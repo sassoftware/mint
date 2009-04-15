@@ -24,7 +24,7 @@ from conary.dbstore import sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(47, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(47, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -257,7 +257,7 @@ def _createBuilds(db):
             troveName            varchar(128),
             troveVersion         varchar(255),
             troveFlavor          varchar(4096),
-            troveLastChanged     integer,
+            troveLastChanged     numeric(14,3),
             timeCreated          numeric(14,3),
             createdBy            integer
                 REFERENCES Users ( userId ) ON DELETE SET NULL,

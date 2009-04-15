@@ -542,7 +542,7 @@ class MigrateTo_46(SchemaMigration):
         return True
 
 class MigrateTo_47(SchemaMigration):
-    Version = (47, 0)
+    Version = (47, 1)
 
     # 47.0
     # - Fixups for migration to PostgreSQL
@@ -601,6 +601,24 @@ class MigrateTo_47(SchemaMigration):
             cu2.execute("""UPDATE Projects SET fqdn = ?, database = ?
                     WHERE projectId = ?""", fqdn, database, row['projectId'])
         drop_tables(self.db, 'ProjectDatabase', 'ReposDatabases')
+        return True
+
+    # 47.1
+    # - PostgreSQL fixup: change type on troveLastChanged to std timestamp
+    def migrate1(self):
+        cu = self.db.cursor()
+
+        if db.driver == 'postgresql':
+            # postgres won't modify a column that's referenced by a view
+            cu.execute("DROP VIEW BuildsView")
+            del db.views['BuildsView']
+
+            cu.execute("""ALTER TABLE Builds
+                    ALTER COLUMN troveLastChanged TYPE numeric(14,3)""")
+
+            # recreate BuildsView
+            schema.createSchema(db, doCommit=False)
+
         return True
 
 

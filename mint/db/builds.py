@@ -49,7 +49,7 @@ class BuildsTable(database.KeyedTable):
                    projectId)
 
         for results in cu.fetchall():
-            yield int(results[0])
+            yield results[0]
 
     def setTrove(self, buildId, troveName, troveVersion, troveFlavor):
         cu = self.db.cursor()
@@ -59,7 +59,7 @@ class BuildsTable(database.KeyedTable):
                                           troveLastChanged=?
                       WHERE buildId=?""",
                    troveName, troveVersion,
-                   troveFlavor, int(time.time()),
+                   troveFlavor, time.time(),
                    buildId)
         self.db.commit()
         return 0
