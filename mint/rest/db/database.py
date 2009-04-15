@@ -510,11 +510,11 @@ class Database(DBInterface):
         return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
 
     @commitafter
-    def createRelease(self, hostname, name, description, version, buildIds):
+    def createRelease(self, hostname, name, description, version, imageIds):
         self.auth.requireProductDeveloper(hostname)
-        self.auth.requireBuildsOnHost(hostname, buildIds)
+        self.auth.requireBuildsOnHost(hostname, imageIds)
         releaseId = self.releaseMgr.createRelease(hostname, name, description,
-                                                  version, buildIds)
+                                                  version, imageIds)
         return releaseId
 
     @commitafter
@@ -537,7 +537,7 @@ class Database(DBInterface):
     def updateImagesForRelease(self, hostname, releaseId, imageIds):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.auth.requireBuildsOnHost(hostname, buildIds)
+        self.auth.requireBuildsOnHost(hostname, imageIds)
         self.releaseMgr.updateImagesForRelease(hostname, releaseId, imageIds)
 
     @commitafter
