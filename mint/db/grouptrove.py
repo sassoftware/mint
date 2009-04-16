@@ -42,7 +42,7 @@ class GroupTroveTable(database.KeyedTable):
         except versions.ParseError:
             raise GroupTroveVersionError
         self.update(groupTroveId, upstreamVersion = vers,
-                    timeModified = time.time())
+                    timeModified = int(time.time()))
 
     def createGroupTrove(self, projectId, creatorId, recipeName,
                          upstreamVersion, description, autoResolve):
@@ -84,7 +84,7 @@ class GroupTroveTable(database.KeyedTable):
 
     def setAutoResolve(self, groupTroveId, resolve):
         self.update(groupTroveId, autoResolve = int(resolve),
-                    timeModified = (time.time()))
+                    timeModified = int(time.time()))
 
     def get(self, groupTroveId):
         ret = database.KeyedTable.get(self, groupTroveId)
@@ -138,7 +138,7 @@ class GroupTroveItemsTable(database.KeyedTable):
     def updateModifiedTime(self, groupTroveItemId):
         cu = self.db.cursor()
         cu.execute("SELECT groupTroveId FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
-        cu.execute("UPDATE GroupTroves SET timeModified=? WHERE groupTroveId=?", time.time(), cu.fetchone()[0])
+        cu.execute("UPDATE GroupTroves SET timeModified=? WHERE groupTroveId=?", int(time.time()), cu.fetchone()[0])
         self.db.commit()
 
     def setVersionLock(self, groupTroveItemId, lock):

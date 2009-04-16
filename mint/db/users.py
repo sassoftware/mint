@@ -148,7 +148,7 @@ class UsersTable(database.KeyedTable):
             confirm = confirmString()
         try:
             self.confirm_table.new(userId = userId,
-                                   timeRequested = time.time(),
+                                   timeRequested = int(time.time()),
                                    confirmation = confirm)
         except DuplicateItem:
             self.confirm_table.update(userId, confirmation = confirm)
@@ -217,7 +217,7 @@ class UsersTable(database.KeyedTable):
                                            email, "Welcome to %s!" % \
                                            self.cfg.productName, message)
                 self.confirm_table.new(userId = userId,
-                                       timeRequested = time.time(),
+                                       timeRequested = int(time.time()),
                                        confirmation = confirm)
 
         except DuplicateItem:
