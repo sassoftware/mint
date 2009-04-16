@@ -501,7 +501,8 @@ class RepositoryDatabase:
     def getRepositoryDB(self, name, db = None):
         if db:
             cu = db.cursor()
-            cu.execute("SELECT database FROM Projects WHERE hostname = ?", name.split('.')[0])
+            cu.execute("SELECT `database` FROM Projects WHERE hostname = ?",
+                    name.split('.')[0])
             database = cu.fetchone()[0]
         else:
             database = self.cfg.defaultDatabase

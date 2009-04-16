@@ -163,8 +163,6 @@ class UsersTable(database.KeyedTable):
             if letter not in nameCharacterSet:
                 raise InvalidUsername
 
-        confirm = confirmString()
-
         cu = self.db.cursor()
         cu.execute("""SELECT COUNT(*) FROM UserGroups
                           WHERE UPPER(userGroup)=UPPER(?)""",
@@ -179,12 +177,7 @@ class UsersTable(database.KeyedTable):
 
         salt, passwd = self._mungePassword(password)
 
-        if self.cfg.sendNotificationEmails and not active:
-            message = templates.write(templates.registerNewUser,
-                username = username, cfg = self.cfg, confirm = confirm)
-            maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
-                                       email, "Welcome to %s!" % \
-                                       self.cfg.productName, message)
+        db.transaction()
         try:
             cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
                        username)
@@ -216,6 +209,17 @@ class UsersTable(database.KeyedTable):
             cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", pubGroupId,
                        userId)
 
+            if self.cfg.sendNotificationEmails and not active:
+                confirm = confirmString()
+                message = templates.write(templates.registerNewUser,
+                    username = username, cfg = self.cfg, confirm = confirm)
+                maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
+                                           email, "Welcome to %s!" % \
+                                           self.cfg.productName, message)
+                self.confirm_table.new(userId = userId,
+                                       timeRequested = time.time(),
+                                       confirmation = confirm)
+
         except DuplicateItem:
             self.db.rollback()
             raise UserAlreadyExists
@@ -224,10 +228,6 @@ class UsersTable(database.KeyedTable):
             raise
         else:
             self.db.commit()
-        if not active:
-            self.confirm_table.new(userId = userId,
-                                   timeRequested = time.time(),
-                                   confirmation = confirm)
         return userId
 
     def isUserStagnant(self, userId):
