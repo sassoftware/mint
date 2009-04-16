@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 
+from mint import buildtypes
 import testsetup
 
 import os
@@ -70,6 +71,43 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         client = db.productMgr.reposMgr.getConaryClientForProduct(shortName)
         pd.saveToRepository(client, 'Product Definition commit\n')
         return pd
+
+    @mint_rephelp.restFixturize('apitest.setupReleases')
+    def setupReleases(self):
+        self.setupProduct()
+        # Add a group
+        label = self.productDefinition.getDefaultLabel()
+        db = self.openRestDatabase()
+        self.setDbUser(db, 'adminuser')
+        client = db.productMgr.reposMgr.getConaryClientForProduct(self.productShortName)
+        repos = client.getRepos()
+        self.addComponent("foo:bin=%s" % label, repos=repos)
+        self.addCollection("foo=%s" % label, ['foo:bin'], repos=repos)
+        groupTrv = self.addCollection("group-foo=%s" % label, ['foo'],
+                                      repos=repos)
+
+        # Let's add some images
+        images = [
+            ('Image 1', buildtypes.INSTALLABLE_ISO),
+            ('Image 2', buildtypes.TARBALL),
+        ]
+        groupName = groupTrv.getName()
+        groupVer = groupTrv.getVersion().freeze()
+        groupFlv = str(groupTrv.getFlavor())
+        imageIds = []
+        for imageName, imageType in images:
+            imageId = self.createImage(db, self.productShortName,
+                imageType, name = imageName,
+                description = "Description for %s" % imageName,
+                troveName = groupName,
+                troveVersion = groupVer,
+                troveFlavor = groupFlv)
+            self.setImageFiles(db, self.productShortName, imageId)
+            imageIds.append(imageId)
+
+        releaseId = db.createRelease(self.productShortName, 'Release Name', '',
+                'v1', imageIds)
+
 
     def getRestClient(self, **kw):
         if 'db' in kw:

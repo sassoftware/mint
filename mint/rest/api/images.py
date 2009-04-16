@@ -50,7 +50,8 @@ class ProductReleasesController(base.BaseController):
         return self.db.getReleaseForProduct(hostname, releaseId)
 
     def destroy(self, request, hostname, releaseId):
-        return self.db.deleteRelease(hostname, releaseId)
+        self.db.deleteRelease(hostname, releaseId)
+        return self.index(request, hostname)
 
     @requires('release', models.UpdateRelease)
     def create(self, request, hostname, release):

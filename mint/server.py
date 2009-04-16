@@ -21,7 +21,6 @@ import StringIO
 from mint import buildtypes
 try:
     from mint import charts
-    raise ImportError
 except ImportError:
     charts = None
 import mint.db.database
