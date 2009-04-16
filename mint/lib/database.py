@@ -173,7 +173,10 @@ class KeyedTable(DatabaseTable):
         if not fields:
             fields = self.fields
 
-        fields_ = ", ".join("`%s`" % x for x in fields)
+        if self.db.driver == 'mysql':
+            fields_ = ", ".join("`%s`" % x for x in fields)
+        else:
+            fields_ = ", ".join(fields)
         stmt = "SELECT %s FROM %s WHERE %s=?" % (fields_, self.name, self.key)
         cu.execute(stmt, id)
 
@@ -216,8 +219,11 @@ class KeyedTable(DatabaseTable):
         """
         # XXX fix to handle sequences
         values = kwargs.values()
-        cols = kwargs.keys()
-        fields_ = ", ".join("`%s`" % x for x in cols)
+        fields = kwargs.keys()
+        if self.db.driver == 'mysql':
+            fields_ = ", ".join("`%s`" % x for x in fields)
+        else:
+            fields_ = ", ".join(fields)
 
         stmt = "INSERT INTO %s (%s) VALUES (%s)" %\
             (self.name, fields_, ",".join('?' * len(values)))

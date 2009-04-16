@@ -476,10 +476,13 @@ def _resolveProjectRepos(db, hostname, domainname):
 
     # Determine if the project is local by checking the projects table
     cu = db.cursor()
-    cu.execute("""SELECT projectId, domainname, external, `database`,
+    cu.execute("""SELECT projectId, domainname, external, %s,
                      EXISTS(SELECT * FROM InboundMirrors
                      WHERE projectId=targetProjectId) AS localMirror, commitEmail
-                  FROM Projects WHERE hostname=? %s""" % extraWhere, hostname)
+                  FROM Projects WHERE hostname=? %s""" % (
+                      (db.driver == 'mysql' and '`database`' or 'database'),
+                      extraWhere),
+                  hostname)
     try:
         rs = cu.fetchone()
         if rs:
@@ -509,10 +512,11 @@ def _resolveProjectRepos(db, hostname, domainname):
                 projectHostName = fromName[0:fromName.find('.')]
                 projectDomainName = fromName[fromName.find('.')+1:]
 
-                cu.execute("""SELECT projectId, external, `database`,
+                cu.execute("""SELECT projectId, external, %s,
                                 EXISTS(SELECT * FROM InboundMirrors
                                             WHERE projectId=targetProjectId) AS localMirror
-                              FROM Projects WHERE hostname=? AND domainname=?""",
+                              FROM Projects WHERE hostname=? AND domainname=?"""
+                                    % ((db.driver == 'mysql' and '`database`' or 'database'),),
                               projectHostName, projectDomainName)
                 rs = cu.fetchone()
                 if rs:

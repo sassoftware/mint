@@ -79,10 +79,12 @@ class RepositoryManager(object):
                     EXISTS ( SELECT * FROM InboundMirrors
                         WHERE projectId = targetProjectId
                         ) AS localMirror,
-                    commitEmail, `database`, url, authType, username, password,
+                    commitEmail, %s, url, authType, username, password,
                     entitlement
                 FROM Projects LEFT JOIN Labels USING ( projectId )%s
-                WHERE %s ORDER BY projectId ASC""" % (joins, whereClause),
+                WHERE %s ORDER BY projectId ASC""" % (
+                    (self.db.driver == 'mysql' and '`database`' or 'database'),
+                    joins, whereClause),
                 *args)
 
         try:
