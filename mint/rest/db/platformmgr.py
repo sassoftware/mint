@@ -53,7 +53,13 @@ class PlatformNameCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, reposMgr):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._reposMgr = weakref.ref(reposMgr)
-        self._cclient = reposMgr.getConaryClient(admin=True)
+        self._cclient = None
+
+    def _getConaryClient(self):
+        if not self._cclient:
+            self._cclient = reposMgr.getConaryClient(admin=True)
+        return self._cclient
+    cclient = property(_getConaryClient)
 
     def _refresh(self, labelStr):
         try:
@@ -61,12 +67,11 @@ class PlatformNameCache(persistentcache.PersistentCache):
             # we require that the first section of the label be unique
             # across all repositories we access.
             hostname = hostname.split('.')[0]
-            client = self._cclient
             try:
                 client = self._reposMgr().getConaryClientForProduct(hostname,
                                                                     admin=True)
             except errors.ProductNotFound:
-                pass
+                client = self.cclient
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             return platDef.getPlatformName()
