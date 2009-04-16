@@ -5422,9 +5422,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.db = mint.db.database.Database(cfg, db=db, alwaysReload=alwaysReload)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
-        self.platformNameCache = PlatformNameCache(
-                os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
-                helperfuncs.getBasicConaryConfiguration(self.cfg), self)
+        self._platformNameCache = None
         self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
 
         global callLog
@@ -5454,7 +5452,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #if self.db.tablesReloaded:
         #    self._generateConaryRcFile()
         self.newsCache.refresh()
-        
+
+    def _getNameCache(self):
+        if self._platformNameCache is None:
+            self._platformNameCache = PlatformNameCache(
+                os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
+                helperfuncs.getBasicConaryConfiguration(self.cfg), self)
+        return self._platformNameCache
+
+    platformNameCache = property(_getNameCache)
+
     def _gracefulHttpd(self):
         return os.system('/usr/libexec/rbuilder/httpd-graceful')
         

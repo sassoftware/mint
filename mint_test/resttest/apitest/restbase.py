@@ -105,8 +105,17 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
             self.setImageFiles(db, self.productShortName, imageId)
             imageIds.append(imageId)
 
+        # make sure the times are different fo
+        imageId3 = self.createImage(db, self.productShortName,
+                                   buildtypes.TARBALL,
+                                   name = 'Image 3')
+        self.setImageFiles(db, self.productShortName, imageId3)
+
         releaseId = db.createRelease(self.productShortName, 'Release Name', '',
                 'v1', imageIds)
+        releaseId2 = db.createRelease(self.productShortName, 'Release Name', '',
+                'v1', [imageId3])
+        db.publishRelease(self.productShortName, releaseId2, True)
 
 
     def getRestClient(self, **kw):

@@ -45,6 +45,8 @@ class Product(Model):
     members            = fields.UrlField('products.members', ['hostname'])
     creator            = fields.UrlField('users', 'creator')
     releases           = fields.UrlField('products.releases', ['hostname'])
+    latestRelease      = fields.UrlField('products.releases', ['hostname'],
+                                         query='limit=1')
     images             = fields.UrlField('products.images', ['hostname'])
     id                 = fields.AbsoluteUrlField(isAttribute=True)
 

@@ -17,7 +17,7 @@ class ReleaseManager(object):
         self.auth = auth
         self.publisher = publisher
 
-    def listReleasesForProduct(self, fqdn):
+    def listReleasesForProduct(self, fqdn, limit=None):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
         sql = '''
@@ -33,8 +33,13 @@ class ReleaseManager(object):
         LEFT JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
         LEFT JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
         LEFT JOIN Users as PublishUser ON (publishedBy=PublishUser.userId)
-        WHERE hostname=?'''
-        cu.execute(sql, hostname)
+        WHERE hostname=?
+        ORDER BY COALESCE(timePublished,0) DESC'''
+        args = [hostname]
+        if limit is not None:
+            sql += ' LIMIT ?'
+            args.append(limit)
+        cu.execute(sql, *args)
         releases = models.ReleaseList()
         for row in cu:
             row['published'] = bool(row['timePublished'])
