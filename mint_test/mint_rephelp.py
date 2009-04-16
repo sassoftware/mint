@@ -645,21 +645,26 @@ class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
 
     openMintDatabase = RestDBMixIn.openRestDatabase
 
-def restFixturize(name=None):
-    if name is None:
-        name = fn.func_name
+def fixturize(name=None):
     def deco(fn):
+        if name is None:
+            module = fn.func_globals['__name__']
+            fixtureName = '%s.%s' % (module, fn.func_name)
+        else:
+            fixtureName = name
+
         def wrapper(self, *args, **kw):
             def loader(mintCfg):
                 self.mintCfg = mintCfg
                 return mintCfg, fn(self, *args, **kw)
             if self.mintCfg and 'fixture' in self.mintCfg.dataPath:
                 return fn(self)
-            data = self.loadRestFixture(name, loader)
+            data = self.loadRestFixture(fixtureName, loader)
             return data
 
         return wrapper
     return deco
+restFixturize = fixturize
 
 def restfixture(name):
     def deco(func):
