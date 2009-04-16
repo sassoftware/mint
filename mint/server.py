@@ -48,6 +48,7 @@ from mint import templates
 from mint import userlevels
 from mint import usertemplates
 from mint import urltypes
+from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
@@ -1043,20 +1044,22 @@ class MintServer(object):
         self.restDb.productMgr.setMemberLevel(projectId, userId, level)
         return True
 
-    typeCheck(int, int)
     @private
     def projectAdmin(self, projectId, userName):
         """Check for admin ACL in a given project repo."""
-        from conary import dbstore
-        self._filterProjectAccess(projectId)
-        project = projects.Project(self, projectId)
-        if project.external:
+        # XXX: rewrite me, i suck
+        if not userName:
             return False
         if self.auth.admin:
             return True
-        repositoryDB = self.projects.reposDB.getRepositoryDB( \
-            self._translateProjectFQDN(project.getFQDN()), db = self.db)
-        db = dbstore.connect(repositoryDB[1], repositoryDB[0])
+        from conary import dbstore
+        self._filterProjectAccess(projectId)
+
+        handle = self.reposMgr.getRepositoryFromProjectId(projectId)
+        if handle.isExternal:
+            return False
+
+        db = handle.getReposDB()
         cu = db.cursor()
         # aggregate with MAX in case user is member of multiple groups
         cu.execute("""SELECT MAX(admin) FROM Users
@@ -1067,7 +1070,6 @@ class MintServer(object):
                       WHERE Users.username=?""", userName)
         res = cu.fetchone()
         # acl in question can be non-existent
-        db.close()
         return res and res[0] or False
 
     @typeCheck(int, int)
@@ -5419,6 +5421,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.mcpClient = None
         self.db = mint.db.database.Database(cfg, db=db, alwaysReload=alwaysReload)
         self.restDb = None
+        self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
         self._platformNameCache = None
         self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
 
@@ -5456,6 +5459,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
                 helperfuncs.getBasicConaryConfiguration(self.cfg), self)
         return self._platformNameCache
+
     platformNameCache = property(_getNameCache)
 
     def _gracefulHttpd(self):

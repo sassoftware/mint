@@ -173,7 +173,8 @@ class KeyedTable(DatabaseTable):
         if not fields:
             fields = self.fields
 
-        stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(fields), self.name, self.key)
+        fields_ = ", ".join("`%s`" % x for x in fields)
+        stmt = "SELECT %s FROM %s WHERE %s=?" % (fields_, self.name, self.key)
         cu.execute(stmt, id)
 
         r = cu.fetchone()
@@ -216,9 +217,10 @@ class KeyedTable(DatabaseTable):
         # XXX fix to handle sequences
         values = kwargs.values()
         cols = kwargs.keys()
+        fields_ = ", ".join("`%s`" % x for x in cols)
 
         stmt = "INSERT INTO %s (%s) VALUES (%s)" %\
-            (self.name, ",".join(cols), ",".join('?' * len(values)))
+            (self.name, fields_, ",".join('?' * len(values)))
 
         try:
             cu.execute(*[stmt] + values)

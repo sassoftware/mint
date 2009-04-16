@@ -79,7 +79,7 @@ class RepositoryManager(object):
                     EXISTS ( SELECT * FROM InboundMirrors
                         WHERE projectId = targetProjectId
                         ) AS localMirror,
-                    commitEmail, database, url, authType, username, password,
+                    commitEmail, `database`, url, authType, username, password,
                     entitlement
                 FROM Projects LEFT JOIN Labels USING ( projectId )%s
                 WHERE %s ORDER BY projectId ASC""" % (joins, whereClause),

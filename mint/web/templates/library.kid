@@ -173,6 +173,7 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
           </div>
         </div>
         <div class="boxBody">
+            <a class="newuiLink" href="/ui/" target="_blank">Try the new UI (beta)</a>
             <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
                 <p class="signinlabel">Username:<br /><input class="signinfield" type="text" name="username" /></p>
                 <p class="signinlabel">Password:<br /><input class="signinfield" type="password" name="password" /></p>
