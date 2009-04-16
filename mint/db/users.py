@@ -177,7 +177,7 @@ class UsersTable(database.KeyedTable):
 
         salt, passwd = self._mungePassword(password)
 
-        db.transaction()
+        self.db.transaction()
         try:
             cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
                        username)
