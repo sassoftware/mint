@@ -500,9 +500,9 @@ class Database(DBInterface):
         return self.imageMgr.stopImageJob(imageId)
 
     @readonly    
-    def listReleasesForProduct(self, hostname):
+    def listReleasesForProduct(self, hostname, limit=None):
         self.auth.requireProductReadAccess(hostname)
-        return self.releaseMgr.listReleasesForProduct(hostname)
+        return self.releaseMgr.listReleasesForProduct(hostname, limit=limit)
 
     @readonly    
     def getReleaseForProduct(self, hostname, releaseId):
