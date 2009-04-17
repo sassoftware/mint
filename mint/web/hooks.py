@@ -559,13 +559,16 @@ def handler(req):
     if not db:
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
     else:
+        if db.reopen():
+            req.log_error("reopened a dead database connection in hooks.py",
+                    apache.APLOG_WARNING)
+
+    if db.inTransaction(True):
         db.rollback()
 
     prof = profile.Profile(cfg)
 
     # reopen a dead database
-    if db.reopen():
-        req.log_error("reopened a dead database connection in hooks.py", apache.APLOG_WARNING)
 
     if not req.uri.startswith(cfg.basePath + 'setup/') and not cfg.configured:
         if req.uri == cfg.basePath + 'pwCheck':
@@ -625,6 +628,10 @@ def handler(req):
     finally:
         prof.stopHttp(req.uri)
         if db:
-            db.rollback()
+            if db.poolmode:
+                db.close()
+                db = None
+            elif db.inTransaction(True):
+                db.rollback()
         coveragehook.save()
     return ret
