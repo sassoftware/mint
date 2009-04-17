@@ -51,7 +51,6 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
-from mint.shimclient import ShimMintClient
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint.logerror import logErrorAndEmail
 from mint import packagecreator
@@ -3133,6 +3132,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.removeDataValue(buildId, 'outputToken')
 
         # Set AMI image permissions for build here
+        from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg,
                 (self.cfg.authUser, self.cfg.authPass), self.db)
 
@@ -3187,6 +3187,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._setBuildFilenames(buildId, filenames)
 
     def _setBuildFilenames(self, buildId, filenames, normalize = False):
+        from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg,
                 (self.cfg.authUser, self.cfg.authPass), self.db)
 
