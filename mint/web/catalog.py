@@ -66,7 +66,7 @@ class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):
 _cfg = None
 _pathInfo = None
 _handler = None
-def catalogHandler(req, cfg, pathInfo = None):
+def catalogHandler(req, db, cfg, pathInfo = None):
     coveragehook.install()
     maintenance.enforceMaintenanceMode(cfg)
     global _cfg, _pathInfo, _handler

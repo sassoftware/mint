@@ -267,7 +267,7 @@ def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
     f.close()
     return apache.OK
 
-def conaryHandler(req, cfg, pathInfo):
+def conaryHandler(req, db, cfg, pathInfo):
     maintenance.enforceMaintenanceMode(cfg)
 
     auth = webauth.getAuth(req)
@@ -421,7 +421,7 @@ def conaryHandler(req, cfg, pathInfo):
             repServer.reset()
 
 
-def mintHandler(req, cfg, pathInfo):
+def mintHandler(req, db, cfg, pathInfo):
     webfe = app.MintApp(req, cfg)
     return webfe._handle(pathInfo)
 
@@ -553,13 +553,7 @@ def handler(req):
         # chop off the provided base path
         pathInfo = normPath(req.uri[len(cfg.basePath):])
 
-    global db
-    if not db:
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-    else:
-        if db.reopen():
-            req.log_error("reopened a dead database connection in hooks.py",
-                    apache.APLOG_WARNING)
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
     if db.inTransaction(True):
         db.rollback()
@@ -584,7 +578,7 @@ def handler(req):
         for match, urlHandler in urls:
             if re.match(match, pathInfo):
                 try:
-                    ret = urlHandler(req, cfg, pathInfo)
+                    ret = urlHandler(req, db, cfg, pathInfo)
                 except HttpError, e:
                     raise apache.SERVER_RETURN, e.code
                 except apache.SERVER_RETURN, e:
