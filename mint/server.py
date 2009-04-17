@@ -455,6 +455,7 @@ class MintServer(object):
                     self.cfg.reposContentsDir.split(" "))
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
+            cfg.serializeCommits = True
             server = shimclient.NetworkRepositoryServer(cfg, '')
             if useServer:
                 # Get a server object instead of a shim client
