@@ -29,10 +29,6 @@ class ImageManager(object):
         self.auth = auth
         self.mcpClient = None
 
-    def __del__(self):
-        if self.mcpClient:
-            self.mcpClient.disconnect()
-
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
                    extraArgs=None, getOne=False, update=False):
         hostname = fqdn.split('.')[0]
