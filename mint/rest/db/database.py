@@ -114,18 +114,18 @@ class Database(DBInterface):
             auth = authmgr.AuthenticationManager(cfg, self)
         self.auth = auth
         self.publisher = publisher.EventPublisher()
-        self.productMgr = productmgr.ProductManager(self.cfg, self, 
-                                                    self.auth, self.publisher)
-        self.imageMgr = imagemgr.ImageManager(self.cfg, self, self.auth)
-        self.releaseMgr = releasemgr.ReleaseManager(self.cfg, self, 
-                                                    self.auth, self.publisher)
-        self.userMgr = usermgr.UserManager(self.cfg, self, self.publisher)
-        self.platformMgr = platformmgr.PlatformManager(self.cfg, self)
+        self.productMgr = productmgr.ProductManager(cfg, self, auth,
+                                                    self.publisher)
+        self.imageMgr = imagemgr.ImageManager(cfg, self, auth)
+        self.releaseMgr = releasemgr.ReleaseManager(cfg, self,
+                                                    auth, self.publisher)
+        self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
+        self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
         if subscribers is None:
             subscribers = []
-            subscribers.append(emailnotifier.EmailNotifier(self.cfg, self, 
-                                                           self.auth))
-            subscribers.append(awshandler.AWSHandler(self.cfg, self.db))
+            subscribers.append(emailnotifier.EmailNotifier(cfg, self,
+                                                           auth))
+            subscribers.append(awshandler.AWSHandler(cfg, self, auth))
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
 

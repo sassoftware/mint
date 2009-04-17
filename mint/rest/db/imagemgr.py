@@ -16,17 +16,16 @@ from mint import mint_error
 from mint import urltypes
 from mint.lib import data
 from mint.rest import errors
+from mint.rest.db import manager
 from mint.rest.api import models
 
 from mcp import client as mcpclient
 from mcp import mcp_error
 from conary.lib import cfgtypes
 
-class ImageManager(object):
+class ImageManager(manager.Manager):
     def __init__(self, cfg, db, auth):
-        self.cfg = cfg
-        self.db = db
-        self.auth = auth
+        manager.Manager.__init__(self, cfg, db, auth)
         self.mcpClient = None
 
     def _getImages(self, fqdn, extraJoin='', extraWhere='',

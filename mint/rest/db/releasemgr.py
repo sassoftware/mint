@@ -9,13 +9,9 @@ from mint import buildtypes
 from mint import mint_error
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest.db import manager
 
-class ReleaseManager(object):
-    def __init__(self, cfg, db, auth, publisher):
-        self.cfg = cfg
-        self.db = db
-        self.auth = auth
-        self.publisher = publisher
+class ReleaseManager(manager.Manager):
 
     def listReleasesForProduct(self, fqdn, limit=None):
         hostname = fqdn.split('.')[0]

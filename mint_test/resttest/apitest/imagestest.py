@@ -34,6 +34,21 @@ class ImagesTest(restbase.BaseRestTest):
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <releases>
+  <release id="http://localhost:8000/api/products/testproject/releases/2">
+    <releaseId>2</releaseId>
+    <hostname>testproject</hostname>
+    <name>Release Name</name>
+    <version>v1</version>
+    <description></description>
+    <published>true</published>
+    <images href="http://localhost:8000/api/products/testproject/releases/2/images"/>
+    <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
+    <updater/>
+    <publisher href="http://localhost:8000/api/users/adminuser">adminuser</publisher>
+    <timeCreated></timeCreated>
+    <timePublished></timePublished>
+    <shouldMirror>true</shouldMirror>
+  </release>
   <release id="http://localhost:8000/api/products/testproject/releases/1">
     <releaseId>1</releaseId>
     <hostname>testproject</hostname>
@@ -50,7 +65,7 @@ class ImagesTest(restbase.BaseRestTest):
   </release>
 </releases>
 """
-        for pat in [ "timeCreated", "timeModified" ]:
+        for pat in [ "timeCreated", "timeModified", "timePublished" ]:
             txt = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
             txt)

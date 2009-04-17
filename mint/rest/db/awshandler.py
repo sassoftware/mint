@@ -5,10 +5,12 @@
 #
 from mint import amiperms
 
-class AWSHandler(object):
-    def __init__(self, cfg, db):
-        self.db = db
-        self.amiPerms = amiperms.AMIPermissionsManager(cfg, db)
+from mint.rest.db import manager
+
+class AWSHandler(manager.Manager):
+    def __init__(self, cfg, db, auth):
+	manager.Manager.__init__(self, cfg, db, auth)
+        self.amiPerms = amiperms.AMIPermissionsManager(cfg, db.db)
 
     def notify_UserProductRemoved(self, event, userId, projectId, userlevel = None):
         self.amiPerms.deleteMemberFromProject(userId, projectId)

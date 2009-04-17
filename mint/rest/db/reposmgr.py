@@ -14,6 +14,7 @@ from mint import userlevels
 from mint.lib import unixutils
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest.db import manager
 
 from conary import changelog
 from conary import conarycfg
@@ -30,13 +31,13 @@ from conary.server import schema
 _cachedCfg = None
 _cachedServerCfgs = {}
 
-class RepositoryManager(object):
+class RepositoryManager(manager.Manager):
     ADMIN_LEVEL = object()
 
-    def __init__(self, cfg, db, reposDB, auth):
+    def __init__(self, cfg, db, auth, reposDB):
+	manager.Manager.__init__(self, cfg, db, auth)
         self.cfg = cfg
         self.reposDB = reposDB
-        self.db = db
         self.auth = auth
         self.profiler = None
 

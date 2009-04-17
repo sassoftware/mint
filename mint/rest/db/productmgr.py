@@ -18,19 +18,16 @@ from mint import userlevels
 from mint import templates
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest.db import manager
 from mint.rest.db import reposmgr
 from mint.templates import groupTemplate
 
 
-class ProductManager(object):
+class ProductManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
-        self.cfg = cfg
-        self.db = db
-        self.auth = auth
-        self.reposMgr = reposmgr.RepositoryManager(cfg, db, 
-                                                   self.db.db.projects.reposDB,
-                                                   auth)
-        self.publisher = publisher
+	manager.Manager.__init__(self, cfg, db, auth, publisher)
+        self.reposMgr = reposmgr.RepositoryManager(cfg, db, auth,
+                                                   self.db.db.projects.reposDB)
 
     def getProduct(self, fqdn):
         # accept fqdn.

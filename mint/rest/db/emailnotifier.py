@@ -7,11 +7,8 @@
 from mint.lib import maillib
 from mint import userlevels
 
-class EmailNotifier(object):
-    def __init__(self, cfg, db, auth):
-        self.db = db
-        self.cfg = cfg
-        self.auth = auth
+from mint.rest.db import manager
+class EmailNotifier(manager.Manager):
 
     def notify_UserProductEvent(self, event, userId, projectId, oldLevel=None,
                                 userlevel=None):
