@@ -230,6 +230,7 @@ class RepositoryManager(manager.Manager):
             cfg.repositoryMap = {}
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
+            cfg.serializeCommits = True
 
             contentsDirs = self.cfg.reposContentsDir
             cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))

@@ -149,25 +149,26 @@ class Database(object):
 
     def _openDb(self, dbDriver, dbPath, db, alwaysReload):
         global dbConnection
-        if db:
+        if db and not db.poolmode:
             dbConnection = db
 
         # Flag to indicate if we created a new self.db and need to force a
         # call to getTables
         reloadTables = False
 
-        if (dbDriver in ["mysql", "postgresql", "pgpool", "sqlite"]
-                and dbConnection and (not alwaysReload)):
+        if dbConnection and not alwaysReload:
             db = dbConnection
+
+            # reopen a dead database
+            if db.reopen():
+                print >> sys.stderr, "reopened dead database connection in mint server"
+                sys.stderr.flush()
         else:
             db = dbstore.connect(dbPath, driver=dbDriver)
-            dbConnection = db
+            if not db.poolmode:
+                dbConnection = db
             reloadTables = True
 
-        # reopen a dead database
-        if db.reopen():
-            print >> sys.stderr, "reopened dead database connection in mint server"
-            sys.stderr.flush()
         return db, reloadTables
 
     def close(self):
