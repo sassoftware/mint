@@ -60,10 +60,12 @@ class SessionAuthenticationCallback(auth.AuthenticationCallback):
 class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):
     def __init__(self, *args, **kw):
         self.mintConfig = kw.pop('mintConfig')
+        self.mintDb = kw.pop('mintDb')
         handler_apache.ApacheRESTHandler.__init__(self, *args, **kw)
 
     def addAuthCallback(self):
-        self.handler.addCallback(SessionAuthenticationCallback(self.storageConfig, self.mintConfig))
+        self.handler.addCallback(SessionAuthenticationCallback(
+            self.storageConfig, self.mintConfig, self.mintDb))
 
 def catalogHandler(req, db, cfg, pathInfo = None):
     coveragehook.install()
@@ -73,5 +75,5 @@ def catalogHandler(req, db, cfg, pathInfo = None):
     topLevel = os.path.join(cfg.basePath, 'catalog')
     storagePath = os.path.join(cfg.dataPath, 'catalog')
     handler = RbuilderCatalogRESTHandler(topLevel, storagePath,
-                                         mintConfig=cfg)
+            mintConfig=cfg, mintDb=db)
     return handler.handle(req)

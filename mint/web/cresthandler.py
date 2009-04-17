@@ -17,7 +17,7 @@ def handleCrest(uri, cfg, db, repos, req):
         callback.repos = repos.repos
     else:
         callback.repos = repos
-    return crestHandler.handle(req, uri)
+    return handler.handle(req, uri)
 
 def getCrestHandler(cfg, db):
     assert(cfg)

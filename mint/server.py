@@ -51,6 +51,7 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
+from mint.shimclient import ShimMintClient
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint.logerror import logErrorAndEmail
 from mint import packagecreator
@@ -3132,9 +3133,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.removeDataValue(buildId, 'outputToken')
 
         # Set AMI image permissions for build here
-        from mint.shimclient import ShimMintClient
-        authclient = ShimMintClient(self.cfg, (self.cfg.authUser,
-                                               self.cfg.authPass))
+        authclient = ShimMintClient(self.cfg,
+                (self.cfg.authUser, self.cfg.authPass), self.db)
 
         bld = authclient.getBuild(buildId)
         project = authclient.getProject(bld.projectId)
@@ -3187,9 +3187,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._setBuildFilenames(buildId, filenames)
 
     def _setBuildFilenames(self, buildId, filenames, normalize = False):
-        from mint.shimclient import ShimMintClient
-        authclient = ShimMintClient(self.cfg, (self.cfg.authUser,
-                                               self.cfg.authPass))
+        authclient = ShimMintClient(self.cfg,
+                (self.cfg.authUser, self.cfg.authPass), self.db)
 
         build = authclient.getBuild(buildId)
         project = authclient.getProject(build.projectId)
@@ -5412,11 +5411,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def isPlatformAvailable(self, platformLabel):
         return (platformLabel in self.cfg.availablePlatforms)
 
-    def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
+    def __init__(self, cfg, allowPrivate=False, db=None, req=None):
         self.cfg = cfg
         self.req = req
         self.mcpClient = None
-        self.db = mint.db.database.Database(cfg, db=db, alwaysReload=alwaysReload)
+        self.db = mint.db.database.Database(cfg, db=db)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
         self._platformNameCache = None

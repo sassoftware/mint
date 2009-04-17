@@ -41,6 +41,10 @@ class RepositoryManager(manager.Manager):
         self.auth = auth
         self.profiler = None
 
+    @staticmethod
+    def close():
+        pass
+
     def _getProductFQDN(self, hostname):
         #FIXME: this breaks when the project is external.
         cu = self.db.cursor()
