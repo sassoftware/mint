@@ -38,7 +38,6 @@ class RepositoryManager(object):
         self.reposDB = reposDB
         self.db = db
         self.auth = auth
-        self._reposCache = {}
         self.profiler = None
 
     def _getProductFQDN(self, hostname):
@@ -215,21 +214,9 @@ class RepositoryManager(object):
             repo = self.profiler.wrapRepository(repo)
         return repo
 
-    def close(self):
-        for server in self._reposCache.values():
-            server = server()
-            if server:
-                server.db.close()
-        self._reposCache = {}
-
     def _getRepositoryServer(self, fqdn):
         if '.' not in fqdn:
             fqdn = self._getProductFQDN(fqdn)
-        repos = self._reposCache.get(fqdn, None)
-        if repos:
-            repos = repos()
-            if repos:
-                repos.db.close()
         if False and fqdn in _cachedServerCfgs:
             cfg = _cachedServerCfgs[fqdn]
         else:
@@ -249,7 +236,6 @@ class RepositoryManager(object):
         repos = shimclient.NetworkRepositoryServer(cfg, '')
         # used for making sure that all database connections 
         # are closed at the end of a restDb's life.
-        self._reposCache[fqdn] = weakref.ref(repos)
         return repos
 
     def _getBaseConfig(self):
