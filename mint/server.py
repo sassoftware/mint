@@ -4343,10 +4343,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except mcp_error.NetworkError:
             raise mint_error.BuildSystemDown
 
-    def __del__(self):
-        if self.mcpClient:
-            self.mcpClient.disconnect()
-
     #
     # EC2 Support for rBO
     #

@@ -79,5 +79,5 @@ def catalogHandler(req, cfg, pathInfo = None):
                                              mintConfig=cfg)
         _cfg = cfg
         _pathInfo = pathInfo
-        _handler = handler
+        #_handler = handler
     return _handler.handle(req)
