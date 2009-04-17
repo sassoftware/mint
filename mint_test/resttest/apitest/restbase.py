@@ -133,7 +133,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         return URLQUOTE_RE.sub('%%\\1', foo)
 
     def getTestProjectRepos(self):
-        reposMgr = self.openMintDatabase().productMgr.reposMgr
+        db = self.openMintDatabase()
+        reposMgr = db.productMgr.reposMgr
         return reposMgr.getRepositoryClientForProduct('testproject')
 
 class Controller(object):

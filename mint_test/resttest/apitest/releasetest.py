@@ -23,7 +23,7 @@ class ReleasesTest(restbase.BaseRestTest):
         self.setDbUser(db, 'adminuser')
         client = self.getRestClient(admin=True, username='adminuser')
         req, results = client.call('GET', 'products/testproject/releases')
-        releaseId = results.releases[0].releaseId
+        releaseId = results.releases[-1].releaseId
         uri = 'products/testproject/releases/%s' % releaseId
         req, results = client.call('DELETE', uri)
         assert(results)

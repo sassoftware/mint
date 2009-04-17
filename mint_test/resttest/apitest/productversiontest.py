@@ -835,6 +835,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <releases href="http://%(server)s:%(port)s/api/products/testproject/releases/"/>
+    <latestRelease href="http://localhost:8000/api/products/testproject/releases/?limit=1"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
   </product>
 </products>
@@ -890,6 +891,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
   <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
   <releases href="http://%(server)s:%(port)s/api/products/testproject/releases/"/>
+  <latestRelease href="http://localhost:8000/api/products/testproject/releases/?limit=1"/>
   <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
 </product>
 """

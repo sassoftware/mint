@@ -14,6 +14,7 @@ from mint import userlevels
 from mint.lib import unixutils
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest.db import manager
 
 from conary import changelog
 from conary import conarycfg
@@ -30,15 +31,14 @@ from conary.server import schema
 _cachedCfg = None
 _cachedServerCfgs = {}
 
-class RepositoryManager(object):
+class RepositoryManager(manager.Manager):
     ADMIN_LEVEL = object()
 
-    def __init__(self, cfg, db, reposDB, auth):
+    def __init__(self, cfg, db, auth, reposDB):
+	manager.Manager.__init__(self, cfg, db, auth)
         self.cfg = cfg
         self.reposDB = reposDB
-        self.db = db
         self.auth = auth
-        self._reposCache = {}
         self.profiler = None
 
     def _getProductFQDN(self, hostname):
@@ -215,21 +215,9 @@ class RepositoryManager(object):
             repo = self.profiler.wrapRepository(repo)
         return repo
 
-    def close(self):
-        for server in self._reposCache.values():
-            server = server()
-            if server:
-                server.db.close()
-        self._reposCache = {}
-
     def _getRepositoryServer(self, fqdn):
         if '.' not in fqdn:
             fqdn = self._getProductFQDN(fqdn)
-        repos = self._reposCache.get(fqdn, None)
-        if repos:
-            repos = repos()
-            if repos:
-                repos.db.close()
         if False and fqdn in _cachedServerCfgs:
             cfg = _cachedServerCfgs[fqdn]
         else:
@@ -249,7 +237,6 @@ class RepositoryManager(object):
         repos = shimclient.NetworkRepositoryServer(cfg, '')
         # used for making sure that all database connections 
         # are closed at the end of a restDb's life.
-        self._reposCache[fqdn] = weakref.ref(repos)
         return repos
 
     def _getBaseConfig(self):

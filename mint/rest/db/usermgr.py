@@ -10,6 +10,7 @@ from conary.lib.digestlib import md5
 
 from mint import mint_error
 from mint.rest import errors
+from mint.rest.db import manager
 
 def _mungePassword(password):
     m = md5()
@@ -19,12 +20,8 @@ def _mungePassword(password):
     return salt, m.hexdigest()
 
 
-class UserManager(object):
-    def __init__(self, cfg, db, publisher):
-        self.cfg = cfg
-        self.db = db
-        self.publisher = publisher
-        
+class UserManager(manager.Manager):
+
     def cancelUserAccount(self, username):
         """Removes the user account from the authrepo and mint databases.
         Also removes the user from each project listed in projects.

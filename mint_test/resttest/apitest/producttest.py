@@ -85,6 +85,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <members href="http://%(server)s:%(port)s/api/products/foobar/members/"/>
   <creator href="http://%(server)s:%(port)s/api/users/foouser">foouser</creator>
   <releases href="http://%(server)s:%(port)s/api/products/foobar/releases/"/>
+  <latestRelease href="http://localhost:8000/api/products/foobar/releases/?limit=1"/>
   <images href="http://%(server)s:%(port)s/api/products/foobar/images/"/>
 </product>
 """

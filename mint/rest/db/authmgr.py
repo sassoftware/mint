@@ -6,12 +6,12 @@
 
 from mint import userlevels
 from mint.rest import errors
+from mint.rest.db import manager
 
-class AuthenticationManager(object):
+class AuthenticationManager(manager.Manager):
     def __init__(self, cfg, db):
+        manager.Manager.__init__(self, cfg, db, None)
         self.auth = None
-        self.db = db
-        self.cfg = cfg
         self.username = None
         self.fullName = None
         self.userId = None

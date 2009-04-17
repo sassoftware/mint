@@ -13,13 +13,12 @@ from rpath_common.proddef import api1 as proddef
 
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest.db import manager
 from mint.lib import persistentcache
 
-
-class PlatformManager(object):
-    def __init__(self, cfg, db):
-        self.cfg = cfg
-        self.db = db
+class PlatformManager(manager.Manager):
+    def __init__(self, cfg, db, auth):
+	manager.Manager.__init__(self, cfg, db, auth)
         cacheFile = os.path.join(self.cfg.dataPath, 'data', 
                                  'platformName.cache')
         self.platformCache = PlatformNameCache(cacheFile, 
