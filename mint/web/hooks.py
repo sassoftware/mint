@@ -49,7 +49,6 @@ BUFFER=1024 * 256
 
 
 # Global cached objects
-db = None
 cfg = None
 repositories = {}
 proxy_repository = None
@@ -280,7 +279,6 @@ def conaryHandler(req, cfg, pathInfo):
         # group builder)
         requireSigs = False
 
-    global db
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
         hostName = paths[paths.index('repos') + 1]
@@ -555,11 +553,7 @@ def handler(req):
         # chop off the provided base path
         pathInfo = normPath(req.uri[len(cfg.basePath):])
 
-    global db
-    if not db:
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-    else:
-        db.rollback()
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
     prof = profile.Profile(cfg)
 
