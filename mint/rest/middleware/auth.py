@@ -60,8 +60,8 @@ class AuthenticationCallback(object):
 
         sid = cookies['pysid'].value
 
-        sessionClient = shimclient.ShimMintClient(cfg, (cfg.authUser, 
-                                                        cfg.authPass))
+        sessionClient = shimclient.ShimMintClient(cfg,
+                (cfg.authUser, cfg.authPass), db=self.db.db.db)
 
         session = SqlSession(req, sessionClient,
             sid = sid,
@@ -71,7 +71,8 @@ class AuthenticationCallback(object):
         return session.get('authToken', None)
 
     def _checkAuth(self, authToken):
-        mintClient = shimclient.ShimMintClient(self.cfg, authToken)
+        mintClient = shimclient.ShimMintClient(self.cfg, authToken,
+                db=self.db.db.db)
         mintAuth = mintClient.checkAuth()
         if mintAuth:
             return mintClient, mintAuth

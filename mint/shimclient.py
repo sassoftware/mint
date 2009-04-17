@@ -11,8 +11,8 @@ from mint.server import MintServer
 
 class ShimMintClient(client.MintClient):
     _allowPrivate = True # enable all private methods of MintClient
-    def __init__(self, cfg, authToken):
-        self.server = ShimServerProxy(cfg, authToken)
+    def __init__(self, cfg, authToken, db=None):
+        self.server = ShimServerProxy(cfg, authToken, db)
         self._cfg = cfg
 
     def getCfg(self):
@@ -51,10 +51,10 @@ class _ShimMethod(client._Method, object):
         return object.__setattr__(self, name, val)
 
 class ShimServerProxy(client.ServerProxy):
-    def __init__(self, cfg, authToken):
+    def __init__(self, cfg, authToken, db=None):
         self._cfg = cfg
         self._authToken = authToken
-        self._server = MintServer(self._cfg, allowPrivate = True)
+        self._server = MintServer(self._cfg, allowPrivate = True, db=db)
 
     def __hasattr__(self, name):
         if name.startswith('__'):

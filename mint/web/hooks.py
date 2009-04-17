@@ -57,7 +57,7 @@ proxy_repository = None
 def getProtocol(isSecure):
     return isSecure and "https" or "http"
 
-def post(port, isSecure, repos, cfg, req):
+def post(port, isSecure, repos, cfg, db, req):
     repos, shimRepo = repos
 
     protocol = getProtocol(isSecure)
@@ -68,20 +68,20 @@ def post(port, isSecure, repos, cfg, req):
             skippedPart = '/'.join(items[:4])
             unparsedUri = req.unparsed_uri[len(skippedPart):]
             return cresthandler.handleCrest(unparsedUri,
-                                            cfg, db, repos, req)
+                    cfg, db, repos, req)
     if req.headers_in['Content-Type'] == "text/xml":
         if not repos:
             return apache.HTTP_NOT_FOUND
 
         return apachemethods.post(port, isSecure, repos, req)
     else:
-        webfe = app.MintApp(req, cfg, repServer = shimRepo)
+        webfe = app.MintApp(req, cfg, repServer = shimRepo, db=db)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
 
 CONARY_GET_COMMANDS = ["changeset", "getOpenPGPKey"]
 
-def get(port, isSecure, repos, cfg, req):
+def get(port, isSecure, repos, cfg, db, req):
     repos, shimRepo = repos
 
     protocol = getProtocol(isSecure)
@@ -100,8 +100,8 @@ def get(port, isSecure, repos, cfg, req):
             skippedPart = '/'.join(items[:4])
             unparsedUri = req.unparsed_uri[len(skippedPart):]
             return cresthandler.handleCrest(unparsedUri,
-                                            cfg, db, repos, req)
-    webfe = app.MintApp(req, cfg, repServer = shimRepo)
+                    cfg, db, repos, req)
+    webfe = app.MintApp(req, cfg, repServer = shimRepo, db=db)
     return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
 def getRepositoryMap(cfg):
@@ -409,9 +409,9 @@ def conaryHandler(req, db, cfg, pathInfo):
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
-            return post(port, secure, (proxyServer, shimRepo), cfg, req)
+            return post(port, secure, (proxyServer, shimRepo), cfg, db, req)
         elif method == "GET":
-            return get(port, secure, (proxyServer, shimRepo), cfg, req)
+            return get(port, secure, (proxyServer, shimRepo), cfg, db, req)
         elif method == "PUT":
             return apachemethods.putFile(port, secure, proxyServer, req)
         else:
@@ -555,12 +555,7 @@ def handler(req):
 
     db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
-    if db.inTransaction(True):
-        db.rollback()
-
     prof = profile.Profile(cfg)
-
-    # reopen a dead database
 
     if not req.uri.startswith(cfg.basePath + 'setup/') and not cfg.configured:
         if req.uri == cfg.basePath + 'pwCheck':
@@ -610,7 +605,7 @@ def handler(req):
                     # code to 500 (internal server error).
                     req.status = 500
                     try:
-                        ret = mintHandler(req, cfg, '/unknownError')
+                        ret = mintHandler(req, db, cfg, '/unknownError')
                     except:
                         # Some requests cause MintApp to choke on setup
                         # We've already logged the error, so just display
@@ -620,10 +615,6 @@ def handler(req):
     finally:
         prof.stopHttp(req.uri)
         if db:
-            if db.poolmode:
-                db.close()
-                db = None
-            elif db.inTransaction(True):
-                db.rollback()
+            db.close()
         coveragehook.save()
     return ret

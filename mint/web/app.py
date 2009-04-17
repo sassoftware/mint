@@ -49,9 +49,10 @@ class MintApp(WebHandler):
     user = None
     session = {}
 
-    def __init__(self, req, cfg, repServer = None):
+    def __init__(self, req, cfg, repServer = None, db=None):
         self.req = req
         self.cfg = cfg
+        self.db = db
 
         # always send html-strict; xhtml FTL
         # The default behavior of kid changed between 0.9.1 and 0.9.6
@@ -107,7 +108,8 @@ class MintApp(WebHandler):
         self.authToken = self.session.get('authToken', anonToken)
 
         # open up a new client with the retrieved authToken
-        self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
+        self.client = shimclient.ShimMintClient(self.cfg, self.authToken,
+                self.db)
 
         self.auth = self.client.checkAuth()
         self.membershipReqsList = None
@@ -258,6 +260,7 @@ class MintApp(WebHandler):
             'authToken':        self.auth.getToken(),
             'client':           self.client,
             'cfg':              self.cfg,
+            'db':               self.db,
             'fields':           self.fields,
             'projectList':      self.projectList,
             'projectDict':      self.projectDict,

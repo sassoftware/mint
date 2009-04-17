@@ -44,7 +44,7 @@ def rpcHandler(req, db, cfg, pathInfo = None):
     if type(authToken) is list:
         authToken = authToken[0:2] # throw away entitlement
     # instantiate a MintServer
-    srvr = server.MintServer(cfg, allowPrivate = allowPrivate, req = req)
+    srvr = server.MintServer(cfg, allowPrivate=allowPrivate, req=req, db=db)
 
     # switch on XML/JSON here
     if isXMLrpc:

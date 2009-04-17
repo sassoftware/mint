@@ -17,8 +17,9 @@ from catalogService.rest import auth
 
 
 class SessionAuthenticationCallback(auth.AuthenticationCallback):
-    def __init__(self, storageConfig, mintConfig):
+    def __init__(self, storageConfig, mintConfig, mintDb):
         self.mintConfig = mintConfig
+        self.mintDb = mintDb
         auth.AuthenticationCallback.__init__(self, storageConfig)
 
     def getMintConfig(self):
@@ -45,7 +46,8 @@ class SessionAuthenticationCallback(auth.AuthenticationCallback):
 
         sid = cookies['pysid'].value
 
-        sessionClient = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
+        sessionClient = shimclient.ShimMintClient(cfg,
+                (cfg.authUser, cfg.authPass), self.mintDb)
 
         session = SqlSession(req, sessionClient,
             sid = sid,
