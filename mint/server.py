@@ -3134,7 +3134,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # Set AMI image permissions for build here
         from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg,
-                (self.cfg.authUser, self.cfg.authPass), self.db)
+                (self.cfg.authUser, self.cfg.authPass), self.db._db)
 
         bld = authclient.getBuild(buildId)
         project = authclient.getProject(bld.projectId)
@@ -3189,7 +3189,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _setBuildFilenames(self, buildId, filenames, normalize = False):
         from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg,
-                (self.cfg.authUser, self.cfg.authPass), self.db)
+                (self.cfg.authUser, self.cfg.authPass), self.db._db)
 
         build = authclient.getBuild(buildId)
         project = authclient.getProject(build.projectId)
