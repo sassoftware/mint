@@ -126,5 +126,6 @@ class AuthenticationCallback(object):
         # require authentication
         if (not getattr(viewMethod, 'public', False)
                 and request.mintAuth is None):
-            return Response(status=401,
-                 headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
+            return Response(status=403)
+            #return Response(status=401,
+            #         headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
