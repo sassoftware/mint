@@ -222,10 +222,14 @@ class ProjectsTable(database.KeyedTable):
                       ('TopProjects', 'projectId') ]
 
         cu = self.db.cursor()
+
         self.db.loadSchema()
+        found = False
         if 'tmpLatestReleases' in self.db.tempTables:
-            cu.execute("TRUNCATE TABLE tmpLatestReleases")
-        else:
+            cu.execute("DELETE FROM tmpLatestReleases")
+            found = True
+
+        if not found:
             cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
                 projectId       INTEGER NOT NULL,
                 timePublished   NUMERIC(14,3))""")
@@ -323,7 +327,7 @@ class ProjectsTable(database.KeyedTable):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
-        cu.execute("DELETE FROM tmpLatestReleases")
+        cu.execute("DROP TABLE tmpLatestReleases")
 
         return [x[1] for x in [(x[2].lower(),x) for x in ids]], count
 
