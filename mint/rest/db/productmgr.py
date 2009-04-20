@@ -55,6 +55,13 @@ class ProductManager(manager.Manager):
 
         d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
         p = models.Product(d)
+        cu.execute("""SELECT pubReleaseId FROM PublishedReleases
+                    WHERE timePublished IS NOT NULL
+                    AND projectId=? ORDER BY timePublished
+                    LIMIT 1 """, p.productId)
+        results = cu.fetchone()
+        if results:
+            p.latestRelease = results[0]
         return p
 
     def listProducts(self, start=0, limit=None, search=None, roles=None):
