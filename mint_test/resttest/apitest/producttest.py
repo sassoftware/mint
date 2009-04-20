@@ -19,7 +19,7 @@ from mint.rest import errors as resterrors
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class ProductVersionTest(restbase.BaseRestTest):
+class ProductTest(restbase.BaseRestTest):
     buildDefs = [
         ('Citrix XenServer 32-bit', 'xen', 'x86', 'xenOvaImage'),
         ('Citrix XenServer 64-bit', 'xen', 'x86_64', 'xenOvaImage'),
@@ -48,6 +48,13 @@ class ProductVersionTest(restbase.BaseRestTest):
                                     client.call,'POST', 'products', 
                                     body=newProduct1 % uhash)
             self.failUnlessEqual(str(err), errmsg)
+
+    def testProductLatestReleases(self):
+        # test where we actually have a published release
+        self.setupReleases()
+        client = self.getRestClient()
+        req, prd = client.call('GET', '/products/%s' % self.productShortName)
+        assert(prd.latestRelease == 2)
 
     def testCreateProduct(self):
         productShortName = "foobar"
@@ -85,7 +92,6 @@ class ProductVersionTest(restbase.BaseRestTest):
   <members href="http://%(server)s:%(port)s/api/products/foobar/members/"/>
   <creator href="http://%(server)s:%(port)s/api/users/foouser">foouser</creator>
   <releases href="http://%(server)s:%(port)s/api/products/foobar/releases/"/>
-  <latestRelease href="http://localhost:8000/api/products/foobar/releases/?limit=1"/>
   <images href="http://%(server)s:%(port)s/api/products/foobar/images/"/>
 </product>
 """

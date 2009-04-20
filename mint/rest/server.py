@@ -35,10 +35,10 @@ class RbuilderRESTHandler(object):
         return self.handler.handle(req, req.unparsed_uri[len(self.pathPrefix):])
 
 
-def restHandler(req, cfg, pathInfo = None):
+def restHandler(req, db, cfg, pathInfo = None):
     coveragehook.install()
     maintenance.enforceMaintenanceMode(cfg)
     topLevel = os.path.join(cfg.basePath, 'api')
-    db = database.Database(cfg)
+    db = database.Database(cfg, db=db)
     handler = RbuilderRESTHandler(topLevel, cfg, db)
     return handler.handle(req)

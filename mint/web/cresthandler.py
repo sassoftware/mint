@@ -10,24 +10,18 @@ from mint.rest.db import database as restDatabase
 from mint.db import database
 from mint.rest.middleware import auth
 
-crestHandler = None
-crestCallback = None
 
 def handleCrest(uri, cfg, db, repos, req):
-    handler = getCrestHandler(cfg, db)
+    handler, callback = getCrestHandler(cfg, db)
     if isinstance(repos, proxy.SimpleRepositoryFilter):
-        crestCallback.repos = repos.repos
+        callback.repos = repos.repos
     else:
-        crestCallback.repos = repos
-    return crestHandler.handle(req, uri)
+        callback.repos = repos
+    return handler.handle(req, uri)
 
 def getCrestHandler(cfg, db):
     assert(cfg)
     assert(db)
-    global crestHandler
-    global crestCallback
-    if crestHandler is not None:
-        return crestHandler
     crestController = crest.root.Controller(None, '/rest')
     crestHandler = restlib.http.modpython.ModPythonHttpHandler(crestController)
     crestCallback = CrestRepositoryCallback(db)
@@ -35,8 +29,12 @@ def getCrestHandler(cfg, db):
     db = database.Database(cfg, db)
     db = restDatabase.Database(cfg, db)
     crestHandler.addCallback(auth.AuthenticationCallback(cfg, db))
-    return crestHandler
+    return crestHandler, crestCallback
 
+
+class AuthChecker(auth.AuthenticationCallback(cfg, db):
+    def processMethod(self, request, viewMethod, args, kw):
+        return self.checkDisablement(request, viewMethod)
 
 class CrestRepositoryCallback(crest.webhooks.ReposCallback):
     def __init__(self, db):

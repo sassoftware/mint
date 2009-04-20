@@ -494,9 +494,7 @@ class Database(DBInterface):
         return self.productMgr.setProductVersionBuildDefinitions(hostname, version, model)
 
     def stopImageJob(self, hostname, imageId):
-        self.auth.requireProductOwner(hostname)
-        # check to make sure the imageId is valid for this host.
-        self.imageMgr.getImageJob(hostname, imageId)
+        self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.stopImageJob(imageId)
 
     @readonly    

@@ -77,9 +77,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessRaises(DuplicateHostname, client.newProject, "Test", 
                               'foo', MINT_PROJECT_DOMAIN, shortname="foo",
                               version='1.0', prodtype='Component')
-        self.failUnlessRaises(DuplicateName, client.newProject, "Foo", 'bar',
-                              MINT_PROJECT_DOMAIN, shortname="bar",
-                              version='1.0', prodtype='Component')
 
         self.mock(socket, 'gethostname', lambda: 'sir.robin')
         sData = re.split("\.", socket.gethostname(), 1)
@@ -120,15 +117,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         assert(project.getName() == "Foo Title")
         assert(project.getDesc() == "Description")
         assert(project.getProjectUrl() == "http://example.com/")
-
-        # create a new project to conflict with
-        hostname=shortname = "foo2"
-        newProjectId = client.newProject("Foo2", hostname, MINT_PROJECT_DOMAIN,
-                                         shortname=shortname,
-                                         version='1.0', prodtype='Component')
-
-        self.failUnlessRaises(DuplicateItem, project.editProject,
-                "http://example.com/", "Description", "Foo2")
 
         # test automatic prepending of http://
         project.editProject("www.example.com", "Description", "Foo Title")
@@ -522,9 +510,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.assertRaises(DuplicateHostname,
             client.newProject, "Hello World", "foo", "localhost", 
                     shortname="foo", version='1.0', prodtype='Component')
-        self.assertRaises(DuplicateName,
-            client.newProject, "Foo", "another", "localhost", 
-                    shortname="another", version='1.0', prodtype='Component')
 
     @fixtures.fixture("Full")
     def testOwnerMirror(self, db, data):

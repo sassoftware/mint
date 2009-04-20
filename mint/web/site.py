@@ -218,7 +218,7 @@ class SiteHandler(WebHandler):
                      x, y):
         if action == 'login':
             authToken = (username, password)
-            client = shimclient.ShimMintClient(self.cfg, authToken)
+            client = shimclient.ShimMintClient(self.cfg, authToken, self.db)
             auth = client.checkAuth()
 
             maintenance.enforceMaintenanceMode(self.cfg, auth)
@@ -1022,8 +1022,8 @@ class SiteHandler(WebHandler):
         if method != "PUT":
             raise HttpMethodNotAllowed
 
-        client = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser,
-                                                      self.cfg.authPass))
+        client = shimclient.ShimMintClient(self.cfg,
+                (self.cfg.authUser, self.cfg.authPass), self.db)
 
         buildId, fileName = self.req.uri.split("/")[-2:]
         build = client.getBuild(int(buildId))
@@ -1043,9 +1043,6 @@ class SiteHandler(WebHandler):
         targetF = open(targetFn, 'w+')
         util.copyfileobj(self.req, targetF)
         return ''
-
-    def cloudCatalog(self, auth):
-        return self._write('cloudCatalog')
 
 
 def helpDocument(page):

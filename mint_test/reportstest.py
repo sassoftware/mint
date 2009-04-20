@@ -12,8 +12,10 @@ import tempfile
 import time
 
 import fixtures
+from mint.lib import maillib
 from mint.mint_error import PermissionDenied
 from mint.mint_error import InvalidReport
+from testutils import mock
 
 class ReportTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -37,6 +39,8 @@ class ReportTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testNewUsersReport(self, db, data):
+        mock.mock(maillib, 'sendMailWithChecks')
+        self.cfg.sendNotificationEmails = True
         client = self.getClient("admin")
         for i in range(3):
             report = client.server.getReport('new_users')

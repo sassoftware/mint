@@ -67,8 +67,10 @@ class AbstractUrlField(CalculatedField):
 
     def getModelInstance(self, value, parent, context):
         modelClass = self.getModel()
-        return modelClass(href=self._getUrl(parent, context), 
-                          value=value)
+        url = self._getUrl(parent, context)
+        if url is None:
+            return None
+        return modelClass(href=url, value=value)
 
 
 class UrlField(AbstractUrlField):

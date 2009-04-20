@@ -89,7 +89,13 @@ service postgresql-rbuilder condstop
 service postgresql-rbuilder start
 waitForPg
 
+service pgbouncer restart
+
 # Migrate the mint database (or create it if it doesn't exist)
+createlang -U postgres plpgsql template1 &>/dev/null
+createuser -SDRU postgres rbuilder &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
+
 /usr/share/rbuilder/scripts/rbuilder-database --migrate \
     || die "Failed to migrate the rBuilder database"
 chown -f apache:apache /srv/rbuilder/data/{db,platformName.cache} 2>/dev/null
@@ -160,6 +166,7 @@ fi
 # Shut down postgres if chrooted
 if [ "x$is_chrooted" == "x1" ]
 then
+    service pgbouncer stop
     service postgresql-rbuilder stop
 
     echo "Waiting for postgres to stop"

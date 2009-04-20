@@ -2,6 +2,7 @@ import sys
 
 from conary import dbstore
 from conary.dbstore import sqlerrors
+from conary.lib.util import rethrow
 
 from mint import mint_error
 from mint.db import schema
@@ -23,10 +24,6 @@ from mint.db import stats
 from mint.db import targets
 from mint.db import users
 
-
-
-dbConnection = None
-tables = None
 
 class TableCache(object):
     def __init__(self, db, cfg):
@@ -81,23 +78,12 @@ class TableCache(object):
 
 class Database(object):
 
-    def __init__(self, cfg, db=None, alwaysReload=False):
-        db, reloadTables = self._openDb(cfg.dbDriver, cfg.dbPath, db, 
-                                        alwaysReload)
+    def __init__(self, cfg, db=None):
         self._cfg = cfg
-
-        # check to make sure the schema version is correct
-        try:
-            schema.checkVersion(db)
-        except sqlerrors.SchemaVersionError, e:
-            raise mint_error.DatabaseVersionMismatch(e.args[0])
         self._db = db
-        global tables
-        if not tables or reloadTables:
-            tables = TableCache(db, cfg)
-            self.tablesReloaded = True
-        else:
-            self.tablesReloaded = False
+        self._autoDb = False
+
+        tables = self._openDb()
 
         self.labels = tables.labels
         self.projects = tables.projects
@@ -140,42 +126,33 @@ class Database(object):
         self.targets = tables.targets
         self.targetData = tables.targetData
 
-        if self.tablesReloaded:
-            self.normalizeMirrorOrder()
+        self.normalizeMirrorOrder()
 
-    def _getDb(self):
+    @property
+    def db(self):
         return self._db
-    db = property(_getDb)
 
-    def _openDb(self, dbDriver, dbPath, db, alwaysReload):
-        global dbConnection
-        if db:
-            dbConnection = db
+    @property
+    def driver(self):
+        return self._db.driver
 
-        # Flag to indicate if we created a new self.db and need to force a
-        # call to getTables
-        reloadTables = False
+    def _openDb(self):
+        if not self._db:
+            self._db = dbstore.connect(self._cfg.dbPath, self._cfg.dbDriver)
+            self._autoDb = True
 
-        if (dbDriver in ["mysql", "postgresql", "pgpool", "sqlite"]
-                and dbConnection and (not alwaysReload)):
-            db = dbConnection
-        else:
-            db = dbstore.connect(dbPath, driver=dbDriver)
-            dbConnection = db
-            reloadTables = True
+        # check to make sure the schema version is correct
+        try:
+            schema.checkVersion(self._db)
+        except sqlerrors.SchemaVersionError:
+            rethrow(mint_error.DatabaseVersionMismatch, False)
 
-        # reopen a dead database
-        if db.reopen():
-            print >> sys.stderr, "reopened dead database connection in mint server"
-            sys.stderr.flush()
-        return db, reloadTables
+        return TableCache(self._db, self._cfg)
 
     def close(self):
-        return self._db.close()
-
-    def getDriver(self):
-        return self._db.driver
-    driver = property(getDriver)
+        if self._autoDb:
+            self._db.close()
+            self._db = None
 
     def cursor(self):
         return self._db.cursor()

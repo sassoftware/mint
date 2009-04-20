@@ -56,6 +56,7 @@ from mcp_test.mcp_helper import MCPTestMixin
 
 from testrunner.testhelp import SkipTestException, findPorts
 from testrunner import resources
+from testutils import mock
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
@@ -488,7 +489,7 @@ class RestDBMixIn(object):
             self.mintCfg = getMintCfg(self.workDir, 0, 0, dbPort, False)
         from mint.rest.db import database as restdb
         from mint.db import database
-        db = database.Database(self.mintCfg, alwaysReload=True)
+        db = database.Database(self.mintCfg)
         db = restdb.Database(self.mintCfg, db, subscribers=[])
         db.auth.isAdmin = True
         # We should probably get a real user ID here, instead of hardcoding 2
@@ -881,7 +882,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
 
         util.mkdirChain(os.path.join(self.reposDir + '-mint', "tmp"))
 
-        self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
+        self.mintServer = server.MintServer(self.mintCfg)
         self.mintServer.mcpClient = self.mcpClient
 
         self.db = self.mintServer.db
@@ -891,6 +892,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         hooks.domainNameCache = {}
 
     def tearDown(self):
+        mock.unmockAll()
         self.db.close()
         RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)

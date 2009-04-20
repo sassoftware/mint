@@ -163,6 +163,8 @@ class ProjectsTable(database.KeyedTable):
         for x in cu.fetchall_dict():
             level = x.pop('level')
             hasRequests = x.pop('hasRequests')
+            if x['creatorId'] is None:
+                del x['creatorId']
             ret.append((x, level, hasRequests))
         return ret
 
@@ -220,15 +222,21 @@ class ProjectsTable(database.KeyedTable):
                       ('TopProjects', 'projectId') ]
 
         cu = self.db.cursor()
-        cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
-            projectId       INTEGER NOT NULL,
-            timePublished   NUMERIC(14,3))""")
+
+        self.db.loadSchema()
+        found = False
+        if 'tmpLatestReleases' in self.db.tempTables:
+            cu.execute("DELETE FROM tmpLatestReleases")
+            found = True
+
+        if not found:
+            cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
+                projectId       INTEGER NOT NULL,
+                timePublished   NUMERIC(14,3))""")
 
         cu.execute("""INSERT INTO tmpLatestReleases (projectId, timePublished)
             SELECT projectId as projectId, MAX(timePublished) AS timePublished FROM PublishedReleases
             GROUP BY projectId""")
-
-        self.db.commit()
 
         # extract a list of build types to search for.
         # these are additive, unlike other search limiters.
@@ -302,6 +310,8 @@ class ProjectsTable(database.KeyedTable):
                                               AND timePublished IS NOT NULL)"""
 
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
+        # multi-layer hack, yay (psql doesn't like "1" here)
+        whereClause = whereClause[0].replace('WHERE 1  AND', 'WHERE'), whereClause[1]
 
         if byPopularity:
             orderByClause = 'rank ASC'
@@ -318,7 +328,6 @@ class ProjectsTable(database.KeyedTable):
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
         cu.execute("DROP TABLE tmpLatestReleases")
-        self.db.commit()
 
         return [x[1] for x in [(x[2].lower(),x) for x in ids]], count
 

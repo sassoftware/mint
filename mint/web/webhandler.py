@@ -49,6 +49,10 @@ class WebHandler(object):
     #Default render type to send to kid
     output = 'xhtml-strict'
 
+    cfg = None
+    db = None
+    req = None
+
     def _write(self, templateName, templatePath = None, **values):
         prof = profile.Profile(self.cfg)
         wasCacheHit = False
@@ -132,7 +136,8 @@ class WebHandler(object):
 
     def _resetPasswordById(self, userId):
         newpw = users.newPassword()
-        adminClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+        adminClient = shimclient.ShimMintClient(self.cfg,
+                (self.cfg.authUser, self.cfg.authPass), self.db)
         user = adminClient.getUser(userId)
         user.setPassword(newpw)
 
@@ -170,7 +175,8 @@ class WebHandler(object):
     def _session_start(self, rememberMe = False):
         sid = self.fields.get('sid', None)
 
-        sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+        sessionClient = shimclient.ShimMintClient(self.cfg,
+                (self.cfg.authUser, self.cfg.authPass), self.db)
 
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,

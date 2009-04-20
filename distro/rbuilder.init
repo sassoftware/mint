@@ -5,43 +5,6 @@
 # Copyright (c) 2008 rPath, Inc
 # All rights reserved
 
-pgsql_service=postgresql-rbuilder
-
-. /etc/sysconfig/pgsql/$pgsql_service
-export PGDATA PGPORT
-
-function waitForPg()
-{
-  ready="false"
-  retries=4
-  while [ "$ready" == "false" ]
-  do
-    psql -U postgres -l >/dev/null 2>&1
-    rc=$?
-    if [ "$rc" -eq 0 ]
-    then
-      ready="true"
-    elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
-    then
-      retries=$(( $retries - 1 ))
-      sleep 4
-    else
-      echo "Failed waiting for PostgreSQL to start"
-      exit 1
-    fi
-  done
-}
-
-
-function createPgDb()
-{
-  createlang -U postgres plpgsql template1 2>/dev/null
-  if [ "$?" -ne 0 -a  "$?" -ne 2 ]
-  then
-    echo "Failed enabling plpgsql"
-    exit 1
-  fi
-}
 
 case "$1" in
 start)
@@ -53,24 +16,6 @@ start)
 
   # Generate SSL certs for various things on initial boot.
   /usr/share/rbuilder/scripts/generate-certs.sh
-
-  # PostgreSQL must be running for initialization
-  if [ ! -f /var/lock/subsys/$pgsql_service ]
-  then
-    stop_after_init=1
-    service $pgsql_service start
-  fi
-
-  waitForPg
-  createPgDb
-
-  # If PostgreSQL wasn't running before, we're probably running in a
-  # tag handler, possibly even in a jobslave. Don't leave postmaster
-  # running.
-  if [ "$stop_after_init" == 1 ]
-  then
-    service $pgsql_service stop
-  fi
 
   ;;
 stop)

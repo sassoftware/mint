@@ -166,7 +166,6 @@ class ReposTest(restbase.BaseRestTest):
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/1">
     <imageId>1</imageId>
     <hostname>testproject</hostname>
-    <release/>
     <imageType>installableIsoImage</imageType>
     <imageTypeName>Installable CD/DVD</imageTypeName>
     <name>Image 1</name>
@@ -177,7 +176,6 @@ class ReposTest(restbase.BaseRestTest):
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
-    <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
     <status>-1</status>
@@ -196,7 +194,6 @@ class ReposTest(restbase.BaseRestTest):
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
     <hostname>testproject</hostname>
-    <release/>
     <imageType>tarballImage</imageType>
     <imageTypeName>TAR File</imageTypeName>
     <name>Image 2</name>
@@ -207,7 +204,6 @@ class ReposTest(restbase.BaseRestTest):
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
-    <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
     <status>-1</status>

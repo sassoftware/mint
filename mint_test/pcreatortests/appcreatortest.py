@@ -301,7 +301,7 @@ class TestRecipe(PackageRecipe):
         for label in retTroveList:
             refTroveList.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
         self.avail_called = False
-        def _getAvailPackages(s, sesH):
+        def _getAvailPackages(s, sesH, refresh):
             self.avail_called = True
             return retTroveList
         self.mock(pcreator.backend.BaseBackend, '_getAvailablePackages',

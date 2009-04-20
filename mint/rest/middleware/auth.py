@@ -60,8 +60,8 @@ class AuthenticationCallback(object):
 
         sid = cookies['pysid'].value
 
-        sessionClient = shimclient.ShimMintClient(cfg, (cfg.authUser, 
-                                                        cfg.authPass))
+        sessionClient = shimclient.ShimMintClient(cfg,
+                (cfg.authUser, cfg.authPass), db=self.db.db.db)
 
         session = SqlSession(req, sessionClient,
             sid = sid,
@@ -71,7 +71,8 @@ class AuthenticationCallback(object):
         return session.get('authToken', None)
 
     def _checkAuth(self, authToken):
-        mintClient = shimclient.ShimMintClient(self.cfg, authToken)
+        mintClient = shimclient.ShimMintClient(self.cfg, authToken,
+                db=self.db.db.db)
         mintAuth = mintClient.checkAuth()
         if mintAuth:
             return mintClient, mintAuth
@@ -113,7 +114,7 @@ class AuthenticationCallback(object):
         if self.db.siteAuth:
             self.db.siteAuth.refresh()
 
-    def processMethod(self, request, viewMethod, args, kwargs):
+    def checkDisablement(self, request, viewMethod):
         # Disablement check
         if not getattr(viewMethod, 'dont_disable', False):
             if self.db.siteAuth and not self.db.siteAuth.isValid():
@@ -122,8 +123,15 @@ class AuthenticationCallback(object):
                             "Please navigate to the rBuilder homepage for "
                             "more information.")
 
+
+    def processMethod(self, request, viewMethod, args, kwargs):
+        response = self.checkDisablement(request, viewMethod)
+        if response:
+            return response
+
         # require authentication
         if (not getattr(viewMethod, 'public', False)
                 and request.mintAuth is None):
-            return Response(status=401,
-                 headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
+            return Response(status=403)
+            #return Response(status=401,
+            #         headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})

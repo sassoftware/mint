@@ -43,7 +43,6 @@ class ImagesTest(restbase.BaseRestTest):
     <published>true</published>
     <images href="http://localhost:8000/api/products/testproject/releases/2/images"/>
     <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
-    <updater/>
     <publisher href="http://localhost:8000/api/users/adminuser">adminuser</publisher>
     <timeCreated></timeCreated>
     <timePublished></timePublished>
@@ -58,8 +57,6 @@ class ImagesTest(restbase.BaseRestTest):
     <published>false</published>
     <images href="http://localhost:8000/api/products/testproject/releases/1/images"/>
     <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
-    <updater/>
-    <publisher/>
     <timeCreated></timeCreated>
     <shouldMirror>false</shouldMirror>
   </release>
@@ -97,7 +94,6 @@ class ImagesTest(restbase.BaseRestTest):
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
-    <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
     <status>-1</status>
@@ -127,7 +123,6 @@ class ImagesTest(restbase.BaseRestTest):
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
-    <updater/>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
     <status>-1</status>

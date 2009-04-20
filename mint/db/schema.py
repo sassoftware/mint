@@ -141,7 +141,7 @@ def _createProjects(db):
             projectId           %(PRIMARYKEY)s,
             creatorId           integer
                 REFERENCES Users ( userId ) ON DELETE SET NULL,
-            name                varchar(128)    NOT NULL    UNIQUE,
+            name                varchar(128)    NOT NULL,
             hostname            varchar(63)     NOT NULL    UNIQUE,
             shortname           varchar(63)     NOT NULL    UNIQUE,
             domainname          varchar(128)    NOT NULL    DEFAULT '',

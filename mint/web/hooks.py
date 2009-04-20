@@ -57,7 +57,7 @@ proxy_repository = None
 def getProtocol(isSecure):
     return isSecure and "https" or "http"
 
-def post(port, isSecure, repos, cfg, req):
+def post(port, isSecure, repos, cfg, db, req):
     repos, shimRepo = repos
 
     protocol = getProtocol(isSecure)
@@ -68,20 +68,20 @@ def post(port, isSecure, repos, cfg, req):
             skippedPart = '/'.join(items[:4])
             unparsedUri = req.unparsed_uri[len(skippedPart):]
             return cresthandler.handleCrest(unparsedUri,
-                                            cfg, db, repos, req)
+                    cfg, db, repos, req)
     if req.headers_in['Content-Type'] == "text/xml":
         if not repos:
             return apache.HTTP_NOT_FOUND
 
         return apachemethods.post(port, isSecure, repos, req)
     else:
-        webfe = app.MintApp(req, cfg, repServer = shimRepo)
+        webfe = app.MintApp(req, cfg, repServer = shimRepo, db=db)
         return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
 
 CONARY_GET_COMMANDS = ["changeset", "getOpenPGPKey"]
 
-def get(port, isSecure, repos, cfg, req):
+def get(port, isSecure, repos, cfg, db, req):
     repos, shimRepo = repos
 
     protocol = getProtocol(isSecure)
@@ -100,8 +100,8 @@ def get(port, isSecure, repos, cfg, req):
             skippedPart = '/'.join(items[:4])
             unparsedUri = req.unparsed_uri[len(skippedPart):]
             return cresthandler.handleCrest(unparsedUri,
-                                            cfg, db, repos, req)
-    webfe = app.MintApp(req, cfg, repServer = shimRepo)
+                    cfg, db, repos, req)
+    webfe = app.MintApp(req, cfg, repServer = shimRepo, db=db)
     return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
 def getRepositoryMap(cfg):
@@ -206,13 +206,25 @@ class RestProxyOpener(transport.URLOpener):
     http_error_401 = http_error_default
 
 
-def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
+def proxyExternalRestRequest(cfg, db, method, projectHostName,
+                             proxyServer, req):
     # FIXME: this only works with entitlements, not user:password
 
     # /repos/rap/api/foo -> api/foo
     path = '/'.join(req.unparsed_uri.split('/')[3:])
     # get the upstream repo url and label
     urlBase, label = _getUpstreamInfoForExternal(db, projectHostName)
+    # no external project?  maybe it's a non-entitled platform
+    if not urlBase:
+        found = False
+        for label in cfg.availablePlatforms:
+            if label.split('.')[0] == projectHostName:
+                serverName = label.split('@')[0]
+                urlBase = 'http://%s/conary/' % serverName
+                found = True
+                break
+        if not found:
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
     url = ''.join((urlBase, path))
     # grab the server name from the label
     serverName = label.split('@')[0]
@@ -267,7 +279,7 @@ def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
     f.close()
     return apache.OK
 
-def conaryHandler(req, cfg, pathInfo):
+def conaryHandler(req, db, cfg, pathInfo):
     maintenance.enforceMaintenanceMode(cfg)
 
     auth = webauth.getAuth(req)
@@ -355,7 +367,6 @@ def conaryHandler(req, cfg, pathInfo):
         doReset = True
 
     else:
-        req.uri.split('/')
         # it's completely external
         # use the Internal Conary Proxy if it's configured and we're
         # passing a fully qualified url
@@ -405,13 +416,15 @@ def conaryHandler(req, cfg, pathInfo):
     try:
         if proxyRestRequest:
             # use proxyServer config for http proxy and auth data
-            return proxyExternalRestRequest(db, method, projectHostName, proxyServer, req)
+            if not projectHostName:
+                projectHostName = hostName
+            return proxyExternalRestRequest(cfg, db, method, projectHostName, proxyServer, req)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
-            return post(port, secure, (proxyServer, shimRepo), cfg, req)
+            return post(port, secure, (proxyServer, shimRepo), cfg, db, req)
         elif method == "GET":
-            return get(port, secure, (proxyServer, shimRepo), cfg, req)
+            return get(port, secure, (proxyServer, shimRepo), cfg, db, req)
         elif method == "PUT":
             return apachemethods.putFile(port, secure, proxyServer, req)
         else:
@@ -421,7 +434,7 @@ def conaryHandler(req, cfg, pathInfo):
             repServer.reset()
 
 
-def mintHandler(req, cfg, pathInfo):
+def mintHandler(req, db, cfg, pathInfo):
     webfe = app.MintApp(req, cfg)
     return webfe._handle(pathInfo)
 
@@ -454,7 +467,10 @@ def _getUpstreamInfoForExternal(db, hostname):
     cu = db.cursor()
     cu.execute("""SELECT url, label FROM Labels JOIN projects USING(projectId)
                   WHERE hostName=?""", (hostname,))
-    return cu.fetchall()[0]
+    ret = cu.fetchall()
+    if len(ret) < 1:
+        return None, None
+    return ret[0]
 
 def _resolveProjectRepos(db, hostname, domainname):
     # Start with some reasonable assumptions
@@ -557,10 +573,6 @@ def handler(req):
 
     prof = profile.Profile(cfg)
 
-    # reopen a dead database
-    if db.reopen():
-        req.log_error("reopened a dead database connection in hooks.py", apache.APLOG_WARNING)
-
     if not req.uri.startswith(cfg.basePath + 'setup/') and not cfg.configured:
         if req.uri == cfg.basePath + 'pwCheck':
             # allow pwCheck requests to go through without being
@@ -577,7 +589,7 @@ def handler(req):
         for match, urlHandler in urls:
             if re.match(match, pathInfo):
                 try:
-                    ret = urlHandler(req, cfg, pathInfo)
+                    ret = urlHandler(req, db, cfg, pathInfo)
                 except HttpError, e:
                     raise apache.SERVER_RETURN, e.code
                 except apache.SERVER_RETURN, e:
@@ -609,7 +621,7 @@ def handler(req):
                     # code to 500 (internal server error).
                     req.status = 500
                     try:
-                        ret = mintHandler(req, cfg, '/unknownError')
+                        ret = mintHandler(req, db, cfg, '/unknownError')
                     except:
                         # Some requests cause MintApp to choke on setup
                         # We've already logged the error, so just display
@@ -619,6 +631,6 @@ def handler(req):
     finally:
         prof.stopHttp(req.uri)
         if db:
-            db.rollback()
+            db.close()
         coveragehook.save()
     return ret

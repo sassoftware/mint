@@ -38,6 +38,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
     def setupProduct(self):
         pd = self._setupProduct()
+        # used by other tests before setupProduct was fixturized.
         self.productDefinition = pd
 
     @mint_rephelp.restFixturize('apitest.setupProduct')

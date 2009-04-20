@@ -88,7 +88,7 @@ def enforceBuiltin(result):
         for item in result:
             failure = failure or enforceBuiltin(item)
     elif isinstance(result, dict):
-        for item in result.values():
+        for item in result.items():
             failure = failure or enforceBuiltin(item)
     failure =  failure or (result.__class__.__name__ \
                            not in __builtin__.__dict__)

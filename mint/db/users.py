@@ -181,10 +181,7 @@ class UsersTable(database.KeyedTable):
         try:
             cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
                        username)
-
-            cu.execute("SELECT userGroupId FROM UserGroups WHERE userGroup=?",
-                       username)
-            userGroupId = cu.fetchone()[0]
+            userGroupId = cu.lastid()
 
             userId = self.new(username = username,
                               fullName = fullName,
