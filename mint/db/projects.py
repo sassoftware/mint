@@ -228,8 +228,6 @@ class ProjectsTable(database.KeyedTable):
             SELECT projectId as projectId, MAX(timePublished) AS timePublished FROM PublishedReleases
             GROUP BY projectId""")
 
-        self.db.commit()
-
         # extract a list of build types to search for.
         # these are additive, unlike other search limiters.
         buildTypes = []
@@ -318,7 +316,6 @@ class ProjectsTable(database.KeyedTable):
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
         cu.execute("DROP TABLE tmpLatestReleases")
-        self.db.commit()
 
         return [x[1] for x in [(x[2].lower(),x) for x in ids]], count
 

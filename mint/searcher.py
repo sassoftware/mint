@@ -125,11 +125,11 @@ class Searcher :
         # Finally paste the OR blocks together
         where += ' OR '.join([x for x in ortoks if x])
 
-        # hack
-        if not where.strip():
-            where = "1"
-
-        return "WHERE " + where + " " + extras, substitutions + extraSubs
+        out = ""
+        if where.strip():
+            out = "WHERE %s " % (where,)
+        out += extras
+        return out, substitutions + extraSubs
 
     @classmethod
     def tokenize(self, searchterms, searchcols):
