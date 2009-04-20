@@ -223,7 +223,7 @@ class ProjectsTable(database.KeyedTable):
 
         cu = self.db.cursor()
         self.db.loadSchema()
-        if 'tmpLatestReleases' in self.db.tables:
+        if 'tmpLatestReleases' in self.db.tempTables:
             cu.execute("TRUNCATE TABLE tmpLatestReleases")
         else:
             cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
