@@ -163,6 +163,8 @@ class ProjectsTable(database.KeyedTable):
         for x in cu.fetchall_dict():
             level = x.pop('level')
             hasRequests = x.pop('hasRequests')
+            if x['creatorId'] is None:
+                del x['creatorId']
             ret.append((x, level, hasRequests))
         return ret
 
