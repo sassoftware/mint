@@ -32,6 +32,10 @@ def getCrestHandler(cfg, db):
     return crestHandler, crestCallback
 
 
+class AuthChecker(auth.AuthenticationCallback(cfg, db):
+    def processMethod(self, request, viewMethod, args, kw):
+        return self.checkDisablement(request, viewMethod)
+
 class CrestRepositoryCallback(crest.webhooks.ReposCallback):
     def __init__(self, db):
         self.db = db

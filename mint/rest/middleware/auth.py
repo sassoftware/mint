@@ -114,7 +114,7 @@ class AuthenticationCallback(object):
         if self.db.siteAuth:
             self.db.siteAuth.refresh()
 
-    def processMethod(self, request, viewMethod, args, kwargs):
+    def checkDisablement(self, request, viewMethod):
         # Disablement check
         if not getattr(viewMethod, 'dont_disable', False):
             if self.db.siteAuth and not self.db.siteAuth.isValid():
@@ -122,6 +122,12 @@ class AuthenticationCallback(object):
                         content="The rBuilder's entitlement has expired.\n\n"
                             "Please navigate to the rBuilder homepage for "
                             "more information.")
+
+
+    def processMethod(self, request, viewMethod, args, kwargs):
+        response = self.checkDisablement(request, viewMethod)
+        if response:
+            return response
 
         # require authentication
         if (not getattr(viewMethod, 'public', False)
