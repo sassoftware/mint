@@ -239,11 +239,26 @@ class BuildsTable(database.KeyedTable):
         query = query % {'extraWhere' : extraWhere,
                          'extraSelect' : extraSelect,
                          'extraJoin' : extraJoin}
+        keys = ['projectId', 'hostname', 'buildId', 'productName',
+                'productDescription', 'buildName', 'buildDescription',
+                'isPublished', 'isPrivate', 'createdBy', 'role',
+                'sha1', 'awsAccountNumber', 'amiId',
+                ]
 
         cu.execute(query, requestingUserId, imageType)
-        return [ rs for rs in cu.fetchall_dict()
-                if self._filterBuildVisibility(rs, okHiddenProjectIds,
-                                               limitToUserId)]
+        out = []
+        for row in cu:
+            if not self._filterBuildVisibility(row,
+                    okHiddenProjectIds, limitToUserId):
+                continue
+            outRow = {}
+            for key in keys:
+                value = row.pop(key, None)
+                if value is not None:
+                    outRow[key] = value
+            assert not row.fields
+            out.append(outRow)
+        return out
 
     def getAMIBuildsForProject(self, projectId):
         published = []
