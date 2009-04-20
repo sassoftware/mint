@@ -90,6 +90,10 @@ service postgresql-rbuilder start
 waitForPg
 
 # Migrate the mint database (or create it if it doesn't exist)
+createlang -U postgres plpgsql template1 &>/dev/null
+createuser -SDRU postgres rbuilder &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
+
 /usr/share/rbuilder/scripts/rbuilder-database --migrate \
     || die "Failed to migrate the rBuilder database"
 chown -f apache:apache /srv/rbuilder/data/{db,platformName.cache} 2>/dev/null
