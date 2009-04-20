@@ -1044,9 +1044,6 @@ class SiteHandler(WebHandler):
         util.copyfileobj(self.req, targetF)
         return ''
 
-    def cloudCatalog(self, auth):
-        return self._write('cloudCatalog')
-
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
