@@ -859,7 +859,7 @@ class MintServer(object):
 
         fqdn = label.split('@')[0]
         if not url:
-            url = 'https://%s/conary/' % (fqdn,)
+            url = 'http://%s/conary/' % (fqdn,)
 
         database = None
         if mirrored:
