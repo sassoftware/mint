@@ -89,6 +89,8 @@ service postgresql-rbuilder condstop
 service postgresql-rbuilder start
 waitForPg
 
+service pgbouncer restart
+
 # Migrate the mint database (or create it if it doesn't exist)
 createlang -U postgres plpgsql template1 &>/dev/null
 createuser -SDRU postgres rbuilder &>/dev/null
@@ -164,6 +166,7 @@ fi
 # Shut down postgres if chrooted
 if [ "x$is_chrooted" == "x1" ]
 then
+    service pgbouncer stop
     service postgresql-rbuilder stop
 
     echo "Waiting for postgres to stop"
