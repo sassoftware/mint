@@ -17,6 +17,7 @@ import StringIO
 
 from testrunner import testhelp
 from testrunner import resources
+from testutils import mock
 
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN
@@ -1047,6 +1048,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
         resetCache()
 
     def tearDown(self):
+        mock.unmockAll()
         if getattr(server, 'dbConnection', None):
             server.dbConnection.close()
         server.dbConnection = None

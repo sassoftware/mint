@@ -311,16 +311,17 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('Thank you for registering' not in page.body,
                     'registerComplete failed')
 
-        conf = client.server._server.getConfirmation('foouser')
-        self.failIf(not conf, "Registration didn't add confirmation entry")
+        if self.mintCfg.sendNotificationEmails:
+            conf = client.server._server.getConfirmation('foouser')
+            self.failIf(not conf, "Registration didn't add confirmation entry")
 
-        page = self.assertCode("/confirm?id=%s" % conf, code = 200)
+            page = self.assertCode("/confirm?id=%s" % conf, code = 200)
 
-        self.failIf("your account has now been confirmed" not in page.body.lower(),
-                    "Confirmation Failed")
-        page = self.assertCode("/confirm?id=%s" % conf, code = 200)
-        self.failIf("Your account has already been confirmed." not in page.body,
-                    "Multiple confirmations allowed.")
+            self.failIf("your account has now been confirmed" not in page.body.lower(),
+                        "Confirmation Failed")
+            page = self.assertCode("/confirm?id=%s" % conf, code = 200)
+            self.failIf("Your account has already been confirmed." not in page.body,
+                        "Multiple confirmations allowed.")
 
         page = self.fetchWithRedirect('/register')
         page = page.postForm(1, page.post,
