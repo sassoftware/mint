@@ -41,6 +41,10 @@ class RepositoryManager(manager.Manager):
         self.auth = auth
         self.profiler = None
 
+    @staticmethod
+    def close():
+        pass
+
     def _getProductFQDN(self, hostname):
         #FIXME: this breaks when the project is external.
         cu = self.db.cursor()
@@ -230,6 +234,7 @@ class RepositoryManager(manager.Manager):
             cfg.repositoryMap = {}
             cfg.authCacheTimeout = self.cfg.authCacheTimeout
             cfg.externalPasswordURL = self.cfg.externalPasswordURL
+            cfg.serializeCommits = True
 
             contentsDirs = self.cfg.reposContentsDir
             cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))

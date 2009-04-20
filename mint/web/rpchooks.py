@@ -19,7 +19,7 @@ from mint.web.webhandler import getHttpAuth
 from conary.lib import coveragehook
 from conary.repository import errors
 
-def rpcHandler(req, cfg, pathInfo = None):
+def rpcHandler(req, db, cfg, pathInfo = None):
     maintenance.enforceMaintenanceMode(cfg)
     isJSONrpc = isXMLrpc = allowPrivate = False
 
@@ -44,7 +44,7 @@ def rpcHandler(req, cfg, pathInfo = None):
     if type(authToken) is list:
         authToken = authToken[0:2] # throw away entitlement
     # instantiate a MintServer
-    srvr = server.MintServer(cfg, allowPrivate = allowPrivate, req = req)
+    srvr = server.MintServer(cfg, allowPrivate=allowPrivate, req=req, db=db)
 
     # switch on XML/JSON here
     if isXMLrpc:
@@ -83,7 +83,7 @@ def handler(req):
     cfg = config.getConfig(req.filename)
 
     try:
-        return rpcHandler(req, cfg)
+        return rpcHandler(req, None, cfg)
     except:
         e_type, e_value, e_tb = sys.exc_info()
         logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')

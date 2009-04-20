@@ -6,10 +6,7 @@ from mint import userlevels
 class AMIPermissionsManager(object):
     def __init__(self, cfg, db):
         self.cfg = cfg
-        self._db = weakref.WeakRef(db)
-
-    def _getDb(self):
-        return self._db()
+        self.db = db
 
     def setUserKey(self, userId, oldAccountNumber, newAccountNumber):
         amiIds = self._getAMIsForPermChange(userId)

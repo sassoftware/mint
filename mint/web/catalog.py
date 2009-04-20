@@ -17,8 +17,9 @@ from catalogService.rest import auth
 
 
 class SessionAuthenticationCallback(auth.AuthenticationCallback):
-    def __init__(self, storageConfig, mintConfig):
+    def __init__(self, storageConfig, mintConfig, mintDb):
         self.mintConfig = mintConfig
+        self.mintDb = mintDb
         auth.AuthenticationCallback.__init__(self, storageConfig)
 
     def getMintConfig(self):
@@ -45,7 +46,8 @@ class SessionAuthenticationCallback(auth.AuthenticationCallback):
 
         sid = cookies['pysid'].value
 
-        sessionClient = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
+        sessionClient = shimclient.ShimMintClient(cfg,
+                (cfg.authUser, cfg.authPass), self.mintDb)
 
         session = SqlSession(req, sessionClient,
             sid = sid,
@@ -58,26 +60,20 @@ class SessionAuthenticationCallback(auth.AuthenticationCallback):
 class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):
     def __init__(self, *args, **kw):
         self.mintConfig = kw.pop('mintConfig')
+        self.mintDb = kw.pop('mintDb')
         handler_apache.ApacheRESTHandler.__init__(self, *args, **kw)
 
     def addAuthCallback(self):
-        self.handler.addCallback(SessionAuthenticationCallback(self.storageConfig, self.mintConfig))
+        self.handler.addCallback(SessionAuthenticationCallback(
+            self.storageConfig, self.mintConfig, self.mintDb))
 
-_cfg = None
-_pathInfo = None
-_handler = None
-def catalogHandler(req, cfg, pathInfo = None):
+def catalogHandler(req, db, cfg, pathInfo = None):
     coveragehook.install()
     maintenance.enforceMaintenanceMode(cfg)
-    global _cfg, _pathInfo, _handler
-    if cfg is not _cfg or pathInfo != _pathInfo:
-        # the leading portion of the URI in an rBuilder context. catalog-service
-        # string substitutes, so leading and trailing slashes aren't needed.
-        topLevel = os.path.join(cfg.basePath, 'catalog')
-        storagePath = os.path.join(cfg.dataPath, 'catalog')
-        handler = RbuilderCatalogRESTHandler(topLevel, storagePath,
-                                             mintConfig=cfg)
-        _cfg = cfg
-        _pathInfo = pathInfo
-        #_handler = handler
-    return _handler.handle(req)
+    # the leading portion of the URI in an rBuilder context. catalog-service
+    # string substitutes, so leading and trailing slashes aren't needed.
+    topLevel = os.path.join(cfg.basePath, 'catalog')
+    storagePath = os.path.join(cfg.dataPath, 'catalog')
+    handler = RbuilderCatalogRESTHandler(topLevel, storagePath,
+            mintConfig=cfg, mintDb=db)
+    return handler.handle(req)
