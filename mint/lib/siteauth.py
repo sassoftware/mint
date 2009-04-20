@@ -91,6 +91,8 @@ class XML_ActivateDocument(xobj.Document):
 # authz handle
 class SiteAuthorization(object):
     def __init__(self, cfgPath, conaryCfg=None):
+        # NB: only set conaryCfg inside scripts. It enables some slow
+        # methods that shouldn't be used in web handlers.
         self.cfgPath = os.path.abspath(cfgPath)
         self.conaryCfg = conaryCfg
         self.cfg = self.xml = None
@@ -150,9 +152,7 @@ class SiteAuthorization(object):
         Get the entitlement currently configured for the main repository.
         This is the key we will ask the enablement server about.
         """
-        if not self.conaryCfg:
-            log.warning("Tried to get entitlement without a loaded conarycfg")
-            return None
+        assert self.conaryCfg
 
         #pylint: disable-msg=E1101
         # ccfg does in fact have an "entitlement" member
@@ -170,10 +170,7 @@ class SiteAuthorization(object):
 
         @returns: (name, version)
         """
-        if not self.conaryCfg:
-            log.warning("Tried to get top-level group without a "
-                    "loaded conarycfg")
-            return None
+        assert self.conaryCfg
         cli = conaryclient.ConaryClient(self.conaryCfg)
 
         groups = set(x[0] for x in cli.fullUpdateItemList()
@@ -344,3 +341,17 @@ class SiteAuthorization(object):
                     registered=False,
                     )
         return identity
+
+
+_AUTH_CACHE = {}
+def getSiteAuth(cfgPath):
+    """
+    Get a L{SiteAuthorization} object for the config at C{cfgPath}, using
+    a cached object if one is available.
+    """
+    if cfgPath in _AUTH_CACHE:
+        ret = _AUTH_CACHE[cfgPath]
+        ret.refresh()
+    else:
+        ret = _AUTH_CACHE[cfgPath] = SiteAuthorization(cfgPath)
+    return ret

@@ -881,12 +881,19 @@ class SiteHandler(WebHandler):
                 yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
 
     def maintenance(self, auth, *args, **kwargs):
-        if maintenance.getMaintenanceMode(self.cfg) == maintenance.NORMAL_MODE:
+        mode = maintenance.getMaintenanceMode(self.cfg)
+        if mode == maintenance.NORMAL_MODE:
+            # Maintenance is over, redirect to the homepage
             self._redirect(self.cfg.basePath)
+        elif mode == maintenance.EXPIRED_MODE:
+            # rBuilder is disabled due to expired entitlement
+            return self._write("maintenance", reason="expired")
         elif auth.admin:
+            # Admins are bounced to the admin page
             self._redirect(self.cfg.basePath + "administer")
         else:
-            return self._write("maintenance")
+            # Everyone else gets the maintenance notice
+            return self._write("maintenance", reason="maintenance")
 
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):

@@ -17,7 +17,8 @@ defaultConfig = config.MintConfig()
         <title>${formatTitle('Maintenance')}</title>
     </head>
     <body>
-        <div id="layout">
+      <div id="layout">
+          <div py:strip="True" py:if="reason == 'maintenance'">
             <div id="right" class="side">
                 ${resourcePane()}
             </div>
@@ -38,6 +39,18 @@ defaultConfig = config.MintConfig()
             maintenance-mode functions, enter your username and
             password to login.</p>
             </div>
-        </div>
+          </div>
+          <div py:strip="True" py:if="reason == 'expired'">
+            <h2>${cfg.productName} is Disabled</h2>
+
+            <p>This ${cfg.productName} is disabled because its entitlement
+              has expired.  Please contact your administrator for help.</p>
+            
+            <p>If you are the administrator, please visit
+              <a href="https://${cfg.hostName}.${cfg.siteDomainName.split(':')[0]}:8003/enablement/Enablement/"
+                target="_blank">the management interface</a> for instructions on how to re-activate it.
+            </p>
+          </div>
+      </div>
     </body>
 </html>

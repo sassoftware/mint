@@ -1,12 +1,14 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2007, 2009 rPath, Inc.
 #
 # All Rights Reserved
 #
 
+import errno
 import os
 
 from mint import mint_error
+from mint.lib import siteauth
 
 # the length of the maintenanceLockPath file is used as the maintenance mode
 # as defined below. no file equates to a length of zero.
@@ -16,16 +18,30 @@ from mint import mint_error
 
 NORMAL_MODE  = 0
 LOCKED_MODE  = 1
+EXPIRED_MODE = 2
 
 # client side
 def getMaintenanceMode(cfg):
-    if os.path.exists(cfg.maintenanceLockPath):
-        return os.stat(cfg.maintenanceLockPath).st_size
-    else:
-        return NORMAL_MODE
+    # Check site authorization first
+    siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
+    if not siteAuth.isValid():
+        return EXPIRED_MODE
+
+    # Then check the maintmode file. A missing file is the same as
+    # normal mode.
+    try:
+        st_result = os.stat(cfg.maintenanceLockPath)
+    except OSError, err:
+        if err.args[0] == errno.ENOENT:
+            return NORMAL_MODE
+        raise
+
+    return st_result.st_size
+
 
 # call this thru xmlrpc only. must verify admin rights.
 def setMaintenanceMode(cfg, maintMode):
+    assert maintMode != EXPIRED_MODE # comes from the siteauth xml, not here
     if maintMode == NORMAL_MODE:
         try:
             os.unlink(cfg.maintenanceLockPath)
@@ -37,12 +53,18 @@ def setMaintenanceMode(cfg, maintMode):
         f.write(chr(0) * maintMode)
         f.close()
 
-def enforceMaintenanceMode(cfg, auth = None, msg = None):
-    e = msg and mint_error.MaintenanceMode(msg) or mint_error.MaintenanceMode
+def enforceMaintenanceMode(cfg, auth = None, msg = None, skipExpired=False):
     mode = getMaintenanceMode(cfg)
     if mode == NORMAL_MODE:
         return
-    if auth is None:
-        raise e
-    if not auth.admin:
-        raise e
+    elif mode == EXPIRED_MODE:
+        if skipExpired:
+            return
+        raise mint_error.MaintenanceMode("The rBuilder's entitlement has expired. "
+                "Please navigate to the rBuilder homepage for more information.")
+
+    if auth is None or not auth.admin:
+        if msg:
+            raise mint_error.MaintenanceMode(msg)
+        else:
+            raise mint_error.MaintenanceMode()
