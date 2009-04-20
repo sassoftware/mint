@@ -19,6 +19,7 @@ from conary import versions
 from conary.conaryclient import ConaryClient
 from conary.repository.netclient import UserNotFound
 from conary import dbstore
+from testutils import mock
 
 class AccountTest(fixtures.FixturedUnitTest):
 
@@ -88,6 +89,9 @@ class AccountTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Empty')
     def testConfirmedTwice(self, db, data):
         '''Confirm an account twice'''
+        mock.mock(maillib, 'sendMailWithChecks')
+        self.cfg.sendNotificationEmails = True
+
         client = self.getAnonymousClient()
         client.registerNewUser('testuser', 'testpass', 'test user',
             'test@example.com', 'test at example dot com', 'LFO', False)
@@ -114,6 +118,8 @@ class AccountTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Empty')
     def testAccountConfirmation(self, db, data):
         '''Ensure that accounts can be activated after registration'''
+        mock.mock(maillib, 'sendMailWithChecks')
+        self.cfg.sendNotificationEmails = True
 
         client = self.getAnonymousClient()
         userId = client.registerNewUser('newuser', 'newuserpass',

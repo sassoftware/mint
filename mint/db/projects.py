@@ -220,9 +220,13 @@ class ProjectsTable(database.KeyedTable):
                       ('TopProjects', 'projectId') ]
 
         cu = self.db.cursor()
-        cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
-            projectId       INTEGER NOT NULL,
-            timePublished   NUMERIC(14,3))""")
+        self.db.loadSchema()
+        if 'tmpLatestReleases' in self.db.tables:
+            cu.execute("TRUNCATE TABLE tmpLatestReleases")
+        else:
+            cu.execute("""CREATE TEMPORARY TABLE tmpLatestReleases (
+                projectId       INTEGER NOT NULL,
+                timePublished   NUMERIC(14,3))""")
 
         cu.execute("""INSERT INTO tmpLatestReleases (projectId, timePublished)
             SELECT projectId as projectId, MAX(timePublished) AS timePublished FROM PublishedReleases
@@ -300,6 +304,8 @@ class ProjectsTable(database.KeyedTable):
                                               AND timePublished IS NOT NULL)"""
 
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
+        # multi-layer hack, yay (psql doesn't like "1" here)
+        whereClause = whereClause[0].replace('WHERE 1  AND', 'WHERE'), whereClause[1]
 
         if byPopularity:
             orderByClause = 'rank ASC'
@@ -315,7 +321,7 @@ class ProjectsTable(database.KeyedTable):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
-        cu.execute("DROP TABLE tmpLatestReleases")
+        cu.execute("DELETE FROM tmpLatestReleases")
 
         return [x[1] for x in [(x[2].lower(),x) for x in ids]], count
 

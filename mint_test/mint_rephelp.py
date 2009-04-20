@@ -56,6 +56,7 @@ from mcp_test.mcp_helper import MCPTestMixin
 
 from testrunner.testhelp import SkipTestException, findPorts
 from testrunner import resources
+from testutils import mock
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
@@ -891,6 +892,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         hooks.domainNameCache = {}
 
     def tearDown(self):
+        mock.unmockAll()
         self.db.close()
         RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)
