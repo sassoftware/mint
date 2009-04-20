@@ -47,8 +47,8 @@ defaultConfig = config.MintConfig()
               has expired.  Please contact your administrator for help.</p>
             
             <p>If you are the administrator, please visit
-              <a href="https://${cfg.hostName}.${cfg.siteDomainName.split(':')[0]}:8003/enablement/Enablement/"
-                target="_blank">the management interface</a> for instructions on how to re-activate it.
+              <a href="http://www.rpath.com/permanent/rbuilder_registration/"
+                target="_blank">http://www.rpath.com/permanent/rbuilder_registration/</a> for instructions on how to re-activate it.
             </p>
           </div>
       </div>
