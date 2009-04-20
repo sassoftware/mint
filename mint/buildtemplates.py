@@ -228,8 +228,13 @@ class VmwareImageTemplate(Template):
 
 class VmwareESXImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
-                 'installLabelPath', 'swapSize', 'natNetworking']
+                 'installLabelPath', 'swapSize', 'natNetworking', 'vmSnapshots']
     id = buildtypes.VMWARE_ESX_IMAGE
+
+class VmwareOvfImageTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
+                 'installLabelPath', 'swapSize', 'natNetworking', 'vmSnapshots']
+    id = buildtypes.VMWARE_OVF_IMAGE
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
