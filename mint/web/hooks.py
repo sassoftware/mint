@@ -206,13 +206,25 @@ class RestProxyOpener(transport.URLOpener):
     http_error_401 = http_error_default
 
 
-def proxyExternalRestRequest(db, method, projectHostName, proxyServer, req):
+def proxyExternalRestRequest(cfg, db, method, projectHostName,
+                             proxyServer, req):
     # FIXME: this only works with entitlements, not user:password
 
     # /repos/rap/api/foo -> api/foo
     path = '/'.join(req.unparsed_uri.split('/')[3:])
     # get the upstream repo url and label
     urlBase, label = _getUpstreamInfoForExternal(db, projectHostName)
+    # no external project?  maybe it's a non-entitled platform
+    if not urlBase:
+        found = False
+        for label in cfg.availablePlatforms:
+            if label.split('.')[0] == projectHostName:
+                serverName = label.split('@')[0]
+                urlBase = 'http://%s/conary/' % serverName
+                found = True
+                break
+        if not found:
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
     url = ''.join((urlBase, path))
     # grab the server name from the label
     serverName = label.split('@')[0]
@@ -355,7 +367,6 @@ def conaryHandler(req, db, cfg, pathInfo):
         doReset = True
 
     else:
-        req.uri.split('/')
         # it's completely external
         # use the Internal Conary Proxy if it's configured and we're
         # passing a fully qualified url
@@ -405,7 +416,9 @@ def conaryHandler(req, db, cfg, pathInfo):
     try:
         if proxyRestRequest:
             # use proxyServer config for http proxy and auth data
-            return proxyExternalRestRequest(db, method, projectHostName, proxyServer, req)
+            if not projectHostName:
+                projectHostName = hostName
+            return proxyExternalRestRequest(cfg, db, method, projectHostName, proxyServer, req)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
@@ -454,7 +467,10 @@ def _getUpstreamInfoForExternal(db, hostname):
     cu = db.cursor()
     cu.execute("""SELECT url, label FROM Labels JOIN projects USING(projectId)
                   WHERE hostName=?""", (hostname,))
-    return cu.fetchall()[0]
+    ret = cu.fetchall()
+    if len(ret) < 1:
+        return None, None
+    return ret[0]
 
 def _resolveProjectRepos(db, hostname, domainname):
     # Start with some reasonable assumptions
