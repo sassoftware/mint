@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import os
+import sys
 import time
 
 from conary.deps import deps
@@ -314,4 +315,4 @@ class ImageManager(manager.Manager):
         try:
             mcpClient.stopJob(imageId)
         except Exception, e:
-            raise StopJobFailed(imageId, e)
+            raise errors.StopJobFailed, (imageId, e), sys.exc_info()[2]
