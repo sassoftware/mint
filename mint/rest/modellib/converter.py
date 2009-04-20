@@ -162,12 +162,18 @@ class XobjConverter(Converter):
         while toProcess:
             entry, finished = toProcess.pop()
             modelClass, xobject, attrs, parentDict, attrName = entry
+            if attrName == 'imageIds':
+                import epdb
+                epdb.st()
             if not finished:
                 toProcess.append((entry, True))
                 for fieldData in self.walkModelClassAndObject(modelClass, 
                                                               xobject):
                     name, field, value, childModel = fieldData
-                    if field.isList() and value is not None:
+                    if field.isList():
+                        if value is None:
+                            attrs[name] = None
+                            continue
                         # Lists get automatically processed by their children,
                         # by appending to the value of parentDict (which is
                         # now a list :-/ )
