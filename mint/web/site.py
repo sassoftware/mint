@@ -24,6 +24,7 @@ from mint import shimclient
 from mint import users
 from mint import userlevels
 from mint.client import timeDelta
+from mint.config import isRBO
 from mint.helperfuncs import getProjectText
 from mint.session import SqlSession
 
@@ -70,6 +71,12 @@ class SiteHandler(WebHandler):
 
     @redirectHttp
     def _frontPage(self, auth, *args, **kwargs):
+        
+        # if rBA go to new UI
+        if not isRBO():
+            url = "https://" + self.cfg.siteHost + "/ui/"
+            self._redirect(url)
+        
         popularProjects = self.client.getPopularProjects()
         topProjects = self.client.getTopProjects()
         selectionData  = self.client.getFrontPageSelection()
