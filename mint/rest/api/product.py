@@ -67,6 +67,11 @@ class ProductController(base.BaseController):
         return self.db.getProduct(hostname)
 
     @requires('product', models.Product)
+    def update(self, request, hostname, product):
+        self.db.updateProduct(hostname, product)
+        return self.get(request, hostname)
+
+    @requires('product', models.Product)
     def create(self, request, product):
         try:
             self.db.createProduct(product)
