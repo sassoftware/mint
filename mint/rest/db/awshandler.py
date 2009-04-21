@@ -22,14 +22,14 @@ class AWSHandler(manager.Manager):
                                   newLevel):
         self.amiPerms.setMemberLevel(userId, projectId, oldLevel, newLevel)
 
-    def notify_UserCancelled(self, userId):
+    def notify_UserCancelled(self, event, userId):
         # yuck.
         awsFound, oldAwsAccountNumber = self.db.userData.getDataValue(
                                                 userId, 'awsAccountNumber')
         self.amiPerms.setUserKey(userId, oldAwsAccountNumber, None)
 
-    def notify_ReleasePublished(self, releaseId):
+    def notify_ReleasePublished(self, event, releaseId):
         self.amiPerms.publishRelease(releaseId)
 
-    def notify_ReleaseUnpublished(self, releaseId):
+    def notify_ReleaseUnpublished(self, event, releaseId):
         self.amiPerms.unpublishRelease(releaseId)

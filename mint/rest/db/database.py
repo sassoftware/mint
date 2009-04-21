@@ -526,7 +526,8 @@ class Database(DBInterface):
                       published, shouldMirror, imageIds):
         self.auth.requireProductDeveloper(hostname)
         self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.auth.requireBuildsOnHost(hostname, imageIds)
+	if imageIds:
+            self.auth.requireBuildsOnHost(hostname, imageIds)
         self.releaseMgr.updateRelease(hostname, releaseId,
                                       name, description, version,
                                       published, shouldMirror, imageIds)
