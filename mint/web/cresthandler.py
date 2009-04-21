@@ -28,11 +28,11 @@ def getCrestHandler(cfg, db):
     crestHandler.addCallback(crestCallback)
     db = database.Database(cfg, db)
     db = restDatabase.Database(cfg, db)
-    crestHandler.addCallback(auth.AuthenticationCallback(cfg, db))
+    crestHandler.addCallback(CrestAuthenticationCallback(cfg, db))
     return crestHandler, crestCallback
 
 
-class AuthChecker(auth.AuthenticationCallback(cfg, db):
+class CrestAuthenticationCallback(auth.AuthenticationCallback):
     def processMethod(self, request, viewMethod, args, kw):
         return self.checkDisablement(request, viewMethod)
 

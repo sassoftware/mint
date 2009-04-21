@@ -185,6 +185,11 @@ class rBASetup(rAASrvPlugin):
             log.info("Successfully set up initial external projects")
         else:
             log.error("Failed to set up initial external projects")
+
+        # Initial RSS feed for notices. Not external projects, but it doesn't
+        # need its own section as it isn't important.
+        os.system("/usr/share/rbuilder/scripts/rss-update -q")
+
         return True
 
     def updateRBAConfig(self, schedId, execId, newValues):
