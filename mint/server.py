@@ -877,10 +877,11 @@ class MintServer(object):
                     database=database,
                     commit=False)
 
-            # create the projectUsers entry
-            self.projectUsers.new(userId = self.auth.userId,
-                                  projectId = projectId,
-                                  level = userlevels.OWNER, commit=False)
+            if creatorId:
+                # create the projectUsers entry
+                self.projectUsers.new(userId=creatorId,
+                        projectId=projectId, level=userlevels.OWNER,
+                        commit=False)
 
             # create the labels entry
             self.labels.addLabel(projectId, label, url, 'none', commit=False)
