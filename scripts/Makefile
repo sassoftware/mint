@@ -19,6 +19,7 @@ static_files =				\
 	mirror-inbound			\
 	mirror-outbound			\
 	rbuilder-database		\
+	refresh-auth			\
 	rmake-setup			\
 	rss-update			\
 	update-package-index		\

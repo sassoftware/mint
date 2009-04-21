@@ -3,3 +3,4 @@
 */30    *   *   *   *       apache  /usr/share/rbuilder/scripts/update-package-index-external --cron >& /dev/null
 
 28      3   *   *   *       root    /usr/share/rbuilder/scripts/rss-update -q
+45      3   *   *   *       root    /usr/share/rbuilder/scripts/refresh-auth
