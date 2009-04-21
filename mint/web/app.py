@@ -110,22 +110,22 @@ class MintApp(WebHandler):
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken,
                 self.db)
-
         self.auth = self.client.checkAuth()
+
+        if not self.auth.admin and pathInfo not in (
+                '/maintenance/', '/processLogin/', '/logout/'):
+            maintenance.enforceMaintenanceMode(self.cfg)
+
         self.membershipReqsList = None
         if self.auth.authorized:
-            if not maintenance.getMaintenanceMode(self.cfg) or self.auth.admin:
-                self.user = self.client.getUser(self.auth.userId)
-                self.projectList = self.client.getProjectsByMember(self.auth.userId)
-                self.projectDict = {}
-                for project, level, memberReqs in self.projectList:
-                    l = self.projectDict.setdefault(level, [])
-                    l.append((project, memberReqs))
-                self.membershipReqsList = [x[0] for x in self.projectList
-                        if x[2] > 0 and x[1] == userlevels.OWNER]
-            else:
-                if pathInfo not in  ('/maintenance/', '/logout/'):
-                    raise MaintenanceMode
+            self.user = self.client.getUser(self.auth.userId)
+            self.projectList = self.client.getProjectsByMember(self.auth.userId)
+            self.projectDict = {}
+            for project, level, memberReqs in self.projectList:
+                l = self.projectDict.setdefault(level, [])
+                l.append((project, memberReqs))
+            self.membershipReqsList = [x[0] for x in self.projectList
+                    if x[2] > 0 and x[1] == userlevels.OWNER]
         self.auth.setToken(self.authToken)
 
         method = self._getHandler(pathInfo)
