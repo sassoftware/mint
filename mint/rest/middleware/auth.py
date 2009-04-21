@@ -121,7 +121,8 @@ class AuthenticationCallback(object):
                 return Response(status=503, content_type="text/plain",
                         content="The rBuilder's entitlement has expired.\n\n"
                             "Please navigate to the rBuilder homepage for "
-                            "more information.")
+                            "more information.",
+                        headers={'X-rBuilder-Error': 'site-disabled'})
 
 
     def processMethod(self, request, viewMethod, args, kwargs):
