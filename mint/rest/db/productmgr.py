@@ -178,7 +178,7 @@ class ProductManager(manager.Manager):
                        description, projecturl, commitEmail):
         cu = self.db.cursor()
         updateTime = time.time()
-        cu.execute('''UPDATE Projects SET name=?description=?, projecturl=?,
+        cu.execute('''UPDATE Projects SET name=?, description=?, projecturl=?,
                                            commitEmail=?,
                                            timeModified=?
                       WHERE hostname=?''',

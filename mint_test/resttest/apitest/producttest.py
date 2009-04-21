@@ -59,7 +59,7 @@ class ProductTest(restbase.BaseRestTest):
     def testUpdateProduct(self):
         # test where we actually have a published release
         self.setupReleases()
-        client = self.getRestClient()
+        client = self.getRestClient(username='adminuser')
         req, prd = client.call('PUT', '/products/%s' % self.productShortName,
                                body = '''
 <product><description>Foo</description>
