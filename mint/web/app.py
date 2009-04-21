@@ -113,7 +113,8 @@ class MintApp(WebHandler):
         self.auth = self.client.checkAuth()
 
         if not self.auth.admin and pathInfo not in (
-                '/maintenance/', '/processLogin/', '/logout/'):
+                '/maintenance/', '/processLogin/', '/logout/',
+                '/validateSession/', '/continueLogin/', '/continueLogout/'):
             maintenance.enforceMaintenanceMode(self.cfg)
 
         self.membershipReqsList = None
