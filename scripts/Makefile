@@ -20,6 +20,7 @@ static_files =				\
 	mirror-outbound			\
 	rbuilder-database		\
 	rmake-setup			\
+	rss-update			\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
