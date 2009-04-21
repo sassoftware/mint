@@ -42,12 +42,15 @@ class ProductReleasesController(base.BaseController):
 
     @requires('release', models.UpdateRelease)
     def update(self, request, hostname, releaseId, release):
+        if release.imageIds is not None:
+            imageIds = [ x.imageId for x in release.imageIds]
+        else:
+            imageIds = None
         self.db.updateRelease(hostname, releaseId, release.name,
                               release.description,
                               release.version,
                               release.published,
-                              release.shouldMirror,
-                              [x.imageId for x in release.imageIds])
+                              release.shouldMirror, imageIds=None)
         return self.get(request, hostname, releaseId)
 
     @requires('publishOptions', models.PublishOptions)
