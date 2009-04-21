@@ -56,6 +56,22 @@ class ProductTest(restbase.BaseRestTest):
         req, prd = client.call('GET', '/products/%s' % self.productShortName)
         assert(prd.latestRelease == 2)
 
+    def testUpdateProduct(self):
+        # test where we actually have a published release
+        self.setupReleases()
+        client = self.getRestClient(username='adminuser')
+        req, prd = client.call('PUT', '/products/%s' % self.productShortName,
+                               body = '''
+<product><description>Foo</description>
+<commitEmail>foo@rpath.com</commitEmail>
+<projecturl>projecturl</projecturl>
+<name>new product name</name>
+</product>
+''')
+        assert(prd.description == 'Foo')
+        assert(prd.commitEmail == 'foo@rpath.com')
+        assert(prd.name == 'new product name')
+
     def testCreateProduct(self):
         productShortName = "foobar"
         uriTemplate = 'products'

@@ -373,6 +373,14 @@ class Database(DBInterface):
         return product
 
     @commitafter
+    def updateProduct(self, hostname, product):
+        self.auth.requireProductOwner(hostname)
+        self.productMgr.updateProduct(hostname, name=product.name,
+                                      description=product.description,
+                                      projecturl=product.projecturl,
+                                      commitEmail=product.commitEmail)
+
+    @commitafter
     def setMemberLevel(self, hostname, username, level):
         self.auth.requireProductOwner(hostname)
         level = userlevels.idsByName[level]
@@ -410,6 +418,7 @@ class Database(DBInterface):
         self.auth.requireProductOwner(hostname)
         self.productMgr.updateProductVersion(hostname,
                                              version, productVersion.description)
+
 
     def getProductVersionPlatform(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)

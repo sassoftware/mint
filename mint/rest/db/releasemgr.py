@@ -91,7 +91,9 @@ class ReleaseManager(manager.Manager):
 
     def updateRelease(self, fqdn, releaseId, name, description, version,
                       published, shouldMirror, imageIds):
-        if self._isPublished(releaseId):
+        if self._isPublished(releaseId) and published:
+            # if we're not switching back to unpublished,
+            # then we can't modify a published release.
             raise mint_error.PublishedReleasePublished
         cu = self.db.cursor()
         sql = '''
