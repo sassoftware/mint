@@ -65,9 +65,12 @@ class ProductTest(restbase.BaseRestTest):
 <product><description>Foo</description>
 <commitEmail>foo@rpath.com</commitEmail>
 <projecturl>projecturl</projecturl>
+<name>new product name</name>
 </product>
 ''')
         assert(prd.description == 'Foo')
+        assert(prd.commitEmail == 'foo@rpath.com')
+        assert(prd.name == 'new product name')
 
     def testCreateProduct(self):
         productShortName = "foobar"

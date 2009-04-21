@@ -374,7 +374,9 @@ class Database(DBInterface):
 
     @commitafter
     def updateProduct(self, hostname, product):
-        self.productMgr.updateProduct(hostname, description=product.description,
+        self.auth.requireProductOwner(hostname)
+        self.productMgr.updateProduct(hostname, name=product.name,
+                                      description=product.description,
                                       projecturl=product.projecturl,
                                       commitEmail=product.commitEmail)
 
