@@ -71,7 +71,7 @@ class RepositoryManager(manager.Manager):
         tmpPath = os.path.join(dbPath, 'tmp')
         util.mkdirChain(tmpPath)
         self.reposDB.create(fqdn)
-        repositoryDB =  self.reposDB.getRepositoryDB(fqdn)
+        repositoryDB =  self.reposDB.getRepositoryDB(fqdn, db=self.db)
         db = dbstore.connect(repositoryDB[1], repositoryDB[0])
         schema.loadSchema(db)
         db.commit()
@@ -228,7 +228,7 @@ class RepositoryManager(manager.Manager):
             dbPath = os.path.join(self.cfg.reposPath, fqdn)
             tmpPath = os.path.join(dbPath, 'tmp')
             cfg = netserver.ServerConfig()
-            cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn))
+            cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn), db=self.db)
             cfg.tmpDir = tmpPath
             cfg.serverName = str(fqdn)
             cfg.repositoryMap = {}
