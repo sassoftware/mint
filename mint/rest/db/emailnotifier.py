@@ -90,7 +90,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                self.cfg.productName,
                                '\n\n'.join((greeting, message, closing)))
             if adminMessage:
-                memberList = self.db.listProductMembers(project.name)
+                memberList = self.db.listProductMembers(project.hostname)
                 adminUsers = []
                 for level in [userlevels.OWNER]:
                     for membership in memberList.members:
