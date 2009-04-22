@@ -8,6 +8,7 @@ import traceback
 from restlib import response
 
 from mint import logerror
+from mint import mint_error
 from mint.rest.api import models
 from mint.rest.modellib import converter
 
@@ -17,6 +18,7 @@ class ErrorCallback(object):
         
     def processException(self, request, excClass, exception, tb):
         message = '%s: %s' % (excClass.__name__, exception)
+
         if hasattr(exception, 'status'):
             status = exception.status
         else:

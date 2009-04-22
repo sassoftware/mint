@@ -1172,7 +1172,7 @@ class WebRepositoryHelper(BaseWebHelper):
         return response
 
     def webLogin(self, username, password):
-        page = self.fetch(self.mintCfg.basePath)
+        page = self.fetch(self.mintCfg.basePath + 'web/')
         page = page.postForm(1, self.fetchWithRedirect,
                     {'username': username,
                      'password': password})

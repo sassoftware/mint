@@ -52,145 +52,173 @@ class RepositoryDatabaseError(InternalMintError):
 
 ### Marshallable errors -- these go over XMLRPC
 class MintError(InternalMintError):
-    pass
+    status = 403
 
+class PermissionDenied(MintError): 
+    "Permission Denied"
+    status = 403
 
-class AdminSelfDemotion(MintError): "You cannot demote yourself."
-class AlreadyConfirmed(MintError):
+class ServerError(MintError):
+    status = 500
+
+class InvalidError(MintError):
+    status = 400
+
+class MissingError(MintError):
+    status = 404
+
+class ConflictError(MintError):
+    status = 409
+
+class AdminSelfDemotion(PermissionDenied): "You cannot demote yourself."
+class AlreadyConfirmed(InvalidError):
     "Your registration has already been confirmed"
-class AuthRepoError(MintError):
+
+class AuthRepoError(ServerError):
     "Authentication token could not be manipulated."
-class BuildDataNameError(MintError):
+
+class BuildDataNameError(InvalidError):
     "Named value is not in data template."
-class BuildFileMissing(MintError):
+class BuildFileMissing(MissingError):
     "The referenced build file doesn't exist."
-class BuildMissing(MintError): "The referenced build does not exist."
-class BuildPublished(MintError):
+class BuildMissing(MissingError): 
+    "The referenced build does not exist."
+class BuildPublished(PermissionDenied):
     "The referenced build is already part of a release."
-class BuildEmpty(MintError):
+
+class BuildEmpty(ConflictError):
     "The referenced build has no files and cannot be released."
-class BuildSystemDown(MintError):
+class BuildSystemDown(ServerError):
     "There was a problem contacting the build system."
-class ConfigurationMissing(MintError):
+class ConfigurationMissing(ServerError):
     "The rBuilder configuration is missing."
     # this init must be in here because this gets thrown from config.py
     def __init__(self):
         self.msg = self.__doc__
-class ConfirmError(MintError):
+class ConfirmError(ServerError):
     "Your registration could not be confirmed"
-class DeleteLocalUrlError(MintError):
+
+
+class DeleteLocalUrlError(PermissionDenied):
     "Deleting a local build file is not supported via this interface."
-class DuplicateHostname(MintError):
+class DuplicateHostname(PermissionDenied):
     "A %(project)s using this hostname already exists"
-class DuplicateJob(MintError):
+
+class DuplicateJob(PermissionDenied):
     "A conflicting job is already in progress"
-class DuplicateName(MintError):
+class DuplicateName(PermissionDenied):
     "A %(project)s using this title already exists"
-class DuplicateLabel(MintError): "Label already exists"
-class DuplicateProductVersion(MintError): "Product version already exists"
-class EC2NotConfigured(MintError): "This rBuilder is missing information " \
+class DuplicateLabel(PermissionDenied): 
+    "Label already exists"
+class DuplicateProductVersion(PermissionDenied): 
+    "Product version already exists"
+class EC2NotConfigured(PermissionDenied):
+    "This rBuilder is missing information " \
     "necessary to communicate with EC2.  Please consult your site administrator."
-class InvalidHostname(MintError):
+class InvalidHostname(InvalidError):
     "Invalid hostname: must start with a letter and contain only " \
         "letters, numbers, and hyphens."
-class LabelMissing(MintError):
+class LabelMissing(MissingError):
     "%(Project)s label does not exist"
-class FailedToLaunchAMIInstance(MintError):
+class FailedToLaunchAMIInstance(ServerError):
     "Failed to launch AMI instance."
-class FileMissing(MintError): "The referenced file does not exist."
-class GroupAlreadyExists(MintError): "Group already exists"
-class GroupTroveTemplateExists(MintError): "Template group trove already exists"
-class GroupTroveEmpty(MintError): "Group cannot be empty"
-class GroupTroveNameError(MintError):
+class FileMissing(MissingError): 
+    "The referenced file does not exist."
+class GroupAlreadyExists(PermissionDenied): "Group already exists"
+class GroupTroveTemplateExists(PermissionDenied): "Template group trove already exists"
+class GroupTroveEmpty(PermissionDenied): "Group cannot be empty"
+class GroupTroveNameError(InvalidError):
     "Invalid name for group: letters, numbers, hyphens allowed."
-class GroupTroveVersionError(MintError):
+class GroupTroveVersionError(InvalidError):
     "Invalid version for group: letters, numbers, periods allowed."
-class HtmlTagNotAllowed(MintError): pass
-class HtmlParseError(MintError): pass
-class InvalidNamespace(MintError):
+class HtmlTagNotAllowed(InvalidError): pass
+class HtmlParseError(InvalidError): pass
+class InvalidNamespace(InvalidError):
     "Invalid namespace: may not contain @ or : and may not be more than 16 characters"
-class InvalidShortname(MintError):
+class InvalidShortname(InvalidError):
     "Invalid short name: must start with a letter and contain only letters, numbers, and hyphens."
-class InvalidProdType(MintError):
+class InvalidProdType(InvalidError):
     "The selected %(project)s type is invalid."
-class InvalidUsername(MintError):
+class InvalidUsername(InvalidError):
     "Username may contain only letters, digits, '-', '_', and '.'"
-class JobserverVersionMismatch(MintError): # LEGACY
+class JobserverVersionMismatch(ServerError): # LEGACY
     "Image job cannot be run."
-class LastAdmin(MintError):
+class LastAdmin(PermissionDenied):
     "You cannot close the last administrator account."
-class LastOwner(MintError):
+class LastOwner(PermissionDenied):
     "You cannot orphan a %(project)s with developers"
-class MailError(MintError): "There was a problem sending email."
-class MailingListException(MintError): pass
-class MaintenanceMode(MintError): "Repositories are currently offline."
-class MessageException(MintError): pass
-class MultipleImageTypes(MintError):
+class MailError(ServerError): 
+    "There was a problem sending email."
+    status = 500
+
+class MailingListException(ServerError): pass
+class MaintenanceMode(ServerError): "Repositories are currently offline."
+class MessageException(ServerError): pass
+class MultipleImageTypes(InvalidError):
     "The build has multiple image types specified."
-class NoMirrorLoadDiskFound(MintError):
+class NoMirrorLoadDiskFound(InvalidError):
     "No mirror preload disk was found attached to your appliance."
-class NoBuildsDefinedInBuildDefinition(MintError):
+class NoBuildsDefinedInBuildDefinition(InvalidError):
     "No images in image set."
-class NoImageGroupSpecifiedForProductDefinition(MintError):
+class NoImageGroupSpecifiedForProductDefinition(InvalidError):
     "No imageGroup specified to build in the product definition."
-class NotEntitledError(MintError):
+class NotEntitledError(PermissionDenied):
     "The rBuilder is not entitled to a required resource. Please " \
         "contact your administrator."
-class ParameterError(MintError):
+class ParameterError(InvalidError):
     "A required parameter had an incorrect data type."
-class PermissionDenied(MintError): "Permission Denied"
-class PlatformDefinitionNotFound(MintError): "The platform definition was not found."
-class PublicToPrivateConversionError(MintError):
+class PlatformDefinitionNotFound(MissingError): "The platform definition was not found."
+class PublicToPrivateConversionError(PermissionDenied):
     "Converting public products to private products is not supported."
-class ProductDefinitionVersionNotFound(MintError):
+class ProductDefinitionVersionNotFound(MissingError):
     "The product definition for the specified product version was not found."
-class ProductVersionNotFound(MintError):
+class ProductVersionNotFound(MissingError):
     "The specified product version was not found."
-class ProductVersionInvalid(MintError):
+class ProductVersionInvalid(InvalidError):
     "The specified product major version is invalid."
-class ProductDefinitionVersionExternalNotSup(MintError):
+class ProductDefinitionVersionExternalNotSup(PermissionDenied):
     "Product versions are not currently supported on external products."
-class PublishedReleaseEmpty(MintError):
+class PublishedReleaseEmpty(ConflictError):
     "The referenced release has no builds and cannot be published."
-class PublishedReleaseMissing(MintError):
+class PublishedReleaseMissing(MissingError):
     "The referenced release does not exist."
-class PublishedReleaseNotPublished(MintError):
+class PublishedReleaseNotPublished(ConflictError):
     "Release has already been unpublished."
-class PublishedReleasePublished(MintError):
+class PublishedReleasePublished(ConflictError):
     "Release has already been published."
-class RmakeRepositoryExistsError(MintError):
+class RmakeRepositoryExistsError(PermissionDenied):
     "The internal rMake repository is already configured."
-class SchemaMigrationError(MintError): pass
-class TargetMissing(MintError):
+class SchemaMigrationError(ServerError): pass
+class TargetMissing(MissingError):
     "Target does not exist"
-class TargetExists(MintError):
+class TargetExists(PermissionDenied):
     "target already exists"
-class TooManyAMIInstancesPerIP(MintError):
+class TooManyAMIInstancesPerIP(PermissionDenied):
     "Too many AMI instances have been launched from this IP " \
         "address. Please try again later."    
-class AMIInstanceDoesNotExist(MintError):
+class AMIInstanceDoesNotExist(MissingError):
     "The AMI instance does not exist, it may have already been deleted."
-class TroveNotSet(MintError):
+class TroveNotSet(ConflictError):
     "This build is not associated with a group."
-class IllegalUsername(MintError): "The username selected cannot be used."
-class UserAlreadyAdmin(MintError): "User is already an administrator."
-class UserAlreadyExists(MintError): "User already exists"
-class UserInduction(MintError):
+class IllegalUsername(InvalidError): "The username selected cannot be used."
+class UserAlreadyAdmin(PermissionDenied): "User is already an administrator."
+class UserAlreadyExists(PermissionDenied): "User already exists"
+class UserInduction(PermissionDenied):
     "%(Project)s owner attempted to manipulate a %(project)s user in an " \
         "illegal fashion"
-class UpdateServiceNotFound(MintError):
+class UpdateServiceNotFound(MissingError):
     "The Update Service was not found."
-class PackageCreatorError(MintError):
+class PackageCreatorError(ServerError):
     "Package Creator Error:"
-class NoImagesDefined(MintError):
+class NoImagesDefined(ServerError):
     "Package Creator Error:"
-class OldProductDefinition(MintError):
+class OldProductDefinition(ServerError):
     "Package Creator Error:"
 
 BuildFileUrlMissing = BuildFileMissing
 
 # Exceptions with arguments
-class DuplicateItem(MintError):
+class DuplicateItem(InvalidError):
     def __init__(self, item = "item"):
         MintError.__init__(self)
         self.item = item
@@ -200,7 +228,7 @@ class DuplicateItem(MintError):
     def __str__(self):
         return "Duplicate item in %s" % self.item
 
-class InvalidLabel(MintError):
+class InvalidLabel(InvalidError):
     def __init__(self, label):
         self.label = label
 
@@ -209,7 +237,7 @@ class InvalidLabel(MintError):
     def __str__(self):
         return "The generated development label %s is invalid. This can be caused by an invalid short name, namespace, or version." % self.label
 
-class ItemNotFound(MintError):
+class ItemNotFound(MissingError):
     def __init__(self, item = "item"):
         MintError.__init__(self)
         self.item = item
@@ -219,7 +247,7 @@ class ItemNotFound(MintError):
     def __str__(self):
         return "Requested %s not found" % self.item
 
-class MethodNotSupported(MintError):
+class MethodNotSupported(PermissionDenied):
     def __init__(self, method):
         MintError.__init__(self)
         self.method = method
@@ -229,7 +257,7 @@ class MethodNotSupported(MintError):
     def __str__(self):
         return "Method not supported by XMLRPC server: %s" % self.method
     
-class RepositoryAlreadyExists(MintError):
+class RepositoryAlreadyExists(PermissionDenied):
     def __init__(self, projectName):
         MintError.__init__(self)
         self.projectName = projectName
@@ -239,7 +267,7 @@ class RepositoryAlreadyExists(MintError):
     def __str__(self):
         return "A repository for '%s' already exists or was not properly deleted." % self.projectName
     
-class ProjectNotDeleted(MintError):
+class ProjectNotDeleted(ServerError):
     def __init__(self, projectName):
         MintError.__init__(self)
         self.projectName = projectName
@@ -249,7 +277,7 @@ class ProjectNotDeleted(MintError):
     def __str__(self):
         return "Unable to delete '%s'.  See the error log for more information." % self.projectName
 
-class ProductDefinitionError(MintError):
+class ProductDefinitionError(ServerError):
     def __init__(self, reason):
         self.reason = reason
 
@@ -258,7 +286,7 @@ class ProductDefinitionError(MintError):
     def __str__(self):
         return "There was a problem that occurred when trying to access the product definition for %s" % self.reason
 
-class UnmountFailed(MintError):
+class UnmountFailed(ServerError):
     def __init__(self, dev):
         MintError.__init__(self)
         self.dev = dev
@@ -269,7 +297,7 @@ class UnmountFailed(MintError):
         return "Unable to automatically unmount %s; please manually " \
             "unmount" % self.dev
 
-class UpToDateException(MintError):
+class UpToDateException(ServerError):
     def __init__(self, table = "Unknown Table"):
         MintError.__init__(self)
         self.table = table
@@ -279,7 +307,7 @@ class UpToDateException(MintError):
     def __str__(self):
         return "The table '%s' is not up to date" % self.table
 
-class InvalidBuildOption(MintError):
+class InvalidBuildOption(InvalidError):
     def __init__(self, desc):
         MintError.__init__(self)
         self.desc = desc
@@ -289,7 +317,7 @@ class InvalidBuildOption(MintError):
     def __str__(self):
         return "Invalid value for %s" % self.desc
 
-class BuildOptionValidationException(MintError):
+class BuildOptionValidationException(InvalidError):
     def __init__(self, errlist):
         MintError.__init__(self)
         self.errlist = errlist
@@ -299,7 +327,7 @@ class BuildOptionValidationException(MintError):
     def __str__(self):
         return "The following error(s) occurred: %s" % ", ".join(self.errlist)
     
-class TroveNotFoundForBuildDefinition(MintError):
+class TroveNotFoundForBuildDefinition(MissingError):
     "The trove for one or more images was not found."
     def __init__(self, errlist):
         MintError.__init__(self)
@@ -322,7 +350,7 @@ class UpdateServiceAuthError(MintError):
                 "Service on %s were incorrect or are not part of the " \
                 "admin role on the Update Service." % self.hostname
 
-class UpdateServiceConnectionFailed(MintError):
+class UpdateServiceConnectionFailed(ServerError):
     def __init__(self, hostname, errmsg):
         MintError.__init__(self)
         self.hostname = hostname
@@ -334,7 +362,7 @@ class UpdateServiceConnectionFailed(MintError):
         return "The Update Service on %s could not be contacted. " \
                 "(Reason: %s)" % (self.hostname, self.errmsg)
 
-class UpdateServiceUnknownError(MintError):
+class UpdateServiceUnknownError(ServerError):
     def __init__(self, hostname):
         MintError.__init__(self)
         self.hostname = hostname
@@ -345,7 +373,7 @@ class UpdateServiceUnknownError(MintError):
         return "An unknown error occurred when attempting to " \
                 "configure the Update Service on %s." % self.hostname
 
-class PublishedReleaseMirrorRole(MintError):
+class PublishedReleaseMirrorRole(ServerError):
     def __init__(self, err = "Unknown error"):
         MintError.__init__(self)
         self.err = err
@@ -355,7 +383,7 @@ class PublishedReleaseMirrorRole(MintError):
     def __str__(self):
         return "Release cannot be published due to an error adding the mirror role/user: %s" % self.err
 
-class DatabaseVersionMismatch(MintError):
+class DatabaseVersionMismatch(ServerError):
     def __init__(self, currentVersion):
         MintError.__init__(self)
 	from mint.db import schema
@@ -370,7 +398,7 @@ class DatabaseVersionMismatch(MintError):
             "Current version is %s; required version is %s." % (
                 self.currentVersion, self.requiredVersion)
             
-class ProductDefinitionInvalidStage(MintError):
+class ProductDefinitionInvalidStage(InvalidError):
     def __init__(self, msg):
         MintError.__init__(self)
         self.msg = msg
@@ -391,7 +419,7 @@ class PackageCreatorValidationError(PackageCreatorError):
     def __str__(self):
         return "Field validation failed: %s" % ', '.join(self.reasons)
 
-class ProductDefinitionLabelLookupError(MintError):
+class ProductDefinitionLabelLookupError(ServerError):
     "Product Definition Label Lookup Error:"
     def __init__(self, label, possibles):
         MintError.__init__(self)
@@ -403,7 +431,7 @@ class ProductDefinitionLabelLookupError(MintError):
     def __str__(self):
         return self.msg + " Could not map the label %s to a product definition.  The versioned default labels are %s" % (self.lookup, ", ".join(self.set))
 
-class EC2Exception(MintError):
+class EC2Exception(ServerError):
     "A generic EC2 exception"
     def __init__(self, ec2ResponseObj):
         MintError.__init__(self)

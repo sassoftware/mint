@@ -84,7 +84,19 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
     PythonOption basePath "/"
     PythonPath "['@MINTPATH@', '@MCPPATH@', '@PRODDEFPATH@', '@CONARYPATH@', '@PCREATORPATH@', '@CATALOGSERVICEPATH@', '@RESTLIBPATH@'] + sys.path"
     PythonDebug Off
+    # Note this is different than what we ship with, 
+    # where this redirect should be set.  But that would 
+    # require changing all of our tests for low value.
+    PythonOption redirectIndex ""
 </Location>
+
+<Location /web/>
+    AddHandler python-program .conf
+    PythonHandler mint.web.hooks
+    PythonOption basePath "/web/"
+    PythonOption redirectIndex ""
+</Location>
+
 
 <Location /xmlrpc/>
     AddHandler python-program .conf
