@@ -343,11 +343,14 @@ class MintServer(object):
                         list(authToken) + [None, None], methodName, str_args)
 
             except mint_error.MintError, e:
+                e_type, e_value, e_tb = sys.exc_info()
+                logErrorAndEmail(self.cfg, e_type, e_value, e_tb, "", {}, doEmail=False)
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
                 return (True, frozen)
             except:
                 e_type, e_value, e_tb = sys.exc_info()
+                logErrorAndEmail(self.cfg, e_type, e_value, e_tb, "", {}, doEmail=False)
                 self._handleError(e_value, authToken, methodName, args)
                 raise
             else:
