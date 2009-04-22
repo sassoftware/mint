@@ -508,6 +508,7 @@ class RepositoryDatabase:
         pass
 
     def getRepositoryDB(self, name, db = None):
+        database = None
         if db:
             cu = db.cursor()
             if db.driver == 'mysql':
@@ -516,8 +517,10 @@ class RepositoryDatabase:
             else:
                 cu.execute("SELECT database FROM Projects WHERE hostname = ?",
                         name.split('.')[0])
-            database = cu.fetchone()[0]
-        else:
+            database = cu.fetchone()
+            if database:
+                database = database[0]
+        if database is None:
             database = self.cfg.defaultDatabase
 
         if ' ' in database:
