@@ -58,7 +58,7 @@ class UsersTable(database.KeyedTable):
         salt, passwd = self._mungePassword(password)
         cu = self.db.cursor()
         cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",
-                   salt, passwd, username)
+                   cu.binary(salt), passwd, username)
         self.db.commit()
 
     def _checkPassword(self, user, salt, password, challenge):
