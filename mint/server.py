@@ -438,8 +438,10 @@ class MintServer(object):
                 protocol = "http"
                 port = 80
 
-            fqdn = self._translateProjectFQDN(project.getFQDN())
-            reposPath = os.path.join(self.cfg.reposPath, fqdn)
+            handle = self.reposMgr.getRepositoryFromProjectId(project.projectId)
+            server = handle.getShimServer()
+
+            reposPath = os.path.join(self.cfg.reposPath, handle.fqdn)
             tmpPath = os.path.join(reposPath, "tmp")
 
             # handle non-standard ports specified on cfg.projectDomainName,
@@ -447,16 +449,6 @@ class MintServer(object):
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
 
-            cfg = netserver.ServerConfig()
-            cfg.repositoryDB = self.projects.reposDB.getRepositoryDB(fqdn, db = self.db)
-            cfg.tmpDir = tmpPath
-            cfg.serverName = fqdn
-            cfg.contentsDir = " ".join(x % fqdn for x in
-                    self.cfg.reposContentsDir.split(" "))
-            cfg.externalPasswordURL = self.cfg.externalPasswordURL
-            cfg.authCacheTimeout = self.cfg.authCacheTimeout
-            cfg.serializeCommits = True
-            server = shimclient.NetworkRepositoryServer(cfg, '')
             if useServer:
                 # Get a server object instead of a shim client
                 return server

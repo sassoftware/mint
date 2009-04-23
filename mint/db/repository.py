@@ -215,14 +215,9 @@ class RepositoryHandle(object):
 
         return protocol, host, port
 
-    def getURL(self, template=False):
+    def getURL(self):
         protocol, host, port = self._getURLPieces()
-        if template:
-            return '%%(protocol)s://%s:%%(port)d/repos/%s/' % (host,
-                self.shortName)
-        else:
-            return '%s://%s:%d/repos/%s/' % (protocol, host, port,
-                    self.shortName)
+        return '%s://%s:%d/repos/%s/' % (protocol, host, port, self.shortName)
 
     @cached
     def _getReposDBParams(self):
@@ -332,7 +327,7 @@ class RepositoryHandle(object):
                     % (nscfg.tmpDir, self.shortName))
 
         db = self.getReposDB()
-        baseUrl = self.getURL(template=True)
+        baseUrl = self.getURL()
         return serverClass(nscfg, baseUrl, db)
 
     @cached
@@ -349,7 +344,7 @@ class RepositoryHandle(object):
         repository.
         """
         return proxy.SimpleRepositoryFilter(self.getNetServerConfig(),
-                self.getURL(template=True), self.getNetServer())
+                self.getURL(), self.getNetServer())
 
     @cached
     def getShimServer(self):
