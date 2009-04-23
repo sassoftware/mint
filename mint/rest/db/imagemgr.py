@@ -158,6 +158,30 @@ class ImageManager(manager.Manager):
         return self._getImages(fqdn, '', 'AND Builds.buildId=?', [imageId],
                                 getOne=True, update=update)
 
+    def deleteImageForProduct(self, fqdn, imageId):
+        self.deleteImageFilesForProduct(fqdn, imageId)
+        cu = self.db.cursor()
+        cu.execute('''DELETE FROM Builds where buildId=?''', imageId)
+
+    def deleteImageFilesForProduct(self, fqdn, imageId):
+        cu = self.db.cursor()
+        cu.execute('''SELECT url FROM BuildFiles
+                     JOIN BuildFilesUrlsMap USING(fileId)
+                     JOIN FilesUrls USING(urlId)
+                     WHERE buildId=?''', imageId)
+        for url, in cu:
+            if os.path.exists(url):
+                os.unlink(url)
+        cu.execute('''DELETE FROM FilesUrls WHERE urlId IN
+                     (SELECT urlId FROM BuildFiles
+                      JOIN BuildFilesUrlsMap USING(FileId)
+                      WHERE buildId=?)''', imageId)
+        cu.execute('''DELETE FROM BuildFilesUrlsMap WHERE urlId IN
+                     (SELECT urlId FROM BuildFiles
+                      JOIN BuildFilesUrlsMap USING(FileId)
+                      WHERE buildId=?)''', imageId)
+        cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
+
     def listImagesForRelease(self, fqdn, releaseId, update=False):
         return self._getImages(fqdn, '', ' AND pubReleaseId=?',
                                [releaseId], update=update)
@@ -183,7 +207,7 @@ class ImageManager(manager.Manager):
                               ' AND ProductVersions.name=? AND stageName=?',
                               [version, stageName])
 
-    def listFilesForImage(self, fqdn, imageId):
+    def listFilesForImage(self, fqdn, imageId, includePath=False):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
         cu.execute('''SELECT fileId, buildId,
@@ -205,6 +229,8 @@ class ImageManager(manager.Manager):
                           WHERE fileId=?''', file.fileId)
             urls = []
             for d in cu:
+                if includePath:
+                    d['path'] = d['url']
                 d['url'] = self.cfg.basePath + 'downloadImage?fileId=%d' % (
                                                                 file.fileId)
                 if d['urlType'] not in (urltypes.LOCAL, 

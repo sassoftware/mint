@@ -19,6 +19,36 @@ class ImagesTest(restbase.BaseRestTest):
         restbase.BaseRestTest.setUp(self)
         self.setupReleases()
 
+    def testDeleteImage(self):
+        # image 1 is not published yet
+        client = self.getRestClient(username='adminuser')
+        db = self.openRestDatabase()
+        url, = db.cursor().execute('''SELECT url from BuildFiles
+                                      JOIN BuildFilesUrlsMap USING (fileId)
+                                      JOIN FilesUrls USING(urlId)
+                                      WHERE buildId=?
+                                   ''', 1).fetchone()
+        assert(os.path.exists(url))
+        client.call('DELETE', 'products/testproject/images/1')
+        assert(not os.path.exists(url))
+        open(url, 'w').write('data')
+
+    def testDeleteImageFiles(self):
+        client = self.getRestClient(username='adminuser')
+        # image 1 is not published yet
+        db = self.openRestDatabase()
+        url, = db.cursor().execute('''SELECT url from BuildFiles
+                                      JOIN BuildFilesUrlsMap USING (fileId)
+                                      JOIN FilesUrls USING(urlId)
+                                      WHERE buildId=?
+                                   ''', 1).fetchone()
+        assert(os.path.exists(url))
+        client.call('DELETE', 'products/testproject/images/1/files')
+        assert(not os.path.exists(url))
+        # FIXME - changes the actual original version bc
+        # we store absolute references.  Lame.
+        open(url, 'w').write('data')
+
     def testGetReleases(self):
         return self._testGetReleases()
 
@@ -143,5 +173,6 @@ class ImagesTest(restbase.BaseRestTest):
 
         self.failUnlessEqual(resp,
             exp % dict(server = 'localhost', port = '8000'))
+
 
 testsetup.main()

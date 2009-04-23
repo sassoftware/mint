@@ -614,6 +614,11 @@ class RestDBMixIn(object):
             imageFiles = [('imagefile_%s.iso' % imageId, 
                            'Image File %s' % imageId,
                            1024 * imageId, digest)]
+        for item in imageFiles:
+            path = self.mintCfg.imagesPath + '/%s/%s/%s' % (hostname, imageId,
+                                                            item[0])
+            util.mkdirChain(os.path.dirname(path))
+            open(path, 'w').write('image data')
         db.setImageFiles(hostname, imageId, imageFiles)
 
 

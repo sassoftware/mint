@@ -591,6 +591,16 @@ class Database(DBInterface):
         return self.imageMgr.getImageForProduct(hostname, imageId,
                 update=update)
 
+    @commitafter
+    def deleteImageForProduct(self, hostname, imageId):
+        self.auth.requireProductDeveloper(hostname)
+        return self.imageMgr.deleteImageForProduct(hostname, imageId)
+
+    @commitafter
+    def deleteImageFilesForProduct(self, hostname, imageId):
+        self.auth.requireProductDeveloper(hostname)
+        return self.imageMgr.deleteImageFilesForProduct(hostname, imageId)
+
     @readonly
     def listFilesForImage(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
