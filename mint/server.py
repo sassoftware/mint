@@ -52,7 +52,6 @@ from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
-from mint.logerror import logErrorAndEmail
 from mint import packagecreator
 
 from mcp import client as mcpClient
@@ -344,13 +343,11 @@ class MintServer(object):
 
             except mint_error.MintError, e:
                 e_type, e_value, e_tb = sys.exc_info()
-                logErrorAndEmail(self.cfg, e_type, e_value, e_tb, "", {}, doEmail=False)
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
                 return (True, frozen)
             except:
                 e_type, e_value, e_tb = sys.exc_info()
-                logErrorAndEmail(self.cfg, e_type, e_value, e_tb, "", {}, doEmail=False)
                 self._handleError(e_value, authToken, methodName, args)
                 raise
             else:
