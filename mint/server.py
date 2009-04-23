@@ -5083,7 +5083,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     def addApplianceSearchPaths(self, sessionHandle, searchPaths):
         pc = self.getApplianceCreatorClient()
-        return pc.addSearchPaths(sessionHandle, searchPaths)
+        try:
+            return pc.addSearchPaths(sessionHandle, searchPaths)
+        except packagecreator.errors.PackageCreatorError, e:
+            raise mint_error.PackageCreatorError(str(e))
 
     @requiresAuth
     def listApplianceSearchPaths(self, sessionHandle):
