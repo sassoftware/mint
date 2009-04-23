@@ -34,10 +34,14 @@ class ProductReleasesController(base.BaseController):
 
     @requires('release', models.UpdateRelease)
     def create(self, request, hostname, release):
+        if release.imageIds is not None:
+            imageIds = [ x.imageId for x in release.imageIds]
+        else:
+            imageIds = []
+
         releaseId = self.db.createRelease(hostname, release.name,
                                           release.description,
-                                          release.version,
-                                          [ x.imageId for x in release.imageIds])
+                                          release.version, imageIds)
         return self.get(request, hostname, releaseId)
 
     @requires('release', models.UpdateRelease)
