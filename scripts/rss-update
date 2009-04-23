@@ -61,7 +61,7 @@ def main():
     upstreamItems = [x.content for x in store.enumerateStoreGlobal('default')]
     upstreamItems = dict((_hashItem(x), x) for x in upstreamItems)
 
-    baseUrl = 'https://%s/api/notices/contexts/default' % cfg.secureHost
+    baseUrl = 'https://%s/api/notices/contexts' % cfg.secureHost
 
     for item in items:
         if _hashItem(item, local = True) in upstreamItems:
