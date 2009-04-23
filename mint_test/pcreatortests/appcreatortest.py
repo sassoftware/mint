@@ -111,6 +111,26 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
         self.failIf(not self.called, "Expected makeApplianceTrove to be called")
 
     @fixtures.fixture('Full')
+    def testAddApplianceSearchPathsFail(self, db, data):
+        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
+                public(lambda *args, **kwargs: 'ses-123'))
+
+        self.setCall = []
+
+        @public
+        def MockedAddApplianceSearchPaths(x, sesH, searchPaths):
+            raise pcreator.backend.errors.TroveSpecError("teh 3rr0r")
+        self.mock(pcreator.backend.BaseBackend,
+                '_addSearchPaths', MockedAddApplianceSearchPaths)
+
+        client = self.getClient('owner')
+        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        err = self.failUnlessRaises(mint_rephelp.mint_error.PackageCreatorError,
+            client.addApplianceSearchPaths, sesH, ['test1==foo@bar:1'])
+        self.failUnlessEqual(str(err), 'teh 3rr0r')
+
+
+    @fixtures.fixture('Full')
     def testAddApplianceSearchPaths(self, db, data):
         self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
                 public(lambda *args, **kwargs: 'ses-123'))
