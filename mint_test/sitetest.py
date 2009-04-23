@@ -161,7 +161,7 @@ class SiteTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
 
-        cookie = page.cookies[page.server][page.url]['pysid']
+        cookie = page.cookies[page.server]['/']['pysid']
 
         conn = xmlrpclib.ServerProxy("%s://%s:%s/xmlrpc-private/" % (
             page.protocol, page.server, page.port),
