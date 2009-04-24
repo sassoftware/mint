@@ -163,6 +163,12 @@ then
     service rmake-node restart
 fi
 
+# Fix notifications with a bad GUID
+#   -- 5.1.1 - 2009-04-24
+sed -i -e 's,contexts/default/default,contexts/default,' \
+    /srv/rbuilder/notices/global/default/*/content &>/dev/null
+
+
 # Shut down postgres if chrooted
 if [ "x$is_chrooted" == "x1" ]
 then
