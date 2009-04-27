@@ -94,6 +94,8 @@ class FormatCallback(object):
         
     def processResponse(self, request, res):
         if not isinstance(res, response.Response):
+            if res == None:
+                return response.Response(status=200)
             request.profile.stopResponse()
             startConvert = time.time()
             text = converter.toText(request.responseType, res,

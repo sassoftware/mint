@@ -32,8 +32,7 @@ class ProductImagesController(base.BaseController):
         return self.db.getImageForProduct(hostname, imageId, update=update)
 
     def destroy(self, request, hostname, imageId):
-        return self.db.deleteImageForProduct(hostname, imageId)
+        self.db.deleteImageForProduct(hostname, imageId)
 
     def stop(self, request, hostname, imageId):
         return self.db.stopImageJob(hostname, imageId)
-
