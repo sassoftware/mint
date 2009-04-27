@@ -797,10 +797,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient('admin')
         project = client.getProject(data['projectId'])
         
-        # make sure there is at least 1 group trove
-        self.failUnless(len(client.listGroupTrovesByProject(project.id)) > 0, 
-            "Need at least one group trove for a valid test")
-        
         # make sure there is at least 1 build
         self.failUnless(len(client.server._server.getBuildsForProject(project.id)) > 0, 
             "Need at least one build for a valid test")
@@ -859,10 +855,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         
         # make sure images dir is gone
         self.failUnless(not os.path.exists(imageDir))
-        
-        # make sure the group troves have been removed
-        self.failUnless(len(client.listGroupTrovesByProject(project.id)) == 0, 
-            "Failed deleting group troves")
         
         # make sure the builds have been removed
         self.failUnless(len(client.server._server.getBuildsForProject(project.id)) == 0, 

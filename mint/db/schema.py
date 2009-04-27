@@ -372,75 +372,6 @@ def _createCommits(db):
     return changed
 
 
-def _createGroupTroves(db):
-    cu = db.cursor()
-    changed = False
-
-    if 'GroupTroves' not in db.tables:
-        cu.execute("""
-        CREATE TABLE GroupTroves(
-            groupTroveId    %(PRIMARYKEY)s,
-            projectId       integer,
-            creatorId       integer,
-            recipeName      varchar(200),
-            upstreamVersion varchar(128),
-            description     text,
-            timeCreated     integer,
-            timeModified    integer,
-            autoResolve     integer,
-            cookCount       INT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['GroupTroves'] = []
-        changed = True
-    changed |= db.createIndex('GroupTroves', 'GroupTrovesProjectIdx',
-        'projectId')
-    changed |= db.createIndex('GroupTroves', 'GroupTrovesUserIdx', 'creatorId')
-
-    if 'GroupTroveItems' not in db.tables:
-        cu.execute("""
-        CREATE TABLE GroupTroveItems(
-            groupTroveItemId    %(PRIMARYKEY)s,
-            groupTroveId        integer,
-            creatorId           integer,
-            trvName             varchar(128),
-            trvVersion          text,
-            trvFlavor           text,
-            subGroup            varchar(128),
-            versionLock         integer,
-            useLock             integer,
-            instSetLock         INT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['GroupTroveItems'] = []
-        changed = True
-    changed |= db.createIndex('GroupTroveItems', 'GroupTroveItemsUserIdx',
-        'creatorId')
-
-    if 'ConaryComponents' not in db.tables:
-        cu.execute("""
-        CREATE TABLE ConaryComponents(
-             componentId    %(PRIMARYKEY)s,
-             component      varchar(128)
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['ConaryComponents'] = []
-        changed = True
-    changed |= db.createIndex('ConaryComponents', 'ConaryComponentsIdx',
-            'component', unique = True)
-
-    if 'GroupTroveRemovedComponents' not in db.tables:
-        cu.execute("""
-        CREATE TABLE GroupTroveRemovedComponents(
-             groupTroveId   integer,
-             componentId    INT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['GroupTroveRemovedComponents'] = []
-        changed = True
-    changed |= db.createIndex('GroupTroveRemovedComponents',
-            'GroupTroveRemovedComponentIdx', 'groupTroveId, componentId',
-            unique = True)
-
-    return changed
-
-
 def _createJobs(db):
     cu = db.cursor()
     changed = False
@@ -852,7 +783,6 @@ def createSchema(db, doCommit=True):
     changed |= _createProductVersions(db)
     changed |= _createBuilds(db)
     changed |= _createCommits(db)
-    changed |= _createGroupTroves(db)
     changed |= _createJobs(db)
     changed |= _createPackageIndex(db)
     changed |= _createNewsCache(db)

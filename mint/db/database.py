@@ -10,7 +10,6 @@ from mint.db import schema
 from mint.db import builds
 from mint.db import communityids
 from mint.db import ec2
-from mint.db import grouptrove
 from mint.db import jobs
 from mint.db import news
 from mint.db import mirror
@@ -45,10 +44,6 @@ class TableCache(object):
         self.membershipRequests = requests.MembershipRequestTable(db)
         self.commits = stats.CommitsTable(db)
         self.buildData = builds.BuildDataTable(db)
-        self.groupTroves = grouptrove.GroupTroveTable(db, cfg)
-        self.groupTroveItems = grouptrove.GroupTroveItemsTable(db, cfg)
-        self.conaryComponents = grouptrove.ConaryComponentsTable(db)
-        self.groupTroveRemovedComponents = grouptrove.GroupTroveRemovedComponentsTable(db)
         self.jobData = jobs.JobDataTable(db)
         self.inboundMirrors = mirror.InboundMirrorsTable(db)
         self.outboundMirrors = mirror.OutboundMirrorsTable(db, cfg)
@@ -103,10 +98,6 @@ class Database(object):
         self.membershipRequests = tables.membershipRequests
         self.commits = tables.commits
         self.buildData = tables.buildData
-        self.groupTroves = tables.groupTroves
-        self.groupTroveItems = tables.groupTroveItems
-        self.conaryComponents = tables.conaryComponents
-        self.groupTroveRemovedComponents = tables.groupTroveRemovedComponents
         self.jobData = tables.jobData
         self.inboundMirrors = tables.inboundMirrors
         self.outboundMirrors = tables.outboundMirrors

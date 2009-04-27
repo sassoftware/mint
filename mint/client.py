@@ -10,7 +10,6 @@ import xmlrpclib
 
 from mint import builds
 from mint import ec2
-from mint.db import grouptrove
 from mint.db import jobs
 from mint import mint_error
 from mint.rest import errors as rest_error
@@ -677,24 +676,6 @@ class MintClient:
 
     def cleanupSessions(self):
         self.server.cleanupSessions()
-
-    # group trove functions
-    def createGroupTrove(self, projectId, recipeName, upstreamVersion,
-                         desc, autoResolve):
-        groupTroveId = self.server.createGroupTrove(projectId, recipeName,
-                                                    upstreamVersion,
-                                                    desc, autoResolve)
-        return self.getGroupTrove(groupTroveId)
-
-    def deleteGroupTrove(self, groupTroveId):
-        return self.server.deleteGroupTrove(groupTroveId)
-
-    def getGroupTrove(self, groupTroveId):
-        return grouptrove.GroupTrove(self.server, groupTroveId)
-
-    def listGroupTrovesByProject(self, projectId):
-        return self.server.listGroupTrovesByProject(projectId)
-
 
     # report functions
     def listAvailableReports(self):

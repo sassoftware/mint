@@ -337,10 +337,6 @@ class FixtureCache(object):
         versionId2 = client.addProductVersion(projectId, 'ns2', 'FooV2',
                 'FooV2Description')
 
-        # create a group trove for the "foo" project
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
-            'No Description', False)
-
         return cfg, { 'projectId':      projectId,
                       'admin':          adminId,
                       'owner':          ownerId,
@@ -355,51 +351,8 @@ class FixtureCache(object):
                       'imagelessBuildId': imagelessBuild.id,
                       'imagelessReleaseId':   imagelessRelease.id,
                       'versionId' : versionId,
-                      'versionId2' : versionId2,
-                      'groupTroveId':   groupTrove.id }
+                      'versionId2' : versionId2 }
     
-    def fixtureCookJob(self, cfg):
-        """
-        CookJob fixture.
-
-        Creates the following setup:
-            - One user:
-                - test (a basic user with no special privileges)
-            - A project called "foo"
-                - "test" is a member of "foo"
-                - A build called "Test Build"
-                - A group trove called "testtrove"
-                - A single group trove cook job, in the "started" state
-
-        @param cfg: The current effective Mint configuration.
-        @return: A 2-tuple consisting of the current Mint configuration and a
-            a dictionary containing the following:
-                - C{test} - the id of the user "test"
-        """
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-
-        userId = self.createUser(cfg, db, 'test')
-        client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
-
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
-                                             'No Description', False)
-
-        groupTroveId = groupTrove.getId()
-
-        trvName = 'testtrove'
-        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel/1.0-1-1'
-        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
-        subGroup = ''
-
-        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
-                                    subGroup, False, False, False)
-
-        cookJobId = groupTrove.startCookJob("1#x86")
-        return cfg, { 'userId': userId }
-
     def fixtureImageJob(self, cfg):
         """
         ImageJob fixture.
@@ -430,58 +383,6 @@ class FixtureCache(object):
         stockBuildFlavor(db, build.getId())
 
         prodJob = client.startImageJob(build.getId())
-        return cfg, { 'test': testId }
-
-    def fixtureBothJobs(self, cfg):
-        """
-        BothJobs fixture.
-
-        Creates the following setup:
-            - One user:
-                - test (a basic user with no special privileges)
-            - A project called "foo"
-                - "test" is a member of "foo"
-                - A group trove called "testtrove"
-                - A build called "Test Build"
-                - A single image job, in the "started" state
-                - A single group trove cook job, in the "started" state
-
-        @param cfg: The current effective Mint configuration.
-        @return: A 2-tuple consisting of the current Mint configuration and a
-            a dictionary containing the following:
-                - C{test} - the id of the user "test"
-        """
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-
-        testId = self.createUser(cfg, db, 'test')
-
-        client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        build = client.newBuild(projectId, "Test Build")
-        build.setBuildType(buildtypes.STUB_IMAGE)
-
-        stockBuildFlavor(db, build.getId())
-
-        prodJob = client.startImageJob(build.getId())
-
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
-            'No Description', False)
-
-        groupTroveId = groupTrove.getId()
-
-        trvName = 'testtrove'
-        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel/1.0-1-1'
-        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
-        subGroup = ''
-
-        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
-                                    subGroup, False, False, False)
-
-        cookJobId = groupTrove.startCookJob("1#x86")
-
-        db.commit()
         return cfg, { 'test': testId }
 
     def fixtureEC2(self, cfg):
