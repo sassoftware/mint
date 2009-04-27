@@ -949,7 +949,9 @@ class MintClient:
         pkgs = self.server.getAvailablePackages(sessionHandle, refresh)
         ret = []
         for label in pkgs:
-            ret.append([(x[0], conaryver.ThawVersion(x[1]), conarydeps.ThawFlavor(x[2])) for x in label])
+            ret.append([(x[0],
+                conaryver.ThawVersion(str(x[1])),
+                conarydeps.ThawFlavor(str(x[2]))) for x in label])
         return ret
 
     def getAvailablePlatforms(self):
