@@ -1,4 +1,4 @@
-Changes in @NEW@
+Changes in 5.1.0
 ===============
 Web Front End Changes
 ---------------------
@@ -11,10 +11,8 @@ Web Front End Changes
 Bug Fixes
 ---------------------
 * Under conditions of high load, rBuilder would occasionally traceback
-  upon reading a partiall-written conaryrc file. This has been
+  upon reading a partially-written conaryrc file. This has been
   corrected. (RBL-4212)
-
-  to the rBuilder. (RBL-4186)
 * Products are created as private by default now. (RBL-4188)
 * Removed description, home page, commits email, and namespace options
   from "Create Product" page.  (RBL-4188)
@@ -38,12 +36,6 @@ Internal Changes
 * Moved to using one repository role per level (owner, admin, user, developer)
   instead of one role per user. (RBL-2721)
   
-Bug Fixes
----------------------
-* Under conditions of high load, rBuilder would occasionally traceback
-  upon reading a partiall-written conaryrc file. This has been
-  corrected. (RBL-4212)
-
 
 Changes in 5.0.1
 ===============
