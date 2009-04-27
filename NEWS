@@ -6,6 +6,7 @@ Web Front End Changes
   are still there.  (RBL-4186)
 * The Next Steps plugin has been removed.  (RBL-4186)
 * The rBA Setup plugin now informs users how to login and redirects them
+* Group builder via the old UI is no longer supported. (RBL-4554)
 
 Bug Fixes
 ---------------------
