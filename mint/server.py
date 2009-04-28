@@ -1978,10 +1978,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def registerCommit(self, hostname, username, name, version):
         projectId = self.getProjectIdByFQDN(hostname)
         self._filterProjectAccess(projectId)
-        try:
-            userId = self.getUserIdByName(username)
-        except mint_error.ItemNotFound:
-            userId = 0
+
+        userId = None
+        if username != self.cfg.authUser:
+            try:
+                userId = self.getUserIdByName(username)
+            except mint_error.ItemNotFound:
+                pass
+
         self.commits.new(projectId, time.time(), name, version, userId)
         return True
 
