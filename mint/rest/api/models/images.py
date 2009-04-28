@@ -93,6 +93,8 @@ class Image(Model):
     trailingVersion = fields.CharField()
     troveFlavor = fields.FlavorField()
     troveLastChanged = fields.DateTimeField()
+    released = fields.BooleanField()
+    published = fields.BooleanField()
     version = fields.UrlField('products.versions', 
                              ['hostname', 'version'])
     stage = fields.UrlField('products.versions.stages', 

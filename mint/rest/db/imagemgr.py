@@ -34,7 +34,8 @@ class ImageManager(manager.Manager):
         hostname = fqdn.split('.')[0]
         # TODO: pull amiId out of here and move into builddata dict ASAP
         sql = '''SELECT Builds.buildId as imageId, hostname,
-               pubReleaseId as "release",
+               Builds.pubReleaseId as "release",
+               timePublished,
                buildType as imageType, Builds.name, Builds.description, 
                troveName, troveVersion, troveFlavor, troveLastChanged,
                Builds.timeCreated, CreateUser.username as creator, 
@@ -45,10 +46,12 @@ class ImageManager(manager.Manager):
             FROM Builds
             JOIN Projects USING(projectId)
             %(join)s
+            LEFT JOIN PublishedReleases
+            ON(Builds.pubReleaseId=PublishedReleases.pubReleaseId)
             LEFT JOIN ProductVersions 
                 ON(Builds.productVersionId=ProductVersions.productVersionId)
-            LEFT JOIN Users as CreateUser ON (createdBy=CreateUser.userId)
-            LEFT JOIN Users as UpdateUser ON (updatedBy=UpdateUser.userId)
+            LEFT JOIN Users as CreateUser ON (Builds.createdBy=CreateUser.userId)
+            LEFT JOIN Users as UpdateUser ON (Builds.updatedBy=UpdateUser.userId)
             LEFT JOIN BuildData ON (BuildData.buildId=Builds.buildId 
                                     AND BuildData.name='amiId')
             WHERE hostname=? AND deleted=0 %(where)s''' 
@@ -65,6 +68,8 @@ class ImageManager(manager.Manager):
         images = []
         for row in rows:
             imageType = row['imageType']
+            row['released'] = bool(row['release'])
+            row['published'] = bool(row.pop('timePublished', False))
             row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
             row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
             row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
@@ -183,7 +188,7 @@ class ImageManager(manager.Manager):
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
 
     def listImagesForRelease(self, fqdn, releaseId, update=False):
-        return self._getImages(fqdn, '', ' AND pubReleaseId=?',
+        return self._getImages(fqdn, '', ' AND Builds.pubReleaseId=?',
                                [releaseId], update=update)
 
     def listImagesForProductVersion(self, fqdn, version, update=False):

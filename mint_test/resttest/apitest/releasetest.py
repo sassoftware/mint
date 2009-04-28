@@ -47,7 +47,19 @@ class ReleasesTest(restbase.BaseRestTest):
         assert(releases[0].timePublished)
 
 
-
+    def testImagesShowPublished(self):
+        db = self.openMintDatabase()
+        self.setDbUser(db, 'adminuser')
+        client = self.getRestClient(admin=True, username='adminuser')
+        uri = 'products/testproject/releases?limit=1'
+        req, results = client.call('GET', uri)
+        releases = results.releases
+        assert(len(releases) == 1)
+        assert(releases[0].releaseId == 2)
+        assert(releases[0].timePublished)
+        req, results = client.call('GET', 'products/testproject/releases/2/images')
+        assert(results.images[0].published)
+        assert(results.images[0].released)
 
 
 testsetup.main()

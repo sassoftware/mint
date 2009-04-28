@@ -26,7 +26,6 @@ except ImportError:
 import mint.db.database
 import mint.rest.db.reposmgr
 import mint.rest.db.database
-from mint.db import grouptrove
 from mint import users
 from mint.lib import data
 from mint.lib import database
