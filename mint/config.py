@@ -214,7 +214,7 @@ class MintConfig(ConfigFile):
     supportContactHTML      = (CfgString, 'Contact information in HTML.')
     supportContactTXT       = (CfgString, 'Contact information in text.')
     newsRssFeed             = (CfgString, '')
-    noticesRssFeed          = (CfgString, None)
+    noticesRssFeed          = (CfgList(CfgString), [])
     announceLink            = (CfgString, '')
     googleAnalyticsTracker  = (CfgBool, False)
 
