@@ -41,9 +41,23 @@ def main():
         log.info("Nothing to do; exiting.")
         return 0
 
-    log.debug("Polling notices from RSS feed %s", cfg.noticesRssFeed)
+    store = notices_store.createStore(os.path.join(cfg.dataPath, 'notices'),
+            cfg.authUser)
+    baseUrl = 'https://%s/api/notices/contexts' % cfg.secureHost
+
+    rc = 0
+    for url in cfg.noticesRssFeed:
+        rc_one = pull(store, url, baseUrl)
+        if rc_one:
+            rc = rc_one
+
+    return rc
+
+
+def pull(store, url, baseUrl):
+    log.info("Pulling notices from RSS feed %s", url)
     try:
-        xmlStream = urllib.urlopen(cfg.noticesRssFeed)
+        xmlStream = urllib.urlopen(url)
     except:
         log.exception("Error fetching notices RSS feed:")
         return 1
@@ -54,14 +68,9 @@ def main():
         log.exception("Error parsing notices RSS feed:")
         return 1
 
-    store = notices_store.createStore(os.path.join(cfg.dataPath, 'notices'),
-            cfg.authUser)
-
     # First, grab all the available notices (non-logged-in)
     upstreamItems = [x.content for x in store.enumerateStoreGlobal('default')]
     upstreamItems = dict((_hashItem(x), x) for x in upstreamItems)
-
-    baseUrl = 'https://%s/api/notices/contexts' % cfg.secureHost
 
     for item in items:
         if _hashItem(item, local = True) in upstreamItems:
@@ -80,6 +89,8 @@ def main():
                 xml_declaration=False, encoding='UTF-8')
         store.storeGlobal(None, notice)
         log.info("Added notice %s", guid)
+
+    return 0
 
 
 def parseFeedStream(xmlStream):
