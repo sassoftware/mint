@@ -179,6 +179,11 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         return self._write("builds", builds = builds, publishedReleases = publishedReleases)
 
     @writersOnly
+    def groups(self, auth):
+        # leave this here until old UI is completely removed
+        return self._write("groups")
+
+    @writersOnly
     @productversion.productVersionRequired
     def newBuildsFromProductDefinition(self, auth):
         return self._write("newBuildsFromProductDefinition")
