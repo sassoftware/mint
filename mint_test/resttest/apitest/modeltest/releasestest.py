@@ -16,7 +16,7 @@ class ReleaseModelTest(mint_rephelp.MintDatabaseHelper):
     def testImageListModel(self):
         release = converter.fromText('xml', data, models.Release, None,
                                     None)
-        self.assertEquals(release.imageIds, [])
+        self.assertEquals(release.imageIds, None)
 
 data = """<?xml version='1.0' encoding='UTF-8'?>
 <release id="http://%(server)s:%(port)s/api/products/testproject/releases/1">
