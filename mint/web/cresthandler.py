@@ -28,7 +28,8 @@ def getCrestHandler(cfg, db):
     crestHandler.addCallback(crestCallback)
     db = database.Database(cfg, db)
     db = restDatabase.Database(cfg, db)
-    crestHandler.addCallback(CrestAuthenticationCallback(cfg, db))
+    crestHandler.addCallback(CrestAuthenticationCallback(cfg, db,
+        crestController))
     return crestHandler, crestCallback
 
 
