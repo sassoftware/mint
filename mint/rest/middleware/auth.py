@@ -9,7 +9,10 @@ import base64
 from mod_python import Cookie
 
 from restlib.response import Response
+from mint import maintenance
 from mint import shimclient
+from mint.rest.api import models
+from mint.rest.modellib import converter
 from mint.session import SqlSession
 
 # Decorator for public (unauthenticated) methods/functions
@@ -28,9 +31,10 @@ def noDisablement(method):
 
 class AuthenticationCallback(object):
 
-    def __init__(self, cfg, db):
+    def __init__(self, cfg, db, controller):
         self.cfg = cfg
         self.db = db
+        self.controller = controller
 
     def getAuth(self, request):
         if not 'Authorization' in request.headers:
@@ -115,15 +119,43 @@ class AuthenticationCallback(object):
             self.db.siteAuth.refresh()
 
     def checkDisablement(self, request, viewMethod):
-        # Disablement check
+        """
+        Check whether the rBuilder is disabled for maintenance or
+        authentication reasons. If it is, and the method being
+        invoked isn't flagged as always available, raise a fault.
+        """
         if not getattr(viewMethod, 'dont_disable', False):
-            if self.db.siteAuth and not self.db.siteAuth.isValid():
-                return Response(status=503, content_type="text/plain",
-                        content="The rBuilder's entitlement has expired.\n\n"
-                            "Please navigate to the rBuilder homepage for "
-                            "more information.",
-                        headers={'X-rBuilder-Error': 'site-disabled'})
+            mode = maintenance.getMaintenanceMode(self.cfg)
+            if mode == maintenance.NORMAL_MODE:
+                return
 
+            code = 503
+            if mode == maintenance.EXPIRED_MODE:
+                content = ("The rBuilder's entitlement has expired.\n\n"
+                        "Please navigate to the rBuilder homepage for "
+                        "more information.\n")
+                error = 'site-disabled'
+            elif mode == maintenance.LOCKED_MODE:
+                content = ("The rBuilder is currently in maintenance mode."
+                        "\n\nPlease contact your site administrator for more "
+                        "information.\n")
+                error = 'maintenance-mode'
+
+            # Flex can't get headers from error responses in Firefox
+            isFlash = 'HTTP_X_FLASH_VERSION' in request.headers
+
+            if not getattr(request, 'contentType', None):
+                request.contentType = 'text/plain'
+                request.responseType = 'xml'
+
+            if isFlash or request.contentType != 'text/plain':
+                fault = models.Fault(code=code, message=content)
+                content = converter.toText(request.responseType, fault,
+                        self.controller, request)
+                if isFlash:
+                    code = 200
+            return Response(content, content_type=request.contentType,
+                    status=code, headers={'X-rBuilder-Error': error})
 
     def processMethod(self, request, viewMethod, args, kwargs):
         response = self.checkDisablement(request, viewMethod)

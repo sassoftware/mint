@@ -10,7 +10,6 @@ from conary.lib import coveragehook
 
 from restlib.http import modpython
 
-from mint import maintenance
 from mint.db import database
 from mint.rest.api import site
 from mint.rest.db import database as restDatabase
@@ -27,7 +26,8 @@ class RbuilderRESTHandler(object):
         db = restDatabase.Database(cfg, db)
         controller = site.RbuilderRestServer(self.cfg, db)
         self.handler = self.httpHandlerClass(controller)
-        self.handler.addCallback(auth.AuthenticationCallback(self.cfg, db))
+        self.handler.addCallback(auth.AuthenticationCallback(self.cfg, db,
+            controller))
         self.handler.addCallback(formatter.FormatCallback(controller))
         self.handler.addCallback(error.ErrorCallback(controller))
 
@@ -37,7 +37,6 @@ class RbuilderRESTHandler(object):
 
 def restHandler(req, db, cfg, pathInfo = None):
     coveragehook.install()
-    maintenance.enforceMaintenanceMode(cfg, skipExpired=True)
     topLevel = os.path.join(cfg.basePath, 'api')
     db = database.Database(cfg, db=db)
     handler = RbuilderRESTHandler(topLevel, cfg, db)

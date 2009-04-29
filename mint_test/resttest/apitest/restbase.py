@@ -10,6 +10,8 @@ import testsetup
 
 import os
 import re
+import subprocess
+import tempfile
 import time
 
 from restlib.http import request
@@ -137,6 +139,35 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         db = self.openMintDatabase()
         reposMgr = db.productMgr.reposMgr
         return reposMgr.getRepositoryClientForProduct('testproject')
+
+    def assertBlobEquals(self, actual, expected):
+        """
+        Like assertEquals but prints a diff.
+        """
+        if actual != expected:
+            if actual and expected:
+                actualF = tempfile.NamedTemporaryFile(prefix='actual-')
+                actualF.write(actual)
+                actualF.flush()
+
+                expectedF = tempfile.NamedTemporaryFile(prefix='expected-')
+                expectedF.write(expected)
+                expectedF.flush()
+
+                proc = subprocess.Popen(['/usr/bin/diff', '-u',
+                    expectedF.name, actualF.name],
+                    shell=False, stdout=subprocess.PIPE)
+                diff, _ = proc.communicate()
+
+                raise self.failureException("Results do not match.\nDiff:\n%s"
+                        % (diff,))
+            elif actual:
+                raise self.failureException("Expected no output, actual "
+                        "result is:\n%s" % (actual,))
+            else:
+                raise self.failureException("Got no output, expected "
+                        "result is:\n%s" % (expected,))
+
 
 class Controller(object):
     def __init__(self, cfg, restDb, username=None, admin=False):

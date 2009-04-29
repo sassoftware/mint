@@ -41,9 +41,10 @@ class SiteTest(restbase.BaseRestTest):
   <products href="http://%(server)s:%(port)s/api/products/"/>
   <users href="http://%(server)s:%(port)s/api/users/"/>
   <platforms href="http://%(server)s:%(port)s/api/platforms"/>
+  <maintMode>false</maintMode>
 </rbuilderStatus>
 """
-        self.failUnlessEqual(response,
+        self.assertBlobEquals(response,
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
                          conaryversion=conaryConstants.version))
