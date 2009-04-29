@@ -76,6 +76,8 @@ class ReleasesTest(restbase.BaseRestTest):
                 'products/testproject/releases/1/images',
                 body="<image><imageId>%s</imageId></image>" % imageId)
         assert(results.imageId == imageId)
+        assert(results.released == True)
+        assert(results.published == False)
 
 
 
