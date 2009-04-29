@@ -74,7 +74,7 @@ class ProductReleasesController(base.BaseController):
     @requires('image', models.ImageId)
     def addImage(self, request, hostname, releaseId, image):
         self.db.addImageToRelease(hostname, releaseId, image.imageId)
-        return self.get(request, hostname, releaseId)
+        return self.db.getImageForProduct(hostname, image.imageId)
 
     @requires('images', models.ImageList)
     def setImages(self, request, hostname, releaseId, images):

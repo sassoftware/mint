@@ -10,6 +10,7 @@ import testsetup
 import restbase
 import mint_rephelp
 
+from mint import buildtypes
 from mint.rest import errors
 
 class ReleasesTest(restbase.BaseRestTest):
@@ -60,6 +61,22 @@ class ReleasesTest(restbase.BaseRestTest):
         req, results = client.call('GET', 'products/testproject/releases/2/images')
         assert(results.images[0].published)
         assert(results.images[0].released)
+
+    def testAddImageToRelease(self):
+        db = self.openMintDatabase()
+        self.setDbUser(db, 'adminuser')
+        imageId = self.createImage(db, self.productShortName,
+                                   buildtypes.TARBALL,
+                                   name = 'Image 3')
+        self.setImageFiles(db, self.productShortName, imageId)
+
+        client = self.getRestClient(admin=True, username='adminuser')
+        uri = 'products/testproject/releases?limit=1'
+        req, results = client.call('POST',
+                'products/testproject/releases/1/images',
+                body="<image><imageId>%s</imageId></image>" % imageId)
+        assert(results.imageId == imageId)
+
 
 
 testsetup.main()
