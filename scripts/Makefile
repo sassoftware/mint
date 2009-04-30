@@ -9,6 +9,7 @@ static_files =				\
 	check-repository		\
 	deleteproject			\
 	ec2-terminator			\
+	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
 	init-extproducts	        \
