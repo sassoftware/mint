@@ -566,6 +566,7 @@ class MigrateTo_47(SchemaMigration):
         cu.execute("UPDATE Projects SET isAppliance = 1 WHERE isAppliance IS NULL")
         cu.execute("UPDATE Projects SET shortname = hostname WHERE shortname IS NULL")
         cu.execute("UPDATE Projects SET creatorId = NULL WHERE creatorId = -1")
+        cu.execute("DELETE FROM Builds WHERE buildType IS NULL")
         cu.execute("UPDATE Builds SET productVersionId = NULL WHERE productVersionId = 0")
         # End fixups
 
