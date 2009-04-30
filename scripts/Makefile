@@ -22,6 +22,7 @@ static_files =				\
 	refresh-auth			\
 	rmake-setup			\
 	rss-update			\
+	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
