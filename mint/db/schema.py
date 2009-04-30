@@ -226,7 +226,7 @@ def _createBuilds(db):
             name                varchar(255)    NOT NULL    DEFAULT '',
             version             varchar(32)     NOT NULL    DEFAULT '',
             description         text,
-            timeCreated         numeric(14,3)   NOT NULL,
+            timeCreated         numeric(14,3),
             createdBy           integer
                 REFERENCES Users ( userId ) ON DELETE SET NULL,
             timeUpdated         numeric(14,3),
@@ -251,12 +251,12 @@ def _createBuilds(db):
                 REFERENCES Projects ON DELETE CASCADE,
             pubReleaseId         integer
                 REFERENCES PublishedReleases ON DELETE SET NULL,
-            buildType            integer        NOT NULL,
-            name                 varchar(255)   NOT NULL,
+            buildType            integer,
+            name                 varchar(255),
             description          text,
-            troveName            varchar(128)   NOT NULL,
-            troveVersion         varchar(255)   NOT NULL,
-            troveFlavor          varchar(4096)  NOT NULL,
+            troveName            varchar(128),
+            troveVersion         varchar(255),
+            troveFlavor          varchar(4096),
             troveLastChanged     numeric(14,3),
             timeCreated          numeric(14,3),
             createdBy            integer
@@ -268,9 +268,9 @@ def _createBuilds(db):
             buildCount           integer        NOT NULL    DEFAULT 0,
             productVersionId     integer
                 REFERENCES ProductVersions ON DELETE SET NULL,
-            stageName            varchar(255),
-            status               integer                    DEFAULT -1,
-            statusMessage        varchar(255)               DEFAULT ''
+            stageName            varchar(255)               DEFAULT '',
+            status               integer DEFAULT -1,
+            statusMessage        varchar(255) DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         changed = True
