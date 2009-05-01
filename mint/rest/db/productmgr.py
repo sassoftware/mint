@@ -185,7 +185,7 @@ class ProductManager(manager.Manager):
                       timeModified=time.time())
         if prodtype is not None:
             params['prodtype'] = prodtype
-            params['isAppliance'] = prodtype == 'Appliance'
+            params['isAppliance'] = int(prodtype == 'Appliance')
 
         keys = '=?, '.join(params) + '=?'
         values = params.values()
