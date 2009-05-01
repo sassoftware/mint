@@ -378,6 +378,7 @@ class Database(DBInterface):
         self.productMgr.updateProduct(hostname, name=product.name,
                                       description=product.description,
                                       projecturl=product.projecturl,
+                                      prodtype=product.prodtype,
                                       commitEmail=product.commitEmail)
 
     @commitafter
