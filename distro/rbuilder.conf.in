@@ -75,6 +75,7 @@ acceptablePlatforms      centos.rpath.com@rpath:centos-5-devel
 acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 
 noticesRssFeed http://www.rpath.com/corp/index.php?option=com_bca-rss-syndicator&feed_id=3
+noticesRssFeed http://blogs.rpath.com/wpmu/rpath-technical-announcements/feed/
 
 # Include rAPA-generated proxy information
 includeConfigFile /etc/conary/config.d/httpProxy
