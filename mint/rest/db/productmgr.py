@@ -174,16 +174,25 @@ class ProductManager(manager.Manager):
         self.publisher.notify('ProductCreated', projectId)
         return projectId
 
-    def updateProduct(self, hostname, name, 
-                       description, projecturl, commitEmail):
+    def updateProduct(self, hostname, name,
+                       description, projecturl, commitEmail,
+                       prodtype=None):
         cu = self.db.cursor()
-        updateTime = time.time()
-        cu.execute('''UPDATE Projects SET name=?, description=?, projecturl=?,
-                                           commitEmail=?,
-                                           timeModified=?
-                      WHERE hostname=?''',
-                   name, description, projecturl, commitEmail, updateTime,
-                   hostname)
+        params = dict(name=name,
+                      description=description,
+                      projecturl=projecturl,
+                      commitEmail=commitEmail,
+                      timeModified=time.time())
+        if prodtype is not None:
+            params['prodtype'] = prodtype
+            params['isAppliance'] = prodtype == 'Appliance'
+
+        keys = '=?, '.join(params) + '=?'
+        values = params.values()
+        values.append(hostname)
+        cu.execute('''UPDATE Projects SET %s
+                      WHERE hostname=?''' % keys,
+                   *values)
 
     def createExternalProduct(self, title, hostname, domainname, url,
                               authInfo, mirror=False, backupExternal=False):
