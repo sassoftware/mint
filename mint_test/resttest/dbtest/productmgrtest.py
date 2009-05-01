@@ -100,6 +100,20 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].shortname, 'bar')
 
+    def testUpdateProduct(self):
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db, private=True)
+        product = db.getProduct('foo')
+        assert(product.prodtype == 'Appliance')
+        product.prodtype = 'Component'
+        product.description = 'new desc'
+        self.setDbUser(db, 'admin')
+        db.updateProduct('foo', product)
+        product = db.getProduct('foo')
+        assert(product.prodtype == 'Component')
+        assert(product.description == 'new desc')
+
     def testGetProductVersion(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
