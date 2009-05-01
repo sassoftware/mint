@@ -160,15 +160,14 @@ class rBASetup(rAASrvPlugin):
             auth = SiteAuthorization(mintCfg.siteAuthCfgPath, conaryCfg)
             if auth.isConfigured():
                 log.warning("Entitlement is already set; "
-                        "keeping rBuilder ID %s .", auth.getRbuilderId())
+                        "keeping rBuilder ID %s .", auth.rBuilderId)
                 return True
 
             newKey = auth.generate()
             self.server.setNewEntitlement(newKey)
 
-            rbuilderId = auth.getRbuilderId()
             log.info("Key successfully generated; your new rBuilder ID is %s .",
-                    rbuilderId)
+                    auth.rBuilderId)
             return True
         except:
             log.exception("Failed to generate entitlement")

@@ -74,8 +74,6 @@ acceptablePlatforms      sle.rpath.com@rpath:sles-10-devel
 acceptablePlatforms      centos.rpath.com@rpath:centos-5-devel
 acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 
-# Amazon DevPay product code
-ec2ProductCode           9961934F
 noticesRssFeed http://www.rpath.com/corp/index.php?option=com_bca-rss-syndicator&feed_id=3
 
 # Include rAPA-generated proxy information

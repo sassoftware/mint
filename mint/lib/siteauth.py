@@ -89,6 +89,25 @@ class XML_ActivateDocument(xobj.Document):
 
 
 # authz handle
+class Getter(object):
+    def __init__(self, path, encode=False):
+        self.path = path.split('.')
+        self.encode = encode
+
+    def __get__(self, instance, owner):
+        if not instance.xml:
+            return None
+        val = instance.xml.entitlement
+        for part in self.path:
+            val = getattr(val, part)
+        if val is None:
+            return None
+        if self.encode:
+            return val.encode('utf8')
+        else:
+            return val
+
+
 class SiteAuthorization(object):
     def __init__(self, cfgPath, conaryCfg=None):
         # NB: only set conaryCfg inside scripts. It enables some slow
@@ -305,16 +324,8 @@ class SiteAuthorization(object):
                 return daysRemaining
         return None
 
-    def getRbuilderId(self):
-        if self.xml:
-            return str(self.xml.entitlement.identity.rbuilderId)
-        return None
-
-    def getIdentityXML(self):
-        if self.xml:
-            return self.xml.entitlement.identity
-        else:
-            return None
+    rBuilderId = Getter('identity.rbuilderId', True)
+    ec2ProductCodes = Getter('credentials.ec2ProductCodes')
 
     def getIdentityModel(self):
         if self.xml:

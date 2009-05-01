@@ -220,7 +220,6 @@ class MintConfig(ConfigFile):
 
     # Build system
     anacondaTemplatesFallback   = (CfgString, 'conary.rpath.com@rpl:1')
-    ec2ProductCode          = (CfgString, None)
     packageCreatorConfiguration = (CfgPath, None)
     packageCreatorURL       = (CfgString, None)
     visibleBuildTypes       = (CfgList(CfgBuildEnum))
@@ -253,6 +252,7 @@ class MintConfig(ConfigFile):
     awsPublicKey            = None
     awsPrivateKey           = None
     bootableX8664           = (CfgBool, True)
+    ec2ProductCode          = (CfgString, None)
     localAddrs              = (CfgList(CfgString), ['127.0.0.1'])
     bannersPerPage          = (CfgInt, 5)
     displaySha1             = (CfgBool, True)

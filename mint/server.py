@@ -313,6 +313,7 @@ class MintServer(object):
                 self.restDb = mint.rest.db.database.Database(self.cfg, self.db,
                                                              dbOnly=True)
                 self.restDb.setAuth(self.auth, authToken)
+                self.siteAuth.refresh()
                 try:
                     maintenance.enforceMaintenanceMode(self.cfg, self.auth)
                 except mint_error.MaintenanceMode:
@@ -2580,8 +2581,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     amiData['ec2LaunchUsers'] = writers + readers
                     amiData['ec2LaunchGroups'] = []
 
-            if self.cfg.ec2ProductCode:
-                amiData['ec2ProductCode'] = self.cfg.ec2ProductCode
+            if self.siteAuth.ec2ProductCodes:
+                amiData['ec2ProductCode'] = self.siteAuth.ec2ProductCodes
 
             r['amiData'] = amiData
 
@@ -5046,6 +5047,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
         self._platformNameCache = None
         self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
+        self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
 
         global callLog
         if self.cfg.xmlrpcLogFile:
