@@ -32,6 +32,7 @@ from mint.lib import database
 from mint.lib import maillib
 from mint.lib import persistentcache
 from mint.lib import profile
+from mint.lib import siteauth
 from mint import amiperms
 from mint import builds
 from mint import ec2
