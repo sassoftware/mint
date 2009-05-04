@@ -229,19 +229,6 @@ class MintApp(WebHandler):
         self.SITE = self.siteHost + self.basePath
         self.isOwner = self.userLevel == userlevels.OWNER or self.auth.admin
 
-        if self.session.has_key('groupTroveId') and self.auth.authorized:
-            try:
-                self.groupTrove = self.client.getGroupTrove(self.session['groupTroveId'])
-            except ItemNotFound:
-                del self.session['groupTroveId']
-                self.groupTrove = None
-                self.groupProject = None
-            else:
-                self.groupProject = self.client.getProject(self.groupTrove.projectId)
-        else:
-            self.groupTrove = None
-            self.groupProject = None
-
         # Handle messages stashed in the session
         self.infoMsg = self.session.setdefault('infoMsg', '')
         self.searchType = self.session.setdefault('searchType', getProjectText().title()+"s")
@@ -282,8 +269,6 @@ class MintApp(WebHandler):
             'userLevel':        self.userLevel,
             'user':             self.user,
             'isOwner':          self.isOwner,
-            'groupTrove':       self.groupTrove,
-            'groupProject':     self.groupProject,
             'infoMsg':          self.infoMsg,
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,

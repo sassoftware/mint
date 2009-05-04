@@ -615,17 +615,6 @@ class SiteHandler(WebHandler):
         elif type == "Users" and self.auth.authorized:
             return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
-            if self.groupTrove and not removed:
-                for x in self.groupTrove.listTroves():
-                    if x['trvName'] == 'group-appliance-platform':
-                        label = versions.Label(x['trvLabel'])
-                        labelLimiter = "branch=%s:%s" % \
-                                (label.getNamespace(), label.getLabel())
-                        if labelLimiter not in search:
-                            search += " %s" % labelLimiter
-                        self._setInfo("Because you are building a group, only search results compatible with your group are shown.")
-                        break
-
             return self._packageSearch(search, limit, offset, removed)
         else:
             self.session['searchType'] = ''
@@ -671,10 +660,7 @@ class SiteHandler(WebHandler):
 
     def _formatPackageSearch(self, results):
         pText = getProjectText().title()
-        if self.groupTrove:
-            columns = ('Package', pText, '')
-        else:
-            columns = ('Package', pText)
+        columns = ('Package', pText)
 
         formattedRows = []
         for troveName, troveVersionStr, projectId in results:
@@ -690,13 +676,6 @@ class SiteHandler(WebHandler):
                 'columns':  [(packageUrl, troveName), (reposUrl, projectName)],
                 'desc':     '%s=%s/%s' % (troveName, ver.trailingLabel(), ver.trailingRevision()),
             }
-
-            # show the group trove links?
-            if self.groupTrove:
-                name = 'Add to %s' % self.groupTrove.recipeName
-                link = self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % \
-                    (self.groupTrove.projectName, self.groupTrove.getId(), quote(troveName), troveVersionStr, quote(self.req.unparsed_uri))
-                row['columns'].append((link, name))
 
             formattedRows.append(row)
         return formattedRows, columns
