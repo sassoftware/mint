@@ -24,7 +24,7 @@ from conary.dbstore import sqlerrors, sqllib
 from conary.lib.tracelog import logMe
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(47, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 0)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -269,8 +269,8 @@ def _createBuilds(db):
             productVersionId     integer
                 REFERENCES ProductVersions ON DELETE SET NULL,
             stageName            varchar(255)               DEFAULT '',
-            status               integer DEFAULT -1,
-            statusMessage        varchar(255) DEFAULT ''
+            status               integer                    DEFAULT -1,
+            statusMessage        text                       DEFAULT ''
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
         changed = True
@@ -368,46 +368,6 @@ def _createCommits(db):
         db.tables['Commits'] = []
         changed = True
     changed |= db.createIndex('Commits', 'CommitsProjectIdx', 'projectId')
-
-    return changed
-
-
-def _createJobs(db):
-    cu = db.cursor()
-    changed = False
-
-    if 'Jobs' not in db.tables:
-        cu.execute("""
-        CREATE TABLE Jobs (
-            jobId           %(PRIMARYKEY)s,
-            buildId         integer,
-            groupTroveId    integer,
-            owner           bigint,
-            userId          integer,
-            status          integer,
-            statusMessage   text,
-            timeSubmitted   numeric(14,3),
-            timeStarted     numeric(14,3),
-            timeFinished    numeric(14,3)
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['Jobs'] = []
-        changed = True
-    changed |= db.createIndex('Jobs', 'JobsBuildIdx', 'buildId')
-    changed |= db.createIndex('Jobs', 'JobsGroupTroveIdx', 'groupTroveId')
-    changed |= db.createIndex('Jobs', 'JobsUserIdx', 'userId')
-
-    if 'JobData' not in db.tables:
-        cu.execute("""
-        CREATE TABLE JobData (
-            jobId           integer,
-            name            varchar(32),
-            value           text,
-            valueType       integer
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['JobData'] = []
-        changed = True
-    changed |= db.createIndex('JobData', 'JobDataIdx', 'jobId, name',
-        unique = True)
 
     return changed
 
@@ -783,7 +743,6 @@ def createSchema(db, doCommit=True):
     changed |= _createProductVersions(db)
     changed |= _createBuilds(db)
     changed |= _createCommits(db)
-    changed |= _createJobs(db)
     changed |= _createPackageIndex(db)
     changed |= _createNewsCache(db)
     changed |= _createMirrorInfo(db)

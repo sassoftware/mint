@@ -539,17 +539,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         assert 'foo' in d
 
     @fixtures.fixture('Full')
-    def testGetRelTroveCompat(self, db, data):
-        client = self.getClient('owner')
-
-        # make a legitimate call to set auth values
-        client.getBuild(data['buildId'])
-        # assert backwards compat function
-        self.failIf(client.server._server.getReleaseTrove(data['buildId']) != \
-                    client.server._server.getBuildTrove(data['buildId']),
-                    "release trove not found. not backwards compatible")
-
-    @fixtures.fixture('Full')
     def testMissingBuildTrove(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
