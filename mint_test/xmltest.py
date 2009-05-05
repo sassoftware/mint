@@ -17,7 +17,7 @@ from mint.server import deriveBaseFunc, checkParam, \
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 
 SKIP_PRIVATE = ('callWrapper', 'getBuildStatus', 'getGroupTroves',
-                'getJobStatus', 'addGroupTroveItem', 'delGroupTroveItem',
+                'addGroupTroveItem', 'delGroupTroveItem',
                 'addGroupTroveItemByProject', 'setGroupTroveItemVersionLock',
                 'getTroveVersionsByArch', 'setUserLevel', 'getGroupTrove',
                 'getBuild', 'getUserPublic', 'listActiveJobs', 'delMember',

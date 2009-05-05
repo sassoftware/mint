@@ -40,56 +40,6 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
         </tr>
     </div>
 
-    <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove">
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js?v={cacheFakeoutVersion}"/>
-        <script type="text/javascript">
-            addLoadEvent(initLinkManager);
-            addLoadEvent(initGroupTroveManager);
-        </script>
-        <div class="right-palette">
-            <img class="left" src="${cfg.staticPath}apps/mint/images/header_user_left.png" alt="" />
-            <img class="right" src="${cfg.staticPath}apps/mint/images/header_user_right.png" alt="" />
-            <div class="rightBoxHeader">
-                <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" alt="X" class="right" /></a>
-                <span class="userBoxBracket">[</span> <span class="emphasisHeaderText">Group Builder</span> <span class="userBoxBracket">]</span>
-            </div>
-
-            <div id="groupBuilderItems" class="rightBoxBody">
-                Current Group: <a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}" title="${groupTrove.recipeName}"> ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 30)}</a>
-            <table>
-            <tr>
-                <td><img alt="Lock Version" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
-                <td>Trove</td>
-                <td>${projectText().title()}</td>
-                <td></td>
-            </tr>
-            <tr py:for="item in groupTrove.listTroves()" id="groupbuilder-item-${item['groupTroveItemId']}">
-                <td py:if="item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
-                <td py:if="not item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
-                <td py:if="item['versionLock']"><a href="${item['baseUrl']}troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}" id="groupbuilder-item-trvname-${item['groupTroveItemId']}"> ${truncateForDisplay(item['trvName'], maxWordLen=14)}</a></td>
-                <td py:if="not item['versionLock']"><a href="${item['baseUrl']}troveInfo?t=${quote(item['trvName'])}" title="Name: ${item['trvName']}; Label: ${item['trvLabel']}" id="groupbuilder-item-trvname-${item['groupTroveItemId']}">${truncateForDisplay(item['trvName'], maxWordLen=14)}</a></td>
-                <td><a href="${item['baseUrl']}browse">${truncateForDisplay(item['shortHost'], maxWordLen=6)}</a></td>
-                <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">x</a></td>
-            </tr>
-            <tr id="groupbuilder-example" style="display:none">
-                <td id="groupbuilder-example versionLock"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-TROVEID" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
-                <td id="groupbuilder-example name"><a href="#">Trove</a></td>
-                <td id="groupbuilder-example projectName">${projectText().title()}</td>
-                <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
-            </tr>
-            </table> 
-      
-            <div class="groupcook"><p><a href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}"><img src="${cfg.staticPath}/apps/mint/images/cook_this_group_button.png" alt="Cook this Group" /></a></p></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="builderPane" py:def="builderPane">
-        <div py:if="groupTrove">
-            ${groupTroveBuilder()}
-        </div>
-    </div>
-
     <div py:def="recentBuildsMenu(builds, display='none')" py:strip="True">
       <div id="builds" class="palette" py:if="builds">
         <h3 onclick="javascript:toggle_display('recentBuild_items');">

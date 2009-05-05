@@ -44,7 +44,6 @@ class TableCache(object):
         self.membershipRequests = requests.MembershipRequestTable(db)
         self.commits = stats.CommitsTable(db)
         self.buildData = builds.BuildDataTable(db)
-        self.jobData = jobs.JobDataTable(db)
         self.inboundMirrors = mirror.InboundMirrorsTable(db)
         self.outboundMirrors = mirror.OutboundMirrorsTable(db, cfg)
         self.updateServices = mirror.UpdateServicesTable(db, cfg)
@@ -98,7 +97,6 @@ class Database(object):
         self.membershipRequests = tables.membershipRequests
         self.commits = tables.commits
         self.buildData = tables.buildData
-        self.jobData = tables.jobData
         self.inboundMirrors = tables.inboundMirrors
         self.outboundMirrors = tables.outboundMirrors
         self.updateServices = tables.updateServices

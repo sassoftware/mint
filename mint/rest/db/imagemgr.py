@@ -181,10 +181,9 @@ class ImageManager(manager.Manager):
                      (SELECT urlId FROM BuildFiles
                       JOIN BuildFilesUrlsMap USING(FileId)
                       WHERE buildId=?)''', imageId)
-        cu.execute('''DELETE FROM BuildFilesUrlsMap WHERE urlId IN
-                     (SELECT urlId FROM BuildFiles
-                      JOIN BuildFilesUrlsMap USING(FileId)
-                      WHERE buildId=?)''', imageId)
+        cu.execute("""DELETE FROM BuildFilesUrlsMap
+            WHERE fileId IN ( SELECT fileId FROM BuildFiles WHERE buildId = ? )
+            """, imageId)
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
 
     def listImagesForRelease(self, fqdn, releaseId, update=False):

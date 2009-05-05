@@ -557,9 +557,6 @@ class MigrateTo_47(SchemaMigration):
         if self.db.driver == 'sqlite':
             rebuild_table(self.db, "UrlDownloads",
                     ['urlId', 'timeDownloaded', 'ip'])
-            rebuild_table(self.db, "JobData",
-                    ['jobId', 'name', 'value', 'valueType'],
-                    ['jobId', 'name', 'value', ('valueType', 'dataType')])
             rebuild_table(self.db, "BuildFiles",
                     ['fileId', 'buildId', 'idx', 'title', 'size', 'sha1'])
 
@@ -620,6 +617,24 @@ class MigrateTo_47(SchemaMigration):
             schema.createSchema(self.db, doCommit=False)
 
         return True
+
+
+class MigrateTo_48(SchemaMigration):
+    Version = (48, 0)
+
+    # 48.0
+    # - Dropped Jobs and JobsData tables
+    # - Changed type of build status column to "text"
+    def migrate(self):
+        cu = self.db.cursor()
+        drop_tables(self.db, 'JobData', 'Jobs')
+
+        if self.db.driver != 'sqlite':
+            # Only change the column type on postgres/mysql which actually
+            # support doing so trivially; on sqlite we're just going to be
+            # migrating to postgres anyway.
+            cu.execute("""ALTER TABLE Builds
+                    ALTER COLUMN statusMessage TYPE text""")
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################

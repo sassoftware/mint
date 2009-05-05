@@ -26,6 +26,3 @@ class FilesUrlsTable(database.KeyedTable):
     name = 'FilesUrls'
     key = 'urlId'
     fields = ['urlId', 'urlType', 'url']
-
-class JobDataTable(data.GenericDataTable):
-    name = "JobData"

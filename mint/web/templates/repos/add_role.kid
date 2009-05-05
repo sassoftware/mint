@@ -21,7 +21,6 @@
                 
                 <div id="right" class="side">
                     ${resourcePane()}
-                    ${builderPane()}
                 </div>
 
                 <div id="middle">

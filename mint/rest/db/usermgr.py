@@ -50,7 +50,6 @@ class UserManager(manager.Manager):
                            userGroupId)
         cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                    userId)
-        cu.execute("UPDATE Jobs SET userId=0 WHERE userId=?", userId)
         cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
         cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)

@@ -23,7 +23,6 @@ from mint.web.templatesupport import projectText
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${builderPane()}
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 25)}</h1>

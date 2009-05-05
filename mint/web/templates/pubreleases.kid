@@ -70,7 +70,6 @@ from mint import buildtypes
             
                 <div id="right" class="side">
                     ${resourcePane()}
-                    ${builderPane()}
                 </div>
                 <div id="middle">
                     <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>

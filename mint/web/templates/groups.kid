@@ -25,7 +25,6 @@ from mint.web.templatesupport import projectText
                 <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
                 <div id="right" class="side">
                     ${resourcePane()}
-                    ${builderPane()}
                 </div>
                 
                 <div id="middle">

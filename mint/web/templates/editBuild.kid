@@ -60,7 +60,6 @@ allowNone = ['anaconda-custom', 'media-template']
                 <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
                 <div id="right" class="side">
                     ${projectsPane()}
-                    ${builderPane()}
                 </div>
 
             <div id="middle">

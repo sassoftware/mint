@@ -20,7 +20,6 @@
             <img class="pagetopright" src="${cfg.staticPath}/apps/mint/images/innerpage_topright.png" alt="" />
             <div id="right" class="side">
                 ${resourcePane()}
-                ${builderPane()}
                 <div class="right-palette">
                     <img class="left" src="${cfg.staticPath}apps/mint/images/header_user_left.png" alt="" />
                     <img class="right" src="${cfg.staticPath}apps/mint/images/header_user_right.png" alt="" />

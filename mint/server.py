@@ -598,16 +598,6 @@ class MintServer(object):
         self._filterProjectAccess(labelRow['projectId'])
 
 
-    def _filterJobAccess(self, jobId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM Jobs
-                        JOIN BuildsView USING(buildId)
-                      WHERE jobId = ?
-                    """, jobId)
-        r = cu.fetchall()
-        if len(r) and r[0][0]:
-            self._filterProjectAccess(r[0][0])
-
     def _filterBuildFileAccess(self, fileId):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM BuildFiles
@@ -1532,7 +1522,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                                userGroupId)
             cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                        userId)
-            cu.execute("UPDATE Jobs SET userId=0 WHERE userId=?", userId)
             cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
             cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
             cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
@@ -2833,29 +2822,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def deleteCommunityId(self, projectId, communityType):
         return self.communityIds.deleteCommunityId(projectId, communityType)
 
-    # job data calls
-    @typeCheck(int, str, ((str, int, bool),), int)
-    @requiresAuth
-    @private
-    def setJobDataValue(self, jobId, name, value, dataType):
-        self._filterJobAccess(jobId)
-        return self.jobData.setDataValue(jobId, name, value, dataType)
-
-    @typeCheck(int, str)
-    @private
-    def getJobDataValue(self, jobId, name):
-        self._filterJobAccess(jobId)
-        return self.jobData.getDataValue(jobId, name)
-
-    @typeCheck(int)
-    @private
-    def getReleaseTrove(self, releaseId):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        # releaseId -> buildId
-        buildId = releaseId
-        self._filterBuildAccess(buildId)
-        return self.builds.getTrove(buildId)
-
     @typeCheck(int)
     @private
     def getBuildTrove(self, buildId):
@@ -3486,25 +3452,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 jobstatus.statusNames[jobstatus.FINISHED]
             self.db.builds.update(buildId, status=status,
                                   statusMessage=message)
-        return { 'status' : status, 'message' : message }
-
-    @typeCheck(unicode)
-    @requiresAuth
-    def getJobStatus(self, uuid):
-        """
-        Note: this is only used for group builder cooks,
-        and needs to be deprecated.
-        """
-        # FIXME: re-enable filtering based on UUID
-        #self._filterJobAccess(jobId)
-
-        try:
-            mc = self._getMcpClient()
-            status, message = mc.jobStatus(uuid)
-        except (mcp_error.UnknownJob, mcp_error.NetworkError):
-            status, message = \
-                jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
-
         return { 'status' : status, 'message' : message }
 
     # session management
