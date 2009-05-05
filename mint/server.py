@@ -2201,7 +2201,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def newBuildWithOptions(self, projectId, buildName,
                             groupName, groupVersion, groupFlavor,
-                            buildType, buildSettings):
+                            buildType, buildSettings, start=False):
         self._filterProjectAccess(projectId)
         jsversion = self._getJSVersion()
 
@@ -2275,6 +2275,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             newBuild.setDataValue(name, value)
 
+        if start:
+            self.startImageJob(buildId)
         return buildId
 
     def _resolveTrove(self, groupList, flavorSet, archFlavor, customFlavor):
