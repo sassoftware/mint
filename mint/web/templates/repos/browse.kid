@@ -17,18 +17,6 @@ def pluralTroves(c):
 from mint.helperfuncs import truncateForDisplay
 ?>
 
-    <span py:def="adder(package, component='')" class="right"
-        py:if="groupTrove and not package.endswith(':source') and package != groupTrove.recipeName">
-        <?python
-            if component:
-                package += ":" + component
-            from mint.helperfuncs import truncateForDisplay
-        ?>
-        <a py:if="groupTrove" href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${groupTrove.recipeName}">
-            Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
-        </a>
-    </span>
-
     <head>
         <title>${formatTitle('Repository Browser: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
     </head>
@@ -77,7 +65,6 @@ from mint.helperfuncs import truncateForDisplay
                     </tr>
                     <tr py:for="i, package in enumerate(packages)">
                         <td class="browse-package">
-                        ${adder(package)}
                         <a href="troveInfo?t=${quote(package)}" title="${package}">${truncateForDisplay(package, maxWordLen = 42)}</a></td>
                     </tr>
                     </table>

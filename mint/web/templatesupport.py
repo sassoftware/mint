@@ -23,10 +23,6 @@ def injectVersion(version):
     parts[-1] = str(time.time()) + ':' + parts[-1]
     return '/'.join(parts)
 
-def isGroupBuilderLegal(groupTrove, trv):
-    """Returns True if 'trv' is legal to add to a group builder project."""
-    return groupTrove and not groupTrove.troveInGroup(trv.getName())
-
 def dictToJS(d):
     """Returns dict as a str with keys converted to str as well"""
     return str(dict([(str(x[0]), x[1]) for x in d.iteritems()]))

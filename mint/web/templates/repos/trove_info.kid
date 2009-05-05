@@ -8,7 +8,6 @@ import time
 from urllib import quote
 from mint import userlevels
 from mint.helperfuncs import splitVersionForDisplay, truncateForDisplay
-from mint.web.templatesupport import isGroupBuilderLegal
 from conary import deps
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -44,7 +43,7 @@ else:
                 <tr>
             <th>Version:</th>
             <td><div id="shortVersion"><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().getSourceVersion().trailingLabel().getNamespace()), str(trove.getVersion().getSourceVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().getSourceVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/expand_string.gif"/></span></div>
-            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/collapse_string.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
+            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion().getSourceVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/collapse_string.gif"/></span></div></td>
         </tr>
         <tr py:if="lineage != '[]'">
             <th>${parentType}:</th>
@@ -62,22 +61,6 @@ else:
             </td>
         </tr>
     </table>
-
-    <span py:def="lockedAdder(trove, quotedVersion, referer)" style="float: right;" py:if="isGroupBuilderLegal(groupTrove, trove)">
-        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=$quotedVersion;versionLock=1;referer=$referer"
-           title="Add this exact version to ${groupTrove.recipeName}">
-            Add this exact version to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
-        </a>
-    </span>
-
-    <span py:def="adder(trove, quotedVersion, quotedLabel, referer)" style="float: right;"
-          py:if="isGroupBuilderLegal(groupTrove, trove)">
-        <a py:if="isGroupBuilderLegal(groupTrove, trove)"
-           title="Add to ${groupTrove.recipeName}"
-           href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=$quotedVersion;referer=$referer">
-            Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
-        </a>
-    </span>
 
     <tr py:def="referencesLink(title, n, v)" py:if="auth.authorized and cfg.allowTroveRefSearch and not cfg.rBuilderOnline">
         <th>Find references</th>
@@ -107,12 +90,12 @@ else:
         ?>
         <tr>
             <th style="font-weight: bold;">$title name:</th>
-            <td style="font-weight: bold;" title="${trove.getName()}">${adder(trove, quotedVersion, quotedLabel, quote(req.unparsed_uri))} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td>
+            <td style="font-weight: bold;" title="${trove.getName()}">${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td>
         </tr>
         <tr>
             <th>Version:</th>
             <td><div id="shortVersion" ><span style="cursor: pointer;" onclick="swapDisplay('shortVersion', 'longVersion');">${'%s:%s' % (str(trove.getVersion().trailingLabel().getNamespace()), str(trove.getVersion().trailingLabel().getLabel()))}/${str(trove.getVersion().trailingRevision().getVersion())}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/expand_string.gif"/></span></div>
-            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/collapse_string.gif"/></span></div> ${lockedAdder(trove, quotedVersion, quote(req.unparsed_uri))}</td>
+            <div id="longVersion" style="display: none;"><span style="cursor: pointer;" onclick="swapDisplay('longVersion', 'shortVersion');">${splitVersionForDisplay(str(trove.getVersion()))}<img style="padding-left: 10px;" src="${cfg.staticPath}/apps/mint/images/collapse_string.gif"/></span></div></td>
         </tr>
         <tr py:if="lineage != '[]'">
             <th>${parentType}:</th>
