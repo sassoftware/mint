@@ -25,7 +25,6 @@
         <div class="layout" id="helpPage">
             <div id="right" class="side">
                 ${resourcePane()}
-                ${builderPane()}
             </div>
 
             <div id="spanleft" class="devTutorial">
