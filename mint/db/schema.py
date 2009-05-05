@@ -264,7 +264,6 @@ def _createBuilds(db):
             timeUpdated          numeric(14,3),
             updatedBy            integer
                 REFERENCES Users ( userId ) ON DELETE SET NULL,
-            deleted              smallint       NOT NULL    DEFAULT 0,
             buildCount           integer        NOT NULL    DEFAULT 0,
             productVersionId     integer
                 REFERENCES ProductVersions ON DELETE SET NULL,
@@ -277,13 +276,6 @@ def _createBuilds(db):
 
     changed |= db.createIndex('Builds', 'BuildProjectIdIdx', 'projectId')
     changed |= db.createIndex('Builds', 'BuildPubReleaseIdIdx', 'pubReleaseId')
-
-    if 'BuildsView' not in db.views:
-        cu.execute("""
-        CREATE VIEW BuildsView AS
-            SELECT * FROM Builds WHERE deleted = 0
-        """)
-        changed = True
 
     if 'BuildData' not in db.tables:
         cu.execute("""

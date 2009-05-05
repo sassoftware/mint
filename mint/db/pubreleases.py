@@ -42,7 +42,7 @@ class PublishedReleasesTable(database.KeyedTable):
 
     def getBuilds(self, pubReleaseId):
         cu = self.db.cursor()
-        cu.execute("""SELECT buildId FROM BuildsView
+        cu.execute("""SELECT buildId FROM Builds
                       WHERE pubReleaseId = ?""", pubReleaseId)
         res = cu.fetchall()
         return [x[0] for x in res]
@@ -76,7 +76,7 @@ class PublishedReleasesTable(database.KeyedTable):
     def getUniqueBuildTypes(self, pubReleaseId):
         cu = self.db.cursor()
         cu.execute("""SELECT buildType, troveFlavor
-                      FROM BuildsView WHERE pubReleaseId = ?
+                      FROM Builds WHERE pubReleaseId = ?
                       ORDER BY buildType, troveFlavor""", pubReleaseId)
         uniqueBuildTypes = []
         for row in cu.fetchall():
@@ -115,7 +115,6 @@ class PublishedReleasesTable(database.KeyedTable):
                  JOIN BuildData bd
                  ON bd.buildId = b.buildId
             WHERE bd.name = 'amiId'
-              AND b.deleted = 0
               AND pr.pubReleaseId = ?
             """, pubReleaseId)
         return cu.fetchall_dict()

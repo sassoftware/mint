@@ -408,7 +408,6 @@ class UsersTable(database.KeyedTable):
               LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
               JOIN buildData bd ON (bd.buildId = b.buildId)
             WHERE bd.name = 'amiId'
-              AND b.deleted = 0
               AND pu.userId = ?""", userId)
         return cu.fetchall_dict()
 

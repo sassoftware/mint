@@ -601,7 +601,7 @@ class MintServer(object):
     def _filterBuildFileAccess(self, fileId):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM BuildFiles
-                          LEFT JOIN BuildsView AS Builds
+                          LEFT JOIN Builds AS Builds
                               ON Builds.buildId = BuildFiles.buildId
                           WHERE fileId=?""", fileId)
         r = cu.fetchall()
@@ -2007,7 +2007,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         del build['timeUpdated']
         del build['updatedBy']
         del build['pubReleaseId']
-        del build['deleted']
         return build
 
     @typeCheck(int)
@@ -2016,9 +2015,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.ItemNotFound
         self._filterBuildAccess(buildId)
         build = self.builds.get(buildId)
-
-        if self.clientVer == 1:
-            del build['deleted']
 
         return build
 
@@ -2321,7 +2317,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         try:
             self.db.transaction()
-            self.builds.deleteBuild(buildId, commit=False)
+            self.builds.delete(buildId, commit=False)
 
             amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
             if amiBuild:
@@ -2965,7 +2961,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
         cu = self.db.cursor()
-        cu.execute("SELECT buildType FROM BuildsView WHERE buildId = ?",
+        cu.execute("SELECT buildType FROM Builds WHERE buildId = ?",
                 buildId)
         return cu.fetchone()[0]
 

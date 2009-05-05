@@ -28,7 +28,7 @@ class BuildsTable(database.KeyedTable):
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
-              'deleted', 'buildCount', 'productVersionId', 'stageName',
+              'buildCount', 'productVersionId', 'stageName',
               'status', 'statusMessage']
 
     def iterBuildsForProject(self, projectId):
@@ -39,7 +39,7 @@ class BuildsTable(database.KeyedTable):
 
         cu = self.db.cursor()
 
-        cu.execute("""SELECT buildId FROM BuildsView
+        cu.execute("""SELECT buildId FROM Builds
                       WHERE projectId=? AND
                             troveName IS NOT NULL AND
                             troveVersion IS NOT NULL AND
@@ -80,7 +80,7 @@ class BuildsTable(database.KeyedTable):
         cu.execute("""SELECT troveName,
                              troveVersion,
                              troveFlavor
-                      FROM BuildsView
+                      FROM Builds
                       WHERE buildId=?""",
                    buildId)
         r = cu.fetchone()
@@ -95,7 +95,7 @@ class BuildsTable(database.KeyedTable):
 
     def getPublished(self, buildId):
         cu = self.db.cursor()
-        cu.execute("SELECT COALESCE((SELECT pubReleaseId FROM BuildsView WHERE buildId=?), 0)", buildId)
+        cu.execute("SELECT COALESCE((SELECT pubReleaseId FROM Builds WHERE buildId=?), 0)", buildId)
         pubReleaseId = cu.fetchone()[0]
         if pubReleaseId:
             cu.execute("SELECT timePublished FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
@@ -106,27 +106,16 @@ class BuildsTable(database.KeyedTable):
 
     def getUnpublishedBuilds(self, projectId):
         cu = self.db.cursor()
-        cu.execute("""SELECT buildId FROM BuildsView
+        cu.execute("""SELECT buildId FROM Builds
                       WHERE projectId = ? AND pubReleaseId IS NULL""",
                       projectId)
         res = cu.fetchall()
         return [x[0] for x in res]
 
-    def deleteBuild(self, buildId, commit=True):
-        try:
-            cu = self.db.cursor()
-            cu.execute("UPDATE Builds SET deleted=1 WHERE buildId=?", buildId)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            if commit:
-                self.db.commit()
-
     def buildExists(self, buildId):
         cu = self.db.cursor()
 
-        cu.execute("SELECT count(*) FROM BuildsView WHERE buildId=?", buildId)
+        cu.execute("SELECT count(*) FROM Builds WHERE buildId=?", buildId)
         return cu.fetchone()[0]
 
     def bumpBuildCount(self, buildId):
@@ -234,7 +223,7 @@ class BuildsTable(database.KeyedTable):
                  LEFT OUTER JOIN projectUsers pu
                     ON (b.projectId = pu.projectId AND pu.userId = ?)
                  %(extraJoin)s
-             WHERE b.buildType = ? AND b.deleted = 0
+             WHERE b.buildType = ?
              %(extraWhere)s"""
         query = query % {'extraWhere' : extraWhere,
                          'extraSelect' : extraSelect,
@@ -269,7 +258,7 @@ class BuildsTable(database.KeyedTable):
                       FROM builds b
                           LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
                           JOIN buildData bd ON (bd.buildId = b.buildId AND bd.name = 'amiId')
-                      WHERE b.projectId = ? AND b.deleted = 0""", projectId)
+                      WHERE b.projectId = ?""", projectId)
         for res in cu.fetchall():
             if res[0]:
                 published.append(res[1])

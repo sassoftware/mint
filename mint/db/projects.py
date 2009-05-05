@@ -262,20 +262,20 @@ class ProjectsTable(database.KeyedTable):
         extras = ""
         extraSubs = []
         if buildTypes:
-            extras += """ AND (EXISTS(SELECT buildId FROM BuildsView
+            extras += """ AND (EXISTS(SELECT buildId FROM Builds
                                         LEFT JOIN PublishedReleases USING(pubReleaseId)
                                         WHERE buildType IN (%s)
                                             AND pubReleaseId IS NOT NULL
-                                            AND BuildsView.projectId=Projects.projectId
+                                            AND Builds.projectId=Projects.projectId
                                             AND PublishedReleases.timePublished IS NOT NULL)""" % \
                 (", ".join("?" * len(buildTypes)))
             extraSubs += buildTypes
         if flavorFlagTypes:
-            sql = """EXISTS(SELECT BuildsView.buildId FROM BuildsView
+            sql = """EXISTS(SELECT Builds.buildId FROM Builds
                                 LEFT JOIN PublishedReleases USING(pubReleaseId)
-                                JOIN BuildData ON BuildsView.buildId=BuildData.buildId
+                                JOIN BuildData ON Builds.buildId=BuildData.buildId
                               WHERE BuildData.name in (%s)
-                                AND BuildsView.projectId=Projects.projectId
+                                AND Builds.projectId=Projects.projectId
                                 AND pubReleaseId IS NOT NULL
                                 AND PublishedReleases.timePublished IS NOT NULL)""" % \
                 (", ".join("?" * len(flavorFlagTypes)))
@@ -303,9 +303,9 @@ class ProjectsTable(database.KeyedTable):
             # asking for only projects with downloadable stuff, filter
             # by the existence of a published release.
             if not buildTypes and not flavorFlagTypes and filterNoDownloads:
-                extras += """ AND EXISTS(SELECT BuildsView.buildId FROM BuildsView
+                extras += """ AND EXISTS(SELECT Builds.buildId FROM Builds
                                             LEFT JOIN PublishedReleases USING(pubReleaseId)
-                                            WHERE BuildsView.projectId=Projects.projectId
+                                            WHERE Builds.projectId=Projects.projectId
                                               AND pubReleaseId IS NOT NULL
                                               AND timePublished IS NOT NULL)"""
 

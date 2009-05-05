@@ -55,7 +55,7 @@ class ImageManager(manager.Manager):
             LEFT JOIN Users as UpdateUser ON (Builds.updatedBy=UpdateUser.userId)
             LEFT JOIN BuildData ON (BuildData.buildId=Builds.buildId 
                                     AND BuildData.name='amiId')
-            WHERE hostname=? AND deleted=0 %(where)s''' 
+            WHERE hostname=? %(where)s''' 
         sql = sql % dict(where=extraWhere, join=extraJoin)
         args = (hostname,)
         if extraArgs:
@@ -94,7 +94,7 @@ class ImageManager(manager.Manager):
             JOIN FilesUrls USING(urlId)
             LEFT JOIN ProductVersions
                 ON(Builds.productVersionId=ProductVersions.productVersionId)
-            WHERE hostname=? AND deleted=0 %(where)s'''
+            WHERE hostname=? %(where)s'''
         sql = sql % dict(where=extraWhere, join=extraJoin)
         args = (hostname,)
         if extraArgs:

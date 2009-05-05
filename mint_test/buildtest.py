@@ -519,7 +519,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         added = {'releaseId' : build.id, 'imageTypes' : [build.buildType],
                  'downloads': 0, 'timePublished': 0, 'published' : 0}
         removed = ('buildId', 'buildType', 'timeCreated', 'createdBy',
-                   'timeUpdated', 'updatedBy', 'pubReleaseId', 'deleted')
+                   'timeUpdated', 'updatedBy', 'pubReleaseId')
         for key, val in releaseDict.iteritems():
             if key in added:
                 assert (val == added[key]), "release['%s'] != %s" % \

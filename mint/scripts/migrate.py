@@ -602,19 +602,17 @@ class MigrateTo_47(SchemaMigration):
 
     # 47.1
     # - PostgreSQL fixup: change type on troveLastChanged to std timestamp
+    # - BuildsView is obsolete in 48.0 so we drop it early here to save work
     def migrate1(self):
         cu = self.db.cursor()
 
-        if self.db.driver == 'postgresql':
-            # postgres won't modify a column that's referenced by a view
+        if 'BuildsView' in db.views:
             cu.execute("DROP VIEW BuildsView")
             del db.views['BuildsView']
 
+        if self.db.driver != 'sqlite':
             cu.execute("""ALTER TABLE Builds
                     ALTER COLUMN troveLastChanged TYPE numeric(14,3)""")
-
-            # recreate BuildsView
-            schema.createSchema(self.db, doCommit=False)
 
         return True
 
@@ -624,15 +622,26 @@ class MigrateTo_48(SchemaMigration):
 
     # 48.0
     # - Dropped Jobs and JobsData tables
+    # - Dropped BuildsView
+    # - Dropped "deleted" column from Builds
     # - Changed type of build status column to "text"
     def migrate(self):
         cu = self.db.cursor()
         drop_tables(self.db, 'JobData', 'Jobs')
 
+        if 'BuildsView' in db.views:
+            cu.execute("DROP VIEW BuildsView")
+            del db.views['BuildsView']
+
+        # This will orphan child rows on sqlite but postgres migration
+        # will clean them up.
+        cu.execute("DELETE FROM Builds WHERE deleted = 1")
+
         if self.db.driver != 'sqlite':
-            # Only change the column type on postgres/mysql which actually
+            # Only change the columns on postgres/mysql which actually
             # support doing so trivially; on sqlite we're just going to be
             # migrating to postgres anyway.
+            cu.execute("ALTER TABLE Builds DROP COLUMN deleted")
             cu.execute("""ALTER TABLE Builds
                     ALTER COLUMN statusMessage TYPE text""")
 
