@@ -13,6 +13,7 @@ from conary import versions
 from mint import builds
 from mint import buildtypes
 from mint import jobstatus
+from mint import helperfuncs
 from mint import mint_error
 from mint import urltypes
 from mint.lib import data
@@ -73,7 +74,7 @@ class ImageManager(manager.Manager):
             if row['troveFlavor']:
                 row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
             if row['troveVersion']:
-                row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
+                row['troveVersion'] = helperfuncs.parseVersion(row['troveVersion'])
             row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
             row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
             row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
