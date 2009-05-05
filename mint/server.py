@@ -2155,7 +2155,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildName = buildDefinition.name
             buildId = self.newBuildWithOptions(projectId, buildName,
                                                n, v, f, buildType,
-                                               buildSettings)
+                                               buildSettings, start=False)
             buildIds.append(buildId)
             self.startImageJob(buildId)
         return buildIds
@@ -2196,7 +2196,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self._getBuildPageUrl(buildId)
 
-    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict)
+    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict, bool)
     @requiresAuth
     @private
     def newBuildWithOptions(self, projectId, buildName,
