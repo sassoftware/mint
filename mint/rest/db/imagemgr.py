@@ -70,8 +70,10 @@ class ImageManager(manager.Manager):
             imageType = row['imageType']
             row['released'] = bool(row['release'])
             row['published'] = bool(row.pop('timePublished', False))
-            row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
-            row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
+            if row['troveFlavor']:
+                row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
+            if row['troveVersion']:
+                row['troveVersion'] = versions.ThawVersion(row['troveVersion'])
             row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
             row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
             row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
