@@ -228,10 +228,16 @@ def typeCheck(*paramTypes):
             for name, default, arg, ptype in zip(filler.names[1:], filler.defaults[1:],
                     args[1:], paramTypes):
                 if arg is not default and not checkParam(arg, ptype):
+                    if isinstance(ptype, tuple):
+                        types = ', '.join(x.__name__ for x in ptype)
+                    elif isinstance(ptype, type):
+                        types = ptype.__name__
+                    else:
+                        types = '<unknown>'
                     raise mint_error.ParameterError("%s was passed %r of "
                             "type %s when expecting %s for parameter %s"
                             % (baseFunc.func_name, arg, type(arg).__name__,
-                                ptype.__name__, name))
+                                types, name))
             return func(*args)
         baseFunc.__args_enforced__ = True
         wrapper.__wrapped_func__ = func
