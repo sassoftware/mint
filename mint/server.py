@@ -6,6 +6,7 @@
 
 import base64
 import hmac
+import inspect
 import os
 import re
 import simplejson
@@ -33,6 +34,7 @@ from mint.lib import maillib
 from mint.lib import persistentcache
 from mint.lib import profile
 from mint.lib import siteauth
+from mint.lib.mintutils import ArgFiller
 from mint import amiperms
 from mint import builds
 from mint import ec2
@@ -119,18 +121,18 @@ def deriveBaseFunc(func):
     return r
 
 def requiresAdmin(func):
-    def wrapper(self, *args):
+    def wrapper(self, *args, **kwargs):
         if self.auth.admin or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
-            return func(self, *args)
+            return func(self, *args, **kwargs)
         else:
             raise mint_error.PermissionDenied
     wrapper.__wrapped_func__ = func
     return wrapper
 
 def requiresAuth(func):
-    def wrapper(self, *args):
+    def wrapper(self, *args, **kwargs):
         if self.auth.authorized or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
-            return func(self, *args)
+            return func(self, *args, **kwargs)
         else:
             raise mint_error.PermissionDenied
     wrapper.__wrapped_func__ = func
@@ -138,11 +140,11 @@ def requiresAuth(func):
 
 def requiresCfgAdmin(cond):
     def deco(func):
-        def wrapper(self, *args):
+        def wrapper(self, *args, **kwargs):
             if (list(self.authToken) == \
                 [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin or \
                  (not self.cfg.__getitem__(cond) and self.auth.authorized):
-                    return func(self, *args)
+                    return func(self, *args, **kwargs)
             else:
                 raise mint_error.PermissionDenied
         wrapper.__wrapped_func__ = func
@@ -152,9 +154,9 @@ def requiresCfgAdmin(cond):
 def private(func):
     """Mark a method as callable only if self._allowPrivate is set
     to mask out functions not callable via XMLRPC over the web."""
-    def wrapper(self, *args):
+    def wrapper(self, *args, **kwargs):
         if self._allowPrivate:
-            return func(self, *args)
+            return func(self, *args, **kwargs)
         else:
             raise mint_error.PermissionDenied
     trueFunc = deriveBaseFunc(func)
@@ -206,20 +208,32 @@ def typeCheck(*paramTypes):
     """This decorator will be required on all functions callable over xmlrpc.
     This will force consistent calling conventions or explicit typecasting
     for all xmlrpc calls made to ensure extraneous calls won't be allowed."""
+    _no_default = ()
     def deco(func):
-        def wrapper(self, *args):
-            for i in range(len(args)):
-                if (not checkParam(args[i],paramTypes[i])):
-                    baseFunc = deriveBaseFunc(func)
-                    raise mint_error.ParameterError(
-                                           '%s was passed %s of type %s when '
-                                           'expecting %s for parameter number '
-                                           '%d' % \
-                        (baseFunc.__name__, repr(args[i]), str(type(args[i])),
-                         str(paramTypes[i]), i+1))
-            return func(self, *args)
-        trueFunc = deriveBaseFunc(func)
-        trueFunc.__args_enforced__ = True
+        baseFunc = deriveBaseFunc(func)
+        filler = ArgFiller.fromFunc(baseFunc)
+
+        underlying = len(filler.names) - 1 # remove self
+        if underlying != len(paramTypes):
+            raise TypeError("paramTypes got %d arguments but the underlying "
+                    "method %s has %d" % (len(paramTypes), baseFunc.func_name,
+                        underlying))
+
+        def wrapper(*args, **kwargs):
+            # Collapse keyword arguments to positional ones
+            args = filler.fill(args, kwargs)
+            del kwargs
+
+            # [1:] here to skip 'self'
+            for name, arg, ptype in zip(filler.names[1:], args[1:],
+                    paramTypes):
+                if not checkParam(arg, ptype):
+                    raise mint_error.ParameterError("%s was passed %r of "
+                            "type %s when expecting %s for parameter %s"
+                            % (baseFunc.func_name, arg, type(arg).__name__,
+                                ptype.__name__, name))
+            return func(*args)
+        baseFunc.__args_enforced__ = True
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
@@ -1255,7 +1269,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.projects.update(projectId,
                 backupExternal=int(backupExternal))
 
-    @typeCheck(int, bool, bool)
+    @typeCheck(int, bool)
     @requiresAuth
     @private
     def setProductVisibility(self, projectId, makePrivate):
@@ -1570,7 +1584,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getUserIdByName(self, username):
         return self.users.getIdByColumn("username", username)
 
-    @typeCheck(str, str, ((str, int, bool),), int)
+    @typeCheck(str, str, ((str, int, bool),))
     @requiresAuth
     @private
     def setUserDataValue(self, username, name, value):
@@ -2018,7 +2032,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return build
 
-    @typeCheck(int, str, bool)
+    @typeCheck(int, str)
     @requiresAuth
     @private
     def newBuild(self, projectId, productName):
@@ -2793,7 +2807,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterPublishedReleaseAccess(pubReleaseId)
         return self.publishedReleases.getUniqueBuildTypes(pubReleaseId)
 
-    @typeCheck(int, bool)
+    @typeCheck(int)
     @private
     def getPublishedReleasesByProject(self, projectId):
         self._filterProjectAccess(projectId)
@@ -3040,7 +3054,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             except mcp_error.NetworkError:
                 raise mint_error.BuildSystemDown
 
-    @typeCheck(int, str, list, (list, str, int))
+    @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
         """
         This call validates the outputToken against one stored in the
@@ -3105,7 +3119,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return True
 
-    @typeCheck(int, list, (list, str, int))
+    @typeCheck(int, list)
     @requiresAuth
     @private
     def setBuildFilenames(self, buildId, filenames):
@@ -4127,7 +4141,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @private
     @requiresAuth
-    @typeCheck(int, str, str, ((str, unicode),), str)
+    @typeCheck(int, str, str, ((str, unicode),))
     def addProductVersion(self, projectId, namespace, name, description):
         self._filterProjectAccess(projectId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
