@@ -466,9 +466,9 @@ class MintClient:
 
         return sesH, self._filterFactories(factories), prevChoices
 
-    def savePackage(self, sessionHandle, factoryHandle, data, build=True):
+    def savePackage(self, sessionHandle, factoryHandle, data, build=True, recipeContents=''):
         "See L{mint.server.MintServer.savePackage}"
-        return self.server.savePackage(sessionHandle, factoryHandle, data, build)
+        return self.server.savePackage(sessionHandle, factoryHandle, data, build, recipeContents)
 
     def getPackageBuildLogs(self, sessionHandle):
         '''See L{mint.server.MintServer.getPackageBuildLogs}'''

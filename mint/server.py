@@ -4462,9 +4462,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return sesH, fact, data
 
-    @typeCheck(((str,unicode),), ((str,unicode),), dict, bool)
+    @typeCheck(((str,unicode),), ((str,unicode),), dict, bool, ((str,unicode),))
     @requiresAuth
-    def savePackage(self, sessionHandle, factoryHandle, data, build):
+    def savePackage(self, sessionHandle, factoryHandle, data, build, recipeContents=''):
         """
         Save the package to the devel repository and optionally start building it
 
@@ -4479,13 +4479,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @type data: dictionary
         @param build: Build the package after it's been saved?
         @type build: boolean
+        @param recipeContents: The contents of the recipe to use
+        @type recipeContents: string
 
         @return: a troveSpec pointing to the created source trove
         @rtype: str
         """
+        if recipeContents:
+            self.savePackageCreatorRecipe(sessionHandle, recipeContents)
+
         path = packagecreator.getUploadDir(self.cfg, sessionHandle)
         pc = self.getPackageCreatorClient()
-
 
         try:
             datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
