@@ -225,9 +225,9 @@ def typeCheck(*paramTypes):
             del kwargs
 
             # [1:] here to skip 'self'
-            for name, arg, ptype in zip(filler.names[1:], args[1:],
-                    paramTypes):
-                if not checkParam(arg, ptype):
+            for name, default, arg, ptype in zip(filler.names[1:], filler.defaults[1:],
+                    args[1:], paramTypes):
+                if arg is not default and not checkParam(arg, ptype):
                     raise mint_error.ParameterError("%s was passed %r of "
                             "type %s when expecting %s for parameter %s"
                             % (baseFunc.func_name, arg, type(arg).__name__,
