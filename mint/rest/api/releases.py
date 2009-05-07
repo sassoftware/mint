@@ -78,6 +78,10 @@ class ProductReleasesController(base.BaseController):
 
     @requires('images', models.ImageList)
     def setImages(self, request, hostname, releaseId, images):
+        # note - this should not be necessary but is due to some
+        # behavior in xobj when the top-level element is an empty list.
+        if image.images is None:
+            image.images = []
         self.db.updateImagesForRelease(hostname, releaseId,
 			       [x.imageId for x in images.images])
         return self.get(request, hostname, releaseId)
