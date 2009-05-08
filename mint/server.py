@@ -2193,7 +2193,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         baseFileName = ''.join([(x.isalnum() or x in ('-', '.')) and x or '_' \
                 for x in baseFileName])
         arch = build.getArch()
-        ver = versions.ThawVersion(build.troveVersion)
+        ver = helperfuncs.parseVersion(build.troveVersion)
         baseFileName = baseFileName or \
                 "%(name)s-%(version)s-%(arch)s" % {
                 'name': project['hostname'],
@@ -2455,7 +2455,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         searchPath = []
         if imageGroupVersion:
             # Get the image group label as the first part of the searchpath
-            igV = versions.ThawVersion(imageGroupVersion)
+            igV = helperfuncs.parseVersion(imageGroupVersion)
 
             # Determine search path; start with imageGroup's label
             searchPath.append(igV.branch().label())
@@ -2478,7 +2478,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             try:
                 # frozen version -> normal version
                 specialTroveVersion = \
-                    versions.ThawVersion(specialTroveVersion).asString()
+                    helperfuncs.parseVersion(specialTroveVersion).asString()
             except:
                 # maybe not
                 pass
@@ -2861,10 +2861,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise mint_error.BuildPublished()
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
-        try: 
-            troveLabel = versions.ThawVersion(troveVersion).trailingLabel()
-        except ValueError:
-            troveLabel = versions.VersionFromString(troveVersion).trailingLabel()
+        troveLabel = helperfuncs.parseVersion(troveVersion).trailingLabel()
         projectId = self.builds.get(buildId)['projectId']
         productVersionId, stage = self._getProductVersionForLabel(projectId, 
                                                                   troveLabel)
