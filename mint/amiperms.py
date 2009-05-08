@@ -167,7 +167,7 @@ class AMIPermissionsManager(object):
         if not e:
             return False
         error = e.errors and e.errors[0] or None
-        if error and error["code"] == "InvalidAMIID.Unavailable":
+        if error and error["code"].startswith("InvalidAMIID."):
             return True
 
     def _addAMIPermissionsForAccount(self, awsAccountNumber, amiIds):
