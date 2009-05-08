@@ -323,12 +323,11 @@ class EC2Wrapper(object):
                                                  'remove',
                                                  user_ids=awsAccountIdList)
             return True
-        except EC2ResponseError, e:
+        except EC2ResponseError, error:
             # see if the error is because the ami no longer exists (ignore)
-            error = e.errors and e.errors[0] or None
-            if error and error["code"] == "InvalidAMIID.Unavailable":
+            if error.code and error.code.startswith('InvalidAMIID.'):
                 return True
-            raise mint_error.EC2Exception(ErrorResponseObject(e))       
+            raise mint_error.EC2Exception(ErrorResponseObject(error))
 
     def validateCredentials(self):
         self.getAllKeyPairs()
