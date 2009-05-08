@@ -576,7 +576,7 @@ class MintServer(object):
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
         # Allow anyone to see public projects
-        if not project.hidden:
+        if not project['hidden']:
             return
         # Project is hidden, so user must be a member to see it.
         if (self.projectUsers.getUserlevelForProjectMember(projectId,
