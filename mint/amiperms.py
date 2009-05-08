@@ -163,14 +163,12 @@ class AMIPermissionsManager(object):
     def _shouldIgnoreException(self, exc):
         if not isinstance(exc, mint_error.EC2Exception):
             return False
-        error = exc.ec2ResponseObj
-        if not error:
+        e = exc.ec2ResponseObj
+        if not e:
             return False
-        if not error.code:
-            return False
-        if error.code.startswith('InvalidAMIID.'):
+        error = e.errors and e.errors[0] or None
+        if error and error["code"] == "InvalidAMIID.Unavailable":
             return True
-        return False
 
     def _addAMIPermissionsForAccount(self, awsAccountNumber, amiIds):
         if not amiIds:

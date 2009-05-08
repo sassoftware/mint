@@ -1,30 +1,11 @@
-javascript_files =\
-	ec2.js \
-	filesystems.js \
-	groupbuilder.js \
-	library.js \
-	mirror.js \
-	newbuildsfromproductdefinition.js \
-	rpc.js	\
-	trovepicker.js \
-	repobrowser.js \
-	editversion.js \
-	dialogs.js \
-	jquery-1.2.3.min.js \
-	jquery-1.2.6.min.js \
-	jquery.ui-1.5.2.all.min.js \
-	jquery-ittabs.js \
-	packagelist.js \
-	swfobject.js \
-	swf_deeplink_history.js \
-	whizzyupload.js
+javascript_files = $(wildcard *.js)
 
 generated_files =\
 	buildtypes.js \
 	jobstatus.js  \
 	buildtemplates.js
 
-static_files = $(javascript_files) $(generated_files)
+static_files = $(javascript_files)
 
 all: $(generated_files) default-all
 

@@ -825,10 +825,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
             'http://example.com/conary/', 'user', 'pass')
         client.addOutboundMirror(project.id,
                 ["localhost.rpath.local2@rpl:devel"], allLabels = True)
-        
-        # add repo name map
-        client.addRemappedRepository('somefrom', project.getFQDN())
-        
+
         # add entitlement
         entDir = self.cfg.dataPath + "/entitlements"
         os.mkdir(entDir)
@@ -857,39 +854,36 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnless(not os.path.exists(imageDir))
         
         # make sure the builds have been removed
-        self.failUnless(len(client.server._server.getBuildsForProject(project.id)) == 0, 
-            "Failed deleting builds")
-        
+        cu = db.cursor()
+        cu.execute("SELECT COUNT(*) FROM Builds WHERE projectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+
         # make sure the published releases have been removed
-        self.failUnless(len(client.server._server.getPublishedReleasesByProject(project.id)) == 0, 
-            "Failed deleting published releases")
-        
+        cu.execute("SELECT COUNT(*) FROM PublishedReleases WHERE projectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+
         # make sure the membership requests have been removed
-        self.failUnless(len(client.server._server._listAllJoinRequests(project.id)) == 0, 
-            "Failed deleting membership requests")
-        
+        cu.execute("SELECT COUNT(*) FROM MembershipRequests WHERE projectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+
         # make sure commits have been removed
-        self.failUnless(len(client.server._server.getCommitsForProject(project.id)) == 0, 
-            "Failed deleting commits")
-        
+        cu.execute("SELECT COUNT(*) FROM Commits WHERE projectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+
         # make sure project user references have been removed
-        self.failUnless(len(client.server._server.getMembersByProjectId(project.id)) == 0, 
-            "Failed deleting project users")
-        
+        cu.execute("SELECT COUNT(*) FROM ProjectUsers WHERE projectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+
         # make sure mirrors are gone
-        self.failUnless(len(client.server._server.getInboundMirror(project.id)) == 0, 
-            "Failed deleting inbound mirror")
-        self.failUnless(len(client.server._server.outboundMirrors.getOutboundMirrorByProject(project.id)) == 0, 
-            "Failed deleting outbound mirror")
-        
+        cu.execute("SELECT COUNT(*) FROM InboundMirrors WHERE targetProjectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+        cu.execute("SELECT COUNT(*) FROM OutboundMirrors WHERE sourceProjectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+
         # make sure project labels are gone
-        self.failUnless(client.server._server.getLabelsForProject(project.id, False, '', '') == ({}, {}, [], []), 
-            "Failed deleting project labels")
-        
-        # make sure repo map names are gone
-        self.failUnless(client.server._server.repNameMap.getCountByFromName(project.getFQDN()) == 0, 
-            "Failed deleting repo map names")
-        
+        cu.execute("SELECT COUNT(*) FROM Labels WHERE projectId = ?", project.id)
+        self.failUnlessEqual(cu.fetchone()[0], 0)
+
     @fixtures.fixture('Full')
     def testDeleteProjectFailure(self, db, data):
         client = self.getClient('admin')
