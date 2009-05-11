@@ -606,9 +606,9 @@ class MigrateTo_47(SchemaMigration):
     def migrate1(self):
         cu = self.db.cursor()
 
-        if 'BuildsView' in db.views:
+        if 'BuildsView' in self.db.views:
             cu.execute("DROP VIEW BuildsView")
-            del db.views['BuildsView']
+            del self.db.views['BuildsView']
 
         if self.db.driver != 'sqlite':
             cu.execute("""ALTER TABLE Builds
@@ -629,9 +629,9 @@ class MigrateTo_48(SchemaMigration):
         cu = self.db.cursor()
         drop_tables(self.db, 'JobData', 'Jobs')
 
-        if 'BuildsView' in db.views:
+        if 'BuildsView' in self.db.views:
             cu.execute("DROP VIEW BuildsView")
-            del db.views['BuildsView']
+            del self.db.views['BuildsView']
 
         # This will orphan child rows on sqlite but postgres migration
         # will clean them up.
