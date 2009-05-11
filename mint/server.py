@@ -3462,10 +3462,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
             and oldStatus not in jobstatus.stoppedStatuses):
             try:
                 mc = self._getMcpClient()
-                status, message = mc.jobStatus(uuid)
+                res = mc.jobStatus(uuid)
             except (mcp_error.UnknownJob, mcp_error.NetworkError):
-                status, message = \
-                    jobstatus.NO_JOB, jobstatus.statusNames[jobstatus.NO_JOB]
+                res = None
+
+            if res:
+                status, message = res
+            else:
+                status, message = (jobstatus.NO_JOB,
+                        jobstatus.statusNames[jobstatus.NO_JOB])
         else:
             # status is always finished since no build is actually done
             status, message = jobstatus.FINISHED, \
