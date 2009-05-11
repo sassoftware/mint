@@ -34,7 +34,12 @@ class ImagesTest(restbase.BaseRestTest):
         open(url, 'w').write('data')
 
     def testDeleteImageFiles(self):
-        client = self.getRestClient(username='adminuser')
+        class Subscriber(object):
+            imageIds = []
+            def notify_ImageRemoved(slf, event, imageId):
+                slf.imageIds.append(imageId)
+        client = self.getRestClient(username='adminuser',
+            subscribers = [Subscriber()])
         # image 1 is not published yet
         db = self.openRestDatabase()
         url, = db.cursor().execute('''SELECT url from BuildFiles
@@ -48,6 +53,8 @@ class ImagesTest(restbase.BaseRestTest):
         # FIXME - changes the actual original version bc
         # we store absolute references.  Lame.
         open(url, 'w').write('data')
+        # Make sure the subscriber's method got called
+        self.failUnlessEqual(Subscriber.imageIds, ['1'])
 
     def testGetReleases(self):
         return self._testGetReleases()

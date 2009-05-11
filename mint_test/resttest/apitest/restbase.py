@@ -125,7 +125,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         if 'db' in kw:
             db = kw.pop('db')
         else:
-            db = self.openRestDatabase()
+            subscribers = kw.pop('subscribers', None)
+            db = self.openRestDatabase(subscribers = subscribers)
         return Controller(self.mintCfg, db, **kw)
 
     def escapeURLQuotes(self, foo):
