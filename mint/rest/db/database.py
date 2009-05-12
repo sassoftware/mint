@@ -133,8 +133,7 @@ class Database(DBInterface):
         # connection if dbOnly is set.
         self.siteAuth = None
         if not dbOnly:
-            self.siteAuth = siteauth.SiteAuthorization(
-                    cfgPath=cfg.siteAuthCfgPath)
+            self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
 
     def close(self):
         #DBInterface.close(self)
@@ -646,20 +645,18 @@ class Database(DBInterface):
     # it pushes to the entitlement server.
     @readonly
     def setRegistration(self, registrationData):
-        if not self.siteAuth:
-            raise RuntimeError("Identity information is not loaded.")
-        elif self.siteAuth.isValid():
+        assert self.siteAuth
+        if self.siteAuth.isValid():
             # only require admin if we've got a valid setup.
             # If our setup is already invalid then allow anyone to
             # set the registration, as most of the interface (including 
             # logging in) is disabled.
             self.auth.requireAdmin()
-        self.siteAuth.setRegistration(registrationData)
+        self.siteAuth.register(registrationData)
 
     @readonly
     def getRegistrationForm(self):
-        if not self.siteAuth:
-            raise RuntimeError("Identity information is not loaded.")
-        elif self.siteAuth.isValid():
+        assert self.siteAuth
+        if self.siteAuth.isValid():
             self.auth.requireAdmin()
-        return self.siteAuth.getRegistrationForm()
+        return self.siteAuth.getForm()

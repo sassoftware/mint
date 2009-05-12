@@ -9,15 +9,15 @@ import os
 import urllib
 import urllib2
 import time
+from conary import conarycfg
 from conary import conaryclient
 from conary.lib.cfg import ConfigFile
 from conary.lib.cfgtypes import CfgString
-from conary.lib.digestlib import sha1
 from conary.lib.util import copyfileobj
-from StringIO import StringIO
 from xobj import xobj
 
 from mint.lib.unixutils import atomicOpen, hashFile
+from mint.mint_error import MintError
 from mint.rest.api.models import siteauth as model
 
 log = logging.getLogger(__name__)
@@ -91,17 +91,17 @@ class XML_ActivateDocument(xobj.Document):
 # authz handle
 class Getter(object):
     def __init__(self, path, encode=False):
-        self.path = path.split('.')
+        self.path = ['entitlement'] + path.split('.')
         self.encode = encode
 
     def __get__(self, instance, owner):
         if not instance.xml:
             return None
-        val = instance.xml.entitlement
+        val = instance.xml
         for part in self.path:
-            val = getattr(val, part)
-        if val is None:
-            return None
+            val = getattr(val, part, None)
+            if val is None:
+                return None
         if self.encode:
             return val.encode('utf8')
         else:
@@ -173,7 +173,7 @@ class SiteAuthorization(object):
         """
         assert self.conaryCfg
 
-        #pylint: disable-msg=E1101
+        #pylint: disable-msg=E1103
         # ccfg does in fact have an "entitlement" member
         matches = self.conaryCfg.entitlement.find(self.cfg.checkRepos)
         if matches:
@@ -201,9 +201,9 @@ class SiteAuthorization(object):
         elif len(groups) == 1:
             name = groups.pop()
         else:
-            for x in ('group-rbuilder-appliance', 'group-rbuilder'):
-                if x in groups:
-                    name = x
+            for group in ('group-rbuilder-appliance', 'group-rbuilder'):
+                if group in groups:
+                    name = group
                     break
             else:
                 log.warning("Multiple top-level groups: %s", " ".join(groups))
@@ -211,6 +211,19 @@ class SiteAuthorization(object):
 
         matches = cli.db.findTrove(None, (name, None, None))
         return max(matches)[:2]
+
+    def getForm(self):
+        """
+        Fetch the registration form from the entitlement server.
+        Returns None if the form cannot be retrieved, and an exception
+        """
+        if self.entitlementKey:
+            url = os.path.join(self.xml.entitlement.id, 'registration/form')
+            log.debug('Grabbing form from %s', url)
+            fObj = urllib2.urlopen(url)
+            return fObj.read()
+        else:
+            return None
 
     # Writers
     def generate(self):
@@ -272,28 +285,6 @@ class SiteAuthorization(object):
                     "no system entitlement.")
         return False
 
-    def getForm(self):
-        """
-        Fetch the registration form from the entitlement server.
-        Returns None if the form cannot be retrieved, and an exception
-        """
-        key = self._getKeyFromSystem()
-        if key:
-            url = os.path.join(self.cfg.keyUrl, urllib.quote(key) + '/form')
-            log.debug('Grabbing form from %s', url)
-            fObj = urllib2.urlopen(url)
-            return fObj.read()
-        return None
-
-    def register(self, registrationData):
-        key = self._getKeyFromSystem()
-        if not key:
-            raise MintError('Unable to register rBuilder - no key set')
-        url = os.path.join(self.cfg.keyUrl, urllib.quote(key)) + '?_method=PUT'
-        fObj = urllib2.urlopen(url, body=registrationData)
-        self._copySaveXML(fObj)
-        return True
-
     def save(self):
         """
         Save the current configuration to disk.
@@ -301,6 +292,14 @@ class SiteAuthorization(object):
         fObj = atomicOpen(self.cfgPath)
         self.cfg.store(fObj, False)
         fObj.commit()
+
+    def register(self, registrationData):
+        if not self.entitlementKey:
+            raise MintError('Unable to register rBuilder - no key set')
+        url = os.path.join(self.xml.entitlement.id, 'registration?_method=PUT')
+        fObj = urllib2.urlopen(url, body=registrationData)
+        self._copySaveXML(fObj)
+        return True
 
     def _copySaveXML(self, fObj):
         """
@@ -348,6 +347,7 @@ class SiteAuthorization(object):
 
     rBuilderId = Getter('identity.rbuilderId', True)
     ec2ProductCodes = Getter('credentials.ec2ProductCodes')
+    entitlementKey = Getter('credentials.key')
 
     def getIdentityModel(self):
         if self.xml:
@@ -377,14 +377,18 @@ class SiteAuthorization(object):
 
 
 _AUTH_CACHE = {}
-def getSiteAuth(cfgPath):
+def getSiteAuth(cfgPath, withConaryConfig=False):
     """
     Get a L{SiteAuthorization} object for the config at C{cfgPath}, using
     a cached object if one is available.
     """
     if cfgPath in _AUTH_CACHE:
-        ret = _AUTH_CACHE[cfgPath]
-        ret.refresh()
+        siteAuth = _AUTH_CACHE[cfgPath]
+        siteAuth.refresh()
     else:
-        ret = _AUTH_CACHE[cfgPath] = SiteAuthorization(cfgPath)
-    return ret
+        siteAuth = _AUTH_CACHE[cfgPath] = SiteAuthorization(cfgPath)
+
+    if withConaryConfig and not siteAuth.conaryCfg:
+        siteAuth.conaryCfg = conarycfg.ConaryConfiguration(True)
+
+    return siteAuth
