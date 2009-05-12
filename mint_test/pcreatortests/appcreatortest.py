@@ -125,7 +125,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
 
         client = self.getClient('owner')
         sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
-        err = self.failUnlessRaises(mint_rephelp.mint_error.PackageCreatorError,
+        err = self.failUnlessRaises(mint_rephelp.mint_error.SearchPathError,
             client.addApplianceSearchPaths, sesH, ['test1==foo@bar:1'])
         self.failUnlessEqual(str(err), 'teh 3rr0r')
 

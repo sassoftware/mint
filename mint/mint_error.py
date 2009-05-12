@@ -208,6 +208,8 @@ class UserInduction(PermissionDenied):
         "illegal fashion"
 class UpdateServiceNotFound(MissingError):
     "The Update Service was not found."
+class SearchPathError(ServerError):
+    "Search Path Error:"
 class PackageCreatorError(ServerError):
     "Package Creator Error:"
 class NoImagesDefined(ServerError):

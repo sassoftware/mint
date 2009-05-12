@@ -116,7 +116,7 @@ class Database(DBInterface):
         self.publisher = publisher.EventPublisher()
         self.productMgr = productmgr.ProductManager(cfg, self, auth,
                                                     self.publisher)
-        self.imageMgr = imagemgr.ImageManager(cfg, self, auth)
+        self.imageMgr = imagemgr.ImageManager(cfg, self, auth, self.publisher)
         self.releaseMgr = releasemgr.ReleaseManager(cfg, self,
                                                     auth, self.publisher)
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)

@@ -490,7 +490,7 @@ var allTypes = map(parseInt, keys(buildTypeNames));
 var defaultType = INSTALLABLE_ISO;
 var x86_64Types = allTypes;
 var xenTypes = [INSTALLABLE_ISO, RAW_FS_IMAGE, RAW_HD_IMAGE, TARBALL, XEN_OVA,
-                AMI];
+                AMI, IMAGELESS];
 
 function handleBuildTypes(flavor) {
     forEach(allTypes, function(x) {

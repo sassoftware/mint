@@ -26,8 +26,8 @@ from mcp import mcp_error
 from conary.lib import cfgtypes
 
 class ImageManager(manager.Manager):
-    def __init__(self, cfg, db, auth):
-        manager.Manager.__init__(self, cfg, db, auth)
+    def __init__(self, cfg, db, auth, publisher=None):
+        manager.Manager.__init__(self, cfg, db, auth, publisher)
         self.mcpClient = None
 
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
@@ -188,6 +188,7 @@ class ImageManager(manager.Manager):
             WHERE fileId IN ( SELECT fileId FROM BuildFiles WHERE buildId = ? )
             """, imageId)
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
+        self.publisher.notify('ImageRemoved', imageId)
 
     def listImagesForRelease(self, fqdn, releaseId, update=False):
         return self._getImages(fqdn, '', ' AND Builds.pubReleaseId=?',

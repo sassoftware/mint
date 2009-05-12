@@ -481,7 +481,8 @@ class RestDBMixIn(object):
             self.mintDb.close()
         mock.unmockAll()
 
-    def openRestDatabase(self, createRepos=True, enableMCP=False):
+    def openRestDatabase(self, createRepos=True, enableMCP=False,
+                         subscribers=None):
         if not self.mintDb:
             self._startDatabase()
         dbPort = getattr(self.mintDb, 'port', None)
@@ -490,7 +491,9 @@ class RestDBMixIn(object):
         from mint.rest.db import database as restdb
         from mint.db import database
         db = database.Database(self.mintCfg)
-        db = restdb.Database(self.mintCfg, db, subscribers=[])
+        if subscribers is None:
+            subscribers = []
+        db = restdb.Database(self.mintCfg, db, subscribers=subscribers)
         db.auth.isAdmin = True
         # We should probably get a real user ID here, instead of hardcoding 2
         # which is generally the admin's

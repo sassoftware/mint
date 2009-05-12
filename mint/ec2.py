@@ -222,7 +222,7 @@ class S3Wrapper(object):
 
             # Delete the manifest.
             bucket.delete_key(keyName)
-        except S3ResponseError:
+        except S3ResponseError, e:
             raise mint_error.EC2Exception(ErrorResponseObject(e))
 
         # Deregister the AMI, this removes the entry from AWS completely.

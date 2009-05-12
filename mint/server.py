@@ -4682,7 +4682,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             return pc.addSearchPaths(sessionHandle, searchPaths)
         except packagecreator.errors.PackageCreatorError, e:
-            raise mint_error.PackageCreatorError(str(e))
+            raise mint_error.SearchPathError(str(e))
 
     @requiresAuth
     def listApplianceSearchPaths(self, sessionHandle):
