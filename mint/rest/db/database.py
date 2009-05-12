@@ -638,6 +638,28 @@ class Database(DBInterface):
             return self.siteAuth.getIdentityModel()
         raise RuntimeError("Identity information is not loaded.")
 
-    @readonly    
+    @readonly
     def listPlatforms(self):
         return self.platformMgr.listPlatforms()
+
+    # doesn't actually commit anything to the database, instead
+    # it pushes to the entitlement server.
+    @readonly
+    def setRegistration(self, registrationData):
+        if not self.siteAuth:
+            raise RuntimeError("Identity information is not loaded.")
+        elif self.siteAuth.isValid():
+            # only require admin if we've got a valid setup.
+            # If our setup is already invalid then allow anyone to
+            # set the registration, as most of the interface (including 
+            # logging in) is disabled.
+            self.auth.requireAdmin()
+        self.siteAuth.setRegistration(registrationData)
+
+    @readonly
+    def getRegistrationForm(self):
+        if not self.siteAuth:
+            raise RuntimeError("Identity information is not loaded.")
+        elif self.siteAuth.isValid():
+            self.auth.requireAdmin()
+        return self.siteAuth.getRegistrationForm()

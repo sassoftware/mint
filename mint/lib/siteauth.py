@@ -272,6 +272,28 @@ class SiteAuthorization(object):
                     "no system entitlement.")
         return False
 
+    def getForm(self):
+        """
+        Fetch the registration form from the entitlement server.
+        Returns None if the form cannot be retrieved, and an exception
+        """
+        key = self._getKeyFromSystem()
+        if key:
+            url = os.path.join(self.cfg.keyUrl, urllib.quote(key) + '/form')
+            log.debug('Grabbing form from %s', url)
+            fObj = urllib2.urlopen(url)
+            return fObj.read()
+        return None
+
+    def register(self, registrationData):
+        key = self._getKeyFromSystem()
+        if not key:
+            raise MintError('Unable to register rBuilder - no key set')
+        url = os.path.join(self.cfg.keyUrl, urllib.quote(key)) + '?_method=PUT'
+        fObj = urllib2.urlopen(url, body=registrationData)
+        self._copySaveXML(fObj)
+        return True
+
     def save(self):
         """
         Save the current configuration to disk.

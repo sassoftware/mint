@@ -13,6 +13,7 @@ from mint.rest.api import models
 from mint.rest.api import product
 from mint.rest.api import notices
 from mint.rest.api import platforms
+from mint.rest.api import registration
 from mint.rest.api import users
 from mint.rest.middleware import auth
 
@@ -21,6 +22,7 @@ class RbuilderRestServer(RestController):
             'projects' : product.ProductController,
             'users'    : users.UserController,
             'platforms' : platforms.PlatformController,
+            'registration' : registration.RegistrationController,
             'notices'  : notices.NoticesController,}
 
     def __init__(self, cfg, db):

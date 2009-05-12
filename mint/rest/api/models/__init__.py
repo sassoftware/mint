@@ -33,6 +33,7 @@ class RbuilderStatus(Model):
     products      = fields.UrlField('products', None)
     users         = fields.UrlField('users', None)
     platforms     = fields.UrlField('platforms', None)
+    registration  = fields.UrlField('registration', None)
     maintMode     = fields.BooleanField()
 
     def get_absolute_url(self):
