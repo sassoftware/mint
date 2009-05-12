@@ -182,7 +182,7 @@ class BuildsTable(database.KeyedTable):
             # image that is RAW_FS_IMAGE and build as a DOMU works.
             imageType = 'RAW_FS_IMAGE'
             extraJoin += ''' JOIN buildData bd ON (bd.buildId  = b.buildId
-                                                   AND bd.name = "XEN_DOMU")'''
+                                                   AND bd.name = 'XEN_DOMU')'''
         try:
             imageType = buildtypes.validBuildTypes[imageType]
         except KeyError:
