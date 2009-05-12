@@ -645,6 +645,7 @@ class MigrateTo_48(SchemaMigration):
             cu.execute("""ALTER TABLE Builds
                     ALTER COLUMN statusMessage TYPE text""")
 
+        return True                    
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
