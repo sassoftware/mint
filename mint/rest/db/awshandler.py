@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+from mint import buildtypes
 from mint import amiperms
 from mint import ec2
 
@@ -35,10 +36,12 @@ class AWSHandler(manager.Manager):
     def notify_ReleaseUnpublished(self, event, releaseId):
         self.amiPerms.unpublishRelease(releaseId)
 
-    def notify_ImageRemoved(self, event, imageId):
+    def notify_ImageRemoved(self, event, imageId, imageName, imageType):
+        if imageType != buildtypes.AMI:
+            return
         s3 = self._getS3Client()
         try:
-            s3.deleteAMI(imageId)
+            s3.deleteAMI(imageName)
         except ec2.mint_error.EC2Exception:
             pass
 

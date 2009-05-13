@@ -36,8 +36,8 @@ class ImagesTest(restbase.BaseRestTest):
     def testDeleteImageFiles(self):
         class Subscriber(object):
             imageIds = []
-            def notify_ImageRemoved(slf, event, imageId):
-                slf.imageIds.append(imageId)
+            def notify_ImageRemoved(slf, event, imageId, imageName, imageType):
+                slf.imageIds.append((imageId, imageName, imageType))
         client = self.getRestClient(username='adminuser',
             subscribers = [Subscriber()])
         # image 1 is not published yet
@@ -54,7 +54,7 @@ class ImagesTest(restbase.BaseRestTest):
         # we store absolute references.  Lame.
         open(url, 'w').write('data')
         # Make sure the subscriber's method got called
-        self.failUnlessEqual(Subscriber.imageIds, ['1'])
+        self.failUnlessEqual(Subscriber.imageIds, [('1', None, 1)])
 
     def testGetReleases(self):
         return self._testGetReleases()

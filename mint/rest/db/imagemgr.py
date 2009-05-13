@@ -173,6 +173,12 @@ class ImageManager(manager.Manager):
 
     def deleteImageFilesForProduct(self, fqdn, imageId):
         cu = self.db.cursor()
+        # Grab the AMI ID, if there is one
+        cu.execute("""SELECT value FROM BuildData
+                      WHERE buildId=? AND name = 'amiId'""", imageId)
+        imageName = cu.fetchone()
+        if imageName:
+            imageName = imageName[0]
         cu.execute('''SELECT url FROM BuildFiles
                      JOIN BuildFilesUrlsMap USING(fileId)
                      JOIN FilesUrls USING(urlId)
@@ -188,7 +194,11 @@ class ImageManager(manager.Manager):
             WHERE fileId IN ( SELECT fileId FROM BuildFiles WHERE buildId = ? )
             """, imageId)
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
-        self.publisher.notify('ImageRemoved', imageId)
+        # Grab the build type
+        cu.execute('''SELECT buildType FROM Builds
+                      WHERE buildId = ?''', imageId)
+        imageType = cu.fetchone()[0]
+        self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
 
     def listImagesForRelease(self, fqdn, releaseId, update=False):
         return self._getImages(fqdn, '', ' AND Builds.pubReleaseId=?',

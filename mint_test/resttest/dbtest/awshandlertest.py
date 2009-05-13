@@ -41,7 +41,8 @@ class AwsHandlerest(mint_rephelp.MintDatabaseHelper):
         Database.db.targetData.addTargetData(targetId, targetData)
         handler = awshandler.AWSHandler(self.mintCfg, Database(), None)
         event = 'ImageRemoved'
-        handler.notify_ImageRemoved(event, imageId = '1')
+        handler.notify_ImageRemoved(event, imageId = '1', imageName = 'ami-Foo',
+            imageType = awshandler.buildtypes.AMI)
 
         # Make sure all the removals got called
         from boto.s3.connection import S3Connection
@@ -56,9 +57,16 @@ class AwsHandlerest(mint_rephelp.MintDatabaseHelper):
         from boto.ec2.connection import EC2Connection
         reqobj = EC2Connection.make_request.im_self
         self.failUnlessEqual(reqobj.called, [
-            ('DescribeImages', {'ImageId.1': '1'}, '/'),
-            ('DeregisterImage', {'ImageId': '1'}, '/')
+            ('DescribeImages', {'ImageId.1': 'ami-Foo'}, '/'),
+            ('DeregisterImage', {'ImageId': 'ami-Foo'}, '/')
         ])
+
+        # Reset caller list
+        reqobj.called = []
+        # aws handler notification should only be called for AMIs
+        handler.notify_ImageRemoved(event, imageId = '1', imageName = None,
+            imageType = awshandler.buildtypes.INSTALLABLE_ISO)
+        self.failUnlessEqual(reqobj.called, [])
 
 xml_DescribeImages1 = """\
 <?xml version="1.0"?>
