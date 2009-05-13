@@ -37,7 +37,7 @@ class AWSHandler(manager.Manager):
         self.amiPerms.unpublishRelease(releaseId)
 
     def notify_ImageRemoved(self, event, imageId, imageName, imageType):
-        if imageType != buildtypes.AMI:
+        if imageType != buildtypes.AMI or imageName is None:
             return
         s3 = self._getS3Client()
         try:
