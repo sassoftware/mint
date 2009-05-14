@@ -60,6 +60,7 @@ class ErrorCallback(object):
                 'headers_in'        : request.headers,
                 'request_params'    : request.GET,
                 'post_params'       : request.POST,
+                'remote'            : '[%s]:%d' % request.remote,
                 }
         logerror.logErrorAndEmail(self.controller.cfg, e_type, e_value, e_tb,
                 'API call', info, doEmail=doEmail)
