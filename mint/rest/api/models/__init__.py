@@ -15,7 +15,7 @@ class RMCUrlField(fields.CalculatedField):
 
 from mint.rest.api.models.builddefinitions import *
 from mint.rest.api.models.members import *
-from mint.rest.api.models.siteauth import Identity, ServiceLevel
+from mint.rest.api.models.siteauth import *
 from mint.rest.api.models.users import *
 from mint.rest.api.models.repos import *
 from mint.rest.api.models.platforms import *

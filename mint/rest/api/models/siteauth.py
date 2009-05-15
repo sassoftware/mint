@@ -11,3 +11,13 @@ class Identity(modellib.Model):
     rbuilderId = fields.CharField()
     serviceLevel = fields.ModelField(ServiceLevel)
     registered = fields.BooleanField()
+
+
+class RegistrationStub(modellib.Model):
+    class Meta(object):
+        name = 'registration'
+    id = fields.AbsoluteUrlField(isAttribute=True)
+    registrationForm = fields.UrlField('registration.form', None)
+
+    def get_absolute_url(self):
+        return 'registration',
