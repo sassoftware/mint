@@ -229,6 +229,7 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
     cfg.dataPath = reposDir
     cfg.logPath = reposDir + '/logs'
     cfg.imagesPath = reposDir + '/images/'
+    cfg.siteAuthCfgPath = reposDir + '/authorization.cfg'
     cfg.authUser = 'mintauth'
     cfg.authPass = 'mintpass'
     cfg.localAddrs = getIpAddresses()

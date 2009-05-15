@@ -247,3 +247,6 @@ class MockRequest(request.Request):
 
     def _getPostData(self):
         return {}
+
+    def _getRemote(self):
+        return (None, None)
