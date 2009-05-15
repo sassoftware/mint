@@ -24,6 +24,7 @@ statusNames = dict([(statuses[x[0]], x[0].capitalize().replace('_', ' ')) \
                         for x in statuses.iteritems()])
 
 stoppedStatuses = [ NO_JOB, KILLED, ERROR, FAILED, FINISHED ]
+terminalStatuses = [ KILLED, ERROR, FAILED, FINISHED ]
 
 statusCodeNames = dict([(x[1], 'STATUS_' + x[0].replace('_', '')) \
                             for x in statuses.iteritems()])

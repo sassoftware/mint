@@ -116,11 +116,27 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         imageMgr._updateStatusForImageList([image])
         assert(image.status == 'xx')
         assert(image.statusMessage == 'foo')
+
+        # No job + image files -> finished
+        image.status = jobstatus.WAITING
         imageMgr.mcpClient.jobStatus._mock.raiseErrorOnAccess(
-                                mcp_error.NetworkError)
+                mcp_error.UnknownJob)
         imageMgr._updateStatusForImageList([image])
-        assert(image.status == jobstatus.NO_JOB)
-        assert(image.statusMessage == jobstatus.statusNames[jobstatus.NO_JOB])
+        self.failUnlessEqual(image.status, jobstatus.FINISHED)
+        self.failUnlessEqual(image.statusMessage,
+                jobstatus.statusNames[jobstatus.FINISHED])
+
+        # No job + no image files -> failed
+        image.status = jobstatus.WAITING
+        image.files.files = []
+        imageMgr.mcpClient.jobStatus._mock.raiseErrorOnAccess(
+                mcp_error.UnknownJob)
+        imageMgr._updateStatusForImageList([image])
+        self.failUnlessEqual(image.status, jobstatus.FAILED)
+        self.failUnlessEqual(image.statusMessage,
+                jobstatus.statusNames[jobstatus.FAILED])
+
+        # Imageless build -> finished
         image.status = jobstatus.WAITING
         mock.mockMethod(image.hasBuild, False)
         imageMgr._updateStatusForImageList([image])

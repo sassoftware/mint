@@ -130,7 +130,7 @@ class ImageManager(manager.Manager):
     def _updateStatusForImageList(self, imageList):
         changed = []
         for image in imageList:
-            if image.status in jobstatus.stoppedStatuses:
+            if image.status in jobstatus.terminalStatuses:
                 continue
             oldStatus = image.status
             oldMessage = image.statusMessage
@@ -142,11 +142,32 @@ class ImageManager(manager.Manager):
                 try:
                     mc = self._getMcpClient()
                     status = mc.jobStatus(uuid)
-                except (mcp_error.UnknownJob, mcp_error.NetworkError):
+                except mcp_error.UnknownJob:
                     image.status = jobstatus.NO_JOB
                     image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
                 else:
                     image.status, image.statusMessage = status
+
+                if image.status == jobstatus.NO_JOB:
+                    # The MCP no longer knows about this job and it never will,
+                    # so make a guess as to whether it passed or failed and
+                    # set its state to that.
+                    image.status = jobstatus.FAILED
+                    if image.files and image.files.files:
+                        # Images with files succeeded, unless one of those files
+                        # is a failed build log.
+                        for file in image.files.files:
+                            if file.title.startswith('Failed '):
+                                break
+                        else:
+                            image.status = jobstatus.FINISHED
+
+                    elif image.amiId:
+                        # AMIs don't have files but if the ID is posted then it
+                        # succeeded.
+                        image.status = jobstatus.FINISHED
+
+                    image.statusMessage = jobstatus.statusNames[image.status]
             else:
                 image.status = jobstatus.FINISHED
                 image.statusMessage = jobstatus.statusNames[jobstatus.FINISHED]
