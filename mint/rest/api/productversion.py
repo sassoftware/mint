@@ -219,6 +219,10 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         imageDefinitionsData = request.read()
         model = converter.fromText('xml', imageDefinitionsData,
             models.BuildDefinitions, self, None)
+        if model.buildDefinitions is None:
+            # Should fix this downstream...
+            model.buildDefinitions = []
+
         pd = self.db.setProductVersionBuildDefinitions(hostname, version,
             model)
         buildDefs = pd.getBuildDefinitions()
