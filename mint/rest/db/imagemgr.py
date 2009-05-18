@@ -79,6 +79,8 @@ class ImageManager(manager.Manager):
             row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
             row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
             image = models.Image(row)
+            if not image.statusMessage:
+                image.statusMessage = jobstatus.statusNames[image.status]
             images.append(image)
 
         # Now add files for the images.
@@ -173,7 +175,7 @@ class ImageManager(manager.Manager):
             else:
                 status = jobstatus.FINISHED
 
-            if statusMessage is None:
+            if not statusMessage:
                 statusMessage = jobstatus.statusNames[status]
 
             if (status, statusMessage) != (image.status, image.statusMessage):
