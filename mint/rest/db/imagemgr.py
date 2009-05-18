@@ -79,7 +79,6 @@ class ImageManager(manager.Manager):
             row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
             row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
             image = models.Image(row)
-            image.statusMessage = jobstatus.statusNames[image.status]
             images.append(image)
 
         # Now add files for the images.
@@ -132,47 +131,55 @@ class ImageManager(manager.Manager):
         for image in imageList:
             if image.status in jobstatus.terminalStatuses:
                 continue
-            oldStatus = image.status
-            oldMessage = image.statusMessage
 
+            status = statusMessage = res = None
             if image.hasBuild():
                 uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
                                   self.cfg.externalDomainName, image.imageId, 
                                   image.buildCount)
                 try:
                     mc = self._getMcpClient()
-                    status = mc.jobStatus(uuid)
+                    res = mc.jobStatus(uuid)
                 except mcp_error.UnknownJob:
-                    image.status = jobstatus.NO_JOB
-                    image.statusMessage = jobstatus.statusNames[jobstatus.NO_JOB]
+                    status = jobstatus.NO_JOB
                 else:
-                    image.status, image.statusMessage = status
+                    if res:
+                        status, statusMessage = res
+                    # Sometimes the MCP returns None for no obvious reason.
+                    # Treat it like NO_JOB.
 
-                if image.status == jobstatus.NO_JOB:
+                if status == jobstatus.NO_JOB:
                     # The MCP no longer knows about this job and it never will,
                     # so make a guess as to whether it passed or failed and
                     # set its state to that.
-                    image.status = jobstatus.FAILED
                     if image.files and image.files.files:
                         # Images with files succeeded, unless one of those files
                         # is a failed build log.
                         for file in image.files.files:
                             if file.title.startswith('Failed '):
+                                status = jobstatus.FAILED
                                 break
                         else:
-                            image.status = jobstatus.FINISHED
+                            status = jobstatus.FINISHED
 
                     elif image.amiId:
                         # AMIs don't have files but if the ID is posted then it
                         # succeeded.
-                        image.status = jobstatus.FINISHED
+                        status = jobstatus.FINISHED
+                    else:
+                        # No files and no AMI means the job failed.
+                        status = jobstatus.FAILED
 
-                    image.statusMessage = jobstatus.statusNames[image.status]
             else:
-                image.status = jobstatus.FINISHED
-                image.statusMessage = jobstatus.statusNames[jobstatus.FINISHED]
-            if (oldStatus, oldMessage) != (image.status, image.statusMessage):
+                status = jobstatus.FINISHED
+
+            if statusMessage is None:
+                statusMessage = jobstatus.statusNames[status]
+
+            if (status, statusMessage) != (image.status, image.statusMessage):
+                image.status, image.statusMessage = status, statusMessage
                 changed.append(image)
+
         if changed:
             cu = self.db.cursor()
             for image in changed:
