@@ -3056,11 +3056,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             data = self.serializeBuild(buildId)
             try:
                 mc = self._getMcpClient()
-                return mc.submitJob(data)
+                res = mc.submitJob(data)
             except mcp_error.NotEntitledError:
                 raise mint_error.NotEntitledError()
             except mcp_error.NetworkError:
                 raise mint_error.BuildSystemDown
+            return res or ""
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
