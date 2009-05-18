@@ -297,7 +297,10 @@ class SiteAuthorization(object):
         if not self.entitlementKey:
             raise MintError('Unable to register rBuilder - no key set')
         url = os.path.join(self.xml.entitlement.id, 'registration?_method=PUT')
-        fObj = urllib2.urlopen(url, registrationData)
+        req = urllib2.Request(url, registrationData,
+                {'Content-type': 'text/xml'})
+
+        fObj = urllib2.urlopen(req)
         self._copySaveXML(fObj)
         return True
 
