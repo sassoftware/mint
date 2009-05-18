@@ -604,7 +604,13 @@ def handler(req):
                         # we must force a redirect to ensure half finished
                         # work flowpaths don't trigger more errors.
                         setCacheControl(req, strict=True)
-                        req.headers_out['Location'] = cfg.basePath + 'maintenance'
+                        mode = maintenance.getMaintenanceMode()
+                        if mode == maintenance.EXPIRED_MODE:
+                            # Bounce to flex UI for registration
+                            req.headers_out['Location'] = cfg.basePath + 'ui/'
+                        else:
+                            # Bounce to maintenance page
+                            req.headers_out['Location'] = cfg.basePath + 'maintenance'
                         return apache.HTTP_MOVED_TEMPORARILY
                 except:
                     # we only want to handle errors in production mode
