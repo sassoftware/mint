@@ -607,6 +607,8 @@ def handler(req):
                         mode = maintenance.getMaintenanceMode(cfg)
                         if mode == maintenance.EXPIRED_MODE:
                             # Bounce to flex UI for registration
+                            if cfg.basePath.endswith('web/'):
+                                cfg.basePath = cfg.basePath[:-4]
                             req.headers_out['Location'] = cfg.basePath + 'ui/'
                         else:
                             # Bounce to maintenance page
