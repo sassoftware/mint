@@ -25,7 +25,6 @@ validBuildTypes = {
     'UPDATE_ISO'        : 15,
     'APPLIANCE_ISO'     : 16,
     'IMAGELESS'         : 17,
-    'VMWARE_OVF_IMAGE'  : 18,
 }
 
 TYPES = validBuildTypes.values()
@@ -78,7 +77,6 @@ typeNames = {
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
     VMWARE_IMAGE:       "VMware (R) Virtual Appliance",
     VMWARE_ESX_IMAGE:   "VMware (R) ESX Server Virtual Appliance",
-    VMWARE_OVF_IMAGE:   "VMware (R) Virtual Appliance OVF",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File",
     VIRTUAL_PC_IMAGE:   "Microsoft (R) VHD Virtual Appliance",
@@ -109,7 +107,6 @@ typeNamesShort = {
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
     IMAGELESS:          "Online Update",
-    VMWARE_OVF_IMAGE:   "VMware (R) OVF",
 }
 
 # To be used to map image types ids from XML tag names
@@ -138,7 +135,6 @@ xmlTagNameImageTypeMap = {
     'virtualIronImage':    VIRTUAL_IRON,
     'vmwareImage':         VMWARE_IMAGE,
     'vmwareEsxImage':      VMWARE_ESX_IMAGE,
-    'vmwareOvfImage':      VMWARE_OVF_IMAGE,
     'xenOvaImage':         XEN_OVA,
 }
 
@@ -152,7 +148,6 @@ typeNamesMarketing = {
     RAW_HD_IMAGE:       "Parallels, QEMU (Raw Hard Disk)",
     VMWARE_IMAGE:       "VMware (R) Virtual Appliance",
     VMWARE_ESX_IMAGE:   "VMware (R) ESX Server Virtual Appliance",
-    VMWARE_OVF_IMAGE:   "VMware (R) Virtual Appliance OVF",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File",
     VIRTUAL_PC_IMAGE:   "Microsoft (R) VHD Virtual Server",
