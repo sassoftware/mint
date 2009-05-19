@@ -604,7 +604,7 @@ def handler(req):
                         # we must force a redirect to ensure half finished
                         # work flowpaths don't trigger more errors.
                         setCacheControl(req, strict=True)
-                        mode = maintenance.getMaintenanceMode()
+                        mode = maintenance.getMaintenanceMode(cfg)
                         if mode == maintenance.EXPIRED_MODE:
                             # Bounce to flex UI for registration
                             req.headers_out['Location'] = cfg.basePath + 'ui/'
