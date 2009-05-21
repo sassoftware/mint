@@ -112,10 +112,10 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         image = db.getImageForProduct('foo', imageId)
         imageMgr = imagemgr.ImageManager(self.mintCfg, db, db.auth)
         imageMgr.mcpClient = mock.MockObject()
-        imageMgr.mcpClient.jobStatus._mock.setDefaultReturn(('xx', 'foo'))
+        imageMgr.mcpClient.jobStatus._mock.setDefaultReturn((jobstatus.RUNNING, 'foo'))
         imageMgr._updateStatusForImageList([image])
-        assert(image.status == 'xx')
-        assert(image.statusMessage == 'foo')
+        self.assertEqual(image.status, jobstatus.RUNNING)
+        self.assertEqual(image.statusMessage, 'foo')
 
         # No job + image files -> finished
         image.status = jobstatus.WAITING
