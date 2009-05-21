@@ -26,8 +26,7 @@ from mint.templates import groupTemplate
 class ProductManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
 	manager.Manager.__init__(self, cfg, db, auth, publisher)
-        self.reposMgr = reposmgr.RepositoryManager(cfg, db, auth,
-                                                   self.db.db.projects.reposDB)
+        self.reposMgr = reposmgr.RepositoryManager(cfg, db, auth)
 
     def getProduct(self, fqdn):
         # accept fqdn.
@@ -165,8 +164,8 @@ class ProductManager(manager.Manager):
             version=version,
             commit=False)
 
-        self.reposMgr.createRepository(projectId, hostname, domainname, 
-                                       isPrivate=isPrivate)
+        self.reposMgr.createRepository(projectId)
+
         # can only add members after the repository is set up
         if self.auth.userId >= 0:
             self.setMemberLevel(projectId, self.auth.userId, userlevels.OWNER,

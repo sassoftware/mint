@@ -44,16 +44,11 @@ class ProjectsTable(database.KeyedTable):
     def __init__(self, db, cfg):
         self.cfg = cfg
 
-        # poor excuse for a switch statement
         # XXX: This doesn't even begin to handle alternates; it's only
         # hanging around until it gets replaced with the new repo logic.
         defaultDriver = self.cfg.database[self.cfg.defaultDatabase][0]
-        self.reposDB = {'sqlite': SqliteRepositoryDatabase,
-                        'mysql':  MySqlRepositoryDatabase,
-                        'postgresql':  PostgreSqlRepositoryDatabase,
-                        'pgpool': PGPoolRepositoryDatabase,
-                       }[defaultDriver](cfg)
-        # call init last so that we can use reposDB during schema upgrades
+        self.reposDB = getFactoryForRepos(defaultDriver)(cfg)
+
         database.DatabaseTable.__init__(self, db)
 
     def new(self, **kwargs):
@@ -642,6 +637,18 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         cu = db.cursor()
         cu.execute("DROP DATABASE %s" % reposName)
         util.rmtree(path + reposName, ignore_errors = True)
+
+
+def getFactoryForRepos(driver):
+    if driver == 'sqlite':
+        return SqliteRepositoryDatabase
+    elif driver == 'mysql':
+        return MySqlRepositoryDatabase
+    elif driver == 'postgresql':
+        return PostgreSqlRepositoryDatabase
+    elif driver == 'pgpool':
+        return PGPoolRepositoryDatabase
+
 
 class ProductVersionsTable(database.KeyedTable):
     name = 'ProductVersions'

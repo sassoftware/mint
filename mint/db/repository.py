@@ -52,17 +52,16 @@ def withNetServer(method):
 class RepositoryManager(object):
     __slots__ = (
             'cfg', 'db',
-            'authToken', 'requestFQDN', 'reposDBCache',
+            'authToken', 'reposDBCache',
             'repos', '_cache', '__weakref__',
             )
-    def __init__(self, cfg, db, authToken=None, requestFQDN=None):
+    def __init__(self, cfg, db, authToken=None):
         self.cfg = cfg
         self.db = db
         if authToken:
             self.authToken = authToken
         else:
             self.authToken = [ValidUser(), None, [], None]
-        self.requestFQDN = requestFQDN
         self.reposDBCache = {}
         self.repos = MultiShimNetClient(self)
         self._cache = {}
@@ -183,16 +182,16 @@ class RepositoryHandle(object):
         return self._projectInfo['fqdn']
     @property
     def hasDatabase(self):
-        return (not self.isExternal) or self.isLocalMirror
+        return bool((not self.isExternal) or self.isLocalMirror)
     @property
     def isExternal(self):
-        return self._projectInfo['external']
+        return bool(self._projectInfo['external'])
     @property
     def isHidden(self):
-        return self._projectInfo['hidden']
+        return bool(self._projectInfo['hidden'])
     @property
     def isLocalMirror(self):
-        return self._projectInfo['localMirror']
+        return bool(self._projectInfo['localMirror'])
     @property
     def projectId(self):
         return self._projectInfo['projectId']
@@ -208,10 +207,11 @@ class RepositoryHandle(object):
             host = self._cfg.secureHost
         else:
             protocol, port = 'http', 80
-            host = '%s.%s' % (self._cfg.hostName, self._cfg.siteDomainName)
+            host = self._cfg.projectSiteHost
 
-        if self._manager().requestFQDN:
-            host = self._manager().requestFQDN
+        if ':' in host:
+            host, port = host.split(':')
+            port = int(port)
 
         return protocol, host, port
 
@@ -277,7 +277,7 @@ class RepositoryHandle(object):
         """
         fqdn, shortName = self.fqdn, self.shortName
 
-        if self.isExternal:
+        if not self.hasDatabase:
             raise RuntimeError("Cannot create a netserver for "
                     "external project %r" % (shortName,))
 

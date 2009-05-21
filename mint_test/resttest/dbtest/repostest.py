@@ -142,16 +142,18 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         productMgr = db.productMgr
         reposMgr = productMgr.reposMgr
         userpass = self.cfg.user.find('localhost')
-        productMgr.createExternalProduct('Local Host', 'localhost', '', 
+        productMgr.createExternalProduct('Local Host', 'localhost', 'abc', 
                                  self.cfg.repositoryMap['localhost'],
                                  models.AuthInfo(authType='userpass',
                                                  username=userpass[0],
                                                  password=userpass[1]),
                                                  mirror=True)
         cfg = reposMgr.getConaryConfig()
-        assert(cfg.repositoryMap['localhost'] == 'https://test.rpath.local2:0/repos/localhost/')
+        self.assertEqual(cfg.repositoryMap['localhost.abc'],
+                'https://test.rpath.local2:0/repos/localhost/')
         # FIXME - is this right??
-        assert(cfg.user.find('localhost') == ('mintauth', 'mintpass'))
+        self.assertEqual(cfg.user.find('localhost.abc'),
+                ('mintauth', 'mintpass'))
 
     def testIsProductExternal(self):
         db = self.openRestDatabase()
@@ -193,7 +195,7 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         self.setDbUser(db, 'owner')
         self.createProduct('bar', domainname='rpath.com', db=db)
         map = db.productMgr.reposMgr.getConaryConfig().repositoryMap
-        assert(map['bar.rpath.com'] == 'https://test.rpath.local2:0/repos/bar/')
+        self.assertEqual(map['bar.rpath.com'], 'https://test.rpath.local2:0/repos/bar/')
 
     def testAdminAccess(self):
         db = self.openRestDatabase()

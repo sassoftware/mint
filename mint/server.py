@@ -893,10 +893,7 @@ class MintServer(object):
 
             # create the target repository if needed
             if mirrored:
-                parts = versions.Label(label).getHost().split(".")
-                hostname, domainname = parts[0], ".".join(parts[1:])
                 self.restDb.productMgr.reposMgr.createRepository(projectId,
-                        hostname, domainname, isPrivate=False,
                         createMaps=False)
         except:
             self.db.rollback()
@@ -3560,6 +3557,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM InboundMirrors")
         mirrorOrder = cu.fetchone()[0]
 
+        project = self.projects.get(targetProjectId)
+        if not project['database']:
+            # Project was not previously assigned a database.
+            self.projects.update(targetProjectId,
+                    database=self.cfg.defaultDatabase)
+
         x = self.inboundMirrors.new(targetProjectId=targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
                 sourceUrl = sourceUrl, sourceAuthType=authType,
@@ -3573,7 +3576,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             hostname = fqdn.split(".")[0]
             domainname = ".".join(fqdn.split(".")[1:])
             self.restDb.productMgr.reposMgr.createRepository(targetProjectId,
-                    hostname, domainname, isPrivate=False, createMaps=False)
+                    createMaps=False)
 
         self._generateConaryRcFile()
         return x

@@ -11,6 +11,8 @@ import weakref
 
 from mint import helperfuncs
 from mint import userlevels
+from mint.db import projects
+from mint.db import repository as reposdb
 from mint.lib import unixutils
 from mint.rest import errors
 from mint.rest.api import models
@@ -29,79 +31,58 @@ from conary.repository.netrepos import netserver
 from conary.server import schema
 
 _cachedCfg = None
-_cachedServerCfgs = {}
+
 
 class RepositoryManager(manager.Manager):
     ADMIN_LEVEL = object()
 
-    def __init__(self, cfg, db, auth, reposDB):
+    def __init__(self, cfg, db, auth):
 	manager.Manager.__init__(self, cfg, db, auth)
         self.cfg = cfg
-        self.reposDB = reposDB
         self.auth = auth
         self.profiler = None
+        self.reposManager = reposdb.RepositoryManager(cfg, db.db._db)
 
-    @staticmethod
-    def close():
-        pass
+    def close(self):
+        self.reposManager.close()
 
-    def _getProductFQDN(self, hostname):
-        #FIXME: this breaks when the project is external.
-        cu = self.db.cursor()
-        cu.execute('SELECT hostname, domainname FROM Projects WHERE'
-                   ' hostname=?', hostname)
-        hostname, domainname = self.db._getOne(cu, errors.ProductNotFound,
-                                               hostname)
-        if domainname:
-            return '%s.%s' % (hostname, domainname)
-        return hostname
+    def createRepository(self, productId, createMaps=True):
+        repos = self.reposManager.getRepositoryFromProjectId(productId)
 
-    def createRepository(self, productId, hostname, domainname,
-                         isPrivate=False, createMaps=True):
-        if domainname:
-            fqdn = "%s.%s" % (hostname, domainname)
-        else:
-            fqdn = hostname
-
-        # Current code can't handle unicodes, and we already know
-        # the string is ASCII-safe.
-        fqdn = str(fqdn)
-
-        dbPath = os.path.join(self.cfg.reposPath, fqdn)
-        tmpPath = os.path.join(dbPath, 'tmp')
-        util.mkdirChain(tmpPath)
-        self.reposDB.create(fqdn)
-        repositoryDB =  self.reposDB.getRepositoryDB(fqdn, db=self.db.db)
-        db = dbstore.connect(repositoryDB[1], repositoryDB[0])
-        schema.loadSchema(db)
-        db.commit()
-        db.close()
-
-        authInfo = models.AuthInfo('userpass', self.cfg.authUser,
-                                   self.cfg.authPass)
+        # Add entry in Labels table.
+        authInfo = models.AuthInfo('userpass',
+                self.cfg.authUser, self.cfg.authPass)
         if createMaps:
-            self._setLabel(productId, fqdn, self._getRepositoryUrl(fqdn),
-                           authInfo)
+            self._setLabel(productId, repos.fqdn, repos.getURL(), authInfo)
 
-        if not isPrivate:
-            self.addUser(fqdn, 'anonymous', password='anonymous',
-                         level=userlevels.USER)
+        if repos.hasDatabase:
+            # Create the repository infrastructure (db, dirs, etc.).
+            repos.create()
 
-        # here we automatically create the USER or DEVELOPER level?
-        # This avoids the chance of paying a high price for adding
-        # them later - instead we amortize the cost over every commit
-        repos = self._getRepositoryServer(fqdn)
-        self._getRoleForLevel(repos, userlevels.USER)
-        self._getRoleForLevel(repos, userlevels.DEVELOPER)
+            # Create users and roles
+            if not repos.isHidden:
+                self.addUser(repos.fqdn, 'anonymous', password='anonymous',
+                        level=userlevels.USER)
 
-        # add the auth user so we can add additional permissions
-        # to this repository
-        self.addUser(fqdn, self.cfg.authUser,
-                     password=self.cfg.authPass,
-                     level=self.ADMIN_LEVEL)
+            # here we automatically create the USER and DEVELOPER levels
+            # This avoids the chance of paying a high price for adding
+            # them later - instead we amortize the cost over every commit
+            if not repos.isExternal:
+                netServer = repos.getNetServer()
+                self._getRoleForLevel(netServer, userlevels.USER)
+                self._getRoleForLevel(netServer, userlevels.DEVELOPER)
+
+            # add the auth user so we can add additional permissions
+            # to this repository
+            self.addUser(repos.fqdn, self.cfg.authUser,
+                    password=self.cfg.authPass, level=self.ADMIN_LEVEL)
 
     def deleteRepository(self, fqdn):
-        self.reposDB.delete(fqdn)
+        # TODO: move this to the internal RepositoryManager
+        repos = self._getRepositoryHandle(fqdn)
+        driver = repos.dbTuple[0]
+        reposFactory = projects.getFactoryForRepos(driver)(self.cfg)
+        reposFactory.delete(repos.fqdn)
 
     def setProfiler(self, profiler):
         self.profiler = profiler
@@ -220,29 +201,15 @@ class RepositoryManager(manager.Manager):
         return repo
 
     def _getRepositoryServer(self, fqdn):
-        if '.' not in fqdn:
-            fqdn = self._getProductFQDN(fqdn)
-        if False and fqdn in _cachedServerCfgs:
-            cfg = _cachedServerCfgs[fqdn]
-        else:
-            dbPath = os.path.join(self.cfg.reposPath, fqdn)
-            tmpPath = os.path.join(dbPath, 'tmp')
-            cfg = netserver.ServerConfig()
-            cfg.repositoryDB = self.reposDB.getRepositoryDB(str(fqdn), db=self.db.db)
-            cfg.tmpDir = tmpPath
-            cfg.serverName = str(fqdn)
-            cfg.repositoryMap = {}
-            cfg.authCacheTimeout = self.cfg.authCacheTimeout
-            cfg.externalPasswordURL = self.cfg.externalPasswordURL
-            cfg.serializeCommits = True
+        return self._getRepositoryHandle(fqdn).getShimServer()
 
-            contentsDirs = self.cfg.reposContentsDir
-            cfg.contentsDir = " ".join(x % fqdn for x in contentsDirs.split(" "))
-            _cachedServerCfgs[fqdn] = cfg
-        repos = shimclient.NetworkRepositoryServer(cfg, '')
-        # used for making sure that all database connections 
-        # are closed at the end of a restDb's life.
-        return repos
+    def _getRepositoryHandle(self, fqdn):
+        if '.' in fqdn:
+            return self.reposManager.getRepositoryFromFQDN(fqdn)
+        elif fqdn.isdigit():
+            return self.reposManager.getRepositoryFromProjectId(fqdn)
+        else:
+            return self.reposManager.getRepositoryFromShortName(fqdn)
 
     def _getBaseConfig(self):
         global _cachedCfg
@@ -345,7 +312,6 @@ class RepositoryManager(manager.Manager):
             fqdn = hostname
         self._checkExternalRepositoryAccess(fqdn, url, authInfo)
 
-        self.createRepository(productId, hostname, domainname, isPrivate=True)
         mirrorOrder = self._getNextMirrorOrder()
         mirrorId = self.db.db.inboundMirrors.new(
                 targetProjectId=productId,
@@ -356,6 +322,8 @@ class RepositoryManager(manager.Manager):
                 sourcePassword = authInfo.password,
                 sourceEntitlement = authInfo.entitlement,
                 mirrorOrder = mirrorOrder, allLabels = 1)
+
+        self.createRepository(productId)
 
         self._generateConaryrcFile()
 
