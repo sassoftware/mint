@@ -41,7 +41,7 @@ install: default-install
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common
-	install -D -m0644 httpd-stub.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder.conf
+	install -D -m0644 httpd-stub.conf $(DESTDIR)/etc/httpd/conf.d/01_rbuilder.conf
 	mkdir -p $(DESTDIR)/etc/httpd/conf.d/rbuilder
 	touch $(DESTDIR)/etc/httpd/conf.d/rbuilder/.keep.rbuilder
 	# system dist (executable)
