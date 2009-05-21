@@ -134,7 +134,8 @@ class ImageManager(manager.Manager):
             if image.status in jobstatus.terminalStatuses:
                 continue
 
-            status = statusMessage = res = None
+            status = jobstatus.UNKNOWN
+            statusMessage = res = None
             if image.hasBuild():
                 uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
                                   self.cfg.externalDomainName, image.imageId, 
@@ -148,7 +149,7 @@ class ImageManager(manager.Manager):
                     if res:
                         status, statusMessage = res
                     # Sometimes the MCP returns None for no obvious reason.
-                    # Treat it like NO_JOB.
+                    # In those cases, keep the fallback value of UNKNOWN.
 
                 if status == jobstatus.NO_JOB:
                     # The MCP no longer knows about this job and it never will,
@@ -175,6 +176,8 @@ class ImageManager(manager.Manager):
             else:
                 status = jobstatus.FINISHED
 
+            if status not in jobstatus.statusNames:
+                status = jobstatus.UNKNOWN
             if not statusMessage:
                 statusMessage = jobstatus.statusNames[status]
 
