@@ -394,8 +394,8 @@ class RepositoryHandle(object):
 
         elif driver in ('postgresql', 'pgpool'):
             if '/' in path:
-                base, dbName = path.rsplit('/', 1)[0] + '/'
-                + '/postgres'
+                base, dbName = path.rsplit('/', 1)
+                base += '/'
             else:
                 base, dbName = '', path
 
