@@ -29,11 +29,6 @@ class ConstantsTest(testhelp.TestCase):
             if missing:
                 errorStr += ', '.join([x[0] for x in missing]) + \
                     " need%s to be defined" % (len(missing) == 1 and 's' or '')
-            if extra:
-                if errorStr:
-                    errorStr += ' and '
-                errorStr += ', '.join([x[0] for x in extra]) + \
-                    " need%s to be removed" % (len(extra) == 1 and 's' or '')
             self.failIf(errorStr, errorStr + ". This test can safely be "
                         "disabled if not comparing tip to tip.")
 
