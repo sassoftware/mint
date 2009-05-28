@@ -621,13 +621,16 @@ class MigrateTo_48(SchemaMigration):
     Version = (48, 0)
 
     # 48.0
-    # - Dropped Jobs and JobsData tables
+    # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
+    #       ConaryComponents, GroupTroveRemovedComponents
     # - Dropped BuildsView
     # - Dropped "deleted" column from Builds
     # - Changed type of build status column to "text"
     def migrate(self):
         cu = self.db.cursor()
-        drop_tables(self.db, 'JobData', 'Jobs')
+        drop_tables(self.db, 'JobData', 'Jobs', 'ConaryComponents',
+                'GroupTroveRemovedComponents', 'GroupTroveItems',
+                'GroupTroves')
 
         if 'BuildsView' in self.db.views:
             cu.execute("DROP VIEW BuildsView")
