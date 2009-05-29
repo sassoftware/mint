@@ -28,95 +28,76 @@ class ProductManager(manager.Manager):
 	manager.Manager.__init__(self, cfg, db, auth, publisher)
         self.reposMgr = reposmgr.RepositoryManager(cfg, db, auth)
 
-    def getProduct(self, fqdn):
-        # accept fqdn.
-        hostname = fqdn.split('.')[0]
-        cu = self.db.cursor()
+    def _getProducts(self, whereClauses=(), limit=None, offset=0):
+        whereClauses = list(whereClauses)
         sql = '''
-            SELECT Projects.projectId as productId,hostname,name,shortname,
-                   domainname, namespace, 
-                   description, Users.username as creator, projectUrl,
-                   isAppliance, Projects.timeCreated, Projects.timeModified,
-                   commitEmail, prodtype, backupExternal, hidden, level
-            FROM Projects
-            LEFT JOIN Users ON (creatorId=Users.userId)
-            LEFT JOIN ProjectUsers ON (
-                            Projects.projectId=ProjectUsers.projectId
-                            AND ProjectUsers.userId=?)
-            WHERE hostname=?
+            SELECT p.projectId AS productId, hostname, name, shortname,
+                domainname, namespace, description, cr.username AS creator,
+                projectUrl, isAppliance, p.timeCreated,
+                p.timeModified, commitEmail, prodtype, backupExternal,
+                hidden, m.level AS role, fqdn AS repositoryHostname,
+                ( SELECT pubReleaseId FROM PublishedReleases r
+                    WHERE r.projectId = p.projectId
+                    AND timePublished IS NOT NULL
+                    ORDER BY timePublished DESC LIMIT 1
+                ) AS latestRelease
+            FROM Projects p
+            LEFT JOIN ProjectUsers m ON (
+                p.projectId = m.projectId
+                AND m.userId = ? )
+            LEFT JOIN Users cr ON ( p.creatorId = cr.userId )
         '''
-        cu.execute(sql, self.auth.userId, hostname)
-        d = self.db._getOne(cu, errors.ProductNotFound, hostname)
+        args = [self.auth.userId]
 
-        level = d.pop('level', None)
-        if level is not None:
-            d['role'] = userlevels.names[level]
+        if not self.auth.isAdmin:
+            # Private projects are invisible to non-member non-admins.
+            whereClauses.append(
+                    ('( p.hidden = 0 OR m.level IS NOT NULL )', ()))
 
-        d['repositoryHostname'] = d['shortname'] + '.' + d['domainname']
-        p = models.Product(d)
-        cu.execute("""SELECT pubReleaseId FROM PublishedReleases
-                    WHERE timePublished IS NOT NULL
-                    AND projectId=? ORDER BY timePublished
-                    LIMIT 1 """, p.productId)
-        results = cu.fetchone()
-        if results:
-            p.latestRelease = results[0]
-        return p
+        if whereClauses:
+            sql += ' WHERE ' + ' AND '.join(x[0] for x in whereClauses)
+            args.extend(itertools.chain(*[x[1] for x in whereClauses]))
+        sql += ' ORDER BY p.shortname ASC'
+        if limit:
+            sql += ' LIMIT %d OFFSET %d' % (limit, offset)
+
+        cu = self.db.cursor()
+        cu.execute(sql, *args)
+
+        results = []
+        for row in cu:
+            role = row.pop('role')
+            if role is not None:
+                row['role'] = userlevels.names[role]
+
+            results.append(models.Product(row))
+        return results
+
+    def getProduct(self, fqdn):
+        hostname = fqdn.split('.')[0]
+        results = self._getProducts([('hostname = ?', (hostname,))])
+        if not results:
+            raise errors.ProductNotFound(hostname)
+        assert len(results) == 1  # guaranteed by unique constraint
+        return results[0]
 
     def listProducts(self, start=0, limit=None, search=None, roles=None):
-        cu = self.db.cursor()
-
-        query = '''
-            SELECT p.projectId AS productId,
-                p.hostname, p.name, p.shortname, p.domainname, p.namespace,
-                p.description, creator.username AS creator, p.projectUrl,
-                p.isAppliance, p.timeCreated, p.timeModified, p.commitEmail,
-                p.prodtype, p.backupExternal, member.level AS role
-            FROM Projects p
-            LEFT JOIN ProjectUsers member ON (
-                member.projectId = p.projectId
-                AND member.userId = ? )
-            LEFT JOIN Users creator ON ( p.creatorId = creator.userId )
-            '''
-        args = [self.auth.userId]
         clauses = []
-
         if roles is not None:
             roles = ', '.join('%d' % userlevels.idsByName[x.lower()]
                     for x in roles)
-            clauses.append('member.level IN ( %s )' % roles)
-        elif not self.auth.isAdmin:
-            # Non-admins can't see hidden projects they aren't a member of
-            clauses.append('( p.hidden = 0 OR member.level IS NOT NULL )')
+            clauses.append(('m.level IN ( %s )' % roles, ()))
 
         if search:
             search = search.replace('\\', '\\\\')
             search = search.replace('%','\\%')
             search = search.replace('_','\\_')
-            clauses.append('p.shortname LIKE ?')
-            args.append('%' + search + '%')
+            search = '%' + search + '%'
+            clauses.append(('p.shortname LIKE ?', (search,)))
 
-        if clauses:
-            query += 'WHERE ' + (' AND '.join(clauses))
-        query += ' ORDER BY p.shortname ASC'
-
-        if limit:
-            query += ' LIMIT %d' % limit
-        if start:
-            query += ' OFFSET %d' % start
-        cu.execute(query, *args)
-
-        results = models.ProductSearchResultList()
-        for d in cu:
-            role = d.pop('role')
-            if role is not None:
-                d['role'] = userlevels.names[role]
-            d['repositoryHostname'] = d['hostname'] + '.' + d['domainname']
-
-            p = models.Product(d)
-            results.products.append(p)
-        return results
-
+        ret = models.ProductSearchResultList()
+        ret.products = self._getProducts(clauses, limit, start)
+        return ret
 
     def getProductVersion(self, fqdn, versionName):
         # accept fqdn.
