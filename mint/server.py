@@ -378,6 +378,9 @@ class MintServer(object):
             prof.stopXml(methodName)
             if self.restDb:
                 self.restDb.productMgr.reposMgr.close()
+            if self.mcpClient:
+                self.mcpClient.disconnect()
+                self.mcpClient = None
 
     def __getattr__(self, key):
         if key[0] != '_':
