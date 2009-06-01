@@ -59,7 +59,9 @@ class ProductManager(manager.Manager):
             args.extend(itertools.chain(*[x[1] for x in whereClauses]))
         sql += ' ORDER BY p.shortname ASC'
         if limit:
-            sql += ' LIMIT %d OFFSET %d' % (limit, offset)
+            sql += ' LIMIT %d' % (limit,)
+            if offset:
+                sql += ' OFFSET %d' % (offset,)
 
         cu = self.db.cursor()
         cu.execute(sql, *args)
