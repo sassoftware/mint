@@ -6,6 +6,7 @@
 
 static_files =				\
 	amazon-s3-processor		\
+	auth-generate			\
 	check-repository		\
 	db2db				\
 	deleteproject			\

@@ -29,3 +29,19 @@ class RefreshAuthScript(SingletonScript):
         if not auth.update():
             return -1
         return 0
+
+
+class GenerateAuthScript(RefreshAuthScript):
+    def action(self):
+        auth = SiteAuthorization(self.cfg.siteAuthCfgPath, self.conaryCfg)
+        if auth.isConfigured():
+            self.log.info('Already configured; keeping existing blob.')
+        else:
+            self.log.info('Generating entitlement ...')
+            if not auth.generate():
+                return -1
+
+        print
+        print 'rBuilder ID:', auth.rBuilderId
+        print 'Entitlement key:', auth.entitlementKey
+        return 0
