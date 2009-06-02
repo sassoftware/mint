@@ -6,8 +6,8 @@
 
 static_files =				\
 	amazon-s3-processor		\
+	auth-generate			\
 	check-repository		\
-	db2db				\
 	deleteproject			\
 	ec2-terminator			\
 	fix-ec2-certificates		\
