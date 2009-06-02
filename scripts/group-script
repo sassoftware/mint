@@ -15,6 +15,8 @@
 . /etc/sysconfig/pgsql/postgresql-rbuilder
 export PGDATA PGPORT
 
+scriptdir=`dirname $0`
+
 if [[ `awk '{print $2}' /proc/mounts | grep -c ^/proc$` > 1 ]]
 then
     # If /proc appears to be mounted more than once, then it means we're
@@ -96,26 +98,26 @@ createlang -U postgres plpgsql template1 &>/dev/null
 createuser -SDRU postgres rbuilder &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
 
-/usr/share/rbuilder/scripts/rbuilder-database --migrate \
+"$scriptdir"/rbuilder-database --migrate \
     || die "Failed to migrate the rBuilder database"
 chown -f apache:apache /srv/rbuilder/data/{db,platformName.cache} 2>/dev/null
 
 # Migrate all conary repositories
-/usr/share/rbuilder/scripts/migrate-all-projects || die "Failed to migrate all repositories"
+"$scriptdir"/migrate-all-projects || die "Failed to migrate all repositories"
 
 # Migrate the mint config
-/usr/share/rbuilder/scripts/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
+"$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
 chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
 # Create a project for rMake to use as a repository.
-sudo -u apache /usr/share/rbuilder/scripts/rmake-setup
+sudo -u apache "$scriptdir"/rmake-setup
 
 # Set up external repositories for the platforms we support
 # this can't be run as apache as it needs root access to read the
 # entitlement dir
-/usr/share/rbuilder/scripts/init-extproducts
+"$scriptdir"/init-extproducts
 
 # make sure that the old rapa plugin .pyc files are not blocking us
 # from finding files in /usr/lib64/raa. rapa should restart at the end of 
@@ -150,7 +152,7 @@ done
 #   -- 5.0.0 - 2008-12-01
 if [ "x$is_chrooted" == "x" ]
 then
-    /usr/share/rbuilder/scripts/generate-certs.sh \
+    "$scriptdir"/generate-certs.sh \
         || die "Failed to generate certificates"
 else
     echo Skipping certificate generation due to chrooting
