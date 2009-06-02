@@ -11,16 +11,25 @@ General utilities for use in the rBuilder codebase.
 import logging
 import inspect
 
+FORMATS = {
+        'console': ('%(levelname)s: %(message)s', None),
+        'file': ('%(asctime)s %(levelname)s %(name)s : %(message)s', None),
+        }
+
 
 def setupLogging(logPath=None, consoleLevel=logging.WARNING,
-        fileLevel=logging.INFO, logger=''):
+        consoleFormat='console', fileLevel=logging.INFO, fileFormat='file',
+        logger=''):
 
     logger = logging.getLogger(logger)
+    logger.handlers = []
     level = 100
 
     # Console handler
     if consoleLevel is not None:
-        consoleFormatter = logging.Formatter('%(levelname)s: %(message)s')
+        if consoleFormat in FORMATS:
+            consoleFormat = FORMATS[consoleFormat]
+        consoleFormatter = logging.Formatter(*consoleFormat)
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(consoleFormatter)
         consoleHandler.setLevel(consoleLevel)
@@ -29,8 +38,9 @@ def setupLogging(logPath=None, consoleLevel=logging.WARNING,
 
     # File handler
     if logPath and fileLevel is not None:
-        logfileFormatter = logging.Formatter(
-                '%(asctime)s %(levelname)s %(name)s : %(message)s')
+        if fileFormat in FORMATS:
+            fileFormat = FORMATS[fileFormat]
+        logfileFormatter = logging.Formatter(*fileFormat)
         logfileHandler = logging.FileHandler(logPath)
         logfileHandler.setFormatter(logfileFormatter)
         logfileHandler.setLevel(fileLevel)

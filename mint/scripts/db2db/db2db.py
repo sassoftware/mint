@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) 2007-2009 rPath, Inc.
 #
@@ -71,7 +70,6 @@ def migrate_table(src, dst, table, batch=5000):
     dstCu = dst.prepareInsert(table, fields)
     callback = Callback(table, count)
     rowCounter = 0
-    commitCounter = 0
     fields = ','.join(fields)
     srcCu = src.iterRows(table, fields)
     while rowCounter <= count:
@@ -81,13 +79,8 @@ def migrate_table(src, dst, table, batch=5000):
         ret = dstCu.insertRows(rows, callback)
 
         rowCounter += ret
-        commitCounter += ret
-        if commitCounter > 10000:
-            #dst.commit()
-            commitCounter = 0
     callback.last()
     deleted, changes = dstCu.finish()
-    #dst.commit()
     dstCount = dst.getCount(table)
     assert (count == dstCount + deleted), ("Source Rows count %d != target "
             "rows count %d + %d for table %s" % (count, dstCount, deleted,
@@ -95,42 +88,12 @@ def migrate_table(src, dst, table, batch=5000):
     return deleted, changes
 
 
-def store_db(option, opt_str, value, parser):
-    if parser.values.db is None:
-        parser.values.db = []
-    parser.values.db.append((opt_str[2:], value))
-    if len(parser.values.db) > 2:
-        raise optparse.OptionValueError(
-                "Can only specify one source and one target database")
-
-
-def main(args):
-    parser = optparse.OptionParser(
-            usage="usage: %prog [options] srcopt=DB dstopt=DB")
-
-    for db in ["sqlite", "mysql", "postgresql"]:
-        parser.add_option("--" + db, action = "callback", callback=store_db,
-                type="string", dest="db", help="specify a %s database" % db,
-                metavar=db.upper())
-
-    parser.add_option("--batch", "-b", action="store", dest="batch",
-            metavar="N", type=int, default=5000,
-            help="batch size in (row count) for each copy operation")
-    parser.add_option("--verbose", "-v", action="store_true", dest="verbose",
-            default=False, help="verbose output")
-
-    (options, args) = parser.parse_args(args)
-    if options.db is None or len(options.db) != 2:
-        parser.print_help()
-        sys.exit(-1)
-
-    mintutils.setupLogging(consoleLevel=logging.DEBUG)
-
-    if options.db[1][0] != 'postgresql':
-        raise RuntimeError("Only postgresql targets are supported at this time")
-    src = getdb(*options.db[0])
-    dst = getdb(*options.db[1])
-    dst.verbose = options.verbose
+def move_database(sourceTuple, destTuple):
+    if destTuple[0] != 'postgresql':
+        raise RuntimeError("Only postgres targets are supported at this time")
+    src = getdb(*sourceTuple)
+    dst = getdb(*destTuple)
+    dst.verbose = True
 
     # Sanity checks
     dst.createSchema()
@@ -164,9 +127,8 @@ def main(args):
     # now migrate all tables
     changes = 0
     for table in tablelist.TABLE_LIST:
-        deleted_, changes_ = migrate_table(src, dst, table, options.batch)
+        deleted_, changes_ = migrate_table(src, dst, table, 5000)
         changes += changes_
-        sys.stdout.flush()
 
     if changes:
         log.warning("A total of %d modifications were made to meet "
@@ -178,9 +140,3 @@ def main(args):
 
     src.close()
     dst.close()
-
-    return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))

@@ -188,8 +188,6 @@ class Database(object):
         self.db.setVersion(version)
         self.db.commit()
     # useful shortcut
-    def commit(self):
-        return self.db.commit()
     def close(self):
         self.db.close()
 
@@ -244,23 +242,10 @@ class PgSQLDatabase(Database):
         return PgSQLLoader(self.db, table, fields)
 
     def finalize(self, version):
-        Database.finalize(self, version)
         cu = self.db.cursor()
         log.info("Vacuuming")
         cu.execute("VACUUM ANALYZE")
-
-
-class MySQLDatabase(Database):
-    def __init__(self, db):
-        Database.__init__(self, "mysql", db)
-        self._hint = "/*!40001 SQL_NO_CACHE */"
-    # functions for when the instance is a target
-    def finalize(self, version):
         Database.finalize(self, version)
-        log.info("Analyzing")
-        cu = self.db.cursor()
-        for table in TABLE_LIST:
-            cu.execute("ANALYZE LOCAL TABLE %s" % (table,))
 
 
 def getdb(driver, db):

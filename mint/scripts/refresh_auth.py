@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) 2009 rPath, Inc.
 #
@@ -12,10 +11,13 @@ from mint.config import MintConfig, RBUILDER_CONFIG
 from mint.lib.scriptlibrary import SingletonScript
 from mint.lib.siteauth import SiteAuthorization
 
+log = logging.getLogger(__name__)
+
 
 class RefreshAuthScript(SingletonScript):
     logFileName = 'scripts.log'
     cfgPath = RBUILDER_CONFIG
+    newLogger = True
 
     def __init__(self):
         self.cfg = MintConfig()
@@ -35,9 +37,9 @@ class GenerateAuthScript(RefreshAuthScript):
     def action(self):
         auth = SiteAuthorization(self.cfg.siteAuthCfgPath, self.conaryCfg)
         if auth.isConfigured():
-            self.log.info('Already configured; keeping existing blob.')
+            log.info('Already configured; keeping existing blob.')
         else:
-            self.log.info('Generating entitlement ...')
+            log.info('Generating entitlement ...')
             if not auth.generate():
                 return -1
 

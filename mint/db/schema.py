@@ -20,8 +20,10 @@ by rBuilder. For migration from previous versions, see the
 L{migrate<mint.migrate>} module.
 '''
 
+import logging
 from conary.dbstore import sqlerrors, sqllib
-from conary.lib.tracelog import logMe
+
+log = logging.getLogger(__name__)
 
 # database schema major version
 RBUILDER_DB_VERSION = sqllib.DBversion(48, 0)
@@ -765,7 +767,6 @@ def createSchema(db, doCommit=True):
 
 def checkVersion(db):
     version = db.getVersion()
-    logMe(2, "current =", version, "required =", RBUILDER_DB_VERSION)
 
     # test for no version
     if version == 0:
@@ -784,7 +785,13 @@ def loadSchema(db, cfg=None, should_migrate=False):
         version =  checkVersion(db)
     except sqlerrors.SchemaVersionError, e_value:
         version = e_value.args[0]
-    logMe(1, "current =", version, "required =", RBUILDER_DB_VERSION)
+    log.debug("Current schema version is %s", version)
+    log.debug("Latest schema verson is %s", RBUILDER_DB_VERSION)
+
+    if version == RBUILDER_DB_VERSION:
+        # Nothing to do
+        return version
+
     # load the current schema object list
     db.loadSchema()
 
@@ -793,6 +800,8 @@ def loadSchema(db, cfg=None, should_migrate=False):
 
     # expedite the initial repo creation
     if version == 0:
+        log.info("Creating new mint database schema with version %s",
+                RBUILDER_DB_VERSION)
         createSchema(db)
         setVer = migrate.majorMinor(RBUILDER_DB_VERSION.major)
         return db.setVersion(setVer)
@@ -828,7 +837,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
     db.loadSchema()
 
     # run through the schema creation to create any missing objects
-    logMe(2, "checking for/initializing missing schema elements...")
+    log.debug("Checking for and creating missing schema elements")
     createSchema(db)
     if version > 0 and version != RBUILDER_DB_VERSION:
         # schema creation/conversion failed. SHOULD NOT HAPPEN!

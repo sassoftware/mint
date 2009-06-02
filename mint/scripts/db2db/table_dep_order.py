@@ -8,6 +8,8 @@
 """
 Given a postgres database, print the list of tables in the order in which they
 should be loaded to keep foreign keys satisfied.
+
+Use this to produce the tables for tablelist.py.
 """
 
 import sys

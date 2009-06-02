@@ -61,10 +61,6 @@ class MirrorScript(scriptlibrary.SingletonScript):
             self.logPath = os.path.join(self.cfg.logPath, self.logFileName)
         return True
 
-    def logTraceback(self):
-        tb = traceback.format_exc()
-        [self.log.error(x) for x in tb.split("\n") if x.strip()]
-
     def _doMirror(self, mirrorCfg, sourceRepos, targetRepos, fullSync = False):
 
         from conary.conaryclient import mirror

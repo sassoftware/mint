@@ -1,9 +1,11 @@
-/var/log/rbuilder/package-index.log
-/var/log/rbuilder/package-index-external.log
+/var/log/rbuilder/conary-db-migration.log
+/var/log/rbuilder/load-mirror.log
 /var/log/rbuilder/mirror-inbound.log
 /var/log/rbuilder/mirror-outbound.log
-/var/log/rbuilder/load-mirror.log
-/var/log/rbuilder/profiling {
+/var/log/rbuilder/package-index-external.log
+/var/log/rbuilder/package-index.log
+/var/log/rbuilder/profiling
+/var/log/rbuilder/scripts.log {
     missingok
     notifempty
     compress

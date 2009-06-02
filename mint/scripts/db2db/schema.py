@@ -185,11 +185,11 @@ class PrintDatabase(object):
 
 def getTables(driver="sqlite"):
     printer = PrintDatabase(True, driver)
-    schema.loadSchema(printer)
+    schema.createSchema(printer)
     return printer.statements
 
 
 def getIndexes(driver="sqlite"):
     printer = PrintDatabase(False, driver)
-    schema.loadSchema(printer)
+    schema.createSchema(printer)
     return printer.statements

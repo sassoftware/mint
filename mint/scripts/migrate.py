@@ -1,14 +1,17 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 
+import logging
 import os
 import sys
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
-from conary.lib.tracelog import logMe
 from mint.db import schema
+
+log = logging.getLogger(__name__)
+
 
 # SCHEMA Migration
 class SchemaMigration(migration.SchemaMigration):
@@ -22,8 +25,9 @@ class SchemaMigration(migration.SchemaMigration):
             msg = self.msg
         if msg == "":
             msg = "Finished migration to schema version %s" % (self.Version,)
-        logMe(1, msg)
+        log.info(msg)
         self.msg = msg
+
 
 # Helper functions
 def add_columns(db, table, *columns):
@@ -685,7 +689,6 @@ def migrateSchema(db, cfg=None):
     assert(version >= 37) # minimum version we support
     if version.major > schema.RBUILDER_DB_VERSION.major:
         return version # noop, should not have been called.
-    logMe(2, "migrating from version", version)
     # first, we need to make sure that for the current major we're up
     # to the latest minor
     migrateFunc = _getMigration(version.major)

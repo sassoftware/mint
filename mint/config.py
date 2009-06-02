@@ -166,7 +166,7 @@ class MintConfig(ConfigFile):
 
     # Repositories and built-in proxy
     database                = (CfgDict(CfgDriver),
-            {'default': ('postgresql', 'postgres@localhost.localdomain:5439/%s')},
+            {'default': ('pgpool', 'postgres@localhost.localdomain:6432/%s')},
             "Aliases for repositoryDB connect string templates.")
     injectUserAuth          = (CfgBool, True,
                                 "Inject user authentication into proxy requests")

@@ -1,31 +1,42 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved
 #
 
+import fcntl
 import logging
 import os
 import os.path
 import sys
 import traceback
-import fcntl
-
 from conary.lib.log import logger
+from mint.lib import mintutils
 
-class GenericScript:
+
+class GenericScript(object):
     """ 
     Class used for a script which has an action phase and an optional
     cleanup phase.
     """
 
+    cfg = None
+    logFileName = None
     logPath = None
+    newLogger = False
 
     def __init__(self):
         self.name = os.path.basename(sys.argv[0])
         self.resetLogging()
 
     def resetLogging(self):
+        if self.newLogger:
+            mintutils.setupLogging(self.logPath, consoleLevel=logging.INFO,
+                    fileLevel=logging.DEBUG)
+        else:
+            self._resetLogging()
+
+    def _resetLogging(self):
         """
         You can override the logPath after __init__ by calling this method.
         """
@@ -44,6 +55,12 @@ class GenericScript:
 
         if oldLogPath:
             self.log.warning("Unable to write to log file: %s" % oldLogPath)
+
+    def setConfig(self, cfg):
+        self.cfg = cfg
+        if self.logFileName and not self.logPath:
+            self.logPath = os.path.join(cfg.logPath, self.logFileName)
+            self.resetLogging()
 
     def run(self):
         """ 

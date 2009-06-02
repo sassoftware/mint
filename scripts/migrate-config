@@ -1,54 +1,6 @@
 #!/usr/bin/python
-#
-# Copyright (c) 2008 rPath, Inc.
-#
-
-import logging
-import os
+from mint.scripts import migrate_config
 import sys
 
-from mint import config
-from mint.lib import scriptlibrary
-
-
-def migrate():
-    scriptlibrary.setupScriptLogger('/var/log/rbuilder/scripts.log',
-            consoleLevel=logging.INFO, logfileLevel=logging.DEBUG)
-    log = scriptlibrary.getScriptLogger()
-
-    # read the configuration
-    cfg = config.MintConfig()
-    namespaceDfl = cfg.namespace
-    cfg.read(config.RBUILDER_CONFIG)
-
-    if not cfg.configured:
-        log.info("Not migrating rBuilder configuration: not configured.")
-        return 0
-
-    changed = False
-
-    # defaultBranch -> namespace
-    if cfg.namespace == namespaceDfl:
-        branch = cfg.defaultBranch.split(':')[0].strip()
-        if branch:
-            cfg.namespace = branch
-            log.info("Namespace has been set to %r", branch)
-            changed = True
-
-    # reposDBDriver/reposDBPath -> database
-    poolName = 'default'
-    if cfg.reposDBDriver:
-        cfg.database[poolName] = pool = (cfg.reposDBDriver, cfg.reposDBPath)
-        log.info("Set database alias %r to %r", poolName, pool)
-        changed = True
-
-    path = config.RBUILDER_GENERATED_CONFIG
-    cfg.writeGeneratedConfig(path)
-    log.info("Migrated configuration written to %s", path)
-    
-    return 0
-
 if __name__ == '__main__':
-    # don't migrate by default just in case
-    if  sys.argv[1:] and sys.argv[1] == "--migrate":
-        os._exit(migrate())
+    sys.exit(migrate_config.MigrateConfig().run())
