@@ -96,11 +96,12 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
                                    name='Image1')
         self.setImageFiles(db, 'foo', imageId)
         file, = db.listFilesForImage('foo', imageId).files
-        assert(file.sha1 == '356a192b7913b04c54574d18c28d46e6395428ab')
-        assert(file.size == 1024)
-        assert(file.title == 'Image File 1')
-        assert(str(file) == 'images.ImageId(fileId=1, size=1024)')
-        assert(str(file.urls[0]) == "images.FileUrl(url='/downloadImage?fileId=1', urlType=0)")
+        self.assertEqual(file.sha1, '356a192b7913b04c54574d18c28d46e6395428ab')
+        self.assertEqual(file.size, 1024)
+        self.assertEqual(file.title, 'Image File 1')
+        self.assertEqual(len(file.urls), 1)
+        self.assertEqual(file.urls[0].url, 'http://test.rpath.local:0/downloadImage?fileId=1')
+        self.assertEqual(file.urls[0].urlType, 0)
 
     def testAddImageStatus(self):
         db = self.openMintDatabase(createRepos=False)
@@ -193,20 +194,22 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
+
         db.setImageFiles('foo', imageId, [('filename1', 'title')])
         files = db.getImageForProduct('foo', imageId).files.files
-        assert(len(files) == 1)
+        self.assertEqual(len(files), 1)
         file, = files
-        assert(file.title == 'title')
-        assert(file.urls[0].url == '/downloadImage?fileId=1')
+        self.assertEqual(file.title, 'title')
+        self.assertEqual(file.urls[0].url, 'http://test.rpath.local:0/downloadImage?fileId=1')
+
         db.setImageFiles('foo', imageId, [('filename2', 'title2', 1024, 'sha')])
         files = db.getImageForProduct('foo', imageId).files.files
-        assert(len(files) == 1)
+        self.assertEqual(len(files), 1)
         file, = files
-        assert(file.title == 'title2')
-        assert(file.urls[0].url == '/downloadImage?fileId=2')
-        assert(file.size == 1024)
-        assert(file.sha1 == 'sha')
+        self.assertEqual(file.title, 'title2')
+        self.assertEqual(file.urls[0].url, 'http://test.rpath.local:0/downloadImage?fileId=2')
+        self.assertEqual(file.size, 1024)
+        self.assertEqual(file.sha1, 'sha')
         self.assertRaises(ValueError,
                 db.setImageFiles, 'foo', imageId, 
                                  [('filename2', 'title2', 1024)])

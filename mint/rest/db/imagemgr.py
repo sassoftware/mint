@@ -394,7 +394,7 @@ class ImageManager(manager.Manager):
             raise errors.StopJobFailed, (imageId, e), sys.exc_info()[2]
 
     def _makeDownloadURL(self, fileId, urlType):
-        url = 'http://%s%s' % (self.cfg.secureHost, self.cfg.basePath)
+        url = 'http://%s%s' % (self.cfg.siteHost, self.cfg.basePath)
         url += 'downloadImage?fileId=%d' % fileId
         if urlType not in (urltypes.LOCAL, self.cfg.redirectUrlType):
             url += '&urlType=%d' % urlType

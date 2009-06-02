@@ -831,6 +831,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <backupExternal>false</backupExternal>
     <timeCreated></timeCreated>
     <timeModified></timeModified>
+    <hidden>false</hidden>
     <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
     <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
@@ -844,8 +845,8 @@ class ProductVersionTest(restbase.BaseRestTest):
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
             resp)
-        self.failUnlessEqual(resp,
-             exp % dict(port = client.port, server = client.server))
+        self.assertBlobEquals(resp,
+                exp % dict(port = client.port, server = client.server))
 
     def testGetOneProduct(self):
         return self._testGetProducts()
