@@ -35,6 +35,20 @@ Copyright (c) 2006-2009 rPath, Inc.
                 font-weight: normal;
                 background: url(${makeUrl('/rbasetup/static/images/check.gif')}) left center no-repeat;
         }
+
+        .failedState {
+                font-weight: normal;
+                background: url(${makeUrl('/rbasetup/static/images/failed.png')}) left center no-repeat;
+        }
+
+        .errormessage {
+                background: #ffcccc;
+                border: 1px solid #ff3333;
+                padding: 10px;
+                margin-left: 1em;
+                margin-right: 1em;
+        }
+
     </style>
     <script type="text/javascript" src="${makeUrl('/static/javascript/constants.js')}?v=25" />
     <script type="text/javascript" src="${makeUrl('/rbasetup/static/javascript/firstTimeSetup.js')}?v=1" />
@@ -58,6 +72,8 @@ Copyright (c) 2006-2009 rPath, Inc.
                     </ul>
                 </div>
                 <div class="page-section-content-bottom">
+                    <div id="status_message"></div>
+                    <a class="rnd_button float-right off" id="retry_button" href="javascript:void(0);">Retry</a>
                     <a class="rnd_button float-right off" id="continue_button" href="javascript:void(0);">Continue</a>
                 </div>
             </form>

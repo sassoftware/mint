@@ -3,6 +3,10 @@
 // All rights reserved
 //
 
+function retryFirstTimeSetup() {
+    d = postRequest('/rbasetup/rBASetup/retryFirstTimeSetup',
+                    null, null, reloadNoHistory, '', false);
+}
 function updateCurrentStep(stepNumber, completed, completedMsg) {
     var step = 'step' + stepNumber;
     var currentFound = false;
@@ -12,7 +16,12 @@ function updateCurrentStep(stepNumber, completed, completedMsg) {
         if (e.id.indexOf(step) >= 0) {
             currentFound = true;
             if (completed) {
-                setElementClass(e, 'completedState');
+                if ( completedMsg.length > 0 ) {
+                    setElementClass(e, 'failedState');
+                }
+                else {
+                    setElementClass(e, 'completedState');
+                }
             }
             else {
                 setElementClass(e, 'currentState');
@@ -28,11 +37,16 @@ function updateCurrentStep(stepNumber, completed, completedMsg) {
     if (completed) {
         var msg = completedMsg || '';
         if (msg.length > 0) {
-            $('completedMsg').innerHTML = errorMsg;
-            showElement('completedMsg');
+            $('status_message').innerHTML = completedMsg;
+            showElement('status_message');
+            setNodeAttribute('status_message', 'class', 'errormessage')
+            removeElementClass('retry_button', 'off');
+            setNodeAttribute('retry_button', 'href', 'javascript:retryFirstTimeSetup()');
         }
-        removeElementClass('continue_button', 'off');
-        setNodeAttribute('continue_button', 'href', 'javascript:button_submit(document.page_form)');
+        else {
+            removeElementClass('continue_button', 'off');
+            setNodeAttribute('continue_button', 'href', 'javascript:button_submit(document.page_form)');
+        }
     }
 }
 
@@ -53,7 +67,7 @@ function getUpdatedStatus() {
         else {
             completed = true;
             if (statusCode != TASK_SUCCESS) {
-                errors = req['statusMsg'];
+                errors = req['statusmsg'];
             }
         }
         updateCurrentStep(newStep, completed, errors);

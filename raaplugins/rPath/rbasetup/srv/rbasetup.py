@@ -12,6 +12,7 @@ import traceback
 from conary import conarycfg
 
 from raa.modules.raasrvplugin import rAASrvPlugin
+from raa.rpath_error import PermanentTaskFailureException
 
 from rPath.rbasetup import lib
 
@@ -161,17 +162,19 @@ class rBASetup(rAASrvPlugin):
             if auth.isConfigured():
                 log.warning("Entitlement is already set; "
                         "keeping rBuilder ID %s .", auth.rBuilderId)
-                return True
+                return {}
 
             newKey = auth.generate()
+            if newKey is None:
+                return {'errors': [ 'Failed to generate entitlement', ] }
             self.server.setNewEntitlement(newKey)
 
             log.info("Key successfully generated; your new rBuilder ID is %s .",
                     auth.rBuilderId)
-            return True
-        except:
+            return {}
+        except Exception, e:
             log.exception("Failed to generate entitlement")
-            return False
+            return { 'errors': [ str(e), ] }
 
     def _setupExternalProjects(self):
         """
@@ -235,7 +238,9 @@ class rBASetup(rAASrvPlugin):
         """
         Calls first time setup.
         """
-        return self.firstTimeSetup(schedId, execId)
+        ret = self.firstTimeSetup(schedId, execId)
+        if ret.has_key('errors'):
+            raise PermanentTaskFailureException('\n'.join(ret['errors']))
 
     def firstTimeSetup(self, schedId, execId):
         """
@@ -259,7 +264,7 @@ class rBASetup(rAASrvPlugin):
             errorMsg = "Failed to add initial administrative user '%s' to rBuilder" % newValues['new_username']
             log.warning(errorMsg)
 
-            return False
+            return { 'errors': [ errorMsg ] }
 
         # Create the rMake repository and restart rMake if needed.
         # If this gets called twice, it's no big deal, as the
@@ -269,8 +274,9 @@ class rBASetup(rAASrvPlugin):
 
         # Generate an entitlement
         self.server.setFirstTimeSetupState(lib.FTS_STEP_ENTITLE)
-        if not self._generateEntitlement(newCfg):
-            return False
+        ret = self._generateEntitlement(newCfg)
+        if ret.has_key('errors'):
+            return ret
 
         # Setup the initial external projects
         self.server.setFirstTimeSetupState(lib.FTS_STEP_INITEXTERNAL)
@@ -278,4 +284,5 @@ class rBASetup(rAASrvPlugin):
 
         # Done
         self.server.setFirstTimeSetupState(lib.FTS_STEP_COMPLETE)
+        return {}
 

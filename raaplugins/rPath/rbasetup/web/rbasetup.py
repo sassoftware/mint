@@ -47,7 +47,7 @@ class rBASetup(rAAWebPlugin):
         # If the system is already configured and this plug-in hasn't been run
         # in the wizard yet (i.e. migration) mark it as done.  We only want to
         # run in the wizard during install.
-        isConfigured, _ = lib.getRBAConfiguration()
+        isConfigured, cfg = lib.getRBAConfiguration()
         if isConfigured:
             # this initializes the pluginId dict which we need
             raa.modules.helper.getWebPluginIdDict()
@@ -216,6 +216,14 @@ class rBASetup(rAAWebPlugin):
             # the first time setup page on success; we don't have to do it here.
 
         return dict(message="Saved rBuilder configuration.")
+
+    @raa.web.expose(allow_json=True)
+    def retryFirstTimeSetup(self):
+        currentStatus = self._getFirstTimeSetupStatus()
+        if currentStatus['status'] == constants.TASK_FATAL_ERROR:
+            sched = schedule.ScheduleNow()
+            self.setPropertyValue('FTS_SCHEDID', self.schedule(sched), RDT_INT)
+        return   
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True, template="rPath.rbasetup.firstTimeSetup")
     def firstTimeSetup(self):
