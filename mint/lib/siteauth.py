@@ -116,10 +116,32 @@ class SiteAuthorization(object):
         # NB: only set conaryCfg inside scripts. It enables some slow
         # methods that shouldn't be used in web handlers.
         self.cfgPath = os.path.abspath(cfgPath)
-        self.conaryCfg = conaryCfg
+        self._conaryCfg = conaryCfg
         self.cfg = self.xml = None
         self.cfgHash = self.xmlHash = None
         self.load()
+
+    @property
+    def conaryCfg(self):
+        """
+        Load the system conary configuration on-demand, as it's too slow to be
+        used in the normal hotpath. It is only needed for maintenance
+        operations like generation, refreshes, and registration.
+        """
+        if not self._conaryCfg:
+            self._conaryCfg = conarycfg.ConaryConfiguration(True)
+        return self._conaryCfg
+
+    def _urlopen(self, request):
+        """
+        urlopen C{request} using the system proxy settings.
+        """
+        return urllib2.urlopen(request)
+        # TODO: finish this using conary's transport since it actually
+        # supports SSL
+        proxy = urllib2.ProxyHandler(self.conaryCfg.proxy)
+        opener = urllib2.build_opener(proxy)
+        return opener.open(request)
 
     # Readers
     def _getXMLPath(self):
@@ -174,8 +196,6 @@ class SiteAuthorization(object):
         Get the entitlement currently configured for the main repository.
         This is the key we will ask the enablement server about.
         """
-        assert self.conaryCfg
-
         # The key can be overridden from the config file.
         if self.cfg.key:
             return self.cfg.key
@@ -196,7 +216,6 @@ class SiteAuthorization(object):
 
         @returns: (name, version)
         """
-        assert self.conaryCfg
         cli = conaryclient.ConaryClient(self.conaryCfg)
 
         groups = set(x[0] for x in cli.fullUpdateItemList()
@@ -227,7 +246,7 @@ class SiteAuthorization(object):
         if self.entitlementKey:
             url = os.path.join(self.xml.entitlement.id, 'registration/form')
             log.debug('Grabbing form from %s', url)
-            fObj = urllib2.urlopen(url)
+            fObj = self._urlopen(url)
             return fObj.read()
         else:
             return None
@@ -257,7 +276,7 @@ class SiteAuthorization(object):
 
         err = None
         try:
-            fObj = urllib2.urlopen(req)
+            fObj = self._urlopen(req)
         except:
             log.exception("Failed to generate entitlement:")
             return None
@@ -278,7 +297,7 @@ class SiteAuthorization(object):
             log.debug('Checking %s', url)
 
             try:
-                fObj = urllib2.urlopen(url)
+                fObj = self._urlopen(url)
             except:
                 # Current policy is to keep trying indefinitely without
                 # shutting off the rBuilder.
@@ -308,7 +327,7 @@ class SiteAuthorization(object):
         req = urllib2.Request(url, registrationData,
                 {'Content-type': 'text/xml'})
 
-        fObj = urllib2.urlopen(req)
+        fObj = self._urlopen(req)
         self._copySaveXML(fObj)
         return True
 
@@ -388,18 +407,13 @@ class SiteAuthorization(object):
 
 
 _AUTH_CACHE = {}
-def getSiteAuth(cfgPath, withConaryConfig=False):
+def getSiteAuth(cfgPath):
     """
     Get a L{SiteAuthorization} object for the config at C{cfgPath}, using
     a cached object if one is available.
     """
     if cfgPath in _AUTH_CACHE:
-        siteAuth = _AUTH_CACHE[cfgPath]
-        siteAuth.refresh()
+        _AUTH_CACHE[cfgPath].refresh()
     else:
-        siteAuth = _AUTH_CACHE[cfgPath] = SiteAuthorization(cfgPath)
-
-    if withConaryConfig and not siteAuth.conaryCfg:
-        siteAuth.conaryCfg = conarycfg.ConaryConfiguration(True)
-
-    return siteAuth
+        _AUTH_CACHE[cfgPath] = SiteAuthorization(cfgPath)
+    return _AUTH_CACHE[cfgPath]
