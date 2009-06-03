@@ -167,7 +167,7 @@ class vhdDiskType(EnumOption):
                'Dynamic image' : 'dynamic',
                'Difference image' : 'difference'}
 
-class buildOVF1_0(BooleanOption):
+class buildOVF10(BooleanOption):
     default = False
     prompt = "Produce an OVF 1.0 format image"
 
@@ -216,24 +216,24 @@ class StubImageTemplate(Template):
 
 class RawHdTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'installLabelPath', 'swapSize', 'buildOVF1_0']
+                 'installLabelPath', 'swapSize', 'buildOVF10']
     id = buildtypes.RAW_HD_IMAGE
 
 class RawFsTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'installLabelPath', 'swapSize', 'buildOVF1_0']
+                 'installLabelPath', 'swapSize', 'buildOVF10']
     id = buildtypes.RAW_FS_IMAGE
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking',
-                 'diskAdapter', 'vmSnapshots', 'buildOVF1_0']
+                 'diskAdapter', 'vmSnapshots', 'buildOVF10']
     id = buildtypes.VMWARE_IMAGE
 
 class VmwareESXImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking',
-                 'vmSnapshots', 'buildOVF1_0']
+                 'vmSnapshots', 'buildOVF10']
     id = buildtypes.VMWARE_ESX_IMAGE
 
 class VmwareOvfImageTemplate(Template):
@@ -245,7 +245,7 @@ class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
                  'installLabelPath', 'showMediaCheck', 'betaNag',
                  'mediaTemplateTrove', 'anacondaCustomTrove',
-                 'anacondaTemplatesTrove', 'buildOVF1_0']
+                 'anacondaTemplatesTrove', 'buildOVF10']
     id = buildtypes.INSTALLABLE_ISO
 
 class UpdateIsoTemplate(Template):
@@ -263,7 +263,7 @@ class LiveIsoTemplate(Template):
 
 class TarballTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath',
-                 'swapSize', 'buildOVF1_0']
+                 'swapSize', 'buildOVF10']
     id = buildtypes.TARBALL
 
 class VirtualPCTemplate(Template):
@@ -273,7 +273,7 @@ class VirtualPCTemplate(Template):
 
 class XenOVATemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'installLabelPath',
-                 'swapSize', 'vmMemory', 'buildOVF1_0']
+                 'swapSize', 'vmMemory', 'buildOVF10']
     id = buildtypes.XEN_OVA
 
 class VirtualIronVHDTemplate(Template):
@@ -283,14 +283,14 @@ class VirtualIronVHDTemplate(Template):
 
 class AMITemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName',
-                 'amiHugeDiskMountpoint', 'installLabelPath', 'buildOVF1_0']
+                 'amiHugeDiskMountpoint', 'installLabelPath', 'buildOVF10']
     id = buildtypes.AMI
 
 class ApplianceISOTemplate(Template):
     __slots__ = ['autoResolve', 'baseFileName', 'bugsUrl',
                  'installLabelPath', 'showMediaCheck', 'betaNag',
                  'mediaTemplateTrove', 'anacondaCustomTrove',
-                 'anacondaTemplatesTrove', 'buildOVF1_0']
+                 'anacondaTemplatesTrove', 'buildOVF10']
     id = buildtypes.APPLIANCE_ISO
 
 class ImagelessTemplate(Template):
