@@ -4,7 +4,8 @@
 #
 
 from raa.modules.raasrvplugin import rAASrvPlugin
-from mint.scripts import loadmirror, config
+from mint import config
+from mint.scripts import loadmirror
 
 import os
 import statvfs

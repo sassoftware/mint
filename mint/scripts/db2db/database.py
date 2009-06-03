@@ -242,10 +242,10 @@ class PgSQLDatabase(Database):
         return PgSQLLoader(self.db, table, fields)
 
     def finalize(self, version):
+        Database.finalize(self, version)
         cu = self.db.cursor()
         log.info("Vacuuming")
         cu.execute("VACUUM ANALYZE")
-        Database.finalize(self, version)
 
 
 def getdb(driver, db):

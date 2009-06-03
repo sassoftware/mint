@@ -13,6 +13,8 @@ import traceback
 from conary.lib.log import logger
 from mint.lib import mintutils
 
+log = logging.getLogger(__name__)
+
 
 class GenericScript(object):
     """ 
@@ -66,7 +68,11 @@ class GenericScript(object):
         """ 
         Call this to run the script action. 
         """
-        return self._run()
+        try:
+            return self._run()
+        except:
+            log.exception("Unhandled exception in script:")
+            return 1
 
     def action(self):
         """ 
@@ -79,8 +85,7 @@ class GenericScript(object):
     
     def cleanup(self):
         """ 
-        Classes inheriting from SingletonScript may implement this 
-        method to run finalizers, etc. 
+        This is called unconditionally before the script exits.
         """
         pass
 
@@ -98,16 +103,23 @@ class GenericScript(object):
         return True
 
     def _run(self):
-        exitcode = 1
-
         if not self.handle_args():
             self.usage()
+            return 1
         else:
-            try:
-                exitcode = self.action()
-            finally:
-                self.cleanup()
+            return self._runAction()
 
+    def _runAction(self):
+        exitcode = 1
+        try:
+            exitcode = self.action()
+        except SystemExit, error:
+            exitcode = error.code
+        except KeyboardInterrupt:
+            log.error("Interrupted by user")
+        except:
+            log.exception("Unhandled exception in script action:")
+        self.cleanup()
         return exitcode
 
 
@@ -177,20 +189,7 @@ class SingletonScript(GenericScript):
 
         try:
             # run action, always running cleanup at the end
-            try:
-                try:
-                    exitcode = self.action()
-                # handle KeyboardInterrupt
-                except KeyboardInterrupt:
-                    print >> sys.stderr, "Interrupted by user"
-                    sys.stderr.flush()
-                except Exception, e:
-                    exc = traceback.format_exc()
-                    print >> sys.stderr, exc
-                    sys.stderr.flush()
-            finally:
-                self.cleanup()
-
+            exitcode = self._runAction()
         finally:
             self._unlock()
             return exitcode

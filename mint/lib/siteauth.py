@@ -25,17 +25,20 @@ log = logging.getLogger(__name__)
 
 class AuthzConfig(ConfigFile):
     #pylint: disable-msg=R0904
-    keyUrl = (CfgString, 'https://entitlements.rpath.com/key/',
-            "Base URL for the enablement service's key handling")
     cachePath = (CfgString, 'authorization.xml',
             "Path where the XML response will be cached, relative to"
             "this configuration file.")
-    lastSuccess = (CfgString, None,
-            "Date on which the entitlement service last "
-            "provided a valid response.")
     checkRepos = (CfgString, 'products.rpath.com',
             "Repository FQDN whose entitlement should be sent to the "
             "enablement server.")
+    key = (CfgString, None,
+            "Entitlement key. If not specified (which is normal), use the "
+            "system's entitlement for C{checkRepos}.")
+    keyUrl = (CfgString, 'https://entitlements.rpath.com/key/',
+            "Base URL for the enablement service's key handling")
+    lastSuccess = (CfgString, None,
+            "Date on which the entitlement service last "
+            "provided a valid response.")
 
 
 # xobj bits - authorization blob
@@ -173,6 +176,10 @@ class SiteAuthorization(object):
         """
         assert self.conaryCfg
 
+        # The key can be overridden from the config file.
+        if self.cfg.key:
+            return self.cfg.key
+
         #pylint: disable-msg=E1103
         # ccfg does in fact have an "entitlement" member
         matches = self.conaryCfg.entitlement.find(self.cfg.checkRepos)
@@ -279,6 +286,7 @@ class SiteAuthorization(object):
                         "unable to refresh:")
             else:
                 self._copySaveXML(fObj)
+                log.debug("Entitlement refresh successful.")
                 return True
         else:
             log.warning("Deferring authorization check: "
