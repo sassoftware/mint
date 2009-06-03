@@ -2226,6 +2226,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         jsversion = self._getJSVersion()
 
+        groupVersion = helperfuncs.parseVersion(groupVersion).freeze()
+        groupFlavor = helperfuncs.parseFlavor(groupFlavor).freeze()
+
         # Make sure we convert from Unicode to UTF-8
         buildName = buildName.encode('UTF-8')
         buildId = self.builds.new(projectId = projectId,

@@ -562,6 +562,20 @@ def getBasicConaryConfiguration(mintCfg):
     return ccfg
 
 
+def parseFlavor(fStr):
+    """
+    Try to parse C{fStr} as a frozen or stringified flavor.
+    """
+    # This is a little fuzzy...
+    if not fStr:
+        return deps.Flavor()
+
+    if '#' in fStr and fStr[:fStr.find('#')].isdigit():
+        return deps.ThawFlavor(fStr)
+
+    return deps.parseFlavor(fStr)
+
+
 def parseVersion(vStr):
     """
     Try to parse C{vStr} as a version with or without timestamps.
