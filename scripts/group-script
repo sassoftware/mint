@@ -114,6 +114,9 @@ usermod -a -G apache raa-web
 # Create a project for rMake to use as a repository.
 sudo -u apache "$scriptdir"/rmake-setup
 
+# Make sure the site authorization is up to date.
+"$scriptdir"/refresh-auth
+
 # Set up external repositories for the platforms we support
 # this can't be run as apache as it needs root access to read the
 # entitlement dir
