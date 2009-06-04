@@ -158,7 +158,7 @@ class BuildsTable(database.KeyedTable):
         # not sure how to deal w/ error logs being associated since
         # we don't have an error status.
         extraSelect = ', bdf.sha1'
-        extraJoin = ' JOIN buildFiles bdf ON (bdf.buildId = b.buildId)'
+        extraJoin = ' LEFT JOIN buildFiles bdf ON (bdf.buildId = b.buildId)'
         if imageType == 'AMI':
             # cancel out sha1 join - we don't have any files with this build!
             extraJoin = ''
