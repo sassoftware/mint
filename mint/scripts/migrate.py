@@ -622,7 +622,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 0)
+    Version = (48, 1)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -653,6 +653,15 @@ class MigrateTo_48(SchemaMigration):
                     ALTER COLUMN statusMessage TYPE text""")
 
         return True                    
+
+    # 48.1
+    # - Move component and non-typed projects to be "repositories"
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Projects SET prodType = 'Repository'
+            WHERE prodType IN ('Component', '', NULL)""")
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
