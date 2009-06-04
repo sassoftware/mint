@@ -4952,12 +4952,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         res = self.builds.getAllBuildsByType(buildType, self.auth.userId,
                                              not self.auth.admin)
 
-        # the downloadUrl is now provided by the getFiles method of a build
-        # object, but we really need to minimize the db hits in the loop below
-        url = util.joinPaths(self.cfg.projectSiteHost,
-                self.cfg.basePath, 'downloadImage')
-        urlTemplate = "http://%s?fileId=%%d" % url
-
         for buildData in res:
             # we want to drop the hostname. it was collected by the builds
             # module call for speed reasons
@@ -4965,11 +4959,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildId = buildData['buildId']
             buildData['buildPageUrl'] = \
                     self._getBuildPageUrl(buildId, hostname = hostname)
+            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
+
             buildFilenames = self.getBuildFilenames(buildId)
             if buildFilenames:
-                buildData['downloadUrl'] = urlTemplate % \
-                        buildFilenames[0]['fileId']
-            buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
+                first = buildFilenames[0]
+                buildData['downloadUrl'] = first['downloadUrl']
+                buildData['sha1'] = first['sha1']
+
         return res
 
     @typeCheck(int)

@@ -152,16 +152,17 @@ class BuildsTable(database.KeyedTable):
 
     def getAllBuildsByType(self, imageType, requestingUserId, 
                            limitToUserId=False):
-        extraWhere = ''
-        # by default, we organize builds by sha1.  This assumes
-        # that builds have one file and that one file is the build.
-        # not sure how to deal w/ error logs being associated since
-        # we don't have an error status.
-        extraSelect = ', bdf.sha1'
+        # By default, select builds that have at least one file that is
+        # not a failed build log.
+        extraSelect = ''
         extraJoin = ' LEFT JOIN buildFiles bdf ON (bdf.buildId = b.buildId)'
+        extraWhere = ''' AND EXISTS (
+            SELECT * FROM BuildFiles bf
+            WHERE bf.buildId = b.buildId
+            AND bf.title != 'Failed build log' ) '''
         if imageType == 'AMI':
-            # cancel out sha1 join - we don't have any files with this build!
-            extraJoin = ''
+            # Cancel out build file test; AMIs don't have files
+            extraWhere = ''
 
             # Extra selects:
             # add in awsAccount if it exists.
@@ -231,7 +232,7 @@ class BuildsTable(database.KeyedTable):
         keys = ['projectId', 'hostname', 'buildId', 'productName',
                 'productDescription', 'buildName', 'buildDescription',
                 'isPublished', 'isPrivate', 'createdBy', 'role',
-                'sha1', 'awsAccountNumber', 'amiId',
+                'awsAccountNumber', 'amiId',
                 ]
 
         cu.execute(query, requestingUserId, imageType)
