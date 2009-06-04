@@ -37,7 +37,9 @@ function updateCurrentStep(stepNumber, completed, completedMsg) {
     if (completed) {
         var msg = completedMsg || '';
         if (msg.length > 0) {
-            $('status_message').innerHTML = completedMsg;
+            errorText = '<p>rBuilder was unable to compete the setup process.  Because some setup errors can be temporary, click the Retry button to attempt to complete the setup process.</p><p>If the error persists, please contact rPath for assistance using any of the following methods:</p><ul><li>web: <a href="https://issues.rpath.com">https://issues.rpath.com</a></li><li>phone: +1 919.851.3984</li><li>email: <a href="mailto: support@rpath.com">support@rpath.com</a></li></ul><p>Please note the step that experienced the error, as well as the additional information displayed below.</p><br />';
+
+            $('status_message').innerHTML = errorText + completedMsg.replace('Failed: A permanent failure has occurred:', '');
             showElement('status_message');
             setNodeAttribute('status_message', 'class', 'errormessage')
             removeElementClass('retry_button', 'off');

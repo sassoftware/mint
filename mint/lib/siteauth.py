@@ -9,11 +9,13 @@ import os
 import urllib
 import urllib2
 import time
+import xmlrpclib
 from conary import conarycfg
 from conary import conaryclient
 from conary.lib.cfg import ConfigFile
 from conary.lib.cfgtypes import CfgString
 from conary.lib.util import copyfileobj
+from conary.repository import transport
 from xobj import xobj
 
 from mint.lib.unixutils import atomicOpen, hashFile
@@ -132,16 +134,20 @@ class SiteAuthorization(object):
             self._conaryCfg = conarycfg.ConaryConfiguration(True)
         return self._conaryCfg
 
-    def _urlopen(self, request):
+    def _urlopen(self, request, data=None):
         """
         urlopen C{request} using the system proxy settings.
         """
-        return urllib2.urlopen(request)
-        # TODO: finish this using conary's transport since it actually
-        # supports SSL
-        proxy = urllib2.ProxyHandler(self.conaryCfg.proxy)
-        opener = urllib2.build_opener(proxy)
-        return opener.open(request)
+        # Break down the request again ... :-(
+        opener = transport.URLOpener(proxies=self.conaryCfg.proxy)
+        if hasattr(request, 'get_header'):
+            if request.get_header('Content-type') == 'text/xml':
+                opener.contentType = 'text/xml'
+            url = request.get_full_url()
+            data = request.get_data()
+        else:
+            url = request
+        return opener.open(url, data)
 
     # Readers
     def _getXMLPath(self):
@@ -260,7 +266,7 @@ class SiteAuthorization(object):
         groupTrove = self._getGroupVersion()
         if not groupTrove:
             log.error("Can't find top-level group to generate entitlement")
-            return None
+            raise Exception, "Can't find top-level group to generate entitlement"
         name, version = groupTrove
 
         doc = XML_ActivateDocument()
@@ -277,9 +283,9 @@ class SiteAuthorization(object):
         err = None
         try:
             fObj = self._urlopen(req)
-        except:
-            log.exception("Failed to generate entitlement:")
-            return None
+        except Exception, e:
+            log.exception("Failed to generate entitlement: %s" % str(e))
+            raise Exception, "Failed to generate entitlement: %s" % str(e)
 
         self._copySaveXML(fObj)
         return str(self.xml.entitlement.credentials.key)

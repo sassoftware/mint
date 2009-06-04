@@ -152,6 +152,13 @@ class rBASetup(rAAWebPlugin):
 
     @raa.web.expose(template="rPath.rbasetup.index")
     def index(self):
+        # check to see if we're mid-setup
+        schedId = self.getPropertyValue('FTS_SCHEDID', -1)
+        if schedId != -1:
+            status = raa.web.getWebRoot().getStatus(schedId)
+            if status['status'] != constants.TASK_SUCCESS:
+                raa.web.raiseHttpRedirect('/rbasetup/rBASetup/firstTimeSetup')
+
         # Get the configuration from the backend
         isConfigured, configurableOptions = lib.getRBAConfiguration()
 
