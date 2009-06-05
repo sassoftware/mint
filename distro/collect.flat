@@ -1,8 +1,8 @@
-/srv/rbuilder/data/db
 /srv/rbuilder/{config,mcp}
+/srv/rbuilder/data/authorization.{cfg,xml}
 /srv/rbuilder/jobmaster/{config,config.d}
-/var/log/rbuilder/{jobmaster.log,mcp.log,mirror-inbound.log,mirror-outbound.log,package-index.log,jobs,conary-db-migration.log}
-/var/log/rmake/{dispatcher.log,messagebus.log,repos.log,rmake-node.log,rmake-server.log,subscriber.log,xmlrpc.log,buildlogs}
+/var/log/rbuilder/*.log
+/var/log/rmake/{*.log,xmlrpc.log,buildlogs}
 /var/log/pgsql
 /etc/sysconfig/pgsql/*
 /etc/postgresql.conf.rbuilder

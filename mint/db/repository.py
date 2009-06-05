@@ -50,14 +50,10 @@ def withNetServer(method):
 
 
 class RepositoryManager(object):
-    __slots__ = (
-            'cfg', 'db',
-            'authToken', 'reposDBCache',
-            'repos', '_cache', '__weakref__',
-            )
-    def __init__(self, cfg, db, authToken=None):
+    def __init__(self, cfg, db, authToken=None, bypass=False):
         self.cfg = cfg
         self.db = db
+        self.bypass = bypass
         if authToken:
             self.authToken = authToken
         else:
@@ -66,11 +62,13 @@ class RepositoryManager(object):
         self.repos = MultiShimNetClient(self)
         self._cache = {}
 
-    def _getRepository(self, whereClause, *args):
+    def iterRepositories(self, whereClause='', *args):
         """
-        Return a new L{RepositoryHandle} object by querying the database.
+        Generate a sequence of L{RepositoryHandle}s matching a given
+        query.
         """
-        joins = ''
+        if whereClause:
+            whereClause = 'WHERE ' + whereClause
 
         cu = self.db.cursor()
         cu.execute("""
@@ -80,20 +78,26 @@ class RepositoryManager(object):
                         ) AS localMirror,
                     commitEmail, %s, url, authType, username, password,
                     entitlement
-                FROM Projects LEFT JOIN Labels USING ( projectId )%s
-                WHERE %s ORDER BY projectId ASC""" % (
+                FROM Projects LEFT JOIN Labels USING ( projectId )
+                %s ORDER BY projectId ASC""" % (
                     (self.db.driver == 'mysql' and '`database`' or 'database'),
-                    joins, whereClause),
+                    whereClause),
                 *args)
 
+        for row in cu:
+            yield RepositoryHandle(self, row)
+
+    def _getRepository(self, whereClause, *args):
+        """
+        Return a new L{RepositoryHandle} object by querying the database.
+        """
+        repoIter = self.iterRepositories(whereClause, *args)
         try:
-            project = cu.next()
+            return repoIter.next()
         except StopIteration:
             log.warning("No project found matching %r %% %r",
                     whereClause, args)
             raise ProductNotFound(args[0])
-        else:
-            return RepositoryHandle(self, project)
 
     @cached
     def getRepositoryFromFQDN(self, fqdn):
@@ -153,15 +157,18 @@ class RepositoryManager(object):
 
 
 class RepositoryHandle(object):
-    __slots__ = (
-            '_manager', '_cfg', '_projectInfo', '_cache',
-            )
-
     def __init__(self, manager, projectInfo):
         self._manager = weakref.ref(manager)
         self._cfg = manager.cfg
         self._projectInfo = projectInfo
         self._cache = {}
+
+        # Switch to a subclass for whichever database driver is needed.
+        if self.hasDatabase:
+            if self.driver == 'sqlite':
+                self.__class__ = SQLiteRepositoryHandle
+            elif self.driver in ('postgresql', 'pgpool'):
+                self.__class__ = PostgreSQLRepositoryHandle
 
     def __repr__(self):
         try:
@@ -175,8 +182,14 @@ class RepositoryHandle(object):
     def commitEmail(self):
         return self._projectInfo['commitEmail']
     @property
+    def contentsDirs(self):
+        return [x % (self.fqdn,) for x in self._cfg.reposContentsDir.split()]
+    @property
     def dbTuple(self):
         return self._getReposDBParams()
+    @property
+    def driver(self):
+        return self._getReposDBParams()[0]
     @property
     def fqdn(self):
         return self._projectInfo['fqdn']
@@ -295,8 +308,7 @@ class RepositoryHandle(object):
         cfg.serializeCommits = True
 
         cfg.serverName = [fqdn]
-        cfg.contentsDir = ' '.join(x % (fqdn,)
-                for x in self._cfg.reposContentsDir.split())
+        cfg.contentsDir = ' '.join(self.contentsDirs)
         cfg.tmpDir = os.path.join(self._cfg.reposPath, fqdn, 'tmp')
 
         if self._cfg.commitAction and not self.isLocalMirror:
@@ -385,38 +397,11 @@ class RepositoryHandle(object):
     # Database management
     def create(self):
         """
-        Create a repository database for this project.
+        Create a repository database for this project including associated
+        infrastructure such as the content store and temporary storage.
         """
-        driver, path = self._getReposDBParams()
-
-        if driver == 'sqlite':
-            util.mkdirChain(os.path.dirname(path))
-
-        elif driver in ('postgresql', 'pgpool'):
-            if '/' in path:
-                base, dbName = path.rsplit('/', 1)
-                base += '/'
-            else:
-                base, dbName = '', path
-
-            # Connect to the postgres database so we can create the reposDB.
-            controlDb = dbstore.connect(base + 'postgres', 'postgresql')
-            ccu = controlDb.cursor()
-
-            ccu.execute("""SELECT COUNT(*) FROM pg_catalog.pg_database
-                    WHERE datname = ?""", dbName)
-            if ccu.fetchone()[0]:
-                # Database exists
-                log.error("PostgreSQL database %r already exists while "
-                        "creating project %r", path, self.shortName)
-                raise RepositoryAlreadyExists(self.shortName)
-
-            ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % (dbName,))
-
-            controlDb.close()
-        else:
-            raise RuntimeError("Cannot create repository with driver %r"
-                    % (driver,))
+        # Do the driver-specific bits first.
+        self._create()
 
         # Set up some other infrastructure that is independent of the db.
         nscfg = self.getNetServerConfig()
@@ -427,6 +412,34 @@ class RepositoryHandle(object):
         # Initialize the repos schema.
         db = self.getReposDB()
         conary_schema.loadSchema(db)
+
+    def _create(self):
+        """
+        Internal, driver-specific method to create an empty repository
+        database.
+        """
+        raise NotImplementedError
+
+    def dump(self, path):
+        """
+        Dump the repository database to C{path}.
+        """
+        raise NotImplementedError
+
+    def restore(self, path):
+        """
+        Load the repository database from the backup at C{path}.
+        """
+        raise NotImplementedError
+
+    def drop(self):
+        """
+        Drop the repository database, if it exists.
+
+        Note that this does not delete any other repository infrastructure,
+        e.g. contents.
+        """
+        raise NotImplementedError
 
     # Repository management
     @withNetServer
@@ -471,6 +484,106 @@ class RepositoryHandle(object):
     @withNetServer
     def changePassword(self, repos, username, password):
         repos.auth.changePassword(username, password)
+
+
+class SQLiteRepositoryHandle(RepositoryHandle):
+    @property
+    def _dbPath(self):
+        return self.dbTuple[1]
+
+    def _create(self):
+        "SQLite-specific repository creation."
+        util.mkdirChain(os.path.dirname(self._dbPath))
+
+    def dump(self, path):
+        if os.path.exists(self._dbPath):
+            util.execute("sqlite3 '%s' .dump > '%s'" % (self._dbPath, path))
+
+    def restore(self, path):
+        self.drop()
+        if os.path.exists(path):
+            util.execute("sqlite3 '%s' < '%s'" % (self._dbPath, path))
+
+    def drop(self):
+        if os.path.exists(self._dbPath):
+            os.unlink(self._dbPath)
+
+
+class PostgreSQLRepositoryHandle(RepositoryHandle):
+    @cached
+    def _getName(self):
+        return self.dbTuple[1].rsplit('/')[-1]
+
+    def _getControlConnection(self):
+        "Return a connection to the control database."
+        driver, path = self.dbTuple
+        if '/' in path:
+            base = path.rsplit('/', 1)[0] + '/'
+        else:
+            base = ''
+
+        if driver == 'pgpool' and self._manager().bypass:
+            driver = 'postgresql'
+            base = base.replace(':6432', ':5439')
+
+        controlPath = base + 'postgres'
+        return dbstore.connect(controlPath, driver)
+
+    def _dbExists(self, controlDb):
+        ccu = controlDb.cursor()
+        ccu.execute("""SELECT COUNT(*) FROM pg_catalog.pg_database
+                WHERE datname = ?""", self._getName())
+        return bool(ccu.fetchone()[0])
+
+    def _create(self, controlDb=None):
+        """
+        PostgreSQL-specific repository creation.
+
+        This is currently used by C{restore} as well so make sure it doesn't
+        create anything that would interfere with the restore process.
+        """
+        dbName = self._getName()
+        if not controlDb:
+            controlDb = self._getControlConnection()
+        ccu = controlDb.cursor()
+
+        if self._dbExists(controlDb):
+            # Database exists
+            log.error("PostgreSQL database %r already exists while "
+                    "creating project %r", dbName, self.shortName)
+            raise RepositoryAlreadyExists(self.shortName)
+
+        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % (dbName,))
+
+    def drop(self, controlDb=None):
+        if not controlDb:
+            controlDb = self._getControlConnection()
+
+        if not self._dbExists(controlDb):
+            return
+
+        ccu = controlDb.cursor()
+        ccu.execute("DROP DATABASE %s" % (self._getName(),))
+
+    def dump(self, path):
+        controlDb = self._getControlConnection()
+
+        if self._dbExists(controlDb):
+            # TODO: genericize
+            util.execute("pg_dump -U postgres -p 5439 -f '%s' '%s'"
+                    % (path, self._getName()))
+
+    def restore(self, path):
+        dbName = self._getName()
+        controlDb = self._getControlConnection()
+        ccu = controlDb.cursor()
+
+        self.drop()
+        if os.path.exists(path):
+            self._create()
+            # TODO: genericize
+            util.execute("psql -U postgres -p 5439 -f '%s' '%s'"
+                    % (path, dbName))
 
 
 class MultiShimServerCache(object):

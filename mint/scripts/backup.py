@@ -1,14 +1,15 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved
 #
 
-import re, os, sys
+import logging, re, os, sys
 import pwd
 from mint import config
 from mint.db import projects
 from mint.db import schema
+from mint.db import repository
 from conary.lib import util
 from conary import dbstore
 from conary import versions
@@ -16,67 +17,42 @@ import conary.errors
 import conary.server.schema
 from conary.conaryclient import cmdline
 
+log = logging.getLogger(__name__)
+
 schemaCutoff = 37
 knownGroupVersions = ('3\.1\.(\d{2}|[56789])(\.\d+)?$', '4\..*', '5\..*')
 
-staticPaths = ['logs', 'installable_iso.conf',
-               'toolkit', 'iso_gen.conf', 'live_iso.conf',
-               'bootable_image.conf']
-# toolkit is linked to outgoing job server architecture.
 
 def backup(cfg, out, backupMirrors = False):
     reposContentsDir = cfg.reposContentsDir.split(' ')
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
     print >> out, backupPath
+    util.rmtree(backupPath, ignore_errors=True)
     util.mkdirChain(backupPath)
+
+    # Dump mintDB
     dumpPath = os.path.join(backupPath, 'db.dump')
     if cfg.dbDriver == 'sqlite':
         util.execute("echo '.dump' | sqlite3 %s > %s" % (cfg.dbPath, dumpPath))
-    extraArgs = ""
-    if not backupMirrors:
-        extraArgs = " WHERE NOT external OR backupExternal"
+    elif cfg.dbDriver in ('postgresql', 'pgpool'):
+        dbName = cfg.dbPath.rsplit('/', 1)[-1]
+        util.execute("pg_dump -U postgres -p 5439 '%s' > '%s'"
+                % (dbName, dumpPath))
 
-    # XXX: Wrong, but no more wrong than before. Integrate this with the new
-    # repository logic and do dumps on a per-project configuration.
-    defaultDriver, defaultPath = cfg.database[cfg.defaultDatabase]
+    mintDb = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    repoMgr = repository.RepositoryManager(cfg, mintDb)
+    for repoHandle in repoMgr.iterRepositories():
+        if not repoHandle.hasDatabase:
+            continue
+        if repoHandle.isExternal and not backupMirrors:
+            continue
 
-    if defaultDriver == 'sqlite':
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        cu = db.cursor()
-        cu.execute("SELECT hostname, domainname FROM Projects%s" % extraArgs)
-        for reposDir in ['.'.join(x) for x in cu.fetchall()]:
-            cu.execute("SELECT toName FROM RepNameMap WHERE fromName=?",
-                    reposDir)
-            res = cu.fetchone()
-            reposDir = res and res[0] or reposDir
-            reposDBPath = defaultPath % reposDir
-            dumpPath = os.path.join(backupPath, '%s.dump' % reposDir)
-            if os.path.exists(reposDBPath):
-                util.execute("echo '.dump' | sqlite3 %s > %s" % \
-                              (reposDBPath, dumpPath))
-                print >> out, reposContentsDir[0] % reposDir
-    elif defaultDriver == 'postgresql':
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        cu = db.cursor()
-        cu.execute("SELECT hostname, domainname FROM Projects%s" % extraArgs)
-        for reposDir in ['.'.join(x) for x in cu.fetchall()]:
-            reposDbName = reposDir.translate(projects.transTables['postgresql'])
-            dbUser = defaultPath.split('@')[0]
-            dumpPath = os.path.join(backupPath, '%s.dump' % reposDbName)
-            rdb = dbstore.connect(defaultPath % 'postgres', 'postgresql')
-            rcu = rdb.cursor()
-            rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
-                         reposDbName)
-            if rcu.fetchone():
-                util.execute("pg_dump -U %s -p 5439 -c --disable-triggers %s > %s" %\
-                             (dbUser, reposDbName, dumpPath))
-                print >> out, reposContentsDir[0] % reposDir
-            rdb.close()
+        dumpPath = os.path.join(backupPath, repoHandle.fqdn + ".dump")
+        repoHandle.dump(dumpPath)
 
-    for d in staticPaths:
-        path = os.path.join(cfg.dataPath, d)
-        if os.path.exists(path):
-            print >> out, path
+        # Only need to backup the first contents dir since they are all (in
+        # theory) identical.
+        print >> out, repoHandle.contentsDirs[0]
 
     # Handle configs separately so we can exclude rbuilder.conf
     backup_path = os.path.join(cfg.dataPath, 'config')
@@ -86,61 +62,61 @@ def backup(cfg, out, backupMirrors = False):
                 path = os.path.join(backup_path, config_file)
                 print >> out, path
 
+
 def restore(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
+
+    for repo in os.listdir(cfg.reposPath):
+        reposPath = os.path.join(cfg.reposPath, repo)
+        util.rmtree(reposPath, ignore_errors = True)
+
     dumpPath = os.path.join(backupPath, 'db.dump')
     if cfg.dbDriver == 'sqlite':
         if os.path.exists(cfg.dbPath):
             os.unlink(cfg.dbPath)
         util.execute("sqlite3 %s < %s" % (cfg.dbPath, dumpPath))
-    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+    elif cfg.dbDriver in ('postgresql', 'pgpool'):
+        dbName = cfg.dbPath.rsplit('/', 1)[-1]
+
+        controlDb = dbstore.connect('postgres@localhost:5439/postgres',
+                'postgresql')
+        ccu = controlDb.cursor()
+
+        # If the database exists ...
+        ccu.execute("""SELECT COUNT(*) FROM pg_catalog.pg_database
+                WHERE datname = ?""", dbName)
+        if ccu.fetchone()[0]:
+            # ... then drop it first.
+            ccu.execute("DROP DATABASE %s" % (dbName,))
+
+        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8' OWNER rbuilder"
+                % (dbName,))
+        controlDb.close()
+
+        util.execute("psql -U postgres -p 5439 -f '%s' '%s' >/dev/null"
+                % (dumpPath, dbName))
+
+    driver, path = cfg.dbDriver, cfg.dbPath
+    if driver == 'pgpool':
+        driver = 'postgresql'
+        path = path.replace(':6432', ':5439')
+    db = dbstore.connect(path, driver)
     schema.loadSchema(db, cfg, should_migrate=True)
+    cu = db.transaction()
 
-    # XXX: Wrong, but no more wrong than before. Integrate this with the new
-    # repository logic and do dumps on a per-project configuration.
-    defaultDriver, defaultPath = cfg.database[cfg.defaultDatabase]
+    repoMgr = repository.RepositoryManager(cfg, db, bypass=True)
+    for repoHandle in repoMgr.iterRepositories():
+        if not repoHandle.hasDatabase:
+            continue
 
-    cu = db.cursor()
-    cu.execute("SELECT hostname, domainname, projectId FROM Projects")
-    for hostname, domainname, projectId in [x for x in cu.fetchall()]:
-        repo = hostname + '.' + domainname
-        cu.execute('SELECT toName FROM RepNameMap WHERE fromName=?', repo)
-        r = cu.fetchone()
-        if r:
-            repo = r[0]
-        dumpPath =  os.path.join(backupPath, repo).translate(projects.transTables[defaultDriver]) + '.dump'
-        reposPath = os.path.join(cfg.reposPath, repo)
+        dumpPath = os.path.join(backupPath, repoHandle.fqdn + ".dump")
         if os.path.exists(dumpPath):
-            util.mkdirChain(os.path.join(reposPath, 'tmp'))
-            if defaultDriver == 'sqlite':
-                dbPath = defaultPath % repo
-                if os.path.exists(dbPath):
-                    os.unlink(dbPath)
-                util.execute('sqlite3 %s < %s' % (dbPath, dumpPath))
-                rdb = dbstore.connect(dbPath, defaultDriver)
-                conary.server.schema.loadSchema(rdb, doMigrate=True)
-                rdb.close()
-            elif defaultDriver == 'postgresql':
-                pgRepo = repo.translate(projects.transTables['postgresql'])
-                dbPath = defaultPath % pgRepo
-                rdb = dbstore.connect('%s' % (defaultPath % 'postgres'),
-                                      defaultDriver)
-                rcu = rdb.cursor()
-                rcu.execute("SELECT datname FROM pg_database WHERE datname=?",
-                             pgRepo)
-                if rcu.fetchone():
-                    rcu.execute("DROP DATABASE %s" % pgRepo)
-                rcu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % pgRepo)
-                rdb.close()
-
-                dbUser = defaultPath.split('@')[0]
-                util.execute('psql -f %s -U %s -p 5439 %s'% (dumpPath, dbUser, pgRepo))
-                rdb = dbstore.connect('%s' % (defaultPath % pgRepo),
-                                      defaultDriver)
-                conary.server.schema.loadSchema(rdb, doMigrate=True)
-                rdb.close()
-        else:
-            cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?", projectId)
+            repoHandle.restore(dumpPath)
+        elif repoHandle.isExternal:
+            # Inbound mirrors that didn't get backed up revert to cache mode.
+            repoHandle.drop()
+            cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?",
+                    repoHandle.projectId)
             localMirror = cu.fetchone_dict()
             if localMirror:
                 if not os.path.exists(reposPath):
@@ -150,30 +126,32 @@ def restore(cfg):
                                 " WHERE projectId=?",
                         localMirror['sourceUrl'],
                         localMirror['sourceUsername'],
-                        localMirror['sourcePassword'], projectId)
+                        localMirror['sourcePassword'], repoHandle.projectId)
 
-                    cu.execute("DELETE FROM RepNameMap WHERE toName=?", repo)
                     cu.execute( \
                         "DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
                         localMirror['inboundMirrorId'])
 
+    db.commit()
+
     # delete package index to ensure we don't reference troves until they're
     # restored.
+    cu = db.transaction()
     try:
         cu.execute('DELETE FROM PackageIndex')
         cu.execute('DELETE FROM PackageIndexMark')
     except:
-        # this masks errors, since it does re-raise but we don't care.
-        # impact and cost are negligible.
+        log.warning("Error clearing package index:", exc_info=True)
         db.rollback()
     else:
         db.commit()
 
+
 def prerestore(cfg):
     util.execute("service httpd stop")
-    for repo in os.listdir(cfg.reposPath):
-        reposPath = os.path.join(cfg.reposPath, repo)
-        util.rmtree(reposPath, ignore_errors = True)
+    # pgbouncer holds database connections open for 45s
+    util.execute("service pgbouncer stop")
+
 
 def clean(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
