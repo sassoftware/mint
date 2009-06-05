@@ -117,6 +117,8 @@ class ImageManager(manager.Manager):
                 filesByImageId.setdefault(file.imageId, []).append(file)
             else:
                 file = filesById[d['fileId']]
+            if url:
+                file.baseFileName = os.path.basename(url)
             url = self._makeDownloadURL(file.fileId, urlType)
             file.urls.append(models.FileUrl(url=url, urlType=urlType))
 
