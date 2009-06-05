@@ -6,6 +6,8 @@ import time
 import os
 import md5
 import simplejson
+import re
+import socket
 
 from gettext import gettext as _
 from time import time
@@ -27,6 +29,8 @@ from mint import config
 from mint import helperfuncs
 
 from rPath.rbasetup import lib
+
+ipAddrMatch = re.compile('^[0-9.]+$')
 
 class rBASetup(rAAWebPlugin):
     """
@@ -105,8 +109,12 @@ class rBASetup(rAAWebPlugin):
         if not options['configured']:
             if '.' in options['hostName']:
                 errorList.append("The hostname of the rBuilder server must not contain periods. The hostname is only the first part of the fully-qualified domain name.")
+            if ipAddrMatch.match(options['hostName']):
+                errorList.append("The hostname appears to be an IP address.")
             if 'siteDomainName' not in options:
                 errorList.append("You must specify a domain name for this installation.")
+            if 'siteDomainName' in options and ipAddrMatch.match(options['siteDomainName']):
+                errorList.append("The domain name appears to be an IP address.")
             if 'new_username' not in options:
                 errorList.append("You must enter a username to be created")
             if 'new_email' not in options:
@@ -172,9 +180,24 @@ class rBASetup(rAAWebPlugin):
                 dict([(str(k),v) for k, v in configurableOptions.iteritems()])
 
         # Return the hostname from the request if it's not set
-        if not sanitizedConfigurableOptions['hostName']:
-            import cherrypy
-            fqdn = raa.lib.url.urlparse(cherrypy.request.base)[1].split(':')[0]
+        if not sanitizedConfigurableOptions['hostName'] or \
+           ipAddrMatch.match(sanitizedConfigurableOptions['hostName']):
+            fqdn = raa.web.getRequestHostname()
+            ipAddr = None
+            if ipAddrMatch.match(fqdn):
+                # user is using IP address to access the rbuilder
+                # suggest a hostname instead
+                ipAddr = fqdn
+                fqdn = os.uname()[1]
+            if fqdn.find('.') == -1:
+                # Maybe we're better off doing a reverse lookup
+                try:
+                    if not ipAddr:
+                        ipAddr = socket.gethostbyname(fqdn)
+                    fqdn = socket.gethostbyaddr(ipAddr)[0]
+                except:
+                    # nothing is fully-qualified.  :-(
+                    pass
             bits = fqdn.split('.',1)
             sanitizedConfigurableOptions['hostName'] = bits[0]
             try:
@@ -279,4 +302,7 @@ class rBASetup(rAAWebPlugin):
         self.wizardDone()
         
         # redirect to the rbuilder itself
-        raa.web.raiseHttpRedirect("http://" + raa.web.getRequestHostname() + "/")
+        isConfigured, configurableOptions = lib.getRBAConfiguration()
+        hostname = configurableOptions['hostName']
+        dn = configurableOptions['siteDomainName']
+        raa.web.raiseHttpRedirect("http://%s.%s/" % (hostname, dn))
