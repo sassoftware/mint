@@ -22,6 +22,7 @@ class ImageFile(Model):
     title    = fields.CharField()
     size     = fields.IntegerField()
     sha1     = fields.CharField()
+    baseFileName = fields.CharField()
     urls     = fields.ListField(FileUrl, displayName='url')
 
     def __repr__(self):

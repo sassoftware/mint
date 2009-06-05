@@ -189,6 +189,7 @@ class ReposTest(restbase.BaseRestTest):
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
+        <baseFileName>imagefile_1.iso</baseFileName>
         <url urlType="0">http://test.rpath.local/downloadImage?fileId=1</url>
       </file>
     </files>
@@ -219,6 +220,7 @@ class ReposTest(restbase.BaseRestTest):
         <title>Image File 2</title>
         <size>2048</size>
         <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
+        <baseFileName>imagefile_2.iso</baseFileName>
         <url urlType="0">http://test.rpath.local/downloadImage?fileId=2</url>
       </file>
     </files>

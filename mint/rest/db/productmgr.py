@@ -429,16 +429,20 @@ class ProductManager(manager.Manager):
             # It is valid for the platform to be missing (although not
             # terribly useful)
             templateIter = prodDef.getBuildTemplates()
-        for buildTempl in templateIter:
-            ent = (buildTempl.containerTemplateRef,
-                buildTempl.architectureRef, buildTempl.flavorSetRef)
-            if bdentry == ent:
-                break
-        else: # for
-            # No build template found; chicken out
-            raise errors.InvalidItem("Invalid combination of container "
-                "template, architecture and flavor set (%s, %s, %s)"
-                    % bdentry)
+        allowedCombinations = set(
+            (bt.containerTemplateRef, bt.architectureRef, bt.flavorSetRef)
+            for bt in templateIter)
+        if bdentry not in allowedCombinations:
+            # Hmm. OK, the old UI was manufacturing additional flavor sets,
+            # let's try to ignore them
+            nbdentry = (bdentry[0], bdentry[1], None)
+            if nbdentry not in allowedCombinations:
+                # No build template found; chicken out
+                raise errors.InvalidItem("Invalid combination of container "
+                    "template, architecture and flavor set (%s, %s, %s)"
+                        % bdentry)
+            # Use this build template instead
+            flavorSetRef = None
         # For now, we don't allow the client to specify the stages
         stages = [ x.name for x in prodDef.getStages() ]
         imageFields = dict((x, getattr(options, x)) for x in options._fields)

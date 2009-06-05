@@ -695,6 +695,23 @@ class ProductVersionTest(restbase.BaseRestTest):
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <imageDefinitions>
+  <imageDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageDefinitions/2ebe0a8a2711b1fd9c45a4a54783d958">
+    <name>Old UI image that has an extra generic flavor in it</name>
+    <displayName>Old UI image that has an extra generic flavor in it</displayName>
+    <imageGroup>group-testproject-appliance</imageGroup>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Development"/>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/QA"/>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Release"/>
+    <container id="http://localhost:8000/api/products/testproject/versions/1.0/containers/applianceIsoImage">
+      <name>applianceIsoImage</name>
+      <displayName>Appliance Installable ISO</displayName>
+      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
+    </container>
+    <architecture id="http://localhost:8000/api/products/testproject/versions/1.0/architectures/x86">
+      <name>x86</name>
+      <displayName>x86 (32-bit)</displayName>
+    </architecture>
+  </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/24597af6ccdf86fbfdc1b011f61e8204">
     <name>update iso 64-bit</name>
     <displayName>update iso 64-bit</displayName>
@@ -979,6 +996,16 @@ imageSet1 = """
       <options autoResolve="false" installLabelPath="" baseFileName="" swapSize="512" freespace="2048"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64" />
+  </imageDefinition>
+  <imageDefinition>
+    <name>Old UI image that has an extra generic flavor in it</name>
+    <displayName>Old UI image that has an extra generic flavor in it</displayName>
+    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/applianceIsoImage">
+      <options autoResolve="false" installLabelPath="" baseFileName="" swapSize="512" freespace="2048"/>
+    </container>
+    <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86" />
+    <flavorSet id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/generic">
+    </flavorSet>
   </imageDefinition>
 </imageDefinitions>
 """
