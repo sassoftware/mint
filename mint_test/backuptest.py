@@ -68,20 +68,14 @@ class BackupTest(fixtures.FixturedUnitTest):
             p = os.path.join(self.cfg.dataPath, d)
             util.mkdirChain(p)
 
-        # And touch some configs
-        config_path = os.path.join(self.cfg.dataPath, 'config')
-        util.mkdirChain(config_path)
-        for file_name in ('rbuilder.conf', 'rbuilder-generated.conf'):
-            open(os.path.join(config_path, file_name), 'w').close()
-
-        # And touch some configs
-        config_path = os.path.join(self.cfg.dataPath, 'config')
-        util.mkdirChain(config_path)
-        for file_name in ('rbuilder.conf', 'rbuilder-generated.conf'):
-            open(os.path.join(config_path, file_name), 'w').close()
-
         # and a few that shouldn't be
         util.mkdirChain('ignoreme')
+
+        # And touch some configs
+        config_path = os.path.join(self.cfg.dataPath, 'config')
+        util.mkdirChain(config_path)
+        for file_name in ('rbuilder.conf', 'rbuilder-generated.conf'):
+            open(os.path.join(config_path, file_name), 'w').close()
 
         oldUtilExecute = util.execute
         util.execute = mock.MockObject()
@@ -216,10 +210,8 @@ class BackupTest(fixtures.FixturedUnitTest):
             backup.prerestore(self.cfg)
         finally:
             util.execute = execute
-        self.assertEquals (self.cmds, ["service httpd stop"])
-
-        self.failIf(os.listdir(self.cfg.reposPath),
-                "repository contents weren't deleted")
+        self.assertEquals (self.cmds, ["service httpd stop",
+            "service pgbouncer stop"])
 
     @fixtures.fixture("Empty")
     def testIsValid_GoodMetadata(self, db, data):
