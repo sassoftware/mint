@@ -961,7 +961,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             raise mailinglists.MailingListException("Mail Lists Disabled")
         hostname = self.project.getHostname()
         lists = mlists.list_lists(hostname)
-        return self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
+        return self._write("mailingListsUI", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
 
     @mailList
     def mailingLists(self, auth, mlists, messages=[]):
@@ -1487,6 +1487,24 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 reqList=reqList, hidden=hidden,
                 adoptable=adoptable, joinable=joinable)
 
+    def membersUI(self, auth):
+        memberList = self.project.getMembers()
+        if (self.userLevel == userlevels.OWNER or auth.admin):
+            reqList = self.client.listJoinRequests(self.project.getId())
+        else:
+            reqList = []
+        hidden = self.project.hidden
+        adoptable = self._isAdoptable(memberList)
+        joinable = (self.auth.authorized
+                and self.userLevel not in userlevels.WRITERS
+                and not adoptable)
+        return self._write("membersUI",
+                projectMemberList=memberList,
+                userHasReq = self.client.userHasRequested(self.project.getId(),
+                    auth.userId),
+                reqList=reqList, hidden=hidden,
+                adoptable=adoptable, joinable=joinable)
+
     @requiresAuth
     def adopt(self, auth):
         if self._isAdoptable():
@@ -1515,6 +1533,14 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self.project.addMemberByName(auth.username, userlevels.USER)
             self._setInfo("You are now a registered user of %s" % self.project.getNameForDisplay())
         self._predirect("members")
+
+    @requiresAuth
+    def watchUI(self, auth):
+        #some kind of check to make sure the user's not a member
+        if self.userLevel == userlevels.NONMEMBER:
+            self.project.addMemberByName(auth.username, userlevels.USER)
+            self._setInfo("You are now a registered user of %s" % self.project.getNameForDisplay())
+        self._predirect("membersUI")
 
     @requiresAuth
     def unwatch(self, auth):
@@ -1602,6 +1628,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     def joinRequest(self, auth):
         return self._write("joinRequest", comments = self.client.getJoinReqComments(self.project.getId(), auth.userId) )
 
+    @requiresAuth
+    def joinRequestUI(self, auth):
+        return self._write("joinRequestUI", comments = self.client.getJoinReqComments(self.project.getId(), auth.userId) )
+
     @intFields(userId = None, level = None)
     @ownerOnly
     def editMember(self, auth, userId, level):
@@ -1668,6 +1698,12 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     @intFields(span = 7)
     def downloads(self, auth, span):
         return self._write("downloads", span = span)
+
+    @requiresAuth
+    @writersOnly
+    @intFields(span = 7)
+    def downloadsUI(self, auth, span):
+        return self._write("downloadsUI", span = span)
 
     @requiresAuth
     @boolFields(confirmed = False)

@@ -325,6 +325,21 @@ class SiteHandler(WebHandler):
         formattedRows, columns = self._formatUserSearch(results)
         return self._write("users", sortOrder = sortOrder, limit = limit, offset = offset,
             results = formattedRows, columns = columns, count = count)
+
+    @requiresAdmin
+    @intFields(sortOrder = -1, limit = 0, offset = 0)
+    def usersUI(self, auth, sortOrder, limit, offset, submit = 0):
+        if not limit:
+            limit =  self.user and \
+                self.user.getDataValue('searchResultsPerPage') or 10
+
+        if sortOrder < 0:
+            sortOrder = self.session.get('usersSortOrder', 0)
+        self.session['usersSortOrder'] = sortOrder
+        results, count = self.client.getUsers(sortOrder, limit, offset)
+        formattedRows, columns = self._formatUserSearch(results)
+        return self._write("usersUI", sortOrder = sortOrder, limit = limit, offset = offset,
+            results = formattedRows, columns = columns, count = count)
     
     @requiresAuth
     @redirectHttps
@@ -335,9 +350,18 @@ class SiteHandler(WebHandler):
                            defaultedData = self.user.getDefaultedData(),
                            firstTimer=self.session.get('firstTimer', True))
 
+    @requiresAuth
+    @redirectHttps
+    def userSettingsUI(self, auth):
+        return self._write("userSettingsUI",
+                           user = self.user,
+                           dataDict = self.user.getDataDict(),
+                           defaultedData = self.user.getDefaultedData(),
+                           firstTimer=self.session.get('firstTimer', True))
     @strFields(email = "", displayEmail = "",
                password1 = "", password2 = "",
                fullName = "", blurb = "", tos = "")
+
     @requiresHttps
     @requiresAuth
     def editUserSettings(self, auth, email, displayEmail, fullName,
@@ -403,6 +427,25 @@ class SiteHandler(WebHandler):
                 error = "You may not upload a key as you are not a member of any %ss. "
                         "Create a %s, or ask a %s owner to add you to their "
                         "%s and then come back"%(pText,pText,pText,pText))
+        
+    @requiresAuth
+    @listFields(str, projects=[])
+    @strFields(keydata = '')
+    def uploadKeyUI(self, auth, projects, keydata):
+        projectList = sorted((
+                (x[0].getName(), x[0].getHostname())
+                for x in self.projectList
+                if not x[0].external and x[1] in userlevels.WRITERS
+            ), key=lambda y: y[0])
+        if self.projectList:
+            return self._write("uploadKeyUI", kwargs={}, projects=projectList)
+        else:
+            pText = getProjectText().lower()
+            return self._write("error", shortError="Not a %s member"%pText,
+                error = "You may not upload a key as you are not a member of any %ss. "
+                        "Create a %s, or ask a %s owner to add you to their "
+                        "%s and then come back"%(pText,pText,pText,pText))
+
 
     @requiresAuth
     @listFields(str, projects=None)
@@ -598,6 +641,28 @@ class SiteHandler(WebHandler):
                             continue
                     userProjects.append(x)
             return self._write("userInfo", user = user, userProjects = userProjects, userIsAdmin = userIsAdmin)
+        else:
+            raise mint_error.ItemNotFound('userid')
+
+    @requiresAuth
+    @intFields(id = None)
+    def userInfoUI(self, auth, id):
+        user = self.client.getUser(id)
+        userIsAdmin = self.client.isUserAdmin(id)
+        if user.active or auth.admin:
+            userProjects = []
+            if auth.userId == id:
+                #Show all the projects.  The user is viewing his own profile
+                userProjects = [x for x in self.client.getProjectsByMember(id)]
+            else:
+                for x in self.client.getProjectsByMember(id):
+                    if x[0].hidden and (x[0].getUserLevel(auth.userId) == userlevels.NONMEMBER):
+                        if not auth.admin:
+                            #Skip this project, it's hidden and the user requesting is
+                            #not a member the project
+                            continue
+                    userProjects.append(x)
+            return self._write("userInfoUI", user = user, userProjects = userProjects, userIsAdmin = userIsAdmin)
         else:
             raise mint_error.ItemNotFound('userid')
 

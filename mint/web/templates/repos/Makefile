@@ -12,6 +12,7 @@ kid_files =			\
 	lic_crypto_report.kid	\
 	notice.kid		\
 	pgp_admin.kid		\
+	pgp_adminUI.kid		\
 	shadow_diff.kid		\
 	trove_info.kid		\
         add_role.kid		\
