@@ -582,7 +582,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         if os.path.exists(path):
             self._create()
             # TODO: genericize
-            util.execute("psql -U postgres -p 5439 -f '%s' '%s'"
+            util.execute("psql -U postgres -p 5439 -f '%s' '%s' >/dev/null"
                     % (path, dbName))
 
 
