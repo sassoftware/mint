@@ -301,15 +301,13 @@ class RepositoryHandle(object):
         cfg.logFile = (self._cfg.reposLog
                 and os.path.join(self._cfg.logPath, 'repository.log') or None)
         cfg.repositoryDB = None # We open databases ourselves
-        if self.isLocalMirror:
-            cfg.requireSigs = False
-        else:
-            cfg.requireSigs = self._cfg.requireSigs
+        cfg.readOnlyRepository = self._cfg.readOnlyRepositories
+        cfg.requireSigs = self._cfg.requireSigs and not self.isLocalMirror
         cfg.serializeCommits = True
 
         cfg.serverName = [fqdn]
         cfg.contentsDir = ' '.join(self.contentsDirs)
-        cfg.tmpDir = os.path.join(self._cfg.reposPath, fqdn, 'tmp')
+        cfg.tmpDir = os.path.join(self._cfg.dataPath, 'tmp')
 
         if self._cfg.commitAction and not self.isLocalMirror:
             actionDict = {
@@ -333,10 +331,15 @@ class RepositoryHandle(object):
 
     def _getServer(self, serverClass):
         nscfg = self.getNetServerConfig()
-        if not os.access(nscfg.tmpDir, os.R_OK | os.X_OK):
-            raise RepositoryDatabaseError(
-                    "Unable to access repository dir %r for project %r"
-                    % (nscfg.tmpDir, self.shortName))
+        for path in nscfg.contentsDir.split():
+            if not os.access(path, os.R_OK | os.X_OK):
+                raise RepositoryDatabaseError("Unable to read repository "
+                        "contents dir %r for project %r"
+                        % (nscfg.tmpDir, self.shortName))
+            if not nscfg.readOnlyRepository and  not os.access(path, os.W_OK):
+                raise RepositoryDatabaseError("Unable to write to repository "
+                        "contents dir %r for project %r"
+                        % (nscfg.tmpDir, self.shortName))
 
         db = self.getReposDB()
         baseUrl = self.getURL()
