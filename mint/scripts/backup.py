@@ -16,6 +16,7 @@ from conary import versions
 import conary.errors
 import conary.server.schema
 from conary.conaryclient import cmdline
+from mint.scripts import refresh_auth
 
 log = logging.getLogger(__name__)
 
@@ -145,6 +146,8 @@ def restore(cfg):
         db.rollback()
     else:
         db.commit()
+
+    refresh_auth.RefreshAuthScript().run()
 
 
 def prerestore(cfg):
