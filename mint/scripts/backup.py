@@ -50,8 +50,8 @@ def backup(cfg, out, backupMirrors = False):
         dumpPath = os.path.join(backupPath, repoHandle.fqdn + ".dump")
         repoHandle.dump(dumpPath)
 
-        # Only need to backup the first contents dir since they are all (in
-        # theory) identical.
+        # Only save the first content store since the only installation with
+        # multiple stores is rBO, and rBO doesn't use this script.
         print >> out, repoHandle.contentsDirs[0]
 
     # Handle configs separately so we can exclude rbuilder.conf
@@ -65,10 +65,6 @@ def backup(cfg, out, backupMirrors = False):
 
 def restore(cfg):
     backupPath = os.path.join(cfg.dataPath, 'tmp', 'backup')
-
-    for repo in os.listdir(cfg.reposPath):
-        reposPath = os.path.join(cfg.reposPath, repo)
-        util.rmtree(reposPath, ignore_errors = True)
 
     dumpPath = os.path.join(backupPath, 'db.dump')
     if cfg.dbDriver == 'sqlite':
@@ -111,7 +107,11 @@ def restore(cfg):
 
         dumpPath = os.path.join(backupPath, repoHandle.fqdn + ".dump")
         if os.path.exists(dumpPath):
+            for path in repoHandle.contentsDirs:
+                util.mkdirChain(path)
+
             repoHandle.restore(dumpPath)
+
         elif repoHandle.isExternal:
             # Inbound mirrors that didn't get backed up revert to cache mode.
             repoHandle.drop()
@@ -119,7 +119,7 @@ def restore(cfg):
                     repoHandle.projectId)
             localMirror = cu.fetchone_dict()
             if localMirror:
-                if not os.path.exists(reposPath):
+                if not os.path.exists(repoHandle.contentsDirs[0]):
                     # revert Labels table to pre-mirror settings
                     cu.execute( \
                             "UPDATE Labels SET url=?, username=?, password=?" \
