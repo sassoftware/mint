@@ -131,7 +131,7 @@ def getRepository(projectName, repName, cfg,
     nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
 
     nscfg.serverName = [repName]
-    nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
+    nscfg.tmpDir = os.path.join(cfg.dataPath, 'tmp')
     nscfg.logFile = cfg.reposLog and \
                     os.path.join(cfg.logPath, 'repository.log') \
                     or None
