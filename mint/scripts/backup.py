@@ -16,7 +16,7 @@ from conary import versions
 import conary.errors
 import conary.server.schema
 from conary.conaryclient import cmdline
-from mint.scripts import refresh_auth
+from mint.lib import mintutils, siteauth
 
 log = logging.getLogger(__name__)
 
@@ -84,6 +84,7 @@ def restore(cfg):
                 WHERE datname = ?""", dbName)
         if ccu.fetchone()[0]:
             # ... then drop it first.
+            log.info("Dropping existing mint database")
             ccu.execute("DROP DATABASE %s" % (dbName,))
 
         ccu.execute("CREATE DATABASE %s ENCODING 'UTF8' OWNER rbuilder"
@@ -99,8 +100,9 @@ def restore(cfg):
         path = path.replace(':6432', ':5439')
     db = dbstore.connect(path, driver)
     schema.loadSchema(db, cfg, should_migrate=True)
-    cu = db.transaction()
+    log.info("mintdb successfully restored")
 
+    cu = db.transaction()
     repoMgr = repository.RepositoryManager(cfg, db, bypass=True)
     for repoHandle in repoMgr.iterRepositories():
         if not repoHandle.hasDatabase:
@@ -108,6 +110,7 @@ def restore(cfg):
 
         dumpPath = os.path.join(backupPath, repoHandle.fqdn + ".dump")
         if os.path.exists(dumpPath):
+            log.debug("Restoring project %s", repoHandle.shortName)
             for path in repoHandle.contentsDirs:
                 util.mkdirChain(path)
 
@@ -121,6 +124,8 @@ def restore(cfg):
             localMirror = cu.fetchone_dict()
             if localMirror:
                 if not os.path.exists(repoHandle.contentsDirs[0]):
+                    log.warning("Reverting external project %r to cache mode.",
+                            repoHandle.shortname)
                     # revert Labels table to pre-mirror settings
                     cu.execute( \
                             "UPDATE Labels SET url=?, username=?, password=?" \
@@ -147,7 +152,13 @@ def restore(cfg):
     else:
         db.commit()
 
-    refresh_auth.RefreshAuthScript().run()
+    # Everything beyond this point runs as root again
+    restorePrivs()
+
+    auth = siteauth.SiteAuthorization(cfg.siteAuthCfgPath)
+    auth.update()
+
+    log.info("Restore complete.")
 
 
 def prerestore(cfg):
@@ -215,26 +226,31 @@ def handle(func, *args, **kwargs):
     errno = 0
     if kwargs.pop('dropPriv', True):
         apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
-        os.setgid(apacheGID)
-        os.setuid(apacheUID)
+        os.setegid(apacheGID)
+        os.seteuid(apacheUID)
     try:
         func(*args, **kwargs)
     except:
-        exception, e, bt = sys.exc_info()
-        if exception in (OSError, IOError):
-            errno = e.errno
-        else:
-            errno = 1
-        import traceback
-        print >> sys.stderr, ''.join(traceback.format_tb(bt))
-        print >> sys.stderr, exception, e
+        log.exception("Unhandled error in restore process:")
+        sys.exit(1)
     sys.exit(errno)
+
+
+def restorePrivs():
+    os.seteuid(0)
+    os.setegid(0)
+
 
 def run():
     cfg = config.MintConfig()
     cfg.read(config.RBUILDER_CONFIG)
+
+    logPath = os.path.join(cfg.logPath, 'scripts.log')
+    mintutils.setupLogging(logPath, fileLevel=logging.DEBUG)
+
     migration = bool(os.getenv('RBA_MIGRATION'))
     mode = (len(sys.argv) > 1) and sys.argv[1] or ''
+    log.debug("rBuilder backup script invoked in mode %r", mode)
     if mode in ('r', 'restore'):
         handle(restore, cfg)
     elif mode  == 'prerestore':
