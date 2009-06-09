@@ -86,16 +86,16 @@
                         <p py:if="not isTrueOwner">Actions:
                         <ul class="pageSectionList">
                             <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
-                                <a href="${basePath}watch">Register</a> as a user of this ${projectText().lower()}</li>
+                                <a href="${basePath}watchUI">Register</a> as a user of this ${projectText().lower()}</li>
                             <li py:if="userLevel == userlevels.USER">
-                                <a href="${basePath}unwatch">Remove your registration</a> from this ${projectText().lower()}</li>
+                                <a href="${basePath}unwatchUI">Remove your registration</a> from this ${projectText().lower()}</li>
                                 
                           <div py:strip="True" py:if="not project.external">
-                            <li py:if="isWriter"><a href="${basePath}resign">Resign</a> from this ${projectText().lower()}</li>
+                            <li py:if="isWriter"><a href="${basePath}resignUI">Resign</a> from this ${projectText().lower()}</li>
                             <li py:if="joinable">
-                              <span py:if="not userHasReq"><a href="${basePath}joinRequest">Request to join</a>
+                              <span py:if="not userHasReq"><a href="${basePath}joinRequestUI">Request to join</a>
                                 this ${projectText().lower()} as a developer</span>
-                              <span py:if="userHasReq"><a href="${basePath}joinRequest">Modify your comments</a>
+                              <span py:if="userHasReq"><a href="${basePath}joinRequestUI">Modify your comments</a>
                                 to a pending join request</span>
                             </li>
                             <li py:if="adoptable">

@@ -1552,6 +1552,16 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             self._predirect("members")
 
+    @requiresAuth
+    def unwatchUI(self, auth):
+        if self.userLevel == userlevels.USER:
+            self.project.delMemberById(auth.userId)
+            self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
+        if self.project.hidden:
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+        else:
+            self._predirect("membersUI")
+
     @strFields(comments = '', keepReq = None)
     @requiresAuth
     def processJoinRequest(self, auth, comments, keepReq):
@@ -1564,6 +1574,19 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self.client.deleteJoinRequest(projectId, userId)
             self._setInfo("Your join request for %s has been deleted" % self.project.getNameForDisplay())
         self._predirect("members")
+
+    @strFields(comments = '', keepReq = None)
+    @requiresAuth
+    def processJoinRequestUI(self, auth, comments, keepReq):
+        projectId = self.project.getId()
+        userId = auth.userId
+        if keepReq == "Submit":
+            self.client.setJoinReqComments(projectId, comments)
+            self._setInfo("Join request for %s has been submitted" % self.project.getNameForDisplay())
+        else:
+            self.client.deleteJoinRequest(projectId, userId)
+            self._setInfo("Your join request for %s has been deleted" % self.project.getNameForDisplay())
+        self._predirect("membersUI")
 
     @ownerOnly
     @intFields(userId = None)
