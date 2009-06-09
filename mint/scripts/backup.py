@@ -118,25 +118,23 @@ def restore(cfg):
 
         elif repoHandle.isExternal:
             # Inbound mirrors that didn't get backed up revert to cache mode.
+            log.warning("External project %r was not backed up; reverting to "
+                    "cached mode.", repoHandle.shortname)
             repoHandle.drop()
-            cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?",
-                    repoHandle.projectId)
-            localMirror = cu.fetchone_dict()
-            if localMirror:
-                if not os.path.exists(repoHandle.contentsDirs[0]):
-                    log.warning("Reverting external project %r to cache mode.",
-                            repoHandle.shortname)
-                    # revert Labels table to pre-mirror settings
-                    cu.execute( \
-                            "UPDATE Labels SET url=?, username=?, password=?" \
-                                " WHERE projectId=?",
-                        localMirror['sourceUrl'],
-                        localMirror['sourceUsername'],
-                        localMirror['sourcePassword'], repoHandle.projectId)
 
-                    cu.execute( \
-                        "DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
-                        localMirror['inboundMirrorId'])
+            cu.execute( \
+                    "UPDATE Labels SET url=?, username=?, password=?" \
+                        " WHERE projectId=?",
+                localMirror['sourceUrl'],
+                localMirror['sourceUsername'],
+                localMirror['sourcePassword'], repoHandle.projectId)
+
+            cu.execute( \
+                "DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
+                localMirror['inboundMirrorId'])
+
+        else:
+            log.error("Database dump missing for project %r.", repoHandle.shortName)
 
     db.commit()
 
