@@ -102,7 +102,7 @@
             
             <h2>Package Signing Keys</h2>
             <ul class="pageSectionList">
-                <li><a href="http://${SITE}uploadKey">Upload a package signing key</a></li>
+                <li><a href="http://${SITE}uploadKeyUI">Upload a package signing key</a></li>
             </ul>
 
         

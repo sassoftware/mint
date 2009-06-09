@@ -175,6 +175,12 @@ class SiteHandler(WebHandler):
         self.toUrl = self.cfg.basePath
         return self._write("forgotPassword", message = message)
 
+    @strFields(message = "")
+    @redirectHttps
+    def forgotPasswordUI(self, auth, message):
+        self.toUrl = self.cfg.basePath
+        return self._write("forgotPasswordUI", message = message)
+
     @redirectHttp
     @strFields(page = "")
     @intFields(step = 1)
@@ -216,6 +222,16 @@ class SiteHandler(WebHandler):
         self._resetPasswordById(userId)
 
         return self._write("passwordReset", email = user.getEmail())
+
+    @requiresHttps
+    @strFields(username = None)
+    def resetPasswordUI(self, auth, username):
+        self.toUrl = self.cfg.basePath
+        userId = self.client.getUserIdByName(username)
+        user = self.client.getUser(userId)
+        self._resetPasswordById(userId)
+
+        return self._write("passwordResetUI", email = user.getEmail())
 
     @requiresHttps
     @strFields(username = None, password = '', action = 'login', to = '/')
@@ -311,6 +327,23 @@ class SiteHandler(WebHandler):
             else:
                 return self._write("register_active")
 
+    @strFields(id = None)
+    def confirmUI(self, auth, id):
+        self.toUrl = self.cfg.basePath
+        try:
+            self.client.confirmUser(id)
+        except users.ConfirmError:
+            return self._write("error", shortError = "Confirm Failed",
+                error = "Sorry, an error has occurred while confirming your registration.")
+        except users.AlreadyConfirmed:
+            return self._write("error", shortError = "Already Confirmed",
+                error = "Your account has already been confirmed.")
+        else:
+            if auth.authorized:
+                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+            else:
+                return self._write("register_activeUI")
+
     @requiresAdmin
     @intFields(sortOrder = -1, limit = 0, offset = 0)
     def users(self, auth, sortOrder, limit, offset, submit = 0):
@@ -337,7 +370,7 @@ class SiteHandler(WebHandler):
             sortOrder = self.session.get('usersSortOrder', 0)
         self.session['usersSortOrder'] = sortOrder
         results, count = self.client.getUsers(sortOrder, limit, offset)
-        formattedRows, columns = self._formatUserSearch(results)
+        formattedRows, columns = self._formatUserSearch(results, True)
         return self._write("usersUI", sortOrder = sortOrder, limit = limit, offset = offset,
             results = formattedRows, columns = columns, count = count)
     
@@ -686,11 +719,31 @@ class SiteHandler(WebHandler):
             return self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
 
+    @strFields(search = "", type = None)
+    @intFields(limit = 0, offset = 0, modified = 0, removed = 0, showAll = 0, byPopularity = 0)
+    def searchUI(self, auth, type, search, modified, limit, offset, removed, showAll, byPopularity):
+        limit = max(limit, 0)
+        offset = max(offset, 0)
+        if not limit:
+            limit =  self.user and \
+                    self.user.getDataValue('searchResultsPerPage') or 10
+        self.session['searchType'] = type
+        if type in ("Products", "Projects"):
+            return self._projectSearchUI(search, modified, limit, offset, removed, not showAll)
+        elif type == "Users" and self.auth.authorized:
+            return self._userSearchUI(auth, search, limit, offset)
+        elif type == "Packages":
+            return self._packageSearchUI(search, limit, offset, removed)
+        else:
+            self.session['searchType'] = ''
+            return self._write("error", shortError = "Invalid Search Type",
+                error = "Invalid search type specified.")
+
     #
     # User search
     #
 
-    def _formatUserSearch(self, results):
+    def _formatUserSearch(self, results, newUI=False):
         if self.auth.admin:
             columns = ('User Name', 'Full Name', 'Account Created', 'Last Accessed', 'Status')
         else:
@@ -698,7 +751,10 @@ class SiteHandler(WebHandler):
 
         formattedRows = []
         for result in results:
-            link = self.cfg.basePath + 'userInfo?id=%d' % result[0]
+            if newUI:
+                link = self.cfg.basePath + 'userInfoUI?id=%d' % result[0]
+            else:
+                link = self.cfg.basePath + 'userInfo?id=%d' % result[0]
             row = {
                 'columns': [(link, result[1]), result[2], timeDelta(result[5]), timeDelta(result[6])],
             }
@@ -719,11 +775,22 @@ class SiteHandler(WebHandler):
             offset = offset, modified = 0, limiters = [],
             limitsRemoved = False, extraParams = "")
 
+    def _userSearchUI(self, auth, terms, limit, offset):
+        results, count = self.client.getUserSearchResults(terms, limit, offset)
+
+        formattedRows, columns = self._formatUserSearch(results, True)
+        self.searchTerms = terms
+        return self._write("searchResultsUI", searchType = "Users", 
+            terms = terms, fullTerms = terms, results = formattedRows,
+            columns = columns, count = count, limit = limit,
+            offset = offset, modified = 0, limiters = [],
+            limitsRemoved = False, extraParams = "")
+
     #
     # Package search
     #
 
-    def _formatPackageSearch(self, results):
+    def _formatPackageSearch(self, results, newUI=False):
         pText = getProjectText().title()
         columns = ('Package', pText)
 
@@ -732,8 +799,12 @@ class SiteHandler(WebHandler):
             p = self.client.getProject(projectId)
             projectHost = p.getHostname()
             projectName = p.name
-            reposUrl = self.cfg.basePath + 'project/%s/' % projectHost
-            packageUrl = self.cfg.basePath + 'repos/%s/troveInfo?t=%s;v=%s' % (projectHost, quote_plus(troveName), quote_plus(troveVersionStr))
+            if newUI:
+                reposUrl = None
+                packageUrl = None
+            else:
+                reposUrl = self.cfg.basePath + 'project/%s/' % projectHost
+                packageUrl = self.cfg.basePath + 'repos/%s/troveInfo?t=%s;v=%s' % (projectHost, quote_plus(troveName), quote_plus(troveVersionStr))
 
             ver = versions.VersionFromString(troveVersionStr)
 
@@ -769,6 +840,30 @@ class SiteHandler(WebHandler):
             modified = 0, limiters = limiters,
             limitsRemoved = limitsRemoved, extraParams = "")
 
+    def _packageSearchUI(self, terms, limit, offset, limitsRemoved = False):
+        results, count = self.client.getPackageSearchResults(terms, limit, offset)
+
+        limiterNames = {
+            'branch': "only packages for %s branch",
+            'server': "only packages on %s server",
+        }
+        def describeFn(key, val):
+            return limiterNames[key] % val
+
+        fullTerms = terms
+        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn, 
+                                                      limiterNames)
+
+        formattedRows, columns = self._formatPackageSearch(results, True)
+
+        terms = " ".join(terms)
+        self.searchTerms = terms
+        return self._write("searchResultsUI", searchType = "Packages",
+            terms = terms, fullTerms = fullTerms, results = formattedRows,
+            columns = columns, count = count, limit = limit, offset = offset,
+            modified = 0, limiters = limiters,
+            limitsRemoved = limitsRemoved, extraParams = "")
+
     #
     # Project search
     # 
@@ -778,7 +873,6 @@ class SiteHandler(WebHandler):
         formattedRows = []
         for x in results:
             p = self.client.getProject(x[0])
-
             row = {
                 'columns': [(p.getUrl(), p.getNameForDisplay()), timeDelta(x[4]), x[6] and timeDelta(x[6]) or "None"],
                 'desc':    p.getDescForDisplay(),
@@ -821,6 +915,49 @@ class SiteHandler(WebHandler):
             extraParams = ";showAll=1"
         
         return self._write("searchResults", searchType = pText.title()+'s',
+                terms = terms, fullTerms = fullTerms,
+                results = formattedRows,
+                columns = columns, count = count, limit = limit,
+                offset = offset, modified = modified, limiters = limiters,
+                limitsRemoved = limitsRemoved,
+                filterNoDownloads = filterNoDownloads,
+                buildTypes = buildTypes,
+                extraParams = extraParams)
+
+    def _projectSearchUI(self, terms, modified, limit, offset, limitsRemoved = False, filterNoDownloads = True):
+        pText = getProjectText()
+        results, count = self.client.getProjectSearchResults(terms, modified, limit, offset,
+            filterNoDownloads = filterNoDownloads)
+
+        buildTypes = list(set(self.client.getAvailableBuildTypes() + [buildtypes.XEN_DOMU]) - \
+                set([ int(v) for k, v in searcher.parseLimiters(terms, 
+                                                            ['buildtype']) \
+                    if k == 'buildtype' ]))
+
+        def describeFn(key, val):
+            if key == "buildtype":
+                return "%s containing %s builds" % (pText.lower(),buildtypes.typeNamesMarketing[int(val)])
+            else:
+                return ""
+
+        formattedRows, columns = self._formatProjectSearch(results)
+
+        fullTerms = terms
+        limiters, terms = searcher.limitersForDisplay(fullTerms, describeFn,
+                                                      ['buildtype'])
+
+        terms = " ".join(terms)
+
+        if terms.strip() != "" or limiters:
+            filterNoDownloads = False
+        self.searchTerms = terms
+        
+        if filterNoDownloads:
+            extraParams = ""
+        else:
+            extraParams = ";showAll=1"
+        
+        return self._write("searchResultsUI", searchType = pText.title()+'s',
                 terms = terms, fullTerms = fullTerms,
                 results = formattedRows,
                 columns = columns, count = count, limit = limit,

@@ -14,7 +14,7 @@ from mint import userlevels
     </head>
     <body>
         <div id="layout">
-            <form method="POST" action="processJoinRequest">
+            <form method="POST" action="processJoinRequestUI">
                 <table>
                     <tr><td><h2>Request membership in ${project.getNameForDisplay(maxWordLen = 50)}</h2></td></tr>
                     <tr><td>Please edit any additional comments you wish to make</td></tr>
