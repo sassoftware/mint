@@ -144,7 +144,7 @@
             </div>
         </div>
         <div class="boxBody" py:if="not projectList">
-            <a class="newuiLink" href="/ui/" target="_blank">Try the new UI (beta)</a>
+            <a class="newuiLink" href="/ui/" target="_blank">Use the new UI</a>
             <div class="projectsPaneActionTop">
                 <a href="http://${SITE}newProject">Create a new ${projectText().lower()}</a>
             </div>
@@ -162,7 +162,7 @@
             </div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
-            <a class="newuiLink" href="/ui/" target="_blank">Try the new UI (beta)</a>
+            <a class="newuiLink" href="/ui/" target="_blank">Use the new UI</a>
             <div id="switchProject" class="projectsPaneSelector">
                 <?python currentProjectId = not self.project and -1 or self.project.id ?>
                 <label for="switchProjectSelector">Select a ${projectText().lower()}:</label>
