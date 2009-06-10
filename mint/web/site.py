@@ -74,7 +74,7 @@ class SiteHandler(WebHandler):
         
         # if rBA go to new UI
         redirectIndex = self.req.get_options().get('redirectIndex', False)
-        if redirectIndex and not isRBO():
+        if redirectIndex:
             url = "https://" + self.cfg.siteHost + "/ui/"
             self._redirect(url)
         popularProjects = self.client.getPopularProjects()
