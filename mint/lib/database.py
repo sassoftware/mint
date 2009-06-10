@@ -233,7 +233,10 @@ class KeyedTable(DatabaseTable):
         except sqlerrors.ColumnNotUnique:
             raise DuplicateItem(self.name)
 
-        return cu.lastid()
+        if self.key in kwargs:
+            return kwargs[self.key]
+        else:
+            return cu.lastid()
 
     @dbWriter
     def update(self, cu, id, **kwargs):
