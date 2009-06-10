@@ -296,7 +296,7 @@ class UsersTable(database.KeyedTable):
         """
         cu = self.db.cursor()
 
-        userConcat = database.concat(self.db, 'username', '" - "', 'fullName')
+        userConcat = database.concat(self.db, 'username', "' - '", 'fullName')
         SQL = """SELECT userId, %s, active
                 FROM Users
                 ORDER BY username""" % userConcat

@@ -98,11 +98,7 @@ class ProjectsTable(database.KeyedTable):
 
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
-
-        # audited for SQL injection.
-        fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
-        cu.execute("""SELECT projectId FROM Projects
-                      WHERE %s=?""" % fqdnConcat, fqdn)
+        cu.execute("SELECT projectId FROM Projects WHERE fqdn = ?", fqdn)
 
         r = cu.fetchone()
         if not r:
