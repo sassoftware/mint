@@ -3426,7 +3426,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cu = self.db.cursor()
         cu.execute("""SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?
                       AND serverName=?""" % database.concat(self.db,
-                            'serverName', '"@"',  'branchName'),
+                            'serverName', "'@'",  'branchName'),
                       projectId, serverName)
         labels = cu.fetchall()
         return [x[0] for x in labels] or [defaultLabel]
