@@ -649,8 +649,12 @@ class MigrateTo_48(SchemaMigration):
             # support doing so trivially; on sqlite we're just going to be
             # migrating to postgres anyway.
             cu.execute("ALTER TABLE Builds DROP COLUMN deleted")
-            cu.execute("""ALTER TABLE Builds
-                    ALTER COLUMN statusMessage TYPE text""")
+            if self.db.driver == 'mysql':
+                cu.execute("""ALTER TABLE Builds
+                        MODIFY COLUMN statusMessage text""")
+            else:
+                cu.execute("""ALTER TABLE Builds
+                        ALTER COLUMN statusMessage TYPE text""")
 
         return True                    
 
