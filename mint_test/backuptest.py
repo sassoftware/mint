@@ -13,8 +13,9 @@ import StringIO
 
 from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
 
-from mint.scripts import backup
 from mint import constants
+from mint.lib import mintutils
+from mint.scripts import backup
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
@@ -167,22 +168,16 @@ class BackupTest(fixtures.FixturedUnitTest):
         self.usageRan = False
         def newUsage():
             self.usageRan = True
-        oldsetgid = os.setgid
-        os.setgid = mock.MockObject()
-
-        oldsetuid = os.setuid
-        os.setuid = mock.MockObject()
 
         oldUsage = backup.usage
+        oldSetup = mintutils.setupLogging
         try:
             backup.usage = newUsage
+            mintutils.setupLogging = lambda *a, **b: None
             backup.run()
         finally:
             backup.usage = oldUsage
-
-
-        os.setgid = oldsetgid
-        os.setuid = oldsetuid
+            mintutils.setupLogging = oldSetup
 
         self.failIf(not self.usageRan,
                 "run method did not execute to completion")
