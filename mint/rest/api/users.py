@@ -48,12 +48,11 @@ class UserNoticesContextController(notices.NoticesContextController):
         return rss.store.storeUserDismissal(notice, context = context)
 
     def getNoticesUrl(self, req, noticeId):
-        return "%s%s/%s" % (req.baseUrl,
-            "users/%s/notices/contexts" % req.auth[0], noticeId)
+        return req.url('users.notices.contexts', req.auth[0], noticeId)
 
     def getSourceUrl(self, req, context):
-        return "%s%s/%s/%s/%s" % (req.baseUrl, "users", req.auth[0],
-                                  "notices/contexts", context)
+        return req.url('users.notices.contexts', req.auth[0], context)
+
 
 class UserNoticesController(base.BaseController):
     urls = dict(aggregation = UserNoticesAggregationController,

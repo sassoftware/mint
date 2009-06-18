@@ -91,10 +91,11 @@ class NoticesContextController(BaseController):
         return rss.store.storeGlobalDismissal(notice, context = context)
 
     def getNoticesUrl(self, req, noticeId):
-        return "%s%s/%s" % (req.baseUrl, "notices/contexts", noticeId)
+        return req.url('notices.contexts', noticeId)
 
     def getSourceUrl(self, req, context):
-        return "%s%s/%s" % (req.baseUrl, "notices/contexts", context)
+        return req.url('notices.contexts', context)
+
 
 class NoticesAggregationController(BaseController):
     modelName = None
