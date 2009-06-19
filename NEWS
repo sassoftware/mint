@@ -1,3 +1,11 @@
+Changes in 5.2.1
+===============
+Bug Fixes
+---------------------
+* When configured to pull a platform definition from another rBuilder,
+  rBuilder would attempt to use the local admin user credentials.
+  (RBL-4830)
+
 Changes in 5.1.0
 ===============
 Web Front End Changes

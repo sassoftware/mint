@@ -56,7 +56,7 @@ class PlatformNameCache(persistentcache.PersistentCache):
 
     def _getConaryClient(self):
         if not self._cclient:
-            self._cclient = self._reposMgr().getConaryClient(admin=True)
+            self._cclient = self._reposMgr().getConaryClient(admin=False)
         return self._cclient
     cclient = property(_getConaryClient)
 
