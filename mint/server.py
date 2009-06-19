@@ -4638,7 +4638,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         pc = self.getApplianceCreatorClient()
         mincfg = self._getMinCfg(project)
         try:
-            sesH = pc.startApplianceSession(dict(hostname=project.getFQDN(),
+            sesH, otherInfo = pc.startApplianceSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version['namespace'],
                 version=version['name']), mincfg, rebuild)
         except packagecreator.errors.NoFlavorsToCook, err:
@@ -4653,7 +4653,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except packagecreator.errors.PackageCreatorError, err:
             raise mint_error.PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
-        return sesH
+        return sesH, otherInfo
 
     @requiresAuth
     def makeApplianceTrove(self, sessionHandle):

@@ -29,20 +29,23 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods,
     but mocks out almost all pcreator methods."""
 
+    def _setupMock(self, sessH = 'ses-123'):
+        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
+                public(lambda *args, **kwargs:
+                    (sessH, dict(isApplianceCreatorManged = True))))
+
     @fixtures.fixture('Full')
     def testStartApplianceSession(self, db, data):
         refSesH = 'ses-bogus'
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: refSesH))
+        self._setupMock(refSesH)
 
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        sesH, otherInfo = client.startApplianceCreatorSession(data['projectId'], 1, False)
         self.assertEquals(sesH, refSesH)
 
     @fixtures.fixture('Full')
     def testListApplianceTroves(self, db, data):
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: 'ses-123'))
+        self._setupMock()
 
         refTroveList = ['foo', 'bar']
         troveList = {'explicitTroves': ['foo', 'bar'],
@@ -50,14 +53,13 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
         self.mock(pcreator.backend.BaseBackend, '_listTroves',
                 public(lambda *args, **kwargs: troveList))
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        sesH, otherInfo = client.startApplianceCreatorSession(data['projectId'], 1, False)
         troveList = client.listApplianceTroves(data['projectId'], sesH)
         self.assertEquals(troveList, refTroveList)
 
     @fixtures.fixture('Full')
     def testSetApplianceTroves(self, db, data):
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: 'ses-123'))
+        self._setupMock()
 
         troveList = {'explicitTroves': ['foo', 'bar'],
                     'implicitTroves': ['not', 'listed']}
@@ -72,14 +74,13 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
             return True
         self.mock(pcreator.backend.BaseBackend, '_setTroves', MockedSetTroves)
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        sesH, otherInfo = client.startApplianceCreatorSession(data['projectId'], 1, False)
         client.setApplianceTroves(sesH, ['test', 'list'])
         self.assertEquals(self.setCall, (['test', 'list'], ['not', 'listed']))
 
     @fixtures.fixture('Full')
     def testAddApplianceTrove(self, db, data):
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: 'ses-123'))
+        self._setupMock()
 
         self.addCall = []
         @public
@@ -88,14 +89,13 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
             return True
         self.mock(pcreator.backend.BaseBackend, '_addTrove', MockedAddTrove)
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        sesH, otherInfo = client.startApplianceCreatorSession(data['projectId'], 1, False)
         client.addApplianceTrove(sesH, 'test')
         self.assertEquals(self.addCall, ('test', True))
 
     @fixtures.fixture('Full')
     def testMakeApplianceTrove(self, db, data):
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: 'ses-123'))
+        self._setupMock()
 
         self.called = False
         @public
@@ -106,14 +106,13 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
         self.mock(pcreator.backend.BaseBackend,
                 '_makeApplianceTrove', MockedMakeTrove)
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        sesH, otherInfo = client.startApplianceCreatorSession(data['projectId'], 1, False)
         client.makeApplianceTrove(sesH)
         self.failIf(not self.called, "Expected makeApplianceTrove to be called")
 
     @fixtures.fixture('Full')
     def testAddApplianceSearchPathsFail(self, db, data):
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: 'ses-123'))
+        self._setupMock()
 
         self.setCall = []
 
@@ -124,7 +123,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
                 '_addSearchPaths', MockedAddApplianceSearchPaths)
 
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        sesH, otherInfo = client.startApplianceCreatorSession(data['projectId'], 1, False)
         err = self.failUnlessRaises(mint_rephelp.mint_error.SearchPathError,
             client.addApplianceSearchPaths, sesH, ['test1==foo@bar:1'])
         self.failUnlessEqual(str(err), 'teh 3rr0r')
@@ -132,8 +131,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testAddApplianceSearchPaths(self, db, data):
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: 'ses-123'))
+        self._setupMock()
 
         self.setCall = []
 
@@ -150,7 +148,7 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
                 '_listSearchPaths', MockedListApplianceSearchPaths)
 
         client = self.getClient('owner')
-        sesH = client.startApplianceCreatorSession(data['projectId'], 1, False)
+        sesH, otherInfo = client.startApplianceCreatorSession(data['projectId'], 1, False)
         ret = client.addApplianceSearchPaths(sesH, ['test1=foo@bar:1'])
         self.failUnlessEqual(ret, ['test1=foo@bar:1'])
 
@@ -160,6 +158,11 @@ class MockedAppCreatorTest(fixtures.FixturedUnitTest):
 class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
     """ Unit Tests the MintClient and corresponding MintServer methods,
     TroveBuilder is generally mocked out."""
+
+    def _setupMock(self, sessH = 'ses-123'):
+        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
+                public(lambda *args, **kwargs:
+                    (sessH, dict(isApplianceCreatorManged = True))))
 
     def setUp(self):
         mint_rephelp.MintRepositoryHelper.setUp(self)
@@ -228,7 +231,7 @@ class AppCreatorTest(mint_rephelp.MintRepositoryHelper):
                 lambda *args, **kwargs: 0)
 
     def testTroveManipulation(self):
-        sesH = self.mintClient.startApplianceCreatorSession( \
+        sesH, otherInfo = self.mintClient.startApplianceCreatorSession( \
                 self.projectId, self.versionId, False)
         self.mintClient.addApplianceTrove(sesH, 'foo')
         trvs = self.mintClient.listApplianceTroves(self.projectId, sesH)
@@ -249,7 +252,7 @@ class TestRecipe(PackageRecipe):
     def setup(r):
         r.Create('/srv/foo%s', contents="jack sprat")
 """
-        sesH = self.mintClient.startApplianceCreatorSession( \
+        sesH, otherInfo = self.mintClient.startApplianceCreatorSession( \
                 self.projectId, self.versionId, False)
         project = self.mintClient.getProject(self.projectId)
         repos = self.mintClient.server._server._getProjectRepo(project)
@@ -269,7 +272,7 @@ class TestRecipe(PackageRecipe):
         self.assertEquals(set(l), set(['testpkgtwo', 'testpkgzero:runtime']))
 
     def _makeApplianceTrove(self, rebuild, troveName, troveList):
-        sesH = self.mintClient.startApplianceCreatorSession( \
+        sesH, otherInfo = self.mintClient.startApplianceCreatorSession( \
                 self.projectId, self.versionId, rebuild)
         self.mintClient.addApplianceTrove(sesH, troveName)
         self.mintClient.makeApplianceTrove(sesH)
@@ -307,8 +310,7 @@ class TestRecipe(PackageRecipe):
         self._makeApplianceTrove(False, 'bar', ['bar'])
 
     def testGetAvailablePackages(self):
-        self.mock(pcreator.backend.BaseBackend, '_startApplianceSession',
-                public(lambda *args, **kwargs: 'ses-123'))
+        self._setupMock()
 
         retTroveList = \
             [
@@ -326,7 +328,7 @@ class TestRecipe(PackageRecipe):
             return retTroveList
         self.mock(pcreator.backend.BaseBackend, '_getAvailablePackages',
                 public(_getAvailPackages))
-        sesH = self.mintClient.startApplianceCreatorSession(self.projectId, 1, False)
+        sesH, otherInfo = self.mintClient.startApplianceCreatorSession(self.projectId, 1, False)
         troveList = self.mintClient.getAvailablePackages(sesH)
         self.assertEquals(troveList, refTroveList)
         self.failUnless(self.avail_called)
