@@ -223,20 +223,24 @@ class MockRequest(request.Request):
                  body=None):
         self.method = method
         self.uri = uri
+        request.Request.__init__(self, None, uri)
         self.extension = None
         self.body = body
-        request.Request.__init__(self, None, '/api')
 
-    def _setProperties(self):
-        self.headers = {}
-        # self.method is set in __init__
-        self.remote = (None, None)
+    def _getBaseUrl(self):
+        return 'http://localhost:8000/api/'
 
-    def _getRawPath(self):
-        return 'http://localhost:8000', ('/api/' + self.uri)
+    def _getHttpMethod(self):
+        return self.method
+
+    def _getFullPath(self):
+        return '/api/' + self.uri
 
     def _getHeaders(self):
         return {}
+
+    def _getHost(self):
+        return 'localhost'
 
     def read(self):
         return self.body
@@ -246,6 +250,3 @@ class MockRequest(request.Request):
 
     def _getRemote(self):
         return (None, None)
-
-    def getContentLength(self):
-        return self.body and len(self.body) or 0
