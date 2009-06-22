@@ -32,10 +32,10 @@ class BooleanField(Field):
         value = value.lower()
         if value in ('true', '1'):
             return True
-        elif value in ('false', '0'):
+        elif value in ('false', '0', ''):
             return False
         else:
-            raise ParseError(value)
+            raise ValueError('Invalid boolean value %r' % (value,))
 
     def _valueToString(self, value, parent, context):
         if value is None:
