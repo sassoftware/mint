@@ -3,6 +3,14 @@ Changes in @NEW@:
 
 Bug Fixes
 ---------------------
+* the mirror-outbound script now uses rBuilder's internal conary proxy 
+  (RBA-4845)
+
+Changes in 4.1.4:
+================
+
+Bug Fixes
+---------------------
 * startImageJob() for imageless builds no longer returns an error when called
   over xmlrpc. (RBL-3885)
 * Adding externally managed projects can no longer fails when a web proxy
