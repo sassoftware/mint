@@ -58,8 +58,9 @@ class MirrorOutbound(MirrorScript):
                 labelStr = labelInfo['label']
                 cfg.host = reposHost = versions.Label(labelStr).getHost()
 
-                sourceUrl = sourceProject.getConaryConfig() \
-                    .repositoryMap[reposHost]
+                sourceProjCCfg = sourceProject.getConaryConfig()
+                sourceUrl = sourceProjCCfg.repositoryMap[reposHost]
+                conaryProxy = sourceProjCCfg.conaryProxy
                 repositoryMap = client.getFullRepositoryMap()
 
                 # Note that the mirror role must be named differently so that
@@ -88,6 +89,8 @@ class MirrorOutbound(MirrorScript):
                 sourceCCfg.user = sourceCfg.user
                 sourceCCfg.entitlement = sourceCfg.entitlement
                 sourceCCfg.proxy = proxy
+                sourceCCfg.conaryProxy = conaryProxy
+
                 # privRepos is a privileged netclient for managing the
                 # mirror user and its permissions
                 privRepos = sourceRepos = \
