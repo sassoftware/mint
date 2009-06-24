@@ -1,3 +1,10 @@
+Changes in @NEW@
+===============
+Bug Fixes
+---------------------
+* the mirror-outbound script now uses rBuilder's internal conary proxy 
+  (RBA-4845)
+
 Changes in 5.1.0
 ===============
 Web Front End Changes
