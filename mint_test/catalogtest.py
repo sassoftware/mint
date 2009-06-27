@@ -44,6 +44,50 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnlessEqual(self.normalizeXML(first),
                              self.normalizeXML(second))
 
+    def testBasicAuth(self):
+        username, password = 'foouser', 'foopass'
+        client, userId = self.quickMintUser(username, password)
+        url = "http://%s:%s@%s/catalog/clouds" % (username, password,
+            client._cfg.siteHost)
+        from restlib import client
+        cli = client.Client(url)
+        cli.connect()
+        resp = cli.request("GET")
+        self.failUnlessEqual(resp.status, 200)
+        data = resp.read()
+        self.failUnless('<cloudTypes' in data, data)
+
+    def testBasicAuthFail(self):
+        username, password = 'foouser', 'foopass'
+        client, userId = self.quickMintUser(username, password)
+        url = "http://%s/catalog/clouds" % (client._cfg.siteHost, )
+        from restlib import client
+        cli = client.Client(url)
+        cli.connect()
+
+        tests = [
+            None,
+            'NoSuchAuthMethodExists aa',
+            'Basic',
+            'Basic a',
+            'Basic YQ==',
+        ]
+        errMsg = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<fault>
+  <code>403</code>
+  <message>Forbidden</message>
+</fault>
+"""
+        for h in tests:
+            headers = dict()
+            if h:
+                headers['Authorization'] = h
+            err = self.failUnlessRaises(client.ResponseError,
+                cli.request, "GET", headers = headers)
+            self.failUnlessEqual(err.status, 403)
+            self.failUnlessEqual(err.contents, errMsg)
+
     def testGetImagesNoCred(self):
         # Enable EC2 in rbuilder
         storagePath = os.path.join(self.mintCfg.dataPath,

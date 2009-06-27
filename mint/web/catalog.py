@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import base64
 import os
 
 from mod_python import Cookie
@@ -42,7 +43,7 @@ class SessionAuthenticationCallback(auth.AuthenticationCallback):
         except:
             cookies = {}
         if 'pysid' not in cookies:
-            return anonToken
+            return self.getBasicAuth(request) or anonToken
 
         sid = cookies['pysid'].value
 
@@ -55,6 +56,25 @@ class SessionAuthenticationCallback(auth.AuthenticationCallback):
             timeout = 86400,
             lock = False)
         return session.get('authToken', anonToken)
+
+    @classmethod
+    def getBasicAuth(cls, request):
+        headers = request.headers
+        auth = headers.get('Authorization')
+        if not auth:
+            return None
+        info = auth.split(' ', 1)
+        if info[0] != 'Basic' or len(info) != 2:
+            return None
+
+        try:
+            user_pass = base64.b64decode(info[1])
+        except TypeError:
+            return None
+        user_pass = user_pass.split(':', 1)
+        if len(user_pass) != 2:
+            return None
+        return tuple(user_pass)
 
 
 class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):
