@@ -8,16 +8,22 @@
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
-class RepositoryBrowserUrlField(fields.AbstractUrlField):
+
+class _RepositoryUrlField(fields.AbstractUrlField):
+    name = None
     def _getUrl(self, parent, context):
-        base = context.request.getHostWithProtocol()
-        return '%s/repos/%s/browse' % (base, parent.hostname)
+        base = context.request.baseUrl
+        if base.endswith('/api'):
+            base = base[:-4]
+        return '%s/repos/%s/%s' % (base, parent.hostname, self.name)
 
 
-class RepositoryRestUrlField(fields.AbstractUrlField):
-    def _getUrl(self, parent, context):
-        base = context.request.getHostWithProtocol()
-        return '%s/repos/%s/api' % (base, parent.hostname)
+class RepositoryBrowserUrlField(_RepositoryUrlField):
+    name = 'browse'
+
+
+class RepositoryRestUrlField(_RepositoryUrlField):
+    name = 'api'
 
 
 class Product(Model):
