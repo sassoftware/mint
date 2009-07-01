@@ -95,7 +95,7 @@ class ProductManager(manager.Manager):
             search = search.replace('%','\\%')
             search = search.replace('_','\\_')
             search = '%' + search + '%'
-            clauses.append(('p.shortname LIKE ?', (search,)))
+            clauses.append(('(p.shortname LIKE ? OR p.name LIKE ?)', (search, search,)))
 
         ret = models.ProductSearchResultList()
         ret.products = self._getProducts(clauses, limit, start)
