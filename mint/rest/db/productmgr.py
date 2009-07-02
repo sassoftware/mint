@@ -158,7 +158,7 @@ class ProductManager(manager.Manager):
 
     def updateProduct(self, hostname, name,
                        description, projecturl, commitEmail,
-                       prodtype=None, hidden=hidden):
+                       prodtype=None, hidden=True):
         fqdn = self._getProductFQDN(projectId)
         oldproduct = self.getProduct(fqdn)
         cu = self.db.cursor()
@@ -172,7 +172,7 @@ class ProductManager(manager.Manager):
             params['isAppliance'] = int(prodtype == 'Appliance')
 
         # we can only unhide here; hiding is not allowed
-        if hidden=False:
+        if hidden == False:
             params['hidden'] = 0
 
         keys = '=?, '.join(params) + '=?'
