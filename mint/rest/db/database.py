@@ -379,7 +379,7 @@ class Database(DBInterface):
                                       projecturl=product.projecturl,
                                       prodtype=product.prodtype,
                                       commitEmail=product.commitEmail,
-                                      hidden=hidden)
+                                      hidden=product.hidden)
 
     @commitafter
     def setMemberLevel(self, hostname, username, level):
