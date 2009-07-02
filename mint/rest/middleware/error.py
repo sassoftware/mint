@@ -53,8 +53,8 @@ class ErrorCallback(object):
 
     def logError(self, request, e_type, e_value, e_tb, doEmail=True):
         info = {
+                'uri'               : request.thisUrl,
                 'path'              : request.path,
-                'basePath'          : request.basePath,
                 'host'              : request.host,
                 'method'            : request.method,
                 'headers_in'        : request.headers,
