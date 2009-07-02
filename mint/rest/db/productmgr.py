@@ -158,7 +158,9 @@ class ProductManager(manager.Manager):
 
     def updateProduct(self, hostname, name,
                        description, projecturl, commitEmail,
-                       prodtype=None):
+                       prodtype=None, hidden=hidden):
+        fqdn = self._getProductFQDN(projectId)
+        oldproduct = self.getProduct(fqdn)
         cu = self.db.cursor()
         params = dict(name=name,
                       description=description,
@@ -169,12 +171,23 @@ class ProductManager(manager.Manager):
             params['prodtype'] = prodtype
             params['isAppliance'] = int(prodtype == 'Appliance')
 
+        # we can only unhide here; hiding is not allowed
+        if hidden=False:
+            params['hidden'] = 0
+
         keys = '=?, '.join(params) + '=?'
         values = params.values()
         values.append(hostname)
         cu.execute('''UPDATE Projects SET %s
                       WHERE hostname=?''' % keys,
                    *values)
+
+        if bool(oldproduct.hidden) == True and hidden == False:
+            self.reposMgr.addUser(fqdn, 'anonymous',
+                                  password='anonymous',
+                                  level=userlevels.USER)   
+            self.publisher.notify('ProductUnhidden', projectId)
+            self.reposMgr._generateConaryrcFile()
 
     def createExternalProduct(self, title, hostname, domainname, url,
                               authInfo, mirror=False, backupExternal=False):
