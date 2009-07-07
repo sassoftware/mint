@@ -553,7 +553,7 @@ class RestDBMixIn(object):
     def createProduct(self, shortname, description=None,
                       owners=None, developers=None, users=None, 
                       private=False, domainname=None, name=None,
-                      db=None):
+                      db=None, prodtype='Appliance'):
         if db is None:
             db = self.openRestDatabase()
         if name is None:
@@ -565,7 +565,7 @@ class RestDBMixIn(object):
             self.setDbUser(db, owners[0])
         try:
             prd = models.Product(name=name, hostname=shortname,
-                                 shortname=shortname, prodtype='Appliance',
+                                 shortname=shortname, prodtype=prodtype,
                                  domainname=domainname, hidden=private,
                                  description=description)
             db.createProduct(prd)

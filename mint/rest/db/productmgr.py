@@ -83,7 +83,8 @@ class ProductManager(manager.Manager):
         assert len(results) == 1  # guaranteed by unique constraint
         return results[0]
 
-    def listProducts(self, start=0, limit=None, search=None, roles=None):
+    def listProducts(self, start=0, limit=None, search=None, roles=None,
+                     prodtype=None):
         clauses = []
         if roles is not None:
             roles = ', '.join('%d' % userlevels.idsByName[x.lower()]
@@ -96,6 +97,9 @@ class ProductManager(manager.Manager):
             search = search.replace('_','\\_')
             search = '%' + search + '%'
             clauses.append(('(UPPER(p.shortname) LIKE UPPER(?) OR UPPER(p.name) LIKE UPPER(?))', (search, search,)))
+
+        if prodtype:
+            clauses.append(('(UPPER(p.prodtype) = UPPER(?))', (prodtype, )))
 
         ret = models.ProductSearchResultList()
         ret.products = self._getProducts(clauses, limit, start)
