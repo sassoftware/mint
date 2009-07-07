@@ -10,6 +10,9 @@ API Changes
 
 Bug Fixes
 ---------------------
+* When configured to pull a platform definition from another rBuilder,
+  rBuilder would attempt to use the local admin user credentials.
+  (RBL-4830)
 * the mirror-outbound script now uses rBuilder's internal conary proxy 
   (RBA-4845)
 
