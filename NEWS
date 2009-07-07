@@ -1,5 +1,13 @@
 Changes in @NEW@
 ===============
+API Changes
+---------------------
+* Added support for filtering products by prodtype. (RBL-4879)
+* The isAppliance element is no longer available in the REST interface.
+  It is deprecated in the database and should not be exposed. The
+  prodtype element is the correct way to tell if a product is an
+  appliance. (RBL-4880)
+
 Bug Fixes
 ---------------------
 * When configured to pull a platform definition from another rBuilder,
