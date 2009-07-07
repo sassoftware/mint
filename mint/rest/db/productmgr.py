@@ -33,7 +33,7 @@ class ProductManager(manager.Manager):
         sql = '''
             SELECT p.projectId AS productId, hostname, name, shortname,
                 domainname, namespace, description, cr.username AS creator,
-                projectUrl, isAppliance, p.timeCreated,
+                projectUrl, p.timeCreated,
                 p.timeModified, commitEmail, prodtype, backupExternal,
                 hidden, m.level AS role, fqdn AS repositoryHostname,
                 ( SELECT pubReleaseId FROM PublishedReleases r
@@ -117,7 +117,7 @@ class ProductManager(manager.Manager):
         return models.ProductVersion(row)
 
     def createProduct(self, name, description, hostname,
-                      domainname, namespace, isAppliance,
+                      domainname, namespace,
                       projecturl, shortname, prodtype,
                       version, commitEmail, isPrivate):
         if namespace is None:
@@ -136,7 +136,7 @@ class ProductManager(manager.Manager):
             fqdn='%s.%s' % (hostname, domainname),
             database=self.cfg.defaultDatabase,
             namespace=namespace,
-            isAppliance=isAppliance, 
+            isAppliance=int(prodtype == 'Appliance'), 
             projecturl=projecturl,
             timeModified=createTime, 
             timeCreated=createTime,
@@ -307,7 +307,7 @@ class ProductManager(manager.Manager):
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
 
-        if product.isAppliance:
+        if product.prodtype == 'Appliance':
             groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
             className = util.convertPackageNameToClassName(groupName)
             # convert from unicode

@@ -49,8 +49,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(bar.shortname == 'bar')
         assert(foo.name == 'Project foo')
         assert(bar.name == 'Project bar')
-        assert(foo.isAppliance)
-        assert(bar.isAppliance)
         assert(foo.prodtype == 'Appliance')
         assert(bar.prodtype == 'Appliance')
         assert(not foo.hidden)

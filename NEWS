@@ -1,5 +1,12 @@
 Changes in @NEW@
 ===============
+API Changes
+---------------------
+* The isAppliance element is no longer available in the REST interface.
+  It is deprecated in the database and should not be exposed. The
+  prodtype element is the correct way to tell if a product is an
+  appliance. (RBL-4880)
+
 Bug Fixes
 ---------------------
 * the mirror-outbound script now uses rBuilder's internal conary proxy 
