@@ -53,6 +53,7 @@ class ProductController(base.BaseController):
         start = request.GET.get('start', None)
         search = request.GET.get('search', None)
         role = request.GET.get('role', None)
+        prodtype = request.GET.get('prodtype', None)
         if limit:
             limit = int(limit)
         if start:
@@ -60,7 +61,7 @@ class ProductController(base.BaseController):
         if isinstance(role, basestring):
             role = [role]
         return self.db.listProducts(limit=limit, start=start, search=search,
-                roles=role)
+                roles=role, prodtype=prodtype)
 
     @auth.public
     def get(self, request, hostname):

@@ -154,9 +154,10 @@ class Database(DBInterface):
         return self._getOne(cu, errors.UserNotFound, userId)[0]
 
     @readonly
-    def listProducts(self, start=0, limit=None, search=None, roles=None):
+    def listProducts(self, start=0, limit=None, search=None, roles=None,
+                     prodtype=None):
         return self.productMgr.listProducts(start=start, limit=limit,
-                search=search, roles=roles)
+                search=search, roles=roles, prodtype=prodtype)
 
     @readonly
     def getProductFQDNFromId(self, productId):
@@ -350,11 +351,6 @@ class Database(DBInterface):
             if getattr(product, attr) is None:
                 setattr(product, attr, '')
 
-        if product.prodtype == 'Appliance':
-            applianceValue = 1
-        else:
-            applianceValue = 0
-
         if self.cfg.hideNewProjects:
             product.hidden = True
         elif product.hidden is None:
@@ -363,7 +359,7 @@ class Database(DBInterface):
         productId = self.productMgr.createProduct(product.name, 
                                       product.description, product.hostname,
                                       product.domainname, product.namespace,
-                                      applianceValue, product.projecturl,
+                                      product.projecturl,
                                       product.shortname, product.prodtype,
                                       product.version,
                                       product.commitEmail, 

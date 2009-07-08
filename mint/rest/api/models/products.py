@@ -32,7 +32,6 @@ class Product(Model):
     repositoryUrl      = RepositoryRestUrlField()
     repositoryBrowserUrl = RepositoryBrowserUrlField()
     description        = fields.CharField()
-    isAppliance        = fields.BooleanField(default=True)
     prodtype           = fields.CharField()
     commitEmail        = fields.EmailField(visibility='owner')
     backupExternal     = fields.BooleanField(visibility='owner')
@@ -58,7 +57,7 @@ class Product(Model):
     def __repr__(self):
         return 'models.Product(%r, %r)' % (self.productId, 
                                   self.hostname + '.' + str(self.domainname))
-            
+
 class ProductSearchResultList(Model):
     class Meta(object):
         name = 'products'
