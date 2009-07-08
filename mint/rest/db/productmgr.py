@@ -33,7 +33,7 @@ class ProductManager(manager.Manager):
         sql = '''
             SELECT p.projectId AS productId, hostname, name, shortname,
                 domainname, namespace, description, cr.username AS creator,
-                projectUrl, isAppliance, p.timeCreated,
+                projectUrl, p.timeCreated,
                 p.timeModified, commitEmail, prodtype, backupExternal,
                 hidden, m.level AS role, fqdn AS repositoryHostname,
                 ( SELECT pubReleaseId FROM PublishedReleases r
@@ -83,7 +83,8 @@ class ProductManager(manager.Manager):
         assert len(results) == 1  # guaranteed by unique constraint
         return results[0]
 
-    def listProducts(self, start=0, limit=None, search=None, roles=None):
+    def listProducts(self, start=0, limit=None, search=None, roles=None,
+                     prodtype=None):
         clauses = []
         if roles is not None:
             roles = ', '.join('%d' % userlevels.idsByName[x.lower()]
@@ -96,6 +97,9 @@ class ProductManager(manager.Manager):
             search = search.replace('_','\\_')
             search = '%' + search + '%'
             clauses.append(('(UPPER(p.shortname) LIKE UPPER(?) OR UPPER(p.name) LIKE UPPER(?))', (search, search,)))
+
+        if prodtype:
+            clauses.append(('(UPPER(p.prodtype) = UPPER(?))', (prodtype, )))
 
         ret = models.ProductSearchResultList()
         ret.products = self._getProducts(clauses, limit, start)
@@ -117,7 +121,7 @@ class ProductManager(manager.Manager):
         return models.ProductVersion(row)
 
     def createProduct(self, name, description, hostname,
-                      domainname, namespace, isAppliance,
+                      domainname, namespace,
                       projecturl, shortname, prodtype,
                       version, commitEmail, isPrivate):
         if namespace is None:
@@ -136,7 +140,7 @@ class ProductManager(manager.Manager):
             fqdn='%s.%s' % (hostname, domainname),
             database=self.cfg.defaultDatabase,
             namespace=namespace,
-            isAppliance=isAppliance, 
+            isAppliance=int(prodtype == 'Appliance'), 
             projecturl=projecturl,
             timeModified=createTime, 
             timeCreated=createTime,
@@ -158,7 +162,8 @@ class ProductManager(manager.Manager):
 
     def updateProduct(self, hostname, name,
                        description, projecturl, commitEmail,
-                       prodtype=None):
+                       prodtype=None, hidden=True):
+        oldproduct = self._getProducts([('hostname = ?', (hostname,))])[0]
         cu = self.db.cursor()
         params = dict(name=name,
                       description=description,
@@ -169,12 +174,25 @@ class ProductManager(manager.Manager):
             params['prodtype'] = prodtype
             params['isAppliance'] = int(prodtype == 'Appliance')
 
+        # we can only unhide here; hiding is not allowed
+        if hidden == False:
+            params['hidden'] = 0
+
         keys = '=?, '.join(params) + '=?'
         values = params.values()
         values.append(hostname)
         cu.execute('''UPDATE Projects SET %s
                       WHERE hostname=?''' % keys,
                    *values)
+
+        if bool(oldproduct.hidden) == True and hidden == False:
+            self.reposMgr.addUser('.'.join((oldproduct.hostname,
+                                            oldproduct.domainname)), 
+                                  'anonymous',
+                                  password='anonymous',
+                                  level=userlevels.USER)   
+            self.publisher.notify('ProductUnhidden', oldproduct.id)
+            self.reposMgr._generateConaryrcFile()
 
     def createExternalProduct(self, title, hostname, domainname, url,
                               authInfo, mirror=False, backupExternal=False):
@@ -307,7 +325,7 @@ class ProductManager(manager.Manager):
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
 
-        if product.isAppliance:
+        if product.prodtype == 'Appliance':
             groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
             className = util.convertPackageNameToClassName(groupName)
             # convert from unicode
