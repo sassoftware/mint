@@ -2,6 +2,7 @@
 /srv/rbuilder/data/authorization.{cfg,xml}
 /srv/rbuilder/jobmaster/{config,config.d}
 /var/log/rbuilder/*.log
+/var/log/rbuilder/jobs/*
 /var/log/rmake/{*.log,xmlrpc.log,buildlogs}
 /var/log/pgsql
 /etc/sysconfig/pgsql/*
