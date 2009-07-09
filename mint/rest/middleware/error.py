@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import logging
 import traceback
 
 from restlib import response
@@ -11,6 +12,9 @@ from mint import logerror
 from mint import mint_error
 from mint.rest.api import models
 from mint.rest.modellib import converter
+
+log = logging.getLogger(__name__)
+
 
 class ErrorCallback(object):
     def __init__(self, controller):
@@ -55,12 +59,14 @@ class ErrorCallback(object):
         info = {
                 'uri'               : request.thisUrl,
                 'path'              : request.path,
-                'host'              : request.host,
                 'method'            : request.method,
                 'headers_in'        : request.headers,
                 'request_params'    : request.GET,
                 'post_params'       : request.POST,
                 'remote'            : '[%s]:%d' % request.remote,
                 }
-        logerror.logErrorAndEmail(self.controller.cfg, e_type, e_value, e_tb,
-                'API call', info, doEmail=doEmail)
+        try:
+            logerror.logErrorAndEmail(self.controller.cfg, e_type, e_value,
+                    e_tb, 'API call', info, doEmail=doEmail)
+        except mint_error.MailError, err:
+            log.error("Error sending mail: %s", str(err))

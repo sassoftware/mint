@@ -32,7 +32,7 @@ class RbuilderRESTHandler(object):
         self.handler.addCallback(error.ErrorCallback(controller))
 
     def handle(self, req):
-        return self.handler.handle(req, req.unparsed_uri[len(self.pathPrefix):])
+        return self.handler.handle(req, self.pathPrefix)
 
 
 def restHandler(req, db, cfg, pathInfo = None):
