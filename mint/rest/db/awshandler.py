@@ -45,6 +45,9 @@ class AWSHandler(manager.Manager):
         except ec2.mint_error.EC2Exception:
             pass
 
+    def notify_ProductUnhidden(self, event, projectId):
+        self.amiPerms.unhideProject(projectId)
+
     def _getS3Client(self):
         targetId = self.amiPerms.db.targets.getTargetId('ec2', 'aws', None)
         if targetId is None:

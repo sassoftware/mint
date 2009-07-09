@@ -49,8 +49,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(bar.shortname == 'bar')
         assert(foo.name == 'Project foo')
         assert(bar.name == 'Project bar')
-        assert(foo.isAppliance)
-        assert(bar.isAppliance)
         assert(foo.prodtype == 'Appliance')
         assert(bar.prodtype == 'Appliance')
         assert(not foo.hidden)
@@ -99,6 +97,22 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         products = db.listProducts(limit=1).products
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].shortname, 'bar')
+
+        # Query prodtype
+        self.createProduct('baz', owners=['user'], db=db, private=True,
+                           prodtype='Repository')
+
+        products = db.listProducts(prodtype='repository').products
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].shortname, 'baz')
+
+        products = db.listProducts(prodtype='appliance').products
+        self.assertEqual(len(products), 2)
+        self.assertEqual(products[0].shortname, 'bar')
+        self.assertEqual(products[1].shortname, 'foo')
+
+        products = db.listProducts(prodtype='foo').products
+        self.assertEqual(len(products), 0)
 
     def testUpdateProduct(self):
         db = self.openMintDatabase(createRepos=False)

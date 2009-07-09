@@ -814,19 +814,12 @@ class MintServer(object):
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
-        if prodtype == 'Appliance':
-            appliance = "yes"
-            applianceValue = 1
-        else:
-            appliance = "no"
-            applianceValue = 0
         isPrivate = isPrivate or self.cfg.hideNewProjects
         projectId = self.restDb.productMgr.createProduct(name=projectName,
                                   description=desc,
                                   hostname=hostname,
                                   domainname=domainname,
                                   namespace=namespace,
-                                  isAppliance=applianceValue,
                                   projecturl=projecturl,
                                   shortname=shortname, 
                                   prodtype=prodtype,

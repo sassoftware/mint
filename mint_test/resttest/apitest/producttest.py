@@ -97,7 +97,6 @@ class ProductTest(restbase.BaseRestTest):
   <repositoryUrl href="http://%(server)s:%(port)s/repos/foobar/api"/>
   <repositoryBrowserUrl href="http://%(server)s:%(port)s/repos/foobar/browse"/>
   <description></description>
-  <isAppliance>false</isAppliance>
   <commitEmail></commitEmail>
   <backupExternal>false</backupExternal>
   <timeCreated>WHITEOUT</timeCreated>
