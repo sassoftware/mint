@@ -36,7 +36,7 @@ class ImageManager(manager.Manager):
         self.mcpClient = None
 
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
-                   extraArgs=None, getOne=False, update=False):
+                   extraArgs=None, getOne=False):
         hostname = fqdn.split('.')[0]
         # TODO: pull amiId out of here and move into builddata dict ASAP
         sql = '''SELECT Builds.buildId as imageId, hostname,
@@ -126,8 +126,9 @@ class ImageManager(manager.Manager):
         for image in images:
             files = filesByImageId.get(image.imageId, [])
             image.files = models.ImageFileList(files)
-        if update:
-            self._updateStatusForImageList(images)
+
+        self._updateStatusForImageList(images)
+
         if getOne:
             return images[0]
         return models.ImageList(images)
@@ -197,12 +198,12 @@ class ImageManager(manager.Manager):
                            ' WHERE buildId=?',
                            image.status, image.statusMessage, image.imageId)
 
-    def listImagesForProduct(self, fqdn, update=False):
-        return self._getImages(fqdn, update=update)
+    def listImagesForProduct(self, fqdn):
+        return self._getImages(fqdn)
 
-    def getImageForProduct(self, fqdn, imageId, update=False):
+    def getImageForProduct(self, fqdn, imageId):
         return self._getImages(fqdn, '', 'AND Builds.buildId=?', [imageId],
-                                getOne=True, update=update)
+                                getOne=True)
 
     def deleteImageForProduct(self, fqdn, imageId):
         self.deleteImageFilesForProduct(fqdn, imageId)
@@ -238,24 +239,23 @@ class ImageManager(manager.Manager):
         imageType = cu.fetchone()[0]
         self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
 
-    def listImagesForRelease(self, fqdn, releaseId, update=False):
+    def listImagesForRelease(self, fqdn, releaseId):
         return self._getImages(fqdn, '', ' AND Builds.pubReleaseId=?',
-                               [releaseId], update=update)
+                               [releaseId])
 
-    def listImagesForProductVersion(self, fqdn, version, update=False):
+    def listImagesForProductVersion(self, fqdn, version):
         return self._getImages(fqdn, '',
-                               ' AND ProductVersions.name=?', [version],
-                               update=update)
+                               ' AND ProductVersions.name=?', [version])
 
-    def listImagesForTrove(self, fqdn, name, version, flavor, update=False):
+    def listImagesForTrove(self, fqdn, name, version, flavor):
         images =  self._getImages(fqdn, '',
                                   ' AND troveName=? AND troveFlavor=?',
-                                    [name, flavor.freeze()],
-                                    update=False)
+                                    [name, flavor.freeze()])
         images.images = [ x for x in images.images
                           if x.troveVersion == version ]
-        if update:
-            self._updateStatusForImageList(images.images)
+
+        self._updateStatusForImageList(images.images)
+
         return images
 
     def listImagesForProductVersionStage(self, fqdn, version, stageName):

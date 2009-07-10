@@ -28,8 +28,7 @@ class ProductImagesController(base.BaseController):
         return self.db.listImagesForProduct(hostname)
 
     def get(self, request, hostname, imageId):
-        update = int(request.GET.get('update', 0))
-        return self.db.getImageForProduct(hostname, imageId, update=update)
+        return self.db.getImageForProduct(hostname, imageId)
 
     def destroy(self, request, hostname, imageId):
         self.db.deleteImageForProduct(hostname, imageId)

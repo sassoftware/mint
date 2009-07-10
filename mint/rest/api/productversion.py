@@ -180,9 +180,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         return self.get(request, hostname, productVersion.name)
 
     def getImages(self, request, hostname, version):
-        update = int(request.GET.get('update', 0))
-        return self.db.listImagesForProductVersion(hostname, version,
-                                                   update=update)
+        return self.db.listImagesForProductVersion(hostname, version)
 
     def getPlatform(self, request, hostname, version):
         return self.db.getProductVersionPlatform(hostname, version)

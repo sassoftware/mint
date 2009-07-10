@@ -148,9 +148,8 @@ class RepositoryItemsController(BaseReposController):
     def getImages(self, request, hostname, troveString):
         #repos, trv = self._checkTrove(hostname, troveString)
         name, version, flavor = self._getTuple(troveString)
-        update = int(request.GET.get('update', 0))
         return self.db.listImagesForTrove(hostname, 
-                name, version, flavor, update=update)
+                name, version, flavor)
 
     
 class RepositoryController(BaseReposController):

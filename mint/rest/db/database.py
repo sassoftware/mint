@@ -463,12 +463,11 @@ class Database(DBInterface):
                                  version=version))
         return stageList
 
-    def listImagesForProductVersion(self, hostname, version, update=False):
+    def listImagesForProductVersion(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersion(hostname, version)
 
-    def listImagesForProductVersionStage(self, hostname, version, stageName,
-                                         update=False):
+    def listImagesForProductVersionStage(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProductVersionStage(hostname,
                                                         version, stageName)
@@ -569,27 +568,25 @@ class Database(DBInterface):
 
 
     @commitmaybe
-    def listImagesForTrove(self, hostname, name, version, flavor, update=False):
+    def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version,
-                flavor, update=update)
+                flavor)
 
     @commitmaybe
-    def listImagesForRelease(self, hostname, releaseId, update=False):
+    def listImagesForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listImagesForRelease(hostname, releaseId,
-                update=update)
+        return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
     @commitmaybe
-    def listImagesForProduct(self, hostname, update=False):
+    def listImagesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listImagesForProduct(hostname, update=update)
+        return self.imageMgr.listImagesForProduct(hostname)
 
     @commitmaybe
-    def getImageForProduct(self, hostname, imageId, update=False):
+    def getImageForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.getImageForProduct(hostname, imageId,
-                update=update)
+        return self.imageMgr.getImageForProduct(hostname, imageId)
 
     @commitafter
     def deleteImageForProduct(self, hostname, imageId):

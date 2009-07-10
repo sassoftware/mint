@@ -68,8 +68,7 @@ class ProductReleasesController(base.BaseController):
 
     @auth.public
     def images(self, request, hostname, releaseId):
-        update = int(request.GET.get('update', 0))
-        return self.db.listImagesForRelease(hostname, releaseId, update=update)
+        return self.db.listImagesForRelease(hostname, releaseId)
 
     @requires('image', models.ImageId)
     def addImage(self, request, hostname, releaseId, image):
