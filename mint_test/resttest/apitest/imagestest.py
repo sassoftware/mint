@@ -135,8 +135,8 @@ class ImagesTest(restbase.BaseRestTest):
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>-1</status>
-    <statusMessage>Unknown</statusMessage>
+    <status>-100</status>
+    <statusMessage>Message</statusMessage>
     <files>
       <file>
         <fileId>1</fileId>
@@ -167,8 +167,8 @@ class ImagesTest(restbase.BaseRestTest):
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>-1</status>
-    <statusMessage>Unknown</statusMessage>
+    <status>-100</status>
+    <statusMessage>Message</statusMessage>
     <files>
       <file>
         <fileId>2</fileId>
