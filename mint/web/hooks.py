@@ -426,7 +426,10 @@ def conaryHandler(req, db, cfg, pathInfo):
         elif method == "GET":
             return get(port, secure, (proxyServer, shimRepo), cfg, db, req)
         elif method == "PUT":
-            return apachemethods.putFile(port, secure, proxyServer, req)
+            if proxyServer:
+                return apachemethods.putFile(port, secure, proxyServer, req)
+            else:
+                return apache.HTTP_NOT_FOUND
         else:
             return apache.HTTP_METHOD_NOT_ALLOWED
     finally:
