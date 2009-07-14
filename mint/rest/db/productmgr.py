@@ -174,8 +174,11 @@ class ProductManager(manager.Manager):
             params['prodtype'] = prodtype
             params['isAppliance'] = int(prodtype == 'Appliance')
 
-        # we can only unhide here; hiding is not allowed
-        if hidden == False:
+        if hidden:
+            # only admin can hide
+            if self.auth.isAdmin:
+                params['hidden'] = 1
+        else:
             params['hidden'] = 0
 
         keys = '=?, '.join(params) + '=?'
