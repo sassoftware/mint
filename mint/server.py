@@ -3568,7 +3568,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 sourceUsername = sourceUsername,
                 sourcePassword = sourcePassword,
                 sourceEntitlement = sourceEntitlement,
-                mirrorOrder = mirrorOrder, allLabels = allLabels)
+                mirrorOrder = mirrorOrder, allLabels = int(allLabels))
 
         fqdn = versions.Label(sourceLabels[0]).getHost()
         if not os.path.exists(os.path.join(self.cfg.reposPath, fqdn)):
