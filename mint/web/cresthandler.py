@@ -11,13 +11,13 @@ from mint.db import database
 from mint.rest.middleware import auth
 
 
-def handleCrest(uri, cfg, db, repos, req):
+def handleCrest(prefix, cfg, db, repos, req):
     handler, callback = getCrestHandler(cfg, db)
     if isinstance(repos, proxy.SimpleRepositoryFilter):
         callback.repos = repos.repos
     else:
         callback.repos = repos
-    return handler.handle(req, uri)
+    return handler.handle(req, prefix)
 
 def getCrestHandler(cfg, db):
     assert(cfg)
