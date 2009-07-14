@@ -61,6 +61,10 @@ class ProjectsTable(database.KeyedTable):
             results = cu.fetchall()
             if len(results) > 0:
                 raise DuplicateHostname()
+            cu.execute("SELECT projectId FROM Projects WHERE shortname=?", kwargs['shortname'])
+            results = cu.fetchall()
+            if len(results) > 0:
+                raise DuplicateShortname()
             cu.execute("SELECT projectId FROM Projects WHERE name=?", kwargs['name'])
             results = cu.fetchall()
             if len(results) > 0:

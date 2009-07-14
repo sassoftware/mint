@@ -103,6 +103,8 @@ class DeleteLocalUrlError(PermissionDenied):
     "Deleting a local build file is not supported via this interface."
 class DuplicateHostname(PermissionDenied):
     "A %(project)s using this hostname already exists"
+class DuplicateShortname(PermissionDenied):
+    "A %(project)s using this shortname already exists"
 
 class DuplicateJob(PermissionDenied):
     "A conflicting job is already in progress"
