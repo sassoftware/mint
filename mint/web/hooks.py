@@ -97,7 +97,6 @@ def get(port, isSecure, repos, cfg, db, req):
         items = req.uri.split('/')
         if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
             # uri at this point should be repos/<hostname>/
-            import epdb; epdb.serve()
             skippedPart = '/'.join(items[:4])
             return cresthandler.handleCrest(skippedPart,
                     cfg, db, repos, req)
