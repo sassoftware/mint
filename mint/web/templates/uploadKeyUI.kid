@@ -63,12 +63,12 @@ from mint.web.templatesupport import projectText
                                 public keys.  Once a key is submitted, it cannot be removed.
                             </p>
                             <p class="help">
-                                For help generating a PGP key, visit 
-                                <a href="http://webber.dewinter.com/gnupg_howto/english/GPGMiniHowto-3.html#ss3.1">here</a>
+                                For help generating a PGP key, click 
+                                <a href="http://www.dewinter.com/gnupg_howto/english/GPGMiniHowto-3.html#ss3.1">here</a>
                             </p>
                             <p class="help">
                                 For help getting the public key in a format suitable for pasting, click 
-                                <a href="http://webber.dewinter.com/gnupg_howto/english/GPGMiniHowto-3.html#ss3.2">here</a>
+                                <a href="http://www.dewinter.com/gnupg_howto/english/GPGMiniHowto-3.html#ss3.2">here</a>
                             </p>
                         </td>
                     </tr>
