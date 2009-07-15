@@ -47,12 +47,16 @@ class CrestRepositoryCallback(crest.webhooks.ReposCallback):
             cu = self.db.cursor()
             fqdn = kwargs['host']
             hostname = fqdn.split('.', 1)[0]
-            cu.execute('''SELECT COUNT(*) FROM Projects
-                          WHERE hostname=?''', hostname)
-            if not cu.fetchall():
-                return 'http://%s/%s' % (kwargs['host'], '/'.join(args))
-            baseUrl = request.getHostWithProtocol() + '/repos/%s/api' % hostname
-            return request.url(baseUrl=baseUrl, *args)
+            cu.execute('''SELECT shortname FROM Projects
+                          WHERE fqdn=?''', fqdn)
+            try:
+                shortName, = cu.next()
+            except StopIteration:
+                return 'http://%s/conary/api/%s' % (fqdn, '/'.join(args))
+            else:
+                rootUrl = '/'.join(request.baseUrl.split('/')[:3])
+                reposUrl = rootUrl + '/repos/%s/api' % (shortName,)
+                return request.url(baseUrl=reposUrl, *args)
         return request.url(*args)
 
 
