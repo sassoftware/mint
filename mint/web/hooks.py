@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -183,7 +183,7 @@ def getRepository(projectName, repName, cfg,
         shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
     else:
         req.log_error("failed to open repository directory: %s" % repositoryDir)
-        repos = shim = None
+        netRepos = repos = shim = None
     return netRepos, repos, shim
 
 
@@ -357,6 +357,9 @@ def conaryHandler(req, db, cfg, pathInfo):
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
                     actualRepName, cfg, req, reposDb, dbTuple,
                     localMirror, requireSigs, commitEmail)
+
+            if not repServer:
+                return apache.HTTP_NOT_FOUND
 
             # Cache non-pooled connections by way of their repository
             # instance.
