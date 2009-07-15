@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -97,7 +97,6 @@ def get(port, isSecure, repos, cfg, db, req):
         items = req.uri.split('/')
         if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
             # uri at this point should be repos/<hostname>/
-            import epdb; epdb.serve()
             skippedPart = '/'.join(items[:4])
             return cresthandler.handleCrest(skippedPart,
                     cfg, db, repos, req)
@@ -184,7 +183,7 @@ def getRepository(projectName, repName, cfg,
         shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
     else:
         req.log_error("failed to open repository directory: %s" % repositoryDir)
-        repos = shim = None
+        netRepos = repos = shim = None
     return netRepos, repos, shim
 
 
@@ -358,6 +357,9 @@ def conaryHandler(req, db, cfg, pathInfo):
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
                     actualRepName, cfg, req, reposDb, dbTuple,
                     localMirror, requireSigs, commitEmail)
+
+            if not repServer:
+                return apache.HTTP_NOT_FOUND
 
             # Cache non-pooled connections by way of their repository
             # instance.
