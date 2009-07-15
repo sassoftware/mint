@@ -666,6 +666,15 @@ class MigrateTo_48(SchemaMigration):
             WHERE prodType IN ('Component', '', NULL)""")
         return True
 
+    # 48.2
+    # - Move non-typed projects to be "repositories" again due
+    # - to external project creation bug RBL-4983
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Projects SET prodType = 'Repository'
+            WHERE prodType IN ('', NULL)""")
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
