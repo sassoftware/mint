@@ -432,6 +432,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         project = adminClient.getProject(projectId)
         self.failUnless(project.external, "created project was not external")
+        # make sure it is a repo by default, RBL-4938
+        self.failUnless(project.prodtype == "Repository", "created project was not repository")
 
         # ensure project users table was populated.
         assert(project.onlyOwner(data['admin']))

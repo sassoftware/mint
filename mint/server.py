@@ -875,7 +875,7 @@ class MintServer(object):
                     description='', shortname=hostname, fqdn=fqdn,
                     hostname=hostname, domainname=domainname, projecturl='',
                     external=1, timeModified=now, timeCreated=now,
-                    database=database,
+                    database=database, prodtype="Repository",
                     commit=False)
 
             if creatorId:
