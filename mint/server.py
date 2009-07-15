@@ -3636,9 +3636,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.outboundMirrors.update(id, sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
                                        allLabels = int(allLabels),
-                                       recurse = recurse,
-                                       useReleases=useReleases,
-                                       fullSync = True)
+                                       recurse = int(recurse),
+                                       useReleases = int(useReleases),
+                                       fullSync = 1)
         else:
             cu = self.db.cursor()
             cu.execute("SELECT COALESCE(MAX(mirrorOrder)+1, 0) FROM OutboundMirrors")
@@ -3646,10 +3646,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             id = self.outboundMirrors.new(sourceProjectId = sourceProjectId,
                                            targetLabels = ' '.join(targetLabels),
                                            allLabels = int(allLabels),
-                                           recurse = recurse,
-                                           useReleases=useReleases,
+                                           recurse = int(recurse),
+                                           useReleases = int(useReleases),
                                            mirrorOrder = mirrorOrder,
-                                           fullSync = True)
+                                           fullSync = 1)
         return id
 
     @private
