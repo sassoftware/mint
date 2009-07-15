@@ -26,7 +26,7 @@ from conary.lib import util, log
 from mint import config
 from mint import helperfuncs
 from mint.client import MintClient
-from mint.mirror import MirrorScript
+from mint.scripts.mirror import MirrorScript
 
 log.setVerbosity(log.DEBUG)
 
