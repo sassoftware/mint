@@ -668,8 +668,8 @@ class MigrateTo_48(SchemaMigration):
 
     # 48.2
     # - Move non-typed projects to be "repositories" again due
-    # - to external project creation bug RBL-4983
-    def migrate1(self):
+    #   to external project creation bug RBL-4938
+    def migrate2(self):
         cu = self.db.cursor()
         cu.execute("""UPDATE Projects SET prodType = 'Repository'
             WHERE prodType IN ('', NULL)""")
