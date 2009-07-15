@@ -3592,7 +3592,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 sourceUsername = sourceUsername,
                 sourcePassword = sourcePassword,
                 sourceEntitlement=sourceEntitlement,
-                allLabels = allLabels)
+                allLabels = int(allLabels))
         self._generateConaryRcFile()
         return x
 
@@ -3635,7 +3635,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if id != -1:
             self.outboundMirrors.update(id, sourceProjectId = sourceProjectId,
                                        targetLabels = ' '.join(targetLabels),
-                                       allLabels = allLabels,
+                                       allLabels = int(allLabels),
                                        recurse = recurse,
                                        useReleases=useReleases,
                                        fullSync = True)
@@ -3645,7 +3645,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             mirrorOrder = cu.fetchone()[0]
             id = self.outboundMirrors.new(sourceProjectId = sourceProjectId,
                                            targetLabels = ' '.join(targetLabels),
-                                           allLabels = allLabels,
+                                           allLabels = int(allLabels),
                                            recurse = recurse,
                                            useReleases=useReleases,
                                            mirrorOrder = mirrorOrder,
