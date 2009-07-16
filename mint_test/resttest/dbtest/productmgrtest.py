@@ -301,7 +301,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         pd = db.getProductVersionDefinition('foo', '1')
         reposMgr = db.productMgr.reposMgr
         pd.loadFromRepository._mock.assertCalled(
-                                    reposMgr.getConaryClientForProduct())
+                reposMgr.getAdminClient(write=False))
         pd.loadFromRepository._mock.raiseErrorOnAccess(RuntimeError)
         self.assertRaises(mint_error.ProductDefinitionVersionNotFound,
                           db.getProductVersionDefinition,'foo', '1')

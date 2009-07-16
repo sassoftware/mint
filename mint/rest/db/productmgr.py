@@ -404,8 +404,7 @@ class ProductManager(manager.Manager):
         pd.setConaryRepositoryHostname(product.getFQDN())
         pd.setConaryNamespace(productVersion.namespace)
         pd.setProductVersion(productVersion.name)
-        cclient = self.reposMgr.getConaryClientForProduct(
-            productVersion.hostname, admin=True)
+        cclient = self.reposMgr.getAdminClient(write=False)
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:

@@ -34,8 +34,6 @@ _cachedCfg = None
 
 
 class RepositoryManager(manager.Manager):
-    ADMIN_LEVEL = object()
-
     def __init__(self, cfg, db, auth):
 	manager.Manager.__init__(self, cfg, db, auth)
         self.cfg = cfg
@@ -71,11 +69,12 @@ class RepositoryManager(manager.Manager):
                 netServer = repos.getNetServer()
                 self._getRoleForLevel(netServer, userlevels.USER)
                 self._getRoleForLevel(netServer, userlevels.DEVELOPER)
+                self._getRoleForLevel(netServer, userlevels.OWNER)
 
             # add the auth user so we can add additional permissions
             # to this repository
             self.addUser(repos.fqdn, self.cfg.authUser,
-                    password=self.cfg.authPass, level=self.ADMIN_LEVEL)
+                    password=self.cfg.authPass, level=userlevels.ADMIN)
 
     def deleteRepository(self, fqdn):
         # TODO: move this to the internal RepositoryManager
@@ -92,14 +91,7 @@ class RepositoryManager(manager.Manager):
         Gets the role name for the given level, creating the role on
         the fly if necessary
         """
-        rolePerms = {
-                # level                 role name           write   admin
-                self.ADMIN_LEVEL:     ('rb_internal_admin', True,   True),
-                userlevels.OWNER:     ('rb_owner',          True,   True),
-                userlevels.DEVELOPER: ('rb_developer',      True,   False),
-                userlevels.USER:      ('rb_user',           False,  False),
-        }
-        roleName, canWrite, canAdmin = rolePerms[level]
+        roleName, canWrite, canAdmin = reposdb.ROLE_PERMS[level]
 
         try:
             repos.auth.addRole(roleName)
@@ -155,11 +147,46 @@ class RepositoryManager(manager.Manager):
             raise errors.ProductNotFound(hostname)
         return bool(results[0][0])
 
+    def getAdminClient(self, write=False):
+        """
+        Get a conary client object with access to all repositories. If C{write}
+        is set then the client can write to the repositories, otherwise it will
+        have only read access.
+
+        All external projects will have full read access, as if using the
+        built-in conary proxy.
+        """
+        if write:
+            userId = reposdb.ANY_WRITER
+        else:
+            userId = reposdb.ANY_READER
+        return self.reposManager.getClient(userId)
+
+    def getUserClient(self):
+        """
+        Get a conary client with the permissions of the current user. This
+        includes hiding private projects the user does not have access to, etc.
+
+        All external projects will have full read access, as if using the
+        built-in conary proxy.
+        """
+        if self.auth.userId < 0:
+            userId = reposdb.ANONYMOUS
+        else:
+            userId = self.auth.userId
+        client = self.reposManager.getClient(userId)
+        if self.auth.username:
+            client.cfg.name = self.auth.username
+            client.cfg.contact = self.auth.fullName or ''
+        return client
+
     def getConaryClient(self, admin=False):
+        # DEPRECATED: Try getAdminClient or getUserClient first; this is going away.
         conaryCfg = self.getConaryConfig(admin=admin)
         return conaryclient.ConaryClient(conaryCfg)
 
     def getConaryClientForProduct(self, fqdn, conaryCfg=None, admin=False):
+        # DEPRECATED: Try getAdminClient or getUserClient first; this is going away.
         if conaryCfg is None:
             conaryCfg = self.getConaryConfig(admin=admin)
 
@@ -172,6 +199,7 @@ class RepositoryManager(manager.Manager):
         Gets a repository client, possibly with a shim connection to 
         one repository (the one associated with the fqdn).
         """ 
+        # DEPRECATED: Try getAdminClient or getUserClient first; this is going away.
         if self.auth.isAdmin:
             admin = True
         if self._isProductExternal(fqdn):
@@ -234,6 +262,7 @@ class RepositoryManager(manager.Manager):
         return cfg
 
     def getConaryConfig(self, admin=False):
+        # DEPRECATED: Try getAdminClient or getUserClient first; this is going away.
 	cfg = self._getBaseConfig()
         if self.auth.isAdmin:
             admin = True
