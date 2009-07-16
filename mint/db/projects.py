@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -75,6 +75,11 @@ class ProjectsTable(database.KeyedTable):
         try:
             # try deleteing the repository
             self.reposDB.delete(projectFQDN)
+
+            for contentsDir in self.cfg.reposContentsDir.split():
+                contentsDir = contentsDir % projectFQDN
+                if os.path.isdir(contentsDir):
+                    util.rmtree(contentsDir)
             
             # try removing the project
             cu = self.db.cursor()
