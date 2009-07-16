@@ -1,4 +1,4 @@
-Changes in @NEW@
+Changes in 5.2.2
 ===============
 API Changes
 ---------------------
@@ -7,6 +7,8 @@ API Changes
   It is deprecated in the database and should not be exposed. The
   prodtype element is the correct way to tell if a product is an
   appliance. (RBL-4880)
+* Users accessing the rBuilder by IP will no longer be redirected to a
+  non-existant product page. (RBL-4917)
 
 Bug Fixes
 ---------------------
