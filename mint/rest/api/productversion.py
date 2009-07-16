@@ -173,7 +173,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     @requires('productVersion', models.ProductVersion)
     def update(self, request, hostname, version, productVersion):
         return self.db.updateProductVersion(hostname, version, productVersion)
-        
+
     @requires('productVersion', models.ProductVersion)
     def create(self, request, hostname, productVersion):
         self.db.createProductVersion(hostname, productVersion)

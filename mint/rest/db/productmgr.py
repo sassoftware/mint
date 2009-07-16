@@ -106,6 +106,14 @@ class ProductManager(manager.Manager):
         return ret
 
     def getProductVersion(self, fqdn, versionName):
+        productVersion = self._getMinimalProductVersion(fqdn, versionName)
+        pd = self.getProductVersionDefinitionByProductVersion(productVersion)
+        # Use sourceGroup here since this is really the name of the source
+        # trove that needs to be cooked.
+        productVersion.sourceGroup = pd.getImageGroup()
+        return productVersion
+
+    def _getMinimalProductVersion(self, fqdn, versionName):
         # accept fqdn.
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
@@ -118,6 +126,7 @@ class ProductManager(manager.Manager):
                       hostname, versionName)
         row = self.db._getOne(cu, errors.ProductVersionNotFound, 
                                   (hostname, versionName))
+
         return models.ProductVersion(row)
 
     def createProduct(self, name, description, hostname,
@@ -385,14 +394,18 @@ class ProductManager(manager.Manager):
                                           description = description)
 
     def getProductVersionDefinition(self, fqdn, version):
-        productVersion = self.getProductVersion(fqdn, version)
-        product = self.getProduct(fqdn)
+        productVersion = self._getMinimalProductVersion(fqdn, version)
+        return self.getProductVersionDefinitionByProductVersion(productVersion)
+
+    def getProductVersionDefinitionByProductVersion(self, productVersion):
+        product = self.getProduct(productVersion.hostname)
         pd = proddef.ProductDefinition()
         pd.setProductShortname(product.shortname)
         pd.setConaryRepositoryHostname(product.getFQDN())
         pd.setConaryNamespace(productVersion.namespace)
         pd.setProductVersion(productVersion.name)
-        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+        cclient = self.reposMgr.getConaryClientForProduct(
+            productVersion.hostname, admin=True)
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:
@@ -412,8 +425,6 @@ class ProductManager(manager.Manager):
         pd.rebase(cclient, platformLabel)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
-
-
 
     def setProductVersionBuildDefinitions(self, hostname, version, model):
         pd = self.getProductVersionDefinition(hostname, version)

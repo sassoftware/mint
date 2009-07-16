@@ -129,7 +129,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(product.description == 'new desc')
 
     def testGetProductVersion(self):
-        db = self.openMintDatabase(createRepos=False)
+        db = self.openMintDatabase(createRepos=True)
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         self.createProductVersion(db, 'foo', '1', namespace='ns', 
@@ -277,7 +277,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(args[1] == 'conary.rpath.com@rpl:1')
 
     def testUpdateProductVersion(self):
-        db = self.openMintDatabase(createRepos=False)
+        db = self.openMintDatabase(createRepos=True)
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         self.createProductVersion(db, 'foo', '1', description='desc', 

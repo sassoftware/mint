@@ -31,6 +31,7 @@ class ProductVersion(Model):
                               ('hostname', 'name'))
     images = fields.UrlField('products.versions.images',
                               ('hostname', 'name'))
+    sourceGroup = fields.CharField()
 
     def get_absolute_url(self):
         return 'products.versions', self.hostname, self.name
