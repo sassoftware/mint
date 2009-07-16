@@ -52,6 +52,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <imageTypeDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions"/>
   <imageDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions"/>
   <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/images"/>
+  <sourceGroup>group-testproject-appliance</sourceGroup>
 </productVersion>
 """
         for pat in [ "timeCreated", "timeModified" ]:
@@ -954,6 +955,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <imageTypeDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageTypeDefinitions"/>
     <imageDefinitions href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/images"/>
+    <sourceGroup>group-testproject-appliance</sourceGroup>
   </productVersion>
 </productVersions>
 """

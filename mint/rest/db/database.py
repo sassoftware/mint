@@ -183,9 +183,16 @@ class Database(DBInterface):
                       FROM Projects 
                       JOIN ProductVersions as PVTable USING (projectId)
                       WHERE Projects.hostname=?''', hostname)
+
         pvl = models.ProductVersionList()
         for row in cu:
             pvl.addProductVersion(row)
+            pv = pvl.versions[-1]
+            pd = self.productMgr.getProductVersionDefinitionByProductVersion(pv)
+            # Use sourceGroup here since this is really the name of the source
+            # trove that needs to be cooked.
+            pv.sourceGroup = pd.getImageGroup()
+
         return pvl
 
     @readonly

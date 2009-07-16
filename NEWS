@@ -4,6 +4,8 @@ Bug Fixes
 ---------------------
 * the mirror-outbound script now uses rBuilder's internal conary proxy 
   (RBA-4845)
+* Provide imageGroup information from the product definiton via the REST
+  API. (RBL-4933)
 
 Changes in 5.1.0
 ===============
