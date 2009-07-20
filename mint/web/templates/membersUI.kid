@@ -172,7 +172,7 @@
                     </div>
                     <div py:if="isWriter">
                         <h2>OpenPGP Signing Keys</h2>
-                        <p>Click <a class="pageSectionLink" href="../../repos/${project.hostname}/pgpAdminForm">here</a> to ${auth.admin and "manage" or "view"} the OpenPGP signing keys your team has uploaded.</a>
+                        <p>Click <a class="pageSectionLink" href="../../repos/${project.hostname}/pgpAdminForm">here</a> to ${auth.admin and "manage" or "view"} the OpenPGP signing keys your team has uploaded.</p>
                     </div>
                 </div><br class="clear" />
                 <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
