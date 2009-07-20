@@ -924,58 +924,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.fetchWithRedirect('/repos/testproject/pgpAdminForm',
             server = self.getProjectServerHostname())
 
-    def testPgpAdminLink(self):
-        # Ideally this test will change in the future. all users of the site
-        # should be able to view public keys.
-        from mint import userlevels
-        client, userId = self.quickMintUser('foouser','foopass')
-        devClient, userId = self.quickMintUser('devuser','devpass')
-        nonClient, userId = self.quickMintUser('nonuser','nonpass')
-        watcherClient, userId = self.quickMintUser('watchuser','watchpass')
-        adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
-
-        projectId = self.newProject(client)
-        project = client.getProject(projectId)
-
-        project.addMemberByName('devuser', userlevels.DEVELOPER)
-        project = watcherClient.getProject(projectId)
-        project.addMemberByName('watchuser', userlevels.USER)
-
-        # view shows up for owner
-        self.webLogin('foouser', 'foopass')
-        page = self.assertContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys",
-                                  server = self.getProjectServerHostname())
-        page.fetchWithRedirect("/logout")
-
-        # view shows up for developer
-        self.webLogin('devuser', 'devpass')
-        page = self.assertContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys",
-                                  server = self.getProjectServerHostname())
-        page.fetchWithRedirect("/logout")
-
-        # view doesn't show up for watcher
-        self.webLogin('watchuser', 'watchpass')
-        page = self.assertNotContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys",
-                                  server = self.getProjectServerHostname())
-        page.fetchWithRedirect("/logout")
-
-        # view doesn't show up for non-member
-        self.webLogin('nonuser', 'nonpass')
-        page = self.assertNotContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys",
-                                  server = self.getProjectServerHostname())
-        page.fetchWithRedirect("/logout")
-
-        # manage shows up for admin
-        self.webLogin('adminuser', 'adminpass')
-        page = self.assertContent('/project/testproject/members',
-                                  "Manage OpenPGP Signing Keys",
-                                  server = self.getProjectServerHostname())
-        page.fetchWithRedirect("/logout")
-
     def testUploadKeyPage(self):
         pText = helperfuncs.getProjectText().lower()
         client, userId = self.quickMintUser('foouser','foopass')

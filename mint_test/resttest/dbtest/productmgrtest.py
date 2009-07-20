@@ -202,7 +202,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
                                        userlevels.USER)
         publisher.notify._mock.assertCalled('UserProductAdded', 
                                             otherId, productId, 
-                                            userlevels.USER)
+                                            None, userlevels.USER)
         db.setMemberLevel('foo', 'other', 'developer')
         reposMgr.editUser._mock.assertCalled('foo.rpath.local2', 'other', 
                                              userlevels.DEVELOPER)
