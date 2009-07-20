@@ -374,6 +374,11 @@ class RepositoryHandle(object):
                         "contents dir %r for project %r"
                         % (path, self.shortName))
 
+        if not os.access(nscfg.tmpDir, os.W_OK):
+            raise RepositoryDatabaseError("Unable to write to repository "
+                    "temporary directory %r for project %r"
+                    % (nscfg.tmpDir, self.shortName))
+
         db = self.getReposDB()
         baseUrl = self.getURL()
         return serverClass(nscfg, baseUrl, db)
