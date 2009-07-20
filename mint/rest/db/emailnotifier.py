@@ -33,7 +33,7 @@ class EmailNotifier(manager.Manager):
         actionText = {'Removed':'has been removed from the "%s" project'%\
                        project.name,
 
-                      'Added':'has been added to the "%s" project as %s %s' % (project.name, userlevelname == 'Developer' and 'a' or 'an', userlevelname),
+                      'Added':'has been added to the "%s" project as %s %s' % (project.name, userlevelname == 'Owner' and 'an' or 'a', userlevelname),
 
                       'Changed':'has had its current access level changed to "%s" on the "%s" project' % (userlevelname, project.name)
                      }

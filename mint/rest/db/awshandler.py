@@ -14,10 +14,12 @@ class AWSHandler(manager.Manager):
 	manager.Manager.__init__(self, cfg, db, auth)
         self.amiPerms = amiperms.AMIPermissionsManager(cfg, db.db)
 
-    def notify_UserProductRemoved(self, event, userId, projectId, userlevel = None):
+    def notify_UserProductRemoved(self, event, userId, projectId, oldLevel=None,
+                                  userlevel = None):
         self.amiPerms.deleteMemberFromProject(userId, projectId)
 
-    def notify_UserProductAdded(self, event, userId, projectId, userlevel = None):
+    def notify_UserProductAdded(self, event, userId, projectId, oldLevel=None,
+                                userlevel = None):
         self.amiPerms.addMemberToProject(userId, projectId)
 
     def notify_UserProductChanged(self, event, userId, projectId, oldLevel,

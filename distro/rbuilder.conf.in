@@ -59,6 +59,7 @@ availablePlatforms      conary.rpath.com@rpl:2
 availablePlatforms      sle.rpath.com@rpath:sles-11
 availablePlatforms      sle.rpath.com@rpath:sles-10
 availablePlatforms      centos.rpath.com@rpath:centos-5
+availablePlatforms      scientific.rpath.com@rpath:sl-5
 availablePlatforms      ubuntu.rpath.com@rpath:ubuntu-hardy
 
 # Available platform names. Should match the order of availablePlatforms
@@ -66,6 +67,7 @@ availablePlatformNames  rPath Linux 2
 availablePlatformNames  SLES 11 Delivered by rPath
 availablePlatformNames  SLES 10 Delivered by rPath
 availablePlatformNames  CentOS 5 Delivered by rPath
+availablePlatformNames  Scientific Linux Delivered by rPath
 availablePlatformNames  Ubuntu Hardy Delivered by rPath
 
 # Acceptable platforms (these are *allowed* but cannot be normally chosen)
