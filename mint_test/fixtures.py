@@ -618,7 +618,9 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.dataPath = testDataPath
         testCfg.dbPath = os.path.join(testCfg.dataPath, 'mintdb')
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
-        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
+        testCfg.reposContentsDir = "%s %s" % (
+                os.path.join(testCfg.dataPath, 'contents1', '%s'),
+                os.path.join(testCfg.dataPath, 'contents2', '%s'))
         reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.configLine('database default sqlite ' + reposDBPath)
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
@@ -786,7 +788,7 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
         testCfg.dbPath = os.path.join(testCfg.dataPath, 'mintdb')
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'),
-                                              os.path.join(cfg.dataPath, 'contents2', '%s'))
+                                              os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
