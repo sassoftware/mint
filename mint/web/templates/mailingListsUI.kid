@@ -24,6 +24,14 @@
                 <p class="message" py:for='msg in messages' py:content="msg"/>
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
                 <h2>Mailing Lists</h2>
+                <p py:if="isOwner">
+                Existing mailing lists are a carry-over from the earliest
+                versions of rBuilder.  Though you cannot add new lists now,
+                appliance owners are encouraged to establish other online 
+                resources outside of rBuilder to promote your appliance and
+                provide support for its users. You can reference these in your 
+                appliance description.
+                </p>
                 <div py:strip="True" py:if="isRPL">
                     <div class="mailingListButtons">
                         <h3>
