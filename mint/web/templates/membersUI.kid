@@ -70,7 +70,7 @@
                     <div class="page-title">Members</div>
     
                     <div id="yourStatus" py:if="auth.authorized">
-                        <h2>Your Status</h2>
+                        <h2>Your Membership Status</h2>
                         <p py:if="userLevel == userlevels.NONMEMBER">
                             You are currently not involved in this ${projectText().lower()}.
                         </p>
@@ -81,7 +81,7 @@
                             You are currently a developer of this ${projectText().lower()}.
                         </p>
                         <p py:if="userLevel == userlevels.OWNER">
-                            You are currently ${onlyOwner and "the owner" or "an owner"} of this ${projectText().lower()}.
+                            You are currently ${onlyOwner and "the owner" or "an owner"} of this ${projectText().lower()}.  You can manage membership here, adding other users as co-owners or developers to be part of the development team.  User the search at the left to find an existing rBuilder user to add as co-owner or developer.
                         </p>
                         <p py:if="not isTrueOwner">Actions:
                         <ul class="pageSectionList">
@@ -172,8 +172,7 @@
                     </div>
                     <div py:if="isWriter">
                         <h2>OpenPGP Signing Keys</h2>
-                        <p>You can view the OpenPGP package signing keys that your developers have uploaded:</p>
-                        <a class="pageSectionLink" href="../../repos/${project.hostname}/pgpAdminFormUI">${auth.admin and "Manage" or "View"} OpenPGP Signing Keys</a>
+                        <p>Click <a class="pageSectionLink" href="../../repos/${project.hostname}/pgpAdminForm">here</a> to ${auth.admin and "manage" or "view"} the OpenPGP signing keys your team has uploaded.</a>
                     </div>
                 </div><br class="clear" />
                 <img class="pagebottomleft" src="${cfg.staticPath}/apps/mint/images/innerpage_bottomleft.png" alt="" />
