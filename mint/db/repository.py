@@ -368,11 +368,11 @@ class RepositoryHandle(object):
             if not os.access(path, os.R_OK | os.X_OK):
                 raise RepositoryDatabaseError("Unable to read repository "
                         "contents dir %r for project %r"
-                        % (nscfg.tmpDir, self.shortName))
+                        % (path, self.shortName))
             if not nscfg.readOnlyRepository and  not os.access(path, os.W_OK):
                 raise RepositoryDatabaseError("Unable to write to repository "
                         "contents dir %r for project %r"
-                        % (nscfg.tmpDir, self.shortName))
+                        % (path, self.shortName))
 
         db = self.getReposDB()
         baseUrl = self.getURL()
