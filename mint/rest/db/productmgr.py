@@ -283,7 +283,7 @@ class ProductManager(manager.Manager):
                                            level)
             if notify:
                 self.publisher.notify('UserProductAdded', userId,
-                                      projectId, level)
+                                      projectId, oldLevel, level)
             return True
 
     def deleteMember(self, projectId, userId, notify=True):
