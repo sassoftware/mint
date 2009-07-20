@@ -164,9 +164,8 @@ class RepositoryManager(object):
         if entitlement:
             entitlements.addEntitlement('*', entitlement)
 
-        proxies = conarycfg.getProxyFromConfig(self.cfg) or None
         cache = netclient.ServerCache(repMap, userMap,
-                entitlements=entitlements, proxies=proxies)
+                entitlements=entitlements, proxies=self.cfg.proxy)
         return cache[fqdn]
 
     def getRepos(self, userId=None):
@@ -331,7 +330,12 @@ class RepositoryHandle(object):
                 and os.path.join(self._cfg.logPath, 'repository.log') or None)
         cfg.repositoryDB = None # We open databases ourselves
         cfg.readOnlyRepository = self._cfg.readOnlyRepositories
-        cfg.requireSigs = self._cfg.requireSigs and not self.isLocalMirror
+        # We only want to require signatures when there is a non-local client
+        # committing the changeset, e.g. in the conary entry point case only.
+        # Shim clients should not be required to sign packages. This is
+        # disabled completely for now since the only users of this code are
+        # local shims.
+        #cfg.requireSigs = self._cfg.requireSigs and not self.isLocalMirror
         cfg.serializeCommits = True
 
         cfg.serverName = [fqdn]

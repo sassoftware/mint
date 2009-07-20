@@ -326,7 +326,7 @@ class ProductManager(manager.Manager):
             raise mint_error.InvalidLabel(label)
 
         if platformLabel:
-            cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+            cclient = self.reposMgr.getUserClient()
             prodDef.rebase(cclient, platformLabel)
         self.setProductVersionDefinition(fqdn, version, prodDef)
         
@@ -375,7 +375,7 @@ class ProductManager(manager.Manager):
             if not str(label).startswith(str(baseLabel)):
                 continue
             try:
-                cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+                cclient = self.reposMgr.getUserClient()
                 pd.loadFromRepository(cclient)
             except Exception, e:
                 return versionId, None
@@ -414,13 +414,13 @@ class ProductManager(manager.Manager):
         return pd
 
     def setProductVersionDefinition(self, fqdn, version, prodDef):
-        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+        cclient = self.reposMgr.getUserClient()
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
     def rebaseProductVersionPlatform(self, fqdn, version, platformLabel):
         pd = self.getProductVersionDefinition(fqdn, version)
-        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+        cclient = self.reposMgr.getUserClient()
         pd.rebase(cclient, platformLabel)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
@@ -430,7 +430,7 @@ class ProductManager(manager.Manager):
         pd.clearBuildDefinition()
         for buildDef in model.buildDefinitions:
             self._addBuildDefinition(buildDef, pd)
-        cclient = self.reposMgr.getConaryClientForProduct(hostname)
+        cclient = self.reposMgr.getUserClient()
         pd.saveToRepository(cclient,
                             'Product Definition commit from rBuilder\n')
         return pd

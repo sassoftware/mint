@@ -305,7 +305,7 @@ class RepositoryManager(manager.Manager):
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage):
         # Get repository + client
-        client = self.getConaryClientForProduct(fqdn)
+        client = self.getUserClient(fqdn)
 
         # Sanitize input
         if ':' not in trovename:
