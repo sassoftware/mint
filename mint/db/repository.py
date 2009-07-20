@@ -414,6 +414,11 @@ class RepositoryHandle(object):
             level = userlevels.ADMIN
         elif userId == ANY_READER:
             level = userlevels.USER
+        elif userId == ANONYMOUS:
+            if self.isHidden:
+                raise ProductNotFound(self.shortName)
+            else:
+                level = userlevels.USER
         elif userId < 0:
             raise RuntimeError("Invalid userId %d" % userId)
         else:
