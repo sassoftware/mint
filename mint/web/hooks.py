@@ -66,8 +66,7 @@ def post(port, isSecure, repos, cfg, db, req):
         if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
             # uri at this point should be repos/<hostname>/
             skippedPart = '/'.join(items[:4])
-            unparsedUri = req.unparsed_uri[len(skippedPart):]
-            return cresthandler.handleCrest(unparsedUri,
+            return cresthandler.handleCrest(skippedPart,
                     cfg, db, repos, req)
     if req.headers_in['Content-Type'] == "text/xml":
         if not repos:
