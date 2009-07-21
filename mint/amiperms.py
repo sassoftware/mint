@@ -66,9 +66,9 @@ class AMIPermissionsManager(object):
                                 getEC2AccountNumbersForProjectUsers(projectId)
         self._removeAMIPermissionsForAll(published + unpublished)
         # all project members, including users, can see published builds
-        self._addAMIPermissionsForUsers(writers + readers, published)
+        self._addAMIPermissionsForAccounts(writers + readers, published)
         # only project developers and owners can see unpublished builds
-        self._addAMIPermissionsForUsers(writers, unpublished)
+        self._addAMIPermissionsForAccounts(writers, unpublished)
 
     def unhideProject(self, projectId):
         writers, readers = self.db.projectUsers.\
@@ -79,7 +79,7 @@ class AMIPermissionsManager(object):
         # everyone can view published releases
         self._addAMIPermissionsForAll(published)
         # writers can view unpublished releases
-        self._addAMIPermissionsForUsers(writers, unpublished)
+        self._addAMIPermissionsForAccounts(writers, unpublished)
 
     def _getEC2Client(self):
         targetId = self.db.targets.getTargetId('ec2', 'aws', None)
@@ -107,13 +107,19 @@ class AMIPermissionsManager(object):
         self._addAMIPermissionsForUsers([userId], amiIds)
 
     def _addAMIPermissionsForUsers(self, userIds, amiIds):
-        if not (userIds and amiIds):
-            return
-        ec2Client = self._getEC2Client()
+        accountIds = set()
         for userId in userIds:
             awsAccountNumber = self._getAWSAccountNumber(userId)
-            if not awsAccountNumber:
-                continue
+            if awsAccountNumber:
+                accountIds.add(awsAccountNumber)
+        if accountIds:
+            self._addAMIPermissionsForAccounts(accountIds, amiIds)
+
+    def _addAMIPermissionsForAccounts(self, accountIds, amiIds):
+        if not (accountIds and amiIds):
+            return
+        ec2Client = self._getEC2Client()
+        for awsAccountNumber in accountIds:
             for amiId in amiIds:
                 self._tryAMIAction(ec2Client.addLaunchPermission, 
                                    amiId, awsAccountNumber)
