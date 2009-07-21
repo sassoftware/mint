@@ -3046,6 +3046,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         buildType = buildDict['buildType']
 
+        # Clear any previously-existing files.
+        self._setBuildFilenames(buildId, [])
+
         if buildType == buildtypes.IMAGELESS:
             return ""
         else:
@@ -3090,6 +3093,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.setDataValue(buildId, 'amiManifestName,',
                 amiManifestName, data.RDT_STRING)
         self.buildData.removeDataValue(buildId, 'outputToken')
+
+        # Clear any pre-existing files (esp. failed build logs)
+        self._setBuildFilenames(buildId, [])
 
         # Set AMI image permissions for build here
         from mint.shimclient import ShimMintClient
