@@ -168,9 +168,12 @@ class RepositoryManager(manager.Manager):
         includes hiding private projects the user does not have access to, etc.
 
         All external projects will have full read access, as if using the
-        built-in conary proxy.
+        built-in conary proxy. Additionally, site admins will have admin access
+        to any repository.
         """
-        if self.auth.userId < 0:
+        if self.auth.isAdmin:
+            userId = reposdb.ANY_WRITER
+        elif self.auth.userId < 0:
             userId = reposdb.ANONYMOUS
         else:
             userId = self.auth.userId
@@ -305,7 +308,7 @@ class RepositoryManager(manager.Manager):
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage):
         # Get repository + client
-        client = self.getUserClient(fqdn)
+        client = self.getUserClient()
 
         # Sanitize input
         if ':' not in trovename:

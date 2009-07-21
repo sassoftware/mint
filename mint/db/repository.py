@@ -368,11 +368,16 @@ class RepositoryHandle(object):
             if not os.access(path, os.R_OK | os.X_OK):
                 raise RepositoryDatabaseError("Unable to read repository "
                         "contents dir %r for project %r"
-                        % (nscfg.tmpDir, self.shortName))
+                        % (path, self.shortName))
             if not nscfg.readOnlyRepository and  not os.access(path, os.W_OK):
                 raise RepositoryDatabaseError("Unable to write to repository "
                         "contents dir %r for project %r"
-                        % (nscfg.tmpDir, self.shortName))
+                        % (path, self.shortName))
+
+        if not os.access(nscfg.tmpDir, os.W_OK):
+            raise RepositoryDatabaseError("Unable to write to repository "
+                    "temporary directory %r for project %r"
+                    % (nscfg.tmpDir, self.shortName))
 
         db = self.getReposDB()
         baseUrl = self.getURL()
@@ -414,6 +419,11 @@ class RepositoryHandle(object):
             level = userlevels.ADMIN
         elif userId == ANY_READER:
             level = userlevels.USER
+        elif userId == ANONYMOUS:
+            if self.isHidden:
+                raise ProductNotFound(self.shortName)
+            else:
+                level = userlevels.USER
         elif userId < 0:
             raise RuntimeError("Invalid userId %d" % userId)
         else:
