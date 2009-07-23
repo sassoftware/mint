@@ -22,6 +22,8 @@ Bug Fixes
 * Re-creating an image now clears the image's downloadable file list
   immediately, preventing failed build logs from appearing on published
   AMIs. (RBL-4342)
+* It is now possible to delete an AMI image via the API after the
+  image has been externally de-registered in EC2. (RBL-4838)
 
 Changes in 5.1.0
 ===============
