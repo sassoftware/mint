@@ -79,10 +79,10 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         hostname = 'foo.%s' % mint_rephelp.MINT_PROJECT_DOMAIN
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
                            name='Image1', troveName='group-foo',
-                           troveVersion='/%s@rpl:foo-1/0:1.0-1' % hostname)
+                           troveVersion='/%s@rpl:foo-1/1.0:1.0-1' % hostname)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
                            name='Image1', troveName='group-foo',
-                       troveVersion='/%s@rpl:foo-1-devel/0:1.0-1' % hostname)
+                       troveVersion='/%s@rpl:foo-1-devel/1.0:1.0-1' % hostname)
         images = db.listImagesForProductVersion('foo', '1').images
         assert(len(images) == 2)
         images = db.listImagesForProductVersionStage('foo', '1', 'Release').images
