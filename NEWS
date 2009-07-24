@@ -1,4 +1,4 @@
-Changes in @NEW@
+Changes in 5.2.2
 ===============
 API Changes
 ---------------------
@@ -7,6 +7,8 @@ API Changes
   It is deprecated in the database and should not be exposed. The
   prodtype element is the correct way to tell if a product is an
   appliance. (RBL-4880)
+* Users accessing the rBuilder by IP will no longer be redirected to a
+  non-existant product page. (RBL-4805)
 
 Bug Fixes
 ---------------------
@@ -17,6 +19,15 @@ Bug Fixes
   (RBA-4845)
 * Provide imageGroup information from the product definiton via the REST
   API. (RBL-4933)
+* Re-creating an image now clears the image's downloadable file list
+  immediately, preventing failed build logs from appearing on published
+  AMIs. (RBL-4342)
+* It is now possible to delete an AMI image via the API after the
+  image has been externally de-registered in EC2. (RBL-4838)
+
+Other Changes
+---------------------
+* The Live ISO image type is no longer supported. (RBL-4258)
 
 Changes in 5.1.0
 ===============

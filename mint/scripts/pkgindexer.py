@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -154,15 +154,14 @@ class UpdatePackageIndexExternal(PackageIndexer):
         # delete the package index if there is no mark or a mark of zero.
         # this code sets the mark to "1" to ensure no race conditions exist
         # sorrounding the setting of the mark.
-        cu = self.db.cursor()
-        cu.execute("SELECT COUNT(*) FROM Projects WHERE NOT external")
+        cu = self.db.transaction()
+        cu.execute("SELECT COUNT(*) FROM Projects WHERE external = 0")
         if not cu.fetchone()[0]:
-            cu.execute('SELECT COUNT(*) FROM PackageIndexMark')
-            if not cu.fetchone()[0]:
-                cu.execute("INSERT INTO PackageIndexMark VALUES(1)")
-            else:
-                cu.execute("UPDATE PackageIndexMark SET mark=1")
+            cu.execute("DELETE FROM PackageIndexMark")
+            cu.execute("INSERT INTO PackageIndexMark ( mark ) VALUES ( 1 )")
             self.db.commit()
+        else:
+            self.db.rollback()
 
     def action(self):
         self.log.info("Updating package index")
@@ -185,32 +184,38 @@ class UpdatePackageIndexExternal(PackageIndexer):
         labels = {}
         projectIds = {}
         netclients = {}
+        hasErrors = False
 
         for projectId, hostname, localMirror in cu.fetchall():
-            self.log.info("Retrieving labels from %s...", hostname)
-            l, repMap, userMap, entMap = labelsTable.getLabelsForProject(projectId)
+            try:
+                self.log.info("Retrieving labels from %s...", hostname)
+                l, repMap, userMap, entMap = labelsTable.getLabelsForProject(projectId)
+    
+                hostname = repMap.keys()[0]
+                labels[hostname] = versions.Label(l.keys()[0])
+                projectIds[hostname] = projectId
 
-            hostname = repMap.keys()[0]
-            labels[hostname] = versions.Label(l.keys()[0])
-            projectIds[hostname] = projectId
-
-            ccfg = conarycfg.ConaryConfiguration()
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'config',
-                    'conaryrc')
-            if os.path.exists(conarycfgFile):
-                ccfg.read(conarycfgFile)
-            ccfg.root = ccfg.dbPath = ':memory:'
-            ccfg.repositoryMap = repMap
-            if not localMirror:
-                for host, authInfo in userMap:
-                    ccfg.user.addServerGlob(host, authInfo[0], authInfo[1])
-                for host, entitlement in entMap:
-                    ccfg.entitlement.addEntitlement(host, entitlement[1])
-            ccfg = helperfuncs.configureClientProxies(ccfg,
-                    self.cfg.useInternalConaryProxy, self.cfg.proxy,
-                    self.cfg.getInternalProxies())
-            repos = conaryclient.ConaryClient(ccfg).getRepos()
-            netclients[hostname] = repos
+                ccfg = conarycfg.ConaryConfiguration()
+                conarycfgFile = os.path.join(self.cfg.dataPath, 'config',
+                        'conaryrc')
+                if os.path.exists(conarycfgFile):
+                    ccfg.read(conarycfgFile)
+                ccfg.root = ccfg.dbPath = ':memory:'
+                ccfg.repositoryMap = repMap
+                if not localMirror:
+                    for host, authInfo in userMap:
+                        ccfg.user.addServerGlob(host, authInfo[0], authInfo[1])
+                    for host, entitlement in entMap:
+                        ccfg.entitlement.addEntitlement(host, entitlement[1])
+                ccfg = helperfuncs.configureClientProxies(ccfg,
+                        self.cfg.useInternalConaryProxy, self.cfg.proxy,
+                        self.cfg.getInternalProxies())
+                repos = conaryclient.ConaryClient(ccfg).getRepos()
+                netclients[hostname] = repos
+            except Exception, e:
+                self.log.error("Exception from %s", hostname)
+                self.log.error(str(e))
+                hasErrors = True
 
         rows = []
         for host in netclients.keys():
@@ -222,6 +227,9 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 troves = netclients[host].getAllTroveLeaves(host, names)
 
             except repository.errors.OpenError, e:
+                self.log.warning("unable to access %s: %s", host, str(e))
+                continue
+            except repository.errors.InsufficientPermission, e:
                 self.log.warning("unable to access %s: %s", host, str(e))
                 continue
 
@@ -243,7 +251,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
                     serverName = label.getHost()
                     branchName = label.getNamespace() + ":" + label.getLabel()
 
-                    isSource = troveName.endswith(':source')
+                    isSource = int(troveName.endswith(':source'))
                     row = (projectIds[host], troveName, str(max(packageDict[troveName][label])),
                         serverName, branchName, isSource)
                     rows.append(row)
@@ -273,9 +281,12 @@ class UpdatePackageIndexExternal(PackageIndexer):
             WHERE pkgId=?""", updates)
         cu.executemany("""
             INSERT INTO PackageIndex
-                (pkgId, projectId, name, version, serverName, branchName, isSource)
-            VALUES (NULL, ?, ?, ?, ?, ?, ?)""", inserts)
+                (projectId, name, version, serverName, branchName, isSource)
+            VALUES (?, ?, ?, ?, ?, ?)""", inserts)
         self.db.commit()
-        self.updateMark()
-        self.log.info("Database update complete, took %.2fs." % (time.time() - st))
+        if not hasErrors:
+            self.updateMark()
+            self.log.info("Database update complete, took %.2fs." % (time.time() - st))
+        else:
+            self.log.info("Database update had errors.  not updating the mark")
         return 0

@@ -6,6 +6,7 @@
 from mint import buildtypes
 from mint import amiperms
 from mint import ec2
+from mint import mint_error
 
 from mint.rest.db import manager
 
@@ -14,10 +15,12 @@ class AWSHandler(manager.Manager):
 	manager.Manager.__init__(self, cfg, db, auth)
         self.amiPerms = amiperms.AMIPermissionsManager(cfg, db.db)
 
-    def notify_UserProductRemoved(self, event, userId, projectId, userlevel = None):
+    def notify_UserProductRemoved(self, event, userId, projectId, oldLevel=None,
+                                  userlevel = None):
         self.amiPerms.deleteMemberFromProject(userId, projectId)
 
-    def notify_UserProductAdded(self, event, userId, projectId, userlevel = None):
+    def notify_UserProductAdded(self, event, userId, projectId, oldLevel=None,
+                                userlevel = None):
         self.amiPerms.addMemberToProject(userId, projectId)
 
     def notify_UserProductChanged(self, event, userId, projectId, oldLevel,
@@ -42,7 +45,8 @@ class AWSHandler(manager.Manager):
         s3 = self._getS3Client()
         try:
             s3.deleteAMI(imageName)
-        except ec2.mint_error.EC2Exception:
+        except (ec2.mint_error.EC2Exception,
+                mint_error.AMIInstanceDoesNotExist):
             pass
 
     def notify_ProductUnhidden(self, event, projectId):

@@ -6,6 +6,7 @@
 
 from mod_python import apache
 
+import logging
 import os
 import re
 import socket
@@ -19,6 +20,7 @@ import base64
 
 from mint import config
 from mint import users
+from mint.lib import mintutils
 from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
@@ -66,8 +68,7 @@ def post(port, isSecure, repos, cfg, db, req):
         if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
             # uri at this point should be repos/<hostname>/
             skippedPart = '/'.join(items[:4])
-            unparsedUri = req.unparsed_uri[len(skippedPart):]
-            return cresthandler.handleCrest(unparsedUri,
+            return cresthandler.handleCrest(skippedPart,
                     cfg, db, repos, req)
     if req.headers_in['Content-Type'] == "text/xml":
         if not repos:
@@ -159,6 +160,7 @@ def getRepository(projectName, repName, cfg,
         actionDict = {'repMap': repName + " " + repMapStr,
                       'buildLabel': buildLabel,
                       'projectName': projectName,
+                      'fqdn': repName,
                       'commitFromEmail': cfg.commitEmail,
                       'commitEmail': commitEmail,
                       'basePath' : cfg.basePath,
@@ -557,6 +559,12 @@ def handler(req):
     coveragehook.install()
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
+
+    # Direct logging to httpd error_log.
+    mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
+    # Silence some noisy third-party components.
+    for name in ('stomp.py', 'boto'):
+        logging.getLogger(name).setLevel(logging.ERROR)
 
     # only reload the configuration file if it's changed
     # since our last read

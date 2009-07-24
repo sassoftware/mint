@@ -1,132 +1,120 @@
-#!/usr/bin/python
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved.
 #
 
-import os, sys
-import xmlrpclib
+import logging
+import os
+import sys
+import time
+
+# Automagically insert the mint tree into sys.path for easier debugging.
+root = os.path.sep.join(__file__.split(os.path.sep)[:-__name__.count('.')-2])
+if root not in sys.path:
+    sys.path.insert(0, root)
+del root
 
 from conary import versions
 from conary.lib import options
 from conary.lib import coveragehook
 
+from mint import config
+from mint.db import database
+from mint.lib import mintutils
+from mint.mint_error import ItemNotFound
 from mint.logerror import logErrorAndEmail
-from mint.mint_error import UnknownException
 
-def usage():
-    return "\n".join((
-     "Usage: commitaction [commitaction args] ",
-     "         --module '/path/to/statsaction --user <user>' --url <xmlrpc url>",
-     ""
-    ))
+log = logging.getLogger(__name__)
 
-class _Method(xmlrpclib._Method):
-    def __repr__(self):
-        return "<rBuilderAction._Method(%s, %r)>" %(self._Method__send, self._Method__name)
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __call__(self, *args):
-        return self.doCall(*args)
-
-    def doCall(self, *args):
-        isException, result = self.__send(self.__name, args)
-        if not isException:
-            return result
-        else:
-            self.handleError(result)
-
-    def handleError(self, result):
-        exceptionName = result[0]
-        exceptionArgs = result[1:]
-
-        if exceptionName == "CommitError":
-            raise Exception(result)
-        else:
-            raise UnknownException(exceptionName, exceptionArgs)
-
-class ServerProxy(xmlrpclib.ServerProxy):
-    def __getattr__(self, name):
-        return _Method(self.__request, name)
 
 def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     coveragehook.install()
     if not len(argv) and not len(otherArgs):
-        usage()
         return 1
+
+    mintutils.setupLogging(consoleLevel=logging.WARNING,
+            consoleFormat='apache')
     
     argDef = {
-        'url' : options.ONE_PARAM,
+        'config' : options.ONE_PARAM,
         'user': options.ONE_PARAM,
         'hostname': options.ONE_PARAM,
     }
 
     # create an argv[0] for processArgs to ignore
     argv[0:0] = ['']
-    argSet, someArgs = options.processArgs(argDef, {}, cfg, usage, argv=argv)
+    argSet, someArgs = options.processArgs(argDef, {}, cfg, '', argv=argv)
     # and now remove argv[0] again
     argv.pop(0)
     if len(someArgs):
         someArgs.pop(0)
     otherArgs.extend(someArgs)
 
-    pid = os.fork()
-    if not pid:
-        #child
-        #Double fork we want the parent to return immediately so that there's no delay
-        pid2 = os.fork()
-        if not pid2:
-            #child2
-            user = argSet['user']
-            url  = argSet['url']
+    # Double-fork so the commit hook doesn't block the caller.
+    if os.fork():
+        return 0
 
-            overrideHostname = None
-            if 'hostname' in argSet:
-                overrideHostname = argSet['hostname']
+    try:
+        if not os.fork():
+            try:
+                registerCommits(argSet, commitList)
+            except:
+                e_type, e_value, e_tb = sys.exc_info()
+                logErrorAndEmail(None, e_type, e_value, e_tb, 'commit hook',
+                        argSet)
+    finally:
+        os._exit(0)
 
-            for commit in commitList:
-                t, vStr, f = commit
 
-                v = versions.VersionFromString(vStr)
+def registerCommits(argSet, commitList):
+    user = argSet['user']
 
-                if overrideHostname:
-                    hostname = overrideHostname
-                else:
-                    hostname = v.getHost()
+    overrideHostname = None
+    if 'hostname' in argSet:
+        overrideHostname = argSet['hostname']
 
-                rBuilderServer = ServerProxy(url)
+    cfgPath = argSet.get('config', config.RBUILDER_CONFIG)
+    cfg = config.MintConfig()
+    cfg.read(cfgPath)
 
-                try:
-                    rBuilderServer.registerCommit(hostname, user, t, vStr)
-                except:
-                    # TODO: get a mint config object so we can email
-                    # the maintainer.
-                    e_type, e_value, e_tb = sys.exc_info()
-                    print >> sys.stderr, 'Error in rBuilder commit action:'
-                    logErrorAndEmail(None, e_type, e_value, e_tb,
-                        'commit action', {
-                            'hostname': hostname,
-                            'user': user,
-                            'trove': '%s=%s[%s]' % (t, vStr, f),
-                          })
-                    os._exit(1)
-            os._exit(0)
+    db = database.Database(cfg)
+    db.db.transaction()
+
+    try:
+        userId = db.users.getIdByColumn("username", user)
+    except ItemNotFound:
+        userId = None
+
+    now = time.time()
+    projectIdCache = {}
+    trovesSeen = set()
+    for name, version, _ in commitList:
+        version = versions.VersionFromString(version)
+
+        # Map FQDN to projectId. If the FQDN isn't found, drop the commit.
+        if overrideHostname:
+            hostname = overrideHostname
         else:
-            #parent 2
-            pid2, status = os.waitpid(pid2, 0)
-            if status:
-                sys.stderr.write("rBuilderAction failed with code %d" % status)
-            os._exit(0)
+            hostname = version.getHost()
 
+        if hostname in projectIdCache:
+            projectId = projectIdCache[hostname]
+        else:
+            try:
+                projectId = db.projects.getProjectIdByFQDN(hostname)
+            except ItemNotFound:
+                projectId = None
+                log.warning("Could not record commit for project %r", hostname)
+            projectIdCache[hostname] = projectId
 
-    #parent 1
-    #drive on oblivious
+        if projectId is None:
+            continue
 
-    return 0
+        # Skip already-added name-version pairs -- they differ only by flavor,
+        # which the commits table doesn't keep a slot for.
+        if (name, version) not in trovesSeen:
+            db.commits.new(projectId, now, name, version.asString(), userId)
+            trovesSeen.add((name, version))
 
-if __name__ == "__main__": #pragma: no cover
-    print usage()
-    sys.exit(1)
+    db.db.commit()

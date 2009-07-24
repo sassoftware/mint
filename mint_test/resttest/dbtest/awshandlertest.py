@@ -68,6 +68,24 @@ class AwsHandlerest(mint_rephelp.MintDatabaseHelper):
             imageType = awshandler.buildtypes.INSTALLABLE_ISO)
         self.failUnlessEqual(reqobj.called, [])
 
+    def testImageMissing(self):
+        """
+        Test that a missing AMI does not prevent the image deletion from
+        succeeding. (RBL-4838)
+        """
+        self._mockRequest()
+        class Database(object):
+            db = self.openRestDatabase()
+            db = db.db
+        targetData = dict(ec2AccountId = '42',
+            ec2PublicKey = 'publicKey',
+            ec2PrivateKey = 'privateKey')
+        targetId = Database.db.targets.addTarget('ec2', 'aws')
+        Database.db.targetData.addTargetData(targetId, targetData)
+        handler = awshandler.AWSHandler(self.mintCfg, Database(), None)
+        handler.notify_ImageRemoved('ImageRemoved', imageId='3',
+                imageName='ami-BAR', imageType=awshandler.buildtypes.AMI)
+
 xml_DescribeImages1 = """\
 <?xml version="1.0"?>
 <DescribeImagesResponse xmlns="http://ec2.amazonaws.com/doc/2008-12-01/">
@@ -83,6 +101,12 @@ xml_DescribeImages1 = """\
             <imageType>machine</imageType>
         </item>
     </imagesSet>
+</DescribeImagesResponse>
+"""
+
+xml_DescribeImages2 = """\
+<?xml version="1.0"?>
+<DescribeImagesResponse xmlns="http://ec2.amazonaws.com/doc/2008-12-01/">
 </DescribeImagesResponse>
 """
 
@@ -145,15 +169,17 @@ xml_manifest1 = """\
 """
 
 class MockedRequest(object):
-    data = dict(
-        DescribeImages = xml_DescribeImages1,
-        DeregisterImage = xml_DeregisterImage1,
-    )
+    data = {
+            ('DescribeImages', (('ImageId.1', 'ami-Foo'),)): xml_DescribeImages1,
+            ('DescribeImages', (('ImageId.1', 'ami-BAR'),)): xml_DescribeImages2,
+            ('DeregisterImage', (('ImageId', 'ami-Foo'),)): xml_DeregisterImage1,
+            }
 
     def _get_response(self, action, params, path, args, kwargs):
-        if action not in self.data:
-            raise Exception("Shouldn't have tried this method", action)
-        data = self.data[action]
+        key = (action, tuple(sorted(params.items())))
+        if key not in self.data:
+            raise Exception("Shouldn't have tried this method", key)
+        data = self.data[key]
         if isinstance(data, tuple):
             status, data = data
         else:

@@ -171,7 +171,7 @@ class ProductManager(manager.Manager):
 
     def updateProduct(self, hostname, name,
                        description, projecturl, commitEmail,
-                       prodtype=None, hidden=True):
+                       prodtype=None, hidden=True, namespace=None):
         oldproduct = self._getProducts([('hostname = ?', (hostname,))])[0]
         cu = self.db.cursor()
         params = dict(name=name,
@@ -182,6 +182,8 @@ class ProductManager(manager.Manager):
         if prodtype is not None:
             params['prodtype'] = prodtype
             params['isAppliance'] = int(prodtype == 'Appliance')
+        if namespace is not None:
+            params['namespace'] = namespace
 
         if hidden:
             # only admin can hide
@@ -283,7 +285,7 @@ class ProductManager(manager.Manager):
                                            level)
             if notify:
                 self.publisher.notify('UserProductAdded', userId,
-                                      projectId, level)
+                                      projectId, oldLevel, level)
             return True
 
     def deleteMember(self, projectId, userId, notify=True):
@@ -326,7 +328,7 @@ class ProductManager(manager.Manager):
             raise mint_error.InvalidLabel(label)
 
         if platformLabel:
-            cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+            cclient = self.reposMgr.getUserClient()
             prodDef.rebase(cclient, platformLabel)
         self.setProductVersionDefinition(fqdn, version, prodDef)
         
@@ -375,7 +377,7 @@ class ProductManager(manager.Manager):
             if not str(label).startswith(str(baseLabel)):
                 continue
             try:
-                cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+                cclient = self.reposMgr.getUserClient()
                 pd.loadFromRepository(cclient)
             except Exception, e:
                 return versionId, None
@@ -404,8 +406,7 @@ class ProductManager(manager.Manager):
         pd.setConaryRepositoryHostname(product.getFQDN())
         pd.setConaryNamespace(productVersion.namespace)
         pd.setProductVersion(productVersion.name)
-        cclient = self.reposMgr.getConaryClientForProduct(
-            productVersion.hostname, admin=True)
+        cclient = self.reposMgr.getAdminClient(write=False)
         try:
             pd.loadFromRepository(cclient)
         except Exception, e:
@@ -415,13 +416,13 @@ class ProductManager(manager.Manager):
         return pd
 
     def setProductVersionDefinition(self, fqdn, version, prodDef):
-        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+        cclient = self.reposMgr.getUserClient()
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
     def rebaseProductVersionPlatform(self, fqdn, version, platformLabel):
         pd = self.getProductVersionDefinition(fqdn, version)
-        cclient = self.reposMgr.getConaryClientForProduct(fqdn)
+        cclient = self.reposMgr.getUserClient()
         pd.rebase(cclient, platformLabel)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
@@ -431,7 +432,7 @@ class ProductManager(manager.Manager):
         pd.clearBuildDefinition()
         for buildDef in model.buildDefinitions:
             self._addBuildDefinition(buildDef, pd)
-        cclient = self.reposMgr.getConaryClientForProduct(hostname)
+        cclient = self.reposMgr.getUserClient()
         pd.saveToRepository(cclient,
                             'Product Definition commit from rBuilder\n')
         return pd

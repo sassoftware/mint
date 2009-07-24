@@ -1,13 +1,17 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2007, 2009 rPath, Inc.
 #
 # All Rights Reserved
 #
 
 #LEVELS may only be appended at the end!  Numeric values are stored in the DB.  
 #Any discrepency could result in a security issue.
-NONMEMBER=-1
-OWNER, DEVELOPER, USER = range(0, 3)
+(       NONMEMBER,  # not used in the db
+        OWNER,
+        DEVELOPER,
+        USER,
+        ADMIN,      # not used in the db (represents mintauth)
+        )= range(-1, 4)
 
 #This list is sorted in order of permissions
 WRITERS = [OWNER, DEVELOPER]

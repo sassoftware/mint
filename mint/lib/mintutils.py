@@ -12,6 +12,8 @@ import logging
 import inspect
 
 FORMATS = {
+        'apache': ('[%(asctime)s] [%(levelname)s] (%(name)s) %(message)s',
+            '%a %b %d %T %Y'),
         'console': ('%(levelname)s: %(message)s', None),
         'file': ('%(asctime)s %(levelname)s %(name)s : %(message)s', None),
         }

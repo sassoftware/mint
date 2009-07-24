@@ -107,15 +107,19 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
             'imageDefinitions' : dict(GET='getImageDefinitions'),
            }
 
+    @auth.public
     def index(self, request, hostname, version):
         return self.db.getProductVersionStages(hostname, version)
 
+    @auth.public
     def get(self, request, hostname, version, stageName):
         return self.db.getProductVersionStage(hostname, version, stageName)
 
+    @auth.public
     def getImages(self, request, hostname, version, stageName):
         return self.db.listImagesForProductVersionStage(hostname, version, stageName)
 
+    @auth.public
     def getImageDefinitions(self, request, hostname, version, stageName):
         extraParams = dict(hostname = hostname, version = version,
             stageName = stageName)
@@ -129,6 +133,7 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
 
 class ProductVersionDefinition(base.BaseController):
 
+    @auth.public
     def index(self, request, hostname, version):
         pd = self.db.getProductVersionDefinition(hostname, version)
         return response.Response(self._fromProddef(pd),
@@ -167,6 +172,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     def index(self, request, hostname):
         return self.db.listProductVersions(hostname)
 
+    @auth.public
     def get(self, request, hostname, version):
         return self.db.getProductVersion(hostname, version)
 
@@ -179,9 +185,11 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         self.db.createProductVersion(hostname, productVersion)
         return self.get(request, hostname, productVersion.name)
 
+    @auth.public
     def getImages(self, request, hostname, version):
         return self.db.listImagesForProductVersion(hostname, version)
 
+    @auth.public
     def getPlatform(self, request, hostname, version):
         return self.db.getProductVersionPlatform(hostname, version)
 
@@ -194,6 +202,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         self.db.rebaseProductVersionPlatform(hostname, version)
         return self.getPlatform(request, hostname, version)
 
+    @auth.public
     def getImageTypeDefinitions(self, request, hostname, version):
         extraParams = dict(hostname = hostname, version = version)
         pd = self.db.getProductVersionDefinition(hostname, version)
@@ -204,6 +213,7 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         bdefs = models.BuildTemplates(buildTemplates = buildDefModels)
         return bdefs
 
+    @auth.public
     def getImageDefinitions(self, request, hostname, version):
         extraParams = dict(hostname = hostname, version = version)
         pd = self.db.getProductVersionDefinition(hostname, version)

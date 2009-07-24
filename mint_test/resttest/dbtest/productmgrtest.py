@@ -122,9 +122,11 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(product.prodtype == 'Appliance')
         product.prodtype = 'Component'
         product.description = 'new desc'
+        product.namespace = 'spiffynamespace'
         self.setDbUser(db, 'admin')
         db.updateProduct('foo', product)
         product = db.getProduct('foo')
+        self.failUnlessEqual(product.namespace, 'spiffynamespace')
         assert(product.prodtype == 'Component')
         assert(product.description == 'new desc')
 
@@ -202,7 +204,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
                                        userlevels.USER)
         publisher.notify._mock.assertCalled('UserProductAdded', 
                                             otherId, productId, 
-                                            userlevels.USER)
+                                            None, userlevels.USER)
         db.setMemberLevel('foo', 'other', 'developer')
         reposMgr.editUser._mock.assertCalled('foo.rpath.local2', 'other', 
                                              userlevels.DEVELOPER)
@@ -301,7 +303,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         pd = db.getProductVersionDefinition('foo', '1')
         reposMgr = db.productMgr.reposMgr
         pd.loadFromRepository._mock.assertCalled(
-                                    reposMgr.getConaryClientForProduct())
+                reposMgr.getAdminClient(write=False))
         pd.loadFromRepository._mock.raiseErrorOnAccess(RuntimeError)
         self.assertRaises(mint_error.ProductDefinitionVersionNotFound,
                           db.getProductVersionDefinition,'foo', '1')
@@ -318,7 +320,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         db.productMgr._setProductVersionDefinition('foo', '1', pd)
         reposMgr = db.productMgr.reposMgr
         pd.saveToRepository._mock.assertCalled(
-                                reposMgr.getConaryClientForProduct(),
+                                reposMgr.getUserClient(),
                                  'Product Definition commit from rBuilder\n')
 
     def testRebaseProductVersionDefinition(self):
@@ -328,7 +330,7 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createProductVersion(db, 'foo', '1', description='desc', 
                                   platformLabel=None)
         reposMgr = db.productMgr.reposMgr
-        cclient = reposMgr.getConaryClientForProduct()
+        cclient = reposMgr.getUserClient()
         mock.mock(proddef.ProductDefinition, 'saveToRepository')
         mock.mock(proddef.ProductDefinition, 'loadFromRepository')
         mock.mock(proddef.ProductDefinition, 'rebase')

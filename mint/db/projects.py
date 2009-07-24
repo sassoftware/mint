@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -75,6 +75,20 @@ class ProjectsTable(database.KeyedTable):
         try:
             # try deleteing the repository
             self.reposDB.delete(projectFQDN)
+
+            for contentsDir in self.cfg.reposContentsDir.split():
+                contentsDir = contentsDir % projectFQDN
+                if os.path.isdir(contentsDir):
+                    util.rmtree(contentsDir)
+
+                # If the parent dir is empty, delete that too.
+                # (e.g. /srv/rbuilder/repos/hostname.rbuilder.com)
+                parentDir = os.path.dirname(os.path.normpath(contentsDir))
+                if os.path.isdir(parentDir) and not os.listdir(parentDir):
+                    try:
+                        os.rmdir(parentDir)
+                    except OSError:
+                        pass
             
             # try removing the project
             cu = self.db.cursor()

@@ -29,7 +29,7 @@ supportContactHTML      <p>your local system administrator</p>
 # repository
 commitAction    @LIBDIR@/python2.4/site-packages/conary/commitaction --repmap='%(repMap)s' --build-label=%(buildLabel)s \
    --username=%(authUser)s --password=%(authPass)s \
-   --module='@LIBDIR@/python2.4/site-packages/mint/rbuilderaction.py --user=%%(user)s --url=http://127.0.0.1/xmlrpc-private/'
+   --module='@LIBDIR@/python2.4/site-packages/mint/rbuilderaction.py --user=%%(user)s --hostname=%(fqdn)s'
 commitActionEmail \
     --module='@LIBDIR@/python2.4/site-packages/conary/changemail.py --user=%%(user)s --from=%(commitFromEmail)s --email=%(commitEmail)s'
 
@@ -50,23 +50,26 @@ debugMode               False
 excludeBuildTypes       STUB_IMAGE
 excludeBuildTypes       NETBOOT_IMAGE
 excludeBuildTypes       PARALLELS
+excludeBuildTypes       LIVE_ISO
 
 # Activate Internal Conary Proxy for rBuilder
 useInternalConaryProxy  True
 
 # Available platforms (these are officially supported)
-availablePlatforms      conary.rpath.com@rpl:2
 availablePlatforms      sle.rpath.com@rpath:sles-11
 availablePlatforms      sle.rpath.com@rpath:sles-10
 availablePlatforms      centos.rpath.com@rpath:centos-5
 availablePlatforms      ubuntu.rpath.com@rpath:ubuntu-hardy
+availablePlatforms      scientific.rpath.com@rpath:sl-5
+availablePlatforms      conary.rpath.com@rpl:2
 
 # Available platform names. Should match the order of availablePlatforms
-availablePlatformNames  rPath Linux 2
 availablePlatformNames  SLES 11 Delivered by rPath
 availablePlatformNames  SLES 10 Delivered by rPath
 availablePlatformNames  CentOS 5 Delivered by rPath
 availablePlatformNames  Ubuntu Hardy Delivered by rPath
+availablePlatformNames  Scientific Linux Delivered by rPath
+availablePlatformNames  rPath Linux 2
 
 # Acceptable platforms (these are *allowed* but cannot be normally chosen)
 acceptablePlatforms      rap.rpath.com@rpath:linux-2-devel

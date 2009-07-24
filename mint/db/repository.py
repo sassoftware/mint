@@ -13,6 +13,7 @@ import logging
 import os
 import weakref
 from conary import conarycfg
+from conary import conaryclient
 from conary import dbstore
 from conary.lib import util
 from conary.repository import errors as reposerrors
@@ -20,13 +21,40 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.repository.netrepos import proxy
-from conary.repository.netrepos.netauth import ValidPasswordToken, ValidUser
+from conary.repository.netrepos.netauth import ValidUser
 from conary.server import schema as conary_schema
 
+from mint import userlevels
 from mint.mint_error import RepositoryDatabaseError, RepositoryAlreadyExists
 from mint.rest.errors import ProductNotFound
 
 log = logging.getLogger(__name__)
+
+
+ROLE_PERMS = {
+        # level                 role name           write   admin
+        userlevels.ADMIN:     ('rb_internal_admin', True,   True),
+        userlevels.OWNER:     ('rb_owner',          True,   True),
+        userlevels.DEVELOPER: ('rb_developer',      True,   False),
+        userlevels.USER:      ('rb_user',           False,  False),
+}
+
+# Tokens for internal, userless repository access. Use with getServerProxy,
+# etc.
+ANONYMOUS = -1
+ANY_READER = -2
+ANY_WRITER = -3
+
+
+def _makeClient(repos):
+    """
+    Make a C{ConaryClient} around the given C{repos} with a default
+    configuration.
+    """
+    cfg = conarycfg.ConaryConfiguration(False)
+    cfg.name = 'rBuilder'
+    cfg.contact = 'rbuilder'
+    return conaryclient.ConaryClient(cfg=cfg, repos=repos)
 
 
 def cached(method):
@@ -50,17 +78,11 @@ def withNetServer(method):
 
 
 class RepositoryManager(object):
-    def __init__(self, cfg, db, authToken=None, bypass=False):
+    def __init__(self, cfg, db, bypass=False):
         self.cfg = cfg
         self.db = db
         self.bypass = bypass
-        if authToken:
-            self.authToken = authToken
-        else:
-            self.authToken = [ValidUser(), None, [], None]
         self.reposDBCache = {}
-        self.repos = MultiShimNetClient(self)
-        self._cache = {}
 
     def iterRepositories(self, whereClause='', *args):
         """
@@ -99,15 +121,12 @@ class RepositoryManager(object):
                     whereClause, args)
             raise ProductNotFound(args[0])
 
-    @cached
     def getRepositoryFromFQDN(self, fqdn):
         return self._getRepository('fqdn = ?', fqdn)
 
-    @cached
     def getRepositoryFromProjectId(self, projectId):
         return self._getRepository('projectId = ?', projectId)
 
-    @cached
     def getRepositoryFromShortName(self, shortName):
         return self._getRepository('shortname = ?', shortName)
 
@@ -122,13 +141,11 @@ class RepositoryManager(object):
                 del self.reposDBCache[key]
             elif reposDB.inTransaction(default=True):
                 reposDB.rollback()
-        self._cache = {}
 
     def close(self):
         while self.reposDBCache:
             reposDB = self.reposDBCache.popitem()[1]
             reposDB.close()
-        self._cache = {}
 
     def getServerProxy(self, fqdn, url=None, user=None, entitlement=None):
         """
@@ -147,19 +164,30 @@ class RepositoryManager(object):
         if entitlement:
             entitlements.addEntitlement('*', entitlement)
 
-        proxies = conarycfg.getProxyFromConfig(self.cfg) or None
         cache = netclient.ServerCache(repMap, userMap,
-                entitlements=entitlements, proxies=proxies)
+                entitlements=entitlements, proxies=self.cfg.proxy)
         return cache[fqdn]
 
-    def getRepos(self):
-        return self.repos
+    def getRepos(self, userId=None):
+        """
+        Get a global C{NetworkRepositoryClient} for this site, optionally
+        constrained to the permissions of a particular user.
+        """
+        return MultiShimNetClient(self, userId)
+
+    def getClient(self, userId=None):
+        """
+        Get a global C{ConaryClient} for this site, optionally constrained to
+        the permissions of a particular user.
+        """
+        return _makeClient(self.getRepos(userId))
 
 
 class RepositoryHandle(object):
     def __init__(self, manager, projectInfo):
         self._manager = weakref.ref(manager)
         self._cfg = manager.cfg
+        self._db = manager.db
         self._projectInfo = projectInfo
         self._cache = {}
 
@@ -302,7 +330,12 @@ class RepositoryHandle(object):
                 and os.path.join(self._cfg.logPath, 'repository.log') or None)
         cfg.repositoryDB = None # We open databases ourselves
         cfg.readOnlyRepository = self._cfg.readOnlyRepositories
-        cfg.requireSigs = self._cfg.requireSigs and not self.isLocalMirror
+        # We only want to require signatures when there is a non-local client
+        # committing the changeset, e.g. in the conary entry point case only.
+        # Shim clients should not be required to sign packages. This is
+        # disabled completely for now since the only users of this code are
+        # local shims.
+        #cfg.requireSigs = self._cfg.requireSigs and not self.isLocalMirror
         cfg.serializeCommits = True
 
         cfg.serverName = [fqdn]
@@ -314,6 +347,7 @@ class RepositoryHandle(object):
                     'repMap': '%s %s' % (fqdn, self.getURL()),
                     'buildLabel': '%s@rpl:1' % (fqdn,),
                     'projectName': shortName,
+                    'fqdn': fqdn,
                     'commitFromEmail': self._cfg.commitEmail,
                     'commitEmail': self.commitEmail,
                     'basePath': self._cfg.basePath,
@@ -335,11 +369,16 @@ class RepositoryHandle(object):
             if not os.access(path, os.R_OK | os.X_OK):
                 raise RepositoryDatabaseError("Unable to read repository "
                         "contents dir %r for project %r"
-                        % (nscfg.tmpDir, self.shortName))
+                        % (path, self.shortName))
             if not nscfg.readOnlyRepository and  not os.access(path, os.W_OK):
                 raise RepositoryDatabaseError("Unable to write to repository "
                         "contents dir %r for project %r"
-                        % (nscfg.tmpDir, self.shortName))
+                        % (path, self.shortName))
+
+        if not os.access(nscfg.tmpDir, os.W_OK):
+            raise RepositoryDatabaseError("Unable to write to repository "
+                    "temporary directory %r for project %r"
+                    % (nscfg.tmpDir, self.shortName))
 
         db = self.getReposDB()
         baseUrl = self.getURL()
@@ -369,21 +408,66 @@ class RepositoryHandle(object):
         return self._getServer(shimclient.NetworkRepositoryServer)
 
     @cached
-    def _getShimServerProxy(self):
+    def _getAuthToken(self, userId):
         """
-        Get a (cached) shim XMLRPC server proxy for this project's repository.
+        Return a role-based auth token for given user, or raise a
+        C{ProductNotFoundError} if they do not have read permissions.
+
+        C{userId} may also be a special value less than zero, either
+        C{ANY_READER} or C{ANY_WRITER}.
+        """
+        if userId == ANY_WRITER:
+            level = userlevels.ADMIN
+        elif userId == ANY_READER:
+            level = userlevels.USER
+        elif userId == ANONYMOUS:
+            if self.isHidden:
+                raise ProductNotFound(self.shortName)
+            else:
+                level = userlevels.USER
+        elif userId < 0:
+            raise RuntimeError("Invalid userId %d" % userId)
+        else:
+            cu = self._db.cursor()
+            cu.execute("""SELECT level FROM ProjectUsers
+                    WHERE projectId = ? AND userId = ?""",
+                    self.projectId, userId)
+            try:
+                level, = cu.next()
+            except StopIteration:
+                if self.isHidden:
+                    # Not a member on a private project -> project not found
+                    raise ProductNotFound(self.shortName)
+                else:
+                    # Not a member on a public project -> "user" level
+                    level = userlevels.USER
+            else:
+                if level not in userlevels.LEVELS:
+                    raise RuntimeError("Invalid userlevel %d" % (level,))
+
+        roleName = ROLE_PERMS[level][0]
+        return [ValidUser(roleName), None, [], None]
+
+    def _getShimServerProxy(self, userId=None):
+        """
+        Get a shim XMLRPC server proxy for this project's repository.
+        If C{userId} is not C{None} then the proxy will emulate that user's
+        permissions in the repository, otherwise the proxy will have access to
+        all roles.
         """
         protocol, _, port = self._getURLPieces()
+        authToken = self._getAuthToken(userId)
         return shimclient.ShimServerProxy(self.getShimServer(),
-                protocol, port, self._manager().authToken)
+                protocol, port, authToken)
 
-    def getServerProxy(self):
+    @cached
+    def getServerProxy(self, userId=None):
         """
         Get a XMLRPC server proxy for this project's repository. If the
         project has a local database, a shim proxy will be used.
         """
         if self.hasDatabase:
-            return self._getShimServerProxy()
+            return self._getShimServerProxy(userId=userId)
         else:
             user = entitlement = None
             authType = self._projectInfo['authType']
@@ -596,8 +680,9 @@ class MultiShimServerCache(object):
     rBuilder, and will use the credentials in the database for any external
     projects.
     """
-    def __init__(self, manager):
+    def __init__(self, manager, userId=None):
         self.manager = weakref.ref(manager)
+        self.userId = userId
         self.cache = {}
 
     @staticmethod
@@ -627,13 +712,13 @@ class MultiShimServerCache(object):
             return manager.getServerProxy(serverName)
         else:
             # Found the project -- use that project's (maybe shim) server proxy
-            return repo.getServerProxy()
+            return repo.getServerProxy(userId=self.userId)
 
 
 class MultiShimNetClient(shimclient.ShimNetClient):
-    def __init__(self, manager):
+    def __init__(self, manager, userId=None):
         repMap = conarycfg.RepoMap()
         userMap = conarycfg.UserInformation()
         netclient.NetworkRepositoryClient.__init__(self, repMap, userMap)
 
-        self.c = MultiShimServerCache(manager)
+        self.c = MultiShimServerCache(manager, userId)

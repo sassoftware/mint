@@ -201,12 +201,15 @@ class MintApp(WebHandler):
         self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri + args
         dots = fullHost.split(':')[0].split('.')
         hostname = dots[0]
+        domainname = '.'.join(dots[1:])
 
         # if it looks like we're requesting a project (hostname isn't in reserved hosts
         # and doesn't match cfg.hostName, try to request the project.
-        if hostname not in server.reservedHosts \
-            and hostname != self.cfg.hostName \
-            and self.cfg.configured:
+        if (hostname not in server.reservedHosts
+                and hostname != self.cfg.hostName
+                and domainname in (self.cfg.projectDomainName,
+                    self.cfg.externalDomainName)
+                and self.cfg.configured):
             self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
