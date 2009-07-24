@@ -113,26 +113,30 @@ class UpdatePackageIndex(PackageIndexer):
                 serverName = label.getHost()
                 branchName = label.getNamespace() + ":" + label.getLabel()
 
+                isSource = int(troveName.endswith(':source'))
                 if not res:
                     inserts.append((projectId, troveName, str(version), serverName,
-                        branchName, troveName.endswith(':source')))
+                        branchName, isSource))
                 else:
                     pkgId = res[0]
                     updates.append((projectId, troveName, str(version), serverName,
-                        branchName, troveName.endswith(':source'), pkgId))
+                        branchName, isSource, pkgId))
 
-            self.db.transaction()
-            cu.executemany("""INSERT INTO PackageIndex
-                              (projectId, name, version,
-                               serverName, branchName, isSource)
-                              VALUES (?, ?, ?, ?, ?, ?)""", inserts)
-            cu.executemany("""UPDATE PackageIndex SET
-                                  projectId=?, name=?, version=?,
-                                  serverName=?, branchName=?, isSource=?
-                                  WHERE pkgId=?""", updates)
-            self.db.commit()
+            if inserts or updates:
+                self.db.transaction()
+                if inserts:
+                    cu.executemany("""INSERT INTO PackageIndex
+                                      (projectId, name, version,
+                                       serverName, branchName, isSource)
+                                      VALUES (?, ?, ?, ?, ?, ?)""", inserts)
+                if updates:
+                    cu.executemany("""UPDATE PackageIndex SET
+                                          projectId=?, name=?, version=?,
+                                          serverName=?, branchName=?, isSource=?
+                                          WHERE pkgId=?""", updates)
+                self.db.commit()
 
-            cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
+            cu.execute("UPDATE PackageIndexMark SET mark=?", int(newMark))
         except Exception, e:
             self.log.error("Error occurred: %s" % str(e))
             self.db.rollback()
@@ -273,17 +277,20 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 inserts.append(row)
 
         st = time.time()
-        self.db.transaction()
-        cu.executemany("""
-            UPDATE PackageIndex SET
-                projectId=?, name=?, version=?,
-                serverName=?, branchName=?, isSource=?
-            WHERE pkgId=?""", updates)
-        cu.executemany("""
-            INSERT INTO PackageIndex
-                (projectId, name, version, serverName, branchName, isSource)
-            VALUES (?, ?, ?, ?, ?, ?)""", inserts)
-        self.db.commit()
+        if inserts or updates:
+            self.db.transaction()
+            if inserts:
+                cu.executemany("""
+                    INSERT INTO PackageIndex
+                        (projectId, name, version, serverName, branchName, isSource)
+                    VALUES (?, ?, ?, ?, ?, ?)""", inserts)
+            if updates:
+                cu.executemany("""
+                    UPDATE PackageIndex SET
+                        projectId=?, name=?, version=?,
+                        serverName=?, branchName=?, isSource=?
+                    WHERE pkgId=?""", updates)
+            self.db.commit()
         if not hasErrors:
             self.updateMark()
             self.log.info("Database update complete, took %.2fs." % (time.time() - st))
