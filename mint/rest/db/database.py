@@ -378,6 +378,7 @@ class Database(DBInterface):
     def updateProduct(self, hostname, product):
         self.auth.requireProductOwner(hostname)
         self.productMgr.updateProduct(hostname, name=product.name,
+                                      namespace=product.namespace,
                                       description=product.description,
                                       projecturl=product.projecturl,
                                       prodtype=product.prodtype,

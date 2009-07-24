@@ -171,7 +171,7 @@ class ProductManager(manager.Manager):
 
     def updateProduct(self, hostname, name,
                        description, projecturl, commitEmail,
-                       prodtype=None, hidden=True):
+                       prodtype=None, hidden=True, namespace=None):
         oldproduct = self._getProducts([('hostname = ?', (hostname,))])[0]
         cu = self.db.cursor()
         params = dict(name=name,
@@ -182,6 +182,8 @@ class ProductManager(manager.Manager):
         if prodtype is not None:
             params['prodtype'] = prodtype
             params['isAppliance'] = int(prodtype == 'Appliance')
+        if namespace is not None:
+            params['namespace'] = namespace
 
         if hidden:
             # only admin can hide

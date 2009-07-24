@@ -122,9 +122,11 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(product.prodtype == 'Appliance')
         product.prodtype = 'Component'
         product.description = 'new desc'
+        product.namespace = 'spiffynamespace'
         self.setDbUser(db, 'admin')
         db.updateProduct('foo', product)
         product = db.getProduct('foo')
+        self.failUnlessEqual(product.namespace, 'spiffynamespace')
         assert(product.prodtype == 'Component')
         assert(product.description == 'new desc')
 
