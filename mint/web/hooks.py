@@ -6,6 +6,7 @@
 
 from mod_python import apache
 
+import logging
 import os
 import re
 import socket
@@ -19,6 +20,7 @@ import base64
 
 from mint import config
 from mint import users
+from mint.lib import mintutils
 from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
@@ -556,6 +558,12 @@ def handler(req):
     coveragehook.install()
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
+
+    # Direct logging to httpd error_log.
+    mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
+    # Silence some noisy third-party components.
+    for name in ('stomp.py', 'boto'):
+        logging.getLogger(name).setLevel(logging.ERROR)
 
     # only reload the configuration file if it's changed
     # since our last read
