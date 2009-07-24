@@ -347,6 +347,7 @@ class RepositoryHandle(object):
                     'repMap': '%s %s' % (fqdn, self.getURL()),
                     'buildLabel': '%s@rpl:1' % (fqdn,),
                     'projectName': shortName,
+                    'fqdn': fqdn,
                     'commitFromEmail': self._cfg.commitEmail,
                     'commitEmail': self.commitEmail,
                     'basePath': self._cfg.basePath,
