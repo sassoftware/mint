@@ -25,6 +25,10 @@ Bug Fixes
 * It is now possible to delete an AMI image via the API after the
   image has been externally de-registered in EC2. (RBL-4838)
 
+Other Changes
+---------------------
+* The Live ISO image type is no longer supported. (RBL-4258)
+
 Changes in 5.1.0
 ===============
 Web Front End Changes

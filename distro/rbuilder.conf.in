@@ -50,6 +50,7 @@ debugMode               False
 excludeBuildTypes       STUB_IMAGE
 excludeBuildTypes       NETBOOT_IMAGE
 excludeBuildTypes       PARALLELS
+excludeBuildTypes       LIVE_ISO
 
 # Activate Internal Conary Proxy for rBuilder
 useInternalConaryProxy  True
