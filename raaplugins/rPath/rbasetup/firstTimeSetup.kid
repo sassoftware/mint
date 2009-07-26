@@ -64,15 +64,10 @@ Copyright (c) 2006-2009 rPath, Inc.
                 <div class="page-section-content">
                     <p>Finalizing the initial setup of rBuilder. Please be patient as this may take some time.</p>
                     <p>Once this process has completed, click Continue and login to your rBuilder using the administrator username and password you specified.</p>
-                    <ul id="statusList">
-                        <li id="statusList_step1" class="currentState">Creating initial rBuilder administrative account</li>
-                        <li id="statusList_step2">Configuring rMake</li>
-                        <li id="statusList_step3">Entitling rBuilder</li>
-                        <li id="statusList_step4">Setting up initial platforms</li>
-                    </ul>
                 </div>
                 <div class="page-section-content-bottom">
                     <div id="status_message"></div>
+                    <br />
                     <a class="rnd_button float-right off" id="retry_button" href="javascript:void(0);">Retry</a>
                     <a class="rnd_button float-right off" id="continue_button" href="javascript:void(0);">Continue</a>
                 </div>

@@ -10,7 +10,6 @@ import re
 import socket
 
 from gettext import gettext as _
-from time import time
 import raa
 import raa.web
 import logging
@@ -24,6 +23,7 @@ from raa.db import schedule
 from raa.db import wizardrun
 from raa.modules import raawebplugin
 from raa.modules.raawebplugin import rAAWebPlugin
+from raa.lib import validate
 
 from mint import config
 from mint import helperfuncs
@@ -31,6 +31,13 @@ from mint import helperfuncs
 from rPath.rbasetup import lib
 
 ipAddrMatch = re.compile('^[0-9.]+$')
+userNameMatch = re.compile('^[A-Za-z0-9._-]+$')
+namespaceMatch = re.compile('^[A-Za-z0-9-]+$')
+
+def validateNamespace(n):
+    if not namespaceMatch.match(n):
+        return "The namespace may only contain alphanumeric characters and hyphens."
+    return ""
 
 class rBASetup(rAAWebPlugin):
     """
@@ -69,12 +76,9 @@ class rBASetup(rAAWebPlugin):
         # Get some status here
         schedId = self.getPropertyValue('FTS_SCHEDID', -1)
         if schedId == -1:
-            # We got here without being scheduled; clear out and move back
-            raa.web.raiseHttpRedirect(raa.web.makeUrl('/rbasetup/rBASetup/'))
-
-        status = raa.web.getWebRoot().getStatus(schedId)
-        ret = dict(currentStep=self.getPropertyValue('FTS_CURRENTSTEP', lib.FTS_STEP_INITIAL),
-                   schedId=schedId,
+            return dict(schedId=-1, errors=['No setup task is running.'])
+        status = raa.web.getWebRoot().callGetStatus(schedId)
+        ret = dict(schedId=status['schedId'],
                    status=status['status'],
                    statusmsg=status['statusmsg'])
 
@@ -107,22 +111,39 @@ class rBASetup(rAAWebPlugin):
         errorList = list()
 
         if not options['configured']:
-            if '.' in options['hostName']:
-                errorList.append("The hostname of the rBuilder server must not contain periods. The hostname is only the first part of the fully-qualified domain name.")
-            if ipAddrMatch.match(options['hostName']):
+            # validate the hostname
+            if 'hostName' not in options:
+                errorList.append("You must specify a fully-qualified hostname")
+            elif ipAddrMatch.match(options['hostName']):
                 errorList.append("The hostname appears to be an IP address.")
-            if 'siteDomainName' not in options:
+            elif not validate.validateFqdn(options['hostName']):
+                errorList.append("The hostname is invalid.")
+
+            # validate the site domain name
+            if 'projectDomainName' not in options:
                 errorList.append("You must specify a domain name for this installation.")
-            if 'siteDomainName' in options and ipAddrMatch.match(options['siteDomainName']):
+            elif ipAddrMatch.match(options['projectDomainName']):
                 errorList.append("The domain name appears to be an IP address.")
+            elif not validate.validateFqdn(options['projectDomainName']):
+                errorList.append("The domain name is invalid.")
+
+            # validate the username
             if 'new_username' not in options:
                 errorList.append("You must enter a username to be created")
+            elif not userNameMatch.match(options['new_username']):
+                errorList.append("Your username must contain only alphnumeric characters, periods, hyphens, and underscores")
+
+            # validate the email address
             if 'new_email' not in options:
                 errorList.append("You must enter an administrator email address")
+
+            # validate password
             if  ('new_password' not in options or 'new_password2' not in options):
                 errorList.append("You must enter initial passwords")
             elif options['new_password'] != options['new_password2']:
                 errorList.append("Passwords must match")
+            elif options['new_password'].find('#') != -1:
+                errorList.append("Passwords must not contain a #")
 
         if options.get('externalPasswordURL'):
             # XXX Removing the validation for this for now;
@@ -152,20 +173,19 @@ class rBASetup(rAAWebPlugin):
                 errorList.append("You must specify a namespace for this installation.")
             else:
                 # returns text explanation if invalid
-                valid = helperfuncs.validateNamespace(options['namespace'])
-                if valid != True:
-                    errorList.append(valid)
+                errorString = validateNamespace(options['namespace'])
+                if errorString:
+                    errorList.append(errorString)
 
         return errorList
 
     @raa.web.expose(template="rPath.rbasetup.index")
     def index(self):
         # check to see if we're mid-setup
-        schedId = self.getPropertyValue('FTS_SCHEDID', -1)
-        if schedId != -1:
-            status = raa.web.getWebRoot().getStatus(schedId)
-            if status['status'] != constants.TASK_SUCCESS:
-                raa.web.raiseHttpRedirect('/rbasetup/rBASetup/firstTimeSetup')
+
+        status = self._getFirstTimeSetupStatus()
+        if status['schedId'] != -1: 
+            raa.web.raiseHttpRedirect('/rbasetup/rBASetup/firstTimeSetup')
 
         # Get the configuration from the backend
         isConfigured, configurableOptions = lib.getRBAConfiguration()
@@ -198,12 +218,15 @@ class rBASetup(rAAWebPlugin):
                 except:
                     # nothing is fully-qualified.  :-(
                     pass
-            bits = fqdn.split('.',1)
-            sanitizedConfigurableOptions['hostName'] = bits[0]
+            bits = fqdn.split('.')
+            sanitizedConfigurableOptions['hostName'] = '.'.join(bits)
             try:
-                sanitizedConfigurableOptions['siteDomainName'] = bits[1]
+                sanitizedConfigurableOptions['siteDomainName'] = '.'.join(bits[1:])
             except IndexError:
                 sanitizedConfigurableOptions['siteDomainName'] = ''
+            sanitizedConfigurableOptions['projectDomainName'] = sanitizedConfigurableOptions['siteDomainName']
+            if not isConfigured and len(bits) > 1:
+                sanitizedConfigurableOptions['namespace'] = bits[-2]
 
         return dict(isConfigured=isConfigured,
                 allowNamespaceChange=allowNamespaceChange,
@@ -216,87 +239,149 @@ class rBASetup(rAAWebPlugin):
         """
         # Normalize kwargs into a minimal set of options
         normalizedOptions = self._normalizeFormKwargs(kwargs)
-        firstTimeSetup = not normalizedOptions.get('configured', False)
+        isConfigured, cfg = lib.getRBAConfiguration()
 
         # Validate the setup form
         errorList = self._validateSetupForm(normalizedOptions)
         if errorList:
             return dict(errors=errorList)
 
+        # split hostname & siteDomainName
+        hostname = normalizedOptions['hostName'].split('.')
+        normalizedOptions['hostName'] = hostname[0]
+        normalizedOptions['siteDomainName'] = '.'.join(hostname[1:])
+
         # Call backend to save generated file
-        saved = self.callBackend('updateRBAConfig', normalizedOptions)
-        if not saved:
-            return dict(errors=["Failed to save the rBuilder Configuration"])
+        try:
+            result = self.callBackend('updateRBAConfig', normalizedOptions)
+            if result.has_key('errors'):
+                return dict(errors=result['errors'])
+            else:
+                ret = dict(message="rBuilder Configuration saved.")
+            # do a simple check to catch the case where the user
+            # did not fully qualify their hostname
+            currentHostname = os.uname()[1]
+            if currentHostname != '.'.join(hostname) and currentHostname == hostname[0]:
+                netCfg = self.plugins['/configure/Network'].index()
+                gatewayDHCP = False
+                if netCfg['host_gateway'] == '':
+                    gatewayDHCP = True
+                log.info('saving new hostname')
+                self.plugins['/configure/Network']._saveGeneral(
+                     netCfg['host_usesdhcp'], 
+                     '.'.join(hostname),
+                     netCfg['dns_dnsDomain'], 
+                     netCfg['dns_dnsServer'],
+                     gatewayDHCP,
+                     netCfg['host_gateway'],
+                     netCfg['host_gatewaydev'],
+                     netCfg['dns_dnsdhcp'],
+                     )
+                log.info('new hostname saved')
+        except Exception, e:
+            return dict(errors=["Failed to save rBuilder Configuration: %s" % repr(e)])
 
         # If this is a first time setup, we must kick off a redirect to do
         # post setup processing.
-        if firstTimeSetup:
+        if not isConfigured:
             # Kick off the first time processing
-            self.setPropertyValue('FINALIZED', False, RDT_BOOL)
-            self.setPropertyValue('FTS_ADMINUSER',
-                    normalizedOptions['new_username'], RDT_STRING)
-            self.setPropertyValue('FTS_ADMINPASS',
-                    normalizedOptions['new_password'], RDT_STRING)
-            self.setPropertyValue('FTS_ADMINEMAIL',
-                    normalizedOptions['new_email'], RDT_STRING)
-            self.setPropertyValue('FTS_CURRENTSTEP', lib.FTS_STEP_INITIAL, RDT_INT)
-            sched = schedule.ScheduleNow()
-            self.setPropertyValue('FTS_SCHEDID', self.schedule(sched), RDT_INT)
-            # N.B.: the javascript on the page will redirect the user to
-            # the first time setup page on success; we don't have to do it here.
+            sched = schedule.ScheduleOnce(time.time() + 1)
+            schedId = self.callBackendAsync(sched, 'firstTimeSetup', normalizedOptions)
+            self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
+            # raa.web.raiseHttpRedirect('/rbasetup/rBASetup/firstTimeSetup')
+            return True
+        else:
+            return ret
 
-        return dict(message="Saved rBuilder configuration.")
+        return dict(errors=['An unexpected condition occurred'])
+
+    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
+    def callGetStatus(self, schedId):
+        return raa.web.getWebRoot().callGetStatus(schedId)       
 
     @raa.web.expose(allow_json=True)
     def retryFirstTimeSetup(self):
         currentStatus = self._getFirstTimeSetupStatus()
-        if currentStatus['status'] == constants.TASK_FATAL_ERROR:
-            sched = schedule.ScheduleNow()
-            self.setPropertyValue('FTS_SCHEDID', self.schedule(sched), RDT_INT)
-        return   
+        if currentStatus['status'] == constants.TASK_FATAL_ERROR or \
+            (currentStatus['status'] == constants.TASK_SUCCESS and
+             not self.getPropertyValue('FINALIZED', False)):
+            sched = schedule.ScheduleOnce(time.time() + 1)
+            schedId = self.callBackendAsync(sched, 'firstTimeSetup', dict(retry=True))
+            self.deletePropertyValue('FTS_SCHEDID')
+            self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
+            return self._getFirstTimeSetupStatus()
+        else:
+            log.error('not retrying FTS: status is %s' % currentStatus['status'] )   
+        return  
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True, template="rPath.rbasetup.firstTimeSetup")
     def firstTimeSetup(self):
-        return self._getFirstTimeSetupStatus()
+        status = self._getFirstTimeSetupStatus()
+        if status['schedId'] == -1:
+            raa.web.raiseHttpRedirect('/rbasetup/rBASetup/')
+        return status
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def getFirstTimeSetupStatus(self):
-        return self._getFirstTimeSetupStatus()
+        result = self._getFirstTimeSetupStatus()
+        result.update(reload=False)
+        if result['schedId'] == -1:
+            return result
 
-    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
+        # if the task is complete, get the return values
+        if result['status'] == constants.TASK_SUCCESS:
+            try:
+                isException, ret = raa.web.getWebRoot().simpleTasks.getResult(result['schedId'])
+                if isException:
+                    try:
+                        result['errors'] = " ".join( [ x.encode('utf-8') for x in ret ])
+                    except:
+                        result['errors'] = " ".join( [ x for x in ret ] )
+                    result['status'] = constants.TASK_FATAL_ERROR
+                    result['statusmsg'] = ''
+                else:
+                    result['statusmsg'] = ret.get('message', '')
+                    result['errors'] = ret.get('errors', '')
+                    if result['errors'] != '':
+                        result['status'] = constants.TASK_FATAL_ERROR
+            except Exception, e:
+                # The task no longer exists
+                finalized = self.getPropertyValue('FINALIZED', False)
+                if not finalized:
+                    # assume that it failed.  rerunning should not hurt.
+                    result['status'] = constants.TASK_FATAL_ERROR
+                result['statusmsg'] = ''
+                result['errors'] = ''
+
+            if isinstance(result['errors'], list):
+                result['errors'] = "\n".join(result['errors'])
+        elif result['status'] == constants.TASK_FATAL_ERROR:
+            # NOTE: elif here is not the same as the following if
+            result['errors'] = result['statusmsg']
+            result['statusmsg'] = ''
+
+        if result['status'] == constants.TASK_FATAL_ERROR:
+            if raa.web.inWizardMode():
+                self.wizardDone()
+                result.update(reload=True)
+
+        return result 
+
+    @raa.web.expose(allow_xmlrpc=True)
     @raa.web.require(raa.authorization.LocalhostOnly())
-    def setFirstTimeSetupState(self, newState):
-        self.setPropertyValue('FTS_CURRENTSTEP', newState, RDT_INT)
-        return dict()
-
-    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    def getFirstTimeSetupStatus(self):
-        return self._getFirstTimeSetupStatus()
-
-    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    @raa.web.require(raa.authorization.LocalhostOnly())
-    def getFirstTimeSetupAdminInfo(self):
-        return dict(new_username=self.getPropertyValue('FTS_ADMINUSER', ''),
-                    new_password=self.getPropertyValue('FTS_ADMINPASS', ''),
-                    new_email=self.getPropertyValue('FTS_ADMINEMAIL', ''))
-
-    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    @raa.web.require(raa.authorization.LocalhostOnly())
-    def setNewEntitlement(self, key):
-        self.plugins['/configure/Entitlements'].doSaveKey(key)
-        return True
+    def setWizardDone(self):
+        log.info('setting wizard done')
+        try:
+            self._wizardDone()
+        except Exception, e:
+            log.error('error setting wizard done')
+        return dict(message='successfully set wizard done')
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def finalize(self):
-        # remove gunk
-        self.deletePropertyValue('FTS_ADMINUSER', commit=False)
-        self.deletePropertyValue('FTS_ADMINPASS', commit=False)
-        self.deletePropertyValue('FTS_ADMINEMAIL', commit=False)
-        self.deletePropertyValue('FTS_CURRENTSTEP', commit=False)
-        self.deletePropertyValue('FTS_SCHEDID', commit=False)
-
         # mark finalized
         self.setPropertyValue('FINALIZED', True, RDT_BOOL)
+        self.deletePropertyValue('FTS_SCHEDID')
 
         # mark done in the wizard
         self.wizardDone()

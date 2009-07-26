@@ -114,7 +114,11 @@ Copyright (c) 2008-2009 rPath, Inc.
                     </p>
                     <div class="form-line-top">
                         <div class="rbasetup-label">rBuilder Appliance's FQDN:</div>
-                        <input type="text" name="hostName" value="${hostName}" />&nbsp;.&nbsp;<input type="text" name="siteDomainName" value="${siteDomainName}" />
+                        <input type="text" name="hostName" value="${hostName}.${siteDomainName}" />
+                    </div>
+                    <div class="form-line">
+                        <div class="rbasetup-label">Default project domain name:</div>
+                        <input type="text" name="projectDomainName" value="${projectDomainName}" />
                     </div>
                     <p>Choose a namespace related to your organization's name. For
                        example, if your organization's name is "XYZ Incorporated",

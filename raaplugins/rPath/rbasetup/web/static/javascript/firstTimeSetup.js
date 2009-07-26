@@ -7,41 +7,19 @@ function retryFirstTimeSetup() {
     d = postRequest('/rbasetup/rBASetup/retryFirstTimeSetup',
                     null, null, reloadNoHistory, '', false);
 }
-function updateCurrentStep(stepNumber, completed, completedMsg) {
-    var step = 'step' + stepNumber;
-    var currentFound = false;
-
-    var liEl = $('statusList');
-    forEach (liEl.getElementsByTagName('li'), function (e) {
-        if (e.id.indexOf(step) >= 0) {
-            currentFound = true;
-            if (completed) {
-                if ( completedMsg.length > 0 ) {
-                    setElementClass(e, 'failedState');
-                }
-                else {
-                    setElementClass(e, 'completedState');
-                }
-            }
-            else {
-                setElementClass(e, 'currentState');
-            }
+function updateCurrentStep(message, completed, errors) {
+    if (message != '') {
+            $('status_message').innerHTML = message.split("\n").join("<br />") + "<br /><br />";
+            showElement('status_message');
         }
-        else {
-            if (!currentFound && stepNumber > 0)  {
-                setElementClass(e, 'completedState');
-            }
-        }
-    });
 
     if (completed) {
-        var msg = completedMsg || '';
-        if (msg.length > 0) {
-            errorText = '<p>rBuilder was unable to compete the setup process.  Because some setup errors can be temporary, click the Retry button to attempt to complete the setup process.</p><p>If the error persists, please contact rPath for assistance using any of the following methods:</p><ul><li>web: <a href="https://issues.rpath.com">https://issues.rpath.com</a></li><li>phone: +1 919.851.3984</li><li>email: <a href="mailto: support@rpath.com">support@rpath.com</a></li></ul><p>Please note the step that experienced the error, as well as the additional information displayed below.</p><br />';
+        if (errors.length > 0) {
+            errorText = '<p>rBuilder was unable to compete the setup process.  Because some setup errors can be temporary, click the Retry button to attempt to complete the setup process.</p><p>If the error persists, please check your Networking and Internet Proxy settings in the Configuration menu to the left.</p><p>If you would like to contact rPath for assistance using any of the following methods:</p><ul><li>web: <a href="https://issues.rpath.com">https://issues.rpath.com</a></li><li>phone: +1 919.851.3984</li><li>email: <a href="mailto: support@rpath.com">support@rpath.com</a></li></ul><p>Please note the step that experienced the error, as well as the additional information displayed above.  Also, please use Collect Diagnostic Information link to the left to collect and download debugging information, and attach this file when filing an issue via the web.</p><br />';
 
-            $('status_message').innerHTML = errorText + completedMsg.replace('Failed: A permanent failure has occurred:', '');
+            $('status_message').innerHTML += errors.replace('Failed: A permanent failure has occurred:', '') + errorText;
             showElement('status_message');
-            setNodeAttribute('status_message', 'class', 'errormessage')
+            setNodeAttribute('status_message', 'class', 'errormessage');
             removeElementClass('retry_button', 'off');
             setNodeAttribute('retry_button', 'href', 'javascript:retryFirstTimeSetup()');
         }
@@ -55,10 +33,13 @@ function updateCurrentStep(stepNumber, completed, completedMsg) {
 function getUpdatedStatus() {
 
     function _callback(req) {
-        var newStep = req['currentStep'];
+        var message = req['statusmsg'];
         var statusCode = req['status'];
         var completed;
-        var errors;
+        var errors = req['errors'];
+        if (req['reload']) {
+            reloadNoHistory();
+        }
         if (statusCode == TASK_RUNNING ||
             statusCode == TASK_SCHEDULED ||
             statusCode == TASK_PENDING ||
@@ -67,12 +48,13 @@ function getUpdatedStatus() {
             completed = false;
         }
         else {
-            completed = true;
-            if (statusCode != TASK_SUCCESS) {
-                errors = req['statusmsg'];
+            if (statusCode != TASK_SUCCESS &&
+                errors == '') {
+                errors = 'Unknown Error occurred';
             }
+            completed = true;
         }
-        updateCurrentStep(newStep, completed, errors);
+        updateCurrentStep(message, completed, errors);
     }
 
     function _callbackErr() {

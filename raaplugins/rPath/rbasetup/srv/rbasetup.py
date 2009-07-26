@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 import traceback
+import pickle
 from conary import conarycfg
 
 from raa.modules.raasrvplugin import rAASrvPlugin
@@ -36,37 +37,37 @@ class rBASetup(rAASrvPlugin):
 
     def __init__(self, *args, **kwargs):
         rAASrvPlugin.__init__(self, *args, **kwargs)
+        self.shmclnt = None
+        self.message = ""
 
-    def _addRBuilderAdminAccount(self, mintcfg, adminUsername,
-            adminPassword, adminEmail):
+    def _addRBuilderAdminAccount(self, adminUsername, adminPassword, adminEmail):
         """
         Adds an admin user to the locally installed rBuilder.
         """
-        shmclnt = shimclient.ShimMintClient(mintcfg,
-                (mintcfg.authUser, mintcfg.authPass))
         try:
             try:
-                userId = shmclnt.registerNewUser(adminUsername, adminPassword,
+                userId = self.shmclnt.registerNewUser(adminUsername, adminPassword,
                     "Administrator", adminEmail, "", "", active=True)
                 log.info("Created initial rBuilder account %s (id=%d)",
                         adminUsername, userId)
             except UserAlreadyExists:
                 log.warning("rBuilder user %s already exists!")
-                userId = shmclnt.getUserIdByName(adminUsername)
+                userId = self.shmclnt.getUserIdByName(adminUsername)
 
             try:
-                shmclnt.promoteUserToAdmin(userId)
+                self.shmclnt.promoteUserToAdmin(userId)
                 log.info("Promoted initial rBuilder account to admin level",
                         adminUsername)
             except UserAlreadyAdmin:
                 log.warning("rBuilder user %s is already an admin!",
                         adminUsername)
-        except:
-            log.exception("Failed to create rBuilder admin account %s :",
-                    adminUsername)
-            return False
+        except Exception, e:
+            errmsg = "Failed to create rBuilder admin account %s : %s" % \
+                     (adminUsername, str(e))
+            log.error(errmsg)
+            return { 'errors': [ errmsg ] }
 
-        return True
+        return {}
 
     def _gracefulApache(self):
         """
@@ -89,28 +90,29 @@ class rBASetup(rAASrvPlugin):
         """
         Sets up rMake for appliance creator, etc.
         """
+        errors = []
         restartNeeded = False
         apacheUID, apacheGID = pwd.getpwnam('apache')[2:4]
+        # log pipe
+        rdfd, wrfd = os.pipe()
+        rdfd2, wrfd2 = os.pipe()
 
-        # NASTY HACK. Need to create a tmpfile to store log messages in for the
-        # child process. A terrible hack needed since the standard logger
-        # handlers are writing to raa-service.log, which is owned by root,
-        # and thus cannot be written to by the child process, which will drop
-        # root privileges.
-        childLogFd, childLogFn = \
-                tempfile.mkstemp(suffix='.log', prefix='setupRMake-')
-        os.close(childLogFd)
-        os.chown(childLogFn, apacheUID, apacheGID)
-        log.info("Attempting to setup rMake - logging to %s", childLogFn)
+        log.info("Attempting to setup rMake")
 
         pid = os.fork()
         if not pid: # child
             rc = -3
             try:
+                errorWriter = None
                 try:
-                    # Reset logging in the child (see NASTY HACK above)
+                    os.close(rdfd)
+                    os.close(rdfd2)
+                    logWriter = os.fdopen(wrfd, 'w')
+                    errorWriter = os.fdopen(wrfd, 'w')
+
+                    # Reset logging in the child
                     childLog = logging.getLogger('setupRMake')
-                    childLog.addHandler(logging.FileHandler(childLogFn))
+                    childLog.addHandler(logging.StreamHandler(logWriter))
                     childLog.setLevel(logging.DEBUG)
 
                     # Drop privs in the child to apache so as to not create
@@ -129,29 +131,63 @@ class rBASetup(rAASrvPlugin):
                 except Exception, e:
                     childLog.error("Unexpected error occurred when attempting "
                             "to create the rMake repository: %s" % str(e))
-                    traceback.print_exc(file=childLogFn)
+                    try:
+                        pickle.dump(sys.exc_info()[:2], errorWriter)
+                    except Exception, e:
+                        log.error('Pickle failed: %s' % str(e))
+                        pass
+                    childLog.error(traceback.format_exc())
                     rc = -2
             finally:
                 os._exit(rc)
         else: # parent
             # close the child log
+            os.close(wrfd)
+            os.close(wrfd2)
+            logReader = os.fdopen(rdfd, "r")
+            errorReader = os.fdopen(rdfd2, "r")
+ 
+            # read the log lines coming back from the child
+            while True:
+                line = logReader.readline()
+                if not line:
+                    break
+                log.info('rmake setup log: %s' % line)
+
             # if child exits and returns 0, we need to restart rMake
             log.info("Parent waiting on PID %d" % pid)
             childStatus = os.waitpid(pid,0)[1]
             childRC = os.WEXITSTATUS(childStatus)
-            log.info("Child exited with %d" % childRC)
+            os.close(rdfd)
+            if not os.WIFEXITED(childStatus) or (childRC and childRC != 255):
+                log.info("Child exited with code %d" % childRC)
+                try:
+                    exc = pickle.load(errorReader)
+                except Exception, e:
+                    log.error('Unpickle failed: %s' % str(e))
+                    return { 'errors': [ 'rmake setup exited with code %d' % childRC ] }
             restartNeeded = os.WIFEXITED(childStatus) and (childRC == 0)
 
         if restartNeeded:
             log.info("Restarting rMake service due to new configuration")
-            rMakeRestartRC = os.system("/sbin/service rmake restart")
-            if rMakeRestartRC == 0:
-                rMakeNodeRestartRC = os.system("/sbin/service rmake-node restart")
-            if rMakeRestartRC != 0 or rMakeNodeRestartRC != 0:
-                log.warn("Failed to restart rMake services. You may need to reboot " \
-                         "the appliance for changes to take effect.")
+            rmakeRestart = subprocess.Popen(['/sbin/service', 'rmake', 'restart'],
+                                            stdout = subprocess.PIPE,
+                                            stderr = subprocess.PIPE)
+            stdout, stderr = rmakeRestart.communicate()
+            log.info('output for "service rmake restart": \nstderr: %s\nstdout: %s' % \
+                    (stderr, stdout))
+            if rmakeRestart.returncode == 0:
+                rmakeNodeRestart = subprocess.Popen(['/sbin/service', 'rmake-node', 'restart'],
+                                            stdout = subprocess.PIPE,
+                                            stderr = subprocess.PIPE)
+                stdout, stderr = rmakeNodeRestart.communicate() 
+                log.info('output for "service rmake-node restart": \nstderr: %s\nstdout: %s' % \
+                        (stderr, stdout))
+            if rmakeRestart.returncode != 0 or rmakeNodeRestart.returncode != 0:
+                return { 'errors': [ "Failed to restart rMake services. You may need to reboot " \
+                         "the appliance for changes to take effect.", ] }
 
-        return True
+        return { 'message': 'complete.\n' }
 
     def _generateEntitlement(self, mintCfg):
         log.info("Generating rBuilder site entitlement ...")
@@ -160,20 +196,21 @@ class rBASetup(rAASrvPlugin):
             conaryCfg = conarycfg.ConaryConfiguration(True)
             auth = SiteAuthorization(mintCfg.siteAuthCfgPath, conaryCfg)
             if auth.isConfigured():
-                log.warning("Entitlement is already set; "
-                        "keeping rBuilder ID %s .", auth.rBuilderId)
-                return {}
+                msg = "Entitlement is already set; " + \
+                        "keeping rBuilder ID %s .\n" % auth.rBuilderId
+                log.warning(msg)
+                return {'message': msg }
 
             newKey = auth.generate()
             if newKey is None:
                 return {'errors': [ 'Failed to generate entitlement', ] }
-            self.server.setNewEntitlement(newKey)
+            self.rootserver.configure.entitlements.saveKey(newKey)
 
-            log.info("Key successfully generated; your new rBuilder ID is %s .",
-                    auth.rBuilderId)
-            return {}
+            msg = "Key successfully generated; your rBuilder ID is %s .\n" % auth.rBuilderId
+            log.info(msg)
+            return {'message': msg}
         except Exception, e:
-            log.exception("Failed to generate entitlement")
+            log.error("Failed to generate entitlement: %s" % str(e))
             return { 'errors': [ str(e), ] }
 
     def _setupExternalProjects(self):
@@ -182,17 +219,23 @@ class rBASetup(rAASrvPlugin):
         All this does is call a script which does the heavy lifting.
         """
         log.info("Attempting to set up external projects for platforms")
-        rc = os.system("/usr/share/rbuilder/scripts/init-extproducts")
-        if (rc == 0):
-            log.info("Successfully set up initial external projects")
-        else:
+        try:
+            errors = helperfuncs.initializeExternalProjects(self.shmclnt)
+            if not errors:
+                log.info("Successfully set up initial external projects")
+                return {}
+            else:
+                log.error("Failed to set up initial external projects")
+                return { 'errors': errors }
+        except Exception, e:
             log.error("Failed to set up initial external projects")
+            return { 'errors': "Failed to set up initial external projects" }            
 
         # Initial RSS feed for notices. Not external projects, but it doesn't
         # need its own section as it isn't important.
         os.system("/usr/share/rbuilder/scripts/rss-update -q")
 
-        return True
+        return {}
 
     def updateRBAConfig(self, schedId, execId, newValues):
         """
@@ -212,7 +255,7 @@ class rBASetup(rAASrvPlugin):
         newCfg.postCfg()
         newCfg.SSL = True
         newCfg.secureHost = newCfg.siteHost
-        newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
+        newCfg.externalDomainName = newCfg.siteDomainName
         # Post processing for first timers
         if firstTimeSetup:
             # Set the bugs / adminMail to be the initial admin account
@@ -228,21 +271,31 @@ class rBASetup(rAASrvPlugin):
         # Attempt to write the new generated configuration and restart Apache
         wroteConfig = lib.writeRBAGeneratedConfig(newCfg,
                 config.RBUILDER_GENERATED_CONFIG)
+        if not wroteConfig:
+            return dict(errors=['Failed to write rBuilder configuration'])
+        else:
+            # Signal apache to restart itself
+            self._gracefulApache()
 
-        # Signal apache to restart itself
-        self._gracefulApache()
-
-        return wroteConfig
+        return dict(message="Configuration written.")
 
     def doTask(self, schedId, execId):
         """
-        Calls first time setup.
+        XXX - Calls first time setup.  No longer needed.
         """
         ret = self.firstTimeSetup(schedId, execId)
         if ret.has_key('errors'):
             raise PermanentTaskFailureException('\n'.join(ret['errors']))
 
-    def firstTimeSetup(self, schedId, execId):
+    def firstTimeSetup(self, schedId, execId, options, step=lib.FTS_STEP_INITIAL):
+        errors = ''
+        try:
+            return self._firstTimeSetup(schedId, execId, options, step=lib.FTS_STEP_INITIAL)
+        except Exception, e:
+            log.error('an unhandled exception occurred: %s' % str(e))
+            return dict(errors=str(e))
+
+    def _firstTimeSetup(self, schedId, execId, options, step=lib.FTS_STEP_INITIAL):
         """
         If this is a first-time configuration, this call will
         also do the following:
@@ -250,39 +303,59 @@ class rBASetup(rAASrvPlugin):
          -- setup rMake
          -- create initial external projects
         """
+        retry = options.get('retry', False)
+        self.message = ""
 
-        # Add the initial admin account
-        self.server.setFirstTimeSetupState(lib.FTS_STEP_ADMINACCT)
         newCfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
-        newValues = self.server.getFirstTimeSetupAdminInfo()
-        addedUser = self._addRBuilderAdminAccount(
-                newCfg,
-                newValues['new_username'],
-                newValues['new_password'],
-                newValues['new_email'])
-        if not addedUser:
-            errorMsg = "Failed to add initial administrative user '%s' to rBuilder" % newValues['new_username']
-            log.warning(errorMsg)
+        self.shmclnt = shimclient.ShimMintClient(newCfg,
+               (newCfg.authUser, newCfg.authPass))
 
-            return { 'errors': [ errorMsg ] }
+        # don't re-add the admin user if it's just a retry
+        if not retry:
+            new_username = options.get('new_username')
+            new_password = options.get('new_password')
+            new_email = options.get('new_email')
+
+            step = lib.FTS_STEP_ADMINACCT
+            self.message += "Adding rBuilder Admin account: %s\n" % new_username
+            self.reportMessage(execId, self.message)
+            ret = self._addRBuilderAdminAccount(
+                    new_username, new_password, new_email)
+            if ret.has_key('errors'):
+                return { 'errors': ret['errors'] , 'step': step, 'message': self.message }
 
         # Create the rMake repository and restart rMake if needed.
         # If this gets called twice, it's no big deal, as the
         # underlying code will not create duplicate repositories.
-        self.server.setFirstTimeSetupState(lib.FTS_STEP_RMAKE)
-        self._setupRMake(newCfg)
+        step = lib.FTS_STEP_RMAKE
+        self.message += "Setting up rMake build server...  "
+        self.reportMessage(execId, self.message)
+        result = self._setupRMake(newCfg)
+        if result.has_key('errors'):
+            return { 'errors': result['errors'], 'step': step, 'message': self.message }
+        self.message += result.get('message', '')
+        self.reportMessage(execId, self.message)
 
         # Generate an entitlement
-        self.server.setFirstTimeSetupState(lib.FTS_STEP_ENTITLE)
+        step = lib.FTS_STEP_ENTITLE
+        self.message += "Generating an entitlement...  "
+        self.reportMessage(execId, self.message)
         ret = self._generateEntitlement(newCfg)
         if ret.has_key('errors'):
-            return ret
+            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+        self.message += ret.get('message', '\n')
+        self.reportMessage(execId, self.message)
 
         # Setup the initial external projects
-        self.server.setFirstTimeSetupState(lib.FTS_STEP_INITEXTERNAL)
-        self._setupExternalProjects()
+        step = lib.FTS_STEP_INITEXTERNAL
+        self.message += "Setting up external repositories...\n"
+        self.reportMessage(execId, self.message)
+        ret = self._setupExternalProjects()
+        if ret.has_key('errors'):
+            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
 
         # Done
-        self.server.setFirstTimeSetupState(lib.FTS_STEP_COMPLETE)
-        return {}
+        self.message += "Setup is complete.\n"
+        self.reportMessage(execId, self.message)
+        return { 'step': lib.FTS_STEP_COMPLETE, 'message': self.message }
 
