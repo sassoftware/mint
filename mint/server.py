@@ -3075,7 +3075,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 self.buildData.getDataValue(buildId, 'outputToken')[1]:
             raise mint_error.PermissionDenied
 
-        ret = self._setBuildFilenames(buildId, filenames, normalize = True)
+        ret = self._setBuildFilenames(buildId, filenames, normalize=True,
+                sendNotice=True)
         self.buildData.removeDataValue(buildId, 'outputToken')
 
         return ret
@@ -3150,9 +3151,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise mint_error.BuildPublished()
 
-        return self._setBuildFilenames(buildId, filenames)
+        return self._setBuildFilenames(buildId, filenames, sendNotice=True)
 
-    def _setBuildFilenames(self, buildId, filenames, normalize = False):
+    def _setBuildFilenames(self, buildId, filenames, normalize=False,
+            sendNotice=False):
         from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg,
                 (self.cfg.authUser, self.cfg.authPass), self.db._db)
@@ -3211,9 +3213,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             self.db.commit()
 
-        notices = notices_callbacks.ImageNotices(self.cfg, username)
-        notices.notify_built(buildName, buildType, buildTime,
-                project.name, project.version, imageFiles)
+        if sendNotice:
+            notices = notices_callbacks.ImageNotices(self.cfg, username)
+            notices.notify_built(buildName, buildType, buildTime,
+                    project.name, project.version, imageFiles)
         return True
 
     @typeCheck(int, int, int, str)
