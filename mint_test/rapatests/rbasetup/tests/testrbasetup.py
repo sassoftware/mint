@@ -331,7 +331,7 @@ class rBASetupTest(raatest.rAATest):
                 newValues)
 
         # Make sure return is OK
-        self.failUnlessEqual(ret, True,
+        self.failUnlessEqual(ret, dict(message="Configuration written."),
                 "Expected return of True from backend call")
 
         # We had better have attempted to restart Apache

@@ -247,9 +247,10 @@ class rBASetup(rAAWebPlugin):
             return dict(errors=errorList)
 
         # split hostname & siteDomainName
-        hostname = normalizedOptions['hostName'].split('.')
-        normalizedOptions['hostName'] = hostname[0]
-        normalizedOptions['siteDomainName'] = '.'.join(hostname[1:])
+        if normalizedOptions.has_key('hostName'):
+            hostname = normalizedOptions['hostName'].split('.')
+            normalizedOptions['hostName'] = hostname[0]
+            normalizedOptions['siteDomainName'] = '.'.join(hostname[1:])
 
         # Call backend to save generated file
         try:
@@ -258,32 +259,35 @@ class rBASetup(rAAWebPlugin):
                 return dict(errors=result['errors'])
             else:
                 ret = dict(message="rBuilder Configuration saved.")
-            # do a simple check to catch the case where the user
-            # did not fully qualify their hostname
-            currentHostname = os.uname()[1]
-            if currentHostname != '.'.join(hostname) and currentHostname == hostname[0]:
-                netCfg = self.plugins['/configure/Network'].index()
-                gatewayDHCP = False
-                if netCfg['host_gateway'] == '':
-                    gatewayDHCP = True
-                log.info('saving new hostname')
-                self.plugins['/configure/Network']._saveGeneral(
-                     netCfg['host_usesdhcp'], 
-                     '.'.join(hostname),
-                     netCfg['dns_dnsDomain'], 
-                     netCfg['dns_dnsServer'],
-                     gatewayDHCP,
-                     netCfg['host_gateway'],
-                     netCfg['host_gatewaydev'],
-                     netCfg['dns_dnsdhcp'],
-                     )
-                log.info('new hostname saved')
         except Exception, e:
             return dict(errors=["Failed to save rBuilder Configuration: %s" % repr(e)])
 
         # If this is a first time setup, we must kick off a redirect to do
         # post setup processing.
         if not isConfigured:
+            try:
+                # do a simple check to catch the case where the user
+                # did not fully qualify their hostname
+                currentHostname = os.uname()[1]
+                if currentHostname != '.'.join(hostname) and currentHostname == hostname[0]:
+                    netCfg = self.plugins['/configure/Network'].index()
+                    gatewayDHCP = False
+                    if netCfg['host_gateway'] == '':
+                        gatewayDHCP = True
+                    log.info('saving new hostname')
+                    self.plugins['/configure/Network']._saveGeneral(
+                         netCfg['host_usesdhcp'], 
+                         '.'.join(hostname),
+                         netCfg['dns_dnsDomain'], 
+                         netCfg['dns_dnsServer'],
+                         gatewayDHCP,
+                         netCfg['host_gateway'],
+                         netCfg['host_gatewaydev'],
+                         netCfg['dns_dnsdhcp'],
+                         )
+                    log.info('new hostname saved')
+            except Exception, e:
+                log.error('Hostname reset failed.  Continuing anyway...')
             # Kick off the first time processing
             sched = schedule.ScheduleOnce(time.time() + 1)
             schedId = self.callBackendAsync(sched, 'firstTimeSetup', normalizedOptions)
