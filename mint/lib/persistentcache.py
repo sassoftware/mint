@@ -112,7 +112,7 @@ class PersistentCache(object):
             # Check to see if a negative cached item has expired, refresh
             # if expired
             elif (value[0] is None and
-                  time.time() > self._value[1] + self._negativeExpire):
+                  time.time() > value[1] + self._negativeExpire):
                 return self.refresh(key)
 
         else:
