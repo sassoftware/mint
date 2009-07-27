@@ -12,6 +12,8 @@ API Changes
 
 Bug Fixes
 ---------------------
+* More strict validation for namespace in initial setup (RBL-4063)
+* Better validation of other initial setup fields (RBL-4804)
 * When configured to pull a platform definition from another rBuilder,
   rBuilder would attempt to use the local admin user credentials.
   (RBL-4830)

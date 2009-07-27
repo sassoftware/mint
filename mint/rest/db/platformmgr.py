@@ -48,29 +48,13 @@ class PlatformManager(manager.Manager):
         return models.Platforms(availablePlatforms)
 
 class PlatformNameCache(persistentcache.PersistentCache):
-
     def __init__(self, cacheFile, reposMgr):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._reposMgr = weakref.ref(reposMgr)
-        self._cclient = None
-
-    def _getConaryClient(self):
-        if not self._cclient:
-            self._cclient = self._reposMgr().getConaryClient(admin=False)
-        return self._cclient
-    cclient = property(_getConaryClient)
 
     def _refresh(self, labelStr):
         try:
-            hostname = versions.Label(labelStr).getHost()
-            # we require that the first section of the label be unique
-            # across all repositories we access.
-            hostname = hostname.split('.')[0]
-            try:
-                client = self._reposMgr().getConaryClientForProduct(hostname,
-                                                                    admin=True)
-            except errors.ProductNotFound:
-                client = self.cclient
+            client = self._reposMgr().getAdminClient()
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             return platDef.getPlatformName()

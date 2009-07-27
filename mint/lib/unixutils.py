@@ -46,8 +46,13 @@ class AtomicFile(object):
         # filesystem, this will atomically replace the old with the new.
         os.rename(self.name, self.finalPath)
 
+        # Hash file
+        hash = hashFile(self.fObj)
+
         # Now close the file.
         self.fObj.close()
+
+        return hash
 
     def close(self):
         if self.fObj and not self.fObj.closed:
