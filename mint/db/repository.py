@@ -117,8 +117,6 @@ class RepositoryManager(object):
         try:
             return repoIter.next()
         except StopIteration:
-            log.warning("No project found matching %r %% %r",
-                    whereClause, args)
             raise ProductNotFound(args[0])
 
     def getRepositoryFromFQDN(self, fqdn):
