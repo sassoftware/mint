@@ -114,8 +114,11 @@ Copyright (c) 2008-2009 rPath, Inc.
                     </p>
                     <div class="form-line-top">
                         <div class="rbasetup-label">rBuilder Appliance's FQDN:</div>
-                        <input type="text" name="hostName" value="${hostName}.${siteDomainName}" />
+                        <input type="text" name="hostName" value="${hostName}" />
                     </div>
+                    <p>Choose a default domain name for project repositories.  This
+                    will be visible in package version information, and should usually 
+                    be the external domain name for your organization.</p>
                     <div class="form-line">
                         <div class="rbasetup-label">Default project domain name:</div>
                         <input type="text" name="projectDomainName" value="${projectDomainName}" />
