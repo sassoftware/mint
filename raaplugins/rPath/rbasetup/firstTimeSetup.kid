@@ -62,7 +62,7 @@ Copyright (c) 2006-2009 rPath, Inc.
                     Finalizing Initial rBuilder Setup
                 </div>
                 <div class="page-section-content">
-                    <p>Finalizing the initial setup of rBuilder. Please be patient as this may take some time.</p>
+                    <p>Finalizing the initial setup of rBuilder. <strong>This process may take several minutes.</strong></p>
                     <p>Once this process has completed, click Continue and login to your rBuilder using the administrator username and password you specified.</p>
                 </div>
                 <div class="page-section-content-bottom">
