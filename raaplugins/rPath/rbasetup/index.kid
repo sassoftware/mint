@@ -16,12 +16,12 @@ Copyright (c) 2008-2009 rPath, Inc.
 <?python
     if not configured:
         pageTitle = "Initial rBuilder Setup"
-        instructions = "Now it's time to configure your rBuilder Appliance.  Some of the following fields have been populated with default values, which you may change if necessary."
+        instructions = "Finish configuring your rBuilder Appliance by providing the following information. Some fields have been populated with default values; these can be changed if necessary."
         advancedOptionsUrl = makeUrl('/static/images/icon_expand.gif')
         advancedOptionsStyle = 'display: none;'
     else:
         pageTitle = "rBuilder Setup"
-        instructions = "Your rBuilder Applinace is already configured. You may make a limited number of changes to the setup via the form below."
+        instructions = "Change the following fields to modify your rBuilder Appliance's configuration."
         advancedOptionsUrl = makeUrl('/static/images/icon_collapse.gif')
         advancedOptionsStyle = ''
 ?>
@@ -80,10 +80,11 @@ Copyright (c) 2008-2009 rPath, Inc.
                 <div py:if="not configured" class="page-section">Initial Administrator Account</div>
                 <div py:if="not configured" class="page-section-content">
                     <p>
-                        In order to access the web interface for rBuilder, you will
-                        need to create an administrator account. This account is
-                        separate from the account you use to access the rPath
-                        Platform Agent.
+                        Specify details for your rBuilder administrator
+                        account. This account is used to access rBuilder's
+                        web interface, and is separate from the account
+                        used to access the rPath Platform Agent for
+                        maintenance of your rBuilder Appliance.
                     </p>
                     <div class="form-line-top">
                         <div class="rbasetup-label">Username:</div>
@@ -106,26 +107,36 @@ Copyright (c) 2008-2009 rPath, Inc.
                 <div class="page-section-content" py:if="not configured">
                     <p>
                         <strong>Note:</strong> The hostname and domain name
-                        displayed below are based on the URL you used to access your
-                        rBuilder server.  You may change these values, but be aware
-                        that the resulting fully-qualified domain name (FQDN) constructed from
-                        the values you've entered must match the URL your users will
-                        use to access rBuilder.
+                        displayed below are based on the URL you used to
+                        access your rBuilder Appliance.  You can change
+                        these values, but be aware that the resulting
+                        fully-qualified domain name (FQDN) constructed from
+                        the values you've entered must match the URL your
+                        users will use to access rBuilder.
                     </p>
                     <div class="form-line-top">
                         <div class="rbasetup-label">rBuilder Appliance's FQDN:</div>
                         <input type="text" name="hostName" value="${hostName}" />
                     </div>
-                    <p>Choose a default domain name for project repositories.  This
-                    will be visible in package version information, and should usually 
-                    be the external domain name for your organization.</p>
+                        <p>
+                            Choose a default domain name for project
+                            repositories. This will be visible in package
+                            version information, and should usually be your
+                            organization's external domain.
+                        </p>
                     <div class="form-line">
                         <div class="rbasetup-label">Default project domain name:</div>
                         <input type="text" name="projectDomainName" value="${projectDomainName}" />
                     </div>
-                    <p>Choose a namespace related to your organization's name. For
-                       example, if your organization's name is "XYZ Incorporated",
-                       a namespace of "xyz" would be appropriate.</p>
+                        <p>
+                            Choose a default namespace related to your
+                            organization's name. This will be visible in
+                            package version information, and should usually
+                            be related to your organization's name. For
+                            example, if your organization's name is "XYZ
+                            Incorporated", a namespace of "xyz" would be
+                            appropriate.
+                        </p>
                     <div class="form-line">
                         <div class="rbasetup-label">Default namespace:</div>
                         <input type="text" name="namespace" value="${namespace}" py:attrs="{'disabled': not allowNamespaceChange and 'disabled' or None}" />
