@@ -3713,7 +3713,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int, bool)
     @requiresAdmin
     def setOutboundMirrorSync(self, outboundMirrorId, fullSync):
-        self.outboundMirrors.update(outboundMirrorId, fullSync=fullSync)
+        self.outboundMirrors.update(outboundMirrorId, fullSync=int(fullSync))
         return True
 
     @private
