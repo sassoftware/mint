@@ -382,6 +382,12 @@ class rBASetup(rAAWebPlugin):
         return dict(message='successfully set wizard done')
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
+    @raa.web.require(raa.authorization.LocalhostOnly())
+    def setNewEntitlement(self, key):
+        self.plugins['/configure/Entitlements'].doSaveKey(key)
+        return True
+
+    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def finalize(self):
         # mark finalized
         self.setPropertyValue('FINALIZED', True, RDT_BOOL)
