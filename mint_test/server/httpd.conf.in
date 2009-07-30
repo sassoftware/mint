@@ -82,7 +82,7 @@ Alias /                             "@DOCROOT@/rbuilder.conf/"
     PythonHandler mint.web.hooks
     PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonOption basePath "/"
-    PythonPath "['@MINTPATH@', '@MCPPATH@', '@PRODDEFPATH@', '@CONARYPATH@', '@PCREATORPATH@', '@CATALOGSERVICEPATH@', '@RESTLIBPATH@'] + sys.path"
+    PythonPath "['@MINTPATH@', '@MCPPATH@', '@CONARYPATH@', '@PCREATORPATH@', '@CATALOGSERVICEPATH@', '@RESTLIBPATH@'] + sys.path"
     PythonDebug Off
     # Note this is different than what we ship with, 
     # where this redirect should be set.  But that would 

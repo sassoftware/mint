@@ -14,7 +14,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN, PFQDN
+from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN
 from mint.scripts import pkgindexer
 from mint.web.repos import ConaryHandler
 import recipes

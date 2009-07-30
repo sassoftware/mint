@@ -10,6 +10,7 @@ import testsetup
 import mint_rephelp
 import mock
 import webprojecttest
+from mint_rephelp import FQDN
 from pcreator import factorydata
 
 import factory_test.testSetup
@@ -97,7 +98,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     def _setupProjectHandlerMockClientMethod(self, methodName, mockMethod, requestName):
         ### All this, just to monkeypatch the client
         projectHandler = self._setupProjectHandler()
-        projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', requestName)
+        projectHandler.req = mint_rephelp.FakeRequest(FQDN, 'POST', requestName)
         auth = projectHandler.client.checkAuth()
         projectHandler.projectList = projectHandler.client.getProjectsByMember(auth.userId)
         projectHandler.projectDict = {}
@@ -455,7 +456,8 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
 
         #set up the request
         projectHandler = self._setupProjectHandler()
-        projectHandler.req = mint_rephelp.FakeRequest(self.getProjectServerHostname(), 'POST', cmd)
+        projectHandler.req = mint_rephelp.FakeRequest(FQDN, 'POST', cmd)
+        projectHandler.baseUrl = 'http://%s/' % FQDN
         auth = projectHandler.client.checkAuth()
         projectHandler.projectList = projectHandler.client.getProjectsByMember(auth.userId)
         projectHandler.projectDict = {}

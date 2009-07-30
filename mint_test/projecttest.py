@@ -14,7 +14,7 @@ import tempfile
 import time
 
 from mint_rephelp import MintRepositoryHelper
-from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
+from mint_rephelp import MINT_PROJECT_DOMAIN, FQDN
 
 from mint import userlevels
 from mint.mint_error import *
@@ -654,7 +654,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         hideProjId = client.newProject('Proj', hostname, 'rpath.local',
                                        shortname=hostname,
                                        version='1.0', prodtype='Component')
-        self._checkRepoMap('repositoryMap proj.rpath.local http://%s/repos/proj/\n' % PFQDN)
+        self._checkRepoMap('repositoryMap proj.rpath.local http://%s/repos/proj/\n' % FQDN)
 
         adminClient.hideProject(hideProjId)
         self._checkRepoMap('')
@@ -662,7 +662,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         hostname="baz"
         client.newProject('Baz', hostname, 'rpath.local', shortname=hostname,
                 version='1.0', prodtype='Component')
-        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN)
+        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % FQDN)
 
         # one regular project, one hidden project, one external project
         reposUrl = 'http://bar.rpath.local/conary/'
@@ -671,7 +671,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                                                    'bar.rpath.local@rpl:devel',
                                                     reposUrl)
         # only the regular project will show up
-        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % PFQDN)
+        self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n' % FQDN)
 
         # another external project with a repository map:
         adminClient.newExternalProject('Wobble', 'wobble',
@@ -681,14 +681,14 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         # this external project will show up:
         self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n'
-                           'repositoryMap wobble.rpath.com http://wobble-commits.rpath.com/conary/\n' % PFQDN)
+                           'repositoryMap wobble.rpath.com http://wobble-commits.rpath.com/conary/\n' % FQDN)
 
         # two regular projects, one external project, not mirrored
         adminClient.unhideProject(hideProjId)
         # both regular projects will show up
         self._checkRepoMap('repositoryMap baz.rpath.local http://%s/repos/baz/\n'
                            'repositoryMap wobble.rpath.com http://wobble-commits.rpath.com/conary/\n'
-                           'repositoryMap proj.rpath.local http://%s/repos/proj/\n' % (PFQDN, PFQDN))
+                           'repositoryMap proj.rpath.local http://%s/repos/proj/\n' % (FQDN, FQDN))
 
         exProject = client.getProject(exProjectId)
         # two regular projects, one external project, mirrored
@@ -700,7 +700,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                            'repositoryMap proj.rpath.local http://%s/repos/proj/\n'
                            'repositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'
                            'repositoryMap wobble.rpath.com http://wobble-commits.rpath.com/conary/\n' % \
-                           (PFQDN, PFQDN))
+                           (FQDN, FQDN))
 
     @fixtures.fixture('Full')
     def testGenConaryRc(self, db, data):
@@ -1214,7 +1214,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
             dat = ph._getVAMData(rel, build)
             vamDat = {'userName': 'root', 'vmtools': False, 'hour': 20,
                 'title': 'Test Published Build', 
-                'url': 'http://%s/project/foo/latestRelease' % PFQDN,
+                'url': 'http://%s/project/foo/latestRelease' % FQDN,
                 'year': 2007, 'oneLiner': 'This is the release description',
                 'longDesc': 'This is the project description', 'minute': 36, 'month': 3,
                 'memory': 256, 'password': '', 'os': 'rPath Linux',

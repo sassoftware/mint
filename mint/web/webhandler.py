@@ -53,6 +53,9 @@ class WebHandler(object):
     db = None
     req = None
 
+    basePath = None
+    baseUrl = None
+
     def _write(self, templateName, templatePath = None, **values):
         prof = profile.Profile(self.cfg)
         wasCacheHit = False
@@ -92,25 +95,11 @@ class WebHandler(object):
 
         return returner
 
-    def _redirectHttp(self, location):
-        if ':' in self.cfg.externalDomainName:
-            httpPort = int(self.cfg.externalDomainName.split(':')[1])
-        else:
-            httpPort = 80
-
+    def _redirectHttp(self, location='', temporary=False):
         while location and location[0] == '/':
             location = location[1:]
-
-        hostname = self.req.headers_in.get('host', self.req.hostname)
-        if ':' in hostname and httpPort != 80:
-            hostname = hostname.split(':')[0]
-            hostname = '%s:%i' % \
-                   (hostname, httpPort)
-
-        location = 'http://%s%s%s' % \
-                   (hostname, self.cfg.basePath, location)
-
-        self._redirect(location)
+        location = self.baseUrl + location
+        self._redirect(location, temporary=temporary)
 
     def _redirect(self, location, temporary = False):
         setCacheControl(self.req, strict=True)
@@ -185,10 +174,6 @@ class WebHandler(object):
             lock = False)
 
         if self.session.is_new():
-            self.session['firstPage'] = "%s://%s%s" % ( \
-                self._protocol(), \
-                self.req.headers_in.get('host', self.req.hostname), '/')
-            self.session['visited'] = { }
             self.session['rememberMe'] = rememberMe
         else:
             rememberMe = self.session['rememberMe']
@@ -202,22 +187,6 @@ class WebHandler(object):
                 self.session.set_timeout(1209600)
 
         self.req.err_headers_out.add('Set-Cookie', str(c))
-
-        # mark the current domain as visited
-        self.session['visited'][self.req.hostname] = True
-
-    def _getNextHop(self):
-        #Now figure out if we need to redirect
-        nexthop = None
-        # split is used to ensure port number doesn't affect cookie domain
-        for dom in (self.cfg.siteDomainName.split(':'),
-                    self.cfg.projectDomainName.split(':')):
-            visitedHost = "%s.%s" % (self.cfg.hostName, dom[0])
-            if not self.session['visited'].get(visitedHost, False):
-                #Yeah we need to redirect
-                nexthop = "%s.%s" % (self.cfg.hostName, ':'.join(dom))
-                break
-        return nexthop
 
     # Methods used to stash away info/error messages into the session.
     # These variables are retrieved and deleted automatically by

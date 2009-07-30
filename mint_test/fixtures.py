@@ -21,7 +21,7 @@ from testutils import mock
 
 
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN
-from mint_rephelp import PFQDN, resetCache
+from mint_rephelp import resetCache
 
 import mint.db.database
 from mint import shimclient
@@ -93,7 +93,6 @@ class FixtureCache(object):
         cfg.namespace = 'yournamespace'
         cfg.hostName = MINT_HOST
         cfg.projectDomainName = MINT_PROJECT_DOMAIN
-        cfg.externalDomainName = MINT_DOMAIN
         cfg.siteDomainName = MINT_DOMAIN
         cfg.secureHostName = "%s.%s" % (MINT_HOST, MINT_PROJECT_DOMAIN)
         cfg.dataPath = tempfile.mkdtemp(prefix = "fixture%s" % name)

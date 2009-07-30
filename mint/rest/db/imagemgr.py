@@ -144,7 +144,7 @@ class ImageManager(manager.Manager):
             statusMessage = res = None
             if image.hasBuild():
                 uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
-                                  self.cfg.externalDomainName, image.imageId, 
+                                  self.cfg.siteDomainName, image.imageId, 
                                   image.buildCount)
                 try:
                     mc = self._getMcpClient()

@@ -84,7 +84,7 @@ class AdminHandler(WebHandler):
                 self._addErrors(e.context);
         if not self._getErrors():
             self._setInfo("User account created")
-            self._redirect(self.cfg.basePath + "admin/")
+            self._redirectHttp("admin/")
         else:
             kwargs = {'username': username,
                       'email': email,
@@ -236,7 +236,7 @@ class AdminHandler(WebHandler):
             # set up the mirror, if requested
             if useMirror == 'net':
                 localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
-                           '', self.cfg.projectSiteHost, self.cfg.basePath, 
+                           '', self.cfg.siteHost, self.cfg.basePath, 
                            hostname)
 
                 # set the internal label to our authUser and authPass
@@ -260,8 +260,7 @@ class AdminHandler(WebHandler):
 
             verb = editing and "Edited" or "Added"
             self._setInfo("%s external %s %s" % (verb, getProjectText().lower(), name))
-            self._redirect("http://%s%sadmin/external" %
-                (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp("admin/external")
         else:
             if editing:
                 return self.editExternal(projectId = projectId, **kwargs)
@@ -406,7 +405,7 @@ class AdminHandler(WebHandler):
             mirrorData = {}
             mirrorData['id'] = outboundMirrorId
             mirrorData['projectName'] = project.name
-            mirrorData['projectUrl'] = project.getUrl()
+            mirrorData['projectUrl'] = project.getUrl(self.baseUrl)
             mirrorData['orderHTML'] = self._makeMirrorOrderingLinks("OutboundMirror", len(mirrors), order, i, outboundMirrorId)
             mirrorData['useReleases'] = int(useReleases)
             mirrorData['allLabels'] = allLabels
@@ -463,8 +462,7 @@ class AdminHandler(WebHandler):
             useReleases, *args, **kwargs):
 
         if action == "Cancel":
-            self._redirect("http://%s%sadmin/outbound" %
-                (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp("admin/outbound")
 
         inputKwargs = {}
         for key in ('projectId', 'mirrorSources', 'allLabels', 'id',
@@ -500,8 +498,7 @@ class AdminHandler(WebHandler):
                 matchTroveList)
             self.client.setOutboundMirrorTargets(outboundMirrorId,
                     selectedTargets)
-            self._redirect("http://%s%sadmin/outbound" %
-                (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp("admin/outbound")
         else:
             return self.editOutbound(**inputKwargs)
 
@@ -512,11 +509,11 @@ class AdminHandler(WebHandler):
             remove = simplejson.loads(yesArgs['removeJSON'])
             for outboundMirrorId in remove:
                 self.client.delOutboundMirror(int(outboundMirrorId))
-            self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp("admin/outbound")
         else:
             if not remove:
                 self._addErrors("No outbound mirrors to delete.")
-                self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
+                self._redirectHttp("admin/outbound")
             message = 'Are you sure you want to remove the outbound mirror(s)?'
             noLink = 'outbound'
             yesArgs = {'func': 'removeOutbound', 'confirmed': 1,
@@ -531,7 +528,7 @@ class AdminHandler(WebHandler):
     def toggleMaintLock(self, curMode, *args, **kwargs):
         mode = curMode ^ 1
         maintenance.setMaintenanceMode(self.cfg, mode)
-        self._redirect("http://%s%sadmin/maintenance" % (self.cfg.siteHost, self.cfg.basePath))
+        self._redirectHttp("admin/maintenance")
 
     def updateServices(self, *args, **kwargs):
         updateServices = self.client.getUpdateServiceList()
@@ -559,8 +556,7 @@ class AdminHandler(WebHandler):
     def processEditUpdateService(self, id, hostname, adminUser, adminPassword,
             description, action, *args, **kwargs):
         if action == "Cancel":
-            self._redirect("http://%s%sadmin/updateServices" %
-                    (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp("admin/updateServices")
 
         inputKwargs = {'hostname': hostname,
             'adminUser': adminUser,
@@ -591,8 +587,7 @@ class AdminHandler(WebHandler):
                 self._setInfo("Update Service changed")
 
         if not self._getErrors():
-            self._redirect("http://%s%sadmin/updateServices" %
-                (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp("admin/updateServices")
         else:
             return self.editUpdateService(**inputKwargs)
 
@@ -604,13 +599,11 @@ class AdminHandler(WebHandler):
             for updateServiceId in remove:
                 self.client.delUpdateService(int(updateServiceId))
             self._setInfo("Update service(s) removed")
-            self._redirect("http://%s%sadmin/updateServices" %
-                    (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp("admin/updateServices")
         else:
             if not remove:
                 self._addErrors("No update services to delete.")
-                self._redirect("http://%s%sadmin/updateServices" %
-                        (self.cfg.siteHost, self.cfg.basePath))
+                self._redirectHttp("admin/updateServices")
             message = 'Are you sure you want to remove the update service(s)?'
             noLink = 'updateServices'
             yesArgs = {'func': 'removeUpdateServices', 'confirmed': 1,

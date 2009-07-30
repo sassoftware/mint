@@ -1,9 +1,10 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved
 #
 import email
+import logging
 import os
 import stat
 import time
@@ -40,6 +41,9 @@ from conary import conaryclient
 
 from rpath_common.proddef import api1 as proddef
 
+log = logging.getLogger(__name__)
+
+
 BUFFER=1024 * 256
 
 class SiteHandler(WebHandler):
@@ -49,14 +53,6 @@ class SiteHandler(WebHandler):
         path = normPath(context['cmd'])
         cmd = path.split('/')[1]
 
-        # if someone attempts to access the SITE from something other than
-        # the site host and SSL is not requested, redirect.
-        # Notable exception: we will allow continueLogout to be accessed
-        # on both domains.
-        if self.req.hostname != self.cfg.siteHost.split(':')[0] and \
-                self.req.subprocess_env.get('HTTPS', 'off') == 'off':
-            self._redirect("http://" + self.cfg.siteHost + \
-                           self.req.unparsed_uri)
         if not cmd:
             return self._frontPage
         try:
@@ -75,8 +71,7 @@ class SiteHandler(WebHandler):
         # if rBA go to new UI
         redirectIndex = self.req.get_options().get('redirectIndex', False)
         if redirectIndex:
-            url = "https://" + self.cfg.siteHost + "/ui/"
-            self._redirect(url)
+            self._redirectHttp('ui/')
         popularProjects = self.client.getPopularProjects()
         topProjects = self.client.getTopProjects()
         selectionData  = self.client.getFrontPageSelection()
@@ -105,7 +100,6 @@ class SiteHandler(WebHandler):
 
     @redirectHttps
     def register(self, auth):
-        self.toUrl = self.cfg.basePath
         return self._write("register", errors=[], kwargs={})
 
     @strFields(newUsername = '', email = '', email2 = '',
@@ -119,7 +113,6 @@ class SiteHandler(WebHandler):
                         blurb, tos, privacy):
         # newUsername only used to prevent browser value caching.
         username = newUsername
-        self.toUrl = self.cfg.basePath
 
         errors = []
         if not username:
@@ -162,7 +155,6 @@ class SiteHandler(WebHandler):
             return self._write("register", errors = errors, kwargs = kwargs)
 
     def registerComplete(self, auth):
-        self.toUrl = self.cfg.basePath
         return self._write("register_conf")
 
     @redirectHttps
@@ -172,13 +164,11 @@ class SiteHandler(WebHandler):
     @strFields(message = "")
     @redirectHttps
     def forgotPassword(self, auth, message):
-        self.toUrl = self.cfg.basePath
         return self._write("forgotPassword", message = message)
 
     @strFields(message = "")
     @redirectHttps
     def forgotPasswordUI(self, auth, message):
-        self.toUrl = self.cfg.basePath
         return self._write("forgotPasswordUI", message = message)
 
     @redirectHttp
@@ -194,29 +184,12 @@ class SiteHandler(WebHandler):
 
     @redirectHttps
     def logout(self, auth):
-        self.session['visited'] = { }
-        self.session['visited'][self.req.hostname] = True
-        nexthop = self._getNextHop()
-        if nexthop and isinstance(self.session, SqlSession):
-            c = self.session.make_cookie()
-            c.expires = 0
-            self.req.err_headers_out.add('Set-Cookie', str(c))
-            setCacheControl(self.req, strict=True)
-            self._redirect("http://%s%scontinueLogout" % \
-                    (nexthop, self.cfg.basePath))
-        else:
-            self._clearAuth()
-            self._redirect("http://%s%s" % \
-                    (self.cfg.siteHost, self.cfg.basePath))
-
-    def continueLogout(self, auth):
         self._clearAuth()
-        self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+        self._redirectHttp()
 
     @requiresHttps
     @strFields(username = None)
     def resetPassword(self, auth, username):
-        self.toUrl = self.cfg.basePath
         userId = self.client.getUserIdByName(username)
         user = self.client.getUser(userId)
         self._resetPasswordById(userId)
@@ -226,7 +199,6 @@ class SiteHandler(WebHandler):
     @requiresHttps
     @strFields(username = None)
     def resetPasswordUI(self, auth, username):
-        self.toUrl = self.cfg.basePath
         userId = self.client.getUserIdByName(username)
         user = self.client.getUser(userId)
         self._resetPasswordById(userId)
@@ -265,41 +237,10 @@ class SiteHandler(WebHandler):
                     client.updateAccessedTime(auth.userId)
                 self.session.save()
 
-                # redirect storm if needed
-                nexthop = self._getNextHop()
-                prefix = 'http%s://' % (self.cfg.SSL and 's' or '')
-                if nexthop:
-                    self._redirect('%s%s%svalidateSession?%s' % (prefix, self.req.headers_in['Host'], self.cfg.basePath, urlencode((('nextHop', "http://%s%scontinueLogin?sid=%s" % (nexthop, self.cfg.basePath, self.session.id())),))))
-                else:
-                    self._redirect('%s%s%svalidateSession?%s' % (prefix, self.req.headers_in['Host'], self.cfg.basePath, urlencode((('nextHop', self.session['firstPage']),))))
+                self._redirectHttp()
 
         else:
             raise HttpNotFound
-
-    def continueLogin(self, auth, sid = None):
-        if sid:
-            self._session_start()
-            self._redirect('http://%s%svalidateSession?%s' % (self.req.headers_in['Host'], self.cfg.basePath, urlencode((('nextHop', self.session['firstPage']),))))
-        else:
-            raise HttpNotFound
-
-    def validateSession(self, auth, nextHop):
-        nextHop = unquote(nextHop)
-        if type(self.session) is dict:
-            if 'continueLogin' in nextHop or \
-                   self.cfg.siteDomainName.split(':')[0] == \
-                   self.cfg.projectDomainName.split(':')[0]:
-                return self._write('error', shortError = "Login Failed",
-                                   error = 'You cannot log in because your browser is blocking cookies to this site.')
-            else:
-                # the only time we ever need to redirect is if we're not on the
-                # secure host. secure host is first of two hops.
-                prefix = 'http%s://' % (self.cfg.SSL and 's' or '')
-                self._redirect("%s%s%sloginFailed" % \
-                               (prefix, self.cfg.secureHost,
-                                self.cfg.basePath))
-        else:
-            self._redirect(nextHop)
 
     def loginFailed(self, auth):
         if isinstance(self.session, SqlSession):
@@ -312,7 +253,6 @@ class SiteHandler(WebHandler):
 
     @strFields(id = None)
     def confirm(self, auth, id):
-        self.toUrl = self.cfg.basePath
         try:
             self.client.confirmUser(id)
         except users.ConfirmError:
@@ -323,13 +263,12 @@ class SiteHandler(WebHandler):
                 error = "Your account has already been confirmed.")
         else:
             if auth.authorized:
-                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+                self._redirectHttp()
             else:
                 return self._write("register_active")
 
     @strFields(id = None)
     def confirmUI(self, auth, id):
-        self.toUrl = self.cfg.basePath
         try:
             self.client.confirmUser(id)
         except users.ConfirmError:
@@ -340,7 +279,7 @@ class SiteHandler(WebHandler):
                 error = "Your account has already been confirmed.")
         else:
             if auth.authorized:
-                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+                self._redirectHttp()
             else:
                 return self._write("register_activeUI")
 
@@ -506,7 +445,7 @@ class SiteHandler(WebHandler):
 
         c = len(added)
         self._setInfo("Added key to %d %s" % (c, (c == 1) and pText or "%ss"%pText))
-        self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+        self._redirectHttp()
 
     @requiresAuth
     def newProject(self, auth):
@@ -625,7 +564,7 @@ class SiteHandler(WebHandler):
             helperfuncs.setCurrentProductVersion(self.session, projectId, versionId)
             self._setInfo("Successfully created %s %s '%s' version '%s'" % \
                               (isPrivate and "private" or "public", pText, title, version))
-            self._redirect("http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            self._redirectHttp('project/%s' % (hostname,))
         else:
             availablePlatforms = self.client.getAvailablePlatforms()
             kwargs = {'title': title, 
@@ -653,7 +592,7 @@ class SiteHandler(WebHandler):
             raise mint_error.PermissionDenied
 
         project.addMemberById(userId, level)
-        self._redirect("http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, project.getHostname()))
+        self._redirectHttp('project/%s' % (project.getHostname(),))
 
     @requiresAuth
     @intFields(id = None)
@@ -874,7 +813,7 @@ class SiteHandler(WebHandler):
         for x in results:
             p = self.client.getProject(x[0])
             row = {
-                'columns': [(p.getUrl(), p.getNameForDisplay()), timeDelta(x[4]), x[6] and timeDelta(x[6]) or "None"],
+                'columns': [(p.getUrl(self.baseUrl), p.getNameForDisplay()), timeDelta(x[4]), x[6] and timeDelta(x[6]) or "None"],
                 'desc':    p.getDescForDisplay(),
             }
 
@@ -1063,7 +1002,7 @@ class SiteHandler(WebHandler):
             #do the actual deletion
             self.user.cancelUserAccount()
             self._clearAuth()
-            self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp()
         else:
             return self._write("confirm", message = "Are you sure you want to close your account?",
                 yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
@@ -1072,13 +1011,13 @@ class SiteHandler(WebHandler):
         mode = maintenance.getMaintenanceMode(self.cfg)
         if mode == maintenance.NORMAL_MODE:
             # Maintenance is over, redirect to the homepage
-            self._redirect(self.cfg.basePath)
+            self._redirectHttp()
         elif mode == maintenance.EXPIRED_MODE:
             # rBuilder is disabled due to expired entitlement
             return self._write("maintenance", reason="expired")
         elif auth.admin:
             # Admins are bounced to the admin page
-            self._redirect(self.cfg.basePath + "administer")
+            self._redirectHttp("administer")
         else:
             # Everyone else gets the maintenance notice
             return self._write("maintenance", reason="maintenance")
@@ -1099,9 +1038,9 @@ class SiteHandler(WebHandler):
                 project = self.client.getProject(p[0])
 
                 item['title'] = project.getName()
-                item['link'] = project.getUrl()
+                item['link'] = project.getUrl(self.baseUrl)
                 item['content'] = "<p>A new %s named <a href=\"%s\">%s</a> has been created.</p>" % \
-                    (pText.lower(),project.getUrl(), project.getName())
+                    (pText.lower(),project.getUrl(self.baseUrl), project.getName())
                 desc = project.getDesc().strip()
                 if desc:
                     item['content'] += "%s description:"%pText.title()
@@ -1122,8 +1061,8 @@ class SiteHandler(WebHandler):
                 item['title'] = "%s" % release.name
                 if release.version:
                     item['title'] += " (version %s)" % (release.version)
-                item['link'] = 'http://%s%sproject/%s/release?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, release.getId())
-                item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> %s.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname, projectName, pText.lower())
+                item['link'] = '%sproject/%s/release?id=%d' % (self.baseUrl, hostname, release.getId())
+                item['content'] = "<p>A new release has been published by the <a href=\"%sproject/%s\">%s</a> %s.</p>\n" % (self.baseUrl, hostname, projectName, pText.lower())
                 item['content']  += "This release contains the following builds:"
                 item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]
@@ -1170,11 +1109,9 @@ class SiteHandler(WebHandler):
             self._addErrors("Please select a valid user adminstration action from the menu.")
 
         if deletedUser:
-            return self._redirect("http://%s%s" % (self.cfg.siteHost, \
-                    self.cfg.basePath))
+            return self._redirectHttp()
         else:
-            return self._redirect("http://%s%suserInfo?id=%d" %
-                    (self.cfg.siteHost, self.cfg.basePath, userId))
+            return self._redirectHttp("userInfo?id=%d" % (userId,))
 
     @requiresAuth
     @strFields(trvName = None, trvVersion = None)

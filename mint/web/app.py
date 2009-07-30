@@ -158,7 +158,6 @@ class MintApp(WebHandler):
             if isinstance(e, MaintenanceMode):
                 raise
             tb = logTraceback()
-            self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
             setCacheControl(self.req, strict=True)
             output = self._write("error", shortError = err_name, error = str(e),
@@ -197,9 +196,25 @@ class MintApp(WebHandler):
         # sanitize IP just in case it's a list of proxied hosts
         self.remoteIp = self.remoteIp.split(',')[0]
 
+        bareHost = fullHost.rsplit(':', 1)[0]
+        if protocol == 'http':
+            # When using HTTP, the SSL URL needs to be constructed using the
+            # port from the config file. It will only be set when running the
+            # testsuite.
+            sslHost = bareHost
+            if ':' in self.cfg.secureHost:
+                sslHost += ':' + self.cfg.secureHost.split(':')[-1]
+        else:
+            sslHost = fullHost
+
+        self.baseUrl = '%s://%s%s' % (protocol, fullHost, self.basePath)
+        self.httpsUrl = 'https://%s%s' % (sslHost, self.basePath)
+        self.hostName = fullHost.rsplit(':', 1)[0]
+        self.SITE = fullHost + '/'
+
         args = self.req.args and "?" + self.req.args or ""
         self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.uri + args
-        dots = fullHost.split(':')[0].split('.')
+        dots = bareHost.split('.')
         hostname = dots[0]
         domainname = '.'.join(dots[1:])
 
@@ -207,16 +222,11 @@ class MintApp(WebHandler):
         # and doesn't match cfg.hostName, try to request the project.
         if (hostname not in server.reservedHosts
                 and hostname != self.cfg.hostName
-                and domainname in (self.cfg.projectDomainName,
-                    self.cfg.externalDomainName)
+                and domainname == self.cfg.projectDomainName
                 and self.cfg.configured):
-            self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            self._redirectHttp('project/' + hostname)
 
         self.siteHost = self.cfg.siteHost
-
-        # redirect from domain.org to host.domain.org
-        if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
-            self._redirect('http://' + self.cfg.hostName + "." + self.cfg.siteDomainName)
 
         # mapping of url regexps to handlers
         urls = (
@@ -229,7 +239,6 @@ class MintApp(WebHandler):
             (r'^/',             self.siteHandler),
         )
 
-        self.SITE = self.siteHost + self.basePath
         self.isOwner = self.userLevel == userlevels.OWNER or self.auth.admin
 
         # Handle messages stashed in the session
@@ -266,7 +275,10 @@ class MintApp(WebHandler):
             'searchType':       self.searchType,
             'searchTerms':      '',
             'toUrl':            self.toUrl,
+            'baseUrl':          self.baseUrl,
             'basePath':         self.basePath,
+            'httpsUrl':         self.httpsUrl,
+            'hostName':         self.hostName,
             'project':          None,
             'SITE':             self.SITE,
             'userLevel':        self.userLevel,

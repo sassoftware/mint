@@ -1124,7 +1124,7 @@ class MintServer(object):
         userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or\
                                              'Unknown')
         projectUrl = 'http://%s%sproject/%s/' %\
-                      (self.cfg.projectSiteHost,
+                      (self.cfg.siteHost,
                        self.cfg.basePath,
                        project.getHostname())
 
@@ -2200,9 +2200,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             projectId = self.getBuild(buildId)['projectId']
             project = self.getProject(projectId)
             hostname = project.get('hostname')
-        url = util.joinPaths(self.cfg.projectSiteHost, self.cfg.basePath,
-                'project', hostname, 'build')
-        return "http://%s?id=%d" % (url, buildId)
+        if self.req:
+            target = self.req.hostname
+        else:
+            target = self.cfg.siteHost
+        return "http://%s%sproject/%s/build?id=%d" % (target,
+                self.cfg.basePath, hostname, buildId)
 
     @typeCheck(int)
     def getBuildPageUrl(self, buildId):
@@ -2557,7 +2560,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         'label' : project.getLabel(),
                         'conaryCfg' : cfgData}
 
-        hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.externalDomainName)
+        hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.siteDomainName)
 
         r['UUID'] = '%s-build-%d-%d' % (hostBase, buildId,
                 self.builds.bumpBuildCount(buildId))
@@ -2596,7 +2599,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             r['amiData'] = amiData
 
         r['outputUrl'] = 'http://%s.%s%s' % \
-            (self.cfg.hostName, self.cfg.externalDomainName, self.cfg.basePath)
+            (self.cfg.hostName, self.cfg.siteDomainName, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
@@ -3462,7 +3465,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         oldMessage = buildDict['statusMessage']
 
         uuid = '%s.%s-build-%d-%d' %(self.cfg.hostName,
-                                  self.cfg.externalDomainName, buildId, count)
+                                  self.cfg.siteDomainName, buildId, count)
 
         if (buildType != buildtypes.IMAGELESS 
             and oldStatus not in jobstatus.stoppedStatuses):
@@ -5225,11 +5228,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             callback = callback)
 
     def getDownloadUrlTemplate(self):
-        # joinPaths will render any occurance of // into / and therefore
-        # normalize the URL. on systems where pathsep is not / this may
-        # be inappropriate
-        url = util.joinPaths(self.cfg.projectSiteHost,
-                self.cfg.basePath, 'downloadImage')
-        downloadUrlTemplate = "http://%s?fileId=%%d" % url
-        return downloadUrlTemplate
+        if self.req:
+            hostname = self.req.hostname
+        else:
+            hostname = self.cfg.siteHost
+        return "http://%s%sdownloadImage?fileId=%%d" % (hostname, self.cfg.basePath)
 

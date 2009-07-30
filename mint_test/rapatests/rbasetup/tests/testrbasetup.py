@@ -83,7 +83,6 @@ companyName               Trancentral
 corpSite                  http://www.mumu.com/
 namespace                 klf
 projectDomainName         mumu.com
-externalDomainName        mumu.com
 SSL                       True
 secureHost                justified.mumu.com
 bugsEmail                 klfisgonnarocku@mumu.com

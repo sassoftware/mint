@@ -394,7 +394,7 @@
                             <img py:if="not isNew" src="${cfg.staticPath}/apps/mint/images/submit_button.png" title="Submit" />
                         </div>
                     </button>
-                    <a class="no-decoration" href="${project.getUrl()}" title="Cancel">
+                    <a class="no-decoration" href="${project.getUrl(baseUrl)}" title="Cancel">
                         <img src="${cfg.staticPath}/apps/mint/images/cancel_button.png" />
                     </a>
                     </p>

@@ -73,10 +73,10 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.assertEquals(build.getFiles(),
             [{'size': 0, 'sha1': '', 'title': 'File Title 1',
                 'fileUrls': [(5, 0, 'file1')], 'idx': 0, 'fileId': 5,
-                'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=5'},
+                'downloadUrl': 'http://test.rpath.local/downloadImage?fileId=5'},
              {'size': 0, 'sha1': '', 'title': 'File Title 2',
                  'fileUrls': [(6, 0, 'file2')], 'idx': 1, 'fileId': 6,
-                 'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=6'}])
+                 'downloadUrl': 'http://test.rpath.local/downloadImage?fileId=6'}])
 
         assert(build.getDefaultName() == 'group-trove=1.0-1-1')
 
@@ -710,7 +710,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         contents = re.sub('<date>.*</date>',
             '<date>@DATE@</date>', contents)
         self.failUnlessEqual(contents, """\
-<item><title>Image `Test Build' built (Foo version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; Foo&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; Stub Image&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; reallybigfile&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://test.rpath.local2/downloadImage?fileId=5"&gt;http://test.rpath.local2/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>http://test.rpath.local2/api/users/owner/notices/contexts/builder/5</guid></item>""")
+<item><title>Image `Test Build' built (Foo version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; Foo&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; Stub Image&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; reallybigfile&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://test.rpath.local/downloadImage?fileId=5"&gt;http://test.rpath.local/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>http://test.rpath.local/api/users/owner/notices/contexts/builder/5</guid></item>""")
 
     def _testSetBuildFilenamesSafe(self, db, data, hidden):
         ownerClient = self.getClient('owner')
@@ -736,7 +736,7 @@ class BuildTest(fixtures.FixturedUnitTest):
             [{'sha1': 'abcd', 'idx': 0, 'title': 'bar',
               'fileUrls': [(5, 0, self.cfg.imagesPath + '/foo/1/foo')],
               'fileId': 5, 'size': 10,
-              'downloadUrl': 'http://test.rpath.local2/downloadImage?fileId=5'}]
+              'downloadUrl': 'http://test.rpath.local/downloadImage?fileId=5'}]
         )
 
         # make sure the outputTokengets removed from the build data
@@ -881,23 +881,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute("SELECT urlId FROM UrlDownloads WHERE urlId=?", urlId)
         self.failUnlessEqual(cu.fetchone()[0], urlId)
-
-    @fixtures.fixture('Full')
-    def testDownloadChart(self, db, data):
-        raise testsuite.SkipTestException('We dont actually use charts')
-        client = self.getClient('admin')
-
-        build = client.getBuild(data['pubReleaseFinalId'])
-        buildFiles = build.getFiles()
-
-        urlId = buildFiles[0]['fileUrls'][0][0]
-        client.server._server.addDownloadHit(urlId, '1.2.3.4')
-
-        x = client.getDownloadChart(data['projectId'], 7, 'png')
-        self.failUnlessEqual(x[:4], '\x89PNG')
-
-        x = client.getDownloadChart(data['projectId'], 30, 'svg')
-        self.failUnless(x.strip().startswith('<?xml'))
 
     @testsuite.context('unfriendly')
     @fixtures.fixture('Empty')
@@ -1126,13 +1109,13 @@ class BuildTest(fixtures.FixturedUnitTest):
         buildId = data.get('buildId')
         build = client.getBuild(buildId)
         self.assertEquals(build.getBuildPageUrl(),
-                'http://test.rpath.local2/project/foo/build?id=1')
+                'http://test.rpath.local/project/foo/build?id=1')
         cu = db.cursor()
         cu.execute("UPDATE Projects SET hostname='bar' WHERE projectId=?",
                 data.get('projectId'))
         db.commit()
         self.assertEquals(build.getBuildPageUrl(),
-                'http://test.rpath.local2/project/bar/build?id=1')
+                'http://test.rpath.local/project/bar/build?id=1')
 
 class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
@@ -1463,89 +1446,6 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         # Should have created 1 build for Elsewhere stage
         self.assertEquals(1, len(buildIds))
 
-
-class BuildTestApplyTemplates(fixtures.FixturedProductVersionTest):
-
-    @fixtures.fixture("Empty")
-    def testApplyTemplatesNoBuildOptionsSpecified(self, db, data):
-        raise testsuite.SkipTestException("This may have been refactored out... skipping")
-
-        # One build definition specified.
-        buildDefinition = [dict(baseFlavor='is: x86',
-                                installableIsoImage=dict())]
-        templBuildDefs = \
-            builds.applyTemplatesToBuildDefinitions(buildDefinition)
-        isoTemplate = \
-            buildtemplates.getDataTemplateByXmlName('installableIsoImage')
-        isoTemplate = isoTemplate.getDefaultDict().copy()
-        self.assertEquals(isoTemplate,
-                          templBuildDefs[0]['installableIsoImage'])
-
-        # Multiple build definitions at once.
-        buildDefinition = [dict(baseFlavor='is: x86',
-                                installableIsoImage=dict()),
-                           dict(baseFlavor='is: x86_64',
-                                vmwareEsxImage=dict())]
-        templBuildDefs = \
-            builds.applyTemplatesToBuildDefinitions(buildDefinition)
-        esxTemplate = \
-            buildtemplates.getDataTemplateByXmlName('vmwareEsxImage')
-        esxTemplate = esxTemplate.getDefaultDict().copy()
-        self.assertEquals(isoTemplate,
-                          templBuildDefs[0]['installableIsoImage'])
-        self.assertEquals(esxTemplate,
-                          templBuildDefs[1]['vmwareEsxImage'])
-
-    @fixtures.fixture("Empty")
-    def testApplyTemplatesBuildOptionsSpecified(self, db, data):
-        raise testsuite.SkipTestException("This may have been refactored out... skipping")
-        # Multiple build definitions overriding build option defaults
-        buildDefinition = [dict(baseFlavor='is: x86',
-                                installableIsoImage=dict(autoResolve=False,
-                                        maxIsoSize='99999999')),
-                           dict(baseFlavor='is: x86_64',
-                                vmwareEsxImage=dict(freespace='42',
-                                        natNetworking='True',
-                                        baseFileName='/chupacabra/linux'))]
-        templBuildDefs = \
-            builds.applyTemplatesToBuildDefinitions(buildDefinition)
-        # verify that set options were preserved.
-        self.assertEquals(templBuildDefs[0]['installableIsoImage']['autoResolve'],
-                          'False')
-        self.assertEquals(templBuildDefs[0]['installableIsoImage']['maxIsoSize'],
-                          '99999999')
-        self.assertEquals(templBuildDefs[1]['vmwareEsxImage']['freespace'],
-                          '42')
-        self.assertEquals(templBuildDefs[1]['vmwareEsxImage']['natNetworking'],
-                          'True')
-        self.assertEquals(templBuildDefs[1]['vmwareEsxImage']['baseFileName'],
-                          '/chupacabra/linux')
-        isoTemplate = \
-            buildtemplates.getDataTemplateByXmlName('installableIsoImage')
-        isoTemplate = isoTemplate.getDefaultDict().copy()
-
-        esxTemplate = \
-            buildtemplates.getDataTemplateByXmlName('vmwareEsxImage')
-        esxTemplate = esxTemplate.getDefaultDict().copy()
-        # pop the set option from each, and verify that everything else is the
-        # same.
-        templBuildDefs[0]['installableIsoImage'].pop('autoResolve')
-        templBuildDefs[0]['installableIsoImage'].pop('maxIsoSize')
-        templBuildDefs[1]['vmwareEsxImage'].pop('freespace')
-        templBuildDefs[1]['vmwareEsxImage'].pop('natNetworking')
-        templBuildDefs[1]['vmwareEsxImage'].pop('baseFileName')
-
-        isoTemplate.pop('autoResolve')
-        isoTemplate.pop('maxIsoSize')
-
-        esxTemplate.pop('freespace')
-        esxTemplate.pop('natNetworking')
-        esxTemplate.pop('baseFileName')
-
-        self.assertEquals(isoTemplate,
-                          templBuildDefs[0]['installableIsoImage'])
-        self.assertEquals(esxTemplate,
-                          templBuildDefs[1]['vmwareEsxImage'])
 
 class BuildTestConaryRepository(MintRepositoryHelper):
     def testBuildTrovesResolution(self):

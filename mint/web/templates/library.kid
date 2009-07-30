@@ -49,9 +49,9 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
         <div id="recentBuild_items" style="display: $display">
           <ul>
             <li py:for="build in builds">
-                <div class="builds_project"><a class="builds_project" href="http://${cfg.projectSiteHost}${cfg.basePath}project/${build[1]}/">${build[0]}</a></div>
+                <div class="builds_project"><a class="builds_project" href="${cfg.basePath}project/${build[1]}/">${build[0]}</a></div>
                 <div class="builds_build">
-                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${build[1]}/build?id=${build[2].getId()}">${build[2].getTroveName()}=${build[2].getTroveVersion().trailingRevision().asString()} (${build[2].getArch()})</a>
+                    <a href="${cfg.basePath}project/${build[1]}/build?id=${build[2].getId()}">${build[2].getTroveName()}=${build[2].getTroveVersion().trailingRevision().asString()} (${build[2].getArch()})</a>
                 </div>
             </li>
           </ul>
@@ -124,14 +124,13 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
         </div>
         <div class="boxBody">
             <a class="newuiLink" href="/ui/" target="_blank">Use the new UI</a>
-            <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+            <form py:if="not auth.authorized" method="post" action="${httpsUrl}processLogin">
                 <p class="signinlabel">Username:<br /><input class="signinfield" type="text" name="username" /></p>
                 <p class="signinlabel">Password:<br /><input class="signinfield" type="password" name="password" /></p>
                 <p class="signinremember"><input class="signincheck" type="checkbox" name="rememberMe" value="1" /> Remember me on this computer</p>
                 <button id="signInSubmit" type="submit" class="img">
                     <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
                 </button>
-                <input type="hidden" name="to" value="${quote(toUrl)}" />
             </form>
             <div class="signinActions">
             <div id="newAccount" class="projectsPaneActionTop" py:if="not cfg.adminNewUsers">

@@ -256,7 +256,6 @@ class rBASetup(rAASrvPlugin):
         newCfg.postCfg()
         newCfg.SSL = True
         newCfg.secureHost = newCfg.siteHost
-        newCfg.externalDomainName = newCfg.siteDomainName
         # Post processing for first timers
         if firstTimeSetup:
             # Set the bugs / adminMail to be the initial admin account

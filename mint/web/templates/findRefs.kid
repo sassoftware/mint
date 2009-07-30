@@ -26,7 +26,7 @@ from mint.web.templatesupport import projectText
 
                 <ul py:def="referenceList(refList)" class="referenceList">
                     <li py:for="project, refs in refList.items()">
-                        <a href="${project.getUrl()}">${project.getName()}</a>
+                        <a href="${project.getUrl(baseUrl)}">${project.getName()}</a>
                         <ul>
                             <li py:for="ref in refs">
                                 <a href="${cfg.basePath}repos/${project.hostname}/troveInfo?t=${quote(ref[0])};v=${quote(ref[1])}">

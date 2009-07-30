@@ -26,7 +26,7 @@ from mint import users
 from mint import helperfuncs
 from mint import mint_error
 
-from mint_rephelp import MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_PROJECT_DOMAIN, FQDN
 
 from repostest import testRecipe
 from conary import versions
@@ -89,6 +89,7 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         projectHandler.versions = projectHandler.client.getProductVersionListForProduct(projectHandler.projectId)
         projectHandler.latestRssNews = {}
         projectHandler.toUrl = self.mintCfg.basePath
+        projectHandler.baseUrl = 'http://%s%s' % (FQDN, self.mintCfg.basePath)
         projectHandler.groupTrove = None
         projectHandler.membershipReqsList = None
         projectHandler._addErrors = types.MethodType(_addErrors,
@@ -121,6 +122,7 @@ class WebProjectBaseTest(mint_rephelp.WebRepositoryHelper):
         siteHandler.session = session()
         siteHandler.latestRssNews = {}
         siteHandler.membershipReqsList = None
+        siteHandler.baseUrl = 'http://%s%s' % (FQDN, self.mintCfg.basePath)
         siteHandler._addErrors = types.MethodType(_addErrors,
             siteHandler, siteHandler.__class__)
 
@@ -500,6 +502,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         self.ph.cfg = self.cfg
         self.ph.session = session()
         self.ph.req = mock.MockObject()
+        self.ph.baseUrl = 'http://%s%s' % (FQDN, self.mintCfg.basePath)
 
         def fakeRedirect(*args, **kwargs):
             raise HttpMoved
