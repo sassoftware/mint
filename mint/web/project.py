@@ -65,20 +65,6 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
         except ItemNotFound:
             raise HttpNotFound
 
-        # redirect endorsed (external) projects
-        # to the right url if accessed incorrectly,
-        # and vice-versa for internal (unendorsed) projects
-        if self.project.external:
-            if self.req.hostname != self.cfg.siteHost.split(':')[0]:
-                self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
-                    (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
-                self._redirect("http://" + self.cfg.siteHost + self.req.unparsed_uri)
-        else:
-            if self.req.hostname != self.cfg.projectSiteHost.split(':')[0]:
-                self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
-                    (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
-                self._redirect("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
-
         self.userLevel = self.project.getUserLevel(self.auth.userId)
         self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
         self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
@@ -112,7 +98,8 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
         """ Override this if necessary """
 
     def _predirect(self, path = "", temporary = False):
-        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
+        self._redirectHttp('project/%s/%s' % (self.project.hostname, path),
+                temporary=temporary)
 
     def help(self, auth):
         return self._write("help")
@@ -794,7 +781,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         dataDict = self._getPreviewData(pubrelease, latestBuild) 
 
         # URL
-        dataDict.update(url=self.project.getUrl() + 'latestRelease')
+        dataDict.update(url=self.project.getUrl(self.baseUrl) + 'latestRelease')
         # Memory
         dataDict.update(memory=latestBuild.getDataValue('vmMemory'))
         # Size compressed
@@ -922,7 +909,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
                 ([x for x in builds if x.buildType in buildType or \
                       flaggedBuilds.intersection(x.getDataDict())])
         except ItemNotFound:
-            self._redirect('http://%s%sproject/%s/releases' % (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname()))
+            self._predirect("releases")
         else:
             return self._write("pubrelease", release = release, builds = builds)
 
@@ -1332,7 +1319,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
         return_to = ''
         if self.req.headers_in.has_key('referer') and \
-                self.project.getUrl() in self.req.headers_in['referer']:
+                self.project.getUrl(self.baseUrl) in self.req.headers_in['referer']:
             return_to = self.req.headers_in['referer'].split('/')[-1]
 
         productVersion = self.client.getProductVersion(id)
@@ -1548,7 +1535,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self.project.delMemberById(auth.userId)
             self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
         if self.project.hidden:
-            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp()
         else:
             self._predirect("members")
 
@@ -1558,7 +1545,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self.project.delMemberById(auth.userId)
             self._setInfo("You are no longer a registered user of %s" % self.project.getNameForDisplay())
         if self.project.hidden:
-            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp()
         else:
             self._predirect("membersUI")
 
@@ -1736,7 +1723,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self.project.delMemberById(auth.userId)
             self._setInfo("You have resigned from %s %s" % \
                     (getProjectText().lower(), self.project.getNameForDisplay()))
-            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp()
         else:
             return self._write("confirm", message = "Are you sure you want to resign from this %s?"%getProjectText().lower(),
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
@@ -1750,10 +1737,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
             self.client.deleteProject(self.project.id)
             self._setInfo("%s '%s' has been deleted." % \
                     (getProjectText().title(), pName))
-            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
+            self._redirectHttp()
         else:
             pText = getProjectText().lower()
-            noLink = "http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.getHostname())
+            noLink = "%sproject/%s" % (self.cfg.basePath, self.project.getHostname())
             return self._write("confirm",
                 message = """Warning: Deleting this %s is an irreversible operation, and
                              will negatively impact all %ss and individuals that consume

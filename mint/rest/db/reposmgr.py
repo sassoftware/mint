@@ -421,7 +421,7 @@ class RepositoryManager(manager.Manager):
         else:
             protocol = 'http'
         path = '%srepos/%s/' % (self.cfg.basePath, hostname)
-        return "%s://%s%s" % (protocol, self.cfg.projectSiteHost, path)
+        return "%s://%s%s" % (protocol, self.cfg.siteHost, path)
 
     def _getNextMirrorOrder(self):
         cu = self.db.cursor()
@@ -491,7 +491,7 @@ class RepositoryManager(manager.Manager):
                     defaultPort = 443
                 else:
                     protocol = "http"
-                    mapHost = self.cfg.projectSiteHost
+                    mapHost = self.cfg.siteHost
                     defaultPort = 80
                 _, port = helperfuncs.hostPortParse(mapHost, defaultPort)
                 repoMap[host] = helperfuncs.rewriteUrlProtocolPort(url, 

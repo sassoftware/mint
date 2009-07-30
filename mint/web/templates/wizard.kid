@@ -21,7 +21,7 @@
                 <span py:replace="wizard_steps[step][0]"/>
             </li>
             <li class="wiz-exit">
-                <a href="${project.getUrl()}">Exit Appliance Creator</a>
+                <a href="${project.getUrl(baseUrl)}">Exit Appliance Creator</a>
             </li>
         </ul>
 </div>

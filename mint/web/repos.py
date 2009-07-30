@@ -810,8 +810,7 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
                 output = method(**d)
             except errors.OpenError, e:
                 self._addErrors(str(e))
-                self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost,
-                    self.cfg.basePath, self.project.hostname))
+                self._redirectHttp('project/%s/' % (self.project.hostname,))
             except conaryerrors.InvalidRegex, e:
                 return self._write("error",
                                    shortError = "Invalid Regular Expression",

@@ -85,7 +85,7 @@
                 <ul py:if="userProjects">
                     <li py:for="project, level, memberReq in userProjects">
                         <a
-                            href="${project.getUrl()}">${project.getNameForDisplay()}</a>
+                            href="${project.getUrl(baseUrl)}">${project.getNameForDisplay()}</a>
                         (${userlevels. names[level]})
                     </li>
                 </ul>

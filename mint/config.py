@@ -28,7 +28,7 @@ CONARY_CONFIG = os.getenv('CONARY_CONFIG_PATH', '/etc/conaryrc')
 # via "setup".
 keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
                            'companyName', 'corpSite', 'namespace',
-                           'projectDomainName', 'externalDomainName', 'SSL',
+                           'projectDomainName', 'SSL',
                            'secureHost', 'bugsEmail', 'adminMail',
                            'externalPasswordURL', 'authCacheTimeout',
                            'requireSigs', 'authPass', 'dbDriver', 'dbPath',
@@ -115,7 +115,6 @@ class MintConfig(ConfigFile):
     # Handler configuration
     basePath                = (CfgString, '/', "URI root for this rBuilder")
     cookieSecretKey         = (CfgString, None) # Not used in product
-    externalDomainName      = (CfgString, None)
     hostName                = (CfgString, None,
         "Hostname to access the rBuilder site. For example, <b><tt>rbuilder</tt></b>. "
         "(The complete URL to access rBuilder is constructed from the "
@@ -258,6 +257,7 @@ class MintConfig(ConfigFile):
     displaySha1             = (CfgBool, True)
     serializeCommits        = (CfgBool, True)
     projectAdmin            = (CfgBool, True)
+    externalDomainName      = (CfgString, None)
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
@@ -293,17 +293,11 @@ class MintConfig(ConfigFile):
 
         if not self.projectDomainName:
             self.projectDomainName = self.siteDomainName
-        if not self.externalDomainName:
-            self.externalDomainName = self.siteDomainName
 
         if self.hostName:
             self.siteHost = self.hostName + "." + self.siteDomainName
-            self.projectSiteHost = self.hostName + "." + self.projectDomainName
-            self.externalSiteHost = self.hostName + "." + self.externalDomainName
         else:
             self.siteHost = self.siteDomainName
-            self.projectSiteHost = self.projectDomainName
-            self.externalSiteHost = self.externalDomainName
 
         if not self.secureHost:
             self.secureHost = self.siteHost

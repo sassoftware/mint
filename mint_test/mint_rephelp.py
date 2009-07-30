@@ -77,7 +77,6 @@ else:
     MINT_PROJECT_DOMAIN = 'rpath.local2'
 
 FQDN = MINT_HOST + '.' + MINT_DOMAIN
-PFQDN = MINT_HOST + '.' + MINT_PROJECT_DOMAIN
 
 # Stop any redirection loops, if encountered, after 20 redirects.
 MAX_REDIRECTS = 20
@@ -185,7 +184,7 @@ def getIpAddresses():
     return ips
 
     
-def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
+def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     # write Mint configuration
     conaryPath = os.path.abspath(os.environ.get("CONARY_PATH", ""))
     mintPath = os.path.abspath(os.environ.get("MINT_PATH", ""))
@@ -198,7 +197,6 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
     cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, port)
     cfg.projectDomainName = "%s:%i" % (MINT_PROJECT_DOMAIN,
             sslDisabled and port or securePort)
-    cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, port)
     cfg.hostName = MINT_HOST
     cfg.basePath = '/'
 
@@ -253,12 +251,12 @@ def getMintCfg(reposDir, port, securePort, reposDbPort, useProxy):
         # /home/foo/hg/conary/[scripts/commitaction]
         scriptPath = os.path.join(conaryPath, 'scripts/commitaction')
 
-    cfg.commitAction = ("%s --username=mintauth --password=mintpass "
-            "--repmap='%%(repMap)s' --build-label=%%(buildLabel)s "
-            "--module='%s/mint/rbuilderaction.py --user=%%%%(user)s "
-                "--url=http://mintauth:mintpass@%s:%d/xmlrpc-private/'"
-            % (scriptPath, mintPath, MINT_HOST + '.' + MINT_PROJECT_DOMAIN,
-                port))
+    if serverRoot:
+        cfg.commitAction = ("%s --username=mintauth --password=mintpass "
+                "--repmap='%%(repMap)s' --build-label=%%(buildLabel)s "
+                "--module='%s/mint/rbuilderaction.py --user=%%%%(user)s "
+                    "--hostname=%%(fqdn)s --config=%s'"
+                % (scriptPath, mintPath, serverRoot + '/rbuilder.conf'))
     cfg.postCfg()
 
     cfg.hideFledgling = True
@@ -335,7 +333,6 @@ class MintApacheServer(rephelp.ApacheServer):
                       "%s/httpd.conf.in" % self.serverRoot)
             cmd = ("sed -e 's|@IMAGESPATH@|%s|g' -e 's|@MINTPATH@|%s|g'"
                     " -e 's|@MCPPATH@|%s|g'"
-                    " -e 's|@PRODDEFPATH@|%s|g'"
                     " -e 's|@CONARYPATH@|%s|g'"
                     " -e 's|@PCREATORPATH@|%s|g'"
                     " -e 's|@CATALOGSERVICEPATH@|%s|g'"
@@ -344,7 +341,7 @@ class MintApacheServer(rephelp.ApacheServer):
                       (os.path.join(self.reposDir, "jobserver",
                                     "finished-images"),
                        os.environ['MINT_PATH'],
-                       os.environ['MCP_PATH'], os.environ['PRODUCT_DEFINITION_PATH'],
+                       os.environ['MCP_PATH'],
                        os.environ['CONARY_PATH'], 
                        os.environ['PACKAGE_CREATOR_SERVICE_PATH'],
                        os.environ['CATALOG_SERVICE_PATH'],
@@ -391,8 +388,8 @@ class MintApacheServer(rephelp.ApacheServer):
                 reposDBPort = self.reposDB.port
             else:
                 reposDBPort = None
-            self.mintCfg = getMintCfg(self.reposDir, self.port, self.securePort,
-                                      reposDBPort, self.useProxy)
+            self.mintCfg = getMintCfg(self.reposDir, self.serverRoot,
+                    self.port, self.securePort, reposDBPort, self.useProxy)
             mintCfg = self.mintCfg
         else:
             self.mintCfg = mintCfg
@@ -488,7 +485,7 @@ class RestDBMixIn(object):
             self._startDatabase()
         dbPort = getattr(self.mintDb, 'port', None)
         if not self.mintCfg:
-            self.mintCfg = getMintCfg(self.workDir, 0, 0, dbPort, False)
+            self.mintCfg = getMintCfg(self.workDir, None, 0, 0, dbPort, False)
         from mint.rest.db import database as restdb
         from mint.db import database
         db = database.Database(self.mintCfg)
@@ -1050,17 +1047,16 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
 
 class BaseWebHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def getServerData(self):
-        server = self.getServerHostname()
         # spawn a server if needed, then point our code at it...
         if self.mintServers.servers[0] is None:
             self.startMintServer()
-        return server, self.mintServers.servers[0].port
+        return FQDN, self.mintServers.servers[0].port
 
     def getServerHostname(self):
-        return '%s.%s' % (MINT_HOST, MINT_DOMAIN)
+        return FQDN
 
     def getProjectServerHostname(self):
-        return '%s.%s' % (MINT_HOST, MINT_PROJECT_DOMAIN)
+        return FQDN
 
     def getProjectHostname(self, projectHostname):
         return '%s.%s' % (projectHostname, MINT_PROJECT_DOMAIN)

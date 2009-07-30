@@ -36,7 +36,8 @@ class WebDecoratorTest(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.cfg = config.MintConfig()
-        self.cfg.secureHost = "www.secure.com"
+        self.cfg.siteDomainName = "insecure.com:8080"
+        self.cfg.secureHost = "www.secure.com:8443"
         self.cfg.namespace = 'yournamespace'
 
     def _redirect(self, *args, **kwargs):
@@ -53,28 +54,27 @@ class WebDecoratorTest(unittest.TestCase):
         self.assertRaises(mint_error.PermissionDenied, w, self)
 
     def testRedirectHttp(self):
-        self.req = FakeReq(ssl = True)
+        self.req = FakeReq(ssl = False)
         w = decorators.redirectHttp(dummy)
         assert(w(self) == True)
 
         self.req = FakeReq(ssl = True)
         self.cfg.SSL = True
         w = decorators.redirectHttp(dummy)
-        assert(w(self) == "http://www.example.com/hello")
+        self.assertEquals(w(self), "http://www.example.com:8080/hello")
 
     def testRedirectHttps(self):
         self.req = FakeReq(ssl = True)
         w = decorators.redirectHttps(dummy)
         assert(w(self) == True)
 
-        self.req = FakeReq(ssl = True)
+        self.req = FakeReq(ssl = False)
         self.cfg.SSL = True
         w = decorators.redirectHttps(dummy)
-        assert(w(self) == "https://www.secure.com/hello")
+        self.assertEquals(w(self), "https://www.example.com:8443/hello")
 
-        self.req.parsed_uri[5] = 443
         self.req.hostname = "www.secure.com"
-        assert(w(self) == "https://www.secure.com/hello")
+        self.assertEquals(w(self), "https://www.secure.com:8443/hello")
 
     def testRequiresAdmin(self):
         auth = Authorization(admin = False)

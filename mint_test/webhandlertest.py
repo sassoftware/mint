@@ -13,12 +13,11 @@ from mint.web import webhandler
 from mint_rephelp import FakeRequest
 
 class FakeConfig(object):
-    __slots__ = [ 'basePath', 'hostname', 'externalDomainName' ]
+    __slots__ = [ 'basePath', 'hostname', ]
 
     def __init__(self, basepath, hostname, extdomainname):
         self.basePath = basepath
         self.hostname = hostname
-        self.externalDomainName = extdomainname
 
 class WebHandlerTestWithPort(unittest.TestCase):
 
@@ -26,6 +25,7 @@ class WebHandlerTestWithPort(unittest.TestCase):
         self.wh = webhandler.WebHandler()
         self.wh.cfg = FakeConfig('/', 'foo', 'test.local:8080')
         self.wh.req = FakeRequest('foo.test.local:8080', 'GET', '/nowhere')
+        self.wh.baseUrl = 'http://foo.test.local:8080/'
 
     def testRedirectHttp(self):
         self.assertRaises(webhandler.HttpMoved, self.wh._redirectHttp,
@@ -58,6 +58,7 @@ class WebHandlerTestWithoutPort(unittest.TestCase):
         self.wh = webhandler.WebHandler()
         self.wh.cfg = FakeConfig('/', 'foo', 'test.local')
         self.wh.req = FakeRequest('foo.test.local', 'GET', '/nowhere')
+        self.wh.baseUrl = 'http://foo.test.local/'
 
     def testRedirectHttpWOP(self):
         self.assertRaises(webhandler.HttpMoved, self.wh._redirectHttp,

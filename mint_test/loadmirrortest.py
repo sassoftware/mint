@@ -145,7 +145,7 @@ class LoadMirrorUnitTest(unittest.TestCase):
             mock.mockMethod(lm._addUsers)
             lm.cfg.namespace = 'yournamespace'
             lm.cfg.dataPath = tempfile.mkdtemp()
-            lm.cfg.projectSiteHost = 'test.rpath.local'
+            lm.cfg.siteHost = 'test.rpath.local'
             lm.cfg.projectDomainName = 'rpath.local'
 
             lm.client = mock.MockObject(getLabelsForProject = lambda id: ({0: ('test.rpath.local', id)}, None, None, None))

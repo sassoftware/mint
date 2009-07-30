@@ -24,7 +24,7 @@ class EmailNotifier(manager.Manager):
                                              'Unknown')
         action = event[len('UserProduct'):]
         projectUrl = 'http://%s%sproject/%s/' %\
-                      (self.cfg.projectSiteHost,
+                      (self.cfg.siteHost,
                        self.cfg.basePath,
                        project.hostname)
 

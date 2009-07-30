@@ -36,7 +36,7 @@
     <div py:def="projectResourcesMenu(readOnlyVersion=False)" id="project" class="palette">
         <?python
             lastchunk = req.uri[req.uri.rfind('/')+1:]
-            projectUrl = project.getUrl()
+            projectUrl = project.getUrl(baseUrl)
             projectAdmin = project.projectAdmin(auth.username)
         ?>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
@@ -85,7 +85,7 @@
 
     <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
         <?python
-            projectUrl = project.getUrl()
+            projectUrl = project.getUrl(baseUrl)
         ?>
         <div py:if="releases" class="palette" id="releases">
             <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
@@ -139,7 +139,7 @@
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_user_right.png" alt="" />
         <div class="userBoxHeader">
             <div class="userBoxHeaderText">
-                <a class="signout" href="http://${cfg.siteHost}${cfg.basePath}logout">( Sign Out )</a>
+              <a class="signout" href="${baseUrl}logout">( Sign Out )</a>
                 <span class="userBoxBracket">[</span> ${auth.username} <span class="userBoxBracket">]</span>
             </div>
         </div>
@@ -174,7 +174,7 @@
                          py:strip="True">
                          <div py:strip="True" py:if="level in projectDict">
                              <optgroup label="--- ${title} ---" />
-                             <option py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name.lower())" value="${project.getUrl()}" py:content="project.getName()" py:attrs="{'selected': (project.id == currentProjectId) and 'selected' or None}" />
+                             <option py:for="project, memberReqs in sorted(projectDict[level], key = lambda x: x[0].name.lower())" value="${project.getUrl(baseUrl)}" py:content="project.getName()" py:attrs="{'selected': (project.id == currentProjectId) and 'selected' or None}" />
                          </div>
                     </div>
                 </select>
@@ -183,7 +183,7 @@
                 <label for="membershipReqsSelector">Pending requests:</label>
                 <select id="membershipReqsSelector" onchange="javascript:if (this.value!='--') document.location = this.value;">
                     <option value="--">--</option>
-                    <option py:for="project in sorted(membershipReqsList, key = lambda x: x.name.lower())" value="${project.getUrl()}members">${project.getName()}</option>
+                    <option py:for="project in sorted(membershipReqsList, key = lambda x: x.name.lower())" value="${project.getUrl(baseUrl)}members">${project.getName()}</option>
                 </select>
             </div>
             <div id="newProject" class="projectsPaneAction" py:if="auth.admin or not cfg.adminNewProjects">
@@ -271,7 +271,7 @@
         <img class="right" src="${cfg.staticPath}apps/mint/images/block_topright.gif" alt="" />
         <div class="pageBoxHeader">Download NOW</div>
         <div class="pageBoxLinks">
-           <a href="${project.getUrl()}latestRelease">( Additional Options... )</a> <a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types?version=${constants.mintVersion}" target="_blank">( Which one do I want? )</a>
+           <a href="${project.getUrl(baseUrl)}latestRelease">( Additional Options... )</a> <a href="http://wiki.rpath.com/wiki/rBuilder:Build_Types?version=${constants.mintVersion}" target="_blank">( Which one do I want? )</a>
 
             <ul class="downloadList">
                 <div py:for="build in builds" py:strip="True">

@@ -42,12 +42,25 @@ def requiresHttps(func):
     requiresHttpsWrapper.__wrapped_func__ = func
     return requiresHttpsWrapper
 
+
+def _makeURL(schema, req, configuredHost):
+    """
+    Redirect C{req} to its HTTP/HTTPS counterpart (C{schema}). If
+    C{configuredHost} has a port, that will be used to build the host part of
+    the URL.
+    """
+    newHost = req.hostname.rsplit(':', 1)[0]
+    if ':' in configuredHost:
+        newHost += ':' + configuredHost.split(':')[-1]
+    return '%s://%s%s' % (schema, newHost, req.unparsed_uri)
+
+
 def redirectHttp(func):
     def redirectHttpWrapper(self, *args, **kwargs):
-        if self.req.subprocess_env.get('HTTPS', 'off') != 'off' and self.cfg.SSL:
-            return self._redirect('http://%s%s' % ( \
-                self.req.headers_in.get('host', self.req.hostname),
-                self.req.unparsed_uri))
+        if (self.req.subprocess_env.get('HTTPS', 'off') != 'off' and
+                self.cfg.SSL):
+            return self._redirect(_makeURL('http', self.req,
+                self.cfg.siteDomainName))
         else:
             return weak_signature_call(func, self, *args, **kwargs)
 
@@ -56,16 +69,10 @@ def redirectHttp(func):
 
 def redirectHttps(func):
     def redirectHttpsWrapper(self, *args, **kwargs):
-        reqPort = self.req.parsed_uri[apache.URI_PORT]
-        reqHost = self.req.headers_in.get('host', self.req.hostname)
-        if ':' not in reqHost and reqPort and reqPort != 443:
-            hostname = '%s:%s' % (reqHost, reqPort)
-        else:
-            hostname = reqHost
-        if (self.req.subprocess_env.get('HTTPS', 'off') != 'on' or \
-            hostname != self.cfg.secureHost) and self.cfg.SSL:
-            return self._redirect('https://%s%s' % \
-                    (self.cfg.secureHost, self.req.unparsed_uri))
+        if (self.req.subprocess_env.get('HTTPS', 'off') != 'on' and
+                self.cfg.SSL):
+            return self._redirect(_makeURL('https', self.req,
+                self.cfg.secureHost))
         else:
             return weak_signature_call(func, self, *args, **kwargs)
 

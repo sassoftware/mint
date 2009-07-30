@@ -6,7 +6,7 @@
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, PFQDN
+from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN
 
 from mint.lib import database
 from mint import server
@@ -64,7 +64,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
         project = adminClient.getProject(data['projectId'])
 
         x = adminClient.getFullRepositoryMap()
-        self.failUnlessEqual({'foo.%s' % MINT_PROJECT_DOMAIN: 'http://%s/repos/foo/' % PFQDN}, x)
+        self.failUnlessEqual({'foo.%s' % MINT_PROJECT_DOMAIN: 'http://%s/repos/foo/' % FQDN}, x)
 
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "foo.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,

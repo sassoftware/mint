@@ -246,7 +246,7 @@ class RepositoryHandle(object):
             host = self._cfg.secureHost
         else:
             protocol, port = 'http', 80
-            host = self._cfg.projectSiteHost
+            host = self._cfg.siteHost
 
         if ':' in host:
             host, port = host.split(':')

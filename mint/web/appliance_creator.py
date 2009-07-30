@@ -111,7 +111,7 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         return sesH
 
     def _apcredirect(self, path = "", temporary = False):
-        self._redirect("http://%s%sapc/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path), temporary = temporary)
+        self._redirectHttp('apc/%s/%s' % (self.project.hostname, path), temporary=temporary)
 
     @writersOnly
     @output_handler(redirect='landing')

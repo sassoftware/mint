@@ -74,7 +74,7 @@ onload = "javascript:;"
                     </a>
                 </div>
                 <div id="topRight">
-                    <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
+                    <form action="${cfg.basePath}search" method="get" id="searchForm">
                         <div class="searchParams">
                             <label class="search"><strong>SEARCH</strong> for a...</label>
                             <input id="typeProject" type="radio" name="type" value="${projectText().title()}s" py:attrs="{'checked': (searchType == projectText().title()+'s') and 'checked' or None}" />
@@ -88,7 +88,7 @@ onload = "javascript:;"
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button>
                             <input class="searchField" name="search" id="searchLabel" type="text" value="$searchTerms" /><br/>
                             <div id="browseText">
-                                <strong>BROWSE</strong> ... &nbsp;&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}search?search=&amp;type=${projectText().title()}s"><strong>${projectText().capitalize()}s</strong></a><span py:strip="True" py:if="auth.admin">,&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users"><strong>Users</strong></a>,</span><span py:strip="True" py:if="auth.authorized">&nbsp;or&nbsp;<a target="_blank" href="https://${SITE}cloudCatalog/"><strong>rPath Management Console</strong></a></span>
+                                <strong>BROWSE</strong> ... &nbsp;&nbsp;<a href="${cfg.basePath}search?search=&amp;type=${projectText().title()}s"><strong>${projectText().capitalize()}s</strong></a><span py:strip="True" py:if="auth.admin">,&nbsp;<a href="${cfg.basePath}users"><strong>Users</strong></a>,</span><span py:strip="True" py:if="auth.authorized">&nbsp;or&nbsp;<a target="_blank" href="https://${SITE}cloudCatalog/"><strong>rPath Management Console</strong></a></span>
                             </div>
                         </div>
                     </form>

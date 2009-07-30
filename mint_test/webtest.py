@@ -13,7 +13,7 @@ import os
 import urlparse
 
 import mint_rephelp
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
+from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN, FQDN
 import rephelp
 
 from mint import mint_error
@@ -50,25 +50,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testNoLocalRedirect(self):
         page = self.assertCode('', code = 200)
 
-    def testRedirect(self):
-        client, userId = self.quickMintUser('foouser', 'foopass')
-        self.setOptIns('foouser')
-        projectId = self.newProject(client)
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        # pick a page to log in from
-        pageURI = '/project/testproject/releases'
-        page = self.fetch(pageURI)
-
-        page = page.postForm(1, self.fetchWithRedirect,
-                {'username':'foouser', 'password':'foopass'})
-
-        self.failIf(pageURI not in page.url,
-                    "rBO explicit redirects are improper. "
-                    "Web browsers will be confused.")
-
     def testLogin(self):
         self.quickMintUser('foouser','foopass')
 
@@ -83,58 +64,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
-
-    def testLoginBlockCookie(self):
-        self.quickMintUser('foouser', 'foopass')
-
-        self.accept_cookies = False
-        page = self.fetch('/')
-        page = page.postForm(1, self.fetchWithRedirect,
-                {'username': 'foouser', 'password': 'foopass'})
-        self.failIf('You cannot log in' not in page.body,
-                    "Browser blocked cookies and didn't go to error page.")
-
-    def testLoginBlockOneCookie(self):
-        client, userId = self.quickMintUser('foouser', 'foopass')
-        projectId = self.newProject(client)
-        project = client.getProject(projectId)
-
-        siteUrl = 'http://' + self.mintCfg.siteHost + self.mintCfg.basePath
-        projectUrl = 'http://' +  mint_rephelp.MINT_HOST + '.' + \
-                      mint_rephelp.MINT_PROJECT_DOMAIN + ":" + str(self.port) \
-                      + self.mintCfg.basePath
-
-        siteHost = mint_rephelp.MINT_HOST + '.' + mint_rephelp.MINT_DOMAIN
-        projectHost = mint_rephelp.MINT_HOST + '.' + \
-                      mint_rephelp.MINT_PROJECT_DOMAIN
-
-        for url in (siteUrl, projectUrl):
-            for host in (siteHost, projectHost):
-                self.cookies.clear()
-                page = self.fetchWithRedirect(url)
-
-                page = page.postForm(1, self.fetch,
-                                     {'username': 'foouser',
-                                      'password': 'foopass'})
-
-                depth = 0
-                while page.code in (301, 302):
-                    assert (depth < 20), 'Max Depth Exceeded'
-                    if host in self.cookies:
-                        # delete only one of two cookies.
-                        del self.cookies[host]
-                    page = self.fetch( \
-                        urlparse.urljoin(url, page.headers['Location']))
-                    depth += 1
-
-                self.failIf('You cannot log in' not in page.body,
-                            "user hit %s and deleted cookie: %s, but "
-                            "didn't trigger error" % (url, host))
-
-                # ensure project page is not logged in (project domain cookie)
-                self.assertNotContent("%sproject/%s" % (self.mintCfg.basePath, project.hostname), '/logout')
-                # ensure front page is not logged in. (site domain cookie)
-                self.assertNotContent(self.mintCfg.basePath, '/logout')
 
     def testLoginWrongUser(self):
         page = self.fetch('/')
@@ -166,16 +95,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.fetch('/')
         page.registerExpectedCookie('pysid')
 
-        self.failUnless('%s.%s' % (self.mintCfg.hostName, MINT_DOMAIN) \
-                in self.cookies.keys(),
-                "%s missing from cookies" % MINT_DOMAIN)
-        if (MINT_PROJECT_DOMAIN != MINT_DOMAIN):
-            self.failUnless('%s.%s' % (self.mintCfg.hostName,
-                MINT_PROJECT_DOMAIN) in self.cookies.keys(),
-                "%s missing from cookies" % MINT_PROJECT_DOMAIN)
-            self.assertEqual(self.cookies['%s.%s' % (self.mintCfg.hostName,
-                MINT_DOMAIN)], self.cookies['%s.%s' % (self.mintCfg.hostName,
-                MINT_PROJECT_DOMAIN)], "Cookies should be identical")
+        self.failUnless(FQDN in self.cookies.keys(),
+                "%s missing from cookies" % FQDN)
 
     def testLoginNonvolatileSession(self):
         self.quickMintUser('foouser','foopass')
@@ -372,24 +293,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                  'privacy':   'True'})
         self.failIf('An account with that username already exists.' not in page.body,
                     'Registration error not detected.')
-
-    def testLoginRedirect(self):
-        # test to make sure that a login on one page
-        # will redirect you back to that page after login
-        client, userId = self.quickMintUser('foouser', 'foopass')
-        self.setOptIns('foouser')
-
-        self.newProject(client)
-
-        # we are working with the project server right now
-        self.setServer(self.getProjectServerHostname(), self.port)
-
-        page = self.fetch('/project/testproject/')
-        startUrl = page.url
-
-        page = page.postForm(1, self.fetchWithRedirect, 
-                {'username': 'foouser', 'password': 'foopass'})
-        assert(page.url.endswith(startUrl))
 
     def testNewProject(self):
         client, userId = self.quickMintUser('foouser','foopass')

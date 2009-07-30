@@ -26,7 +26,7 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         self.userId = userId
         self.store = notices_store.createStore(
             os.path.join(cfg.dataPath, "notices"), userId)
-        self.hostName = cfg.projectSiteHost
+        self.hostName = cfg.siteHost
 
     def _notify(self, troveBuilder, job):
         troveBinaries = self.getJobBuiltTroves(troveBuilder, job)

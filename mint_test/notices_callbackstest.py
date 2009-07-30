@@ -158,7 +158,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
 class DummyConfig(object):
     def __init__(self, workDir):
         self.dataPath = workDir
-        self.projectSiteHost = "siteproject.com"
+        self.siteHost = "siteproject.com"
 
 class FakeJob(object):
     tstamp = 1234567890.1

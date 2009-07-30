@@ -196,11 +196,11 @@ class Project(database.TableObject):
             mlists = mailinglists.MailingListClient(mlbaseurl + 'RPC2')
             mlists.adopt_lists(auth, mlpasswd, self.getHostname())
 
-    def getUrl(self):
-        if self.external: # we control all external projects, so use externalSiteHost
-            return "http://%s%sproject/%s/" % (self.server._cfg.externalSiteHost, self.server._cfg.basePath, self.hostname)
-        else:
-            return "http://%s%sproject/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
+    def getUrl(self, baseUrl=None):
+        if not baseUrl:
+            baseUrl = 'http://%s%s' % (self.server._cfg.siteHost,
+                    self.server._cfg.basePath)
+        return '%sproject/%s/' % (baseUrl, self.hostname)
 
     def getBuilds(self):
         return self.server.getBuildsForProject(self.id)

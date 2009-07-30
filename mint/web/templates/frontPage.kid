@@ -19,9 +19,9 @@ from mint.web.templatesupport import projectText
         <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
+              title="New ${cfg.productName} Projects" href="${baseUrl}rss?feed=newProjects" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
+          title="New ${cfg.productName} Releases" href="${baseUrl}rss?feed=newReleases" />
     </head>
     <body>
         <div class="fullpage">
@@ -69,7 +69,7 @@ from mint.web.templatesupport import projectText
                         <td>
                         <ul type="none">
                             <li py:for="project in popularProjects">
-                            <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
+                            <a href="${cfg.basePath}project/${project['hostname']}/">
                                 ${truncateForDisplay(project['name'], maxWordLen=30)}
                             </a></li>
                         </ul>
@@ -78,7 +78,7 @@ from mint.web.templatesupport import projectText
                         <td>
                         <ul type="none">
                             <li py:for="project in topProjects">
-                            <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project['hostname']}/">
+                            <a href="${cfg.basePath}project/${project['hostname']}/">
                                 ${truncateForDisplay(project['name'], maxWordLen=30)}
                             </a></li>
                         </ul>
@@ -93,7 +93,7 @@ from mint.web.templatesupport import projectText
                                 releaseName = release.name
                                 shorterReleaseName = truncateForDisplay(releaseName, maxWords=8)
                             ?>
-                            <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${shorterReleaseName}<span py:if="release.version" style="font-size: smaller;"> (Version ${release.version})</span></a></li>
+                            <a href="${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${shorterReleaseName}<span py:if="release.version" style="font-size: smaller;"> (Version ${release.version})</span></a></li>
                          </ul>
                          </td>
                     </tr>

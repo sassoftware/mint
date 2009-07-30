@@ -11,7 +11,7 @@ import os
 import mock
 import StringIO
 
-from mint_rephelp import MINT_PROJECT_DOMAIN, PFQDN
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import constants
 from mint.lib import mintutils
