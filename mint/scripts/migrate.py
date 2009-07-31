@@ -8,6 +8,8 @@ import sys
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
+from mint import userlevels
+from mint.db import repository
 from mint.db import schema
 
 log = logging.getLogger(__name__)
@@ -15,6 +17,9 @@ log = logging.getLogger(__name__)
 
 # SCHEMA Migration
 class SchemaMigration(migration.SchemaMigration):
+    db = None
+    cfg = None
+    msg = None
 
     def __init__(self, db, cfg=None):
         migration.SchemaMigration.__init__(self, db)
@@ -622,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 2)
+    Version = (48, 3)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -673,6 +678,43 @@ class MigrateTo_48(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""UPDATE Projects SET prodType = 'Repository'
             WHERE prodType IN ('', NULL)""")
+        return True
+
+    # 48.3
+    # - Create missing roles for repositories. (RBL-5019)
+    def migrate3(self):
+        manager = repository.RepositoryManager(self.cfg, self.db, bypass=True)
+        for repos in manager.iterRepositories():
+            if not repos.hasDatabase:
+                continue
+            log.info("Checking repository %s for standardized roles",
+                    repos.fqdn)
+
+            if repos.isExternal:
+                neededRoles = [repository.ROLE_PERMS[userlevels.ADMIN]]
+            else:
+                neededRoles = repository.ROLE_PERMS.values()
+
+            try:
+                presentRoles = repos.getRoleList()
+                numAdded = 0
+                for role, write, admin in neededRoles:
+                    if role in presentRoles:
+                        continue
+                    repos.addRoleWithACE(role, write=write, remove=admin,
+                            mirror=admin, admin=admin)
+                    numAdded += 1
+                if numAdded:
+                    log.info("Added %d roles to project %s", numAdded,
+                            repos.fqdn)
+            except:
+                log.exception("Error checking roles of project %s -- the "
+                        "project may not function correctly.",  repos.fqdn)
+
+            # Don't leave reposdb connections hanging around or we'll run out
+            # before we hit all the projects.
+            manager.close()
+
         return True
 
 

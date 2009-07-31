@@ -528,6 +528,10 @@ class RepositoryHandle(object):
 
     # Repository management
     @withNetServer
+    def getRoleList(self, repos):
+        return set(repos.auth.getRoleList())
+
+    @withNetServer
     def addRoleWithACE(self, repos, role,
             write=False, remove=False, mirror=False, admin=False):
         try:

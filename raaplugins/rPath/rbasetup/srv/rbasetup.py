@@ -205,7 +205,7 @@ class rBASetup(rAASrvPlugin):
             newKey = auth.generate()
             if newKey is None:
                 return {'errors': [ 'Failed to generate entitlement', ] }
-            self.rootserver.configure.entitlements.saveKey(newKey)
+            self.server.setNewEntitlement(newKey)
 
             msg = "Key successfully generated; your rBuilder ID is %s .\n" % auth.rBuilderId
             log.info(msg)
