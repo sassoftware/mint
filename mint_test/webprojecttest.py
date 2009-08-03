@@ -502,7 +502,6 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         self.ph.cfg = self.cfg
         self.ph.session = session()
         self.ph.req = mock.MockObject()
-        self.ph.baseUrl = 'http://%s%s' % (FQDN, self.mintCfg.basePath)
 
         def fakeRedirect(*args, **kwargs):
             raise HttpMoved
@@ -517,6 +516,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         self.ph.userLevel = self.project.getUserLevel(self.userId)
         self.ph.auth = self.auth = users.Authorization(
                 userId=self.userId, username=roleName, authorized=True)
+        self.ph.baseUrl = 'http://%s%s' % (FQDN, self.cfg.basePath)
 
 
     @fixtures.fixture('Full')

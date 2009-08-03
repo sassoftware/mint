@@ -245,35 +245,6 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                       False, False, False)
             nc.changePassword(self.cfg.buildLabel, 'anonymous', 'anonymous')
 
-    def testReposAccessViaStandardPath(self):
-        client, userId = self.quickMintAdmin("testuser", "testpass")
-        projectId = self.newProject(client, "testproject")
-
-        project = client.getProject(projectId)
-
-        projectFQDN = self.getProjectHostname("testproject")
-
-        # Note this test REQUIRES you to have the following hostnames in
-        # your /etc/hosts:
-        #
-        # 127.0.0.1 testproject.rpath.local
-        # 127.0.0.1 testproject.rpath.local2
-        #
-        # This check will skip the test if it can't resolve the hostname
-        try:
-            from socket import gethostbyname
-            gethostbyname(projectFQDN)
-        except:
-            raise testsuite.SkipTestException("add %s to your /etc/hosts" % \
-                    projectFQDN)
-
-        self.setServer(projectFQDN, self.port)
-
-        # fetch from both URLs, one with and one without the trailing slash
-        # both should redirect
-        self.assertCode('/conary', code = 301)
-        self.assertCode('/conary/', code = 301)
-
     def testReferencesAndDescendants(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
         projectId = self.newProject(client, "testproject")
