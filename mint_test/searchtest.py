@@ -120,7 +120,7 @@ class SearchHelperTest(unittest.TestCase):
                                  ' AND (UPPER(bah) LIKE UPPER(?) ) '\
                                  ' AND (UPPER(bah) LIKE UPPER(?) ) '\
                                  ' AND (UPPER(bah) LIKE UPPER(?) ) '\
-                                 ' AND (UPPER(bah) LIKE UPPER(?) )  ',
+                                 ' AND (UPPER(bah) LIKE UPPER(?) )',
                                  ['%this%', '%is%', '% %', '%a%', '%test%']))
 
 class BrowseTest(fixtures.FixturedUnitTest):
