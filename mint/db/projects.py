@@ -319,8 +319,6 @@ class ProjectsTable(database.KeyedTable):
                                               AND timePublished IS NOT NULL)"""
 
         whereClause = searcher.Searcher.where(terms, searchcols, extras, extraSubs)
-        # multi-layer hack, yay (psql doesn't like "1" here)
-        whereClause = whereClause[0].replace('WHERE 1  AND', 'WHERE'), whereClause[1]
 
         if byPopularity:
             orderByClause = 'rank ASC'
