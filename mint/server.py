@@ -3461,29 +3461,64 @@ If you would not like to be %s %s of this project, you may resign from this proj
         oldStatus = buildDict['status']
         oldMessage = buildDict['statusMessage']
 
-        uuid = '%s.%s-build-%d-%d' %(self.cfg.hostName,
-                                  self.cfg.externalDomainName, buildId, count)
+        # NB: This function mostly mirrors
+        # ImageManager._updateStatusForImageList
 
-        if (buildType != buildtypes.IMAGELESS 
-            and oldStatus not in jobstatus.stoppedStatuses):
+        if oldStatus in jobstatus.terminalStatuses:
+            return { 'status' : oldStatus, 'message' : oldMessage }
+
+        status = jobstatus.UNKNOWN
+        statusMessage = res = None
+        if buildType != buildtypes.IMAGELESS:
+            uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
+                              self.cfg.externalDomainName, buildId, count)
             try:
                 mc = self._getMcpClient()
                 res = mc.jobStatus(uuid)
             except (mcp_error.UnknownJob, mcp_error.NetworkError):
-                res = None
-
-            if res:
-                status, message = res
+                status = jobstatus.NO_JOB
             else:
-                status, message = (jobstatus.NO_JOB,
-                        jobstatus.statusNames[jobstatus.NO_JOB])
+                if res:
+                    status, statusMessage = res
+                # Sometimes the MCP returns None for no obvious reason.
+                # In those cases, keep the fallback value of UNKNOWN.
+
+            if status == jobstatus.NO_JOB:
+                # The MCP no longer knows about this job and it never will,
+                # so make a guess as to whether it passed or failed and
+                # set its state to that.
+                filenames = [x['title'] for x in self.getBuildFilenames(buildId)]
+                if filenames:
+                    # Images with files succeeded, unless one of those files
+                    # is a failed build log.
+                    for filename in filenames:
+                        if filename.startswith('Failed '):
+                            status = jobstatus.FAILED
+                            break
+                    else:
+                        status = jobstatus.FINISHED
+
+                elif self.getBuildDataValue(buildId, 'amiId')[0]:
+                    # AMIs don't have files but if the ID is posted then it
+                    # succeeded.
+                    status = jobstatus.FINISHED
+                else:
+                    # No files and no AMI means the job failed.
+                    status = jobstatus.FAILED
+
         else:
-            # status is always finished since no build is actually done
-            status, message = jobstatus.FINISHED, \
-                jobstatus.statusNames[jobstatus.FINISHED]
+            status = jobstatus.FINISHED
+
+        if status not in jobstatus.statusNames:
+            status = jobstatus.UNKNOWN
+        if not statusMessage:
+            statusMessage = jobstatus.statusNames[status]
+
+        if (status, statusMessage) != (oldStatus, oldMessage):
             self.db.builds.update(buildId, status=status,
-                                  statusMessage=message)
-        return { 'status' : status, 'message' : message }
+                    statusMessage=statusMessage)
+
+        return { 'status' : status, 'message' : statusMessage }
 
     # session management
     @private
