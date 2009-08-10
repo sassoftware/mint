@@ -24,17 +24,18 @@ from mint.rest.api.models.productversions import *
 from mint.rest.api.models.images import *
 
 class RbuilderStatus(Model):
-    id            = fields.AbsoluteUrlField(isAttribute=True)
-    version       = fields.CharField()
-    conaryVersion = fields.CharField()
-    isRBO         = fields.BooleanField()
-    identity      = fields.ModelField(Identity)
-    rmcService    = RMCUrlField()
-    products      = fields.UrlField('products', None)
-    users         = fields.UrlField('users', None)
-    platforms     = fields.UrlField('platforms', None)
-    registration  = fields.UrlField('registration', None)
-    maintMode     = fields.BooleanField()
+    id                      = fields.AbsoluteUrlField(isAttribute=True)
+    version                 = fields.CharField()
+    conaryVersion           = fields.CharField()
+    isRBO                   = fields.BooleanField()
+    identity                = fields.ModelField(Identity)
+    rmcService              = RMCUrlField()
+    products                = fields.UrlField('products', None)
+    users                   = fields.UrlField('users', None)
+    platforms               = fields.UrlField('platforms', None)
+    registration            = fields.UrlField('registration', None)
+    maintMode               = fields.BooleanField()
+    proddefSchemaVersion    = fields.CharField()
 
     def get_absolute_url(self):
         return '',
