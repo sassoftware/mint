@@ -89,6 +89,7 @@ class Image(Model):
     imageTypeName = fields.CharField()
     name = fields.CharField()
     description = fields.CharField()
+    architecture = fields.CharField()
     troveName = fields.CharField()
     troveVersion = fields.VersionField()
     trailingVersion = fields.CharField()

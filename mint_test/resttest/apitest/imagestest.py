@@ -124,6 +124,7 @@ class ImagesTest(restbase.BaseRestTest):
     <imageType>installableIsoImage</imageType>
     <imageTypeName>Installable CD/DVD</imageTypeName>
     <name>Image 1</name>
+    <architecture></architecture>
     <troveName>group-foo</troveName>
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
@@ -156,6 +157,7 @@ class ImagesTest(restbase.BaseRestTest):
     <imageType>tarballImage</imageType>
     <imageTypeName>TAR File</imageTypeName>
     <name>Image 2</name>
+    <architecture></architecture>
     <troveName>group-foo</troveName>
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
