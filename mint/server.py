@@ -4164,7 +4164,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         instancesKilled = []
         for launchedAMIId, ec2InstanceId in instancesToKill:
             if ec2Wrapper.terminateInstance(ec2InstanceId):
-                self.launchedAMIs.update(launchedAMIId, isActive = False)
+                self.launchedAMIs.update(launchedAMIId, isActive=0)
                 instancesKilled.append(launchedAMIId)
         return instancesKilled
 
