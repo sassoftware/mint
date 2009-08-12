@@ -444,9 +444,9 @@ class rBASetupTest(raatest.rAATest):
         # Check ourselves out
         mock_writeRmakeConfig._mock.assertCalled(config.RBUILDER_RMAKE_CONFIG,
                 'rmake-repository-user', fakeGeneratedPassword,
-                'https://justified.mumu.com',
+                'https://localhost',
                 'rmake-repository.mumu.com',
-                'https://justified.mumu.com/repos/rmake-repository')
+                'https://localhost/repos/rmake-repository')
         self.mockOS_exit._mock.assertCalled(0)
 
 
