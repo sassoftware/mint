@@ -47,9 +47,9 @@ def setupRmake(cfg, rmakeConfigFilePath, restartRmake=False):
         rmakePassword)
 
     _writeRmakeConfig(rmakeConfigFilePath, rmakeUser, rmakePassword,
-        "https://%s" % cfg.siteHost,
+        "https://localhost",
         "%s.%s" % (shortName, cfg.projectDomainName),
-        "https://%s/repos/%s" % (cfg.siteHost, shortName))
+        "https://localhost/repos/%s" % (shortName,))
 
     if restartRmake:
         if os.getenv('RBUILDER_NOSUDO'):
