@@ -19,7 +19,7 @@ from mint import users
 from mint import packagecreator
 from mint.mint_error import *
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
 CLIENT_VERSIONS = [6, 7, 8]

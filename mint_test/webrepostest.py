@@ -15,7 +15,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from repostest import testRecipe
 from conary import versions
 from conary.conaryclient import ConaryClient
-from testrunner import resources
+from testrunner import pathManager
 
 testDirRecipe = """
 class TestCase(PackageRecipe):
@@ -447,7 +447,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         # add archive/key.asc to project
         project = client.getProject(projectId)
-        gpgData = file(os.path.join(resources.mintArchivePath, 'key.asc'))
+        gpgData = file(os.path.join(pathManager.getPath('MINT_ARCHIVE_PATH'), 'key.asc'))
 
         from conary import conaryclient
         cclient = conaryclient.ConaryClient(project.getConaryConfig())

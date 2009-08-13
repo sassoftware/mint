@@ -11,7 +11,6 @@ import raapluginstest
 import raatest
 import tempfile
 from testutils import mock
-from testrunner import resources
 
 from raa.modules.raasrvplugin import rAASrvPlugin
 from raa.lib import command

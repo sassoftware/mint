@@ -16,7 +16,7 @@ import urlparse
 from testutils import sqlharness
 from SimpleXMLRPCServer import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler
 from testutils import mock
-
+from testrunner import pathManager
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
 SimpleDOM.EMPTY_HTML_TAGS.remove('input')
@@ -55,7 +55,6 @@ from mcp import queue
 from mcp_test.mcp_helper import MCPTestMixin
 
 from testrunner.testhelp import SkipTestException, findPorts
-from testrunner import resources
 from testutils import mock
 
 # Mock out the queues
@@ -186,8 +185,9 @@ def getIpAddresses():
     
 def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     # write Mint configuration
-    conaryPath = os.path.abspath(os.environ.get("CONARY_PATH", ""))
-    mintPath = os.path.abspath(os.environ.get("MINT_PATH", ""))
+    conaryPath = pathManager.getPath('CONARY_PATH')
+    mintPath = pathManager.getPath('MINT_PATH')
+
 
     cfg = config.MintConfig()
 
@@ -302,7 +302,7 @@ class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
             conaryPath, repMap, useCache = False, requireSigs = False,
             authCheck = None, entCheck = None, useProxy = True, readOnlyRepository = False, serverIdx = 0, **kwargs):
-        self.mintPath = os.environ.get("MINT_PATH", "")
+        self.mintPath = pathManager.getPath('MINT_PATH')
         self.useCache = useCache
         self.name = name
 
@@ -340,12 +340,12 @@ class MintApacheServer(rephelp.ApacheServer):
                     " < %s/httpd.conf.in > %s/httpd.conf" % \
                       (os.path.join(self.reposDir, "jobserver",
                                     "finished-images"),
-                       os.environ['MINT_PATH'],
-                       os.environ['MCP_PATH'],
-                       os.environ['CONARY_PATH'], 
-                       os.environ['PACKAGE_CREATOR_SERVICE_PATH'],
-                       os.environ['CATALOG_SERVICE_PATH'],
-                       os.environ['RESTLIB_PATH'],
+                       pathManager.getPath('MINT_PATH'),
+                       pathManager.getPath('MCP_PATH'),
+                       pathManager.getPath('CONARY_PATH'),
+                       pathManager.getPath('PACKAGE_CREATOR_SERVICE_PATH'),
+                       pathManager.getPath('CATALOG_SERVICE_PATH'),
+                       pathManager.getPath('RESTLIB_PATH'),
                        self.serverRoot, self.serverRoot))
             os.system(cmd)
             os.system("sed -i 's|@CONTENTPATH@|%s|g' %s/httpd.conf" % \
@@ -424,7 +424,7 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintDb.reset()
 
     def getTestDir(self):
-        return os.environ.get("MINT_TEST_PATH", "") + '/'
+        return pathManager.getPath("MINT_TEST_PATH")
 
     def getMap(self):
         # by default, there's no repository associated w/ a mint database.
@@ -445,7 +445,7 @@ class MintServerCache(rephelp.ServerCache):
     def getServerClass(self, envname, useSSL):
         name = "mint." + MINT_DOMAIN
         server = None
-        serverDir = os.environ.get('CONARY_PATH') + '/conary/server'
+        serverDir = os.path.join(pathManager.getPath('CONARY_PATH'),'/conary/server')
         serverClass = MintApacheServer
 
         return server, serverClass, serverDir, None, None
@@ -456,7 +456,7 @@ rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 rephelpCleanup = rephelp._cleanUp
 def _cleanUp():
-    _servers.stopAllServers(clean=not resources.cfg.isIndividual)
+    _servers.stopAllServers(clean=not testsuite._individual)
     rephelpCleanup()
 
 rephelp._cleanUp = _cleanUp
@@ -716,20 +716,20 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         SQLserver = sqlharness.start(self.topDir)
         reposDir = self._getReposDir() + '-mint'
         if not server:
-            server = serverCache.startServer(reposDir, self.conaryDir,
-                                          SQLserver,
-                                          serverIdx, requireSigs=False, 
-                                          serverName=None,
-                                          readOnlyRepository=False,
-                                          useSSL = False,
-                                          sslCert = None,
-                                          sslKey = None,
-                                          authTimeout = None,
-                                          forceSSL = False,
-                                          closed = False,
-                                          commitAction = None,
-                                          deadlockRetry = None)
-
+            server = serverCache.startServer(reposDir, 
+                                             pathManager.getPath('CONARY_PATH'),
+                                             SQLserver,
+                                             serverIdx, requireSigs=False, 
+                                             serverName=None,
+                                             readOnlyRepository=False,
+                                             useSSL = False,
+                                             sslCert = None,
+                                             sslKey = None,
+                                             authTimeout = None,
+                                             forceSSL = False,
+                                             closed = False,
+                                             commitAction = None,
+                                             deadlockRetry = None)
 
         else:
             server.setNeedsReset()

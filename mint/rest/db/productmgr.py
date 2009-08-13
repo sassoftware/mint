@@ -9,7 +9,7 @@ import itertools
 import time
 
 from conary.lib import util
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 from mint import helperfuncs
 from mint import mint_error

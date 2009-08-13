@@ -10,7 +10,7 @@ import os
 import time
 from conary.lib import util
 
-from testrunner import resources
+from testrunner import pathManager
 
 
 import boto
@@ -300,9 +300,9 @@ class BaseEC2Test(fixtures.FixturedUnitTest):
                 'ec2LaunchUsers' : ["000000001111", "000000002222"],
                 'ec2LaunchGroups' : ["group1", "group2"],
                 'ec2Certificate': open(os.path.join( \
-                        resources.mintArchivePath, 'ec2.pem')).read(),
+                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.pem')).read(),
                 'ec2CertificateKey': open(os.path.join( \
-                        resources.mintArchivePath, 'ec2.key')).read()
+                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.key')).read()
                 }
         adminClient = shimclient.ShimMintClient(self.cfg, ("admin", "adminpass"))
         adminClient.addTarget('ec2', 'aws', amiData)

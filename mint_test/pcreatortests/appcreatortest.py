@@ -23,7 +23,7 @@ from conary import conaryclient
 import pcreator
 public = pcreator.common.public
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 class MockedAppCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods,

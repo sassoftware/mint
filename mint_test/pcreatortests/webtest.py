@@ -13,11 +13,8 @@ import webprojecttest
 from mint_rephelp import FQDN
 from pcreator import factorydata
 
-import factory_test.testSetup
-factory_test.testSetup.setup()
-
 from conary.lib import util
-import testrunner.resources
+from testrunner import pathManager
 
 from factory_test.factorydatatest import basicXmlDef
 
@@ -28,7 +25,7 @@ import mint.mint_error
 import mint.web.webhandler
 from types import MethodType
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 import pcreatortests.packagecreatoruitest
 
@@ -165,7 +162,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         # This method only tests that the page was rendered as expected with
         # the proper UI elements
         self.factorystream = open(
-                 os.path.join(testrunner.resources.factoryRecipePath,
+                 os.path.join(pathManager.getPath('PACKAGE_CREATOR_SERVICE_FACTORY_PATH'),
                               'factory-stub', 'data-definition.xml'))
         self.prefilled={'version': '0.1999', 'license': 'GPL', 'multiple_license': 'GPL', 'description': 'line1\nline2'}
         def fakepackagefactories(s, *args):

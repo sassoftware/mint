@@ -145,7 +145,7 @@ class ProductVersionDefinition(base.BaseController):
         return self.index(request, hostname, version)
 
     def _toProddef(self, request):
-        from rpath_common.proddef import api1 as proddef
+        from rpath_proddef.proddef import api1 as proddef
         return proddef.ProductDefinition(fromStream=request.read())
 
     def _fromProddef(self, pd):

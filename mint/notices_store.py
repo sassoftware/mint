@@ -5,7 +5,7 @@
 
 import os
 import time
-from rpath_common.storage import api1 as storage
+from rpath_storage.storage import api1 as storage
 
 class DiskStorage(storage.DiskStorage):
     pass

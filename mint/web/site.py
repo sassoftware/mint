@@ -39,7 +39,7 @@ from conary.lib import util
 from conary import versions
 from conary import conaryclient
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 log = logging.getLogger(__name__)
 

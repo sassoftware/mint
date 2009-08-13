@@ -16,7 +16,7 @@ import pwd
 import StringIO
 
 from testrunner import testhelp
-from testrunner import resources
+from testrunner import pathManager
 from testutils import mock
 
 
@@ -43,7 +43,7 @@ from mcp_test import mcp_helper
 from mcp import queue
 from mcp_test.mcp_helper import MCPTestMixin
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue
@@ -104,7 +104,7 @@ class FixtureCache(object):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
-        cfg.newsRssFeed = 'file://' + resources.mintArchivePath + '/news.xml'
+        cfg.newsRssFeed = 'file://' + pathManager.getPath('MINT_ARCHIVE_PATH') + '/news.xml'
         cfg.ec2AccountId = '012345678901'
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
@@ -256,9 +256,9 @@ class FixtureCache(object):
                 'ec2LaunchUsers' : ["000000001111", "000000002222"],
                 'ec2LaunchGroups' : ["group1", "group2"],
                 'ec2Certificate': open(os.path.join( \
-                        resources.mintArchivePath, 'ec2.pem')).read(),
+                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.pem')).read(),
                 'ec2CertificateKey': open(os.path.join( \
-                        resources.mintArchivePath, 'ec2.key')).read()
+                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.key')).read()
                 }
         adminClient = shimclient.ShimMintClient(cfg, ("admin", "adminpass"))
         adminClient.addTarget('ec2', 'aws', amiData)
@@ -420,9 +420,9 @@ class FixtureCache(object):
                 'ec2LaunchUsers' : ["000000001111", "000000002222"],
                 'ec2LaunchGroups' : ["group1", "group2"],
                 'ec2CertificateFile': open(os.path.join( \
-                        resources.mintArchivePath, 'ec2.pem')).read(),
+                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.pem')).read(),
                 'ec2CertificateKeyFile': open(os.path.join( \
-                        resources.mintArchivePath, 'ec2.key')).read()
+                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.key')).read()
                 }
         client.addTarget('ec2', 'aws', amiData)
         hostname = shortname = "testproject"

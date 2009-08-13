@@ -18,7 +18,7 @@ from mint import helperfuncs
 from mint import userlevels
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 class ProductVersionTest(fixtures.FixturedProductVersionTest):
 

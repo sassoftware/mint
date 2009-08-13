@@ -9,7 +9,7 @@ import weakref
 
 from conary import versions
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 from mint.rest import errors
 from mint.rest.api import models

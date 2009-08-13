@@ -18,7 +18,7 @@ from mint.config import MintConfig
 import fixtures
 from conary.lib import util
 
-from testrunner import resources
+from testrunner import pathManager
 
 import mock
 import sys
@@ -91,18 +91,18 @@ class LoadMirrorUnitTest(unittest.TestCase):
         loadmirror.call = self.oldCall
 
     def testGetMountPoints(self):
-        points = loadmirror.getMountPoints(source = resources.mintArchivePath + "/partitions")
+        points = loadmirror.getMountPoints(source = pathManager.getPath('MINT_ARCHIVE_PATH') + "/partitions")
         self.failUnlessEqual(['/dev/sda1'], points)
 
     def testGetFsLabel(self):
-        os.popen = makeMockPopen(resources.mintArchivePath + "/dumpe2fs")
+        os.popen = makeMockPopen(pathManager.getPath('MINT_ARCHIVE_PATH') + "/dumpe2fs")
         self.failUnlessEqual('MIRRORLOAD', loadmirror.getFsLabel(None))
 
     def testMounting(self):
         callLog = []
         loadmirror.call = makeMockCall(callLog, 0)
 
-        loadmirror.unmountIfMounted("/dev/sda1", resources.mintArchivePath + "/mounts")
+        loadmirror.unmountIfMounted("/dev/sda1", pathManager.getPath('MINT_ARCHIVE_PATH') + "/mounts")
         self.failUnlessEqual(callLog, ['umount /dev/sda1'])
         callLog.pop()
 
@@ -112,17 +112,17 @@ class LoadMirrorUnitTest(unittest.TestCase):
     def testMountMirrorLoadDrive(self):
         callLog = []
         loadmirror.call = makeMockCall(callLog, 0)
-        os.popen = makeMockPopen(resources.mintArchivePath + "/dumpe2fs")
+        os.popen = makeMockPopen(pathManager.getPath('MINT_ARCHIVE_PATH') + "/dumpe2fs")
 
         loadmirror.mountMirrorLoadDrive(
-            partitions = resources.mintArchivePath + "/partitions",
-            mounts = resources.mintArchivePath + "/mounts")
+            partitions = pathManager.getPath('MINT_ARCHIVE_PATH') + "/partitions",
+            mounts = pathManager.getPath('MINT_ARCHIVE_PATH') + "/mounts")
         self.failUnlessEqual(callLog, ['umount /dev/sda1', 'mount /dev/sda1 /mnt/mirror/'])
 
         self.assertRaises(loadmirror.NoMirrorLoadDiskFound,
             loadmirror.mountMirrorLoadDrive,
-            partitions = resources.mintArchivePath + "/partitions-missing",
-            mounts = resources.mintArchivePath + "/mounts")
+            partitions = pathManager.getPath('MINT_ARCHIVE_PATH') + "/partitions-missing",
+            mounts = pathManager.getPath('MINT_ARCHIVE_PATH') + "/mounts")
 
     def createFile(self, fileName, contents = ''):
         f = open(fileName, "w")

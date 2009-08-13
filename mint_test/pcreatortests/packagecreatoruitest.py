@@ -38,9 +38,9 @@ from factory_test.factorydatatest import basicXmlDef
 import pcreator
 from pcreator.factorydata import FactoryDefinition
 from pcreator import server as pcreatorServer
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
-from testrunner import resources
+from testrunner import pathManager
 
 class PkgCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods, but mocks
@@ -687,7 +687,7 @@ class FileHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_GET(self):
         fname = os.path.basename(self.path)
         # Do we have this file?
-        fPath = os.path.join(resources.factoryArchivePath, 'rpms',
+        fPath = os.path.join(pathManager.getPath('PACKAGE_CREATOR_SERVICE_ARCHIVE_PATH'), 'rpms',
                              fname)
         if not os.path.exists(fPath):
             self.send_response(404)
@@ -838,7 +838,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
             sesH = pClient.startSession(pDefDict, mincfg)
             tarFile = 'logrotate-3.7.1.tar.gz'
-            filePath = os.path.join(resources.archivePath, tarFile)
+            filePath = os.path.join(pathManager.getPath('CONARY_ARCHIVE_PATH'), tarFile)
             pClient.uploadData(sesH, tarFile, open(filePath),
                     'application/x-rpm')
             res = pClient.getCandidateBuildFactories(sesH)

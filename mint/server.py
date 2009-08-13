@@ -75,7 +75,7 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary import errors as conary_errors
 
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef.proddef import api1 as proddef
 
 try:
     # Conary 2

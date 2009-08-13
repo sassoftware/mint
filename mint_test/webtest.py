@@ -25,7 +25,7 @@ from mint import urltypes
 from mint import helperfuncs
 
 from repostest import testRecipe
-from testrunner import resources
+from testrunner import pathManager
 
 from conary.lib import util
 from conary import versions
@@ -849,7 +849,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
 
     def testUploadKey(self):
-        keyFile = open(resources.mintArchivePath + '/key.asc')
+        keyFile = open(pathManager.getPath('MINT_ARCHIVE_PATH') + '/key.asc')
         keyData = keyFile.read()
         keyFile.close()
         client, userId = self.quickMintUser('foouser','foopass')
@@ -1544,7 +1544,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           authType, userpass[0], userpass[1], '')
 
     def addPlatform(self, label, name='Platform for %(label)s'):
-        from rpath_common.proddef import api1 as proddef
+        from rpath_proddef.proddef import api1 as proddef
         from StringIO import StringIO
         pd = proddef.PlatformDefinition()
         pd.setPlatformName(name % dict(label=label))

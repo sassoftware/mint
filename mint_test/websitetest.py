@@ -25,7 +25,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_HOST, FQDN
 from conary import versions
 from conary.lib import util
 
-from testrunner import resources
+from testrunner import pathManager
 
 from mint_rephelp import FakeRequest
 
@@ -59,7 +59,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         self.sh.client = self.getClient('anonymous')
         self.sh.auth = users.Authorization(admin = False, authorized = False)
 
-        testFile = open(resources.mintArchivePath + "/testChunkedFile")
+        testFile = open(pathManager.getPath("MINT_ARCHIVE_PATH") + "/testChunkedFile")
         self.sh.req.read = testFile.read
 
         method = self.sh.handle({'cmd': 'uploadBuild'})

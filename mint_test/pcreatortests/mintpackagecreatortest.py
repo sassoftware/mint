@@ -7,7 +7,7 @@
 
 import testsetup
 
-from testrunner import resources
+from testrunner import pathManager
 
 import os
 import shutil
@@ -212,7 +212,7 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
         mincfg = self._getMinimalFactoryConfig()
         sesH = pClient.startSession(self.productDefinitionDict, mincfg)
         rpmFileName = 'tags-1.2-3.noarch.rpm'
-        rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
+        rpmf = os.path.join(pathManager.getPath('PACKAGE_CREATOR_SERVICE_ARCHIVE_PATH'), 'rpms',
                             rpmFileName)
         pClient.uploadData(sesH, rpmFileName, file(rpmf), "application/x-rpm")
 
@@ -226,7 +226,7 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
         self.assertEquals(foo.getvalue(), generatedXML)
 
         rpmFileName = 'foo-0.3-1.noarch.rpm'
-        rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
+        rpmf = os.path.join(pathManager.getPath('PACKAGE_CREATOR_SERVICE_ARCHIVE_PATH'), 'rpms',
                             rpmFileName)
         pClient.uploadData(sesH, rpmFileName, file(rpmf), "application/x-rpm")
         self.assertEquals(sorted(pClient.server._server._getSessionValue( \
@@ -240,7 +240,7 @@ class testPackageCreatorManipulation(packagecreatortest.RepoTest):
         mincfg = self._getMinimalFactoryConfig()
         sesH = pClient.startSession(self.productDefinitionDict, mincfg)
         rpmFileName = 'tags-1.2-3.noarch.rpm'
-        rpmf = os.path.join(resources.factoryArchivePath, 'rpms',
+        rpmf = os.path.join(pathManager.getPath('PACKAGE_CREATOR_SERVICE_ARCHIVE_PATH'), 'rpms',
                             rpmFileName)
         pClient.uploadData(sesH, rpmFileName, file(rpmf), "application/x-rpm")
 
