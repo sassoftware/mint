@@ -705,7 +705,14 @@ class MintServer(object):
                     (self.cfg.hostName, self.cfg.siteDomainName), hostname)
 
             # Add a user to the update service with mirror permissions
-            mirrorPassword = \
+            try:
+                mirrorPassword = \
+                    sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
+            except socket.error:
+                from M2Crypto import m2xmlrpclib, SSL
+                SSL.Connection.clientPostConnectionCheck = None
+                sp = xmlrpclib.ServerProxy(url, transport=m2xmlrpclib.SSL_Transport())
+                mirrorPassword = \
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
