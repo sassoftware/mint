@@ -7,6 +7,7 @@
 import base64
 import hmac
 import inspect
+import logging
 import os
 import re
 import simplejson
@@ -103,6 +104,8 @@ SERVER_VERSIONS = [8]
 # first argument needs to be fairly unique so that we can detect
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
+
+log = logging.getLogger(__name__)
 
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
@@ -4316,12 +4319,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _getMinCfg(self, project):
         # We should use internal=False here because the configuration we
         # generate here is used by the package creator service, not rBuilder.
+        # However, pcreator is always localhost, so use that for proxying.
         cfg = self._getProjectConaryConfig(project, internal=False)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
-        cfg.entitlementDirectory = os.path.join(self.cfg.dataPath,
-                'entitlements')
-        cfg.readEntitlementDirectory()
+        cfg.configLine('conaryProxy https://localhost/conary/')
 
         #package creator service should get the searchpath from the product definition
         mincfg = packagecreator.MinimalConaryConfiguration( cfg)
@@ -4663,6 +4665,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     str(err))
 
         except packagecreator.errors.PackageCreatorError, err:
+            log.exception("Error starting appliance creator session:")
             raise mint_error.PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
         return sesH, otherInfo
