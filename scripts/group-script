@@ -88,6 +88,10 @@ function waitForPg()
 }
 
 service postgresql-rbuilder condstop
+# postgres attaches shared memory to its pidfile; if it shuts down uncleanly it
+# can subsequently refuse to start because of this. Unlinking the pidfile is a
+# simple workaround.
+rm -f $PGDATA/postmaster.pid
 service postgresql-rbuilder start
 waitForPg
 
