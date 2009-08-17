@@ -411,6 +411,20 @@ class MintServer(object):
         res = cu.fetchone()
         return res and res[0] or fqdn
 
+    def _addUserGlobs(self, ccfg):
+        """
+        Adds user lines to a conary configuration for the current user.
+        """
+        for (otherProjectData, level, memberReqs,
+                ) in self.getProjectDataByMember(self.auth.userId):
+            if level not in userlevels.WRITERS:
+                continue
+            otherProject = projects.Project(self,
+                    otherProjectData['projectId'],
+                    initialData=otherProjectData)
+            ccfg.user.addServerGlob(otherProject.getFQDN(),
+                self.authToken[0], self.authToken[1])
+
     def _getProjectConaryConfig(self, project, internal=True):
         """
         Creates a conary configuration object, suitable for internal or external
@@ -432,15 +446,7 @@ class MintServer(object):
         if os.path.exists(conarycfgFile):
             ccfg.read(conarycfgFile)
 
-        #Set up the user config lines
-        for otherProjectData, level, memberReqs in \
-          self.getProjectDataByMember(self.auth.userId):
-            if level in userlevels.WRITERS:
-                otherProject = projects.Project(self,
-                        otherProjectData['projectId'],
-                        initialData=otherProjectData)
-                ccfg.user.addServerGlob(otherProject.getFQDN(),
-                    self.authToken[0], self.authToken[1])
+        self._addUserGlobs(ccfg)
 
         return ccfg
 
@@ -2542,18 +2548,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         project = projects.Project(self, buildDict['projectId'])
 
-        # We should use internal=False here because the configuration we
-        # generate here is used by the jobslave, not internally by rBuilder.
-        cc = self._getProjectConaryConfig(project, internal=False)
-        cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
-        cc.readEntitlementDirectory()
+        cc = conarycfg.ConaryConfiguration(False)
+        self._addUserGlobs(cc)
 
         cfgBuffer = StringIO.StringIO()
-        cc.display(cfgBuffer)
-        cfgData = cfgBuffer.getvalue().split("\n")
-
-        allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
-        cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
+        cc.displayKey('user', cfgBuffer)
+        cfgData = cfgBuffer.getvalue()
 
         r = {}
         r['protocolVersion'] = builds.PROTOCOL_VERSION
