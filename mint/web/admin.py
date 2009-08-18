@@ -328,11 +328,14 @@ class AdminHandler(WebHandler):
         # iterate through all projects, set up the
         # regular project rows, and save the mirrored
         # projects for later.
+
+        # NB: It would be great to not have to reach around the XMLRPC layer
+        # here, but the old way scales very poorly (>30s on rBO w/ 12000
+        # projects).
         mirroredProjects = []
-        for p in self.client.getProjectsList():
-            project = self.client.getProject(p[0])
-            if not project.external:
-                continue
+        for repos in self.client.server._server.reposMgr.iterRepositories(
+                'external = 1'):
+            project = self.client.getProject(repos.projectId)
             mirrored = self.client.getInboundMirror(project.id)
 
             if not mirrored:

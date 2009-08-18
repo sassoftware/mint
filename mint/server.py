@@ -7,6 +7,7 @@
 import base64
 import hmac
 import inspect
+import logging
 import os
 import re
 import simplejson
@@ -103,6 +104,8 @@ SERVER_VERSIONS = [8]
 # first argument needs to be fairly unique so that we can detect
 # detect old (unversioned) clients.
 VERSION_STRINGS = ["RBUILDER_CLIENT:%d" % x for x in SERVER_VERSIONS]
+
+log = logging.getLogger(__name__)
 
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 reservedExtHosts = ['admin', 'mail', 'mint', 'www', 'web', 'wiki', 'conary', 'lists']
@@ -408,6 +411,20 @@ class MintServer(object):
         res = cu.fetchone()
         return res and res[0] or fqdn
 
+    def _addUserGlobs(self, ccfg):
+        """
+        Adds user lines to a conary configuration for the current user.
+        """
+        for (otherProjectData, level, memberReqs,
+                ) in self.getProjectDataByMember(self.auth.userId):
+            if level not in userlevels.WRITERS:
+                continue
+            otherProject = projects.Project(self,
+                    otherProjectData['projectId'],
+                    initialData=otherProjectData)
+            ccfg.user.addServerGlob(otherProject.getFQDN(),
+                self.authToken[0], self.authToken[1])
+
     def _getProjectConaryConfig(self, project, internal=True):
         """
         Creates a conary configuration object, suitable for internal or external
@@ -429,15 +446,7 @@ class MintServer(object):
         if os.path.exists(conarycfgFile):
             ccfg.read(conarycfgFile)
 
-        #Set up the user config lines
-        for otherProjectData, level, memberReqs in \
-          self.getProjectDataByMember(self.auth.userId):
-            if level in userlevels.WRITERS:
-                otherProject = projects.Project(self,
-                        otherProjectData['projectId'],
-                        initialData=otherProjectData)
-                ccfg.user.addServerGlob(otherProject.getFQDN(),
-                    self.authToken[0], self.authToken[1])
+        self._addUserGlobs(ccfg)
 
         return ccfg
 
@@ -705,7 +714,14 @@ class MintServer(object):
                     (self.cfg.hostName, self.cfg.siteDomainName), hostname)
 
             # Add a user to the update service with mirror permissions
-            mirrorPassword = \
+            try:
+                mirrorPassword = \
+                    sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
+            except socket.error:
+                from M2Crypto import m2xmlrpclib, SSL
+                SSL.Connection.clientPostConnectionCheck = None
+                sp = xmlrpclib.ServerProxy(url, transport=m2xmlrpclib.SSL_Transport())
+                mirrorPassword = \
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
@@ -2532,18 +2548,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         project = projects.Project(self, buildDict['projectId'])
 
-        # We should use internal=False here because the configuration we
-        # generate here is used by the jobslave, not internally by rBuilder.
-        cc = self._getProjectConaryConfig(project, internal=False)
-        cc.entitlementDirectory = os.path.join(self.cfg.dataPath, 'entitlements')
-        cc.readEntitlementDirectory()
+        cc = conarycfg.ConaryConfiguration(False)
+        self._addUserGlobs(cc)
 
         cfgBuffer = StringIO.StringIO()
-        cc.display(cfgBuffer)
-        cfgData = cfgBuffer.getvalue().split("\n")
-
-        allowedOptions = ['repositoryMap', 'user', 'conaryProxy', 'entitlement']
-        cfgData = "\n".join([x for x in cfgData if x.split(" ")[0] in allowedOptions])
+        cc.displayKey('user', cfgBuffer)
+        cfgData = cfgBuffer.getvalue()
 
         r = {}
         r['protocolVersion'] = builds.PROTOCOL_VERSION
@@ -4309,12 +4319,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _getMinCfg(self, project):
         # We should use internal=False here because the configuration we
         # generate here is used by the package creator service, not rBuilder.
+        # However, pcreator is always localhost, so use that for proxying.
         cfg = self._getProjectConaryConfig(project, internal=False)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
-        cfg.entitlementDirectory = os.path.join(self.cfg.dataPath,
-                'entitlements')
-        cfg.readEntitlementDirectory()
+        cfg.configLine('conaryProxy https://localhost/conary/')
 
         #package creator service should get the searchpath from the product definition
         mincfg = packagecreator.MinimalConaryConfiguration( cfg)
@@ -4656,6 +4665,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     str(err))
 
         except packagecreator.errors.PackageCreatorError, err:
+            log.exception("Error starting appliance creator session:")
             raise mint_error.PackageCreatorError( \
                     "Error starting the appliance creator service session: %s", str(err))
         return sesH, otherInfo

@@ -24,15 +24,18 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         self.createProduct('foo2', owners=['admin'], db=db)
-        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
+        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
+                troveFlavor='is: x86')
         self.setImageFiles(db, 'foo', imageId)
-        self.createImage(db, 'foo2', buildtypes.INSTALLABLE_ISO)
+        self.createImage(db, 'foo2', buildtypes.INSTALLABLE_ISO,
+                troveFlavor='is: sparc sparc64')
         image, = db.listImagesForProduct('foo').images
         self.failUnlessEqual(str(image),
-           "models.Image(1, 'installableIsoImage', 'foo=/localhost@test:1/0.1-1-1[]')")
+            "models.Image(1, 'installableIsoImage', 'foo=/localhost@test:1/0.1-1-1[is: x86]')")
         image, = db.listImagesForProduct('foo2').images
         self.failUnlessEqual(image.imageId, 2)
         self.failUnlessEqual(image.hostname, 'foo2')
+        self.failUnlessEqual(image.architecture, 'sparc64')
 
     def testListImagesForRelease(self):
         db = self.openMintDatabase(createRepos=False)

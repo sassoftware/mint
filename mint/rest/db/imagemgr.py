@@ -78,9 +78,17 @@ class ImageManager(manager.Manager):
             row['published'] = bool(row.pop('timePublished', False))
             if row['troveFlavor'] is not None:
                 row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
+                row['architecture'] = helperfuncs.getArchFromFlavor(
+                        row['troveFlavor'])
+            else:
+                row['architecture'] = None
+
             if row['troveVersion'] is not None:
                 row['troveVersion'] = helperfuncs.parseVersion(row['troveVersion'])
-            row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
+                row['trailingVersion'] = str(row['troveVersion'].trailingRevision())
+            else:
+                row['trailingVersion'] = None
+
             row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
             row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
             image = models.Image(row)

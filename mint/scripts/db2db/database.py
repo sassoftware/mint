@@ -177,9 +177,10 @@ class Database(object):
         return [x.lower() for x in cu.fields()]
     def getTables(self):
         return [x.lower() for x in self.db.tables]
-    def iterRows(self, table, fields = "*"):
+    def iterRows(self, table, fields):
         cu = self.db.itercursor()
-        cu.execute("select %s %s from %s" % (self._hint, fields, table))
+        cu.execute("select %s %s from %s" % (self._hint, ', '.join(fields),
+            table))
         return cu
     # functions for when the instance is a target
     def prepareInsert(self, table, fields):
@@ -190,6 +191,17 @@ class Database(object):
     # useful shortcut
     def close(self):
         self.db.close()
+
+
+class MySQLDatabase(Database):
+    def __init__(self, db):
+        Database.__init__(self, "mysql", db)
+
+    def iterRows(self, table, fields):
+        cu = self.db.itercursor()
+        cu.execute("select %s %s from %s" % (self._hint,
+            ', '.join('`%s`' % (x,) for x in fields), table))
+        return cu
 
 
 class PgSQLDatabase(Database):

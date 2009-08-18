@@ -70,7 +70,6 @@ def migrate_table(src, dst, table, batch=5000):
     dstCu = dst.prepareInsert(table, fields)
     callback = Callback(table, count)
     rowCounter = 0
-    fields = ','.join(fields)
     srcCu = src.iterRows(table, fields)
     while rowCounter <= count:
         rows = srcCu.fetchmany(batch)
