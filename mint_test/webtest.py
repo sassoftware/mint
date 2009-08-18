@@ -12,7 +12,7 @@ import cPickle
 import os
 import urlparse
 
-import mint_rephelp
+from mint_test import mint_rephelp
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN, FQDN
 import rephelp
 
@@ -1544,7 +1544,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           authType, userpass[0], userpass[1], '')
 
     def addPlatform(self, label, name='Platform for %(label)s'):
-        from rpath_proddef.proddef import api1 as proddef
+        from rpath_proddef import api1 as proddef
         from StringIO import StringIO
         pd = proddef.PlatformDefinition()
         pd.setPlatformName(name % dict(label=label))

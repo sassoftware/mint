@@ -10,7 +10,7 @@ import testsuite
 testsuite.setup()
 
 import fixtures
-import mint_rephelp
+from mint_test import mint_rephelp
 
 from conary import conaryclient
 from mint import mint_error
@@ -18,7 +18,7 @@ from mint import helperfuncs
 from mint import userlevels
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
-from rpath_proddef.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 
 class ProductVersionTest(fixtures.FixturedProductVersionTest):
 

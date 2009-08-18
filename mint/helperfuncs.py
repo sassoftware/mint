@@ -437,7 +437,7 @@ def addDefaultPlatformToProductDefinition(productDefinition):
     flavorSets, containerTemplates or buildTemplates are defined. This
     function modifies the original object
     """
-    from rpath_proddef.proddef import api1 as proddef
+    from rpath_proddef import api1 as proddef
     if not (hasattr(productDefinition, 'platform') and \
             productDefinition.platform):
         productDefinition.platform = proddef.PlatformDefinition()
@@ -469,7 +469,7 @@ def sanitizeProductDefinition(projectName, projectDescription,
     If a productDefinition object isn't passed in, one is
     created and returned.
     """
-    from rpath_proddef.proddef import api1 as proddef
+    from rpath_proddef import api1 as proddef
     if not productDefinition:
         productDefinition = proddef.ProductDefinition()
     productDefinition.setProductName(projectName)

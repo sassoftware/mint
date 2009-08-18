@@ -14,7 +14,7 @@ testsuite.setup()
 import tempfile
 
 import rephelp
-import mint_rephelp
+from mint_test import mint_rephelp
 
 from mint import helperfuncs
 from conary import versions

@@ -3,7 +3,7 @@ import StringIO
 import testsetup
 from testutils import mock
 
-from rpath_proddef.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 
 from mint import mint_error
 
@@ -11,7 +11,7 @@ from mint import userlevels
 from mint.rest import errors
 from mint.rest.api import models
 
-import mint_rephelp
+from mint_test import mint_rephelp
 
 class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
     def testGetAndCreateProductVersion(self):

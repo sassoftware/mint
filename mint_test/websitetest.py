@@ -9,7 +9,7 @@ testsuite.setup()
 
 import os
 
-import mint_rephelp
+from mint_test import mint_rephelp
 import fixtures
 from mint.web import site
 from mint.lib.data import RDT_STRING

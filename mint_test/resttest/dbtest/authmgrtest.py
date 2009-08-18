@@ -2,7 +2,7 @@
 import testsetup
 from mint.rest import errors
 
-import mint_rephelp
+from mint_test import mint_rephelp
 
 class AuthenticationManagerTest(mint_rephelp.MintDatabaseHelper):
     def _checkPerms(self, db, method, param, userList, allowedUsers):

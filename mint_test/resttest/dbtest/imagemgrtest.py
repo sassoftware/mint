@@ -15,7 +15,7 @@ from mint.lib import data
 from mint.rest import errors
 from mint.rest.db import imagemgr
 
-import mint_rephelp
+from mint_test import mint_rephelp
 
 class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
     

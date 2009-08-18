@@ -11,7 +11,7 @@ from mint.rest.api import models
 from mint import mint_error
 from mint import userlevels
 from mint.rest import errors
-import mint_rephelp
+from mint_test import mint_rephelp
 
 class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
     def testCreateRepository(self):

@@ -19,8 +19,11 @@ from testutils import mock
 from testrunner import pathManager
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
-SimpleDOM.EMPTY_HTML_TAGS.remove('input')
-SimpleDOM.EMPTY_HTML_TAGS.remove('img')
+try:
+    SimpleDOM.EMPTY_HTML_TAGS.remove('input')
+    SimpleDOM.EMPTY_HTML_TAGS.remove('img')
+except ValueError:
+    pass
 from webunit import webunittest
 
 from mint.web import hooks

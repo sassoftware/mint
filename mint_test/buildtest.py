@@ -35,7 +35,7 @@ from conary.deps import deps
 from conary import conaryclient
 from conary import conarycfg
 
-from rpath_proddef.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 import fixtures
 
 class BuildTest(fixtures.FixturedUnitTest):
@@ -1785,7 +1785,7 @@ class BuildTestConaryRepository(MintRepositoryHelper):
         self.failUnlessEqual(foundSpec, "%s=%s[%s]" % coll.getNameVersionFlavor())
 
     def testMakeFlavorMap(self):
-        from rpath_proddef.proddef import api1 as proddef
+        from rpath_proddef import api1 as proddef
         prd = proddef.ProductDefinition()
 
         res = buildtypes.makeFlavorMap(prd)

@@ -24,7 +24,7 @@ from conary import changelog
 from conary import versions
 
 import fixtures
-import mint_rephelp
+from mint_test import mint_rephelp
 
 from mint import packagecreator
 from mint import helperfuncs
@@ -38,7 +38,7 @@ from factory_test.factorydatatest import basicXmlDef
 import pcreator
 from pcreator.factorydata import FactoryDefinition
 from pcreator import server as pcreatorServer
-from rpath_proddef.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 
 from testrunner import pathManager
 

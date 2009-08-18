@@ -9,7 +9,7 @@
 <?python
     from mint.web.templatesupport import projectText
     from mint.helperfuncs import truncateForDisplay, formatProductVersion
-    from rpath_common.proddef import api1 as proddef
+    from rpath_proddef import api1 as proddef
     for var in [ 'name',
                  'namespace',
                  'description' ]:

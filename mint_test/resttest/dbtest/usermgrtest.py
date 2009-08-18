@@ -4,7 +4,7 @@ from testutils import mock
 
 from mint import mint_error
 from mint.rest import errors
-import mint_rephelp
+from mint_test import mint_rephelp
 
 class UserManagerTest(mint_rephelp.MintDatabaseHelper):
     def testCancelUserAccount(self):

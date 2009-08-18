@@ -7,7 +7,7 @@
 from mint.rest.modellib import Model, ModelMeta
 from mint.rest.modellib import fields
 
-from rpath_proddef.proddef import imageTypes
+from rpath_proddef import imageTypes
 
 class _DisplayField(Model):
     "Base field class"

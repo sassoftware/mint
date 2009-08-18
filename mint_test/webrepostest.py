@@ -9,7 +9,7 @@ import shutil
 import testsuite
 testsuite.setup()
 
-import mint_rephelp
+from mint_test import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from repostest import testRecipe

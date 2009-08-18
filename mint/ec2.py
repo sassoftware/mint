@@ -20,7 +20,8 @@ from mint.db import ec2
 from mint.lib import database
 from mint.helperfuncs import urlSplit
 from mint import mint_error
-from rpath_xmllib.xmllib import api1 as xmllib
+from rpath_xmllib import api1 as xmllib
+
 
 class LaunchedAMI(database.TableObject):
 

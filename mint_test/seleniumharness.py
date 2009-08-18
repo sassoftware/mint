@@ -3,7 +3,7 @@
 #
 # All Rights Reserved
 #
-import mint_rephelp
+from mint_test import mint_rephelp
 
 import os
 import socket

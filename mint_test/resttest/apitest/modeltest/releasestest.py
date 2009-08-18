@@ -6,7 +6,7 @@
 #
 
 import testsetup
-import mint_rephelp
+from mint_test import mint_rephelp
 
 
 from mint.rest.api import models

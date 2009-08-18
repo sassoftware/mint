@@ -7,7 +7,7 @@
 
 import sys
 import testsetup
-import mint_rephelp
+from mint_test import mint_rephelp
 import mock
 import webprojecttest
 from mint_rephelp import FQDN
@@ -25,7 +25,7 @@ import mint.mint_error
 import mint.web.webhandler
 from types import MethodType
 
-from rpath_proddef.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 
 import pcreatortests.packagecreatoruitest
 

@@ -8,7 +8,7 @@
 import testsetup
 
 import restbase
-import mint_rephelp
+from mint_test import mint_rephelp
 
 from mint import buildtypes
 from mint.rest import errors

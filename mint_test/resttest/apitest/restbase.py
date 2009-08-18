@@ -20,7 +20,7 @@ from mint import users
 from mint.rest.api import site
 from mint.rest.modellib import converter
 
-import mint_rephelp
+from mint_test import mint_rephelp
 
 URLQUOTE_RE = re.compile('%([A-Z0-9]{2})')
 

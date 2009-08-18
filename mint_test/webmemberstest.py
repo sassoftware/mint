@@ -8,7 +8,7 @@
 import testsuite
 testsuite.setup()
 
-import mint_rephelp
+from mint_test import mint_rephelp
 import rephelp
 
 from mint import userlevels

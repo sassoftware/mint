@@ -13,7 +13,7 @@ import os
 import sys
 import tempfile
 
-import mint_rephelp
+from mint_test import mint_rephelp
 from mint import config
 from mint.lib import copyutils
 from mint.lib import scriptlibrary
@@ -702,7 +702,7 @@ Much like Powdermilk Biscuits[tm]."""
         self.failUnless(prd.platform.baseFlavor)
         self.failIf(prd.baseFlavor)
 
-        from rpath_proddef.proddef import api1 as proddef
+        from rpath_proddef import api1 as proddef
 
         plt = proddef.PlatformDefinition()
         plt.addContainerTemplate(prd.imageType('installableIsoImage'))
@@ -719,7 +719,7 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(prd2.baseFlavor)
 
     def testProdDefNoPlatDef(self):
-        from rpath_proddef.proddef import api1 as proddef
+        from rpath_proddef import api1 as proddef
         prd = proddef.ProductDefinition()
         # ensure we don't have a platform definition at all
         if hasattr(prd, 'platform'):
@@ -728,7 +728,7 @@ Much like Powdermilk Biscuits[tm]."""
         self.failUnless(hasattr(prd, 'platform'))
 
     def testProdDefPredefined(self):
-        from rpath_proddef.proddef import api1 as proddef
+        from rpath_proddef import api1 as proddef
         # a single definition of flavorSet, architecture, containerTemplate, or
         # buildTemplate should be enough to stop the defaults
         prd = proddef.ProductDefinition()

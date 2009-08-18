@@ -13,7 +13,7 @@ import shutil
 import types
 import copy
 
-import mint_rephelp
+from mint_test import mint_rephelp
 import fixtures
 from mint.web import project
 from mint.web import site

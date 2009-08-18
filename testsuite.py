@@ -1,15 +1,16 @@
 #!/usr/bin/python
 # -*- mode: python -*-
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
-import bootstrap
+from mint_test import bootstrap
 
 import __builtin__
 import sys
 import os
 import os.path
 from testrunner import pathManager
+from testrunner.decorators import tests
 
 _individual = False
 
@@ -62,15 +63,8 @@ def setup():
     pathManager.addExecPath('RMAKE_TEST_PATH')
 
     pathManager.addExecPath('MCP_PATH')
-    pathManager.addExecPath('MCP_TEST_PATH')
 
     pathManager.addExecPath('JOB_SLAVE_PATH')
-
-    pathManager.addExecPath('MINT_PATH')
-    mintTestPath = pathManager.addExecPath('MINT_TEST_PATH')
-    pathManager.addResourcePath('TEST_PATH',path=mintTestPath)
-    pathManager.addResourcePath('MINT_ARCHIVE_PATH',path=os.path.join(mintTestPath,'mint_archive'))
-    pathManager.addExecPath('MINT_RAA_PLUGINS_PATH')
 
     pathManager.addExecPath('RAA_PATH')
     pathManager.addExecPath('RAA_TEST_PATH')
@@ -87,7 +81,16 @@ def setup():
     pathManager.addExecPath('CATALOG_SERVICE_PATH')
 
     pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_PATH')
-    pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_TEST_PATH')
+    path = pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_TEST_PATH')
+    pathManager.addResourcePath('PACKAGE_CREATOR_SERVICE_FACTORY_PATH',
+            path + '/recipes')
+
+    pathManager.addExecPath('MINT_PATH')
+    mintTestPath = pathManager.addExecPath('MINT_TEST_PATH')
+    pathManager.addResourcePath('TEST_PATH',path=mintTestPath)
+    pathManager.addResourcePath('MINT_ARCHIVE_PATH',
+            path=os.path.join(mintTestPath, 'mint_test/mint_archive'))
+    pathManager.addExecPath('MINT_RAA_PLUGINS_PATH')
 
    # if we're running with COVERAGE_DIR, we'll start covering now
     from conary.lib import coveragehook
@@ -95,6 +98,10 @@ def setup():
     # ensure shim client errors on types that can't be sent over xml-rpc
     from mint import shimclient
     shimclient._ShimMethod.__call__ = filteredCall
+
+    from mint_test import _apache
+    sys.modules['_apache'] = _apache
+
 
 def getCoverageDirs(handler, environ):
     mintDir = pathManager.getPath('MINT_PATH')
@@ -128,15 +135,9 @@ def main(argv=None, individual=True):
                                             getExcludePaths,
                                             sortTests)
 
-    handler = handlerClass(individual=_individual, topdir=pathManager.getPath("MINT_TEST_PATH"),
-                           testPath=pathManager.getPath("MINT_TEST_PATH"), conaryDir=pathManager.getPath("CONARY_PATH"))
-
+    handler = handlerClass(individual=_individual)
     results = handler.main(argv)
-
-    # Return 2 if tests failed. Python will return 1 if there was a fatal
-    # error outside of the actual testing (e.g. an import error).
-    rc = (not results.wasSuccessful()) and 2 or 0
-    sys.exit(rc)
+    sys.exit(results.getExitCode())
 
 if __name__ == '__main__':
     setup()

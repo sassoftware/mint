@@ -10,7 +10,7 @@ from mint import buildtypes
 from mint.rest import errors
 from mint.rest.api import models
 
-import mint_rephelp
+from mint_test import mint_rephelp
 
 class Settings(object):
     def __init__(self, d):

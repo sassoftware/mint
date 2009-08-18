@@ -21,6 +21,6 @@ for x in sys.path:
         for line in f:
             m = isconst.search(line)
             if m:
-                setattr(sys.modules['_apache'], m.group(1), None)
+                setattr(sys.modules[__name__], m.group(1), None)
 
 mpm_query = lambda *P, **K: None

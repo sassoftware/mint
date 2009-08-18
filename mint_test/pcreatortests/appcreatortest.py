@@ -14,7 +14,7 @@ import testsuite
 testsuite.setup()
 
 import fixtures
-import mint_rephelp
+from mint_test import mint_rephelp
 
 from conary import versions as conaryver
 from conary.deps import deps as conarydeps
@@ -23,7 +23,7 @@ from conary import conaryclient
 import pcreator
 public = pcreator.common.public
 
-from rpath_proddef.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 
 class MockedAppCreatorTest(fixtures.FixturedUnitTest):
     """ Unit Tests the MintClient and corresponding MintServer methods,

@@ -11,7 +11,7 @@ import os
 import re
 import time
 
-import mint_rephelp
+from mint_test import mint_rephelp
 import restbase
 
 class ImagesTest(restbase.BaseRestTest):

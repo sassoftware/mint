@@ -43,7 +43,7 @@ from mcp_test import mcp_helper
 from mcp import queue
 from mcp_test.mcp_helper import MCPTestMixin
 
-from rpath_proddef.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 
 # Mock out the queues
 queue.Queue = mcp_helper.DummyQueue

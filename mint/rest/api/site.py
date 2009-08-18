@@ -6,7 +6,7 @@
 
 from conary import constants as conaryConstants
 from restlib.controller import RestController
-from rpath_common.proddef import api1 as proddef
+from rpath_proddef import api1 as proddef
 
 from mint import constants
 from mint import maintenance

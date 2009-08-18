@@ -13,7 +13,7 @@ import cPickle
 import os
 import urlparse
 
-import mint_rephelp
+from mint_test import mint_rephelp
 import ec2test
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
