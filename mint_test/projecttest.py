@@ -45,7 +45,9 @@ class ProjectTest(fixtures.FixturedUnitTest):
     def _callDeleteProjectScript(self, projectName):
         import os
         configFile = os.path.join(self.cfg.dataPath, "rbuilder.conf")
-        ret = os.system('echo yes | ../scripts/deleteproject --xyzzy=%s %s > /dev/null' % (configFile, projectName))
+        scriptPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        ret = os.system('echo yes | %s/scripts/deleteproject --xyzzy=%s %s > /dev/null'
+                % (scriptPath, configFile, projectName))
         return ret >> 8
 
     @testsuite.context("quick")

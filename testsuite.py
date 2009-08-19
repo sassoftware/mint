@@ -81,6 +81,8 @@ def setup():
 
     pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_PATH')
     path = pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_TEST_PATH')
+    pathManager.addResourcePath('PACKAGE_CREATOR_SERVICE_ARCHIVE_PATH',
+            path + '/factory_test/archive')
     pathManager.addResourcePath('PACKAGE_CREATOR_SERVICE_FACTORY_PATH',
             path + '/recipes')
 

@@ -517,7 +517,7 @@ Much like Powdermilk Biscuits[tm]."""
                    and not x.startswith('.')]
         nonExec = False
         for modl in modules:
-            if not (os.stat(modl)[0] & 0100):
+            if not (os.stat(os.path.join(curdir, modl))[0] & 0100):
                 if not nonExec:
                     print >> sys.stderr, ""
                 print >> sys.stderr, "%s is not executable" % modl

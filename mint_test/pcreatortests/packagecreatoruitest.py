@@ -452,26 +452,16 @@ content-type=text/plain
 
     @fixtures.fixture('Full')
     def testMinCfgData(self, db, data):
-        self.proxyLinePresent = False
         @pcreator.backend.public
         def startSession(*args):
             cfgArgs = simplejson.loads(args[2])
             proxyLines = [x for x in cfgArgs if x.startswith('conaryProxy')]
-            self.assertEquals(bool(proxyLines), self.proxyLinePresent)
+            self.failUnless(proxyLines, "Local conary proxy was not set")
             return 'asdfasdfasdfasdfsdf'
         self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
         client = self.getClient('owner')
         sesH = client.startPackageCreatorSession(1, '3', 'yournamespace', 'foo', 'bar.baz.com@yournamespace:baz-3-devel')
 
-        def newGetConfig(*args, **kwargs):
-            cfg = conary.conarycfg.ConaryConfiguration()
-            cfg.configLine('conaryProxy http://test/')
-            return cfg
-        self.mock(mint.server.MintServer, '_getProjectConaryConfig', newGetConfig)
-        self.proxyLinePresent = True
-
-        client = self.getClient('owner')
-        sesH = client.startPackageCreatorSession(1, '3', 'yournamespace', 'foo', 'bar.baz.com@yournamespace:baz-3-devel')
 
 class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
     def _createProductVersion(self, mintclient, project, version, namespace, description=''):
@@ -759,8 +749,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
         'sqlite:lib',
         'tar:runtime',
     ]
-        recipedir = conary.lib.util.joinPaths( \
-                os.environ.get('CONARY_FACTORY_TEST_PATH'), 'recipes')
+        recipedir = pathManager.getPath('PACKAGE_CREATOR_SERVICE_FACTORY_PATH')
 
         if 'factory-base-packagecreator' not in recipesToBuild:
             recipesToBuild.insert(0, 'factory-base-packagecreator')

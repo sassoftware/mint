@@ -43,7 +43,7 @@ class SiteTest(restbase.BaseRestTest):
   <platforms href="http://%(server)s:%(port)s/api/platforms"/>
   <registration href="http://%(server)s:%(port)s/api/registration"/>
   <maintMode>false</maintMode>
-  <proddefSchemaVersion>2.0</proddefSchemaVersion>
+  <proddefSchemaVersion>3.0</proddefSchemaVersion>
 </rbuilderStatus>
 """
         self.assertBlobEquals(response,
