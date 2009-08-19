@@ -2576,7 +2576,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 self.builds.bumpBuildCount(buildId))
 
         #Set up the http/https proxy
-        r['proxy'] = dict(cc.proxy)
+        r['proxy'] = dict(self.cfg.proxy)
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
