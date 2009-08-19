@@ -60,7 +60,6 @@ def setup():
     from testrunner.testhelp import TestCase
     
     pathManager.addExecPath('RMAKE_PATH')
-    pathManager.addExecPath('RMAKE_TEST_PATH')
 
     pathManager.addExecPath('MCP_PATH')
 
