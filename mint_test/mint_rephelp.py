@@ -372,14 +372,14 @@ class MintApacheServer(rephelp.ApacheServer):
 
             # Make sure the secure port is configured in the SSL confirguration
             os.system("sed 's|@SECURE_PORT@|%s|g'"
-                    " < %s/server/ssl.conf.in > %s/ssl.conf"
-                    % (str(self.securePort), self.getTestDir(),
+                    " < %s/ssl.conf.in > %s/ssl.conf"
+                    % (str(self.securePort), self.getMintServerDir(),
                     self.serverRoot))
 
             # Copy over the certificates
             for ext in ('key', 'crt'):
-                shutil.copy("%s/server/test.%s" % (self.getTestDir(), ext),
-                        "%s" % self.serverRoot)
+                shutil.copy("%s/test.%s" % (self.getMintServerDir(),
+                    ext), "%s" % self.serverRoot)
 
         # point every mint server at the same database
         # we don't need completely separate mint instances
@@ -426,9 +426,6 @@ class MintApacheServer(rephelp.ApacheServer):
         self.needsPGPKey = False
         self.mintDb.reset()
 
-    def getTestDir(self):
-        return pathManager.getPath("MINT_TEST_PATH")
-
     def getMap(self):
         # by default, there's no repository associated w/ a mint database.
         # we could make this return the entire map for all projects
@@ -436,7 +433,7 @@ class MintApacheServer(rephelp.ApacheServer):
         return {}
 
     def getMintServerDir(self):
-        return os.path.join(os.path.dirname(sys.modules['mint_rephelp'].__file__), 'server')
+        return pathManager.getPath('MINT_TEST_PATH') + '/mint_test/server'
 
     def getHttpdConfTemplate(self):
         return os.path.join(self.getMintServerDir(), 'httpd.conf.in')
