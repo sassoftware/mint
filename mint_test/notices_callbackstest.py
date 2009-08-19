@@ -46,7 +46,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
         ltime = notices_callbacks.PackageNoticesCallback.formatTime(tstamp)
         stime = notices_callbacks.PackageNoticesCallback.formatRFC822Time(tstamp)
         expBinaries = """\
-<item><title>Package Build calibre=1.2-3-4 completed</title><description>&lt;b&gt;Name:&lt;/b&gt; calibre&lt;br/&gt;&lt;b&gt;Version:&lt;/b&gt; localhost@rpl:linux/1.2-3-4&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @LTIME@&lt;br/&gt;&lt;b&gt;Duration:&lt;/b&gt; 00:45:43&lt;br/&gt;</description><date>@STIME@</date><category>success</category><guid>http://siteproject.com/api/users/JeanValjean/notices/contexts/builder/@GUID@</guid></item>"""
+<item><title>Package Build calibre=1.2-3-4 completed</title><description>&lt;b&gt;Name:&lt;/b&gt; calibre&lt;br/&gt;&lt;b&gt;Version:&lt;/b&gt; localhost@rpl:linux/1.2-3-4&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @LTIME@&lt;br/&gt;&lt;b&gt;Duration:&lt;/b&gt; 00:45:43&lt;br/&gt;</description><date>@STIME@</date><category>success</category><guid>/api/users/JeanValjean/notices/contexts/builder/@GUID@</guid></item>"""
         expBinaries = expBinaries.replace('@LTIME@', ltime).replace('@STIME@', stime)
         actual = file(path).read()
         self.failUnlessEqual(actual, expBinaries.replace("@GUID@", "1"))
@@ -67,7 +67,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
         self.failUnless(os.path.exists(path))
         stime = notices_callbacks.PackageNoticesCallback.formatRFC822Time(0)
         expNoBinaries = """\
-<item><title>Package Build calibre:source=1.2-3 completed</title><description>No packages built</description><date>@STIME@</date><category>success</category><guid>http://siteproject.com/api/users/JeanValjean/notices/contexts/builder/@GUID@</guid></item>"""
+<item><title>Package Build calibre:source=1.2-3 completed</title><description>No packages built</description><date>@STIME@</date><category>success</category><guid>/api/users/JeanValjean/notices/contexts/builder/@GUID@</guid></item>"""
         expNoBinaries = expNoBinaries.replace('@STIME@', stime)
         actual = file(path).read()
         self.failUnlessEqual(actual, expNoBinaries.replace("@GUID@", "3"))
@@ -132,7 +132,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
         ltime = notices_callbacks.PackageNoticesCallback.formatTime(tstamp)
         stime = notices_callbacks.PackageNoticesCallback.formatRFC822Time(tstamp)
         exp = """\
-<item><title>Image `Build Name' built (Project Foo version Version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; Project Foo&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; Version 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; 2&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://host/file1"&gt;http://host/file1&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://host/file2"&gt;http://host/file2&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @LTIME@</description><date>@STIME@</date><category>success</category><guid>http://siteproject.com/api/users/JeanValjean/notices/contexts/builder/1</guid></item>"""
+<item><title>Image `Build Name' built (Project Foo version Version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; Project Foo&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; Version 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; 2&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://host/file1"&gt;http://host/file1&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://host/file2"&gt;http://host/file2&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @LTIME@</description><date>@STIME@</date><category>success</category><guid>/api/users/JeanValjean/notices/contexts/builder/1</guid></item>"""
         exp = exp.replace('@LTIME@', ltime).replace('@STIME@', stime)
         self.failUnlessEqual(actual, exp)
 
@@ -150,7 +150,7 @@ class NoticesTest(testsetup.testsuite.TestCase):
         actual = file(path).read()
 
         exp = """\
-<item><title>Image `Build Name' built (Project Foo version Version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; Project Foo&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; Version 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; 2&lt;br/&gt;&lt;b&gt;AMI:&lt;/b&gt; AMI-0&lt;br/&gt;&lt;b&gt;AMI:&lt;/b&gt; AMI-1&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @LTIME@</description><date>@STIME@</date><category>success</category><guid>http://siteproject.com/api/users/JeanValjean/notices/contexts/builder/2</guid></item>"""
+<item><title>Image `Build Name' built (Project Foo version Version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; Project Foo&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; Version 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; 2&lt;br/&gt;&lt;b&gt;AMI:&lt;/b&gt; AMI-0&lt;br/&gt;&lt;b&gt;AMI:&lt;/b&gt; AMI-1&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @LTIME@</description><date>@STIME@</date><category>success</category><guid>/api/users/JeanValjean/notices/contexts/builder/2</guid></item>"""
         exp = exp.replace('@LTIME@', ltime).replace('@STIME@', stime)
         self.failUnlessEqual(actual, exp)
 

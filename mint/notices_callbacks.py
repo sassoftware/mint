@@ -26,7 +26,6 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         self.userId = userId
         self.store = notices_store.createStore(
             os.path.join(cfg.dataPath, "notices"), userId)
-        self.hostName = cfg.siteHost
 
     def _notify(self, troveBuilder, job):
         troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
@@ -48,9 +47,8 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
     notify_error = _notify
 
     def getNoticesUrl(self, noticeId):
-        return "http://%s/%s" % (self.hostName,
-            '/'.join(["api/users", self.userId,
-                      "notices/contexts", noticeId]))
+        return '/'.join(["/api/users", self.userId,
+                      "notices/contexts", noticeId])
 
     @classmethod
     def makeItem(self, title, description, category, date, guid):
