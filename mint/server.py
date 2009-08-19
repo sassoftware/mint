@@ -3177,7 +3177,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         username = self.users.get(build.createdBy)['username']
         buildName = build.name
         buildType = buildtypes.typeNamesMarketing.get(build.buildType, None)
-        downloadUrlTemplate = self.getDownloadUrlTemplate()
+
+        # URLs in notices should use the canonical hostname since they
+        # are stored permanently.
+        downloadUrlTemplate = self.getDownloadUrlTemplate(useRequest=False)
+
         # We don't have a timestamp on the data coming from the jobslave, so
         # just use the current time for that.
         buildTime = time.time()
@@ -5242,8 +5246,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
             callback = callback)
 
-    def getDownloadUrlTemplate(self):
-        if self.req:
+    def getDownloadUrlTemplate(self, useRequest=True):
+        if self.req and useRequest:
             hostname = self.req.hostname
         else:
             hostname = self.cfg.siteHost
