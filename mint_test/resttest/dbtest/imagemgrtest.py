@@ -103,7 +103,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.assertEqual(file.size, 1024)
         self.assertEqual(file.title, 'Image File 1')
         self.assertEqual(len(file.urls), 1)
-        self.assertEqual(file.urls[0].url, 'http://test.rpath.local:0/downloadImage?fileId=1')
+        self.assertEqual(file.urls[0].fileId, 1)
         self.assertEqual(file.urls[0].urlType, 0)
 
     def testAddImageStatus(self):
@@ -203,14 +203,16 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.assertEqual(len(files), 1)
         file, = files
         self.assertEqual(file.title, 'title')
-        self.assertEqual(file.urls[0].url, 'http://test.rpath.local:0/downloadImage?fileId=1')
+        self.assertEqual(file.urls[0].fileId, 1)
+        self.assertEqual(file.urls[0].urlType, 0)
 
         db.setImageFiles('foo', imageId, [('filename2', 'title2', 1024, 'sha')])
         files = db.getImageForProduct('foo', imageId).files.files
         self.assertEqual(len(files), 1)
         file, = files
         self.assertEqual(file.title, 'title2')
-        self.assertEqual(file.urls[0].url, 'http://test.rpath.local:0/downloadImage?fileId=2')
+        self.assertEqual(file.urls[0].fileId, 2)
+        self.assertEqual(file.urls[0].urlType, 0)
         self.assertEqual(file.size, 1024)
         self.assertEqual(file.sha1, 'sha')
         self.assertRaises(ValueError,

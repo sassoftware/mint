@@ -10,11 +10,13 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class FileUrl(Model):
+    fileId = fields.IntegerField(isAttribute=True)
     urlType = fields.IntegerField(isAttribute=True)
-    url = fields.CharField(isText=True)
+    url = fields.ImageDownloadField(isText=True)
 
     def __repr__(self):
-        return "images.FileUrl(url=%r, urlType=%r)" % (self.url, self.urlType)
+        return "images.FileUrl(fileId=%r, urlType=%r)" % (self.fileId, self.urlType)
+
 
 class ImageFile(Model):
     fileId   = fields.IntegerField()

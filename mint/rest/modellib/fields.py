@@ -120,6 +120,18 @@ class AbsoluteUrlField(CalculatedField):
         return context.controller.url(context.request,
                                       *parent.get_absolute_url())
 
+
+class ImageDownloadField(CalculatedField):
+    handleNone = True
+
+    def _valueToString(self, value, parent, context):
+        baseUrl = context.request.baseUrl
+        if baseUrl.endswith('api'):
+            baseUrl = baseUrl[:-3]
+        return baseUrl + 'downloadImage?fileId=%d&urlType=%d' % (
+                parent.fileId, parent.urlType)
+
+
 class EmailField(Field):
     pass
 

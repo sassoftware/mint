@@ -127,8 +127,7 @@ class ImageManager(manager.Manager):
                 file = filesById[d['fileId']]
             if url:
                 file.baseFileName = os.path.basename(url)
-            url = self._makeDownloadURL(file.fileId, urlType)
-            file.urls.append(models.FileUrl(url=url, urlType=urlType))
+            file.urls.append(models.FileUrl(fileId=file.fileId, urlType=urlType))
 
         imagesById = dict((x.imageId, x) for x in images)
         for image in images:
@@ -293,9 +292,10 @@ class ImageManager(manager.Manager):
                           WHERE fileId=?''', file.fileId)
             urls = []
             for d in cu:
+                d['fileId'] = file.fileId
+                path = d.pop('url')
                 if includePath:
-                    d['path'] = d['url']
-                d['url'] = self._makeDownloadURL(file.fileId, d['urlType'])
+                    d['path'] = path
                 urls.append(models.FileUrl(d))
             file.urls = urls
         return models.ImageFileList(imageFiles)
@@ -402,10 +402,3 @@ class ImageManager(manager.Manager):
             mcpClient.stopJob(imageId)
         except Exception, e:
             raise errors.StopJobFailed, (imageId, e), sys.exc_info()[2]
-
-    def _makeDownloadURL(self, fileId, urlType):
-        url = 'http://%s%s' % (self.cfg.siteHost, self.cfg.basePath)
-        url += 'downloadImage?fileId=%d' % fileId
-        if urlType not in (urltypes.LOCAL, self.cfg.redirectUrlType):
-            url += '&urlType=%d' % urlType
-        return url
