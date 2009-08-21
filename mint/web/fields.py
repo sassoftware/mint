@@ -14,6 +14,7 @@
 #
 
 from conary import errors
+from mint.web.decorators import weak_signature_call
 
 
 class MissingParameterError(errors.WebError):
@@ -49,7 +50,7 @@ def strFields(**params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return weak_signature_call(func, self, **kw)
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
@@ -74,7 +75,7 @@ def intFields(**params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return weak_signature_call(func, self, **kw)
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
@@ -94,7 +95,7 @@ def listFields(memberType, **params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return weak_signature_call(func, self, **kw)
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
@@ -114,7 +115,7 @@ def boolFields(**params):
                 else:
                     value = default
                 kw[name] = value
-            return func(self, **kw)
+            return weak_signature_call(func, self, **kw)
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
@@ -135,7 +136,7 @@ def dictFields(**params):
                     value = kw[key]
                     d[parts[0]] = str(value)
                     del kw[key]
-            return func(self, **kw)
+            return weak_signature_call(func, self, **kw)
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
