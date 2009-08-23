@@ -82,7 +82,7 @@ class MigrateAllProjects(scriptlibrary.SingletonScript):
         tracelog.logMe = self._newLogMe
 
         db = dbstore.connect(self.cfg.dbPath, driver = self.cfg.dbDriver)
-        repoManager = repository.RepositoryManager(self.cfg, db)
+        repoManager = repository.RepositoryManager(self.cfg, db, bypass=True)
         cu = db.cursor()
 
         handles = []

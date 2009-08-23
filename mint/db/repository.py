@@ -279,6 +279,10 @@ class RepositoryHandle(object):
                         "Database alias %r is not defined" % (database,))
             driver, path = self._cfg.database[database]
 
+        if driver == 'pgpool' and self._manager().bypass:
+            driver = 'postgresql'
+            path = path.replace(':6432', ':5439')
+
         dbName = self.fqdn.lower()
         if driver != 'sqlite':
             for badchar in '-.':
@@ -610,10 +614,6 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             base = path.rsplit('/', 1)[0] + '/'
         else:
             base = ''
-
-        if driver == 'pgpool' and self._manager().bypass:
-            driver = 'postgresql'
-            base = base.replace(':6432', ':5439')
 
         controlPath = base + 'postgres'
         return dbstore.connect(controlPath, driver)
