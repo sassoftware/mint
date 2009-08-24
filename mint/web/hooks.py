@@ -46,6 +46,8 @@ from conary.repository.netrepos import netserver
 
 from conary.server import apachemethods
 
+log = logging.getLogger(__name__)
+
 
 BUFFER=1024 * 256
 
@@ -115,7 +117,7 @@ def getRepositoryMap(cfg):
         return {}
 
 def getRepository(projectName, repName, cfg,
-        req, conaryDb, dbTuple, localMirror, requireSigs, commitEmail):
+        req, dbTuple, localMirror, requireSigs, commitEmail):
 
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
@@ -174,18 +176,35 @@ def getRepository(projectName, repName, cfg,
     else:
         nscfg.commitAction = None
 
-    if os.access(repositoryDir, os.F_OK):
-        netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
+    if not os.access(repositoryDir, os.F_OK):
+        log.error("Failed to open repository directory %s", repositoryDir)
+        raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
-        if 'changesetCacheDir' in nscfg.keys():
-            repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
+    netRepos = reposDb = None
+    for x in range(5):
+        try:
+            reposDb = dbstore.connect(dbTuple[1], dbTuple[0])
+        except sqlerrors.DatabaseError, err:
+            req.log_error("Error opening database %r: %s" %
+                    (dbTuple, str(err)))
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+
+        try:
+            netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, reposDb)
+        except sqlerrors.DatabaseLocked:
+            reposDb.close()
+            time.sleep(0.1)
         else:
-            repos = netRepos
-
-        shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, conaryDb)
+            break
     else:
-        req.log_error("failed to open repository directory: %s" % repositoryDir)
-        netRepos = repos = shim = None
+        raise
+
+    if 'changesetCacheDir' in nscfg.keys():
+        repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
+    else:
+        repos = netRepos
+    shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, reposDb)
+
     return netRepos, repos, shim
 
 
@@ -315,7 +334,6 @@ def conaryHandler(req, db, cfg, pathInfo):
         requireSigs = False
 
     doReset = False
-    reposDb = None
 
     items = req.uri.split('/')
     proxyRestRequest = (len(items) >= 4
@@ -349,16 +367,9 @@ def conaryHandler(req, db, cfg, pathInfo):
             repServer.reopen()
         else:
             # Create a new connection.
-            try:
-                reposDb = dbstore.connect(dbTuple[1], dbTuple[0])
-            except sqlerrors.DatabaseError, err:
-                req.log_error("Error opening database %r: %s" %
-                        (dbTuple, str(err)))
-                raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
-
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
-                    actualRepName, cfg, req, reposDb, dbTuple,
-                    localMirror, requireSigs, commitEmail)
+                    actualRepName, cfg, req, dbTuple, localMirror, requireSigs,
+                    commitEmail)
 
             if not repServer:
                 return apache.HTTP_NOT_FOUND
