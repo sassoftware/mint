@@ -145,7 +145,8 @@ class APCHandler(BaseProjectHandler, PackageCreatorMixin):
         # session is saved in the _setApplianceCreatorSession call
         self.session['appliance_creator_maintenance'] = maintain
         try:
-            sesH = self.client.startApplianceCreatorSession(projectId, self.currentVersion, maintain)
+            sesH = self.client.startApplianceCreatorSession(projectId,
+                    self.currentVersion, maintain)[0]
         except mint_error.NoImagesDefined:
             version = self.client.getProductVersion(self.currentVersion)
             self._addErrors("No images have been defined for version: %s" % \
