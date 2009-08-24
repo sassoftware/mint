@@ -114,8 +114,6 @@ class WebHandler(object):
 
     def _redirect(self, location, temporary = False):
         setCacheControl(self.req, strict=True)
-        if not location.startswith('http'):
-            self.req.log_error("ERROR IN REDIRECT: " + location)
         self.req.headers_out['Location'] = location
 
         if temporary:

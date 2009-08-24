@@ -30,8 +30,6 @@ class SqlSession(BaseSession):
     
     def do_cleanup(self):
         self._req.register_cleanup(sql_cleanup, self._client)
-        self._req.log_error("SqlSession: registered database cleanup.",
-                            apache.APLOG_NOTICE)
 
     def do_load(self):
         return self._client.loadSession(str(self._sid))
