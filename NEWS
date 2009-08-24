@@ -1,6 +1,10 @@
 Changes in @NEW@:
 ================
 
+Web Front End Changes
+---------------------
+* Built images for public products are now anonymously accessible (RBL-4070)
+
 Bug Fixes
 ---------------------
 * the mirror-outbound script now uses rBuilder's internal conary proxy 

@@ -36,7 +36,7 @@ from mint.web.templatesupport import downloadTracker, projectText
             <td class="buildInfo">${build.getTroveName()}<br />${"%s/%s" % (build.getTroveVersion().trailingLabel(), build.getTroveVersion().trailingRevision())}</td>
             <td py:if="build.getBuildType() != buildtypes.IMAGELESS" class="buildInfo">${build.getArch()}&nbsp;${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
             <td py:if="build.getBuildType() == buildtypes.IMAGELESS" class="buildInfo">&nbsp;${buildtypes.typeNamesShort.get(build.getBuildType(), 'Unknown')}</td>
-            <td class="buildInfo">&nbsp;<input py:if="not isPublished" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
+            <td class="buildInfo">&nbsp;<input py:if="not isPublished and isWriter" style="float: right;" name="buildIdsToDelete" type="checkbox" value="${build.id}" />
             </td>
         </tr>
     </div>
@@ -49,7 +49,7 @@ from mint.web.templatesupport import downloadTracker, projectText
                         ${buildsTableRow(build, rowNumber)}
                     </div>
                 </table>
-                <p><button id="deleteBuildsSubmit" type="submit">Delete Selected Images</button></p>
+                <p><button py:if="isWriter" id="deleteBuildsSubmit" type="submit">Delete Selected Images</button></p>
             </form>
         </div>
         <p py:if="not builds">This ${projectText().lower()} contains no images.</p>
