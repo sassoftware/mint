@@ -153,7 +153,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
     def releases(self, auth):
         return self._write("pubreleases")
 
-    @writersOnly
+    # @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedReleases = dict()
