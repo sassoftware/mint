@@ -1471,7 +1471,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # has developers.
         cu.execute("""SELECT MAX(D.flagged)
                         FROM (SELECT A.projectId,
-                               COUNT(B.userId) * (NOT COUNT(C.userId)) AS flagged
+                               COUNT(B.userId) * (CASE COUNT(C.userId) WHEN 0 THEN 1 ELSE 0 END) AS flagged
                                  FROM ProjectUsers AS A
                                    LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1
                                    LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND
