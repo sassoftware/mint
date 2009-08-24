@@ -3438,7 +3438,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return [versionDict, versionList]
 
     @typeCheck(int)
-    @requiresAuth
+    # @requiresAuth
     def getAllProjectLabels(self, projectId):
         defaultLabel = projects.Project(self, projectId).getLabel()
         serverName = versions.Label(defaultLabel).getHost()
