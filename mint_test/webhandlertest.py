@@ -46,11 +46,6 @@ class WebHandlerTestWithPort(unittest.TestCase):
         self.assertEqual(self.wh.req.headers_out['Location'],
                 'http://foo.test.local:8080/nowhere')
 
-    def testBadRedirect(self):
-        self.assertRaises(webhandler.HttpMoved,
-                self.wh._redirect, "nowhere")
-        self.failUnless(self.wh.req.error_logged)
-
 
 class WebHandlerTestWithoutPort(unittest.TestCase):
 
@@ -78,11 +73,6 @@ class WebHandlerTestWithoutPort(unittest.TestCase):
                 {'temporary': False})
         self.assertEqual(self.wh.req.headers_out['Location'],
                 'http://foo.test.local/nowhere')
-
-    def testBadRedirectWOP(self):
-        self.assertRaises(webhandler.HttpMoved,
-                self.wh._redirect, "nowhere")
-        self.failUnless(self.wh.req.error_logged)
 
 
 if __name__ == "__main__":

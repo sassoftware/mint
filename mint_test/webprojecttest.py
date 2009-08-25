@@ -138,7 +138,7 @@ class WebProjectTest(WebProjectBaseTest):
         # Anonymous
         page = self.assertContent('/project/testproject/builds',
                                   code=[200],
-                                  content='Permission Denied',
+                                  content='This product contains no images.',
                                   server=self.getProjectServerHostname())
 
         self.webLogin('testuser', 'testpass')
