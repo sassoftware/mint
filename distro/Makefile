@@ -26,6 +26,7 @@ install: default-install
 	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
 	install -D -m0644 backup.flat $(DESTDIR)/etc/raa/backup.d/rBAFiles
 	install -D -m0755 backup.py $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
+	install -D -m0644 console.msg $(DESTDIR)/etc/raa/console.msg
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
 	install -D -m0644 chrootcache.conf $(DESTDIR)/etc/rmake/node.d/chrootcache.conf
 	install -D -m0644 collect.flat $(DESTDIR)/etc/raa/collect.d/rBAFiles
