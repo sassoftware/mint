@@ -8,7 +8,7 @@ import raatest
 
 from rPath.loadmirror.web.loadmirror import LoadMirror
 
-from mintraatests import webPluginTest
+from mint_test.mintraatests import webPluginTest
 
 class LoadMirrorTest(raatest.rAATest):
     def setUp(self):

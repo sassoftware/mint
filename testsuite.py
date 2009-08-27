@@ -67,7 +67,6 @@ def setup():
 
     pathManager.addExecPath('RAA_PATH')
     pathManager.addExecPath('RAA_TEST_PATH')
-    pathManager.addExecPath('RAA_PLUGINS_PATH')
     
     pathManager.addExecPath('RESTLIB_PATH')
     pathManager.addExecPath('CREST_PATH')
@@ -91,7 +90,10 @@ def setup():
     pathManager.addResourcePath('TEST_PATH',path=mintTestPath)
     pathManager.addResourcePath('MINT_ARCHIVE_PATH',
             path=os.path.join(mintTestPath, 'mint_test/mint_archive'))
-    pathManager.addExecPath('MINT_RAA_PLUGINS_PATH')
+
+    mintPlugins = pathManager.addExecPath('MINT_RAA_PLUGINS_PATH')
+    defaultPlugins = pathManager.getPath('RAA_PATH')
+    pathManager.addExecPath('RAA_PLUGINS_PATH', [defaultPlugins, mintPlugins])
 
    # if we're running with COVERAGE_DIR, we'll start covering now
     from conary.lib import coveragehook

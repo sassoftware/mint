@@ -3,6 +3,7 @@
 # All rights reserved.
 #
 
+import cherrypy
 import raa.web
 import os
 import subprocess
@@ -12,10 +13,11 @@ import raatest
 import tempfile
 from testutils import mock
 
+import raa.identity
 from raa.modules.raasrvplugin import rAASrvPlugin
 from raa.lib import command
 from raa.rpath_error import RestartWebException
-from mintraatests import webPluginTest
+from mint_test.mintraatests import webPluginTest
 from rPath.rbasetup import lib as rbasetup_lib
 from rPath.rbasetup.srv import rbasetup as rbasetup_srv
 
@@ -232,6 +234,37 @@ class rBASetupTest(raatest.rAATest):
                 "The configuration should be marked as configured.")
         self.failIf(ret['allowNamespaceChange'],
                 "The configuration's namespace option should be frozen now.")
+
+    def test_web_saveConfigFirstTime(self):
+        """
+        Run-through of normal first-time setup from the web end.
+        """
+        webFormValues = dict(hostName="justified",
+                             siteDomainName="mumu.org",
+                             projectDomainName="mumu.org",
+                             new_username="foobar",
+                             new_password="password123",
+                             new_password2="password123",
+                             new_email="nobody@noplace.nohow",
+                             namespace="yournamespace",
+                             externalPasswordURL="",
+                             authCacheTimeout="",
+                             configured="0",
+                             allowNamesaceChange="1")
+
+        oldBackendCall = self.root.callBackend
+        try:
+            self.root.callBackend = raatest.backendFactory({})
+            ret = self.callWithIdent(self.root.saveConfig, **webFormValues)
+        finally:
+            self.root.callBackend = oldBackendCall
+        self.assertEquals(ret, True)
+
+        # Check that the rPA password was updated
+        user = cherrypy.tools.identity_tool.provider.validate_identity(
+                'admin', 'password123', None)
+        if not user:
+            self.fail("Admin password was not changed during initial setup")
 
     def test_web_AttemptSaveFirstTimeConfigWithDefaults(self):
         """
