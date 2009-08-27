@@ -265,6 +265,10 @@ class rBASetup(rAAWebPlugin):
         # If this is a first time setup, we must kick off a redirect to do
         # post setup processing.
         if not isConfigured:
+            username = raa.identity.current.user_name
+            user = raa.identity.current_provider.authenticated_identity(username)
+            raa.identity.current_provider.set_password(user,
+                    normalizedOptions['new_password'])
             try:
                 # do a simple check to catch the case where the user
                 # did not fully qualify their hostname

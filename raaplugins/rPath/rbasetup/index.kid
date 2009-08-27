@@ -80,11 +80,15 @@ Copyright (c) 2008-2009 rPath, Inc.
                 <div py:if="not configured" class="page-section">Initial Administrator Account</div>
                 <div py:if="not configured" class="page-section-content">
                     <p>
-                        Specify details for your rBuilder administrator
-                        account. This account is used to access rBuilder's
-                        web interface, and is separate from the account
-                        used to access the rPath Platform Agent for
-                        maintenance of your rBuilder Appliance.
+                        Provide details for your rBuilder administrator
+                        account. This account is used to access rBuilder's web
+                        interface, and is separate from the account used to
+                        access the rPath Platform Agent for maintenance of your
+                        rBuilder Appliance. The Agent password will initially
+                        also be set to the password you provide here; if you
+                        wish to make the Agent password different from the
+                        rBuilder administrator password, you must change the
+                        Agent password later.
                     </p>
                     <div class="form-line-top">
                         <div class="rbasetup-label">Username:</div>
