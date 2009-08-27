@@ -953,6 +953,9 @@ class MintClient:
                 conaryver.ThawVersion(str(x[1])),
                 conarydeps.ThawFlavor(str(x[2]))) for x in label])
         return ret
+        
+    def getAvailablePackagesFiltered(self, sessionHandle, refresh = False, ignoreComponents = True):
+        return self.server.getAvailablePackagesFiltered(sessionHandle, refresh, ignoreComponents)
 
     def getAvailablePlatforms(self):
         return self.server.getAvailablePlatforms()

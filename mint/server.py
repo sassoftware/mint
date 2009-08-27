@@ -4828,6 +4828,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getAvailablePackages(self, sessionHandle, refresh = False):
         pc = self.getPackageCreatorClient()
         return pc.getAvailablePackagesFrozen(sessionHandle, refresh)
+        
+    @requiresAuth
+    def getAvailablePackagesFiltered(self, sessionHandle, refresh = False, ignoreComponents = True):
+        pc = self.getPackageCreatorClient()
+        return pc.getAvailablePackagesFiltered(sessionHandle, refresh, ignoreComponents)
 
     @typeCheck(str, str, dict)
     @requiresAdmin
