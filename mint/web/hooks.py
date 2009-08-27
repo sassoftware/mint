@@ -453,7 +453,7 @@ def conaryHandler(req, db, cfg, pathInfo):
 
 
 def mintHandler(req, db, cfg, pathInfo):
-    webfe = app.MintApp(req, cfg)
+    webfe = app.MintApp(req, cfg, db=db)
     return webfe._handle(pathInfo)
 
 urls = (
