@@ -9,6 +9,7 @@ A unified interface to rBuilder project repositories.
 """
 
 
+import errno
 import logging
 import os
 import weakref
@@ -520,6 +521,33 @@ class RepositoryHandle(object):
         Load the repository database from the backup at C{path}.
         """
         raise NotImplementedError
+
+    def destroy(self):
+        """
+        Delete the entire repository including database and content store.
+        """
+        nscfg = self.getNetServerConfig()
+
+        self.drop()
+
+        for contDir in nscfg.contentsDir.split():
+            contDir = os.path.normpath(contDir)
+            if os.path.isdir(contDir):
+                util.rmtree(contDir)
+
+            # If the parent of the content store is named the same as the
+            # project FQDN, try to delete it, too. There may be an old 'tmp'
+            # directory that needs to be deleted first.
+            parentDir = os.path.dirname(contDir)
+            if os.path.basename(parentDir) == self.fqdn:
+                try:
+                    tmpDir = os.path.join(parentDir, 'tmp')
+                    if os.path.isdir(tmpDir):
+                        util.rmtree(tmpDir)
+                    os.rmdir(parentDir)
+                except OSError, err:
+                    if err.errno not in (errno.ENOTEMPTY, errno.EACCES):
+                        raise
 
     def drop(self):
         """

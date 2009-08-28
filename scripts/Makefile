@@ -39,20 +39,12 @@ cgi_files =				\
 override STATICDEST = /usr/share/rbuilder/scripts
 override CGIDEST = /srv/www/cgi-bin
 
-all: default-all httpdgraceful
+all: default-all
 
-install: static-install cgi-install default-install httpdgraceful-install
+install: static-install cgi-install default-install
 
-clean: default-clean httpdgraceful-clean
+clean: default-clean
 
-httpdgraceful:
-	gcc httpd-graceful.c -o httpd-graceful
-
-httpdgraceful-install:
-	install -D -m4755 httpd-graceful $(DESTDIR)/usr/libexec/rbuilder/httpd-graceful
-
-httpdgraceful-clean:
-	rm -f httpd-graceful
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

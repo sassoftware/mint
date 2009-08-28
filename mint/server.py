@@ -5,6 +5,7 @@
 #
 
 import base64
+import errno
 import hmac
 import inspect
 import logging
@@ -375,7 +376,8 @@ class MintServer(object):
                 self._handleError(e_value, authToken, methodName, args)
                 raise
             else:
-                self.db.commit()
+                if self.db.inTransaction(True):
+                    self.db.commit()
                 return (False, r)
         finally:
             prof.stopXml(methodName)
@@ -391,7 +393,8 @@ class MintServer(object):
             return getattr(self.db, key)
 
     def _handleError(self, e, authToken, methodName, args):
-        self.db.rollback()
+        if self.db.inTransaction(True):
+            self.db.rollback()
         if self.callLog:
             # See above for rant about pickling args
             str_args = [isinstance(x, (int, long)) and x or str(x)
@@ -2355,49 +2358,53 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId) and not force:
             raise mint_error.BuildPublished()
 
+        self.db.transaction()
         try:
-            self.db.transaction()
-            self.builds.delete(buildId, commit=False)
+            try:
+                amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
+                if amiBuild:
+                    self.deleteAMI(amiId)
+            except mint_error.AMIInstanceDoesNotExist:
+                # We do not want to fail this operation in this case.
+                pass
 
-            amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
-            if amiBuild:
-                self.deleteAMI(amiId)
-        except mint_error.AMIInstanceDoesNotExist:
-            # We do not want to fail this operation in this case.
-            pass
+            for filelist in self.getBuildFilenames(buildId):
+                fileId = filelist['fileId']
+                fileUrlList = filelist['fileUrls']
+                for urlId, urlType, url in fileUrlList:
+                    self.filesUrls.delete(urlId, commit=False)
+
+                    if urlType != urltypes.LOCAL:
+                        continue
+
+                    # if this location is local, delete the file
+                    path = url
+                    try:
+                        os.unlink(path)
+                    except OSError, e:
+                        # ignore permission denied, no such file/dir
+                        if e.errno not in (errno.ENOENT, errno.EACCES):
+                            raise
+
+                    # Try to delete parent directories
+                    for n in range(2):
+                        path = os.path.dirname(path)
+                        try:
+                            os.rmdir(path)
+                        except OSError, err:
+                            if err.errno in (errno.ENOENT, errno.EACCES,
+                                    errno.ENOTEMPTY):
+                                break
+                            else:
+                                raise
+
+            self.builds.delete(buildId, commit=False)
         except:
             self.db.rollback()
             raise
         else:
             self.db.commit()
-
-        for filelist in self.getBuildFilenames(buildId):
-            fileId = filelist['fileId']
-            fileUrlList = filelist['fileUrls']
-            for urlId, urlType, url in fileUrlList:
-                if self.db.driver == 'sqlite':
-                    # sqlite doesn't do cascading deletes, so we'll do it for them
-                    self.buildFilesUrlsMap.delete(fileId, urlId)
-                # if this location is local, delete the file
-                if urlType == urltypes.LOCAL:
-                    fileName = url
-                    try:
-                        os.unlink(fileName)
-                    except OSError, e:
-                            # ignore permission denied, no such file/dir
-                            if e.errno not in (2, 13):
-                                raise
-                    for dirName in (\
-                        os.path.sep.join(fileName.split(os.path.sep)[:-1]),
-                        os.path.sep.join(fileName.split(os.path.sep)[:-2])):
-                        try:
-                            os.rmdir(dirName)
-                        except OSError, e:
-                            # ignore permission denied, dir not empty, no such file/dir
-                            if e.errno not in (2, 13, 39):
-                                raise
-
-        return True
+            return True
 
     @typeCheck(int)
     @requiresAuth
@@ -5134,9 +5141,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     platformNameCache = property(_getNameCache)
 
-    def _gracefulHttpd(self):
-        return os.system('/usr/libexec/rbuilder/httpd-graceful')
-        
     @typeCheck(int)
     @requiresAdmin
     def deleteProject(self, projectId):
@@ -5145,134 +5149,45 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @param projectId: The id of the project to delete
         @type projectId: C{int}
         """
-        
-        def handleNonFatalException(desc):
-            e_type, e_value, e_tb = sys.exc_info()
-            logErrorAndEmail(self.cfg, e_type, e_value, e_tb, desc, {}, doEmail=False)
-        
-        project = projects.Project(self, projectId)
-        reposName = self._translateProjectFQDN(project.getFQDN())
-        
-        if project.external and not self.isLocalMirror(project.id):
-            # can't do it
-            return False
-                
-        # We need to make sure the project and labels are deleted before doing 
-        # anything else.  Any failure here should end with a rollback so no
-        # changes are preserved.  Note that we try a few times after doing an
-        # http graceful.  This is done to get rid of any cached connections
-        # that block the repo DB from being dropped.
-        self.db.transaction()
+        handle = self.reposMgr.getRepositoryFromProjectId(projectId)
+        log.info("Deleting project %s (%d)", handle.shortName, projectId)
+
+        # Delete images first since some of them may be AMIs or otherwise
+        # reside on S3.
         try:
-            numTries = 0
-            maxTries = 3
-            deleted = False
-            while (numTries < maxTries) and not deleted:
-                
-                self._gracefulHttpd()
-                
-                # delete the project
-                try:
-                    self.projects.deleteProject(project.id, project.getFQDN(), commit=False)
-                    deleted = True
-                except Exception, e:
-                    if numTries >= maxTries:
-                        # this is fatal, but we want the original traceback logged
-                        # and then mask the error for the user
-                        handleNonFatalException('delete-project')
-                        raise mint_error.ProjectNotDeleted(project.name)
-                    else:
-                        time.sleep(1)
-                        numTries += 1
-            
-            # delete project labels
-            self.labels.deleteLabels(projectId, commit=False)
+            for buildId in self.builds.iterBuildsForProject(projectId):
+                self._deleteBuild(buildId, force=True)
+        except:
+            log.warning("Could not delete images for project %s:",
+                    handle.shortName, exc_info=True)
+
+        # Perform all the remaining database operations in a single
+        # transaction.
+        cu = self.db.transaction()
+        try:
+            cu.execute("DELETE FROM Projects WHERE projectId = ?", projectId)
+            cu.execute("DELETE FROM RepNameMap WHERE toName = ?", handle.fqdn)
         except:
             self.db.rollback()
             raise
-        
-        self.db.commit()        
-        
-        # this should not fail after this point, delete what we can and move on
-        
-        # delete the images
-        try:
-            imagesDir = os.path.join(self.cfg.imagesPath, project.hostname)
-            util.rmtree(imagesDir, ignore_errors = True)
-        except Exception, e:
-            handleNonFatalException('delete-images')
-        
-        # delete the entitlements
-        try:
-            entFile = os.path.join(self.cfg.dataPath, 'entitlements', reposName)
-            util.rmtree(entFile, ignore_errors = True)
-        except Exception, e:
-            handleNonFatalException('delete-entitlements')
+        self.db.commit()
 
-        # delete the releases
-        try:
-            pubRelIds = self.publishedReleases.getPublishedReleasesByProject(
-                            project.id, publishedOnly=False)
-            for id in pubRelIds:
-                self.publishedReleases.delete(id)
-        except Exception, e:
-            handleNonFatalException('delete-releases')
-        
-        # delete the builds
-        try:
-            for buildId in self.builds.iterBuildsForProject(project.id):
-                self._deleteBuild(buildId, force=True)
-        except Exception, e:
-            handleNonFatalException('delete-builds')
-        
-        # delete the membership requests
-        try:
-            self.membershipRequests.deleteRequestsByProject(project.id)
-        except Exception, e:
-            handleNonFatalException('delete-membership-requests')
-        
-        # delete the commits
-        try:
-            self.commits.deleteCommitsByProject(project.id)
-        except Exception, e:
-            handleNonFatalException('delete-commits')
-        
-        # delete package indices
-        try:
-            self.pkgIndex.deleteByProject(project.id)
-        except Exception, e:
-            handleNonFatalException('delete-package-indices')
-        
-        # delete project user references
-        try:
-            users = self.projectUsers.getMembersByProjectId(project.id)
-            for userId, _, _ in users:
-                self.projectUsers.delete(project.id, userId, force=True)
-        except Exception, e:
-            handleNonFatalException('delete-project-users')
-        
-        # delete inbound mirror
-        try:
-            ibmirror = self.getInboundMirror(project.id)
-            if ibmirror:
-                self.delInboundMirror(ibmirror['inboundMirrorId'])
-        except Exception, e:
-            handleNonFatalException('delete-inbound-mirrors')
-        
-        # delete outbound mirror
-        try:
-            obmirror = self.outboundMirrors.getOutboundMirrorByProject(project.id)
-            if obmirror:
-                self.delOutboundMirror(obmirror['outboundMirrorId'])
-        except Exception, e:
-            handleNonFatalException('delete-outbound-mirrors')
-        
-        # delete repo names
-        try:
-            # delRemappedRepository takes the "fromName", not the project FQDN, as the arg here
-            self.delRemappedRepository("%s.%s" % (project.getHostname(), self.cfg.siteDomainName))
-        except Exception, e:
-            handleNonFatalException('delete-repo-names')
+        # Delete the repository database.
+        if handle.hasDatabase:
+            try:
+                handle.destroy()
+            except:
+                log.exception("Could not delete repository for project %s:",
+                        handle.shortName)
+
+        # Clean up the stragglers
+        imagesDir = os.path.join(self.cfg.imagesPath, handle.shortName)
+        if os.path.exists(imagesDir):
+            try:
+                util.rmtree(imagesDir)
+            except:
+                log.warning("Could not delete project images directory %s:",
+                        imagesDir, exc_info=True)
         
         return True
 

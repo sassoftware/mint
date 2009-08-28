@@ -96,6 +96,7 @@ class FixtureCache(object):
         cfg.siteDomainName = MINT_DOMAIN
         cfg.secureHostName = "%s.%s" % (MINT_HOST, MINT_PROJECT_DOMAIN)
         cfg.dataPath = tempfile.mkdtemp(prefix = "fixture%s" % name)
+        cfg.logPath = os.path.join(cfg.dataPath, 'logs')
         cfg.reposPath = os.path.join(cfg.dataPath, 'repos')
         cfg.reposContentsDir = "%s %s" % (os.path.join(cfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
         cfg.imagesPath = os.path.join(cfg.dataPath, 'images')
@@ -113,6 +114,8 @@ class FixtureCache(object):
         f = open(cfg.conaryRcFile, 'w')
         f.close()
         cfg.postCfg()
+
+        util.mkdirChain(cfg.logPath)
 
         util.mkdirChain(cfg.dataPath + "/config/")
         f = open(cfg.dataPath + "/config/mcp-client.conf", "w")

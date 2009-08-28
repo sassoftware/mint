@@ -12,6 +12,7 @@ import re
 import socket
 import tempfile
 import time
+from testrunner.testhelp import SkipTestException
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN, FQDN
@@ -798,6 +799,8 @@ class ProjectTest(fixtures.FixturedUnitTest):
         
     @fixtures.fixture('Full')
     def testDeleteProject(self, db, data):
+        if db.driver == 'sqlite':
+            raise SkipTestException("test requires working foreign key constraints")
         client = self.getClient('admin')
         project = client.getProject(data['projectId'])
         
@@ -830,14 +833,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client.addOutboundMirror(project.id,
                 ["localhost.rpath.local2@rpl:devel"], allLabels = True)
 
-        # add entitlement
-        entDir = self.cfg.dataPath + "/entitlements"
-        os.mkdir(entDir)
-        entFile = os.path.join(entDir, "foo.%s" % MINT_PROJECT_DOMAIN)
-        f = open(entFile, 'w')
-        f.write("...")
-        f.close()
-        
         # add image files
         imageDir = os.path.join(self.cfg.imagesPath, project.hostname)
         os.mkdir(imageDir)
@@ -850,9 +845,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         # make sure project is gone
         self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
-        
-        # make sure entitlement file is gone
-        self.failUnless(not os.path.exists(entFile))
         
         # make sure images dir is gone
         self.failUnless(not os.path.exists(imageDir))
@@ -889,43 +881,13 @@ class ProjectTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(cu.fetchone()[0], 0)
 
     @fixtures.fixture('Full')
-    def testDeleteProjectFailure(self, db, data):
-        client = self.getClient('admin')
-        project = client.getProject(data['projectId'])
-        
-        self.numGracefulHttp = 0
-        
-        def myGracefulHttpd():
-            self.numGracefulHttp += 1
-        
-        orgGracefulHttpd = client.server._server._gracefulHttpd
-        client.server._server._gracefulHttpd = myGracefulHttpd
-
-        try:
-            # delete the project
-            self.failUnless(client.deleteProject(project.id) == True, "This must succeed to be valid test")
-            
-            # try deleting again
-            numGracefulHttp = 0
-            failures = 0
-            try:
-                client.deleteProject(project.id)
-            except Exception, e:
-                failures += 1
-            
-            self.failUnless(failures == self.numGracefulHttp)
-        finally:
-            client.server._server._gracefulHttpd = orgGracefulHttpd
-        
-    @fixtures.fixture('Full')
     def testDeleteExternalProject(self, db, data):
         client = self.getClient('admin')
         projectId = client.newExternalProject('rPath Linux', 'rpath',
                           'rpath.local', 'conary.rpath.com@rpl:devel', '')
 
         project = client.getProject(projectId)
-
-        self.failUnless(client.deleteProject(project.id) == False, "Don't allow deleting external projects")
+        self.failUnless(client.deleteProject(project.id) == True, "Allow deleting external projects")
         
     @fixtures.fixture('Full')
     def testDeleteExternalProjectLocalMirror(self, db, data):
@@ -978,24 +940,17 @@ class ProjectTest(fixtures.FixturedUnitTest):
         project.refresh()
         del project
 
-        os.mkdir(self.cfg.dataPath + "/entitlements")
-        entFile = os.path.join(self.cfg.dataPath, "entitlements", "foo.%s" % MINT_PROJECT_DOMAIN)
-        f = open(entFile, 'w')
-        f.write("...")
-        f.close()
-
         # call the database deletion script
         self.failUnless(self._callDeleteProjectScript(projectName) == 0,
                 "Script exited with non-zero exit code")
 
         # check for remnants
         self.assertRaises(database.ItemNotFound, client.getProject, data['projectId'])
-        self.failUnless(not os.path.exists(entFile))
 
     @fixtures.fixture('Full')
     def testDeleteExtraUrlsProjectScript(self, db, data):
-        # extra mirror URLs (e.g. Amazon S3) should be left behind; only
-        # urltypes.LOCAL should be deleted
+        if db.driver == 'sqlite':
+            raise SkipTestException("test requires working foreign key constraints")
         client = self.getClient('admin')
         project = client.getProject(data['projectId'])
         projectName = project.hostname
@@ -1007,26 +962,17 @@ class ProjectTest(fixtures.FixturedUnitTest):
         build.addFileUrl(fileId, urltypes.AMAZONS3, "http://s3.amazonaws.com/rbuilder/foo.iso")
         build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT, "http://s3.amazonaws.com/rbuilder/foo.iso?torrent")
 
-        cu = db.cursor()
-        cu.execute("""SELECT fu.urlId
-                      FROM BuildFilesUrlsMap bfum
-                           LEFT OUTER JOIN FilesUrls fu USING (urlId)
-                           WHERE bfum.fileId = ?
-                              AND fu.urlType IN (?, ?)""", fileId,
-                              urltypes.AMAZONS3, urltypes.AMAZONS3TORRENT)
-
-        expectedUrlIds = [ x[0] for x in cu.fetchall() ]
-
         # call the database deletion script
         self.failUnless(self._callDeleteProjectScript(projectName) == 0,
                 "Script exited with non-zero exit code")
 
         # make sure some things are left behind!
+        cu = db.cursor()
         self.assertRaises(database.ItemNotFound, client.getProject, data['anotherBuildId'])
         cu.execute("""SELECT COUNT(*) FROM BuildFilesUrlsMap WHERE fileId = ?""", fileId)
         self.failUnlessEqual(cu.fetchall()[0][0], 0, "BuildFilesUrlsMap query should be empty")
         cu.execute("""SELECT COUNT(*) FROM FilesUrls WHERE urlId IN ( %s )""" % ','.join([str(x) for x in expectedUrlIds]))
-        self.failUnlessEqual(cu.fetchall()[0][0], len(expectedUrlIds), "FilesUrls query should contain two URL types that are non local")
+        self.failUnlessEqual(cu.fetchall()[0][0], 0, "FilesUrls query should be empty")
 
     @fixtures.fixture('Full')
     def testLocalMirror(self, db, data):

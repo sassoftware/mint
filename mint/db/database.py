@@ -158,6 +158,9 @@ class Database(object):
     def transaction(self):
         return self._db.transaction()
 
+    def inTransaction(self, default=None):
+        return self._db.inTransaction(default)
+
     def normalizeMirrorOrder(self):
         self._normalizeMirrorOrder("OutboundMirrors", "outboundMirrorId")
         self._normalizeMirrorOrder("InboundMirrors", "inboundMirrorId")
