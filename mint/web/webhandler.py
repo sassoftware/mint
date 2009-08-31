@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved
 #
@@ -109,6 +109,15 @@ class WebHandler(object):
             raise HttpMovedTemporarily
         else:
             raise HttpMoved
+
+    def _redirectOldLinks(self, location=''):
+        """
+        Mechanism to redirect old UI links to the new UI when not prefixed by
+        /web/
+        """
+        redirectIndex = self.req.get_options().get('redirectIndex', False)
+        if redirectIndex:
+            self._redirectHttp('ui/' + location)
 
     def _clearAuth(self):
         self.auth = users.Authorization()

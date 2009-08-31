@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All rights reserved
 #
@@ -120,6 +120,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @redirectHttp
     def projectPage(self, auth):
+        self._redirectOldLinks('#/%s?shortname=%s' % (
+            self.project.isAppliance and 'appliances' or 'repositories',
+            self.project.shortname))
+
         if self.auth.admin:
             # various bits of logic to figure out if we should prompt for
             # mirror preloading

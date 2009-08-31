@@ -67,11 +67,8 @@ class SiteHandler(WebHandler):
 
     @redirectHttp
     def _frontPage(self, auth, *args, **kwargs):
+        self._redirectOldLinks()
         
-        # if rBA go to new UI
-        redirectIndex = self.req.get_options().get('redirectIndex', False)
-        if redirectIndex:
-            self._redirectHttp('ui/')
         popularProjects = self.client.getPopularProjects()
         topProjects = self.client.getTopProjects()
         selectionData  = self.client.getFrontPageSelection()
