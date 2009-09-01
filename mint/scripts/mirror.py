@@ -1,15 +1,18 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2007, 2009 rPath, Inc.
 #
 # All Rights Reserved
 #
+
+import logging
+import optparse
+import os
+import sys
+
 from mint import config
 from mint.lib import scriptlibrary
 
-import os
-import sys
-import optparse
-import traceback
+log = logging.getLogger(__name__)
 
 EXCLUDE_SOURCE_MATCH_TROVES = ["-.*:source", "-.*:debuginfo"]
 INCLUDE_ALL_MATCH_TROVES = ["+.*"]
@@ -17,11 +20,10 @@ INCLUDE_ALL_MATCH_TROVES = ["+.*"]
 class MirrorScript(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = None
+    newLogger = True
+
     options = None
     args = None
-
-    def __init__(self, aLockPath = scriptlibrary.DEFAULT_LOCKPATH):
-        scriptlibrary.SingletonScript.__init__(self, aLockPath)
 
     def handle_args(self):
         usage = "%prog [options] rbuilder-xml-rpc-url"
@@ -52,13 +54,12 @@ class MirrorScript(scriptlibrary.SingletonScript):
             op.error("missing URL to rBuilder XML-RPC interface")
             return False
         # read the configuration
-        self.cfg = config.MintConfig()
+        cfg = config.MintConfig()
         if self.options.cfgPath:
-            self.cfg.read(self.options.cfgPath)
+            cfg.read(self.options.cfgPath)
         else:
-            self.cfg.read(self.cfgPath)
-        if self.logFileName:
-            self.logPath = os.path.join(self.cfg.logPath, self.logFileName)
+            cfg.read(self.cfgPath)
+        self.setConfig(cfg)
         return True
 
     def _doMirror(self, mirrorCfg, sourceRepos, targetRepos, fullSync = False):
@@ -70,15 +71,15 @@ class MirrorScript(scriptlibrary.SingletonScript):
         tmpDir = os.path.join(self.cfg.dataPath, 'tmp')
         if os.access(tmpDir, os.W_OK):
             util.settempdir(tmpDir)
-            self.log.info("Using %s as tmpDir" % tmpDir)
+            log.info("Using %s as tmpDir", tmpDir)
         else:
-            self.log.warning("Using system temporary directory")
+            log.warning("Using system temporary directory")
 
         fullSync = self.options.sync or fullSync
         if fullSync:
-            self.log.info("Full sync requested on this mirror")
+            log.info("Full sync requested on this mirror")
         if self.options.syncSigs:
-            self.log.info("Full signature sync requested on this mirror")
+            log.info("Full signature sync requested on this mirror")
 
         # first time through, we should pass in sync options;
         # subsequent passes should use the mirror marks
@@ -87,7 +88,7 @@ class MirrorScript(scriptlibrary.SingletonScript):
         if self.options.test:
             # If we are testing, print the configuration
             if not self.options.showConfig:
-                self.log.info("--test implies --show-config")
+                log.info("--test implies --show-config")
                 self.options.showConfig = True
 
         if self.options.showConfig:
@@ -97,18 +98,18 @@ class MirrorScript(scriptlibrary.SingletonScript):
             sys.stdout.flush()
 
         if self.options.test:
-            self.log.info("Testing mode, not actually mirroring")
+            log.info("Testing mode, not actually mirroring")
             return
 
-        self.log.info("Beginning pass %d" % passNumber)
+        log.info("Beginning pass %d", passNumber)
         callAgain = mirror.mirrorRepository(sourceRepos, targetRepos,
             mirrorCfg, sync = self.options.sync or fullSync,
             syncSigs = self.options.syncSigs)
-        self.log.info("Completed pass %d" % passNumber)
+        log.info("Completed pass %d", passNumber)
 
         while callAgain:
             passNumber += 1
-            self.log.info("Beginning pass %d" % passNumber)
+            log.info("Beginning pass %d", passNumber)
             callAgain = mirror.mirrorRepository(sourceRepos,
                 targetRepos, mirrorCfg)
-            self.log.info("Completed pass %d" % passNumber)
+            log.info("Completed pass %d", passNumber)

@@ -1,28 +1,24 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
 
+import logging
 import sys
-import os
-from os import _exit
 
 from conary import versions
 from conary import conarycfg
 from conary.conaryclient import mirror
-from conary.lib import util, log
 from conary.repository import errors
-from conary.repository import netclient
 from conary import conaryclient
 
-from mint import config
-from mint import helperfuncs
 from mint.client import MintClient
 from mint.scripts.mirror import MirrorScript
 
-log.setVerbosity(log.DEBUG)
+log = logging.getLogger(__name__)
+
 
 class MirrorInbound(MirrorScript):
     logFileName = "mirror-inbound.log"
@@ -42,7 +38,7 @@ class MirrorInbound(MirrorScript):
                     sourceAuthType, sourceUser, sourcePass, \
                     sourceEntitlement, allLabels = label
             targetProject = client.getProject(targetProjectId)
-            self.log.info("Mirroring %s" % targetProject.name)
+            log.info("Mirroring %s", targetProject.name)
 
             try:
                 targetLabelId = targetProject.getLabelIdMap().values()[0]
@@ -85,20 +81,20 @@ class MirrorInbound(MirrorScript):
                 targetRepos = conaryclient.ConaryClient(targetCCfg).getRepos()
 
                 self._doMirror(cfg, sourceRepos, targetRepos)
-            except KeyboardInterrupt, ke:
-                self.log.info("Inbound mirror killed by user")
+            except KeyboardInterrupt:
+                log.info("Inbound mirror killed by user")
                 break
             except errors.InsufficientPermission, ie:
-                self.log.error("%s. Check to make sure that you have been given access to mirror from the aforementioned repository." % ie)
-            except Exception, e:
-                self.log.error("Exception occurred while mirroring %s" % targetProject.name)
-                self.logTraceback()
+                log.error("%s. Check to make sure that you have been given access to mirror from the aforementioned repository.", ie)
+            except:
+                log.exception("Unhandled exception while mirroring %s",
+                        targetProject.name)
 
         return 0
 
     def cleanup(self):
-        self.log.info("Inbound mirror script finished")
+        log.info("Inbound mirror script finished")
 
 if __name__ == "__main__":
     mi = MirrorInbound()
-    _exit(mi.run())
+    sys.exit(mi.run())

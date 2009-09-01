@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -9,26 +9,21 @@
 # have permission/access to call back to the rBuilder Appliance to mirror.
 # This script should be run from a machine with access to both rBA and mirror.
 
+import logging
 import sys
-import os
-from os import _exit
-import xmlrpclib
 
 from conary.conaryclient import mirror
 from conary import conaryclient, conarycfg
-from conary import dbstore
-from conary import trove
 from conary import versions
 from conary.deps import deps
 from conary.repository import errors
-from conary.lib import util, log
 
-from mint import config
 from mint import helperfuncs
 from mint.client import MintClient
 from mint.scripts.mirror import MirrorScript
 
-log.setVerbosity(log.DEBUG)
+log = logging.getLogger(__name__)
+
 
 class MirrorOutbound(MirrorScript):
     logFileName = "mirror-outbound.log"
@@ -42,16 +37,14 @@ class MirrorOutbound(MirrorScript):
         # get proxy configuration here
         proxy = self.cfg.proxy
 
-        mirrorMarks = {}
-
         for (outboundMirrorId, sourceProjectId, targetLabels, allLabels,
-          recurse, matchStrings, order, fullSync, useReleases,
+          recurse, matchStrings, _, fullSync, useReleases,
           ) in outboundMirrors:
             cfg = mirror.MirrorFileConfiguration()
 
             sourceProject = client.getProject(int(sourceProjectId))
             sourceLabelId = sourceProject.getLabelIdMap().values()[0]
-            self.log.info("Mirroring %s" % sourceProject.name)
+            log.info("Mirroring %s", sourceProject.name)
 
             try:
                 labelInfo = client.getLabel(sourceLabelId)
@@ -77,7 +70,7 @@ class MirrorOutbound(MirrorScript):
                 cfg.setSection('') # Switch back to the main config
 
                 # Add user/entitlement information from all projects
-                labelPath, repoMap, userMap, entMap = client.getAllLabelsForProjects()
+                _, _, userMap, entMap = client.getAllLabelsForProjects()
                 for host, authInfo in userMap:
                     sourceCfg.user.addServerGlob(host, authInfo[0], authInfo[1])
                 for host, entitlement in entMap:
@@ -196,7 +189,7 @@ class MirrorOutbound(MirrorScript):
                 # Configure targets
                 obmt = client.getOutboundMirrorTargets(outboundMirrorId)
                 if not obmt:
-                    self.log.warning("Skipping %s, no Update Services specified" % \
+                    log.warning("Skipping %s, no Update Services specified",
                             sourceProject.name)
                     continue
 
@@ -232,19 +225,19 @@ class MirrorOutbound(MirrorScript):
                     # Delete temporary mirror user
                     privRepos.deleteUserByName(reposHost, mirrorUser)
 
-            except KeyboardInterrupt, ke:
-                self.log.info("Outbound mirror killed by user")
+            except KeyboardInterrupt:
+                log.info("Outbound mirror killed by user")
                 break
             except errors.InsufficientPermission, ie:
-                self.log.error("%s. Check to make sure that you have been given access to mirror from the aforementioned repository." % ie)
-            except Exception, e:
-                self.log.error("Exception occurred while mirroring %s" % sourceProject.name)
-                self.logTraceback()
+                log.error("%s. Check to make sure that you have been given access to mirror from the aforementioned repository.", ie)
+            except:
+                log.exception("Unhandled exception while mirroring %s",
+                        sourceProject.name)
         return 0
 
     def cleanup(self):
-        self.log.info("Outbound mirror script finished")
+        log.info("Outbound mirror script finished")
 
 if __name__ == "__main__":
     mo = MirrorOutbound()
-    _exit(mo.run())
+    sys.exit(mo.run())
