@@ -35,6 +35,8 @@ class GenericScript(object):
         if self.newLogger:
             mintutils.setupLogging(self.logPath, consoleLevel=logging.INFO,
                     fileLevel=logging.DEBUG)
+            # Set the conary logger to not eat messages
+            logger.setLevel(logging.NOTSET)
         else:
             self._resetLogging()
 
