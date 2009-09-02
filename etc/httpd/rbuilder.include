@@ -55,6 +55,7 @@
     <Location /images/>
         SetHandler none
         AddType application/octet-stream .iso .img
+        AddType application/x-tar .ova
     </Location>
 
     # Handler for Job Server requests
