@@ -652,7 +652,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                 WHERE datname = ?""", self._getName())
         return bool(ccu.fetchone()[0])
 
-    def _create(self, controlDb=None):
+    def _create(self):
         """
         PostgreSQL-specific repository creation.
 
@@ -660,8 +660,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         create anything that would interfere with the restore process.
         """
         dbName = self._getName()
-        if not controlDb:
-            controlDb = self._getControlConnection()
+        controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
         if self._dbExists(controlDb):
@@ -672,15 +671,28 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
 
         ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'" % (dbName,))
 
-    def drop(self, controlDb=None):
-        if not controlDb:
-            controlDb = self._getControlConnection()
+    def drop(self):
+        controlDb = self._getControlConnection()
 
         if not self._dbExists(controlDb):
             return
 
+        name = self._getName()
+        useBouncer = ':6432/' in self.dbTuple[1]
+        if useBouncer:
+            # pgbouncer normally holds idle connections for 45 seconds.
+            # PAUSEing causes it to close those connections, and prevents new
+            # ones from opening until the RESUME.
+
+            # Our psql bindings don't work with pgbouncer, so we have to do
+            # something incredibly lame...
+            util.execute("psql -U pgbouncer -p 6432 -c 'PAUSE %s'" % (name,))
+
         ccu = controlDb.cursor()
-        ccu.execute("DROP DATABASE %s" % (self._getName(),))
+        ccu.execute("DROP DATABASE %s" % (name,))
+
+        if useBouncer:
+            util.execute("psql -U pgbouncer -p 6432 -c 'RESUME %s'" % (name,))
 
     def dump(self, path):
         controlDb = self._getControlConnection()
