@@ -15,7 +15,6 @@ import raa.web
 import logging
 log = logging.getLogger('raa.web')
 
-from raa.web import makeUrl, getCurrentUser, getRequestHeaderValue
 from raa import rpath_error
 from raa import constants
 from raa.db.data import RDT_BOOL, RDT_INT, RDT_JSON, RDT_STRING
@@ -401,7 +400,5 @@ class rBASetup(rAAWebPlugin):
         self.wizardDone()
         
         # redirect to the rbuilder itself
-        isConfigured, configurableOptions = lib.getRBAConfiguration()
-        hostname = configurableOptions['hostName']
-        dn = configurableOptions['siteDomainName']
-        raa.web.raiseHttpRedirect("http://%s.%s/" % (hostname, dn))
+        fqdn = raa.web.getRequestHostname()
+        raa.web.raiseHttpRedirect("http://%s/" % (fqdn,))
