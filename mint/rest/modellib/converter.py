@@ -162,9 +162,6 @@ class XobjConverter(Converter):
         while toProcess:
             entry, finished = toProcess.pop()
             modelClass, xobject, attrs, parentDict, attrName = entry
-            if attrName == 'imageIds':
-                import epdb
-                epdb.st()
             if not finished:
                 toProcess.append((entry, True))
                 for fieldData in self.walkModelClassAndObject(modelClass, 
