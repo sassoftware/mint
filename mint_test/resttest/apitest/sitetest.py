@@ -17,6 +17,8 @@ from conary.lib import util
 from mint import buildtypes
 from mint import constants
 
+from rpath_proddef import api1 as proddef
+
 import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
@@ -43,13 +45,14 @@ class SiteTest(restbase.BaseRestTest):
   <platforms href="http://%(server)s:%(port)s/api/platforms"/>
   <registration href="http://%(server)s:%(port)s/api/registration"/>
   <maintMode>false</maintMode>
-  <proddefSchemaVersion>3.0</proddefSchemaVersion>
+  <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
 </rbuilderStatus>
 """
         self.assertBlobEquals(response,
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
-                         conaryversion=conaryConstants.version))
+                         conaryversion=conaryConstants.version,
+                         proddefVer=proddef.BaseDefinition.version))
 
 if __name__ == "__main__":
         testsetup.main()
