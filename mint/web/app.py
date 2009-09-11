@@ -218,7 +218,7 @@ class MintApp(WebHandler):
                 and hostname != self.cfg.hostName
                 and domainname == self.cfg.projectDomainName
                 and self.cfg.configured):
-            self._redirectHttp('project/' + hostname)
+            self._redirect('https://%s/project/%s' % (self.cfg.secureHost, hostname))
 
         self.siteHost = self.cfg.siteHost
 

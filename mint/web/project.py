@@ -120,8 +120,9 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @redirectHttp
     def projectPage(self, auth):
+        isAppliance = self.project.prodtype.lower() == 'appliance'
         self._redirectOldLinks('#/%s?shortname=%s' % (
-            self.project.isAppliance and 'appliances' or 'repositories',
+            isAppliance and 'appliances' or 'repositories',
             self.project.shortname))
 
         if self.auth.admin:
