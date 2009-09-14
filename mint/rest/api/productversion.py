@@ -206,7 +206,8 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     def getImageTypeDefinitions(self, request, hostname, version):
         extraParams = dict(hostname = hostname, version = version)
         pd = self.db.getProductVersionDefinition(hostname, version)
-        buildTemplates = pd.iterAllBuildTemplates()
+        buildTemplates = pd.getPlatformBuildTemplates()
+        # XXX Grab build templates from the product too
         buildDefModels = [ self._makeBuildDefinition(x, pd, extraParams,
             models.BuildTemplate) for x in buildTemplates ]
         bdefs = models.BuildTemplates(buildTemplates = buildDefModels)

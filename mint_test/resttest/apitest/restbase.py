@@ -32,68 +32,9 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         ('VMware ESX 64-bit', 'vmware', 'x86_64', 'vmwareEsxImage'),
     ]
     buildTemplates = buildDefs
-    architectures = [
-        ('x86', 'x86 (32-bit)',
-            'is: x86(~i486,~i586,~i686,~cmov,~mmx,~sse,~sse2)'),
-        ('x86_64', 'x86 (64-bit)',
-            'is: x86(~i486,~i586,~i686,~cmov,~mmx,~sse,~sse2) x86_64'),
-    ]
-    containerTemplates = [
-        ("applianceIsoImage",
-            {
-             "autoResolve": False,
-             "baseFileName": "",
-             "installLabelPath": "",
-             "anacondaCustomTrove": "",
-             "anacondaTemplatesTrove": "conary.rpath.com@rpl:2",
-             "betaNag": False,
-             "bugsUrl": "",
-             "maxIsoSize": None,
-             "mediaTemplateTrove": "",
-             "showMediaCheck": False}),
-        ("updateIsoImage",
-            {
-             "autoResolve": False,
-             "baseFileName": "",
-             "installLabelPath": "",
-             "anacondaCustomTrove": "",
-             "anacondaTemplatesTrove": "conary.rpath.com@rpl:2",
-             "betaNag": False,
-             "bugsUrl": "",
-             "maxIsoSize": None,
-             "mediaTemplateTrove": "",
-             "showMediaCheck": False}),
-        ("virtualIronImage",
-            {
-             "autoResolve": False,
-             "baseFileName": "",
-             "installLabelPath": "",
-             "freespace": 1024,
-             "swapSize": 512,
-             "vhdDiskType": "dynamic"}),
-        ("vmwareEsxImage",
-            {
-             "autoResolve": False,
-             "baseFileName": "",
-             "installLabelPath": "",
-             "freespace": 1024,
-             "natNetworking": True,
-             "swapSize": 512,
-             "vmMemory": 256}),
-        ("xenOvaImage",
-            {
-             "autoResolve": False,
-             "baseFileName": "",
-             "installLabelPath": "",
-             "freespace": 1024,
-             "swapSize": 512,
-             "vmMemory": 256}),
-    ]
-    flavorSets = [
-        ('generic', 'Generic', '~!dom0,~!domU,~!xen,~!vmware'),
-        ('xen', 'Xen', '~!dom0,~domU,~xen,~!vmware'),
-        ('vmware', 'VMware', '~!dom0,!domU,~!xen,~vmware')
-    ]
+    architectures = [ ]
+    containerTemplates = [ ]
+    flavorSets = [ ]
     productVersion = '1.0'
     productName = 'Project 1'
     productShortName = 'testproject'
