@@ -25,6 +25,17 @@ class ProductVersionTest(restbase.BaseRestTest):
         ('VMware ESX 32-bit', 'vmware', 'x86', 'vmwareEsxImage'),
         ('VMware ESX 64-bit', 'vmware', 'x86_64', 'vmwareEsxImage'),
     ]
+    buildTemplates = buildDefs[:]
+    buildTemplates.extend([
+        ('Appliance ISO 32-bit', None, 'x86', 'applianceIsoImage'),
+        ('Update ISO 32-bit', None, 'x86', 'updateIsoImage'),
+        ('Update ISO 64-bit', None, 'x86_64', 'updateIsoImage'),
+        ('Virtual Iron 32-bit', 'virtual_iron', 'x86', 'virtualIronImage'),
+    ])
+    flavorSets = restbase.BaseRestTest.flavorSets[:]
+    flavorSets.extend([
+        ('virtual_iron', 'Virtual Iron', '!xen,!vmware'),
+    ])
 
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
@@ -644,7 +655,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageTypeDefinition>
 </imageTypeDefinitions>
 """
-        self.failUnlessEqual(response,
+        self.assertXMLEquals(response,
             exp % dict(server = client.server, port = client.port))
 
     def testGetProductVersionStages(self):
@@ -740,7 +751,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/virtualIronImage">
       <name>virtualIronImage</name>
       <displayName>Virtual Iron Virtual Appliance</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
+      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -774,7 +785,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageDefinition>
 </imageDefinitions>
 """
-        self.failUnlessEqual(response,
+        self.assertXMLEquals(response,
             exp % dict(server = client.server, port = client.port))
 
         # Make sure we're fetching the same thing

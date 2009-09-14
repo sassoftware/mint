@@ -31,6 +31,69 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         ('VMware ESX 32-bit', 'vmware', 'x86', 'vmwareEsxImage'),
         ('VMware ESX 64-bit', 'vmware', 'x86_64', 'vmwareEsxImage'),
     ]
+    buildTemplates = buildDefs
+    architectures = [
+        ('x86', 'x86 (32-bit)',
+            'is: x86(~i486,~i586,~i686,~cmov,~mmx,~sse,~sse2)'),
+        ('x86_64', 'x86 (64-bit)',
+            'is: x86(~i486,~i586,~i686,~cmov,~mmx,~sse,~sse2) x86_64'),
+    ]
+    containerTemplates = [
+        ("applianceIsoImage",
+            {
+             "autoResolve": False,
+             "baseFileName": "",
+             "installLabelPath": "",
+             "anacondaCustomTrove": "",
+             "anacondaTemplatesTrove": "conary.rpath.com@rpl:2",
+             "betaNag": False,
+             "bugsUrl": "",
+             "maxIsoSize": None,
+             "mediaTemplateTrove": "",
+             "showMediaCheck": False}),
+        ("updateIsoImage",
+            {
+             "autoResolve": False,
+             "baseFileName": "",
+             "installLabelPath": "",
+             "anacondaCustomTrove": "",
+             "anacondaTemplatesTrove": "conary.rpath.com@rpl:2",
+             "betaNag": False,
+             "bugsUrl": "",
+             "maxIsoSize": None,
+             "mediaTemplateTrove": "",
+             "showMediaCheck": False}),
+        ("virtualIronImage",
+            {
+             "autoResolve": False,
+             "baseFileName": "",
+             "installLabelPath": "",
+             "freespace": 1024,
+             "swapSize": 512,
+             "vhdDiskType": "dynamic"}),
+        ("vmwareEsxImage",
+            {
+             "autoResolve": False,
+             "baseFileName": "",
+             "installLabelPath": "",
+             "freespace": 1024,
+             "natNetworking": True,
+             "swapSize": 512,
+             "vmMemory": 256}),
+        ("xenOvaImage",
+            {
+             "autoResolve": False,
+             "baseFileName": "",
+             "installLabelPath": "",
+             "freespace": 1024,
+             "swapSize": 512,
+             "vmMemory": 256}),
+    ]
+    flavorSets = [
+        ('generic', 'Generic', '~!dom0,~!domU,~!xen,~!vmware'),
+        ('xen', 'Xen', '~!dom0,~domU,~xen,~!vmware'),
+        ('vmware', 'VMware', '~!dom0,!domU,~!xen,~vmware')
+    ]
     productVersion = '1.0'
     productName = 'Project 1'
     productShortName = 'testproject'
@@ -39,6 +102,17 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
     productHostname = "%s.%s" % (productShortName, productDomainName)
 
     def setupProduct(self):
+        from rpath_proddef import api1 as proddef
+        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
+        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
+            # Not running from a checkout
+            schemaDir = os.path.join("/usr/share/rpath_proddef")
+            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
+        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.Platform, 'schemaDir', schemaDir)
+
         pd = self._setupProduct()
         # used by other tests before setupProduct was fixturized.
         self.productDefinition = pd
@@ -64,6 +138,19 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
             projectName, '', shortName, domainName,
             shortName, version, '', self.mintCfg.namespace)
         stageRefs = [ x.name for x in pd.getStages() ]
+        for _name, displayName, _flavor in self.architectures:
+            pd.addArchitecture(_name, displayName, _flavor)
+        for _name, displayName, _flavor in self.flavorSets:
+            pd.addFlavorSet(_name, displayName, _flavor)
+        for _name, opts in self.containerTemplates:
+            pd.addContainerTemplate(pd.imageType(_name, opts))
+        for buildName, flavorSetRef, archRef, containerTemplateRef in \
+                    self.buildTemplates:
+            pd.addBuildTemplate(name = buildName,
+                displayName = buildName,
+                flavorSetRef = flavorSetRef,
+                architectureRef = archRef,
+                containerTemplateRef = containerTemplateRef)
         for buildName, flavorSetRef, archRef, containerTemplateRef in \
                     self.buildDefs:
             pd.addBuildDefinition(name = buildName,
