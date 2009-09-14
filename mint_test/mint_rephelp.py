@@ -646,10 +646,6 @@ class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
         self.mintDb.start()
         return data
 
-    def assertXMLEquals(self, first, second):
-        self.failUnlessEqual(normalizeXML(first),
-                             normalizeXML(second))
-
     openMintDatabase = RestDBMixIn.openRestDatabase
 
 def fixturize(name=None):
@@ -683,15 +679,6 @@ def restfixture(name):
         return wrapper
     return deco
 
-def normalizeXML(data):
-    """lxml will produce the header with single quotes for its attributes,
-    while xmllint uses double quotes. This function normalizes the data"""
-    return data.replace(
-        "<?xml version='1.0' encoding='UTF-8'?>",
-        '<?xml version="1.0" encoding="UTF-8"?>').strip()
-
-
-
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
 
     # Repository tests tend to be slow, so tag them with this context
@@ -701,10 +688,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         global _reposDir
         _reposDir = rephelp.getReposDir(_reposDir, 'rbuildertest')
         return _reposDir
-
-    def assertXMLEquals(self, first, second):
-        self.failUnlessEqual(normalizeXML(first),
-                             normalizeXML(second))
 
     def openMintDatabase(self):
         return dbstore.connect(self.mintCfg.dbPath,

@@ -1186,8 +1186,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         except ProductDefinitionInvalidStage, e:
             self._addErrors(str(e))
 
-        # XXX ProductDefinition object needs clearStages()
-        pd.stages = proddef._Stages()
+        pd.clearStages()
         for s in stages:
             pd.addStage(s['name'], s['labelSuffix'])
 

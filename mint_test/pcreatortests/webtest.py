@@ -32,6 +32,18 @@ import pcreatortests.packagecreatoruitest
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
 
+    def setUp(self):
+        webprojecttest.WebProjectBaseTest.setUp(self)
+        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
+        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
+            # Not running from a checkout
+            schemaDir = os.path.join("/usr/share/rpath_proddef")
+            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
+        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.Platform, 'schemaDir', schemaDir)
+
     def testPackageCreatorUI(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -401,7 +413,19 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         methodName = 'processRebaseProductVersion'
 
         def getProductDefinition(self, *args, **kwargs):
-            return proddef.ProductDefinition()
+            pd = proddef.ProductDefinition()
+            pd.setProductName("Mocked product name")
+            pd.setProductShortname("mockedProductShortVersion")
+            pd.setProductVersion("1.0")
+            pd.setProductDescription("Mocked product description")
+            pd.setProductVersionDescription("Mocked product version description")
+            pd.setConaryRepositoryHostname("conary.example.com")
+            pd.setConaryNamespace("cns")
+            pd.setImageGroup("group-os")
+            pd.addStage(name = "devel", labelSuffix = "-devel")
+            pd.addStage(name = "qa", labelSuffix = "-qa")
+            pd.addStage(name = "release", labelSuffix = "")
+            return pd
 
         cmd = 'testproject/processRebaseProductVersion'
         fields = {'id': 1, 'platformLabel': 'conary.rpath.com@rpl:2-devel',

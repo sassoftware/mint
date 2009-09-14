@@ -4,6 +4,7 @@
 #
 # All Rights Reserved
 #
+import os
 import StringIO
 
 import testsuite
@@ -21,6 +22,18 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from rpath_proddef import api1 as proddef
 
 class ProductVersionTest(fixtures.FixturedProductVersionTest):
+    def setUp(self):
+        fixtures.FixturedProductVersionTest.setUp(self)
+        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
+        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
+            # Not running from a checkout
+            schemaDir = os.path.join("/usr/share/rpath_proddef")
+            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
+        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.Platform, 'schemaDir', schemaDir)
+
 
     @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
@@ -206,6 +219,14 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         versionId = data['versionId']
 
         pd = proddef.ProductDefinition()
+        pd.setProductName("Mocked product name")
+        pd.setProductShortname("mockedProductShortVersion")
+        pd.setProductVersion("1.0")
+        pd.setProductDescription("Mocked product description")
+        pd.setProductVersionDescription("Mocked product version description")
+        pd.setConaryRepositoryHostname("conary.example.com")
+        pd.setConaryNamespace("cns")
+        pd.setImageGroup("group-os")
         pd.addStage('devel', '-devel')
         pd.addStage('qa', '-qa')
         pd.addStage('release', '')

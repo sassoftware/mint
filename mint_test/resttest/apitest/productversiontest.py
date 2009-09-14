@@ -268,7 +268,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageDefinition>
 </imageDefinitions>
 """
-        self.failUnlessEqual(response,
+        self.assertXMLEquals(response,
             exp % dict(server = client.server, port = client.port))
 
     def testGetImageTypeDefinitions(self):
