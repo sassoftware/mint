@@ -722,8 +722,7 @@ Much like Powdermilk Biscuits[tm]."""
         from rpath_proddef import api1 as proddef
         prd = proddef.ProductDefinition()
         # ensure we don't have a platform definition at all
-        if hasattr(prd, 'platform'):
-            del prd.platform
+        prd.platform = None
         addDefaultPlatformToProductDefinition(prd)
         self.failUnless(hasattr(prd, 'platform'))
 
