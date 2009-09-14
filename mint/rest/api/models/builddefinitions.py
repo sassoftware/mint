@@ -43,7 +43,6 @@ class ImageModelMeta(ModelMeta):
     }
     def __new__(mcs, name, bases, attrs):
         for fieldName, fieldType in sorted(imageTypes.Image._attributes.items()):
-            fieldType = fieldType[0]
             attrs[fieldName] = mcs._fieldTypeMap[fieldType](isAttribute = True)
         return ModelMeta.__new__(mcs, name, bases, attrs)
 
