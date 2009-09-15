@@ -43,16 +43,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
     productHostname = "%s.%s" % (productShortName, productDomainName)
 
     def setupProduct(self):
-        from rpath_proddef import api1 as proddef
-        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
-        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
-        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
-            # Not running from a checkout
-            schemaDir = os.path.join("/usr/share/rpath_proddef")
-            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
-        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
-        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
-        self.mock(proddef.Platform, 'schemaDir', schemaDir)
+        self.setUpProductDefinition()
 
         pd = self._setupProduct()
         # used by other tests before setupProduct was fixturized.

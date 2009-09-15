@@ -2100,7 +2100,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             stageLabel = str(pd.getLabelForStage(stageName))
         except proddef.StageNotFoundError, snfe:
-            raise mint_error.ProductDefinitionError("Stage %s was not found in the product definition" % stageName)
+            raise mint_error.ProductDefinitionInvalidStage("Stage %s was not found in the product definition" % stageName)
         except proddef.MissingInformationError, mie:
             raise mint_error.ProductDefinitionError("Cannot determine the product label as the product definition is incomplete")
 
@@ -2145,7 +2145,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             architecture = deps.parseFlavor(architecture \
                     and architecture.flavor or '')
 
-            customFlavor = deps.parseFlavor(build.flavor or '')
+            # As of schema 2.0, builds no longer have custom flavors, so use
+            # an empty flavor for the custom flavor
+            customFlavor = deps.parseFlavor('')
 
             # Returns a list of troves that satisfy buildFlavor.
             nvfs = self._resolveTrove(groupList, flavorSet, architecture,

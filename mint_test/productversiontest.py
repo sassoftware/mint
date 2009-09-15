@@ -24,16 +24,7 @@ from rpath_proddef import api1 as proddef
 class ProductVersionTest(fixtures.FixturedProductVersionTest):
     def setUp(self):
         fixtures.FixturedProductVersionTest.setUp(self)
-        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
-        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
-        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
-            # Not running from a checkout
-            schemaDir = os.path.join("/usr/share/rpath_proddef")
-            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
-        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
-        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
-        self.mock(proddef.Platform, 'schemaDir', schemaDir)
-
+        self.setUpProductDefinition()
 
     @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")

@@ -830,6 +830,18 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
     # apply default context of "fixtured" to all children of this class
     contexts = ("fixtured",)
 
+    def setUpProductDefinition(self):
+        from rpath_proddef import api1 as proddef
+        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
+        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
+            # Not running from a checkout
+            schemaDir = os.path.join("/usr/share/rpath_proddef")
+            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
+        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.Platform, 'schemaDir', schemaDir)
+
     def listFixtures(self):
         return fixtureCache.list()
 
@@ -967,21 +979,18 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
 
 class FixturedProductVersionTest(FixturedUnitTest):
 
-    global _testxmldata
-    _testxmldata = None
-
     class _MockProductDefinition(proddef.ProductDefinition):
+        _testxmldata = []
         def saveToRepository(self, *args, **kwargs):
             sio = StringIO.StringIO()
             self.serialize(sio)
-            global _testxmldata
             _testxmldata = sio.getvalue()
+            self._testxmldata.append(_testxmldata)
 
         def loadFromRepository(self, *args, **kwargs):
-            global _testxmldata
-            if not _testxmldata:
+            if not self._testxmldata:
                 raise proddef.ProductDefinitionTroveNotFound
-            sio = StringIO.StringIO(_testxmldata)
+            sio = StringIO.StringIO(self._testxmldata[-1])
             sio.seek(0)
             self.parseStream(sio)
 
@@ -989,15 +998,12 @@ class FixturedProductVersionTest(FixturedUnitTest):
         self.oldProductDefinition = proddef.ProductDefinition
         proddef.ProductDefinition = self._MockProductDefinition
         FixturedUnitTest.setUp(self)
-        global _testxmldata
-        _testxmldata = None
+        del self._MockProductDefinition._testxmldata[:]
 
     def tearDown(self):
         FixturedUnitTest.tearDown(self)
         proddef.ProductDefinition = self.oldProductDefinition
-        global _testxmldata
-        _testxmldata = None
-
+        del self._MockProductDefinition._testxmldata[:]
 
 driver = os.environ.get("CONARY_REPOS_DB", "sqlite")
 if driver == "sqlite":
