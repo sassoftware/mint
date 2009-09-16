@@ -90,9 +90,9 @@ class UsersTable(database.KeyedTable):
             return []
 
     def checkAuth(self, authToken):
-        noAuth = {'authorized': False, 'userId': -1}
+        auth = {'authorized': False, 'userId': -1}
         if authToken == ('anonymous', 'anonymous'):
-            return noAuth
+            return auth
 
         username, password = authToken
         cu = self.db.cursor()
@@ -105,27 +105,27 @@ class UsersTable(database.KeyedTable):
             try:
                 groups = self._getUserGroups(authToken)
             except repository.errors.OpenError:
-                auth = noAuth
+                return auth
 
             if type(groups) != list:
                 raise AuthRepoError
 
-            auth = {'authorized':   True,
-                    'userId':       int(r[0]),
-                    'username':     username,
-                    'email':        r[1],
-                    'displayEmail': r[2],
-                    'fullName':     r[3],
-                    'blurb':        r[4],
-                    'timeAccessed': r[5],
-                    'stagnant':     self.isUserStagnant(r[0]),
-                    'groups':       groups}
-            if 'MintAdmin' in groups:
-                auth['admin'] = True
-            else:
-                auth['admin'] = False
-        else:
-            auth = noAuth
+            if groups:
+                auth = {'authorized':   True,
+                        'userId':       int(r[0]),
+                        'username':     username,
+                        'email':        r[1],
+                        'displayEmail': r[2],
+                        'fullName':     r[3],
+                        'blurb':        r[4],
+                        'timeAccessed': r[5],
+                        'stagnant':     self.isUserStagnant(r[0]),
+                        'groups':       groups}
+                if 'MintAdmin' in groups:
+                    auth['admin'] = True
+                else:
+                    auth['admin'] = False
+
         return auth
 
     def validateNewEmail(self, userId, email):
