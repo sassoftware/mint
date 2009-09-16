@@ -8,16 +8,21 @@
 from mint import buildtypes
 import testsetup
 
+import base64
 import os
 import re
 import subprocess
 import tempfile
 import time
 
+from restlib.http import handler
 from restlib.http import request
 from mint import helperfuncs
 from mint import users
+from mint.mint_error import UserAlreadyExists
 from mint.rest.api import site
+from mint.rest.middleware import auth
+from mint.rest.middleware import formatter
 from mint.rest.modellib import converter
 
 from mint_test import mint_rephelp
@@ -146,6 +151,21 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         else:
             subscribers = kw.pop('subscribers', None)
             db = self.openRestDatabase(subscribers = subscribers)
+
+        admin = kw.pop('admin', None)
+        if 'username' not in kw:
+            if admin:
+                kw['username'] = 'adminuser'
+            else:
+                kw['username'] = 'someuser'
+        if 'password' not in kw:
+            kw['password'] = kw['username']
+            if kw['username']:
+                try:
+                    self.createUser(kw['username'], kw['password'], admin=admin)
+                except UserAlreadyExists:
+                    pass
+
         return Controller(self.mintCfg, db, **kw)
 
     def escapeURLQuotes(self, foo):
@@ -190,48 +210,31 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
 
 class Controller(object):
-    def __init__(self, cfg, restDb, username=None, admin=False):
+    def __init__(self, cfg, restDb, username, password):
         self.server = 'localhost'
         self.port = '8000'
         self.controller = site.RbuilderRestServer(cfg, restDb)
+        self.handler = MockHandler(self.controller)
+        self.handler.addCallback(auth.AuthenticationCallback(cfg, restDb,
+            self.controller))
+        self.handler.addCallback(MockFormatCallback(self.controller))
         self.restDb = restDb
-        if username:
-            cu = self.restDb.cursor()
-            cu.execute("select userId from Users where username=?", username)
-            userId = cu.fetchone()
-            if userId:
-                userId = userId[0]
-            else:
-                userId = 1
-            self.auth = users.Authorization(authorized=True, admin=admin,
-                                            userId=userId,
-                                            username=username)
-        else:
-            self.auth = users.Authorization(authoried=False, admin=False,
-                                           userId=-1)
+        self.username = username
+        self.password = password
 
-
-    def call(self, method, uri, body=None, convert=False):
+    def call(self, method, uri, body=None, convert=False, headers=None):
         request = MockRequest(method, uri, body=body)
-        request.rootController = self.controller
-        if self.auth.authorized:
-            request.mintAuth = self.auth
-        else:
-            request.mintAuth = None
-        request.auth = (self.auth.username, self.auth.username)
-        fn, remainder, args, kw = self.controller.getView(method,
-                                                request.unparsedPath)
-        request.unparsedPath = remainder
-        self.restDb.setAuth(self.auth, request.auth)
-        if hasattr(fn, 'model'):
-            modelName, model = fn.model
-            kw[modelName] = converter.fromText('xml',
-                                               body,
-                                               model, self.controller, request)
-        response = fn(request, *args, **kw)
+        request._convert = convert
+
+        if self.username:
+            request.headers['Authorization'] = 'Basic ' + base64.b64encode(
+                    self.username + ':' + self.password)
+
+        if headers:
+            request.headers.update(headers)
+        response = self.handler.handle(request)
         if convert:
-            response = converter.toText('xml', response, self.controller,
-                                        request)
+            response = response.content
         return request, response
 
     def convert(self, type, request, object):
@@ -268,3 +271,20 @@ class MockRequest(request.Request):
 
     def getContentLength(self):
         return self.body and len(self.body) or 0
+
+
+class MockHandler(handler.HttpHandler):
+    def handle(self, request, pathPrefix=''):
+        return self.getResponse(request)
+
+    class exceptionCallback(object):
+        def processException(self, request, excClass, exception, tb):
+            raise excClass, exception, tb
+
+
+class MockFormatCallback(formatter.FormatCallback):
+    def processResponse(self, request, res):
+        if request._convert:
+            return formatter.FormatCallback.processResponse(self, request, res)
+        else:
+            return res

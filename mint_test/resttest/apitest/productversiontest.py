@@ -689,7 +689,6 @@ class ProductVersionTest(restbase.BaseRestTest):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion)
 
-        self.createUser('foouser')
         client = self.getRestClient(username='foouser', admin=True)
         req, response = client.call('PUT', uri, convert = True, body=imageSet1)
 

@@ -110,23 +110,20 @@ class UsersTable(database.KeyedTable):
             if type(groups) != list:
                 raise AuthRepoError
 
-            if username in groups:
-                auth = {'authorized':   True,
-                        'userId':       int(r[0]),
-                        'username':     username,
-                        'email':        r[1],
-                        'displayEmail': r[2],
-                        'fullName':     r[3],
-                        'blurb':        r[4],
-                        'timeAccessed': r[5],
-                        'stagnant':     self.isUserStagnant(r[0]),
-                        'groups':       groups}
-                if 'MintAdmin' in groups:
-                    auth['admin'] = True
-                else:
-                    auth['admin'] = False
+            auth = {'authorized':   True,
+                    'userId':       int(r[0]),
+                    'username':     username,
+                    'email':        r[1],
+                    'displayEmail': r[2],
+                    'fullName':     r[3],
+                    'blurb':        r[4],
+                    'timeAccessed': r[5],
+                    'stagnant':     self.isUserStagnant(r[0]),
+                    'groups':       groups}
+            if 'MintAdmin' in groups:
+                auth['admin'] = True
             else:
-                auth = noAuth
+                auth['admin'] = False
         else:
             auth = noAuth
         return auth

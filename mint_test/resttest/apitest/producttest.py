@@ -77,8 +77,7 @@ class ProductTest(restbase.BaseRestTest):
         uriTemplate = 'products'
         uri = uriTemplate
         db = self.openMintDatabase(createRepos=False)
-        self.createUser('foouser')
-        client = self.getRestClient(username='foo', db=db)
+        client = self.getRestClient(username='foouser', db=db)
         data = newProduct1 % dict(shortname = "foobar",
             hostname = "foobar", name = "foobar appliance")
         req, response = client.call('POST', uri, data)
@@ -115,8 +114,23 @@ class ProductTest(restbase.BaseRestTest):
              "<%s>WHITEOUT</%s>" % (pat, pat),
             resp)
 
-        self.failUnlessEqual(resp,
+        self.assertBlobEquals(resp,
              exp % dict(port = 8000, server = 'localhost'))
+
+    def testCreateProduct(self):
+        productShortName = "foobar"
+        uriTemplate = 'products'
+        uri = uriTemplate
+        db = self.openMintDatabase(createRepos=False)
+        client = self.getRestClient(username=None)
+        data = newProduct1 % dict(shortname = "foobar",
+            hostname = "foobar", name = "foobar appliance")
+        req, response = client.call('POST', uri, data)
+        self.failUnlessEqual(response.status, 401)
+
+        req, response = client.call('POST', uri, data,
+                headers={'HTTP_X_FLASH_VERSION': '1'})
+        self.failUnlessEqual(response.status, 403)
 
 newProduct1 = """
 <product>
