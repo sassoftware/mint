@@ -14,6 +14,7 @@ import re
 import subprocess
 import tempfile
 import time
+from conary.dbstore.sqllib import CaselessDict
 
 from restlib.http import handler
 from restlib.http import request
@@ -250,7 +251,7 @@ class MockRequest(request.Request):
         request.Request.__init__(self, None, '/api')
 
     def _setProperties(self):
-        self.headers = {}
+        self.headers = CaselessDict()
         # self.method is set in __init__
         self.remote = (None, None)
 

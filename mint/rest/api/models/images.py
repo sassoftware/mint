@@ -137,6 +137,8 @@ class Image(Model):
     timeCreated = fields.DateTimeField(editable=False) # not modifiable
     timeUpdated = fields.DateTimeField(editable=False) # not modifiable
     buildCount = fields.IntegerField()
+    buildLog = fields.UrlField('products.images.buildLog',
+            ['hostname', 'imageId'])
     status = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     

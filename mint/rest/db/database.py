@@ -18,6 +18,7 @@ from mint.rest import errors
 from mint.rest.db import authmgr
 from mint.rest.db import awshandler
 from mint.rest.db import emailnotifier
+from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
 from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
@@ -116,6 +117,7 @@ class Database(DBInterface):
         self.publisher = publisher.EventPublisher()
         self.productMgr = productmgr.ProductManager(cfg, self, auth,
                                                     self.publisher)
+        self.fileMgr = filemgr.FileManager(cfg, self, auth)
         self.imageMgr = imagemgr.ImageManager(cfg, self, auth, self.publisher)
         self.releaseMgr = releasemgr.ReleaseManager(cfg, self,
                                                     auth, self.publisher)
@@ -597,6 +599,18 @@ class Database(DBInterface):
     def getImageStatus(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageStatus(hostname, imageId)
+
+    @readonly
+    def getImageFile(self, hostname, imageId, fileName, asResponse=False):
+        self.auth.requireBuildsOnHost(hostname, [imageId])
+        return self.fileMgr.getImageFile(hostname, imageId, fileName,
+                asResponse)
+
+    @readonly
+    def appendImageFile(self, hostname, imageId, fileName, imageToken, data):
+        self.auth.requireImageToken(hostname, imageId, imageToken)
+        return self.fileMgr.appendImageFile(hostname, imageId, fileName,
+                data)
 
     @commitafter
     def deleteImageForProduct(self, hostname, imageId):

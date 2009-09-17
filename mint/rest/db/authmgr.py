@@ -109,3 +109,14 @@ class AuthenticationManager(manager.Manager):
         releaseHost, = self.db._getOne(cu, errors.ReleaseNotFound, releaseId)
         if hostname != releaseHost:
             raise errors.ReleaseNotFound(releaseId)
+
+    def requireImageToken(self, hostname, imageId, token):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT buildId FROM BuildData bd
+                JOIN Builds b USING ( buildId )
+                JOIN Projects p USING ( projectId )
+            WHERE p.hostname = ? AND b.buildId = ?
+                AND bd.name = 'outputToken' AND bd.value = ?""",
+                hostname, imageId, token)
+        self.db._getOne(cu, errors.BuildNotFound, imageId)
