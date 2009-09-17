@@ -2024,29 +2024,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.commits.getCommitsByProject(projectId)
 
     @typeCheck(int)
-    def getRelease(self, releaseId):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        # releaseId -> buildId
-        buildId = releaseId
-        self._filterBuildAccess(buildId)
-        build = self.builds.get(buildId)
-        # add some things that the old jobserver will expect
-        build['releaseId'] = build['buildId']
-        build['imageTypes'] = [build['buildType']]
-        build['downloads'] = 0
-        build['timePublished'] = 0
-        build['published'] = 0
-        # remove things that will confuse old jobservers
-        del build['buildId']
-        del build['buildType']
-        del build['timeCreated']
-        del build['createdBy']
-        del build['timeUpdated']
-        del build['updatedBy']
-        del build['pubReleaseId']
-        return build
-
-    @typeCheck(int)
     def getBuild(self, buildId):
         if not self.builds.buildExists(buildId):
             raise mint_error.ItemNotFound
@@ -2625,31 +2602,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return simplejson.dumps(r)
 
-    @typeCheck(int, str, ((str, int, bool),), int)
-    @requiresAuth
-    @private
-    def setReleaseDataValue(self, releaseId, name, value, dataType):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        # releaseId -> buildId
-        buildId = releaseId
-        return self.setBuildDataValue(buildId, name, value, dataType)
-
-    @typeCheck(int, str)
-    @private
-    def getReleaseDataValue(self, releaseId, name):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        # releaseId -> buildId
-        buildId = releaseId
-        return self.getBuildDataValue(buildId, name)
-
-    @typeCheck(int)
-    @private
-    def getReleaseDataDict(self, releaseId):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        # releaseId -> buildId
-        buildId = releaseId
-        return self.getBuildDataDict(buildId)
-
     #
     # published releases 
     #
@@ -2986,16 +2938,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     @typeCheck(int)
     @private
-    def getImageTypes(self, releaseId):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        # releaseId -> buildId
-        buildId = releaseId
-        # old jobservers expect a list here
-        imageTypes = [ self.getBuildType(buildId) ]
-        return imageTypes
-
-    @typeCheck(int)
-    @private
     def getBuildType(self, buildId):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
@@ -3301,15 +3243,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             self.db.commit()
         return True
-
-    @typeCheck(int, (list, (list, str)))
-    @requiresAuth
-    @private
-    def setImageFilenames(self, releaseId, filenames):
-        """ Backwards-compatible call for older jobservers <= 1.6.3 """
-        # releaseId -> buildId
-        buildId = releaseId
-        return self.setBuildFilenames(buildId, filenames)
 
     @typeCheck(int)
     @private
