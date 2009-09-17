@@ -91,9 +91,15 @@ class ImageManager(manager.Manager):
 
             row['imageType'] = buildtypes.imageTypeXmlTagNameMap.get(imageType, 'imageless')
             row['imageTypeName'] = buildtypes.typeNamesMarketing.get(imageType, 'Unknown')
+
+            status = models.ImageStatus()
+            status.hostname = row['hostname']
+            status.imageId = row['imageId']
+            status.set_status(code=row.pop('status'),
+                    message=row.pop('statusMessage'))
+
             image = models.Image(row)
-            if not image.statusMessage:
-                image.statusMessage = jobstatus.statusNames[image.status]
+            image.status = status
             images.append(image)
 
         # Now add files for the images.
@@ -144,7 +150,7 @@ class ImageManager(manager.Manager):
     def _updateStatusForImageList(self, imageList):
         changed = []
         for image in imageList:
-            if image.status in jobstatus.terminalStatuses:
+            if image.status.code in jobstatus.terminalStatuses:
                 continue
 
             status = jobstatus.UNKNOWN
@@ -194,16 +200,17 @@ class ImageManager(manager.Manager):
             if not statusMessage:
                 statusMessage = jobstatus.statusNames[status]
 
-            if (status, statusMessage) != (image.status, image.statusMessage):
-                image.status, image.statusMessage = status, statusMessage
+            if (status, statusMessage) != (image.status.code,
+                    image.status.message):
+                image.status.set_status(code=status, message=statusMessage)
                 changed.append(image)
 
         if changed:
             cu = self.db.cursor()
             for image in changed:
                 cu.execute('UPDATE Builds SET status=?, statusMessage=?'
-                           ' WHERE buildId=?',
-                           image.status, image.statusMessage, image.imageId)
+                           ' WHERE buildId=?', image.status.code,
+                           image.status.message, image.imageId)
 
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)
@@ -402,3 +409,13 @@ class ImageManager(manager.Manager):
             mcpClient.stopJob(imageId)
         except Exception, e:
             raise errors.StopJobFailed, (imageId, e), sys.exc_info()[2]
+
+    def getImageStatus(self, hostname, imageId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT hostname, buildId AS imageId,
+                    status AS code, statusMessage AS message
+                FROM Builds JOIN Projects USING ( projectId )
+                WHERE hostname = ? AND buildId = ?""",
+                hostname, imageId)
+        row = self.db._getOne(cu, errors.ImageNotFound, imageId)
+        return models.ImageStatus(row)

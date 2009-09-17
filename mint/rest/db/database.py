@@ -593,6 +593,11 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageForProduct(hostname, imageId)
 
+    @readonly
+    def getImageStatus(self, hostname, imageId):
+        self.auth.requireProductReadAccess(hostname)
+        return self.imageMgr.getImageStatus(hostname, imageId)
+
     @commitafter
     def deleteImageForProduct(self, hostname, imageId):
         self.auth.requireProductDeveloper(hostname)

@@ -172,4 +172,4 @@ class Model(object):
         assert not args # checked above
         if kwargs:
             raise TypeError('%s() got an unexpected keyword argument %r'
-                    % (className, kwargs))
+                    % (className, sorted(kwargs)[0]))

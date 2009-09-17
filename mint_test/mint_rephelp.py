@@ -456,7 +456,7 @@ rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 rephelpCleanup = rephelp._cleanUp
 def _cleanUp():
-    _servers.stopAllServers(clean=not testsuite._individual)
+    _servers.stopAllServers(clean=True)
     rephelpCleanup()
 
 rephelp._cleanUp = _cleanUp

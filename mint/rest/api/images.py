@@ -22,11 +22,15 @@ class ProductImagesController(base.BaseController):
     modelName = 'imageId'
 
     urls = {'files' : ProductImageFilesController,
-            'stop'  : {'POST' : 'stop'}}
+            'stop'  : {'POST' : 'stop'},
+            'status': {'GET': 'getStatus'},
+            }
 
+    @auth.public
     def index(self, request, hostname):
         return self.db.listImagesForProduct(hostname)
 
+    @auth.public
     def get(self, request, hostname, imageId):
         return self.db.getImageForProduct(hostname, imageId)
 
@@ -35,3 +39,8 @@ class ProductImagesController(base.BaseController):
 
     def stop(self, request, hostname, imageId):
         return self.db.stopImageJob(hostname, imageId)
+
+    # jobslave API
+    @auth.public
+    def getStatus(self, request, hostname, imageId):
+        return self.db.getImageStatus(hostname, imageId)

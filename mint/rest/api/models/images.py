@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 from mint import buildtypes
+from mint import jobstatus
 
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
@@ -82,6 +83,34 @@ class UpdateRelease(Model):
     published = fields.BooleanField()
     shouldMirror = fields.BooleanField()
 
+
+class ImageStatus(Model):
+    id = fields.AbsoluteUrlField(isAttribute=True)
+    hostname = fields.CharField(display=False)
+    imageId = fields.IntegerField(display=False)
+    code = fields.IntegerField()
+    message = fields.CharField()
+    isFinal = fields.BooleanField(editable=False)
+
+    def __init__(self, *args, **kwargs):
+        Model.__init__(self, *args, **kwargs)
+        self.set_status()
+
+    def get_absolute_url(self):
+        return ('products.images.status', self.hostname, str(self.imageId))
+
+    def set_status(self, code=None, message=None):
+        if code is not None:
+            self.code = code
+        if message is not None:
+            self.message = message
+        elif code is not None:
+            # Use a default message if the code changed but no message was
+            # provided.
+            self.message = jobstatus.statusNames[self.code]
+        self.isFinal = self.code in jobstatus.terminalStatuses
+
+
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
@@ -108,8 +137,7 @@ class Image(Model):
     timeCreated = fields.DateTimeField(editable=False) # not modifiable
     timeUpdated = fields.DateTimeField(editable=False) # not modifiable
     buildCount = fields.IntegerField()
-    status = fields.IntegerField()
-    statusMessage = fields.CharField()
+    status = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     
     # TODO: we want to expose all buildData via a dict.  But that requires
