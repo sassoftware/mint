@@ -11,6 +11,7 @@ import os
 import re
 import StringIO
 import time
+import base64
 
 from conary.lib import util
 
@@ -132,6 +133,27 @@ class ProductTest(restbase.BaseRestTest):
                 headers={'HTTP_X_FLASH_VERSION': '1'})
         self.failUnlessEqual(response.status, 403)
 
+
+    def testAuthPacket(self):
+        username = 'foo'
+        password = 'bar'
+        productShortName = "foobar"
+        uriTemplate = 'products'
+        uri = uriTemplate
+        db = self.openMintDatabase(createRepos=False)
+        client = self.getRestClient(username=None)
+        
+        msg = "Your authentication header could not be decoded"
+        data = newProduct1 % dict(shortname = "foobar",
+            hostname = "foobar", name = "foobar appliance")
+        auth = 'Basic ' + base64.b64encode(
+                    username + ':' + password)[1:]
+                    
+        err = self.assertRaises(resterrors.AuthHeaderError, 
+                                    client.call,'POST', 'products', 
+                                    data, headers={'Authorization': auth})
+        self.failUnlessEqual(str(err), msg)
+
 newProduct1 = """
 <product>
   <shortname>%(shortname)s</shortname>
@@ -139,6 +161,7 @@ newProduct1 = """
   <name>%(name)s</name>
 </product>
 """
+
 
 
 if __name__ == "__main__":
