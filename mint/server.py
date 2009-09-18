@@ -3430,7 +3430,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         statusMessage = res = None
         if buildType != buildtypes.IMAGELESS:
             uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
-                              self.cfg.externalDomainName, buildId, count)
+                              self.cfg.siteDomainName, buildId, count)
             try:
                 mc = self._getMcpClient()
                 res = mc.jobStatus(uuid)

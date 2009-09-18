@@ -761,6 +761,7 @@ class MultiShimNetClient(shimclient.ShimNetClient):
     def __init__(self, manager, userId=None):
         repMap = conarycfg.RepoMap()
         userMap = conarycfg.UserInformation()
-        netclient.NetworkRepositoryClient.__init__(self, repMap, userMap)
+        netclient.NetworkRepositoryClient.__init__(self, repMap, userMap,
+                proxy=manager.cfg.proxy)
 
         self.c = MultiShimServerCache(manager, userId)
