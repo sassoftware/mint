@@ -32,6 +32,10 @@ import pcreatortests.packagecreatoruitest
 class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
     """ Unit tests for the web ui pieces of the Package Creator """
 
+    def setUp(self):
+        webprojecttest.WebProjectBaseTest.setUp(self)
+        self.setUpProductDefinition()
+
     def testPackageCreatorUI(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject',
@@ -401,7 +405,19 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         methodName = 'processRebaseProductVersion'
 
         def getProductDefinition(self, *args, **kwargs):
-            return proddef.ProductDefinition()
+            pd = proddef.ProductDefinition()
+            pd.setProductName("Mocked product name")
+            pd.setProductShortname("mockedProductShortVersion")
+            pd.setProductVersion("1.0")
+            pd.setProductDescription("Mocked product description")
+            pd.setProductVersionDescription("Mocked product version description")
+            pd.setConaryRepositoryHostname("conary.example.com")
+            pd.setConaryNamespace("cns")
+            pd.setImageGroup("group-os")
+            pd.addStage(name = "devel", labelSuffix = "-devel")
+            pd.addStage(name = "qa", labelSuffix = "-qa")
+            pd.addStage(name = "release", labelSuffix = "")
+            return pd
 
         cmd = 'testproject/processRebaseProductVersion'
         fields = {'id': 1, 'platformLabel': 'conary.rpath.com@rpl:2-devel',

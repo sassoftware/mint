@@ -634,11 +634,12 @@ troveName="group-postgres"/>
       <flavorSet name="vmware" displayName="vmware" flavor="~vmware"/>
    </flavorSets>
    <containerTemplates>
-      <containerTemplate containerFormat="installableIsoImage"/>
-      <containerTemplate containerFormat="rawFsImage" freespace="1234"/>
-     <containerTemplate containerFormat="rawHdImage" autoResolve="true" baseFileName="proc-foo-moo"/>
-     <containerTemplate containerFormat="vmwareImage" autoResolve="true" baseFileName="foobar"/>
-     <containerTemplate containerFormat="virtualIronImage"/>
+     <image architectureRef="x86" containerTemplateRef="installableIsoImage"/>
+     <image architectureRef="x86_64" containerTemplateRef="installableIsoImage"/>
+     <image architectureRef="x86" containerTemplateRef="rawFsImage" flavorSetRef="xen" freespace="1234"/>
+     <image architectureRef="biarch" containerTemplateRef="rawHdImage" flavorSetRef="xen" autoResolve="true" baseFileName="proc-foo-moo"/>
+     <image architectureRef="biarch" containerTemplateRef="vmwareImage" flavorSetRef="vmware" autoResolve="true" baseFileName="foobar"/>
+     <image architectureRef="biarch" containerTemplateRef="virtualIronImage"/>
    </containerTemplates>
    <buildDefinition>
       <build architectureRef="x86" name="x86 installableIso" containerTemplateRef="installableIsoImage">
@@ -700,6 +701,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
 
     def setUp(self):
         mint_rephelp.MintRepositoryHelper.setUp(self)
+        self.setUpProductDefinition()
         self.httpServer = self.startHTTPServer()
 
     def tearDown(self):

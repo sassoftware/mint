@@ -20,8 +20,6 @@ class ReleasesTest(restbase.BaseRestTest):
         self.setupReleases()
 
     def testDeleteRelease(self):
-        db = self.openMintDatabase()
-        self.setDbUser(db, 'adminuser')
         client = self.getRestClient(admin=True, username='adminuser')
         req, results = client.call('GET', 'products/testproject/releases')
         releaseId = results.releases[-1].releaseId
@@ -32,7 +30,6 @@ class ReleasesTest(restbase.BaseRestTest):
 
     def testLatestRelease(self):
         db = self.openMintDatabase()
-        self.setDbUser(db, 'adminuser')
         client = self.getRestClient(admin=True, username='adminuser')
         uri = 'products/testproject/releases?limit=1'
         req, results = client.call('GET', uri)
@@ -49,8 +46,6 @@ class ReleasesTest(restbase.BaseRestTest):
 
 
     def testImagesShowPublished(self):
-        db = self.openMintDatabase()
-        self.setDbUser(db, 'adminuser')
         client = self.getRestClient(admin=True, username='adminuser')
         uri = 'products/testproject/releases?limit=1'
         req, results = client.call('GET', uri)
@@ -64,7 +59,6 @@ class ReleasesTest(restbase.BaseRestTest):
 
     def testAddImageToRelease(self):
         db = self.openMintDatabase()
-        self.setDbUser(db, 'adminuser')
         imageId = self.createImage(db, self.productShortName,
                                    buildtypes.TARBALL,
                                    name = 'Image 3')

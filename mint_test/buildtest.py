@@ -1121,6 +1121,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     def setUp(self):
         fixtures.FixturedProductVersionTest.setUp(self)
+        self.setUpProductDefinition()
 
         # This product definition is based on the "Full" fixture
         pd = helperfuncs.sanitizeProductDefinition('The Foo Project',
@@ -1135,23 +1136,16 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         pd.addStage('Booya', '-booya')
         pd.addStage('Elsewhere', '-nada')
         pd.addStage('Custom', '-sodapopinski')
+        pd.addStage('NoImages', '-noimages')
         stageNames = [x.name for x in pd.getStages() \
-                if x.name not in ('Booya', 'Elsewhere', 'Custom')]
+                if x.name not in ('Booya', 'Elsewhere', 'Custom', 'NoImages')]
 
         pd.addSearchPath('group-rap-standard',
                 'rap.rpath.com@rpath:linux-1')
         pd.addSearchPath('group-postgres',
                     'products.rpath.com@rpath:postgres-8.2')
 
-        pd.addFlavorSet('generic', 'Generic', '!dom0, !domU, !xen, !vmware')
-        pd.addFlavorSet('vmware', 'VMware', '!dom0, !domU, !xen, vmware')
-        pd.addFlavorSet('ami', 'AMI', '!dom0, domU, xen, !vmware')
         pd.addFlavorSet('superfunk', 'Superfunk', '~superfunk.bootsy')
-
-        pd.addArchitecture('x86', 'x86 (32-bit)',
-                'grub.static,dietlibc is: x86(~i486,~i586,~i686,~sse,~sse2)')
-        pd.addArchitecture('x86_64', 'x86 (64-bit)',
-                '!grub.static,!dietlibc is: x86(~i486,~i586,~i686,~sse,~sse2) x86_64')
 
         pd.addContainerTemplate(pd.imageType('installableIsoImage',
             {'showMediaCheck' : True}))
@@ -1266,6 +1260,10 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinition(self, db, data):
+        # Surprisingly, setUp runs before fixtureFull; we need to get rid of
+        # the persisted xml data from fixtureFull
+        del self._MockProductDefinition._testxmldata[1:]
+
         versionId = data['versionId']
         client = self.getClient('admin')
         buildIds = \
@@ -1287,6 +1285,10 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionFilteredByBuildName(self, db, data):
+        # Surprisingly, setUp runs before fixtureFull; we need to get rid of
+        # the persisted xml data from fixtureFull
+        del self._MockProductDefinition._testxmldata[1:]
+
         versionId = data['versionId']
         client = self.getClient('admin')
         reqBuildNames = ['ISO 32', 'ISO 64']
@@ -1302,6 +1304,10 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionFilteredByVersionSpec(self, db, data):
+        # Surprisingly, setUp runs before fixtureFull; we need to get rid of
+        # the persisted xml data from fixtureFull
+        del self._MockProductDefinition._testxmldata[1:]
+
         versionId = data['versionId']
         client = self.getClient('admin')
         reqBuildNames = ['ISO 32']
@@ -1320,22 +1326,29 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
     @fixtures.fixture('Full')
     @testsuite.tests('RBL-2924')
     def testBuildsFromProductDefinitionBoolVal(self, db, data):
-        
+        # Surprisingly, setUp runs before fixtureFull; we need to get rid of
+        # the persisted xml data from fixtureFull
+        del self._MockProductDefinition._testxmldata[1:]
+
         versionId = data['versionId']
         client = self.getClient('admin')
         server = client.server._server
-        
+
         # get our booya build
-        buildIds = client.newBuildsFromProductDefinition(versionId, 'Booya', 
+        buildIds = client.newBuildsFromProductDefinition(versionId, 'Booya',
                                                          False)
         self.assertEquals(1, len(buildIds))
-        
+
         isSet, betaNag = server.getBuildDataValue(buildIds[0], "betaNag")
         self.assertTrue(isSet)
         self.assertTrue(betaNag)
         
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionCustom(self, db, data):
+        # Surprisingly, setUp runs before fixtureFull; we need to get rid of
+        # the persisted xml data from fixtureFull
+        del self._MockProductDefinition._testxmldata[1:]
+
         versionId = data['versionId']
         client = self.getClient('admin')
         server = client.server._server
@@ -1364,9 +1377,13 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionBadStage(self, db, data):
+        # Surprisingly, setUp runs before fixtureFull; we need to get rid of
+        # the persisted xml data from fixtureFull
+        del self._MockProductDefinition._testxmldata[1:]
+
         versionId = data['versionId']
         client = self.getClient('admin')
-        self.assertRaises(ProductDefinitionError,
+        self.assertRaises(ProductDefinitionInvalidStage,
             client.newBuildsFromProductDefinition, versionId, 'fgsfds', False)
 
     @fixtures.fixture('Full')
@@ -1432,8 +1449,21 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
 
     @fixtures.fixture('Full')
     def testBuildsFromProductDefinitionNoTrove(self, db, data):
+        # Surprisingly, setUp runs before fixtureFull; we need to get rid of
+        # the persisted xml data from fixtureFull
+        del self._MockProductDefinition._testxmldata[1:]
         # test an empty result from _resolveTrove
         client = self.getClient('owner')
+        # Should raise an exception
+        self.assertRaises(ProductDefinitionInvalidStage,
+                          client.newBuildsFromProductDefinition,
+                          data['versionId'],
+                          'HissBoo', False)
+        # Should raise an exception
+        self.assertRaises(NoBuildsDefinedInBuildDefinition,
+                          client.newBuildsFromProductDefinition,
+                          data['versionId'],
+                          'NoImages', False)
         # Should raise an exception
         self.assertRaises(TroveNotFoundForBuildDefinition,
                           client.newBuildsFromProductDefinition,
@@ -1441,7 +1471,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                           'Elsewhere', False)
         # Let's FORCE IT
         buildIds = \
-            client.newBuildsFromProductDefinition(data['versionId'], 
+            client.newBuildsFromProductDefinition(data['versionId'],
                 'Elsewhere', True)
         # Should have created 1 build for Elsewhere stage
         self.assertEquals(1, len(buildIds))

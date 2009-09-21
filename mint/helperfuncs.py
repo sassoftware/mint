@@ -438,9 +438,8 @@ def addDefaultPlatformToProductDefinition(productDefinition):
     function modifies the original object
     """
     from rpath_proddef import api1 as proddef
-    if not (hasattr(productDefinition, 'platform') and \
-            productDefinition.platform):
-        productDefinition.platform = proddef.PlatformDefinition()
+    # XXX don't use the internal interface here
+    productDefinition._ensurePlatformExists()
     if not (productDefinition.getArchitectures() or
             productDefinition.getFlavorSets() or
             productDefinition.getContainerTemplates() or

@@ -268,7 +268,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageDefinition>
 </imageDefinitions>
 """
-        self.failUnlessEqual(response,
+        self.assertXMLEquals(response,
             exp % dict(server = client.server, port = client.port))
 
     def testGetImageTypeDefinitions(self):
@@ -288,7 +288,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/amiImage">
       <name>amiImage</name>
       <displayName>Amazon Machine Image (EC2)</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="1024"/>
+      <options amiHugeDiskMountpoint="False" autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="1024"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -305,7 +305,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/amiImage">
       <name>amiImage</name>
       <displayName>Amazon Machine Image (EC2)</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="1024"/>
+      <options amiHugeDiskMountpoint="False" autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="1024"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -400,7 +400,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vhdImage">
       <name>vhdImage</name>
       <displayName>VHD for Microsoft(R) Hyper-V</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
+      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -417,7 +417,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vhdImage">
       <name>vhdImage</name>
       <displayName>VHD for Microsoft(R) Hyper-V</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
+      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -580,7 +580,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/virtualIronImage">
       <name>virtualIronImage</name>
       <displayName>Virtual Iron Virtual Appliance</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
+      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -597,7 +597,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/virtualIronImage">
       <name>virtualIronImage</name>
       <displayName>Virtual Iron Virtual Appliance</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
+      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -644,7 +644,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageTypeDefinition>
 </imageTypeDefinitions>
 """
-        self.failUnlessEqual(response,
+        self.assertXMLEquals(response,
             exp % dict(server = client.server, port = client.port))
 
     def testGetProductVersionStages(self):
@@ -689,7 +689,6 @@ class ProductVersionTest(restbase.BaseRestTest):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion)
 
-        self.createUser('foouser')
         client = self.getRestClient(username='foouser', admin=True)
         req, response = client.call('PUT', uri, convert = True, body=imageSet1)
 
@@ -740,7 +739,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/virtualIronImage">
       <name>virtualIronImage</name>
       <displayName>Virtual Iron Virtual Appliance</displayName>
-      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
+      <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vhdDiskType="dynamic"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -774,7 +773,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   </imageDefinition>
 </imageDefinitions>
 """
-        self.failUnlessEqual(response,
+        self.assertXMLEquals(response,
             exp % dict(server = client.server, port = client.port))
 
         # Make sure we're fetching the same thing

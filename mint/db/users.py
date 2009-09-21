@@ -90,9 +90,9 @@ class UsersTable(database.KeyedTable):
             return []
 
     def checkAuth(self, authToken):
-        noAuth = {'authorized': False, 'userId': -1}
+        auth = {'authorized': False, 'userId': -1}
         if authToken == ('anonymous', 'anonymous'):
-            return noAuth
+            return auth
 
         username, password = authToken
         cu = self.db.cursor()
@@ -105,12 +105,12 @@ class UsersTable(database.KeyedTable):
             try:
                 groups = self._getUserGroups(authToken)
             except repository.errors.OpenError:
-                auth = noAuth
+                return auth
 
             if type(groups) != list:
                 raise AuthRepoError
 
-            if username in groups:
+            if groups:
                 auth = {'authorized':   True,
                         'userId':       int(r[0]),
                         'username':     username,
@@ -125,10 +125,7 @@ class UsersTable(database.KeyedTable):
                     auth['admin'] = True
                 else:
                     auth['admin'] = False
-            else:
-                auth = noAuth
-        else:
-            auth = noAuth
+
         return auth
 
     def validateNewEmail(self, userId, email):

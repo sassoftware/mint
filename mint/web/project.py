@@ -120,8 +120,9 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
 
     @redirectHttp
     def projectPage(self, auth):
+        isAppliance = self.project.prodtype.lower() == 'appliance'
         self._redirectOldLinks('#/%s?shortname=%s' % (
-            self.project.isAppliance and 'appliances' or 'repositories',
+            isAppliance and 'appliances' or 'repositories',
             self.project.shortname))
 
         if self.auth.admin:
@@ -1185,8 +1186,7 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         except ProductDefinitionInvalidStage, e:
             self._addErrors(str(e))
 
-        # XXX ProductDefinition object needs clearStages()
-        pd.stages = proddef._Stages()
+        pd.clearStages()
         for s in stages:
             pd.addStage(s['name'], s['labelSuffix'])
 

@@ -30,6 +30,9 @@ class InvalidVersion(mint_error.MintError):
 
 class InvalidFlavor(mint_error.MintError):
     status = 400
+    
+class AuthHeaderError(mint_error.InvalidError):
+    "Your authentication header could not be decoded"
 
 class InvalidSearchType(mint_error.MintError):
     pass

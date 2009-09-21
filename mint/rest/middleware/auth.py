@@ -14,6 +14,7 @@ from mint import shimclient
 from mint.rest.api import models
 from mint.rest.modellib import converter
 from mint.session import SqlSession
+from mint.rest import errors
 
 # Decorator for public (unauthenticated) methods/functions
 def public(deco):
@@ -40,8 +41,11 @@ class AuthenticationCallback(object):
         if not 'Authorization' in request.headers:
             return None
         type, user_pass = request.headers['Authorization'].split(' ', 1)
-        user_name, password = base64.decodestring(user_pass).split(':', 1)
-        return (user_name, password)
+        try:
+            user_name, password = base64.decodestring(user_pass).split(':', 1)
+            return (user_name, password)
+        except:
+            raise errors.AuthHeaderError
 
     def getCookieAuth(self, request):
         # the pysid cookie contains the session reference that we can use to
@@ -165,6 +169,7 @@ class AuthenticationCallback(object):
         # require authentication
         if (not getattr(viewMethod, 'public', False)
                 and request.mintAuth is None):
-            return Response(status=403)
-            #return Response(status=401,
-            #         headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
+            if 'HTTP_X_FLASH_VERSION' in request.headers:
+                return Response(status=403)
+            return Response(status=401,
+                     headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})

@@ -474,6 +474,18 @@ class RestDBMixIn(object):
         self.mintDb = None
         self.mintCfg = None
 
+    def setUpProductDefinition(self):
+        from rpath_proddef import api1 as proddef
+        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
+        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
+            # Not running from a checkout
+            schemaDir = os.path.join("/usr/share/rpath_proddef")
+            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
+        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.Platform, 'schemaDir', schemaDir)
+
     def tearDown(self):
         if self.mintDb:
             self.mintDb.close()
@@ -646,10 +658,6 @@ class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
         self.mintDb.start()
         return data
 
-    def assertXMLEquals(self, first, second):
-        self.failUnlessEqual(normalizeXML(first),
-                             normalizeXML(second))
-
     openMintDatabase = RestDBMixIn.openRestDatabase
 
 def fixturize(name=None):
@@ -683,15 +691,6 @@ def restfixture(name):
         return wrapper
     return deco
 
-def normalizeXML(data):
-    """lxml will produce the header with single quotes for its attributes,
-    while xmllint uses double quotes. This function normalizes the data"""
-    return data.replace(
-        "<?xml version='1.0' encoding='UTF-8'?>",
-        '<?xml version="1.0" encoding="UTF-8"?>').strip()
-
-
-
 class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
 
     # Repository tests tend to be slow, so tag them with this context
@@ -701,10 +700,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, MCPTestMixin, RestDBMixIn):
         global _reposDir
         _reposDir = rephelp.getReposDir(_reposDir, 'rbuildertest')
         return _reposDir
-
-    def assertXMLEquals(self, first, second):
-        self.failUnlessEqual(normalizeXML(first),
-                             normalizeXML(second))
 
     def openMintDatabase(self):
         return dbstore.connect(self.mintCfg.dbPath,
@@ -1133,6 +1128,17 @@ class WebRepositoryHelper(BaseWebHelper):
         for key in ('queueHost', 'queuePort', 'namespace'):
             cfgFile.write('%s %s' % (key, self.mcpCfg.__getitem__(key)))
 
+    def setUpProductDefinition(self):
+        from rpath_proddef import api1 as proddef
+        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
+        if not os.path.exists(os.path.join(schemaDir, schemaFile)):
+            # Not running from a checkout
+            schemaDir = os.path.join("/usr/share/rpath_proddef")
+            assert(os.path.exists(os.path.join(schemaDir, schemaFile)))
+        self.mock(proddef.ProductDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.PlatformDefinition, 'schemaDir', schemaDir)
+        self.mock(proddef.Platform, 'schemaDir', schemaDir)
 
     def tearDown(self):
         BaseWebHelper.tearDown(self)

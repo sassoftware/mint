@@ -4,6 +4,7 @@
 #
 # All Rights Reserved
 #
+import os
 import StringIO
 
 import testsuite
@@ -21,6 +22,9 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from rpath_proddef import api1 as proddef
 
 class ProductVersionTest(fixtures.FixturedProductVersionTest):
+    def setUp(self):
+        fixtures.FixturedProductVersionTest.setUp(self)
+        self.setUpProductDefinition()
 
     @testsuite.context('more_cowbell')
     @fixtures.fixture("Full")
@@ -206,6 +210,14 @@ class ProductVersionTest(fixtures.FixturedProductVersionTest):
         versionId = data['versionId']
 
         pd = proddef.ProductDefinition()
+        pd.setProductName("Mocked product name")
+        pd.setProductShortname("mockedProductShortVersion")
+        pd.setProductVersion("1.0")
+        pd.setProductDescription("Mocked product description")
+        pd.setProductVersionDescription("Mocked product version description")
+        pd.setConaryRepositoryHostname("conary.example.com")
+        pd.setConaryNamespace("cns")
+        pd.setImageGroup("group-os")
         pd.addStage('devel', '-devel')
         pd.addStage('qa', '-qa')
         pd.addStage('release', '')
