@@ -138,11 +138,11 @@ class ImagesTest(restbase.BaseRestTest):
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
     <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/1/buildLog"/>
-    <status id="http://%(server)s:%(port)s/api/products/testproject/images/1/status">
+    <imageStatus id="http://%(server)s:%(port)s/api/products/testproject/images/1/status">
       <code>100</code>
       <message>Message</message>
       <isFinal>false</isFinal>
-    </status>
+    </imageStatus>
     <files>
       <file>
         <fileId>1</fileId>
@@ -175,11 +175,11 @@ class ImagesTest(restbase.BaseRestTest):
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
     <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/2/buildLog"/>
-    <status id="http://%(server)s:%(port)s/api/products/testproject/images/2/status">
+    <imageStatus id="http://%(server)s:%(port)s/api/products/testproject/images/2/status">
       <code>100</code>
       <message>Message</message>
       <isFinal>false</isFinal>
-    </status>
+    </imageStatus>
     <files>
       <file>
         <fileId>2</fileId>

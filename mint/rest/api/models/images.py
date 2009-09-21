@@ -139,7 +139,7 @@ class Image(Model):
     buildCount = fields.IntegerField()
     buildLog = fields.UrlField('products.images.buildLog',
             ['hostname', 'imageId'])
-    status = fields.ModelField(ImageStatus)
+    imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     
     # TODO: we want to expose all buildData via a dict.  But that requires

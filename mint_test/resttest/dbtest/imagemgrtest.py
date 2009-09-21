@@ -118,36 +118,36 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         imageMgr.mcpClient = mock.MockObject()
         imageMgr.mcpClient.jobStatus._mock.setDefaultReturn((jobstatus.RUNNING, 'foo'))
         imageMgr._updateStatusForImageList([image])
-        self.assertEqual(image.status.code, jobstatus.RUNNING)
-        self.assertEqual(image.status.message, 'foo')
-        self.assertEqual(image.status.isFinal, False)
+        self.assertEqual(image.imageStatus.code, jobstatus.RUNNING)
+        self.assertEqual(image.imageStatus.message, 'foo')
+        self.assertEqual(image.imageStatus.isFinal, False)
 
         # No job + image files -> finished
-        image.status.set_status(jobstatus.WAITING)
+        image.imageStatus.set_status(jobstatus.WAITING)
         imageMgr.mcpClient.jobStatus._mock.raiseErrorOnAccess(
                 mcp_error.UnknownJob)
         imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.status.code, jobstatus.FINISHED)
-        self.failUnlessEqual(image.status.message, 'Finished')
-        self.failUnlessEqual(image.status.isFinal, True)
+        self.failUnlessEqual(image.imageStatus.code, jobstatus.FINISHED)
+        self.failUnlessEqual(image.imageStatus.message, 'Finished')
+        self.failUnlessEqual(image.imageStatus.isFinal, True)
 
         # No job + no image files -> failed
-        image.status.set_status(jobstatus.WAITING)
+        image.imageStatus.set_status(jobstatus.WAITING)
         image.files.files = []
         imageMgr.mcpClient.jobStatus._mock.raiseErrorOnAccess(
                 mcp_error.UnknownJob)
         imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.status.code, jobstatus.FAILED)
-        self.failUnlessEqual(image.status.message, 'Error')
-        self.failUnlessEqual(image.status.isFinal, True)
+        self.failUnlessEqual(image.imageStatus.code, jobstatus.FAILED)
+        self.failUnlessEqual(image.imageStatus.message, 'Error')
+        self.failUnlessEqual(image.imageStatus.isFinal, True)
 
         # Imageless build -> finished
-        image.status.set_status(jobstatus.WAITING)
+        image.imageStatus.set_status(jobstatus.WAITING)
         mock.mockMethod(image.hasBuild, False)
         imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.status.code, jobstatus.FINISHED)
-        self.failUnlessEqual(image.status.message, 'Finished')
-        self.failUnlessEqual(image.status.isFinal, True)
+        self.failUnlessEqual(image.imageStatus.code, jobstatus.FINISHED)
+        self.failUnlessEqual(image.imageStatus.message, 'Finished')
+        self.failUnlessEqual(image.imageStatus.isFinal, True)
 
     def testGetMcpClient(self):
         db = self.openMintDatabase(createRepos=False)

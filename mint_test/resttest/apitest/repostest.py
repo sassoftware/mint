@@ -181,11 +181,12 @@ class ReposTest(restbase.BaseRestTest):
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status id="http://%(server)s:%(port)s/api/products/testproject/images/1/status">
+    <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/1/buildLog"/>
+    <imageStatus id="http://%(server)s:%(port)s/api/products/testproject/images/1/status">
       <code>100</code>
       <message>Message</message>
       <isFinal>false</isFinal>
-    </status>
+    </imageStatus>
     <files>
       <file>
         <fileId>1</fileId>
@@ -216,11 +217,12 @@ class ReposTest(restbase.BaseRestTest):
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status id="http://%(server)s:%(port)s/api/products/testproject/images/2/status">
+    <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/2/buildLog"/>
+    <imageStatus id="http://%(server)s:%(port)s/api/products/testproject/images/2/status">
       <code>100</code>
       <message>Message</message>
       <isFinal>false</isFinal>
-    </status>
+    </imageStatus>
     <files>
       <file>
         <fileId>2</fileId>

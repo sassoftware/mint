@@ -99,7 +99,7 @@ class ImageManager(manager.Manager):
                     message=row.pop('statusMessage'))
 
             image = models.Image(row)
-            image.status = status
+            image.imageStatus = status
             images.append(image)
 
         # Now add files for the images.
@@ -150,7 +150,7 @@ class ImageManager(manager.Manager):
     def _updateStatusForImageList(self, imageList):
         changed = []
         for image in imageList:
-            if image.status.code in jobstatus.terminalStatuses:
+            if image.imageStatus.code in jobstatus.terminalStatuses:
                 continue
 
             status = jobstatus.UNKNOWN
@@ -200,17 +200,18 @@ class ImageManager(manager.Manager):
             if not statusMessage:
                 statusMessage = jobstatus.statusNames[status]
 
-            if (status, statusMessage) != (image.status.code,
-                    image.status.message):
-                image.status.set_status(code=status, message=statusMessage)
+            if (status, statusMessage) != (image.imageStatus.code,
+                    image.imageStatus.message):
+                image.imageStatus.set_status(code=status,
+                        message=statusMessage)
                 changed.append(image)
 
         if changed:
             cu = self.db.cursor()
             for image in changed:
                 cu.execute('UPDATE Builds SET status=?, statusMessage=?'
-                           ' WHERE buildId=?', image.status.code,
-                           image.status.message, image.imageId)
+                           ' WHERE buildId=?', image.imageStatus.code,
+                           image.imageStatus.message, image.imageId)
 
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)
