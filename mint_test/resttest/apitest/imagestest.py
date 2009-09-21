@@ -11,6 +11,7 @@ import os
 import re
 import time
 
+from mint.rest.errors import BuildNotFound, PermissionDeniedError
 from mint_test import mint_rephelp
 import restbase
 
@@ -136,8 +137,12 @@ class ImagesTest(restbase.BaseRestTest):
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>100</status>
-    <statusMessage>Message</statusMessage>
+    <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/1/buildLog"/>
+    <status id="http://%(server)s:%(port)s/api/products/testproject/images/1/status">
+      <code>100</code>
+      <message>Message</message>
+      <isFinal>false</isFinal>
+    </status>
     <files>
       <file>
         <fileId>1</fileId>
@@ -169,8 +174,12 @@ class ImagesTest(restbase.BaseRestTest):
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <buildCount>0</buildCount>
-    <status>100</status>
-    <statusMessage>Message</statusMessage>
+    <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/2/buildLog"/>
+    <status id="http://%(server)s:%(port)s/api/products/testproject/images/2/status">
+      <code>100</code>
+      <message>Message</message>
+      <isFinal>false</isFinal>
+    </status>
     <files>
       <file>
         <fileId>2</fileId>
@@ -188,6 +197,51 @@ class ImagesTest(restbase.BaseRestTest):
 
         self.assertBlobEquals(resp,
             exp % dict(server = 'localhost', port = '8000'))
+
+    def _setOutputToken(self, buildId, token='abcdef'):
+        db = self.openRestDatabase()
+        cu = db.db.transaction()
+        cu.execute("DELETE FROM BuildData WHERE buildId = ? AND name = 'outputToken'", buildId)
+        cu.execute("""
+            INSERT INTO BuildData ( buildId, name, value, dataType )
+            VALUES ( ?, 'outputToken', ?, 0 )
+            """, buildId, token)
+        db.commit()
+        return token
+
+    def testBuildLog(self):
+        client = self.getRestClient(username='adminuser')
+        token = self._setOutputToken(1)
+
+        headers = {
+                'content-type': 'text/plain',
+                'x-rbuilder-outputtoken': token,
+                }
+        data = 'some\nlogging\nstuff\n'
+
+        resp = client.call('POST', 'products/testproject/images/1/buildLog',
+                data, headers=headers)[1]
+        self.failUnlessEqual(resp.status, 204)
+        self.failUnlessEqual(resp.content, '')
+
+        resp = client.call('POST', 'products/testproject/images/1/buildLog',
+                data, headers=headers)[1]
+        self.failUnlessEqual(resp.status, 204)
+        self.failUnlessEqual(resp.content, '')
+
+        resp = client.call('GET', 'products/testproject/images/1/buildLog')[1]
+        self.failUnlessEqual(resp.status, 200)
+        self.failUnlessEqual(open(resp.path).read(), data + data)
+
+        headers['x-rbuilder-outputtoken'] = 'dsfargeg'
+        self.assertRaises(BuildNotFound, client.call, 'POST',
+                'products/testproject/images/1/buildLog', data,
+                headers=headers)
+
+        del headers['x-rbuilder-outputtoken']
+        self.assertRaises(PermissionDeniedError, client.call, 'POST',
+                'products/testproject/images/1/buildLog', data,
+                headers=headers)
 
 
 testsetup.main()

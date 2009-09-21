@@ -511,34 +511,6 @@ class BuildTest(fixtures.FixturedUnitTest):
                 client.server.updateBuild, buildId, {'createdBy':  42})
 
     @fixtures.fixture('Full')
-    def testGetReleaseCompat(self, db, data):
-        client = self.getClient("owner")
-        build = client.getBuild(data['buildId'])
-        releaseDict = client.server._server.getRelease(build.id)
-        buildDict = client.server._server.getBuild(build.id)
-        added = {'releaseId' : build.id, 'imageTypes' : [build.buildType],
-                 'downloads': 0, 'timePublished': 0, 'published' : 0}
-        removed = ('buildId', 'buildType', 'timeCreated', 'createdBy',
-                   'timeUpdated', 'updatedBy', 'pubReleaseId')
-        for key, val in releaseDict.iteritems():
-            if key in added:
-                assert (val == added[key]), "release['%s'] != %s" % \
-                       (key, str(added[key]))
-            elif key not in removed:
-                assert (val == buildDict[key])
-
-    @fixtures.fixture('Full')
-    def testReleaseDataCompat(self, db, data):
-        client = self.getClient("owner")
-        build = client.getBuild(data['buildId'])
-        client.server._server.setReleaseDataValue(build.id, 'foo', 1,
-                                                  RDT_STRING)
-        assert client.server._server.getReleaseDataValue(build.id, 'foo') == \
-               (True, '1')
-        d = client.server._server.getReleaseDataDict(build.id)
-        assert 'foo' in d
-
-    @fixtures.fixture('Full')
     def testMissingBuildTrove(self, db, data):
         client = self.getClient('owner')
         build = client.getBuild(data['buildId'])
@@ -598,14 +570,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         # don't have any files
         build.setBuildType(buildtypes.IMAGELESS)
         self.failUnless(build.setPublished(pubRel.id, True))
-
-    @fixtures.fixture('Full')
-    def testGetImageTypesCompat(self, db, data):
-        client = self.getClient('owner')
-        build = client.getBuild(data['buildId'])
-        imageTypes = client.server._server.getImageTypes(build.id)
-        self.failIf(imageTypes != [build.getBuildType()],
-                    "Compatibility hook failed buildtypes")
 
     @fixtures.fixture('Full')
     def testMissingGetBuildType(self, db, data):
@@ -789,15 +753,6 @@ class BuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testSetBuildAMIDataSafeHidden(self, db, data):
         return self._testSetBuildAMIDataSafe(db, data, hidden = True)
-
-    @fixtures.fixture('Full')
-    def testSetImageFilenamesCompat(self, db, data):
-        client = self.getClient('owner')
-        build = client.getBuild(data['buildId'])
-
-        self.assertRaises(ValueError,
-                          client.server._server.setImageFilenames, build.id,
-                          [['not right at all']])
 
     @fixtures.fixture('Full')
     def testGetEmptyFilenames(self, db, data):
