@@ -412,6 +412,11 @@ class ImageManager(manager.Manager):
             raise errors.StopJobFailed, (imageId, e), sys.exc_info()[2]
 
     def getImageStatus(self, hostname, imageId):
+        # XXX: Have to hack it to get the MCP status querying. Trash this once
+        # the MCP is gone.
+        image = self.getImageForProduct(hostname, imageId)
+        return image.imageStatus
+
         cu = self.db.cursor()
         cu.execute("""SELECT hostname, buildId AS imageId,
                     status AS code, statusMessage AS message

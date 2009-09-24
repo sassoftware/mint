@@ -40,8 +40,8 @@
 ^scripts/rbuilder_database.py$
 ^scripts/httpd-graceful$
 
-mint_test/(.*/)?\.failed$
-mint_test/(.*/)?\.times$
+^(.*/)?\.failed$
+^(.*/)?\.times$
 .*,cover
 ^VERSION$
 ^INSTALL$
