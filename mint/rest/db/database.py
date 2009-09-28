@@ -574,28 +574,33 @@ class Database(DBInterface):
         self.releaseMgr.unpublishRelease(releaseId)
 
 
+    # TODO: switch to readonly after image status rework
     @commitmaybe
     def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version,
                 flavor)
 
+    # TODO: switch to readonly after image status rework
     @commitmaybe
     def listImagesForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
+    # TODO: switch to readonly after image status rework
     @commitmaybe
     def listImagesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProduct(hostname)
 
+    # TODO: switch to readonly after image status rework
     @commitmaybe
     def getImageForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageForProduct(hostname, imageId)
 
-    @readonly
+    # TODO: switch to readonly after image status rework
+    @commitmaybe
     def getImageStatus(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageStatus(hostname, imageId)
