@@ -1,6 +1,6 @@
 [global]
 server.supplemental_groups = ['apache']
-plugins.disable = ['/configure/ConaryConf', '/flipflop/Update', '/factoryreset/FactoryReset']
+plugins.disable = ['/configure/ConaryConf', '/flipflop/Update', '/factoryreset/FactoryReset', '/loadmirror/LoadMirror']
 product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
 services.Services.hidden = True
