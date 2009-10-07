@@ -75,8 +75,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         errMsg = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <fault>
-  <code>403</code>
-  <message>Forbidden</message>
+  <code>401</code>
+  <message>Unauthorized</message>
 </fault>
 """
         for h in tests:
@@ -85,7 +85,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 headers['Authorization'] = h
             err = self.failUnlessRaises(client.ResponseError,
                 cli.request, "GET", headers = headers)
-            self.failUnlessEqual(err.status, 403)
+            self.failUnlessEqual(err.status, 401)
             self.failUnlessEqual(err.contents, errMsg)
 
     def testGetImagesNoCred(self):
@@ -106,7 +106,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 "user</message>\n</fault>\n")
 
     def testGetImagesNoSession(self):
-        page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [403])
+        page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [401])
 
     def testEnumerateNoImages(self):
         raise testsuite.SkipTestException("This test case will really try to talk to EC2")
