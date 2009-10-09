@@ -1,5 +1,24 @@
-from api.models import Users
+from models import Users
 import md5
+import base64
+
+def getAuth(request):
+    auth_header = {}
+    if 'Authorization' in request.META:
+        auth_header = {'Authorization': request.META['Authorization']}
+    elif 'HTTP_AUTHORIZATION' in request.META:
+        auth_header =  {'Authorization': request.META['HTTP_AUTHORIZATION']}
+
+    if 'Authorization' in auth_header:
+        type, user_pass = auth_header['Authorization'].split(' ', 1)
+
+        try:
+            username, password = base64.decodestring(user_pass).split(':', 1)
+            return (username, password)
+        except:
+            pass
+
+    return (None, None)
 
 class rBuilderBackend:
 
