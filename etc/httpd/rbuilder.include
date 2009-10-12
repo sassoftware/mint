@@ -2,8 +2,8 @@
 # Apache configuration files in /etc/httpd/conf.d.
 
     # Aliases for our site
-    Alias /conary-static/ 	/usr/share/conary/web-common/
-    Alias /favicon.ico 		/usr/share/conary/web-common/apps/mint/images/favicon.ico
+    Alias /conary-static/  /usr/share/conary/web-common/
+    Alias /favicon.ico i   /usr/share/conary/web-common/apps/mint/images/favicon.ico
     Alias /rbuilder/            /srv/rbuilder/config/rbuilder.conf/
     Alias /conary/              /srv/rbuilder/config/rbuilder.conf/
     Alias /repos/               /srv/rbuilder/config/rbuilder.conf/
@@ -36,13 +36,13 @@
     <Location /rbuilder/>
         AddHandler python-program .conf
         PythonHandler mint.web.hooks
-	PythonOption basePath "/rbuilder/"
+        PythonOption basePath "/rbuilder/"
     </Location>
 
     <Location /conary/>
-	AddHandler python-program .conf
-	PythonHandler mint.web.hooks
-	PythonOption basePath "/"
+        AddHandler python-program .conf
+        PythonHandler mint.web.hooks
+        PythonOption basePath "/"
     </Location>
 
     <Location /repos/>
@@ -61,15 +61,15 @@
     # Handler for Job Server requests
     # Limit connections (it's a private interface)
     <Location /xmlrpc-private>
-	AddHandler python-program .conf
-	PythonHandler mint.web.hooks
-	PythonOption basePath "/"
+        AddHandler python-program .conf
+        PythonHandler mint.web.hooks
+        PythonOption basePath "/"
         Order Deny,Allow
         Deny From All
         Allow From 127.0.0.1
-	Allow From rpath.org
-	Allow From rpath.com
-	Allow From 38.100.0.21
+        Allow From rpath.org
+        Allow From rpath.com
+        Allow From 38.100.0.21
         Allow from lists.rpath.com
         Allow From conary-commits.rpath.com
 
