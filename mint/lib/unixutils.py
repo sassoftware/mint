@@ -18,17 +18,18 @@ class AtomicFile(object):
 
     fObj = None
 
-    def __init__(self, path, mode='w+b', chmod=0644):
+    def __init__(self, path, mode='w+b', chmod=0644, **kwargs):
         self.finalPath = os.path.realpath(path)
         self.finalMode = chmod
 
-        fDesc, self.name = tempfile.mkstemp(dir=os.path.dirname(self.finalPath))
+        kwargs.setdefault('dir', os.path.dirname(self.finalPath))
+        fDesc, self.name = tempfile.mkstemp(**kwargs)
         self.fObj = os.fdopen(fDesc, mode)
 
     def __getattr__(self, name):
         return getattr(self.fObj, name)
 
-    def commit(self):
+    def commit(self, sync=True):
         """
         C{flush()}, C{chmod()}, and C{rename()} to the target path.
         C{close()} afterwards.
@@ -40,7 +41,8 @@ class AtomicFile(object):
         # are immediately present and accessible.
         self.fObj.flush()
         os.chmod(self.name, self.finalMode)
-        os.fsync(self.fObj)
+        if sync:
+            os.fsync(self.fObj)
 
         # Rename to the new location. Since both are on the same
         # filesystem, this will atomically replace the old with the new.
