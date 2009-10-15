@@ -1,5 +1,7 @@
 from django.conf.urls.defaults import *
 
+from rbuilder.reporting import imagereports, views
+
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
@@ -14,4 +16,6 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # (r'^admin/', include(admin.site.urls)),
+    url(r'^api/reports/types/?$', views.reportTypeCollection()),
+    url(r'^api/reports/types/imagesPerProduct/data/(.*?)/?$', imagereports.ImagesPerProduct()),
 )

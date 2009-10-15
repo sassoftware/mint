@@ -1,4 +1,4 @@
-from models import Users
+from mint.django_rest.models import Users
 import md5
 import base64
 

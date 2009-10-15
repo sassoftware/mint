@@ -11,11 +11,11 @@ from django.db import models
 
 class UrlField(object):
     def __init__(self, path):
-    	self.path = path
-    	
+        self.path = path
+    
     def _getUrl(self, hostname, request):
-    	return request.baseUrl;
-    	
+        return request.baseUrl;
+    
 class RepositoryUrlField(UrlField):
     name = None
     def _getUrl(self, hostname, request):
@@ -71,7 +71,7 @@ class Products(models.Model):
         return self.hostname
         
     def _attributes(self):
-    	return ({'id': self.hostname})
+        return ({'id': self.hostname})
 
 class Members(models.Model):
     productId = models.ForeignKey(Products, db_column='projectid', related_name='product')
