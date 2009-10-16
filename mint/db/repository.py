@@ -236,6 +236,9 @@ class RepositoryHandle(object):
     def projectId(self):
         return self._projectInfo['projectId']
     @property
+    def repositoryMap(self):
+        return self._projectInfo['url']
+    @property
     def shortName(self):
         return self._projectInfo['shortname']
 
