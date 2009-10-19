@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 3)
+    Version = (48, 4)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -715,6 +715,12 @@ class MigrateTo_48(SchemaMigration):
             # before we hit all the projects.
             manager.close()
 
+        return True
+
+    # 48.4
+    # - Platforms / PlatformSources / PlatformSourceData tables will be
+    # created.
+    def migrate4(self):
         return True
 
 

@@ -18,6 +18,7 @@ from mint.rest.api.models.members import *
 from mint.rest.api.models.siteauth import *
 from mint.rest.api.models.users import *
 from mint.rest.api.models.repos import *
+from mint.rest.api.models.descriptor import *
 from mint.rest.api.models.platforms import *
 from mint.rest.api.models.products import *
 from mint.rest.api.models.productversions import *

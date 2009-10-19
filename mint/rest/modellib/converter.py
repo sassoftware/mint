@@ -205,7 +205,8 @@ class XobjConverter(Converter):
 
     def toText(self, modelInstance, context):
         xobjObject = self.getXobjObject(modelInstance, context)
-        return xobj.toxml(xobjObject, xobjObject.__class__.__name__)
+        nsmap = getattr(modelInstance, 'nsmap', {})
+        return xobj.toxml(xobjObject, xobjObject.__class__.__name__, nsmap=nsmap)
 
     def fromText(self, text, modelClass, context):
         className = self.xobjClass.__name__
