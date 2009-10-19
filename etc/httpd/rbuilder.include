@@ -51,6 +51,15 @@
         PythonOption basePath "/"
     </Location>
 
+    # Django rest API
+    <Location "/django_rest/">
+        SetHandler python-program
+        PythonHandler django.core.handlers.modpython
+        SetEnv DJANGO_SETTINGS_MODULE mint.django_rest.settings
+        PythonOption django.root /mint/django_rest
+        PythonDebug On
+    </Location>
+
     # Images are handled by apache; make sure the MIME types are correct
     <Location /images/>
         SetHandler none
