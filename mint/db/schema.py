@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 4)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -722,6 +722,46 @@ def _createTargets(db):
 
     return changed
 
+def _createPlatforms(db):
+    cu = db.cursor()
+    changed = False
+
+    if 'Platforms' not in db.tables:
+        cu.execute("""
+            CREATE TABLE Platforms (
+                platformId  %(PRIMARYKEY)s,
+                platformLabel       varchar(255)    NOT NULL
+                configurable        smallint        NOT NULL    DEFAULT 0,
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['Platforms'] = []
+        changed = True
+
+    if 'PlatformSources' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformSources (
+                platformSourceId  %(PRIMARYKEY)s,
+                platformId        integer   NOT NULL
+                    REFERENCES Platforms ON DELETE CASCADE,
+                platformSourceName       varchar(255)    NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformSources'] = []
+        changed = True
+
+    if 'PlatformSourceData' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformSourceData (
+                platformSourceId    integer         NOT NULL
+                    REFERENCES PlatformSources ON DELETE CASCADE,
+                name                varchar(32)     NOT NULL,
+                value               text            NOT NULL,
+                dataType            smallint        NOT NULL,
+                PRIMARY KEY ( platformSourceId, name )
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['PlatformSourceData'] = []
+        changed = True
+
+    return changed
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -746,6 +786,7 @@ def createSchema(db, doCommit=True):
     changed |= _createEC2Data(db)
     changed |= _createSessions(db)
     changed |= _createTargets(db)
+    changed |= _createPlatforms(db)
 
     if doCommit:
         if changed:
