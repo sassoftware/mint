@@ -97,7 +97,7 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
     def handler_customizations(self, context):
         """ Override this if necessary """
 
-    def _predirect(self, path = "", temporary = False):
+    def _predirect(self, path = "", temporary=True):
         self._redirectHttp('project/%s/%s' % (self.project.hostname, path),
                 temporary=temporary)
 
