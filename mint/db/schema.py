@@ -746,7 +746,7 @@ def _createPlatforms(db):
                 name       varchar(255)    NOT NULL,
                 shortName  varchar(255)    NOT NULL UNIQUE,
                 defaultSource    smallint  NOT NULL,
-                orderIndex  smallint NOT NULL,
+                orderIndex  smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformSources'] = []
         changed = True
