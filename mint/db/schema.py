@@ -730,8 +730,9 @@ def _createPlatforms(db):
         cu.execute("""
             CREATE TABLE Platforms (
                 platformId  %(PRIMARYKEY)s,
-                platformLabel       varchar(255)    NOT NULL
+                label       varchar(255)    NOT NULL UNIQUE,
                 configurable        smallint        NOT NULL    DEFAULT 0,
+                mode varchar(255) check (mode in ('proxied', 'mirrored'))
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Platforms'] = []
         changed = True
@@ -742,10 +743,19 @@ def _createPlatforms(db):
                 platformSourceId  %(PRIMARYKEY)s,
                 platformId        integer   NOT NULL
                     REFERENCES Platforms ON DELETE CASCADE,
-                platformSourceName       varchar(255)    NOT NULL
+                name       varchar(255)    NOT NULL,
+                shortName  varchar(255)    NOT NULL UNIQUE,
+                defaultSource    smallint  NOT NULL,
+                orderIndex  smallint NOT NULL,
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformSources'] = []
         changed = True
+    changed |= db.createIndex('PlatformSources',
+            'PlatformSources_platformSourceId_defaultSource_uq',
+            'platformSourceId,defaultSource', unique = True)
+    changed |= db.createIndex('PlatformSources',
+            'PlatformSources_platformSourceId_orderIndex_uq',
+            'platformSourceId,orderIndex', unique = True)
 
     if 'PlatformSourceData' not in db.tables:
         cu.execute("""

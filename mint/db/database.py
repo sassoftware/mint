@@ -14,6 +14,7 @@ from mint.db import jobs
 from mint.db import news
 from mint.db import mirror
 from mint.db import pkgindex
+from mint.db import platforms
 from mint.db import projects
 from mint.db import pubreleases
 from mint.db import requests
@@ -61,6 +62,10 @@ class TableCache(object):
 
         self.targets = targets.TargetsTable(db)
         self.targetData = targets.TargetDataTable(db)
+
+        self.platforms = platforms.PlatformsTable(db, cfg)
+        self.platformSources = platforms.PlatformSourcesTable(db, cfg)
+        self.platformSourceData = platforms.PlatformSourceDataTable(db)
 
         self.users.confirm_table.db = db
         self.newsCache.ageTable.db = db
@@ -111,6 +116,9 @@ class Database(object):
         self.launchedAMIs = tables.launchedAMIs
         self.communityIds = tables.communityIds
         self.productVersions = tables.productVersions
+        self.platforms = tables.platforms
+        self.platformSources = tables.platformSources
+        self.platformSourceData = tables.platformSourceData
 
         self.targets = tables.targets
         self.targetData = tables.targetData

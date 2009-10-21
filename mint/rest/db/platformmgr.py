@@ -6,15 +6,18 @@
 import os
 import sys
 import weakref
+import xmlrpclib
 
 from conary import versions
+from conary.lib import util
 
-from rpath_proddef import api1 as proddef
-
+from mint import mint_error
+from mint.lib import persistentcache
 from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import manager
-from mint.lib import persistentcache
+
+from rpath_proddef import api1 as proddef
 
 class PlatformManager(manager.Manager):
     def __init__(self, cfg, db, auth):
@@ -43,7 +46,8 @@ class PlatformManager(manager.Manager):
                                platformName=kw['platformName'],
                                hostname=kw['hostname'],
                                enabled=kw['enabled'],
-                               configurable=kw['configurable'])
+                               configurable=kw['configurable'],
+                               platformMode=kw['mode'])
 
 
     def listPlatforms(self, filterPlatformId=None):
@@ -53,15 +57,17 @@ class PlatformManager(manager.Manager):
             if dbPlatforms.has_key(platformLabel):
                 platformId = dbPlatforms[platformLabel]['platformId']
                 configurable = dbPlatforms[platformLabel]['configurable']
+                mode = dbPlatforms[platformLabel]['mode']
             else:
                 # TODO: Something meaningful.
                 platformId = '0'
                 configurable = 0
+                mode = 'proxied'
                 pass
             plat = self._platformModelFactory(platformId=platformId,
                         label=platformLabel, platformName=platformName,
                         hostname=platformLabel.split('.')[0],
-                        enabled=enabled, configurable=configurable)
+                        enabled=enabled, configurable=configurable, mode=mode)
             plat.sources = self.listPlatformSources(platformId)                        
 
             if filterPlatformId and \
@@ -109,8 +115,9 @@ class PlatformManager(manager.Manager):
         sql = """
             SELECT
                 platforms.platformId,
-                platforms.platformLabel,
-                platforms.configurable
+                platforms.label,
+                platforms.configurable,
+                platforms.mode
             FROM
                 platforms
         """
@@ -122,9 +129,10 @@ class PlatformManager(manager.Manager):
 
         results = {}
         for row in cu:
-            results[row['platformLabel']] = \
+            results[row['label']] = \
                 dict(platformId=str(row['platformId']),
-                     configurable=row['configurable'])
+                     configurable=row['configurable'],
+                     mode=row['mode'])
 
         return results
     
@@ -145,8 +153,11 @@ class PlatformManager(manager.Manager):
     def _platformSourceModelFactory(self, row):
         plat = models.Source(
                         platformSourceId=str(row['platformSourceId']),
-                        platformSourceName=row['platformSourceName'],
-                        platformId=str(row['platformId']))
+                        name=row['name'],
+                        platformId=str(row['platformId']),
+                        shortName=row['shortName'],
+                        defaultSource=row['defaultSource'],
+                        orderIndex=row['orderIndex'])
 
         data = self._getPlatformSourceData(row['platformSourceId'])
 
@@ -155,27 +166,32 @@ class PlatformManager(manager.Manager):
 
         return plat
 
-    def listPlatformSources(self, platformId, filterPlatformSourceId=None):
+    def listPlatformSources(self, platformId=None, filterPlatformSourceId=None):
         cu = self.db.cursor()
 
         sql = """
             SELECT
                 platformSources.platformSourceId,
-                platformSources.platformSourceName,
+                platformSources.name,
+                platformSources.shortName,
+                platformSources.defaultSource,
+                platformSources.orderIndex,
                 platforms.platformId
             FROM
                 platforms,
                 platformSources
             WHERE
                 platformSources.platformId = platforms.platformId
-                and platforms.platformId = ?
         """
+
+        if platformId:
+            sql = sql + ' AND platforms.platformId = %s' % platformId
 
         if filterPlatformSourceId:
             sql = sql + ' AND platformSources.platformSourceId = %s' % \
                 filterPlatformSourceId
 
-        cu.execute(sql, platformId)
+        cu.execute(sql)
 
         ret = []
         for row in cu:
@@ -186,9 +202,83 @@ class PlatformManager(manager.Manager):
             return ret[0]
         else:
             platformSources = models.Sources()
-            platformSources.sources = ret
+            platformSources.source = ret
             return platformSources
 
+    def getPlatformSource(self, platformSourceId):
+        return self.listPlatformSources(None, platformSourceId)
+
+    def getPlatformStatus(self, platformId):
+        pass
+
+    def getPlatformSourceStatus(self, platformSourceId):
+        platformSource = self.getPlatformSource(platformSourceId)
+        ret = self._checkRHNSourceStatus(platformSource.sourceUrl,
+                    platformSource.username, platformSource.password)
+        status = models.Status(connected=ret[0],
+                            valid=ret[1], message=ret[2])
+        return status
+
+    def _checkRHNSourceStatus(self, url, username, password):
+        if url.endswith('/'):
+            url = url[:-1]
+        url = "%s/rpc/api" % url
+        s = util.ServerProxy(url)
+        try:
+            s.auth.login(username, password)
+            return (True, True, 'Validated Successfully.')
+        except xmlrpclib.Fault, e:
+            return (True, False, e.faultString)
+
+    def updatePlatformSource(self, platformId, platformSourceId, source):
+        cu = self.db.cursor()
+        sql = """
+        UPDATE platformSourceData
+        SET value='%s'
+        WHERE 
+            name='%s'
+            and platformSourceId = ?
+        """
+
+        oldSource = self.getPlatformSource(platformSourceId)
+
+        for field in ['username', 'password', 'sourceUrl']:
+            newVal = getattr(source, field)
+            if getattr(oldSource, field) != newVal:
+                cu.execute(sql % (newVal, field), platformSourceId)
+
+    def updatePlatform(self, platformId, platform):
+        cu = self.db.cursor()
+        sql = """
+        UPDATE platforms
+        SET mode='%s'
+        WHERE
+            platformId=?
+        """
+
+        cu.execute(sql % platform.platformMode, platformId)
+        return self.getPlatform(platformId)
+
+    def createPlatformSource(self, platformId, source):
+        try:
+            platformSourceId = self.db.db.platformSources.new(
+                    platformId=platformId, name=source.name, shortName=source.shortName)
+        except mint_error.DuplicateItem, e:
+            raise e
+
+        cu = self.db.cursor()
+        sql = """
+        INSERT INTO platformSourceData
+        VALUES (%s, '%s', '%s', 3)
+        """
+
+        for field in ['username', 'password', 'sourceUrl']:
+            cu.execute(sql % (platformSourceId, field, source.username))
+
+        return self.getPlatformSource(platformSourceId)            
+
+    def deletePlatformSource(self, platformSourceId):
+        self.db.db.platformSources.delete(platformSourceId)
 
 class PlatformNameCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, reposMgr):
