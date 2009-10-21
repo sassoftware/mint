@@ -3,7 +3,7 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 from mint.rest.api.models import Descriptor
 
-class Status(Model):
+class PlatformSourceStatus(Model):
     connected = fields.BooleanField()
     valid = fields.BooleanField()
     message = fields.CharField()

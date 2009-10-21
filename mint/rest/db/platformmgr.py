@@ -216,12 +216,12 @@ class PlatformManager(manager.Manager):
         if not platformSource.username or \
            not platformSource.password or \
            not platformSource.sourceUrl:
-            status = models.Status(connected=False, valid=False, 
+            status = models.PlatformSourceStatus(connected=False, valid=False, 
                 message="Username, password, and source url must be provided to check a source's status.")
         else:
             ret = self._checkRHNSourceStatus(platformSource.sourceUrl,
                         platformSource.username, platformSource.password)
-            status = models.Status(connected=ret[0],
+            status = models.PlatformSourceStatus(connected=ret[0],
                                 valid=ret[1], message=ret[2])
 
         return status
@@ -239,12 +239,16 @@ class PlatformManager(manager.Manager):
 
     def updatePlatformSource(self, platformId, platformSourceId, source):
         cu = self.db.cursor()
-        sql = """
+        updSql = """
         UPDATE platformSourceData
         SET value='%s'
         WHERE 
             name='%s'
             and platformSourceId = ?
+        """
+        insSql = """
+        INSERT INTO platformSourceData
+        VALUES (?, '%s', '%s', 3)
         """
 
         oldSource = self.getPlatformSource(platformSourceId)
@@ -252,7 +256,11 @@ class PlatformManager(manager.Manager):
         for field in ['username', 'password', 'sourceUrl']:
             newVal = getattr(source, field)
             if getattr(oldSource, field) != newVal:
-                cu.execute(sql % (newVal, field), platformSourceId)
+                row = cu.execute(updSql % (newVal, field), platformSourceId)
+                if not row:
+                    cu.execute(insSql % (field, newVal), platformSourceId)
+
+        return self.getPlatformSource(platformSourceId)                    
 
     def updatePlatform(self, platformId, platform):
         cu = self.db.cursor()
