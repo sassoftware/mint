@@ -213,10 +213,17 @@ class PlatformManager(manager.Manager):
 
     def getPlatformSourceStatus(self, platformSourceId):
         platformSource = self.getPlatformSource(platformSourceId)
-        ret = self._checkRHNSourceStatus(platformSource.sourceUrl,
-                    platformSource.username, platformSource.password)
-        status = models.Status(connected=ret[0],
-                            valid=ret[1], message=ret[2])
+        if not platformSource.username or \
+           not platformSource.password or \
+           not platformSource.sourceUrl:
+            status = models.Status(connected=False, valid=False, 
+                message="Username, password, and source url must be provided to check a source's status.")
+        else:
+            ret = self._checkRHNSourceStatus(platformSource.sourceUrl,
+                        platformSource.username, platformSource.password)
+            status = models.Status(connected=ret[0],
+                                valid=ret[1], message=ret[2])
+
         return status
 
     def _checkRHNSourceStatus(self, url, username, password):
