@@ -27,5 +27,8 @@ class PlatformSourcesTable(database.KeyedTable):
         self.cfg = cfg
         database.KeyedTable.__init__(self, db)
 
+    def getIdFromShortName(self, shortName):
+        return self.getIdByColumn('shortName', shortName)
+
 class PlatformSourceDataTable(data.GenericDataTable):
     name = 'platformSourceData'

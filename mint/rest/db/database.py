@@ -676,9 +676,9 @@ class Database(DBInterface):
         return self.platformMgr.listPlatformSources(platformId)
 
     @readonly
-    def getPlatformSource(self, platformId, platformSourceId):
+    def getPlatformSource(self, platformId, platformSourceShortName):
         return self.platformMgr.listPlatformSources(platformId,
-                    platformSourceId)
+                    platformSourceShortName)
 
     @readonly
     def getSourceDescriptorConfig(self, platformId):
@@ -689,13 +689,13 @@ class Database(DBInterface):
         return self.platformMgr.getPlatformStatus(platformId)
 
     @readonly
-    def getPlatformSourceStatus(self, platformSourceId):
-        return self.platformMgr.getPlatformSourceStatus(platformSourceId)
+    def getPlatformSourceStatus(self, platformSourceShortName):
+        return self.platformMgr.getPlatformSourceStatus(platformSourceShortName)
 
     @commitafter
-    def updatePlatformSource(self, platformId, platformSourceId, source):
+    def updatePlatformSource(self, platformId, platformSourceShortName, source):
         return self.platformMgr.updatePlatformSource(platformId, 
-                        platformSourceId, source)
+                        platformSourceShortName, source)
 
     @commitafter
     def updatePlatform(self, platformId, platform):
@@ -706,8 +706,8 @@ class Database(DBInterface):
         return self.platformMgr.createPlatformSource(platformId, source)
 
     @commitafter
-    def deletePlatformSource(self, platformSourceId):
-        return self.platformMgr.deletePlatformSource(platformSourceId)
+    def deletePlatformSource(self, platformSourceShortName):
+        return self.platformMgr.deletePlatformSource(platformSourceShortName)
 
     # doesn't actually commit anything to the database, instead
     # it pushes to the entitlement server.

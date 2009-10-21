@@ -8,11 +8,11 @@ class PlatformSourceStatus(Model):
     valid = fields.BooleanField()
     message = fields.CharField()
 
-class Source(Model):
+class PlatformSource(Model):
     platformSourceId = fields.CharField()
     name = fields.CharField()
     platformId = fields.CharField()
-    shortName = fields.CharField()
+    shortName = fields.CharField(displayName='shortname')
     sourceUrl = fields.CharField()
     username = fields.CharField()
     password = fields.CharField()
@@ -20,15 +20,15 @@ class Source(Model):
     orderIndex = fields.IntegerField()
     platformSourceStatus = fields.UrlField(
                                 'platforms.sources.status',
-                                ['platformId', 'platformSourceId'])
+                                ['platformId', 'shortName'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
     def get_absolute_url(self):
-        return ('platforms.sources', self.platformId, self.platformSourceId)
+        return ('platforms.sources', self.platformId, self.shortName)
 
 class Sources(Model):
-    source = fields.ListField(Source)
+    platformSource = fields.ListField(PlatformSource)
 
 class Platform(Model):
     platformId = fields.CharField()

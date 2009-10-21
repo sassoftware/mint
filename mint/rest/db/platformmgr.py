@@ -151,7 +151,7 @@ class PlatformManager(manager.Manager):
         return cu
 
     def _platformSourceModelFactory(self, row):
-        plat = models.Source(
+        plat = models.PlatformSource(
                         platformSourceId=str(row['platformSourceId']),
                         name=row['name'],
                         platformId=str(row['platformId']),
@@ -166,7 +166,14 @@ class PlatformManager(manager.Manager):
 
         return plat
 
-    def listPlatformSources(self, platformId=None, filterPlatformSourceId=None):
+    def listPlatformSources(self, platformId=None, filterPlatformSourceShortName=None):
+
+        if filterPlatformSourceShortName:
+            filterPlatformSourceId = \
+                self.db.db.platformSources.getIdFromShortName(filterPlatformSourceShortName)
+        else:
+            filterPlatformSourceId = None
+
         cu = self.db.cursor()
 
         sql = """
@@ -202,17 +209,19 @@ class PlatformManager(manager.Manager):
             return ret[0]
         else:
             platformSources = models.Sources()
-            platformSources.source = ret
+            platformSources.platformSource = ret
             return platformSources
 
-    def getPlatformSource(self, platformSourceId):
-        return self.listPlatformSources(None, platformSourceId)
+    def getPlatformSource(self, platformSourceShortName):
+        return self.listPlatformSources(None, platformSourceShortName)
 
     def getPlatformStatus(self, platformId):
         pass
 
-    def getPlatformSourceStatus(self, platformSourceId):
-        platformSource = self.getPlatformSource(platformSourceId)
+    def getPlatformSourceStatus(self, platformSourceShortName):
+        platformSourceId = \
+            self.db.db.platformSources.getIdFromShortName(platformSourceShortName)
+        platformSource = self.getPlatformSource(platformSourceShortName)
         if not platformSource.username or \
            not platformSource.password or \
            not platformSource.sourceUrl:
@@ -237,7 +246,9 @@ class PlatformManager(manager.Manager):
         except xmlrpclib.Fault, e:
             return (True, False, e.faultString)
 
-    def updatePlatformSource(self, platformId, platformSourceId, source):
+    def updatePlatformSource(self, platformId, platformSourceShortName, source):
+        platformSourceId = \
+            self.db.db.platformSources.getIdFromShortName(platformSourceShortName)
         cu = self.db.cursor()
         updSql = """
         UPDATE platformSourceData
@@ -251,7 +262,7 @@ class PlatformManager(manager.Manager):
         VALUES (?, '%s', '%s', 3)
         """
 
-        oldSource = self.getPlatformSource(platformSourceId)
+        oldSource = self.getPlatformSource(platformSourceShortName)
 
         for field in ['username', 'password', 'sourceUrl']:
             newVal = getattr(source, field)
@@ -260,7 +271,7 @@ class PlatformManager(manager.Manager):
                 if not row:
                     cu.execute(insSql % (field, newVal), platformSourceId)
 
-        return self.getPlatformSource(platformSourceId)                    
+        return self.getPlatformSource(platformSourceShortName)                    
 
     def updatePlatform(self, platformId, platform):
         cu = self.db.cursor()
@@ -292,7 +303,9 @@ class PlatformManager(manager.Manager):
 
         return self.getPlatformSource(platformSourceId)            
 
-    def deletePlatformSource(self, platformSourceId):
+    def deletePlatformSource(self, platformShortName):
+        platformSourceId = \
+            self.db.db.platformSources.getIdFromShortName(platformSourceShortName)
         self.db.db.platformSources.delete(platformSourceId)
 
 class PlatformNameCache(persistentcache.PersistentCache):

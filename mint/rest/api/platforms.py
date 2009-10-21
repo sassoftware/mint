@@ -13,11 +13,11 @@ from mint.rest.middleware import auth
 class PlatformSourceStatusController(base.BaseController):
     
     @auth.public
-    def index(self, request, platformId, platformSourceId):
-        return self.db.getPlatformSourceStatus(platformSourceId)
+    def index(self, request, platformId, shortName):
+        return self.db.getPlatformSourceStatus(shortName)
 
 class PlatformSourceController(base.BaseController):
-    modelName = 'platformSourceId'
+    modelName = 'shortName'
 
     urls = { 'status' : PlatformSourceStatusController }
 
@@ -26,23 +26,23 @@ class PlatformSourceController(base.BaseController):
         return self.db.listPlatformSources(platformId)
 
     @auth.public
-    def get(self, request, platformId, platformSourceId):
-        return self.db.getPlatformSource(platformId, platformSourceId)
+    def get(self, request, platformId, shortName):
+        return self.db.getPlatformSource(platformId, shortName)
 
     @auth.public
-    @requires('source', models.Source)
+    @requires('source', models.PlatformSource)
     def create(self, request, platformId, source):
         return self.db.createPlatformSource(platformId, source)
 
     @auth.public
-    @requires('source', models.Source)
-    def update(self, request, platformId, platformSourceId, source):
+    @requires('source', models.PlatformSource)
+    def update(self, request, platformId, shortName, source):
         return self.db.updatePlatformSource(platformId, 
-                    platformSourceId, source)
+                    shortName, source)
 
     @auth.public        
-    def destroy(self, request, platformId, platformSourceId):
-        return self.db.deletePlatformSource(platformId, platformSourceId)
+    def destroy(self, request, platformId, shortName):
+        return self.db.deletePlatformSource(platformId, shortName)
 
 class SourceDescriptorConfigController(base.BaseController):
     
