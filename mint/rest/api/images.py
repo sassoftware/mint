@@ -26,7 +26,7 @@ class ProductImagesController(base.BaseController):
 
     urls = {'files' : ProductImageFilesController,
             'stop'  : {'POST' : 'stop'},
-            'status': {'GET': 'getStatus'},
+            'status': {'GET': 'getStatus', 'PUT': 'setStatus'},
             'buildLog': {'GET': 'getBuildLog', 'POST': 'postBuildLog'},
             }
 
@@ -56,12 +56,18 @@ class ProductImagesController(base.BaseController):
     def getStatus(self, request, hostname, imageId):
         return self.db.getImageStatus(hostname, imageId)
 
+    @auth.public # authenticated by image token
+    @requires('status', models.ImageStatus)
+    def setStatus(self, request, hostname, imageId, status):
+        imageToken = self._getImageToken(request)
+        return self.db.setImageStatus(hostname, imageId, imageToken, status)
+
     @auth.public
     def getBuildLog(self, request, hostname, imageId):
         return self.db.getImageFile(hostname, imageId, 'build.log',
                 asResponse=True)
 
-    @auth.public
+    @auth.public # authenticated by image token
     def postBuildLog(self, request, hostname, imageId):
         imageToken = self._getImageToken(request)
         data = request.read()

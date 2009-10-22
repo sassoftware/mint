@@ -573,37 +573,36 @@ class Database(DBInterface):
         self.auth.requireProductOwner(hostname)
         self.releaseMgr.unpublishRelease(releaseId)
 
-
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version,
                 flavor)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def listImagesForRelease(self, hostname, releaseId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def listImagesForProduct(self, hostname):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForProduct(hostname)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def getImageForProduct(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageForProduct(hostname, imageId)
 
-    # TODO: switch to readonly after image status rework
-    @commitmaybe
+    @readonly
     def getImageStatus(self, hostname, imageId):
         self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.getImageStatus(hostname, imageId)
+        return self.imageMgr.getImageStatus(imageId)
+
+    @commitafter
+    def setImageStatus(self, hostname, imageId, imageToken, status):
+        self.auth.requireImageToken(hostname, imageId, imageToken)
+        return self.imageMgr.setImageStatus(imageId, status)
 
     @readonly
     def getImageFile(self, hostname, imageId, fileName, asResponse=False):

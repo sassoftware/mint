@@ -132,78 +132,9 @@ class ImageManager(manager.Manager):
             files = filesByImageId.get(image.imageId, [])
             image.files = models.ImageFileList(files)
 
-        self._updateStatusForImageList(images)
-
         if getOne:
             return images[0]
         return models.ImageList(images)
-
-
-    def _updateStatusForImageList(self, imageList):
-        changed = []
-        for image in imageList:
-            if image.imageStatus.code in jobstatus.terminalStatuses:
-                continue
-
-            status = jobstatus.UNKNOWN
-            statusMessage = res = None
-            if image.hasBuild():
-                uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
-                                  self.cfg.siteDomainName, image.imageId, 
-                                  image.buildCount)
-                try:
-                    mc = self._getMcpClient()
-                    res = mc.jobStatus(uuid)
-                except mcp_error.UnknownJob:
-                    status = jobstatus.NO_JOB
-                else:
-                    if res:
-                        status, statusMessage = res
-                    # Sometimes the MCP returns None for no obvious reason.
-                    # In those cases, keep the fallback value of UNKNOWN.
-
-                if status == jobstatus.NO_JOB:
-                    # The MCP no longer knows about this job and it never will,
-                    # so make a guess as to whether it passed or failed and
-                    # set its state to that.
-                    if image.files and image.files.files:
-                        # Images with files succeeded, unless one of those files
-                        # is a failed build log.
-                        for file in image.files.files:
-                            if file.title.startswith('Failed '):
-                                status = jobstatus.FAILED
-                                break
-                        else:
-                            status = jobstatus.FINISHED
-
-                    elif image.amiId:
-                        # AMIs don't have files but if the ID is posted then it
-                        # succeeded.
-                        status = jobstatus.FINISHED
-                    else:
-                        # No files and no AMI means the job failed.
-                        status = jobstatus.FAILED
-
-            else:
-                status = jobstatus.FINISHED
-
-            if status not in jobstatus.statusNames:
-                status = jobstatus.UNKNOWN
-            if not statusMessage:
-                statusMessage = jobstatus.statusNames[status]
-
-            if (status, statusMessage) != (image.imageStatus.code,
-                    image.imageStatus.message):
-                image.imageStatus.set_status(code=status,
-                        message=statusMessage)
-                changed.append(image)
-
-        if changed:
-            cu = self.db.cursor()
-            for image in changed:
-                cu.execute('UPDATE Builds SET status=?, statusMessage=?'
-                           ' WHERE buildId=?', image.imageStatus.code,
-                           image.imageStatus.message, image.imageId)
 
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)
@@ -260,9 +191,6 @@ class ImageManager(manager.Manager):
                                     [name, flavor.freeze()])
         images.images = [ x for x in images.images
                           if x.troveVersion == version ]
-
-        self._updateStatusForImageList(images.images)
-
         return images
 
     def listImagesForProductVersionStage(self, fqdn, version, stageName):
@@ -376,17 +304,17 @@ class ImageManager(manager.Manager):
     def stopImageJob(self, imageId):
         raise NotImplementedError
 
-    def getImageStatus(self, hostname, imageId):
-        # XXX: Have to hack it to get the MCP status querying. Trash this once
-        # the MCP is gone.
-        image = self.getImageForProduct(hostname, imageId)
-        return image.imageStatus
-
+    def getImageStatus(self, imageId):
         cu = self.db.cursor()
         cu.execute("""SELECT hostname, buildId AS imageId,
                     status AS code, statusMessage AS message
                 FROM Builds JOIN Projects USING ( projectId )
-                WHERE hostname = ? AND buildId = ?""",
-                hostname, imageId)
+                WHERE buildId = ?""", imageId)
         row = self.db._getOne(cu, errors.ImageNotFound, imageId)
         return models.ImageStatus(row)
+
+    def setImageStatus(self, imageId, status):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Builds SET status = ?, statusMessage = ?
+                WHERE buildId = ?""", status.code, status.message, imageId)
+        return self.getImageStatus(imageId)
