@@ -189,8 +189,12 @@ class PlatformManager(manager.Manager):
                                        defaultSource='1',
                                        orderIndex='0')
                 # TODO: fix once we have platform types
-                platformId = self.db.db.platforms.getIdByColumn('label',
-                                'pnalv.rb.rpath.com@rpath:rhel-4')
+                try:
+                    platformId = self.db.db.platforms.getIdByColumn('label',
+                                    self.cfg.platformSourceLabels[i])
+                except mint_error.ItemNotFound:
+                    return
+
                 self.createPlatformSource(platformId, source)
 
     def listPlatformSources(self, platformId=None, filterPlatformSourceShortName=None):

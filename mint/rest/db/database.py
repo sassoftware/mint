@@ -667,7 +667,7 @@ class Database(DBInterface):
             return self.siteAuth.getIdentityModel()
         raise RuntimeError("Identity information is not loaded.")
 
-    @readonly
+    @commitafter
     def listPlatforms(self):
         return self.platformMgr.listPlatforms()
 
