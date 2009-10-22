@@ -56,7 +56,7 @@ class PlatformManager(manager.Manager):
 
     def listPlatforms(self, filterPlatformId=None):
         availablePlatforms = []
-        dbPlatforms = self._listPlatformsFromDB(filterPlatformId)
+        dbPlatforms = self._listPlatformsFromDB()
         for platformLabel, platformName, enabled in self._iterPlatforms():
             if dbPlatforms.has_key(platformLabel):
                 platformId = dbPlatforms[platformLabel]['platformId']

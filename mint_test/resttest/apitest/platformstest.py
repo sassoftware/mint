@@ -31,13 +31,14 @@ class PlatformTest(restbase.BaseRestTest):
         return self._testGetPlatforms(notLoggedIn = True)
 
     def _testGetPlatforms(self, notLoggedIn = False):
-        raise testsetup.testsuite.SkipTestException("We need to add a platform")
         platformLabel = self.mintCfg.availablePlatforms[1]
 
+        repos = self.openRepository()
         # Add a platform definition
         pl = self.productDefinition.toPlatformDefinition()
         pl.setPlatformName('Wunderbar Linux')
         cclient = self.getConaryClient()
+        cclient.repos = repos
         pl.saveToRepository(cclient, platformLabel)
 
         uriTemplate = 'platforms'
@@ -45,8 +46,8 @@ class PlatformTest(restbase.BaseRestTest):
         kw = {}
         if notLoggedIn:
             kw['username'] = None
-        client = self.getRestClient(uri, **kw)
-        response = client.request('GET')
+        client = self.getRestClient(**kw)
+        req, response = client.call('GET', uri)
         # This is less than helpful.
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>

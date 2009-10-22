@@ -87,6 +87,7 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
     def testExternalRepositoryEntitlementAccess(self):
         # s create an external repository that requires entitlement access 
         # and ensure that we can reach it.
+        import epdb; epdb.st()
         repos = self.openRepository()
         self.addComponent('foo:run=localhost@rpl:1')
 
