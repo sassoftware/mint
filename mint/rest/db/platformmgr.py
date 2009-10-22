@@ -185,7 +185,8 @@ class PlatformManager(manager.Manager):
                 # TODO: create sources independent of platforms
                 source = models.PlatformSource(shortName=configShortName,
                                        sourceUrl=self.cfg.platformSourceUrls[i],
-                                       name=self.cfg.platformSourceNames[i])
+                                       name=self.cfg.platformSourceNames[i],
+                                       defaultSource='1')
                 # TODO: fix once we have platform types
                 platformId = self.db.db.platforms.getIdByColumn('label',
                                 'pnalv.rb.rpath.com@rpath:rhel-4')
