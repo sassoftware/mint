@@ -186,7 +186,8 @@ class PlatformManager(manager.Manager):
                 source = models.PlatformSource(shortName=configShortName,
                                        sourceUrl=self.cfg.platformSourceUrls[i],
                                        name=self.cfg.platformSourceNames[i],
-                                       defaultSource='1')
+                                       defaultSource='1',
+                                       orderIndex='0')
                 # TODO: fix once we have platform types
                 platformId = self.db.db.platforms.getIdByColumn('label',
                                 'pnalv.rb.rpath.com@rpath:rhel-4')
@@ -318,7 +319,10 @@ class PlatformManager(manager.Manager):
     def createPlatformSource(self, platformId, source):
         try:
             platformSourceId = self.db.db.platformSources.new(
-                    platformId=platformId, name=source.name, shortName=source.shortName)
+                    platformId=platformId, name=source.name,
+                    shortName=source.shortName,
+                    defaultSource=source.defaultSource,
+                    orderIndex=source.orderIndex)
         except mint_error.DuplicateItem, e:
             raise e
 

@@ -745,7 +745,7 @@ def _createPlatforms(db):
                     REFERENCES Platforms ON DELETE CASCADE,
                 name       varchar(255)    NOT NULL,
                 shortName  varchar(255)    NOT NULL UNIQUE,
-                defaultSource    smallint  NOT NULL,
+                defaultSource    smallint  NOT NULL DEFAULT 0,
                 orderIndex  smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformSources'] = []
