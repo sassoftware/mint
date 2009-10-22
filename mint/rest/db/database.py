@@ -685,8 +685,8 @@ class Database(DBInterface):
                     platformSourceShortName)
 
     @readonly
-    def getSourceDescriptorConfig(self, platformId):
-        return self.platformMgr.getSourceDescriptorConfig(platformId)
+    def getConfigDescriptor(self, platformSourceShortName):
+        return self.platformMgr.getConfigDescriptor(platformSourceShortName)
 
     @readonly
     def getPlatformStatus(self, platformId):

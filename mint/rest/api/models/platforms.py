@@ -1,7 +1,6 @@
 import products
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
-from mint.rest.api.models import Descriptor
 
 class PlatformSourceStatus(Model):
     connected = fields.BooleanField()
@@ -20,6 +19,9 @@ class PlatformSource(Model):
     orderIndex = fields.IntegerField()
     platformSourceStatus = fields.UrlField(
                                 'platforms.sources.status',
+                                ['platformId', 'shortName'])
+    configDescriptor = fields.UrlField(
+                                'platforms.sources.descriptor', 
                                 ['platformId', 'shortName'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
@@ -43,7 +45,6 @@ class Platform(Model):
     repositoryUrl  = products.RepositoryRestUrlField()
     sources = fields.ModelField(Sources)
     platformMode = fields.CharField()
-    sourceDescriptorConfig = fields.UrlField('platforms.sourceDescriptorConfig', ['platformId'])
     platformStatus = fields.UrlField('platforms.status', ['platformId'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)

@@ -25,12 +25,12 @@ class DescriptorField(Model):
 class DataFields(Model):
     field = fields.ListField(DescriptorField)
 
-class Descriptor(Model):
+class ConfigDescriptor(Model):
     xsi = fields.CharField(isAttribute=True, displayName='{%s}schemaLocation' % XSI)
     metadata = fields.ModelField(Metadata)
     dataFields = fields.ModelField(DataFields)
 
 def descriptorFactory(*args, **kw):
-    d = Descriptor(xsi=SCHEMALOC, **kw)
+    d = ConfigDescriptor(xsi=SCHEMALOC, **kw)
     d.nsmap = {'xsi' : XSI}
     return d            

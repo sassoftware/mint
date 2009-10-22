@@ -92,11 +92,9 @@ class PlatformManager(manager.Manager):
     def getPlatform(self, platformId):
         return self.listPlatforms(platformId)
 
-    def getSourceDescriptorConfig(self, platformId):
-        plat = self.getPlatform(platformId)
-
-        desc = models.Description(desc='Configure %s' % plat.platformName)
-        metadata = models.Metadata(displayName=plat.platformName,
+    def getConfigDescriptor(self, platformSourceShortName):
+        desc = models.Description(desc='Configure %s' % platformSourceShortName)
+        metadata = models.Metadata(displayName=platformSourceShortName,
                     descriptions=[desc])
 
         dFields = []

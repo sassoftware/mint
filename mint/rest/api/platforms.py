@@ -16,10 +16,17 @@ class PlatformSourceStatusController(base.BaseController):
     def index(self, request, platformId, shortName):
         return self.db.getPlatformSourceStatus(shortName)
 
+class ConfigDescriptorController(base.BaseController):
+    
+    @auth.public
+    def index(self, request, platformId, shortName):
+        return self.db.getConfigDescriptor(shortName)
+
 class PlatformSourceController(base.BaseController):
     modelName = 'shortName'
 
-    urls = { 'status' : PlatformSourceStatusController }
+    urls = { 'status' : PlatformSourceStatusController,
+             'descriptor' : ConfigDescriptorController }
 
     @auth.public
     def index(self, request, platformId):
@@ -44,12 +51,6 @@ class PlatformSourceController(base.BaseController):
     def destroy(self, request, platformId, shortName):
         return self.db.deletePlatformSource(platformId, shortName)
 
-class SourceDescriptorConfigController(base.BaseController):
-    
-    @auth.public
-    def index(self, request, platformId):
-        return self.db.getSourceDescriptorConfig(platformId)
-
 class PlatformStatusController(base.BaseController):
 
     @auth.public
@@ -60,7 +61,6 @@ class PlatformController(base.BaseController):
     modelName = "platformId"
 
     urls = { 'sources' : PlatformSourceController,
-             'sourceDescriptorConfig' : SourceDescriptorConfigController,
              'status' : PlatformStatusController }
 
     @auth.public
