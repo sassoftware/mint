@@ -414,9 +414,9 @@ class MintServer(object):
         res = cu.fetchone()
         return res and res[0] or fqdn
 
-    def _addUserGlobs(self, ccfg):
+    def _addInternalConaryConfig(self, ccfg, repoMaps=True):
         """
-        Adds user lines to a conary configuration for the current user.
+        Adds user lines and repository maps for the current user.
         """
         for (otherProjectData, level, memberReqs,
                 ) in self.getProjectDataByMember(self.auth.userId):
@@ -427,6 +427,14 @@ class MintServer(object):
                     initialData=otherProjectData)
             ccfg.user.addServerGlob(otherProject.getFQDN(),
                 self.authToken[0], self.authToken[1])
+
+        # Also add repositoryMap entries for external cached projects.
+        if repoMaps:
+            for repos in self.reposMgr.iterRepositories('external = 1'):
+                if repos.isLocalMirror:
+                    # No repomap required for anything with a database.
+                    continue
+                ccfg.repositoryMap.append((repos.fqdn, repos.repositoryMap))
 
     def _getProjectConaryConfig(self, project, internal=True):
         """
@@ -449,7 +457,7 @@ class MintServer(object):
         if os.path.exists(conarycfgFile):
             ccfg.read(conarycfgFile)
 
-        self._addUserGlobs(ccfg)
+        self._addInternalConaryConfig(ccfg, repoMaps=False)
 
         return ccfg
 
@@ -2535,10 +2543,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         project = projects.Project(self, buildDict['projectId'])
 
         cc = conarycfg.ConaryConfiguration(False)
-        self._addUserGlobs(cc)
+        self._addInternalConaryConfig(cc)
 
         cfgBuffer = StringIO.StringIO()
         cc.displayKey('user', cfgBuffer)
+        cc.displayKey('repositoryMap', cfgBuffer)
         cfgData = cfgBuffer.getvalue()
 
         r = {}
