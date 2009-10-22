@@ -628,8 +628,13 @@ class Database(DBInterface):
 
     @readonly
     def listFilesForImage(self, hostname, imageId):
-        self.auth.requireProductReadAccess(hostname)
+        self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.listFilesForImage(hostname, imageId)
+
+    @commitafter
+    def setFilesForImage(self, hostname, imageId, imageToken, files):
+        self.auth.requireImageToken(hostname, imageId, imageToken)
+        return self.imageMgr.setFilesForImage(hostname, imageId, files)
 
     @commitafter
     def createImage(self, hostname, image, buildData=None):

@@ -30,38 +30,46 @@ class ImageManager(manager.Manager):
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
                    extraArgs=None, getOne=False):
         hostname = fqdn.split('.')[0]
+        cu = self.db.cursor()
+
         # TODO: pull amiId out of here and move into builddata dict ASAP
-        sql = '''SELECT Builds.buildId as imageId, hostname,
-               Builds.pubReleaseId as "release",
-               timePublished,
-               buildType as imageType, Builds.name, Builds.description, 
-               troveName, troveVersion, troveFlavor, troveLastChanged,
-               Builds.timeCreated, CreateUser.username as creator, 
-               Builds.timeUpdated, Builds.status, Builds.statusMessage,
-               ProductVersions.name as version, stageName as stage,
-               UpdateUser.username as updater, buildCount, 
-               BuildData.value as amiId
-            FROM Builds
-            JOIN Projects USING(projectId)
-            %(join)s
-            LEFT JOIN PublishedReleases
-            ON(Builds.pubReleaseId=PublishedReleases.pubReleaseId)
-            LEFT JOIN ProductVersions 
-                ON(Builds.productVersionId=ProductVersions.productVersionId)
-            LEFT JOIN Users as CreateUser ON (Builds.createdBy=CreateUser.userId)
-            LEFT JOIN Users as UpdateUser ON (Builds.updatedBy=UpdateUser.userId)
-            LEFT JOIN BuildData ON (BuildData.buildId=Builds.buildId 
-                                    AND BuildData.name='amiId')
-            WHERE hostname=? AND troveVersion IS NOT NULL %(where)s'''
-        sql = sql % dict(where=extraWhere, join=extraJoin)
+        sql = '''
+            SELECT
+                p.hostname,
+                pv.name AS version,
+                b.buildId AS imageId, b.pubReleaseId AS "release",
+                    b.buildType AS imageType, b.name, b.description,
+                    b.troveName, b.troveVersion, b.troveFlavor,
+                    b.troveLastChanged, b.timeCreated, b.timeUpdated,
+                    b.status AS statusCode, b.statusMessage, b.buildCount,
+                    b.stageName AS stage,
+                pr.timePublished,
+                cr_user.username AS creator, up_user.username AS updater,
+                ami_data.value AS amiId
+
+            FROM Builds b
+                JOIN Projects p USING ( projectId )
+                %(join)s
+                LEFT JOIN PublishedReleases pr USING ( pubReleaseId )
+                LEFT JOIN ProductVersions pv USING ( productVersionId )
+                LEFT JOIN Users cr_user ON ( b.createdBy = cr_user.userId )
+                LEFT JOIN Users up_user ON ( b.updatedBy = up_user.userId )
+                LEFT JOIN BuildData ami_data ON (
+                    b.buildId = ami_data.buildId AND ami_data.name = 'amiId' )
+
+            WHERE hostname = ? AND troveVersion IS NOT NULL
+            %(where)s
+            '''
+        sql %= dict(where=extraWhere, join=extraJoin)
         args = (hostname,)
         if extraArgs:
             args += tuple(extraArgs)
-        cu = self.db.cursor()
-        rows = cu.execute(sql, *args)
+        cu.execute(sql, *args)
         if getOne:
             row = self.db._getOne(cu, errors.ImageNotFound, args)
             rows = [row]
+        else:
+            rows = cu
 
         images = []
         for row in rows:
@@ -87,60 +95,62 @@ class ImageManager(manager.Manager):
             status = models.ImageStatus()
             status.hostname = row['hostname']
             status.imageId = row['imageId']
-            status.set_status(code=row.pop('status'),
+            status.set_status(code=row.pop('statusCode'),
                     message=row.pop('statusMessage'))
 
             image = models.Image(row)
             image.imageStatus = status
             images.append(image)
 
-        # Now add files for the images.
-        filesById = {}
-        filesByImageId = {}
-        sql = '''SELECT fileId, Builds.buildId, title, size, sha1, urlType, url
-               FROM Builds
-               JOIN Projects USING(projectId)
-               JOIN BuildFiles ON(Builds.buildId = BuildFiles.buildId)
-            %(join)s
-            JOIN BuildFilesUrlsMap USING(fileId)
-            JOIN FilesUrls USING(urlId)
-            LEFT JOIN ProductVersions
-                ON(Builds.productVersionId=ProductVersions.productVersionId)
-            WHERE hostname=? AND troveVersion IS NOT NULL %(where)s'''
-        sql = sql % dict(where=extraWhere, join=extraJoin)
-        args = (hostname,)
-        if extraArgs:
-            args += tuple(extraArgs)
-        rows = self.db.cursor().execute(sql, *args)
-        for d in rows:
-            urlType = d.pop('urlType')
-            url = d.pop('url')
-            if d['fileId'] not in filesById:
-                d['imageId'] = d.pop('buildId')
-                file = models.ImageFile(d)
-                filesById[file] = file
-                file.urls = []
-                filesByImageId.setdefault(file.imageId, []).append(file)
-            else:
-                file = filesById[d['fileId']]
-            if url:
-                file.baseFileName = os.path.basename(url)
-            file.urls.append(models.FileUrl(fileId=file.fileId, urlType=urlType))
-
-        imagesById = dict((x.imageId, x) for x in images)
-        for image in images:
-            files = filesByImageId.get(image.imageId, [])
-            image.files = models.ImageFileList(files)
+        imagesFiles = self._getFilesForImages(hostname,
+                (x.imageId for x in images))
+        for image, imageFiles in zip(images, imagesFiles):
+            image.files = imageFiles
 
         if getOne:
             return images[0]
         return models.ImageList(images)
 
+
+    def _getFilesForImages(self, hostname, imageIds):
+        imageIds = [int(x) for x in imageIds]
+
+        cu = self.db.cursor()
+        sql = '''
+            SELECT
+                f.fileId, f.buildId AS imageId, f.idx, f.title, f.size, f.sha1,
+                u.urlType, u.url
+            FROM BuildFiles f
+                JOIN BuildFilesUrlsMap USING ( fileId )
+                JOIN FilesUrls u USING ( urlId )
+            WHERE buildId IN ( %(images)s )
+            '''
+        sql %= dict(images=','.join('%d' % x for x in imageIds))
+        cu.execute(sql)
+
+        filesByImageId = dict((imageId, {}) for imageId in imageIds)
+        for d in cu:
+            imageId, fileId = d['imageId'], d['fileId']
+            urlType, url = d.pop('urlType'), d.pop('url')
+            imageFiles = filesByImageId[imageId]
+            if fileId in imageFiles:
+                file = imageFiles[fileId]
+            else:
+                file = imageFiles[fileId] = models.ImageFile(d)
+                file.urls = []
+            if url:
+                file.baseFileName = os.path.basename(url)
+            file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
+
+        return [models.ImageFileList(hostname=hostname, imageId=imageId,
+            files=sorted(imageFiles.values(), key=lambda x: x.idx))
+            for (imageId, imageFiles) in filesByImageId.iteritems()]
+
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)
 
     def getImageForProduct(self, fqdn, imageId):
-        return self._getImages(fqdn, '', 'AND Builds.buildId=?', [imageId],
+        return self._getImages(fqdn, '', 'AND b.buildId=?', [imageId],
                                 getOne=True)
 
     def deleteImageForProduct(self, fqdn, imageId):
@@ -178,7 +188,7 @@ class ImageManager(manager.Manager):
         self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
 
     def listImagesForRelease(self, fqdn, releaseId):
-        return self._getImages(fqdn, '', ' AND Builds.pubReleaseId=?',
+        return self._getImages(fqdn, '', ' AND b.pubReleaseId=?',
                                [releaseId])
 
     def listImagesForProductVersion(self, fqdn, version):
@@ -198,35 +208,9 @@ class ImageManager(manager.Manager):
                               ' AND ProductVersions.name=? AND stageName=?',
                               [version, stageName])
 
-    def listFilesForImage(self, fqdn, imageId, includePath=False):
+    def listFilesForImage(self, fqdn, imageId):
         hostname = fqdn.split('.')[0]
-        cu = self.db.cursor()
-        cu.execute('''SELECT fileId, buildId,
-                      title, size, sha1
-                      FROM BuildFiles
-                      JOIN Builds USING(buildId)
-                      JOIN Projects USING(projectId)
-                      WHERE buildId=? and hostname=?
-                      ORDER BY idx''', imageId, hostname)
-        imageFiles = []
-        for d in cu:
-            d['imageId'] = d.pop('buildId')
-            file = models.ImageFile(d)
-            imageFiles.append(file)
-        for file in imageFiles:
-            cu.execute('''SELECT urlType, url
-                          FROM BuildFilesUrlsMap 
-                          JOIN FilesUrls USING(urlId)
-                          WHERE fileId=?''', file.fileId)
-            urls = []
-            for d in cu:
-                d['fileId'] = file.fileId
-                path = d.pop('url')
-                if includePath:
-                    d['path'] = path
-                urls.append(models.FileUrl(d))
-            file.urls = urls
-        return models.ImageFileList(imageFiles)
+        return self._getFilesForImages(hostname, [imageId])[0]
 
     def createImage(self, fqdn, buildType, buildName, troveTuple, buildData):
         cu = self.db.db.cursor()
@@ -266,40 +250,6 @@ class ImageManager(manager.Manager):
                                         commit=False)
         return buildId
 
-    def setImageFiles(self, hostname, imageId, imageFiles):
-        cu = self.db.cursor()
-        if self.db.db.driver == 'sqlite':
-            cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
-                (SELECT fileId FROM BuildFiles WHERE buildId=?)""",
-                    imageId)
-        cu.execute("DELETE FROM BuildFiles WHERE buildId=?", imageId)
-        for idx, item in enumerate(imageFiles):
-            if len(item) == 2:
-                fileName, title = item
-                sha1 = ''
-                size = 0
-            elif len(item) == 4:
-                fileName, title, size, sha1 = item
-
-                # Newer jobslaves will send this as a string; convert
-                # to a long for the database's sake (RBL-2789)
-                size = long(size)
-
-                # sanitize filename based on configuration
-                fileName = os.path.join(self.cfg.imagesPath, 
-                                        hostname,
-                                str(imageId), os.path.basename(fileName))
-            else:
-                raise ValueError
-            cu.execute("""INSERT INTO BuildFiles ( buildId, idx, title,
-                    size, sha1) VALUES (?, ?, ?, ?, ?)""",
-                    imageId, idx, title, size, sha1)
-            fileId = cu.lastrowid
-            cu.execute("""INSERT INTO FilesUrls ( urlType, url )
-                    VALUES (?, ?)""", urltypes.LOCAL, fileName)
-            urlId = cu.lastrowid
-            cu.execute("""INSERT INTO BuildFilesUrlsMap ( fileId, urlId )
-                    VALUES(?, ?)""", fileId, urlId)
 
     def stopImageJob(self, imageId):
         raise NotImplementedError
@@ -318,3 +268,39 @@ class ImageManager(manager.Manager):
         cu.execute("""UPDATE Builds SET status = ?, statusMessage = ?
                 WHERE buildId = ?""", status.code, status.message, imageId)
         return self.getImageStatus(imageId)
+
+    def setFilesForImage(self, fqdn, imageId, files):
+        hostname = fqdn.split('.')[0]
+        cu = self.db.cursor()
+
+        # Delete existing files attached to the build.
+        # NB: currently we just orphan the URL objects, esp. since some may be
+        # on S3 and require special cleanup.
+        if self.db.db.driver == 'sqlite':
+            cu.execute("""DELETE FROM BuildFilesUrlsMap WHERE fileId IN
+                (SELECT fileId FROM BuildFiles WHERE buildId=?)""",
+                    imageId)
+        cu.execute("DELETE FROM BuildFiles WHERE buildId=?", imageId)
+
+        for idx, file in enumerate(files.files):
+            # First insert the file ...
+            cu.execute("""
+                INSERT INTO BuildFiles ( buildId, idx, title, size, sha1 )
+                    VALUES ( ?, ?, ?, ?, ? )""",
+                imageId, idx, file.title, file.size, file.sha1)
+            fileId = cu.lastrowid
+
+            # ... then the URL ...
+            fileName = os.path.basename(file.baseFileName)
+            filePath = os.path.join(self.cfg.imagesPath, hostname,
+                    str(imageId), fileName)
+            cu.execute("INSERT INTO FilesUrls ( urlType, url) VALUES ( ?, ? )",
+                    urltypes.LOCAL, filePath)
+            urlId = cu.lastrowid
+
+            # ... then the mapping between them.
+            cu.execute("""INSERT INTO BuildFilesUrlsMap (
+                    fileId, urlId) VALUES ( ?, ? )""",
+                    fileId, urlId)
+
+        return self.listFilesForImage(hostname, imageId)

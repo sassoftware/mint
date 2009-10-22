@@ -11,7 +11,7 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class FileUrl(Model):
-    fileId = fields.IntegerField(isAttribute=True)
+    fileId = fields.IntegerField(display=False)
     urlType = fields.IntegerField(isAttribute=True)
     url = fields.ImageDownloadField(isText=True)
 
@@ -21,7 +21,8 @@ class FileUrl(Model):
 
 class ImageFile(Model):
     fileId   = fields.IntegerField()
-    imageId  = fields.IntegerField()
+    imageId  = fields.IntegerField(display=False)
+    idx      = fields.IntegerField(display=False)
     title    = fields.CharField()
     size     = fields.IntegerField()
     sha1     = fields.CharField()
@@ -35,7 +36,14 @@ class ImageFileList(Model):
     class Meta(object):
         name = 'files'
 
+    id = fields.AbsoluteUrlField(isAttribute=True)
+    hostname = fields.CharField(display=False)
+    imageId = fields.IntegerField(display=False)
     files = fields.ListField(ImageFile, displayName='file')
+
+    def get_absolute_url(self):
+        return ('products.images.files', self.hostname, str(self.imageId))
+
 
 class ImageId(Model):
     class Meta(object):
