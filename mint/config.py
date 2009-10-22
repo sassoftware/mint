@@ -231,6 +231,12 @@ class MintConfig(ConfigFile):
     # have an entitlement
     availablePlatformNames  = (CfgList(CfgString), [])
     availablePlatforms      = (CfgList(CfgString), [])
+    # Parallel lists of platform sources
+    platformSourceNames      = (CfgList(CfgString), [])
+    platformSourceUrls       = (CfgList(CfgString), [])
+    platformSourceLabels     = (CfgList(CfgString), [])
+    platformSources          = (CfgList(CfgString), [])
+
     acceptablePlatforms     = (CfgList(CfgString), [])
     siteAuthCfgPath         = (CfgPath, RBUILDER_DATA + 'data/authorization.cfg')
 

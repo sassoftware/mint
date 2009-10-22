@@ -49,6 +49,10 @@ class PlatformManager(manager.Manager):
                                configurable=kw['configurable'],
                                platformMode=kw['mode'])
 
+    def _createPlatformInDB(self, platformLabel, configurable, mode):
+        platformId = self.db.db.platforms.new(label=platformLabel,
+                                        configurable=configurable, mode=mode)
+        return str(platformId)                                        
 
     def listPlatforms(self, filterPlatformId=None):
         availablePlatforms = []
@@ -59,11 +63,19 @@ class PlatformManager(manager.Manager):
                 configurable = dbPlatforms[platformLabel]['configurable']
                 mode = dbPlatforms[platformLabel]['mode']
             else:
-                # TODO: Something meaningful.
-                platformId = '0'
-                configurable = 0
+                # Create the platform in the db
+                # Configurable by default.
+                configurable = 1
+                # Proxied by default.
                 mode = 'proxied'
-                pass
+                platformId = self._createPlatformInDB(platformLabel, 
+                                configurable, mode)
+
+            # TODO: remove this once platforms are not tightly tied to sources
+            # just here now to trigger a create of the configured sources
+            if platformLabel in self.cfg.platformSourceLabels:
+                self.listPlatformSources()
+
             plat = self._platformModelFactory(platformId=platformId,
                         label=platformLabel, platformName=platformName,
                         hostname=platformLabel.split('.')[0],
@@ -166,6 +178,19 @@ class PlatformManager(manager.Manager):
 
         return plat
 
+    def _createConfiguredSources(self, sources):
+        shortNames = [source['shortname'] for source in sources]
+        for i, configShortName in enumerate(self.cfg.platformSources):
+            if configShortName not in shortNames:
+                # TODO: create sources independent of platforms
+                source = models.PlatformSource(shortName=configShortName,
+                                       sourceUrl=self.cfg.platformSourceUrls[i],
+                                       name=self.cfg.platformSourceNames[i])
+                # TODO: fix once we have platform types
+                platformId = self.db.db.platforms.getIdByColumn('label',
+                                'pnalv.rb.rpath.com@rpath:rhel-4')
+                self.createPlatformSource(platformId, source)
+
     def listPlatformSources(self, platformId=None, filterPlatformSourceShortName=None):
 
         if filterPlatformSourceShortName:
@@ -199,6 +224,10 @@ class PlatformManager(manager.Manager):
                 filterPlatformSourceId
 
         cu.execute(sql)
+
+        if not platformId and not filterPlatformSourceId:
+            self._createConfiguredSources(cu)
+            cu.execute(sql)
 
         ret = []
         for row in cu:
@@ -299,9 +328,11 @@ class PlatformManager(manager.Manager):
         """
 
         for field in ['username', 'password', 'sourceUrl']:
-            cu.execute(sql % (platformSourceId, field, source.username))
+            value = getattr(source, field, None)
+            if value:
+                cu.execute(sql % (platformSourceId, field, value))
 
-        return self.getPlatformSource(platformSourceId)            
+        return self.getPlatformSource(source.shortName)            
 
     def deletePlatformSource(self, platformShortName):
         platformSourceId = \
