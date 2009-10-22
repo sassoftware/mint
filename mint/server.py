@@ -58,9 +58,6 @@ from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint import packagecreator
 
-from mcp import client as mcpClient
-from mcp import mcp_error
-
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
@@ -75,17 +72,11 @@ from conary.repository.errors import TroveNotFound, RoleNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
+from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
 from conary import errors as conary_errors
 
+from mcp import client as mcp_client
 from rpath_proddef import api1 as proddef
-
-try:
-    # Conary 2
-    from conary.repository.netrepos.reposlog \
-        import RepositoryCallLogger as CallLogger
-except ImportError:
-    # Conary 1
-    from conary.repository.netrepos.calllog import CallLogger
 
 
 import gettext
@@ -383,9 +374,6 @@ class MintServer(object):
             prof.stopXml(methodName)
             if self.restDb:
                 self.restDb.productMgr.reposMgr.close()
-            if self.mcpClient:
-                self.mcpClient.disconnect()
-                self.mcpClient = None
 
     def __getattr__(self, key):
         if key[0] != '_':
@@ -2045,7 +2033,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
-        jsversion = self._getJSVersion()
         buildId = self.builds.new(projectId = projectId,
                       name = productName,
                       timeCreated = time.time(),
@@ -2053,8 +2040,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                       createdBy = self.auth.userId,
                       status = jobstatus.WAITING,
                       statusMessage = jobstatus.statusNames[jobstatus.WAITING])
-        self.buildData.setDataValue(buildId, 'jsversion',
-            jsversion, data.RDT_STRING)
 
         return buildId
 
@@ -2226,7 +2211,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             groupName, groupVersion, groupFlavor,
                             buildType, buildSettings, start=False):
         self._filterProjectAccess(projectId)
-        jsversion = self._getJSVersion()
 
         groupVersion = helperfuncs.parseVersion(groupVersion).freeze()
         groupFlavor = helperfuncs.parseFlavor(groupFlavor).freeze()
@@ -2240,8 +2224,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                       createdBy = self.auth.userId,
                       status = jobstatus.WAITING,
                       statusMessage=jobstatus.statusNames[jobstatus.WAITING])
-        self.buildData.setDataValue(buildId, 'jsversion', jsversion,
-            data.RDT_STRING)
 
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
@@ -3023,17 +3005,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._setBuildFilenames(buildId, [])
 
         if buildType == buildtypes.IMAGELESS:
-            return ""
+            self.db.builds.update(buildId, status=jobstatus.FINISHED,
+                    statusMessage="Job Finished")
         else:
-            data = self.serializeBuild(buildId)
-            try:
-                mc = self._getMcpClient()
-                res = mc.submitJob(data)
-            except mcp_error.NotEntitledError:
-                raise mint_error.NotEntitledError()
-            except mcp_error.NetworkError:
-                raise mint_error.BuildSystemDown
-            return res or ""
+            jobData = self.serializeBuild(buildId)
+            client = self._getMcpClient()
+            uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
+            self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+            return uuid
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
@@ -3417,76 +3396,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
             not trove.endswith(':source'))
         return troves
 
-    # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
     def getBuildStatus(self, buildId):
         self._filterBuildAccess(buildId)
 
         buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType'] 
-        count = buildDict['buildCount']
-        oldStatus = buildDict['status']
-        oldMessage = buildDict['statusMessage']
-
-        # NB: This function mostly mirrors
-        # ImageManager._updateStatusForImageList
-
-        if oldStatus in jobstatus.terminalStatuses:
-            return { 'status' : oldStatus, 'message' : oldMessage }
-
-        status = jobstatus.UNKNOWN
-        statusMessage = res = None
-        if buildType != buildtypes.IMAGELESS:
-            uuid = '%s.%s-build-%d-%d' % (self.cfg.hostName,
-                              self.cfg.siteDomainName, buildId, count)
-            try:
-                mc = self._getMcpClient()
-                res = mc.jobStatus(uuid)
-            except (mcp_error.UnknownJob, mcp_error.NetworkError):
-                status = jobstatus.NO_JOB
-            else:
-                if res:
-                    status, statusMessage = res
-                # Sometimes the MCP returns None for no obvious reason.
-                # In those cases, keep the fallback value of UNKNOWN.
-
-            if status == jobstatus.NO_JOB:
-                # The MCP no longer knows about this job and it never will,
-                # so make a guess as to whether it passed or failed and
-                # set its state to that.
-                filenames = [x['title'] for x in self.getBuildFilenames(buildId)]
-                if filenames:
-                    # Images with files succeeded, unless one of those files
-                    # is a failed build log.
-                    for filename in filenames:
-                        if filename.startswith('Failed '):
-                            status = jobstatus.FAILED
-                            break
-                    else:
-                        status = jobstatus.FINISHED
-
-                elif self.getBuildDataValue(buildId, 'amiId')[0]:
-                    # AMIs don't have files but if the ID is posted then it
-                    # succeeded.
-                    status = jobstatus.FINISHED
-                else:
-                    # No files and no AMI means the job failed.
-                    status = jobstatus.FAILED
-
-        else:
-            status = jobstatus.FINISHED
-
-        if status not in jobstatus.statusNames:
-            status = jobstatus.UNKNOWN
-        if not statusMessage:
-            statusMessage = jobstatus.statusNames[status]
-
-        if (status, statusMessage) != (oldStatus, oldMessage):
-            self.db.builds.update(buildId, status=status,
-                    statusMessage=statusMessage)
-
-        return { 'status' : status, 'message' : statusMessage }
+        return { 'status': buildDict['status'],
+                'message': buildDict['statusMessage'] }
 
     # session management
     @private
@@ -3930,30 +3847,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return descendants
 
-    # *** MCP RELATED FUNCTIONS ***
-    # always use this method to get an MCP client so that it can be cached
     def _getMcpClient(self):
-        if not self.mcpClient:
-            mcpClientCfg = mcpClient.MCPClientConfig()
+        return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
 
-            try:
-                mcpClientCfg.read(os.path.join(self.cfg.dataPath,
-                                               'mcp', 'client-config'))
-            except CfgEnvironmentError:
-                # If there is no client-config, default to localhost
-                pass
-
-            self.mcpClient = mcpClient.MCPClient(mcpClientCfg)
-        return self.mcpClient
-
-    def _getJSVersion(self):
-        try:
-            mc = self._getMcpClient()
-            return str(mc.getJSVersion())
-        except mcp_error.NotEntitledError:
-            raise mint_error.NotEntitledError
-        except mcp_error.NetworkError:
-            raise mint_error.BuildSystemDown
 
     #
     # EC2 Support for rBO
@@ -5040,7 +4936,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def __init__(self, cfg, allowPrivate=False, db=None, req=None):
         self.cfg = cfg
         self.req = req
-        self.mcpClient = None
         self.db = mint.db.database.Database(cfg, db=db)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)

@@ -39,18 +39,7 @@ from conary.lib import util
 from conary.dbstore import sqlerrors
 from testutils import sqlharness
 
-from mcp_test import mcp_helper
-from mcp import queue
-from mcp_test.mcp_helper import MCPTestMixin
-
 from rpath_proddef import api1 as proddef
-
-# Mock out the queues
-queue.Queue = mcp_helper.DummyQueue
-queue.Topic = mcp_helper.DummyQueue
-queue.MultiplexedQueue = mcp_helper.DummyMultiplexedQueue
-queue.MultiplexedTopic = mcp_helper.DummyMultiplexedQueue
-
 
 
 def stockBuildFlavor(db, buildId, arch = "x86_64"):
@@ -119,10 +108,6 @@ class FixtureCache(object):
         cfg.postCfg()
 
         util.mkdirChain(cfg.logPath)
-
-        util.mkdirChain(cfg.dataPath + "/config/")
-        f = open(cfg.dataPath + "/config/mcp-client.conf", "w")
-        f.close()
 
         return cfg
 
@@ -826,7 +811,7 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
             util.rmtree(f[0].dataPath)
 
 
-class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
+class FixturedUnitTest(testhelp.TestCase):
     adminClient = None
     cfg = None
 
@@ -875,9 +860,7 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
                 password = 'anonymous'
             else:
                 password = '%spass' % username
-        s = shimclient.ShimMintClient(self.cfg, (username, password))
-        s.server._server.mcpClient = self.mcpClient
-        return s
+        return shimclient.ShimMintClient(self.cfg, (username, password))
 
     def getAnonymousClient(self):
         return self.getClient('anonymous')
@@ -964,7 +947,6 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
 
     def setUp(self):
         testhelp.TestCase.setUp(self)
-        MCPTestMixin.setUp(self)
         resetCache()
 
     def tearDown(self):
@@ -973,7 +955,6 @@ class FixturedUnitTest(testhelp.TestCase, MCPTestMixin):
             server.dbConnection.close()
         server.dbConnection = None
         testhelp.TestCase.tearDown(self)
-        MCPTestMixin.tearDown(self)
         try:
             fixtureCache.delRepos()
             self.cfg and util.rmtree(self.cfg.dataPath)

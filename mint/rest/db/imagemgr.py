@@ -21,19 +21,11 @@ from mint.rest import errors
 from mint.rest.db import manager
 from mint.rest.api import models
 
-from mcp import client as mcpclient
-from mcp import mcp_error
 from conary.lib import cfgtypes
 
 class ImageManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
         manager.Manager.__init__(self, cfg, db, auth, publisher)
-        self.mcpClient = None
-
-    def __del__(self):
-        if self.mcpClient:
-            self.mcpClient.disconnect()
-        self.mcpClient = None
 
     def _getImages(self, fqdn, extraJoin='', extraWhere='',
                    extraArgs=None, getOne=False):
@@ -308,29 +300,6 @@ class ImageManager(manager.Manager):
             file.urls = urls
         return models.ImageFileList(imageFiles)
 
-    def _getMcpClient(self):
-        if not self.mcpClient:
-            mcpClientCfg = mcpclient.MCPClientConfig()
-
-            try:
-                mcpClientCfg.read(os.path.join(self.cfg.dataPath,
-                                               'mcp', 'client-config'))
-            except cfgtypes.CfgEnvironmentError:
-                # If there is no client-config, default to localhost
-                pass
-
-            self.mcpClient = mcpclient.MCPClient(mcpClientCfg)
-        return self.mcpClient
-
-    def _getJobServerVersion(self):
-        try:
-            mc = self._getMcpClient()
-            return str(mc.getJSVersion())
-        except mcp_error.NotEntitledError:
-            raise mint_error.NotEntitledError
-        except mcp_error.NetworkError:
-            raise mint_error.BuildSystemDown
-
     def createImage(self, fqdn, buildType, buildName, troveTuple, buildData):
         cu = self.db.db.cursor()
         productId = self.db.getProductId(fqdn)
@@ -405,11 +374,7 @@ class ImageManager(manager.Manager):
                     VALUES(?, ?)""", fileId, urlId)
 
     def stopImageJob(self, imageId):
-        mcpClient = self._getMcpClient()
-        try:
-            mcpClient.stopJob(imageId)
-        except Exception, e:
-            raise errors.StopJobFailed, (imageId, e), sys.exc_info()[2]
+        raise NotImplementedError
 
     def getImageStatus(self, hostname, imageId):
         # XXX: Have to hack it to get the MCP status querying. Trash this once

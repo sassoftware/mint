@@ -224,6 +224,8 @@ class MintConfig(ConfigFile):
     visibleBuildTypes       = (CfgList(CfgBuildEnum))
     excludeBuildTypes       = (CfgList(CfgBuildEnum))
     includeBuildTypes       = (CfgList(CfgBuildEnum))
+    queueHost               = (CfgString, '127.0.0.1')
+    queuePort               = (CfgInt, 50900)
 
     # Entitlement and authorization (of the rBuilder)
     availablePlatforms      = (CfgList(CfgString), [])

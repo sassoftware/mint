@@ -13,7 +13,7 @@ import os
 import shutil
 import tempfile
 
-import fixtures
+from mint_test import fixtures
 
 from mint import packagecreator
 from mint import config

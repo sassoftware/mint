@@ -13,7 +13,7 @@ if mainPath not in sys.path: sys.path.append(mainPath)
 import testsuite
 testsuite.setup()
 
-import fixtures
+from mint_test import fixtures
 from mint_test import mint_rephelp
 
 from conary import versions as conaryver
