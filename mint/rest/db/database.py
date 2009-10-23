@@ -17,6 +17,7 @@ from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
 from mint.rest.db import awshandler
+from mint.rest.db import capsulemgr
 from mint.rest.db import emailnotifier
 from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
@@ -123,6 +124,7 @@ class Database(DBInterface):
                                                     auth, self.publisher)
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
+        self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(cfg, self,

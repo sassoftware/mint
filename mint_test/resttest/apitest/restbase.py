@@ -58,6 +58,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         mint_rephelp.MintDatabaseHelper.tearDown(self)
         self.unMockProddef()
 
+    ControllerFactory = None
+
     def setupProduct(self):
         self.setUpProductDefinition()
 
@@ -205,7 +207,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 except UserAlreadyExists:
                     pass
 
-        return Controller(self.mintCfg, db, **kw)
+        return self.ControllerFactory(self.mintCfg, db, **kw)
 
     def escapeURLQuotes(self, foo):
         """
@@ -249,20 +251,23 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
 
 class Controller(object):
+    RequestFactory = None
+    HandlerFactory = None
+    FormatCallbackFactory = None
     def __init__(self, cfg, restDb, username, password):
         self.server = 'localhost'
         self.port = '8000'
         self.controller = site.RbuilderRestServer(cfg, restDb)
-        self.handler = MockHandler(self.controller)
+        self.handler = self.HandlerFactory(self.controller)
         self.handler.addCallback(auth.AuthenticationCallback(cfg, restDb,
             self.controller))
-        self.handler.addCallback(MockFormatCallback(self.controller))
+        self.handler.addCallback(self.FormatCallbackFactory(self.controller))
         self.restDb = restDb
         self.username = username
         self.password = password
 
     def call(self, method, uri, body=None, convert=False, headers=None):
-        request = MockRequest(method, uri, body=body)
+        request = self.RequestFactory(method, uri, body=body)
         request._convert = convert
 
         if self.username:
@@ -327,3 +332,10 @@ class MockFormatCallback(formatter.FormatCallback):
             return formatter.FormatCallback.processResponse(self, request, res)
         else:
             return res
+
+# Set defaults
+# We do this here because I did not want to move classes around
+BaseRestTest.ControllerFactory = Controller
+Controller.FormatCallbackFactory = MockFormatCallback
+Controller.HandlerFactory = MockHandler
+Controller.RequestFactory = MockRequest

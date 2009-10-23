@@ -10,6 +10,7 @@ from rpath_proddef import api1 as proddef
 
 from mint import constants
 from mint import maintenance
+from mint.rest.api import capsules
 from mint.rest.api import models
 from mint.rest.api import product
 from mint.rest.api import notices
@@ -24,7 +25,8 @@ class RbuilderRestServer(RestController):
             'users'    : users.UserController,
             'platforms' : platforms.PlatformController,
             'registration' : registration.RegistrationController,
-            'notices'  : notices.NoticesController,}
+            'notices'  : notices.NoticesController,
+            'capsules'  : capsules.CapsulesController,}
 
     def __init__(self, cfg, db):
         self.cfg = cfg
