@@ -27,6 +27,7 @@ class PlatformTest(restbase.BaseRestTest):
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
         self.setupProduct()
+        self.setupPlatforms()
 
     def testGetPlatforms(self):
         return self._testGetPlatforms()
@@ -37,35 +38,7 @@ class PlatformTest(restbase.BaseRestTest):
     def _toXml(self, model, client, req):
         return converter.toText('xml', model, client.controller, req)
 
-    def _mockProddef(self):
-
-        def newLoadFromRepository(*args, **kw):
-            platdef = args[0]
-            oldClient = args[1]
-            label = args[2]
-            return self.oldLoadFromRepository(platdef, self.cclient, label)
-
-        self.oldLoadFromRepository = proddef.PlatformDefinition.loadFromRepository
-        proddef.PlatformDefinition.loadFromRepository = newLoadFromRepository
-
-    def _unMockProddef(self):
-        proddef.PlatformDefinition.loadFromRepository = \
-            self.oldLoadFromRepository
-
     def _testGetPlatforms(self, notLoggedIn = False):
-        self._mockProddef()
-
-        platformLabel = self.mintCfg.availablePlatforms[0]
-
-        repos = self.openRepository()
-        # Add a platform definition
-        pl = self.productDefinition.toPlatformDefinition()
-        pl.setPlatformName('Wunderbar Linux')
-        cclient = self.getConaryClient()
-        cclient.repos = repos
-        self.cclient = cclient
-        pl.saveToRepository(cclient, platformLabel)
-
         uri = 'platforms'
         kw = {}
         if notLoggedIn:
@@ -91,10 +64,6 @@ class PlatformTest(restbase.BaseRestTest):
 """
         xml = self._toXml(platforms, client, req)
         self.assertEquals(exp, xml)
-        self._unMockProddef()
-
-    def getConaryClient(self):
-        return conaryclient.ConaryClient(self.cfg)
 
 if __name__ == "__main__":
         testsetup.main()

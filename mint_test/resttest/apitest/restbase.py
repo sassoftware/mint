@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 import time
 from conary.dbstore.sqllib import CaselessDict
+from conary import conaryclient
 
 from restlib.http import handler
 from restlib.http import request
@@ -25,6 +26,7 @@ from mint.rest.api import site
 from mint.rest.middleware import auth
 from mint.rest.middleware import formatter
 from mint.rest.modellib import converter
+from rpath_proddef import api1 as proddef
 
 from mint_test import mint_rephelp
 
@@ -47,6 +49,14 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
     productVersionDescription = 'Version description'
     productDomainName = mint_rephelp.MINT_PROJECT_DOMAIN
     productHostname = "%s.%s" % (productShortName, productDomainName)
+
+    def setUp(self):
+        mint_rephelp.MintDatabaseHelper.setUp(self)
+        self.mockProddef()
+        
+    def tearDown(self):
+        mint_rephelp.MintDatabaseHelper.tearDown(self)
+        self.unMockProddef()
 
     def setupProduct(self):
         self.setUpProductDefinition()
@@ -145,6 +155,34 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 'v1', [imageId3])
         db.publishRelease(self.productShortName, releaseId2, True)
 
+    def mockProddef(self):
+
+        def newLoadFromRepository(*args, **kw):
+            platdef = args[0]
+            oldClient = args[1]
+            label = args[2]
+            return self.oldLoadFromRepository(platdef, self.cclient, label)
+
+        self.oldLoadFromRepository = proddef.PlatformDefinition.loadFromRepository
+        proddef.PlatformDefinition.loadFromRepository = newLoadFromRepository
+
+    def unMockProddef(self):
+        proddef.PlatformDefinition.loadFromRepository = \
+            self.oldLoadFromRepository
+
+    def setupPlatforms(self):
+        platformLabel = self.mintCfg.availablePlatforms[0]
+        repos = self.openRepository()
+        # Add a platform definition
+        pl = self.productDefinition.toPlatformDefinition()
+        pl.setPlatformName('Wunderbar Linux')
+        cclient = self.getConaryClient()
+        cclient.repos = repos
+        self.cclient = cclient
+        pl.saveToRepository(cclient, platformLabel)
+
+    def getConaryClient(self):
+        return conaryclient.ConaryClient(self.cfg)
 
     def getRestClient(self, **kw):
         if 'db' in kw:
