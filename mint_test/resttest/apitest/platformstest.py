@@ -14,9 +14,13 @@ import time
 from conary import conaryclient
 from conary.lib import util
 from mint import buildtypes
+from mint.rest.modellib import converter
 
 import restbase
 from restlib import client as restClient
+
+from rpath_proddef import api1 as proddef
+
 ResponseError = restClient.ResponseError
 
 class PlatformTest(restbase.BaseRestTest):
@@ -30,8 +34,28 @@ class PlatformTest(restbase.BaseRestTest):
     def testGetPlatformsNotLoggedIn(self):
         return self._testGetPlatforms(notLoggedIn = True)
 
+    def _toXml(self, model, client, req):
+        return converter.toText('xml', model, client.controller, req)
+
+    def _mockProddef(self):
+
+        def newLoadFromRepository(*args, **kw):
+            platdef = args[0]
+            oldClient = args[1]
+            label = args[2]
+            return self.oldLoadFromRepository(platdef, self.cclient, label)
+
+        self.oldLoadFromRepository = proddef.PlatformDefinition.loadFromRepository
+        proddef.PlatformDefinition.loadFromRepository = newLoadFromRepository
+
+    def _unMockProddef(self):
+        proddef.PlatformDefinition.loadFromRepository = \
+            self.oldLoadFromRepository
+
     def _testGetPlatforms(self, notLoggedIn = False):
-        platformLabel = self.mintCfg.availablePlatforms[1]
+        self._mockProddef()
+
+        platformLabel = self.mintCfg.availablePlatforms[0]
 
         repos = self.openRepository()
         # Add a platform definition
@@ -39,33 +63,35 @@ class PlatformTest(restbase.BaseRestTest):
         pl.setPlatformName('Wunderbar Linux')
         cclient = self.getConaryClient()
         cclient.repos = repos
+        self.cclient = cclient
         pl.saveToRepository(cclient, platformLabel)
 
-        uriTemplate = 'platforms'
-        uri = uriTemplate
+        uri = 'platforms'
         kw = {}
         if notLoggedIn:
             kw['username'] = None
         client = self.getRestClient(**kw)
-        req, response = client.call('GET', uri)
-        # This is less than helpful.
+        req, platforms = client.call('GET', uri)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <platforms>
-  <platform>
-    <label>localhost@rpl:plat</label>
-    <platformName>My Spiffy Platform</platformName>
-    <enabled>false</enabled>
-  </platform>
-  <platform>
-    <label>testproject.rpath.local2@platform:1</label>
+  <platform id="http://localhost:8000/api/platforms/1">
+    <platformId>1</platformId>
+    <hostname>localhost@rpl:plat-1</hostname>
+    <label>localhost@rpl:plat-1</label>
     <platformName>Wunderbar Linux</platformName>
     <enabled>true</enabled>
+    <configurable>true</configurable>
+    <repositoryUrl href="http://localhost:8000/repos/localhost@rpl:plat-1/api"/>
+    <sources/>
+    <platformMode>proxied</platformMode>
+    <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   </platform>
 </platforms>
 """
-        self.failUnlessEqual(response.read(),
-             exp % dict(port = client.port, server = client.server))
+        xml = self._toXml(platforms, client, req)
+        self.assertEquals(exp, xml)
+        self._unMockProddef()
 
     def getConaryClient(self):
         return conaryclient.ConaryClient(self.cfg)

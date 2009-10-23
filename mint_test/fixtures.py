@@ -99,8 +99,7 @@ class FixtureCache(object):
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
 
-        cfg.availablePlatforms = ['localhost@rpl:plat-1',
-                                  'localhost@rpl:plat-2']
+        cfg.availablePlatforms = ['localhost@rpl:plat-1']
 
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')
