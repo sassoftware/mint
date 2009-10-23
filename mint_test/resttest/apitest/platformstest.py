@@ -50,15 +50,27 @@ class PlatformTest(restbase.BaseRestTest):
 <platforms>
   <platform id="http://localhost:8000/api/platforms/1">
     <platformId>1</platformId>
-    <hostname>localhost@rpl:plat-1</hostname>
-    <label>localhost@rpl:plat-1</label>
-    <platformName>Wunderbar Linux</platformName>
+    <hostname>localhost@rpath:plat-1</hostname>
+    <label>localhost@rpath:plat-1</label>
+    <platformName>Crowbar Linux 1</platformName>
     <enabled>true</enabled>
     <configurable>true</configurable>
-    <repositoryUrl href="http://localhost:8000/repos/localhost@rpl:plat-1/api"/>
+    <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
     <sources/>
     <platformMode>proxied</platformMode>
     <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
+  </platform>
+  <platform id="http://localhost:8000/api/platforms/2">
+    <platformId>2</platformId>
+    <hostname>localhost@rpath:plat-2</hostname>
+    <label>localhost@rpath:plat-2</label>
+    <platformName>Crowbar Linux 2</platformName>
+    <enabled>true</enabled>
+    <configurable>true</configurable>
+    <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-2/api"/>
+    <sources/>
+    <platformMode>proxied</platformMode>
+    <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
   </platform>
 </platforms>
 """

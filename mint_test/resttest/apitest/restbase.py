@@ -171,15 +171,19 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
             self.oldLoadFromRepository
 
     def setupPlatforms(self):
-        platformLabel = self.mintCfg.availablePlatforms[0]
         repos = self.openRepository()
-        # Add a platform definition
-        pl = self.productDefinition.toPlatformDefinition()
-        pl.setPlatformName('Wunderbar Linux')
-        cclient = self.getConaryClient()
-        cclient.repos = repos
-        self.cclient = cclient
-        pl.saveToRepository(cclient, platformLabel)
+        self.cclient = self.getConaryClient()
+        self.cclient.repos = repos
+
+        platformLabel1 = self.mintCfg.availablePlatforms[0]
+        pl1 = self.productDefinition.toPlatformDefinition()
+        pl1.setPlatformName('Crowbar Linux 1')
+        pl1.saveToRepository(self.cclient, platformLabel1)
+
+        platformLabel2 = self.mintCfg.availablePlatforms[1]
+        pl2 = self.productDefinition.toPlatformDefinition()
+        pl2.setPlatformName('Crowbar Linux 2')
+        pl2.saveToRepository(self.cclient, platformLabel2)
 
     def getConaryClient(self):
         return conaryclient.ConaryClient(self.cfg)
