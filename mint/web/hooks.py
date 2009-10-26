@@ -117,7 +117,7 @@ def getRepositoryMap(cfg):
         return {}
 
 def getRepository(projectName, repName, cfg,
-        req, dbTuple, localMirror, requireSigs, commitEmail):
+        req, dbTuple, localMirror, requireSigs, commitEmail, indexerUrl):
 
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
@@ -125,6 +125,7 @@ def getRepository(projectName, repName, cfg,
     nscfg.requireSigs = requireSigs
     nscfg.serializeCommits = cfg.serializeCommits
     nscfg.readOnlyRepository = cfg.readOnlyRepositories
+    nscfg.capsuleServerUrl = indexerUrl
 
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
@@ -366,10 +367,21 @@ def conaryHandler(req, db, cfg, pathInfo):
             repServer, proxyServer, shimRepo = repositories[repHash]
             repServer.reopen()
         else:
+            # Open rest db; we need to find out if we have to configure an
+            # indexer URL; there no reason to do so if a capsule-based
+            # platform has not been enabled
+            from mint.db import database
+            from mint.rest.db import database as restdb
+            rdb = restdb.Database(cfg, database.Database(cfg, db))
+            indexer = rdb.capsuleMgr.getIndexer()
+            if list(indexer.iterSources()):
+                indexerUrl = "http://localhost/api/capsules"
+            else:
+                indexerUrl = None
             # Create a new connection.
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
                     actualRepName, cfg, req, dbTuple, localMirror, requireSigs,
-                    commitEmail)
+                    commitEmail, indexerUrl)
 
             if not repServer:
                 return apache.HTTP_NOT_FOUND

@@ -772,6 +772,131 @@ def _createPlatforms(db):
 
     return changed
 
+def _createCapsuleIndexerSchema(db):
+    # Even though sqlalchemy is perfectly capable of creating the schema, we
+    # will create it by hand instead. The main reason is that sqlite will get
+    # upset if schema changes underneath an open connection.
+    cu = db.cursor()
+    changed = False
+
+    tableName = 'ci_rhn_channels'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_channels (
+                channel_id %(PRIMARYKEY)s,
+                label VARCHAR(256) NOT NULL,
+                last_modified VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_channels',
+        'ci_rhn_channels_label_idx_uq', 'label', unique = True)
+
+    tableName = 'ci_rhn_errata'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_errata (
+                errata_id %(PRIMARYKEY)s,
+                advisory VARCHAR NOT NULL,
+                advisory_type VARCHAR NOT NULL,
+                issue_date VARCHAR NOT NULL,
+                last_modified_date VARCHAR NOT NULL,
+                synopsis VARCHAR NOT NULL,
+                update_date VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+
+    tableName = 'ci_rhn_nevra'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_nevra (
+                nevra_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL,
+                epoch INTEGER,
+                version VARCHAR NOT NULL,
+                release VARCHAR NOT NULL,
+                arch VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_nevra',
+        'ci_rhn_nevra_n_e_v_r_a_idx_uq', 'name, epoch, version, release, arch',
+        unique = True)
+
+    tableName = 'ci_rhn_packages'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_packages (
+                package_id %(PRIMARYKEY)s,
+                nevra_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_nevra ON DELETE CASCADE,
+                md5sum VARCHAR,
+                sha1sum VARCHAR,
+                last_modified VARCHAR NOT NULL,
+                path VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_packages',
+        'ci_rhn_packages_nevra_id_last_modified_idx_uq',
+        'nevra_id, last_modified', unique = True)
+    changed |= db.createIndex('ci_rhn_packages',
+        'ci_rhn_packages_nevra_id_sha1sum_idx', 'nevra_id, sha1sum')
+
+    tableName = 'ci_rhn_channel_package'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_channel_package (
+                channel_id  INTEGER NOT NULL
+                    REFERENCES ci_rhn_channels ON DELETE CASCADE,
+                package_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_packages ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_channel_package',
+        'ci_rhn_channel_package_cid_pid_idx_uq', 'channel_id, package_id',
+        unique = True)
+    changed |= db.createIndex('ci_rhn_channel_package',
+        'ci_rhn_channel_package_pid_cid_idx', 'package_id, channel_id')
+
+    tableName = 'ci_rhn_errata_channel'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_errata_channel (
+                errata_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_errata ON DELETE CASCADE,
+                channel_id  INTEGER NOT NULL
+                    REFERENCES ci_rhn_channels ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_errata_channel',
+        'ci_rhn_errata_channel_eid_cid_idx_uq', 'errata_id, channel_id',
+        unique = True)
+    changed |= db.createIndex('ci_rhn_errata_channel',
+        'ci_rhn_errata_channel_cid_eid_idx', 'channel_id, errata_id')
+
+    tableName = 'ci_rhn_errata_package'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_errata_package (
+                errata_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_errata ON DELETE CASCADE,
+                package_id  INTEGER NOT NULL
+                    REFERENCES ci_rhn_package ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_errata_package',
+        'ci_rhn_errata_package_eid_pid_idx_uq', 'errata_id, package_id',
+        unique = True)
+    changed |= db.createIndex('ci_rhn_errata_package',
+        'ci_rhn_errata_package_pid_eid_idx', 'package_id, errata_id')
+
+    return changed
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -797,6 +922,7 @@ def createSchema(db, doCommit=True):
     changed |= _createSessions(db)
     changed |= _createTargets(db)
     changed |= _createPlatforms(db)
+    changed |= _createCapsuleIndexerSchema(db)
 
     if doCommit:
         if changed:
