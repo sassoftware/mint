@@ -13,8 +13,9 @@ class CapsuleManager(manager.Manager):
     def getIndexerConfig(self):
         capsuleDataDir = util.joinPaths(self.cfg.dataPath, 'capsules')
         cfg = rpath_capsule_indexer.IndexerConfig()
-        cfg.configLine("store sqlite:///%s/database.sqlite" %
-            capsuleDataDir)
+        dbDriver = self.db.db.driver
+        dbConnectString = self.db.db.db.database
+        cfg.configLine("store %s:///%s" % (dbDriver, dbConnectString))
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
         dataSources = self.db.platformMgr.listPlatformSources().platformSource
