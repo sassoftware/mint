@@ -102,6 +102,17 @@ class FixtureCache(object):
         cfg.availablePlatforms = ['localhost@rpath:plat-1',
                                   'localhost@rpath:plat-2']
 
+        cfg.platformSources      = ['plat1source', 'plat2source0', 'plat2source1']
+        cfg.platformSourceUrls   = ['http://plat1source.example.com',
+                                    'https://plat2source0.example.com',
+                                    'https://plat2source1.example.com']
+        cfg.platformSourceNames  = ['Platform 1 Source',
+                                    'Platform 2 Source 0',
+                                    'Platform 2 Source 1']
+        cfg.platformSourceLabels = ['localhost@rpath:plat-1',
+                                    'localhost@rpath:plat-2',
+                                    'localhost@rpath:plat-2']
+
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')
         f.close()

@@ -17,6 +17,7 @@ from mint import buildtypes
 from mint.rest.modellib import converter
 
 import restbase
+from platformstestxml import *
 from restlib import client as restClient
 
 from rpath_proddef import api1 as proddef
@@ -45,25 +46,38 @@ class PlatformTest(restbase.BaseRestTest):
             kw['username'] = None
         client = self.getRestClient(**kw)
         req, platforms = client.call('GET', uri)
-        exp = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<platforms>
-  <platform id="http://localhost:8000/api/platforms/1">
-    <platformId>1</platformId>
-    <hostname>localhost@rpl:plat-1</hostname>
-    <label>localhost@rpl:plat-1</label>
-    <platformName>Wunderbar Linux</platformName>
-    <enabled>true</enabled>
-    <configurable>true</configurable>
-    <repositoryUrl href="http://localhost:8000/repos/localhost@rpl:plat-1/api"/>
-    <sources/>
-    <platformMode>proxied</platformMode>
-    <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
-  </platform>
-</platforms>
-"""
+
         xml = self._toXml(platforms, client, req)
-        self.assertEquals(exp, xml)
+        self.assertEquals(platformsXml, xml)
+
+    def testGetPlatform(self):
+        uri = '/platforms/1'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformXml, xml)
+
+    def testGetPlatformSources(self):        
+        # TODO: can be removed once the code is refactored
+        # Need to get platforms first to trigger creation in the db
+        self.testGetPlatforms()
+
+        uri = '/platforms/1/sources'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourcesXml, xml)
+
+    def testGetPlatformSource(self):        
+        # TODO: can be removed once the code is refactored
+        # Need to get platforms first to trigger creation in the db
+        self.testGetPlatforms()
+
+        uri = '/platforms/1/sources/plat1source'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourceXml, xml)
 
 if __name__ == "__main__":
         testsetup.main()

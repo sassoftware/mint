@@ -673,7 +673,7 @@ class Database(DBInterface):
     def listPlatforms(self):
         return self.platformMgr.listPlatforms()
 
-    @readonly
+    @commitafter
     def getPlatform(self, platformId):
         return self.platformMgr.getPlatform(platformId)
 
