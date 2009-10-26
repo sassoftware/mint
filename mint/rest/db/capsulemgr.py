@@ -19,7 +19,7 @@ class CapsuleManager(manager.Manager):
         if dbDriver == 'pgpool':
             dbDriver = "postgres"
             # XXX this is temporary
-            dbConnectString = 'rbuilder@localhost:5439/mint'
+            dbConnectString = 'postgres@localhost:5439/mint'
         elif dbDriver == "sqlite":
             # sqlalchemy requires four slashes for a sqlite backend, 
             # because it treats the filename as the database. See comments in
