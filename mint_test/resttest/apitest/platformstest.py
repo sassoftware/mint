@@ -50,5 +50,34 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platforms, client, req)
         self.assertEquals(platformsXml, xml)
 
+    def testGetPlatform(self):
+        uri = '/platforms/1'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformXml, xml)
+
+    def testGetPlatformSources(self):        
+        # TODO: can be removed once the code is refactored
+        # Need to get platforms first to trigger creation in the db
+        self.testGetPlatforms()
+
+        uri = '/platforms/1/sources'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourcesXml, xml)
+
+    def testGetPlatformSource(self):        
+        # TODO: can be removed once the code is refactored
+        # Need to get platforms first to trigger creation in the db
+        self.testGetPlatforms()
+
+        uri = '/platforms/1/sources/plat1source'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourceXml, xml)
+
 if __name__ == "__main__":
         testsetup.main()
