@@ -149,3 +149,74 @@ platformSourceStatusDataFailXml = """\
   <message>Validation Failed</message>
 </platformSourceStatus>
 """
+
+platformSourceDescriptorXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Platform 1 Source</displayName>
+    <descriptions>
+      <desc>Configure Platform 1 Source</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>username</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Username</desc>
+      </descriptions>
+      <prompt>
+        <desc>Your RHN Username</desc>
+      </prompt>
+      <type>str</type>
+    </field>
+    <field>
+      <name>password</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Your RHN Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
+    </field>
+  </dataFields>
+</configDescriptor>
+"""
+
+platformSourcePUTXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSource id="http://localhost:8000/api/platforms/1/sources/plat1source">
+  <platformSourceId>1</platformSourceId>
+  <name>Platform 1 Source</name>
+  <platformId>1</platformId>
+  <shortname>plat1source</shortname>
+  <sourceUrl>http://plat1source.example.com</sourceUrl>
+  <username>foousername</username>
+  <password>foopassword</password>
+  <defaultSource>true</defaultSource>
+  <orderIndex>0</orderIndex>
+  <platformSourceStatus href="http://localhost:8000/api/platforms/1/sources/plat1source/status"/>
+  <configDescriptor href="http://localhost:8000/api/platforms/1/sources/plat1source/descriptor"/>
+</platformSource>
+"""
+
+platformSourcePUTXml2 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSource id="http://localhost:8000/api/platforms/1/sources/plat1source">
+  <platformSourceId>1</platformSourceId>
+  <name>Platform 1 Source</name>
+  <platformId>1</platformId>
+  <shortname>plat1source</shortname>
+  <sourceUrl>http://plat1source.example.com</sourceUrl>
+  <username>foousername2</username>
+  <password>foopassword2</password>
+  <defaultSource>true</defaultSource>
+  <orderIndex>0</orderIndex>
+  <platformSourceStatus href="http://localhost:8000/api/platforms/1/sources/plat1source/status"/>
+  <configDescriptor href="http://localhost:8000/api/platforms/1/sources/plat1source/descriptor"/>
+</platformSource>
+"""
