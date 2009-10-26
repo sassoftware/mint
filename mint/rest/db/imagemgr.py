@@ -114,6 +114,8 @@ class ImageManager(manager.Manager):
 
     def _getFilesForImages(self, hostname, imageIds):
         imageIds = [int(x) for x in imageIds]
+        if not imageIds:
+            return []
 
         cu = self.db.cursor()
         sql = '''
@@ -193,7 +195,7 @@ class ImageManager(manager.Manager):
 
     def listImagesForProductVersion(self, fqdn, version):
         return self._getImages(fqdn, '',
-                               ' AND ProductVersions.name=?', [version])
+                               ' AND pv.name=?', [version])
 
     def listImagesForTrove(self, fqdn, name, version, flavor):
         images =  self._getImages(fqdn, '',
@@ -205,7 +207,7 @@ class ImageManager(manager.Manager):
 
     def listImagesForProductVersionStage(self, fqdn, version, stageName):
         return self._getImages(fqdn, '',
-                              ' AND ProductVersions.name=? AND stageName=?',
+                              ' AND pv.name=? AND stageName=?',
                               [version, stageName])
 
     def listFilesForImage(self, fqdn, imageId):
