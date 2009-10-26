@@ -77,6 +77,8 @@ def setup():
     pathManager.addExecPath('STOMP_PATH')
     pathManager.addExecPath('STORAGE_PATH')
     pathManager.addExecPath('CATALOG_SERVICE_PATH')
+    pathManager.addExecPath('CAPSULE_INDEXER_PATH')
+    pathManager.addExecPath('CAPSULE_INDEXER_TEST_PATH')
 
     pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_PATH')
     path = pathManager.addExecPath('PACKAGE_CREATOR_SERVICE_TEST_PATH')
