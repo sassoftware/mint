@@ -127,5 +127,34 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(platformSourceStatusDataFailXml, xml)
 
+    def testGetPlatformSourceDescriptor(self):
+        # TODO: can be removed once the code is refactored
+        # Need to get platforms first to trigger creation in the db
+        self.testGetPlatforms()
+
+        uri = '/platforms/1/sources/plat1source/descriptor'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourceDescriptorXml, xml)
+        
+
+    def testPutPlatformSource(self):
+        # TODO: can be removed once the code is refactored
+        # Need to get platforms first to trigger creation in the db
+        self.testGetPlatforms()
+
+        uri = '/platforms/1/sources/plat1source'
+        client = self.getRestClient()
+        req, platform = client.call('PUT', uri, body=platformSourcePUTXml)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourcePUTXml, xml)
+
+        # Now that username/password is set in db, PUT again to test an 
+        # update.
+        req, platform = client.call('PUT', uri, body=platformSourcePUTXml2)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourcePUTXml2, xml)
+
 if __name__ == "__main__":
         testsetup.main()

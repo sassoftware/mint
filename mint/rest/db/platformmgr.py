@@ -288,14 +288,21 @@ class PlatformManager(manager.Manager):
         cu = self.db.cursor()
         updSql = """
         UPDATE platformSourceData
-        SET value='%s'
+        SET value = ?
         WHERE 
-            name='%s'
-            and platformSourceId = ?
+            name = ?
+            AND platformSourceId = ?
         """
         insSql = """
         INSERT INTO platformSourceData
         VALUES (?, '%s', '%s', 3)
+        """
+        selSql = """
+        SELECT ?
+        FROM platformSourceData
+        WHERE 
+            name = ?
+            AND platformSourceId = ?
         """
 
         oldSource = self.getPlatformSource(platformSourceShortName)
@@ -303,8 +310,10 @@ class PlatformManager(manager.Manager):
         for field in ['username', 'password', 'sourceUrl']:
             newVal = getattr(source, field)
             if getattr(oldSource, field) != newVal:
-                row = cu.execute(updSql % (newVal, field), platformSourceId)
-                if not row:
+                row = cu.execute(selSql, 'value', field, platformSourceId)
+                if row.fetchall():
+                    cu.execute(updSql, newVal, field, platformSourceId)
+                else:
                     cu.execute(insSql % (field, newVal), platformSourceId)
 
         return self.getPlatformSource(platformSourceShortName)                    
