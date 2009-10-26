@@ -14,8 +14,16 @@ class CapsuleManager(manager.Manager):
         capsuleDataDir = util.joinPaths(self.cfg.dataPath, 'capsules')
         cfg = rpath_capsule_indexer.IndexerConfig()
         dbDriver = self.db.db.driver
+        # pgpool is the same as postgres
         dbConnectString = self.db.db.db.database
-        cfg.configLine("store %s:///%s" % (dbDriver, dbConnectString))
+        if dbDriver == 'pgpool':
+            dbDriver = "postgres"
+        elif dbDriver == "sqlite":
+            # sqlalchemy requires four slashes for a sqlite backend, 
+            # because it treats the filename as the database. See comments in
+            # sqlalchemy/databases/sqlite.py
+            dbConnectString = "/" + dbConnectString
+        cfg.configLine("store %s://%s" % (dbDriver, dbConnectString))
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
         dataSources = self.db.platformMgr.listPlatformSources().platformSource
