@@ -734,7 +734,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         return cli
 
     def openConaryRepository(self, *args, **kw):
-        import epdb; epdb.st()
         return self.openRepository(*args, **kw)
 
     def reset(self):

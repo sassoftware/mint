@@ -21,6 +21,12 @@ def public(deco):
     deco.public = True
     return deco
 
+# Decorator for internal methods/functions. Access should only be allowed from
+# localhost
+def internal(deco):
+    deco.internal = True
+    return deco
+
 def noDisablement(method):
     """
     Decorator for methods that should work even when the rBuilder's
@@ -165,6 +171,11 @@ class AuthenticationCallback(object):
         response = self.checkDisablement(request, viewMethod)
         if response:
             return response
+
+        if (getattr(viewMethod, 'internal', False)
+                and request.remote[0] != '127.0.0.1'):
+            # Request to an internal API from an external IP address
+            return Response(status=404)
 
         # require authentication
         if (not getattr(viewMethod, 'public', False)
