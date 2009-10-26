@@ -61,6 +61,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'mint.django_rest.middleware.MethodRequestMiddleware',
 )
 
 USE_ETAGS=True
@@ -79,7 +80,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
-    'mint.django_rest.rbuilder.platforms',
     'mint.django_rest.rbuilder.reporting',
 )
 

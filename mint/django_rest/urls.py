@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-from rbuilder.reporting import imagereports, views
+from mint.django_rest.rbuilder.reporting import imagereports, reportdispatcher, reports, views
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -16,6 +16,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # (r'^admin/', include(admin.site.urls)),
-    url(r'^api/reports/types/?$', views.reportTypeCollection()),
-    url(r'^api/reports/types/imagesPerProduct/data/(.*?)/?$', imagereports.ImagesPerProduct()),
+    url(r'^api/reports/type/$', views.reportTypeCollection()),
+    url(r'^api/reports/type/(.*?)/descriptor/?$', reportdispatcher.ReportTypeDescriptor()),
+    url(r'^api/reports/type/(.*?)/data/(.*?)/?$', reportdispatcher.ReportDispatcher()),
 )

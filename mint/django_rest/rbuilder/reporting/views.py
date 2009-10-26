@@ -1,7 +1,8 @@
-from django_restapi.model_resource import Collection
-from django_restapi.responder import XMLResponder
+from mint.django_rest.rbuilder.flex_resource import FlexCollection
+from mint.django_rest.rbuilder.xobj_responder import xobjResponder
+from mint.django_rest.rbuilder.reporting.models import ReportType, ReportTypes
 
-from rbuilder.reporting.models import ReportType
+from django_restapi.model_resource import Collection
 
 class ReportTypeCollection(Collection):
     pass
@@ -10,5 +11,5 @@ def reportTypeCollection():
     return ReportTypeCollection(
         queryset = ReportType.objects.all(),
         permitted_methods = ('GET',),
-        responder = XMLResponder(),
+        responder = xobjResponder(model_list = ReportTypes()),
     )

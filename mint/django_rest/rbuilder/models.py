@@ -9,21 +9,6 @@
 
 from django.db import models
 
-class UrlField(object):
-    def __init__(self, path):
-        self.path = path
-    
-    def _getUrl(self, hostname, request):
-        return request.baseUrl;
-    
-class RepositoryUrlField(UrlField):
-    name = None
-    def _getUrl(self, hostname, request):
-        base = request.get_full_path()
-        if base.endswith('/api'):
-            base = base[:-4]
-        return '%s/repos/%s/%s' % (request.gethost(), hostname, self.name)
-
 class Users(models.Model):
     userid = models.IntegerField(primary_key=True)
     username = models.CharField(unique=True, max_length=128)
@@ -51,8 +36,6 @@ class Products(models.Model):
     shortname = models.CharField(unique=True, max_length=63)
     projecturl = models.CharField(max_length=128, null=True, blank=True)
     repositoryHostName = models.CharField(max_length=255, db_column='fqdn')
-    repositoryUrl      = RepositoryUrlField('api')
-    repositoryBrowserUrl = RepositoryUrlField('browse')
     description = models.TextField(null=True, blank=True)
     prodtype = models.CharField(max_length=128)
     commitemail = models.CharField(max_length=128, null=True, blank=True)
