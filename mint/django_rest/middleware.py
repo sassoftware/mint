@@ -10,7 +10,10 @@ class MethodRequestMiddleware:
             allowable_methods = ['GET','POST','PUT','DELETE',]
                 
             if request_method in allowable_methods:
-                request.method = request_method
+                try:
+                    request.method = request_method
+                except AttributeError:
+                    request.META['REQUEST_METHOD'] = request_method
             else:
                 raise HttpMethodNotAllowed
                 
