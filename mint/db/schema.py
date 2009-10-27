@@ -885,7 +885,7 @@ def _createCapsuleIndexerSchema(db):
                 errata_id INTEGER NOT NULL
                     REFERENCES ci_rhn_errata ON DELETE CASCADE,
                 package_id  INTEGER NOT NULL
-                    REFERENCES ci_rhn_package ON DELETE CASCADE
+                    REFERENCES ci_rhn_packages ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
@@ -925,11 +925,8 @@ def createSchema(db, doCommit=True):
     changed |= _createCapsuleIndexerSchema(db)
 
     if doCommit:
-        if changed:
-            db.commit()
-            db.loadSchema()
-        else:
-            db.rollback()
+        db.commit()
+        db.loadSchema()
 
     return changed
 
@@ -1010,12 +1007,19 @@ def loadSchema(db, cfg=None, should_migrate=False):
         converting the rBuilder database to a supported version.""", version)
 
     # if we reach here, a schema migration is needed/requested
-    version = migrate.migrateSchema(db, cfg)
-    db.loadSchema()
+    db.transaction()
+    try:
+        version = migrate.migrateSchema(db, cfg)
+        db.loadSchema()
 
-    # run through the schema creation to create any missing objects
-    log.debug("Checking for and creating missing schema elements")
-    createSchema(db)
+        # run through the schema creation to create any missing objects
+        log.debug("Checking for and creating missing schema elements")
+        createSchema(db, doCommit=False)
+    except:
+        db.rollback()
+        raise
+    else:
+        db.commit()
     if version > 0 and version != RBUILDER_DB_VERSION:
         # schema creation/conversion failed. SHOULD NOT HAPPEN!
         raise sqlerrors.SchemaVersionError("""

@@ -742,15 +742,10 @@ def majorMinor(major):
 
 
 def tryMigrate(db, func):
-    db.transaction()
-    try:
-        rv = func()
-    except:
-        db.rollback()
-        raise
-    else:
-        db.commit()
-    return rv
+    # Do all migration steps in one transaction so a failure in createSchema
+    # will abort the whole thing. Otherwise we wouldn't rerun the createSchema
+    # because the schema version has already been updated.
+    return func(skipCommit=True)
 
 
 # entry point that migrates the schema
