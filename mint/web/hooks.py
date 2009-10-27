@@ -117,7 +117,7 @@ def getRepositoryMap(cfg):
         return {}
 
 def getRepository(projectName, repName, cfg,
-        req, dbTuple, localMirror, requireSigs, commitEmail, indexerUrl):
+        req, dbTuple, localMirror, requireSigs, commitEmail):
 
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
@@ -201,6 +201,7 @@ def getRepository(projectName, repName, cfg,
         raise
 
     if 'changesetCacheDir' in nscfg.keys():
+        # XXX FIXME: deal with capsules
         repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
     else:
         repos = netRepos
@@ -300,6 +301,51 @@ def proxyExternalRestRequest(cfg, db, method, projectHostName,
     f.close()
     return apache.OK
 
+class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
+    def __init__(self, mintCfg, *args, **kwargs):
+        proxy.ProxyRepositoryServer.__init__(self, *args, **kwargs)
+        self._mintCfg = mintCfg
+        self._setCapsuleServerUrl()
+        self.CapsuleDownloader = lambda x: self._CapsuleDownloader(
+            self._getRestDb())
+
+    def _setCapsuleServerUrl(self):
+        restdb = self._getRestDb()
+        indexer = restdb.capsuleMgr.getIndexer()
+        if not list(indexer.iterSources()):
+            return
+        # It really doesn't matter what the capsule server URL is, as long as
+        # it is not None
+        self.cfg.capsuleServerUrl = 'direct'
+
+    def _getRestDb(self):
+        cfg = self._mintCfg
+        from mint.db import database
+        from mint.rest.db import database as rdb
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        restdb = rdb.Database(cfg, database.Database(cfg, db))
+        return restdb
+
+    class _CapsuleDownloader(object):
+        def __init__(self, restdb):
+            self._restdb = restdb
+
+        def downloadCapsule(self, capsuleKey, sha1sum):
+            indexer = self._restdb.capsuleMgr.getIndexer()
+            # XXX FIXME: error handling
+            pkg = indexer.getPackage(capsuleKey, sha1sum)
+            fobj = file(indexer.getFullFilePath(pkg))
+            return self.fromFile(fobj)
+
+        def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileName,
+                fileSha1sum):
+            indexer = self._restdb.capsuleMgr.getIndexer()
+            fobj = indexer.getFileFromPackage(capsuleKey, capsuleSha1sum,
+                fileName, fileSha1sum)
+            return self.fromFile(fobj)
+
+        fromFile = proxy.ProxyRepositoryServer.CapsuleDownloader.fromFile
+
 def conaryHandler(req, db, cfg, pathInfo):
     maintenance.enforceMaintenanceMode(cfg)
 
@@ -367,21 +413,10 @@ def conaryHandler(req, db, cfg, pathInfo):
             repServer, proxyServer, shimRepo = repositories[repHash]
             repServer.reopen()
         else:
-            # Open rest db; we need to find out if we have to configure an
-            # indexer URL; there no reason to do so if a capsule-based
-            # platform has not been enabled
-            from mint.db import database
-            from mint.rest.db import database as restdb
-            rdb = restdb.Database(cfg, database.Database(cfg, db))
-            indexer = rdb.capsuleMgr.getIndexer()
-            if list(indexer.iterSources()):
-                indexerUrl = "http://localhost/api/capsules"
-            else:
-                indexerUrl = None
             # Create a new connection.
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
                     actualRepName, cfg, req, dbTuple, localMirror, requireSigs,
-                    commitEmail, indexerUrl)
+                    commitEmail)
 
             if not repServer:
                 return apache.HTTP_NOT_FOUND
@@ -430,8 +465,8 @@ def conaryHandler(req, db, cfg, pathInfo):
                 domain = cfg.siteDomainName + ':%(port)d'
             urlBase = "%%(protocol)s://%s.%s/" % \
                     (cfg.hostName, domain)
-            proxyServer = proxy_repository = proxy.ProxyRepositoryServer(
-                    proxycfg, urlBase)
+            proxyServer = proxy_repository = ProxyRepositoryServer(
+                    cfg, proxycfg, urlBase)
 
         # inject known authentication (userpass and entitlement)
         proxyServer.cfg.entitlement = conarycfg.EntitlementList()

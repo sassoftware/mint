@@ -21,7 +21,7 @@ class CapsuleManager(manager.Manager):
             # XXX this is temporary
             dbConnectString = 'postgres@localhost:5439/mint'
         elif dbDriver == "sqlite":
-            # sqlalchemy requires four slashes for a sqlite backend, 
+            # sqlalchemy requires four slashes for a sqlite backend,
             # because it treats the filename as the database. See comments in
             # sqlalchemy/databases/sqlite.py
             dbConnectString = "/" + dbConnectString
