@@ -10,6 +10,7 @@ import testsetup
 import os
 import time
 
+from conary import conaryclient
 from conary.lib import util
 
 import restbase
@@ -19,22 +20,11 @@ ResponseError = restClient.ResponseError
 import rpath_capsule_indexer
 from capsule_indexertest import base
 
-class CapsulesTest(restbase.BaseRestTest, base.IndexerTestMixIn):
-    # This controller should mock access from localhost
-    class ControllerFactory(restbase.Controller):
-        class RequestFactory(restbase.MockRequest):
-            def _setProperties(self):
-                restbase.MockRequest._setProperties(self)
-                self.remote = ('127.0.0.1', 12345)
-
-    def setUp(self):
-        restbase.BaseRestTest.setUp(self)
-        base.IndexerTestMixIn.setUp(self)
-
+class IndexerSetupMixIn(base.IndexerTestMixIn):
     def setUpIndexerCfg(self):
         db = self.openRestDatabase()
         self._addPlatformSources(db)
-        self.cfg = db.capsuleMgr.getIndexerConfig()
+        self.capsulecfg = db.capsuleMgr.getIndexerConfig()
 
     def _addPlatformSources(self, db):
         # XXX nasty hacks to produce some data in the hopefully proper format
@@ -65,6 +55,18 @@ class CapsulesTest(restbase.BaseRestTest, base.IndexerTestMixIn):
         # Populate the indexer
         indexer.refresh()
         return indexer
+
+class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
+    # This controller should mock access from localhost
+    class ControllerFactory(restbase.Controller):
+        class RequestFactory(restbase.MockRequest):
+            def _setProperties(self):
+                restbase.MockRequest._setProperties(self)
+                self.remote = ('127.0.0.1', 12345)
+
+    def setUp(self):
+        restbase.BaseRestTest.setUp(self)
+        IndexerSetupMixIn.setUp(self)
 
     def testGetContent(self):
         # Make sure we populate the indexer's db
@@ -118,6 +120,7 @@ class CapsulesTest(restbase.BaseRestTest, base.IndexerTestMixIn):
         channels = indexer.model.enumerateChannels()
         self.failUnlessEqual(len(channels), 4)
 
+
 class CapsulesTestRemote(restbase.BaseRestTest):
     # This controller should mock access from non-localhost
     class ControllerFactory(restbase.Controller):
@@ -137,6 +140,43 @@ class CapsulesTestRemote(restbase.BaseRestTest):
         uri = 'capsules/rpm/content'
         req, response = client.call('POST', uri)
         self.failUnlessEqual(response.status, 404)
+
+class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
+                            IndexerSetupMixIn):
+    def setUp(self):
+        restbase.mint_rephelp.MintRepositoryHelper.setUp(self)
+        IndexerSetupMixIn.setUp(self)
+
+    def testConaryProxyInjection(self):
+        mintClient = self.startMintServer(useProxy = True)
+        rpmFile0 = os.path.join(self.sourceSearchDir,
+            'with-config-special-0.2-1.noarch.rpm')
+
+        indexer = self.indexer()
+        # Populate the db with the proper data, to avoid the test trying to
+        # contact RHN
+        capsuleKey = ('with-config-special', None, '0.2', '1', 'noarch')
+        capsuleSha1sum = '4daf5f932e248a32758876a1f8ff12a5f58b1a54'
+        pkg = indexer.getPackage(capsuleKey, capsuleSha1sum)
+        self.failUnless(
+            pkg.path.endswith("with-config-special-0.2-1.noarch.rpm"),
+            pkg.path)
+
+        self.openRepository(1, excludeCapsuleContents = True)
+
+        ver0 = "/localhost1@rpl:linux/1-1-1"
+        trv0 = self.addComponent("foo:data", ver0, filePrimer = 1)
+        trv0 = self.addRPMComponent("%s=%s" % ("foo:rpm", ver0),
+             rpmPath = rpmFile0)
+
+        # Absolute changeset
+        joblist = [ ('foo:rpm', (None, None),
+            (trv0.getVersion(), trv0.getFlavor()), True) ]
+
+        cli = conaryclient.ConaryClient(self.cfg)
+        cs = cli.repos.createChangeSet(joblist, withFiles = True,
+                            withFileContents = True)
+
 
 if __name__ == "__main__":
         testsetup.main()
