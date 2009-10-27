@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 4)
+    Version = (48, 5)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -723,6 +723,11 @@ class MigrateTo_48(SchemaMigration):
     def migrate4(self):
         return True
 
+    # 48.5
+    # - Dashboard report type table 
+    def migrate5(self):
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
@@ -742,15 +747,10 @@ def majorMinor(major):
 
 
 def tryMigrate(db, func):
-    db.transaction()
-    try:
-        rv = func()
-    except:
-        db.rollback()
-        raise
-    else:
-        db.commit()
-    return rv
+    # Do all migration steps in one transaction so a failure in createSchema
+    # will abort the whole thing. Otherwise we wouldn't rerun the createSchema
+    # because the schema version has already been updated.
+    return func(skipCommit=True)
 
 
 # entry point that migrates the schema

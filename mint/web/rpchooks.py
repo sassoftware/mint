@@ -1,8 +1,9 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
+import logging
 import simplejson
 import sys
 import xmlrpclib
@@ -13,6 +14,7 @@ from mint import config
 from mint import mint_error
 from mint import server
 from mint import maintenance
+from mint.lib import mintutils
 from mint.logerror import logWebErrorAndEmail
 from mint.web.webhandler import getHttpAuth
 
@@ -20,6 +22,8 @@ from conary.lib import coveragehook
 from conary.repository import errors
 
 def rpcHandler(req, db, cfg, pathInfo = None):
+    mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
+
     maintenance.enforceMaintenanceMode(cfg)
     isJSONrpc = isXMLrpc = allowPrivate = False
 

@@ -3,14 +3,15 @@ from mint.django_rest.rbuilder.reporting.reports import TimeSegmentReport
 
 from django.db import connection, transaction
 from django.db.models import Count
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django_restapi.resource import Resource
 
 from xobj import xobj
 
-from datetime import date
+from datetime import datetime
 import time
 import calendar
+import re
 
 class ImagesPerProduct(Resource):
     
@@ -18,8 +19,9 @@ class ImagesPerProduct(Resource):
         year = (('year' in kwargs and kwargs['year']) or 1)
         month = (('month' in kwargs and kwargs['month']) or 1)
         day = (('day' in kwargs and kwargs['day']) or 1)
+        hour = (('hour' in kwargs and kwargs['hour']) or 0)
         
-        return (time.mktime(date(year, month, day).timetuple()))
+        return (time.mktime(datetime(year, month, day, hour).timetuple()))
         
     def _getDayName(self, index):
         return (calendar.day_name[index])
@@ -38,7 +40,14 @@ class ImagesPerProduct(Resource):
         starttime = ((request.REQUEST.has_key('starttime') and request.REQUEST['starttime']) or None)
         endtime = ((request.REQUEST.has_key('endtime') and request.REQUEST['endtime']) or None)
         
-        cursor = connection.cursor()
+        if units not in self._time_units_matrix:
+            return HttpResponseBadRequest('Invalid timeunits value: %s' % units)
+        
+        # Make sure that the arguments are only numbers
+        pattern = re.compile('^(([0-9]+(\.)?[0-9]+)|([0-9]+))$')    
+        for param in (starttime, endtime,):
+            if param is not None and not pattern.match(param):
+                     return HttpResponseBadRequest('Invalid query parameter: %s' % param)       
         
         extracts = self._getCalendarComponents(units)
         
@@ -64,11 +73,23 @@ class ImagesPerProduct(Resource):
             group by %(extract_stmt)s
 			order by %(extract_stmt)s"""
         
+        cursor = connection.cursor()
+        
         cursor.execute(sql_query % locals())
          
         segreport = TimeSegmentReport(request, units, starttime, endtime)
         
-        for row in cursor.fetchall():
+        rows = cursor.fetchall()
+        
+        #Check to see if any rows were returned and if the cause was due to 
+        #nonexistent product
+        if not rows:
+            try:
+                product = Products.objects.get(shortname=product)
+            except Products.DoesNotExist, data:
+                raise Http404(data)
+        
+        for row in rows:
             total = row[-1]
             time = self._getTimeConversion(units)(self, dict(zip(extracts,row[:-1])))
             segment = segreport.timeSegments.Segment(total, time)
@@ -76,7 +97,7 @@ class ImagesPerProduct(Resource):
         
         return HttpResponse(xobj.toxml(segreport, report), "text/plain")
      
-    #    
+    # Matrix of time units to the order of time elements to have distinct values
     _time_units_matrix = {'year': {'extracts' : ['year',],
                                    'timeConv' : _getEpoch,
                                   },
@@ -86,4 +107,7 @@ class ImagesPerProduct(Resource):
                            'day': {'extracts':['year','month','day'],
                                    'timeConv' : _getEpoch,
                                   },
+                           'hour': {'extracts':['year','month','day', 'hour'],
+                                   'timeConv' : _getEpoch,
+                                  },     
                           }

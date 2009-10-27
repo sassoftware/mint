@@ -1,4 +1,3 @@
-from mint.django_rest.rbuilder.flex_resource import FlexCollection
 from mint.django_rest.rbuilder.xobj_responder import xobjResponder
 from mint.django_rest.rbuilder.reporting.models import ReportType, ReportTypes
 

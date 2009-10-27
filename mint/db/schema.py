@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 4)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 5)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -928,6 +928,37 @@ def _createCapsuleIndexerSchema(db):
 
     return changed
 
+def _createReportingSchema(db):
+    # Report types for the dashboard nd reporting
+    cu = db.cursor()
+    changed = False
+
+    if 'reporttype' not in db.tables:
+        cu.execute("""
+            CREATE TABLE reporttype
+            (
+                reporttypeid %(PRIMARYKEY)s, 
+                URIname character varying(128) NOT NULL,
+                name character varying(128) NOT NULL,
+                description text NOT NULL,
+                timecreated numeric(14,3) NOT NULL,
+                timeupdated numeric(14,3) NOT NULL,
+                active smallint NOT NULL,
+                creatorid integer
+                    REFERENCES Users ( userId ) ON DELETE SET NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['reporttype'] = []
+        cu.execute("""
+            insert into reporttype (uriname,name,description,timecreated,timeupdated,active,creatorid) values 
+                ('imagePerProduct','Find Images per Product','Show the number of images created for a product by different aggregations',
+                1240934903.38,1240934903.38,1,1)""") 
+        changed = True
+    changed |= db.createIndex('reporttype',
+        'reporttype_uriname_uq', 'URIname', unique=True)
+
+    return changed
+
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -954,13 +985,11 @@ def createSchema(db, doCommit=True):
     changed |= _createTargets(db)
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
+    changed |= _createReportingSchema(db)
 
     if doCommit:
-        if changed:
-            db.commit()
-            db.loadSchema()
-        else:
-            db.rollback()
+        db.commit()
+        db.loadSchema()
 
     return changed
 
@@ -1041,12 +1070,19 @@ def loadSchema(db, cfg=None, should_migrate=False):
         converting the rBuilder database to a supported version.""", version)
 
     # if we reach here, a schema migration is needed/requested
-    version = migrate.migrateSchema(db, cfg)
-    db.loadSchema()
+    db.transaction()
+    try:
+        version = migrate.migrateSchema(db, cfg)
+        db.loadSchema()
 
-    # run through the schema creation to create any missing objects
-    log.debug("Checking for and creating missing schema elements")
-    createSchema(db)
+        # run through the schema creation to create any missing objects
+        log.debug("Checking for and creating missing schema elements")
+        createSchema(db, doCommit=False)
+    except:
+        db.rollback()
+        raise
+    else:
+        db.commit()
     if version > 0 and version != RBUILDER_DB_VERSION:
         # schema creation/conversion failed. SHOULD NOT HAPPEN!
         raise sqlerrors.SchemaVersionError("""
