@@ -17,23 +17,23 @@ class ReportType(models.Model):
     _timeupdated = models.DecimalField(max_digits=14, decimal_places=3, db_column='timeupdated')
     _active = models.SmallIntegerField(default=1, db_column='active')
     _creator = models.ForeignKey(Users, db_column='creatorid', related_name='typecreator', null=True)
-    _URIname = models.CharField(unique=True, max_length=128, db_column='URIname')
+    _uri = models.CharField(unique=True, max_length=128, db_column='uriname')
     
     #xobj Elements   
     def populateElements(self, request):
-        self.id = rbuilder.IDElement(request.build_absolute_uri("./" +self._URIname))
+        self.id = rbuilder.IDElement(request.build_absolute_uri("./" +self._uri))
         self.timeCreated = self._timecreated.to_eng_string()
         self.timeModified = self._timeupdated.to_eng_string()
         self.creator = rbuilder.LinkElement(request.build_absolute_uri("../../users/" + self._creator.username), self._creator.username)
         self.active = bool(self._active)
-        self.data = rbuilder.LinkElement(request.build_absolute_uri("./" + self._URIname + "/data/"))
-        self.descriptor = rbuilder.LinkElement(request.build_absolute_uri("./" + self._URIname + "/descriptor/"))
+        self.data = rbuilder.LinkElement(request.build_absolute_uri("./" + self._uri + "/data/"))
+        self.descriptor = rbuilder.LinkElement(request.build_absolute_uri("./" + self._uri + "/descriptor/"))
     
     class Meta:
         db_table = u'reporttype'
         
     def __unicode__(self):
-        return self._URIname
+        return self._uri
     
     #describe how the object should be presented.
     _xobj = xobj.XObjMetadata(

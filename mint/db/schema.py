@@ -917,6 +917,10 @@ def _createReportingSchema(db):
                     REFERENCES Users ( userId ) ON DELETE SET NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['reporttype'] = []
+        cu.execute("""
+            insert into reporttype (uriname,name,description,timecreated,timeupdated,active,creatorid) values 
+                ('imagePerProduct','Find Images per Product','Show the number of images created for a product by different aggregations',
+                1240934903.38,1240934903.38,1,1)""") 
         changed = True
     changed |= db.createIndex('reporttype',
         'reporttype_uriname_uq', 'URIname', unique=True)

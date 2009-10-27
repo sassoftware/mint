@@ -97,7 +97,7 @@ class ImagesPerProduct(Resource):
         
         return HttpResponse(xobj.toxml(segreport, report), "text/plain")
      
-    #    
+    # Matrix of time units to the order of time elements to have distinct values
     _time_units_matrix = {'year': {'extracts' : ['year',],
                                    'timeConv' : _getEpoch,
                                   },
