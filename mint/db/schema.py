@@ -918,9 +918,9 @@ def _createReportingSchema(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['reporttype'] = []
         cu.execute("""
-            insert into reporttype (uriname,name,description,timecreated,timeupdated,active,creatorid) values 
+            insert into reporttype (uriname,name,description,timecreated,timeupdated,active) values 
                 ('imagePerProduct','Find Images per Product','Show the number of images created for a product by different aggregations',
-                1240934903.38,1240934903.38,1,1)""") 
+                1240934903.38,1240934903.38,1)""") 
         changed = True
     changed |= db.createIndex('reporttype',
         'reporttype_uriname_uq', 'URIname', unique=True)
