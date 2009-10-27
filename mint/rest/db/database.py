@@ -670,33 +670,36 @@ class Database(DBInterface):
         raise RuntimeError("Identity information is not loaded.")
 
     @commitafter
-    def listPlatforms(self):
-        return self.platformMgr.listPlatforms()
+    def getPlatforms(self):
+        return self.platformMgr.getPlatforms()
 
     @commitafter
     def getPlatform(self, platformId):
         return self.platformMgr.getPlatform(platformId)
 
     @readonly
-    def listPlatformSources(self, platformId):
-        return self.platformMgr.listPlatformSources(platformId)
+    def getSources(self):
+        return self.platformMgr.getSources()
 
     @readonly
-    def getPlatformSource(self, platformId, platformSourceShortName):
-        return self.platformMgr.listPlatformSources(platformId,
-                    platformSourceShortName)
+    def getSource(self, source):
+        return self.platformMgr.getSource(source)
 
     @readonly
-    def getConfigDescriptor(self, platformSourceShortName):
-        return self.platformMgr.getConfigDescriptor(platformSourceShortName)
+    def getSourceDescriptor(self, source):
+        return self.platformMgr.getSourceDescriptor(source)
+
+    @readonly
+    def getSourceInstances(self, source):
+        return self.platformMgr.getSourceInstances(source)
 
     @readonly
     def getPlatformStatus(self, platformId):
         return self.platformMgr.getPlatformStatus(platformId)
 
     @readonly
-    def getPlatformSourceStatus(self, platformSourceShortName):
-        return self.platformMgr.getPlatformSourceStatus(platformSourceShortName)
+    def getSourceInstanceStatus(self, source, shortName):
+        return self.platformMgr.getSourceInstanceStatus(source, shortName)
 
     @commitafter
     def updatePlatformSource(self, platformId, platformSourceShortName, source):

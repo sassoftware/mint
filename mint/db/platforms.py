@@ -15,6 +15,22 @@
 from mint.lib import data
 from mint.lib import database
 
+dbReader = database.dbReader
+
+class ContentSourceTypesTable(database.KeyedTable):
+    name = 'contentSourceTypes'
+    key = 'contentSourceTypeId'
+    fields = [ 'contentSourceTypeId',
+               'name' ]
+
+    def getByName(self, name):
+        return self.getIdByColumn('name', name)
+
+class PlatformsContentSourceTypesTable(database.DatabaseTable):
+    name = 'platformsContentSourceTypes'
+    fields = [ 'platformId',
+               'contentSourceTypeId' ]
+
 class PlatformsTable(database.KeyedTable):
     name = 'platforms'
     key = 'platformId'
@@ -27,15 +43,33 @@ class PlatformsTable(database.KeyedTable):
         self.cfg = cfg
         database.KeyedTable.__init__(self, db)
 
+    @dbReader
+    def getAllByType(self, cu, type):
+        sql = """\
+            SELECT 
+                platforms.platformId
+            FROM 
+                platforms,
+                platformsContentSourceTypes,
+                contentSourceTypes
+            WHERE
+                platforms.platformId = platformsContentSourceTypes.platformId
+            AND platformsContentSourceTypes.contentSourceTypeId =
+                contentSourceTypes.contentSourceTypeId
+            AND contentSourceTypes.name = ?
+        """
+        cu.execute(sql, type)
+        return cu.fetchall()[0]
+
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'
     key = 'platformSourceId'
     fields = [ 'platformSourceId', 
-               'platformId',
                'name',
                'shortName',
                'defaultSource',
-               'orderIndex' ]
+               'orderIndex',
+               'type' ]
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -46,3 +80,8 @@ class PlatformSourcesTable(database.KeyedTable):
 
 class PlatformSourceDataTable(data.GenericDataTable):
     name = 'platformSourceData'
+
+class PlatformsPlatformSourcesTable(database.DatabaseTable):    
+    name = 'platformsPlatformSources'
+    fields = [ 'platformId',
+               'platformSourceId' ]

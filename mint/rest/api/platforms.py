@@ -10,31 +10,44 @@ from mint.rest.api import requires
 
 from mint.rest.middleware import auth
 
-class PlatformSourceStatusController(base.BaseController):
-    
-    @auth.public
-    def index(self, request, platformId, shortName):
-        return self.db.getPlatformSourceStatus(shortName)
+class SourceInstancesStatusController(base.BaseController):
 
-class ConfigDescriptorController(base.BaseController):
-    
     @auth.public
-    def index(self, request, platformId, shortName):
-        return self.db.getConfigDescriptor(shortName)
+    def index(self, request, source, shortName):
+        return self.db.getSourceInstanceStatus(source, shortName)
 
-class PlatformSourceController(base.BaseController):
+class SourceInstancesController(base.BaseController):
     modelName = 'shortName'
 
-    urls = { 'status' : PlatformSourceStatusController,
-             'descriptor' : ConfigDescriptorController }
+    urls = { 'status' : SourceInstancesStatusController }
 
     @auth.public
-    def index(self, request, platformId):
-        return self.db.listPlatformSources(platformId)
+    def index(self, request, source):
+        return self.db.getSourceInstances(source)
 
     @auth.public
-    def get(self, request, platformId, shortName):
-        return self.db.getPlatformSource(platformId, shortName)
+    def get(self, request, source, shortName):
+        return self.db.getSourceInstance(source, shortName)
+
+class SourceDescriptorController(base.BaseController):
+    
+    @auth.public
+    def index(self, request, source):
+        return self.db.getSourceDescriptor(source)
+
+class SourceController(base.BaseController):
+    modelName = 'source'
+
+    urls = { 'instances' : SourceInstancesController,
+             'descriptor' : SourceDescriptorController }
+
+    @auth.public
+    def index(self, request):
+        return self.db.getSources()
+
+    @auth.public
+    def get(self, request, source):
+        return self.db.getSource(source)
 
     @auth.public
     @requires('source', models.PlatformSource)
@@ -60,12 +73,11 @@ class PlatformStatusController(base.BaseController):
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
-    urls = { 'sources' : PlatformSourceController,
-             'status' : PlatformStatusController }
+    urls = { 'status' : PlatformStatusController }
 
     @auth.public
     def index(self, request):
-        return self.db.listPlatforms()
+        return self.db.getPlatforms()
 
     @auth.public
     def get(self, request, platformId):        

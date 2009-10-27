@@ -238,6 +238,7 @@ class MintConfig(ConfigFile):
     platformSourceUrls       = (CfgList(CfgString), [])
     platformSourceLabels     = (CfgList(CfgString), [])
     platformSources          = (CfgList(CfgString), [])
+    platformSourceTypes          = (CfgList(CfgString), [])
 
     acceptablePlatforms     = (CfgList(CfgString), [])
     siteAuthCfgPath         = (CfgPath, RBUILDER_DATA + 'data/authorization.cfg')

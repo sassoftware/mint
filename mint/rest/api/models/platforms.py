@@ -10,27 +10,31 @@ class PlatformSourceStatus(Model):
 class PlatformSource(Model):
     platformSourceId = fields.CharField()
     name = fields.CharField()
-    platformId = fields.CharField()
     shortName = fields.CharField(displayName='shortname')
     sourceUrl = fields.CharField()
     username = fields.CharField()
     password = fields.CharField()
     defaultSource = fields.BooleanField()
     orderIndex = fields.IntegerField()
-    platformSourceStatus = fields.UrlField(
-                                'platforms.sources.status',
-                                ['platformId', 'shortName'])
-    configDescriptor = fields.UrlField(
-                                'platforms.sources.descriptor', 
-                                ['platformId', 'shortName'])
+    contentSourceType = fields.CharField()
+    # platformSourceStatus = fields.UrlField(
+                                # 'platforms.sources.status',
+                                # ['platformId', 'shortName'])
+    # configDescriptor = fields.UrlField(
+                                # 'platforms.sources.descriptor', 
+                                # ['platformId', 'shortName'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
+    # TODO: fix to new platformTypes structure
     def get_absolute_url(self):
-        return ('platforms.sources', self.platformId, self.shortName)
+        return ('sources.instances', self.contentSourceType, self.shortName)
 
 class Sources(Model):
     platformSource = fields.ListField(PlatformSource)
+
+class SourceTypes(Model):
+    sourceType = fields.CharField()
 
 class Platform(Model):
     platformId = fields.CharField()
@@ -45,7 +49,9 @@ class Platform(Model):
     repositoryUrl  = products.RepositoryRestUrlField()
     sources = fields.ModelField(Sources)
     platformMode = fields.CharField()
+    platformType = fields.CharField()
     platformStatus = fields.UrlField('platforms.status', ['platformId'])
+    sourceTypes = fields.ListField(SourceTypes)
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 

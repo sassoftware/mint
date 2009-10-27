@@ -737,15 +737,35 @@ def _createPlatforms(db):
         db.tables['Platforms'] = []
         changed = True
 
+    if 'ContentSourceTypes' not in db.tables:
+        cu.execute("""
+            CREATE TABLE ContentSourceTypes (
+                contentSourceTypeId %(PRIMARYKEY)s,
+                name varchar(255) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['ContentSourceTypes'] = []
+        changed = True
+
+    if 'PlatformsContentSourceTypes' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformsContentSourceTypes (
+                platformId  integer NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                contentSourceTypeId integer NOT NULL
+                    REFERENCES contentSourceTypes ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsContentSourceTypes'] = []
+        changed = True
+
     if 'PlatformSources' not in db.tables:
         cu.execute("""
             CREATE TABLE PlatformSources (
                 platformSourceId  %(PRIMARYKEY)s,
-                platformId        integer   NOT NULL
-                    REFERENCES Platforms ON DELETE CASCADE,
                 name       varchar(255)    NOT NULL,
                 shortName  varchar(255)    NOT NULL UNIQUE,
                 defaultSource    smallint  NOT NULL DEFAULT 0,
+                contentSourceTypeId    integer    NOT NULL
+                    REFERENCES ContentSourceTypes,
                 orderIndex  smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformSources'] = []
@@ -768,6 +788,17 @@ def _createPlatforms(db):
                 PRIMARY KEY ( platformSourceId, name )
             ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PlatformSourceData'] = []
+        changed = True
+
+    if 'PlatformsPlatformSources' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformsPlatformSources (
+                platformId          integer         NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                platformSourceId    integer         NOT NULL
+                    REFERENCES platformSources ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsPlatformSources'] = []
         changed = True
 
     return changed
@@ -885,7 +916,7 @@ def _createCapsuleIndexerSchema(db):
                 errata_id INTEGER NOT NULL
                     REFERENCES ci_rhn_errata ON DELETE CASCADE,
                 package_id  INTEGER NOT NULL
-                    REFERENCES ci_rhn_package ON DELETE CASCADE
+                    REFERENCES ci_rhn_packages ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
