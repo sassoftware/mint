@@ -41,14 +41,18 @@ class PlatformManager(manager.Manager):
             
             # TODO: remove this, just for testing until types are in platform
             # defn.
-            if i == 1:
-                types = ['blue',]
+            # if i == 1:
+                # types = ['blue',]
+            # else:
+                # types = ['red',]
+            if 'pnalv' in platformLabel or 'localhost' in platformLabel:
+                types = ['rhn',]
             else:
-                types = ['red',]
+                types = []
 
             yield platformLabel, platformName, enabled, types
 
-    def _getConfigPlatforms(self, platformLabel):
+    def _getConfigPlatforms(self, platformLabel=None):
         plats = {}
         for pLabel, pName, enabled, sourceTypes in self._iterConfigPlatforms():
             if pLabel == platformLabel:
@@ -68,8 +72,7 @@ class PlatformManager(manager.Manager):
             SELECT
                 platforms.platformId,
                 platforms.label,
-                platforms.configurable,
-                platforms.mode
+                platforms.configurable
             FROM
                 platforms
         """
@@ -83,21 +86,19 @@ class PlatformManager(manager.Manager):
         for row in cu:
             results[row['label']] = \
                 dict(platformId=str(row['platformId']),
-                     configurable=row['configurable'],
-                     mode=row['mode'])
+                     configurable=row['configurable'])
 
         return results
 
     def _platformModelFactory(self, *args, **kw):
-        sourceTypes = [models.SourceTypes(sourceType=t) for t in kw['sourceTypes']]
+        sourceTypes = [models.SourceTypeRef(contentSourceType=t) for t in kw['sourceTypes']]
         return models.Platform(platformId=kw['platformId'],
                                label=kw['label'],
                                platformName=kw['platformName'],
                                hostname=kw['hostname'],
                                enabled=kw['enabled'],
                                configurable=kw['configurable'],
-                               platformMode=kw['mode'],
-                               sourceTypes=sourceTypes)
+                               contentSourceTypes=models.SourceTypeRefs(sourceTypes))
 
     def _createContentSourceType(self, name):
         try:
@@ -107,9 +108,10 @@ class PlatformManager(manager.Manager):
 
         return typeId            
 
-    def _createPlatformInDB(self, platformLabel, configurable, mode, sourceTypes):
+    def _createPlatformInDB(self, platformLabel, configurable, sourceTypes):
+        configurable = int(configurable)
         platformId = self.db.db.platforms.new(label=platformLabel,
-                                        configurable=configurable, mode=mode)
+                                        configurable=configurable)
 
         for sourceType in sourceTypes:
             typeId = self._createContentSourceType(sourceType)
@@ -122,9 +124,9 @@ class PlatformManager(manager.Manager):
         changed = False
         for label in cfgPlatforms:
             if not dbPlatforms.has_key(label):
-                # TODO: set configurable, mode correctly
+                # TODO: set configurable correctly
                 self._createPlatformInDB(label, cfgPlatforms[label]['enabled'],
-                        'proxied', cfgPlatforms[label]['sourceTypes'])
+                        cfgPlatforms[label]['sourceTypes'])
                 changed = True
         return changed                
 
@@ -141,7 +143,6 @@ class PlatformManager(manager.Manager):
         for platformLabel in dbPlatforms:
             platId = dbPlatforms[platformLabel]['platformId']
             configurable = dbPlatforms[platformLabel]['configurable']
-            mode = dbPlatforms[platformLabel]['mode']
             platformName = cfgPlatforms[platformLabel]['name']
             enabled = cfgPlatforms[platformLabel]['enabled']
             sourceTypes = cfgPlatforms[platformLabel]['sourceTypes']
@@ -149,9 +150,18 @@ class PlatformManager(manager.Manager):
             plat = self._platformModelFactory(platformId=platId,
                         label=platformLabel, platformName=platformName,
                         hostname=platformLabel.split('.')[0],
-                        enabled=enabled, configurable=configurable, mode=mode,
+                        enabled=enabled, configurable=configurable,
                         sourceTypes=sourceTypes)
-            plat.sources = self.getSourceInstances(platformId=platId)
+            sources = self.getSourceInstances(platformId=platId)
+            sourceRefs = []
+            for src in sources.instance:
+                sourceRef = models.SourceRef()
+                sourceRef._contentSourceType = src.contentSourceType
+                sourceRef._shortName = src.shortName
+                sourceRefs.append(sourceRef)
+            plat.contentSources = models.SourceRefs(sourceRefs)
+            # plat.contentSources = sourceRefs
+
             availablePlatforms.append(plat)
 
         if platformId:
@@ -162,12 +172,9 @@ class PlatformManager(manager.Manager):
     def getPlatform(self, platformId):
         return self.getPlatforms(platformId)
 
-    def getConfigDescriptor(self, platformSourceShortName):
-        sourceId = \
-            self.db.db.platformSources.getIdFromShortName(platformSourceShortName)
-        source = self.db.db.platformSources.get(sourceId)            
-        desc = models.Description(desc='Configure %s' % source['name'])
-        metadata = models.Metadata(displayName=source['name'],
+    def getSourceDescriptor(self, source):
+        desc = models.Description(desc='Configure %s' % source)
+        metadata = models.Metadata(displayName=source,
                     descriptions=[desc])
 
         dFields = []
@@ -209,13 +216,13 @@ class PlatformManager(manager.Manager):
         return cu
 
     def _platformSourceModelFactory(self, row):
-        plat = models.PlatformSource(
-                        platformSourceId=str(row['platformSourceId']),
+        plat = models.SourceInstance(
+                        contentSourceId=str(row['platformSourceId']),
                         name=row['name'],
                         shortName=row['shortName'],
                         defaultSource=row['defaultSource'],
                         orderIndex=row['orderIndex'],
-                        contentSourceType=row['name'])
+                        contentSourceType=row['contentSourceType'])
 
         data = self._getPlatformSourceData(row['platformSourceId'])
 
@@ -224,7 +231,7 @@ class PlatformManager(manager.Manager):
 
         return plat
 
-    def _getSourcesFromDB(self, platformId, sourceShortName):
+    def _getSourcesFromDB(self, source, platformId, sourceShortName):
         cu = self.db.cursor()
         sql = """
             SELECT
@@ -236,10 +243,13 @@ class PlatformManager(manager.Manager):
                 (SELECT contentSourceTypes.name
                  FROM contentSourceTypes
                  WHERE platformSources.contentSourceTypeId =
-                       contentSourceTypes.contentSourceTypeId) name
+                       contentSourceTypes.contentSourceTypeId) AS contentSourceType
             FROM
                 platformSources
         """
+
+        if source:
+            sourceId = self.db.db.contentSourceTypes.getByName(source)
 
         if platformId: 
             sql = sql + ', platformsPlatformSources '
@@ -253,6 +263,9 @@ class PlatformManager(manager.Manager):
         elif sourceShortName:
             sql = sql + 'WHERE platformSources.shortName = ?'
             cu.execute(sql, sourceShortName)
+        elif source:
+            sql = sql + """WHERE platformSources.contentSourceTypeId = ?""" 
+            cu.execute(sql, sourceId)
         else:
             cu.execute(sql)
             
@@ -263,7 +276,7 @@ class PlatformManager(manager.Manager):
 
         return sources            
 
-    def _getCfgSources(self, sourceShortName):        
+    def _getCfgSources(self, source=None, sourceShortName=None):        
         sources = {}
         for i, cfgShortName in enumerate(self.cfg.platformSources):
             source = models.PlatformSource(shortName=cfgShortName,
@@ -272,10 +285,12 @@ class PlatformManager(manager.Manager):
                                    contentSourceType=self.cfg.platformSourceTypes[i],
                                    defaultSource='1',
                                    orderIndex='0')
-            if sourceShortName:
+            if sourceShortName and sourceShortName == cfgShortName:
                 sources = {}
                 sources[source.shortName] = source
                 return sources
+            elif source and source == self.cfg.platformSourceTypes[i]:
+                sources[source.shortName] = source
             else:                
                 sources[source.shortName] = source
 
@@ -289,31 +304,49 @@ class PlatformManager(manager.Manager):
         platformIds = self.db.db.platforms.getAllByType(source.contentSourceType)
         for platformId in platformIds:
             self._linkPlatformPlatformSource(platformId,
-                    source.platformSourceId)
+                    source.contentSourceId)
 
     def _createSourcesInDB(self, dbSources, cfgSources):
         changed = False
         for cfgSource in cfgSources:
             if not dbSources.has_key(cfgSource):
                 sourceId = self._createPlatformSource(cfgSources[cfgSource])
-                cfgSources[cfgSource].platformSourceId = sourceId
+                cfgSources[cfgSource].contentSourceId = sourceId
                 self._linkToPlatforms(cfgSources[cfgSource])
                 changed = True
 
         return changed                
 
+    def getSources(self, source=None):
+        plats = self._getConfigPlatforms()
+        types = []
+        strTypes = []
+        for p in plats:
+            tList = plats[p]['sourceTypes']
+            for t in tList:
+                if t not in strTypes:
+                    if source and source == t:
+                        return models.SourceType(contentSourceType=t)
+                    strTypes.append(t)
+                    types.append(models.SourceType(contentSourceType=t))
+
+        return models.ContentSources(types)
+
+    def getSource(self, source):
+        return self.getSources(source)
+
     def getSourceInstances(self, source=None, shortName=None, platformId=None):
         sources = []
-        dbSources = self._getSourcesFromDB(None, shortName)
-        cfgSources = self._getCfgSources(shortName)
+        dbSources = self._getSourcesFromDB(None, source, shortName)
+        cfgSources = self._getCfgSources(source, shortName)
         changed = self._createSourcesInDB(dbSources, cfgSources)
 
-        dbSources = self._getSourcesFromDB(platformId, shortName)
+        dbSources = self._getSourcesFromDB(source, platformId, shortName)
         
         if shortName:
             return dbSources[shortName]
         else:
-            return models.Sources(dbSources.values())
+            return models.SourceInstances(dbSources.values())
 
     def getSourceInstance(self, source=None, shortName=None):
         return self.getSourceInstances(source, shortName)
@@ -391,13 +424,8 @@ class PlatformManager(manager.Manager):
     def updatePlatform(self, platformId, platform):
         cu = self.db.cursor()
         sql = """
-        UPDATE platforms
-        SET mode='%s'
-        WHERE
-            platformId=?
         """
-
-        cu.execute(sql % platform.platformMode, platformId)
+        cu.execute(sql, platformId)
         return self.getPlatform(platformId)
 
     def _createPlatformSource(self, source):

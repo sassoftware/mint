@@ -8,7 +8,10 @@ class PlatformSourceStatus(Model):
     message = fields.CharField()
 
 class PlatformSource(Model):
-    platformSourceId = fields.CharField()
+    class Meta(object):
+        name = 'contentSource'
+
+    contentSourceId = fields.CharField()
     name = fields.CharField()
     shortName = fields.CharField(displayName='shortname')
     sourceUrl = fields.CharField()
@@ -20,21 +23,51 @@ class PlatformSource(Model):
     # platformSourceStatus = fields.UrlField(
                                 # 'platforms.sources.status',
                                 # ['platformId', 'shortName'])
-    # configDescriptor = fields.UrlField(
-                                # 'platforms.sources.descriptor', 
-                                # ['platformId', 'shortName'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
-    # TODO: fix to new platformTypes structure
     def get_absolute_url(self):
-        return ('sources.instances', self.contentSourceType, self.shortName)
+        return ('contentSources.instances', self.contentSourceType, self.shortName)
 
-class Sources(Model):
-    platformSource = fields.ListField(PlatformSource)
+class SourceType(Model):
+    class Meta(object):
+        name = 'contentSourceType'
+    contentSourceType = fields.CharField()
+    instances = fields.UrlField('contentSources.instances', ['contentSourceType'])
+    descriptor = fields.UrlField('contentSources.descriptor', ['contentSourceType'])
+    id = fields.AbsoluteUrlField(isAttribute=True)
 
-class SourceTypes(Model):
-    sourceType = fields.CharField()
+    def get_absolute_url(self):
+        return ('contentSources', self.contentSourceType)
+
+class ContentSources(Model):
+    contentSourceType = fields.ListField(SourceType)
+
+SourceInstance = PlatformSource
+
+class SourceInstances(Model):
+    class Meta(object):
+        name = 'instances'
+    instance = fields.ListField(SourceInstance, displayName='contentSource')
+
+class SourceRef(Model):
+    href = fields.AbsoluteUrlField(isAttribute=True)
+    _contentSourceType = ''
+    _shortName = ''
+    def get_absolute_url(self):
+        return ('contentSources.instances', self._contentSourceType, self._shortName) 
+
+class SourceRefs(Model):
+    sourceRef = fields.ListField(SourceRef, displayName='contentSource')
+
+class SourceTypeRef(Model):
+    href = fields.AbsoluteUrlField(isAttribute=True)
+    contentSourceType = fields.CharField(display=False)
+    def get_absolute_url(self):
+        return ('contentSources', self.contentSourceType)
+
+class SourceTypeRefs(Model):
+    sourceTypeRef = fields.ListField(SourceTypeRef, displayName='contentSourceType')
 
 class Platform(Model):
     platformId = fields.CharField()
@@ -47,11 +80,10 @@ class Platform(Model):
     enabled = fields.BooleanField()
     configurable = fields.BooleanField()
     repositoryUrl  = products.RepositoryRestUrlField()
-    sources = fields.ModelField(Sources)
-    platformMode = fields.CharField()
+    contentSources = fields.ModelField(SourceRefs)
     platformType = fields.CharField()
     platformStatus = fields.UrlField('platforms.status', ['platformId'])
-    sourceTypes = fields.ListField(SourceTypes)
+    contentSourceTypes = fields.ModelField(SourceTypeRefs)
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 

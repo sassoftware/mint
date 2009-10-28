@@ -53,6 +53,7 @@ class PlatformTest(restbase.BaseRestTest):
         req, platforms = client.call('GET', uri)
 
         xml = self._toXml(platforms, client, req)
+        print xml
         self.assertEquals(platformsXml, xml)
 
     def testGetPlatform(self):
@@ -127,17 +128,46 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(platformSourceStatusDataFailXml, xml)
 
-    def testGetPlatformSourceDescriptor(self):
-        # TODO: can be removed once the code is refactored
-        # Need to get platforms first to trigger creation in the db
-        self.testGetPlatforms()
-
-        uri = '/platforms/1/sources/plat1source/descriptor'
+    def testGetSourceDescriptor(self):
+        uri = '/sources/rhn/descriptor'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(platformSourceDescriptorXml, xml)
-        
+        print xml
+        self.assertEquals(sourceDescriptorXml, xml)
+
+    def testGetSources(self):
+        uri = '/contentSources'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        print xml
+        self.assertEquals(sourcesXml, xml)
+
+    def testGetSource(self):
+        uri = '/sources/rhn'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        print xml
+        self.assertEquals(sourceXml, xml)
+
+    def testGetSourceInstances(self):
+        uri = '/sources/rhn/instances'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        print xml
+        self.assertEquals(sourceInstancesXml, xml)
+
+    def testGetSourceInstance(self):
+        uri = '/sources/rhn/instances/plat2source0'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        print xml
+        self.assertEquals(sourceInstanceXml, xml)
+
     def testPutPlatformSource(self):
         # TODO: can be removed once the code is refactored
         # Need to get platforms first to trigger creation in the db

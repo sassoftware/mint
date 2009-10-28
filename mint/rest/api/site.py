@@ -24,7 +24,7 @@ class RbuilderRestServer(RestController):
             'projects' : product.ProductController,
             'users'    : users.UserController,
             'platforms' : platforms.PlatformController,
-            'sources' : platforms.SourceController,
+            'contentSources' : platforms.SourceController,
             'registration' : registration.RegistrationController,
             'notices'  : notices.NoticesController,
             'capsules'  : capsules.CapsulesController,}

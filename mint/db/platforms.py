@@ -59,7 +59,11 @@ class PlatformsTable(database.KeyedTable):
             AND contentSourceTypes.name = ?
         """
         cu.execute(sql, type)
-        return cu.fetchall()[0]
+        ret = cu.fetchall()
+        if ret:
+            return ret[0]
+        else:
+            return ret
 
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'

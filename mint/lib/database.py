@@ -176,7 +176,7 @@ class DatabaseTable(object):
         except sqlerrors.ColumnNotUnique:
             raise DuplicateItem(self.name)
 
-        return cu.fetchall()
+        return cu.lastid()
 
 class KeyedTable(DatabaseTable):
     """
