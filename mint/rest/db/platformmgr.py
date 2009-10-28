@@ -303,7 +303,7 @@ class PlatformManager(manager.Manager):
     def _linkToPlatforms(self, source):
         platformIds = self.db.db.platforms.getAllByType(source.contentSourceType)
         for platformId in platformIds:
-            self._linkPlatformPlatformSource(platformId,
+            self._linkPlatformPlatformSource(platformId[0],
                     source.contentSourceId)
 
     def _createSourcesInDB(self, dbSources, cfgSources):
@@ -337,7 +337,7 @@ class PlatformManager(manager.Manager):
 
     def getSourceInstances(self, source=None, shortName=None, platformId=None):
         sources = []
-        dbSources = self._getSourcesFromDB(None, source, shortName)
+        dbSources = self._getSourcesFromDB(None, None, shortName)
         cfgSources = self._getCfgSources(source, shortName)
         changed = self._createSourcesInDB(dbSources, cfgSources)
 

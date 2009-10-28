@@ -60,10 +60,7 @@ class PlatformsTable(database.KeyedTable):
         """
         cu.execute(sql, type)
         ret = cu.fetchall()
-        if ret:
-            return ret[0]
-        else:
-            return ret
+        return ret
 
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'
