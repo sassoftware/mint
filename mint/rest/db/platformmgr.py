@@ -45,7 +45,7 @@ class PlatformManager(manager.Manager):
                 # types = ['blue',]
             # else:
                 # types = ['red',]
-            if 'pnalv' in platformLabel or 'localhost' in platformLabel:
+            if 'pnalv' in platformLabel or 'localhost' in platformLabel or 'rhelrepo' in platformLabel:
                 types = ['rhn',]
             else:
                 types = []
@@ -173,6 +173,8 @@ class PlatformManager(manager.Manager):
         return self.getPlatforms(platformId)
 
     def getSourceDescriptor(self, source):
+        # TODO remove later
+        source = 'Red Hat Network'
         desc = models.Description(desc='Configure %s' % source)
         metadata = models.Metadata(displayName=source,
                     descriptions=[desc])
@@ -303,7 +305,12 @@ class PlatformManager(manager.Manager):
     def _linkToPlatforms(self, source):
         platformIds = self.db.db.platforms.getAllByType(source.contentSourceType)
         for platformId in platformIds:
-            self._linkPlatformPlatformSource(platformId[0],
+            try:
+                platId = platformId[0]
+            except TypeError, e:
+                platId = platformId
+
+            self._linkPlatformPlatformSource(platId,
                     source.contentSourceId)
 
     def _createSourcesInDB(self, dbSources, cfgSources):
