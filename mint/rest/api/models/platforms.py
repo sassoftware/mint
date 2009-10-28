@@ -43,10 +43,15 @@ class SourceType(Model):
     def get_absolute_url(self):
         return ('contentSources', self.contentSourceType)
 
+SourceInstance = PlatformSource
+
+class ContentSourceInstances(Model):
+    class Meta(object):
+        name = 'contentSources'
+    instance = fields.ListField(SourceInstance, displayName='contentSource')
+
 class ContentSources(Model):
     contentSourceType = fields.ListField(SourceType)
-
-SourceInstance = PlatformSource
 
 class SourceInstances(Model):
     class Meta(object):
@@ -83,7 +88,9 @@ class Platform(Model):
     enabled = fields.BooleanField()
     configurable = fields.BooleanField()
     repositoryUrl  = products.RepositoryRestUrlField()
-    contentSources = fields.ModelField(SourceRefs)
+    # contentSources = fields.ModelField(SourceRefs)
+    contentSources = fields.UrlField('platforms.contentSources',
+                                     ['platformId'])
     platformType = fields.CharField()
     platformStatus = fields.UrlField('platforms.status', ['platformId'])
     contentSourceTypes = fields.ModelField(SourceTypeRefs)

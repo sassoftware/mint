@@ -152,15 +152,14 @@ class PlatformManager(manager.Manager):
                         hostname=platformLabel.split('.')[0],
                         enabled=enabled, configurable=configurable,
                         sourceTypes=sourceTypes)
-            sources = self.getSourceInstances(platformId=platId)
-            sourceRefs = []
-            for src in sources.instance:
-                sourceRef = models.SourceRef()
-                sourceRef._contentSourceType = src.contentSourceType
-                sourceRef._shortName = src.shortName
-                sourceRefs.append(sourceRef)
-            plat.contentSources = models.SourceRefs(sourceRefs)
-            # plat.contentSources = sourceRefs
+            # sources = self.getSourceInstances(platformId=platId)
+            # sourceRefs = []
+            # for src in sources.instance:
+                # sourceRef = models.SourceRef()
+                # sourceRef._contentSourceType = src.contentSourceType
+                # sourceRef._shortName = src.shortName
+                # sourceRefs.append(sourceRef)
+            # plat.contentSources = models.SourceRefs(sourceRefs)
 
             availablePlatforms.append(plat)
 
@@ -345,6 +344,8 @@ class PlatformManager(manager.Manager):
         
         if shortName:
             return dbSources[shortName]
+        elif platformId:
+            return models.ContentSourceInstances(dbSources.values())
         else:
             return models.SourceInstances(dbSources.values())
 

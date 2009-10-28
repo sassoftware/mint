@@ -44,15 +44,17 @@ class PlatformTest(restbase.BaseRestTest):
     def _toXml(self, model, client, req):
         return converter.toText('xml', model, client.controller, req)
 
-    def _testGetPlatforms(self, notLoggedIn = False):
+    def _getPlatforms(self, notLoggedIn=False):
         uri = 'platforms'
         kw = {}
         if notLoggedIn:
             kw['username'] = None
         client = self.getRestClient(**kw)
         req, platforms = client.call('GET', uri)
+        return self._toXml(platforms, client, req)
 
-        xml = self._toXml(platforms, client, req)
+    def _testGetPlatforms(self, notLoggedIn=False):
+        xml = self._getPlatforms(notLoggedIn)
         self.assertEquals(platformsXml, xml)
 
     def testGetPlatform(self):
@@ -156,6 +158,17 @@ class PlatformTest(restbase.BaseRestTest):
     def testGetSourceInstance(self):
         xml = self._getSourceInstance('plat2source0')
         self.assertEquals(contentSourceInstanceXml, xml)
+
+    def testGetSourceInstancesByPlatform(self):
+        # we already have a platform, so we must assume they've already been
+        # created in the db.  call getPlatforms to create them for this test.
+        self._getPlatforms()
+
+        uri = '/platforms/1/contentSources'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(contentSourceInstancesByPlatformXml, xml)
 
     def testUpdateSourceInstance(self):
         # GET the source instance first, so it will be created

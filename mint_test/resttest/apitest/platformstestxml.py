@@ -9,10 +9,7 @@ platformsXml = """\
     <enabled>true</enabled>
     <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
-    <contentSources>
-      <contentSource href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0"/>
-      <contentSource href="http://localhost:8000/api/contentSources/rhn/instances/plat2source1"/>
-    </contentSources>
+    <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
     <contentSourceTypes>
       <contentSourceType href="http://localhost:8000/api/contentSources/rhn"/>
@@ -26,10 +23,7 @@ platformsXml = """\
     <enabled>true</enabled>
     <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-2/api"/>
-    <contentSources>
-      <contentSource href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0"/>
-      <contentSource href="http://localhost:8000/api/contentSources/rhn/instances/plat2source1"/>
-    </contentSources>
+    <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
     <contentSourceTypes>
       <contentSourceType href="http://localhost:8000/api/contentSources/rhn"/>
@@ -48,10 +42,7 @@ platformXml = """\
   <enabled>true</enabled>
   <configurable>true</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
-  <contentSources>
-    <contentSource href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0"/>
-    <contentSource href="http://localhost:8000/api/contentSources/rhn/instances/plat2source1"/>
-  </contentSources>
+  <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes>
     <contentSourceType href="http://localhost:8000/api/contentSources/rhn"/>
@@ -215,6 +206,31 @@ contentSourceInstanceXml = """\
 </contentSource>
 """
 
+contentSourceInstancesByPlatformXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSources>
+  <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+    <contentSourceId>1</contentSourceId>
+    <name>Platform 2 Source 0</name>
+    <shortname>plat2source0</shortname>
+    <sourceUrl>https://plat2source0.example.com</sourceUrl>
+    <defaultSource>true</defaultSource>
+    <orderIndex>0</orderIndex>
+    <contentSourceType>rhn</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+  </contentSource>
+  <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source1">
+    <contentSourceId>2</contentSourceId>
+    <name>Platform 2 Source 1</name>
+    <shortname>plat2source1</shortname>
+    <sourceUrl>https://plat2source1.example.com</sourceUrl>
+    <defaultSource>true</defaultSource>
+    <orderIndex>0</orderIndex>
+    <contentSourceType>rhn</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source1/status"/>
+  </contentSource>
+</contentSources>
+"""
 contentSourcePUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">

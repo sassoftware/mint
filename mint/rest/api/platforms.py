@@ -10,20 +10,20 @@ from mint.rest.api import requires
 
 from mint.rest.middleware import auth
 
-class SourceInstancesStatusController(base.BaseController):
+class SourceInstanceStatusController(base.BaseController):
 
     @auth.public
     def index(self, request, source, shortName):
         return self.db.getSourceInstanceStatus(source, shortName)
 
-class SourceInstancesController(base.BaseController):
+class SourceInstanceController(base.BaseController):
     modelName = 'shortName'
 
-    urls = { 'status' : SourceInstancesStatusController }
+    urls = { 'status' : SourceInstanceStatusController }
 
     @auth.public
     def index(self, request, source):
-        return self.db.getSourceInstances(source)
+        return self.db.getSourceInstances(source, None)
 
     @auth.public
     def get(self, request, source, shortName):
@@ -43,7 +43,7 @@ class SourceDescriptorController(base.BaseController):
 class SourceController(base.BaseController):
     modelName = 'source'
 
-    urls = { 'instances' : SourceInstancesController,
+    urls = { 'instances' : SourceInstanceController,
              'descriptor' : SourceDescriptorController }
 
     @auth.public
@@ -75,10 +75,16 @@ class PlatformStatusController(base.BaseController):
     def index(self, request, platformId):
         return self.db.getPlatformStatus(platformId)
 
+class PlatformSourceController(base.BaseController):
+    @auth.public
+    def index(self, request, platformId):
+        return self.db.getSourceInstances(None, platformId)
+
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
-    urls = { 'status' : PlatformStatusController }
+    urls = { 'status' : PlatformStatusController,
+             'contentSources' : PlatformSourceController }
 
     @auth.public
     def index(self, request):
