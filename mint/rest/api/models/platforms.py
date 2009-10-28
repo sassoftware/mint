@@ -20,9 +20,9 @@ class PlatformSource(Model):
     defaultSource = fields.BooleanField()
     orderIndex = fields.IntegerField()
     contentSourceType = fields.CharField()
-    # platformSourceStatus = fields.UrlField(
-                                # 'platforms.sources.status',
-                                # ['platformId', 'shortName'])
+    contentSourceStatus = fields.UrlField(
+                                'contentSources.instances.status',
+                                ['contentSourceType', 'shortName'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 

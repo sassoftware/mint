@@ -186,6 +186,7 @@ contentSourceInstancesXml = """\
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>rhn</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
   </contentSource>
   <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source1">
     <contentSourceId>2</contentSourceId>
@@ -195,6 +196,7 @@ contentSourceInstancesXml = """\
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>rhn</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source1/status"/>
   </contentSource>
 </instances>
 """
@@ -209,6 +211,7 @@ contentSourceInstanceXml = """\
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
   <contentSourceType>rhn</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
 </contentSource>
 """
 
