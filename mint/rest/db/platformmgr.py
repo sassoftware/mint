@@ -473,7 +473,7 @@ class PlatformManager(manager.Manager):
 
     def createPlatformSource(self, source):
         self._createPlatformSource(source)
-        return self.getPlatformSource(source.shortName)            
+        return self.getSourceInstance(shortName=source.shortName)            
 
     def deletePlatformSource(self, platformShortName):
         platformSourceId = \
