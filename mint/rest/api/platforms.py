@@ -80,11 +80,17 @@ class PlatformSourceController(base.BaseController):
     def index(self, request, platformId):
         return self.db.getSourceInstances(None, platformId)
 
+class PlatformSourceTypeController(base.BaseController):
+    @auth.public
+    def index(self, request, platformId):
+        return self.db.getSourcesByPlatform(platformId)
+
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
     urls = { 'status' : PlatformStatusController,
-             'contentSources' : PlatformSourceController }
+             'contentSources' : PlatformSourceController,
+             'contentSourceTypes' : PlatformSourceTypeController }
 
     @auth.public
     def index(self, request):

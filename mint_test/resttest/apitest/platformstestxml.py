@@ -11,9 +11,7 @@ platformsXml = """\
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
     <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
-    <contentSourceTypes>
-      <contentSourceType href="http://localhost:8000/api/contentSources/rhn"/>
-    </contentSourceTypes>
+    <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
   </platform>
   <platform id="http://localhost:8000/api/platforms/2">
     <platformId>2</platformId>
@@ -25,9 +23,7 @@ platformsXml = """\
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-2/api"/>
     <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
-    <contentSourceTypes>
-      <contentSourceType href="http://localhost:8000/api/contentSources/rhn"/>
-    </contentSourceTypes>
+    <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
   </platform>
 </platforms>
 """
@@ -44,9 +40,7 @@ platformXml = """\
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
-  <contentSourceTypes>
-    <contentSourceType href="http://localhost:8000/api/contentSources/rhn"/>
-  </contentSourceTypes>
+  <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
 </platform>
 """
 
@@ -231,6 +225,18 @@ contentSourceInstancesByPlatformXml = """\
   </contentSource>
 </contentSources>
 """
+
+contentSourceTypesByPlatformXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSourceTypes>
+  <contentSourceType id="http://localhost:8000/api/contentSources/rhn">
+    <contentSourceType>rhn</contentSourceType>
+    <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
+    <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
+  </contentSourceType>
+</contentSourceTypes>
+"""
+
 contentSourcePUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">

@@ -91,14 +91,12 @@ class PlatformManager(manager.Manager):
         return results
 
     def _platformModelFactory(self, *args, **kw):
-        sourceTypes = [models.SourceTypeRef(contentSourceType=t) for t in kw['sourceTypes']]
         return models.Platform(platformId=kw['platformId'],
                                label=kw['label'],
                                platformName=kw['platformName'],
                                hostname=kw['hostname'],
                                enabled=kw['enabled'],
-                               configurable=kw['configurable'],
-                               contentSourceTypes=models.SourceTypeRefs(sourceTypes))
+                               configurable=kw['configurable'])
 
     def _createContentSourceType(self, name):
         try:
@@ -132,8 +130,13 @@ class PlatformManager(manager.Manager):
 
     def getPlatforms(self, platformId=None):
         availablePlatforms = []
+        if platformId:
+            platformLabel = self.db.db.platforms.get(platformId)['label']
+        else:
+            platformLabel = None
+
         dbPlatforms = self._getPlatformsFromDB(platformId)
-        cfgPlatforms = self._getConfigPlatforms(platformId)
+        cfgPlatforms = self._getConfigPlatforms(platformLabel)
         changed = self._createPlatformsInDB(dbPlatforms, cfgPlatforms)
 
         # If we created platforms in db, need to refresh dbPlatforms
@@ -145,13 +148,11 @@ class PlatformManager(manager.Manager):
             configurable = dbPlatforms[platformLabel]['configurable']
             platformName = cfgPlatforms[platformLabel]['name']
             enabled = cfgPlatforms[platformLabel]['enabled']
-            sourceTypes = cfgPlatforms[platformLabel]['sourceTypes']
             
             plat = self._platformModelFactory(platformId=platId,
                         label=platformLabel, platformName=platformName,
                         hostname=platformLabel.split('.')[0],
-                        enabled=enabled, configurable=configurable,
-                        sourceTypes=sourceTypes)
+                        enabled=enabled, configurable=configurable)
             # sources = self.getSourceInstances(platformId=platId)
             # sourceRefs = []
             # for src in sources.instance:
@@ -315,6 +316,16 @@ class PlatformManager(manager.Manager):
                 changed = True
 
         return changed                
+
+    def getSourcesByPlatform(self, platformId):
+        platformLabel = self.db.db.platforms.get(platformId)['label']
+        platform = self._getConfigPlatforms(platformLabel).values()[0]
+
+        types = []
+        for sourceType in platform['sourceTypes']:
+            types.append(models.SourceType(contentSourceType=sourceType))
+        
+        return models.SourceTypes(types)
 
     def getSources(self, source=None):
         plats = self._getConfigPlatforms()

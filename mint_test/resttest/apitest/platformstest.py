@@ -58,6 +58,10 @@ class PlatformTest(restbase.BaseRestTest):
         self.assertEquals(platformsXml, xml)
 
     def testGetPlatform(self):
+        # we already have a platform, so we must assume they've already been
+        # created in the db.  call getPlatforms to create them for this test.
+        self._getPlatforms()
+
         uri = '/platforms/1'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
@@ -169,6 +173,17 @@ class PlatformTest(restbase.BaseRestTest):
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceInstancesByPlatformXml, xml)
+    
+    def testGetSourceTypesByPlatform(self):
+        # we already have a platform, so we must assume they've already been
+        # created in the db.  call getPlatforms to create them for this test.
+        self._getPlatforms()
+
+        uri = '/platforms/1/contentSourceTypes'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(contentSourceTypesByPlatformXml, xml)
 
     def testUpdateSourceInstance(self):
         # GET the source instance first, so it will be created

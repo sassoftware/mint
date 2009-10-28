@@ -698,6 +698,10 @@ class Database(DBInterface):
         return self.platformMgr.getSourceInstances(source, shortName)
 
     @readonly
+    def getSourcesByPlatform(self, platformId):
+        return self.platformMgr.getSourcesByPlatform(platformId)
+
+    @readonly
     def getPlatformStatus(self, platformId):
         return self.platformMgr.getPlatformStatus(platformId)
 

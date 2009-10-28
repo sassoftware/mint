@@ -43,6 +43,11 @@ class SourceType(Model):
     def get_absolute_url(self):
         return ('contentSources', self.contentSourceType)
 
+class SourceTypes(Model):
+    class Meta(object):
+        name = 'contentSourceTypes'
+    contentSourceTypes = fields.ListField(SourceType, displayName='contentSourceType')
+
 SourceInstance = PlatformSource
 
 class ContentSourceInstances(Model):
@@ -93,7 +98,9 @@ class Platform(Model):
                                      ['platformId'])
     platformType = fields.CharField()
     platformStatus = fields.UrlField('platforms.status', ['platformId'])
-    contentSourceTypes = fields.ModelField(SourceTypeRefs)
+    # contentSourceTypes = fields.ModelField(SourceTypeRefs)
+    contentSourceTypes = fields.UrlField('platforms.contentSourceTypes',
+                                         ['platformId'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
