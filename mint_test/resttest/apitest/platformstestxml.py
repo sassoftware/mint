@@ -107,9 +107,9 @@ sourceDescriptorXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
   <metadata>
-    <displayName>rhn</displayName>
+    <displayName>Red Hat Network</displayName>
     <descriptions>
-      <desc>Configure rhn</desc>
+      <desc>Configure Red Hat Network</desc>
     </descriptions>
   </metadata>
   <dataFields>
@@ -295,4 +295,30 @@ platformPUTXml = """\
   <platformMode>mirrored</platformMode>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
 </platform>
+"""
+
+sourceInstancePOSTXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSource>
+  <name>Platform 2 Source 2</name>
+  <shortname>plat2source2</shortname>
+  <sourceUrl>https://plat2source2.example.com</sourceUrl>
+  <defaultSource>false</defaultSource>
+  <orderIndex>1</orderIndex>
+  <contentSourceType>rhn</contentSourceType>
+</contentSource>
+"""
+
+sourceInstancePOSTRespXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source2">
+  <contentSourceId>1</contentSourceId>
+  <name>Platform 2 Source 2</name>
+  <shortname>plat2source2</shortname>
+  <sourceUrl>https://plat2source2.example.com</sourceUrl>
+  <defaultSource>false</defaultSource>
+  <orderIndex>1</orderIndex>
+  <contentSourceType>rhn</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source2/status"/>
+</contentSource>
 """
