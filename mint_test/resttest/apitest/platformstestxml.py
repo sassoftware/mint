@@ -91,31 +91,31 @@ platformSourceXml = """\
 </platformSource>
 """
 
-platformSourceStatusXml = """\
+contentSourceStatusXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<platformSourceStatus>
+<contentSourceStatus>
   <connected>false</connected>
   <valid>false</valid>
   <message>Username, password, and source url must be provided to check a source's status.</message>
-</platformSourceStatus>
+</contentSourceStatus>
 """
 
-platformSourceStatusDataXml = """\
+contentSourceStatusDataXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<platformSourceStatus>
+<contentSourceStatus>
   <connected>true</connected>
   <valid>true</valid>
   <message>Validated Successfully</message>
-</platformSourceStatus>
+</contentSourceStatus>
 """
 
-platformSourceStatusDataFailXml = """\
+contentSourceStatusDataFailXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<platformSourceStatus>
+<contentSourceStatus>
   <connected>true</connected>
   <valid>false</valid>
   <message>Validation Failed</message>
-</platformSourceStatus>
+</contentSourceStatus>
 """
 
 sourceDescriptorXml = """\

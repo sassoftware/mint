@@ -351,24 +351,25 @@ class PlatformManager(manager.Manager):
     def getSourceInstance(self, source=None, shortName=None):
         return self.getSourceInstances(source, shortName)
 
+    def getSourceInstanceStatus(self, shortName):
+        source = self.getSourceInstance(shortName=shortName)
+        return self.getPlatformSourceStatus(source)
+
     def getPlatformSource(self, sourceShortName):
         return self.getPlatformSources(None, sourceShortName)
 
     def getPlatformStatus(self, platformId):
         pass
 
-    def getPlatformSourceStatus(self, platformSourceShortName):
-        platformSourceId = \
-            self.db.db.platformSources.getIdFromShortName(platformSourceShortName)
-        platformSource = self.getPlatformSource(platformSourceShortName)
-        if not platformSource.username or \
-           not platformSource.password or \
-           not platformSource.sourceUrl:
+    def getPlatformSourceStatus(self, source):
+        if not source.username or \
+           not source.password or \
+           not source.sourceUrl:
             status = models.PlatformSourceStatus(connected=False, valid=False, 
                 message="Username, password, and source url must be provided to check a source's status.")
         else:
-            ret = self._checkRHNSourceStatus(platformSource.sourceUrl,
-                        platformSource.username, platformSource.password)
+            ret = self._checkRHNSourceStatus(source.sourceUrl,
+                        source.username, source.password)
             status = models.PlatformSourceStatus(connected=ret[0],
                                 valid=ret[1], message=ret[2])
 

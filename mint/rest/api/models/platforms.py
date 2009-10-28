@@ -3,6 +3,9 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class PlatformSourceStatus(Model):
+    class Meta(object):
+        name = 'contentSourceStatus'
+
     connected = fields.BooleanField()
     valid = fields.BooleanField()
     message = fields.CharField()

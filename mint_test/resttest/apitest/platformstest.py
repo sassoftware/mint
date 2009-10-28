@@ -84,48 +84,40 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(platformSourceXml, xml)
 
-    def XXXtestGetPlatformSourceStatusNoData(self):
-        # TODO: can be removed once the code is refactored
-        # Need to get platforms first to trigger creation in the db
-        self.testGetPlatforms()
-
-        uri = '/platforms/1/sources/plat1source/status'
+    def testGetContentSourceStatusNoData(self):
+        uri = '/contentSources/rhn/instances/plat2source0/status'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(platformSourceStatusXml, xml)
+        self.assertEquals(contentSourceStatusXml, xml)
 
-    def XXXtestGetPlatformSourceStatusData(self):
-        # TODO: can be removed once the code is refactored
-        # Need to get platforms first to trigger creation in the db
-        self.testGetPlatforms()
-
+    def testGetContentSourceStatusData(self):
         source = models.PlatformSource()
         source.sourceUrl = 'https://example.com'
         source.username = 'foousername'
         source.password = 'foopassword'
 
         mock.mockFunctionOnce(platformmgr.PlatformManager,
-                              'listPlatformSources', source)
+                              'getSourceInstance', source)
         mock.mockFunctionOnce(platformmgr.PlatformManager,
                               '_checkRHNSourceStatus',
                               (True, True, 'Validated Successfully'))
 
-        uri = '/platforms/1/sources/plat1source/status'
+        uri = '/contentSources/rhn/instances/plat2source0/status'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(platformSourceStatusDataXml, xml)
+        self.assertEquals(contentSourceStatusDataXml, xml)
 
         # Now try and trigger a failure.
         mock.mockFunctionOnce(platformmgr.PlatformManager,
-                              'listPlatformSources', source)
+                              'getSourceInstance', source)
         mock.mockFunctionOnce(platformmgr.PlatformManager,
                               '_checkRHNSourceStatus',
                               (True, False, 'Validation Failed'))
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(platformSourceStatusDataFailXml, xml)
+        self.assertEquals(contentSourceStatusDataFailXml, xml)
 
     def testGetSourceDescriptor(self):
         uri = '/contentSources/rhn/descriptor'
