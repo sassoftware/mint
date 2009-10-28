@@ -412,7 +412,7 @@ class PlatformManager(manager.Manager):
         VALUES (?, '%s', '%s', 3)
         """
         selSql = """
-        SELECT ?
+        SELECT value
         FROM platformSourceData
         WHERE 
             name = ?
@@ -424,7 +424,7 @@ class PlatformManager(manager.Manager):
         for field in ['username', 'password', 'sourceUrl']:
             newVal = getattr(sourceInstance, field)
             if getattr(oldSource, field) != newVal:
-                row = cu.execute(selSql, 'value', field, sourceInstance.contentSourceId)
+                row = cu.execute(selSql, field, sourceInstance.contentSourceId)
                 if row.fetchall():
                     cu.execute(updSql, newVal, field, sourceInstance.contentSourceId)
                 else:
