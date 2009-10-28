@@ -161,7 +161,7 @@ contentSourcesXml = """\
   <contentSourceType id="http://localhost:8000/api/contentSources/rhn">
     <contentSourceType>rhn</contentSourceType>
     <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
-    <descriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
+    <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
   </contentSourceType>
 </contentSources>
 """
@@ -171,7 +171,7 @@ contentSourceXml = """\
 <contentSourceType id="http://localhost:8000/api/contentSources/rhn">
   <contentSourceType>rhn</contentSourceType>
   <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
-  <descriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
+  <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
 </contentSourceType>
 """
 
