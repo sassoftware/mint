@@ -147,29 +147,31 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceInstancesXml, xml)
 
-    def testGetSourceInstance(self):
-        uri = '/contentSources/rhn/instances/plat2source0'
+    def _getSourceInstance(self, name):
+        uri = '/contentSources/rhn/instances/%s' % name
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
-        xml = self._toXml(platform, client, req)
+        return self._toXml(platform, client, req)
+
+    def testGetSourceInstance(self):
+        xml = self._getSourceInstance('plat2source0')
         self.assertEquals(contentSourceInstanceXml, xml)
 
-    def XXXtestPutPlatformSource(self):
-        # TODO: can be removed once the code is refactored
-        # Need to get platforms first to trigger creation in the db
-        self.testGetPlatforms()
+    def testUpdateSourceInstance(self):
+        # GET the source instance first, so it will be created
+        self._getSourceInstance('plat2source0')
 
-        uri = '/platforms/1/sources/plat1source'
+        uri = '/contentSources/rhn/instances/plat2source0'
         client = self.getRestClient()
-        req, platform = client.call('PUT', uri, body=platformSourcePUTXml)
+        req, platform = client.call('PUT', uri, body=contentSourcePUTXml)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(platformSourcePUTXml, xml)
+        self.assertEquals(contentSourcePUTXml, xml)
 
         # Now that username/password is set in db, PUT again to test an 
         # update.
-        req, platform = client.call('PUT', uri, body=platformSourcePUTXml2)
+        req, platform = client.call('PUT', uri, body=contentSourcePUTXml2)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(platformSourcePUTXml2, xml)
+        self.assertEquals(contentSourcePUTXml2, xml)
 
     def XXXtestPutPlatform(self):
         # TODO: can be removed once the code is refactored

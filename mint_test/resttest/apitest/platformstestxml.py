@@ -215,38 +215,36 @@ contentSourceInstanceXml = """\
 </contentSource>
 """
 
-platformSourcePUTXml = """\
+contentSourcePUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<platformSource id="http://localhost:8000/api/platforms/1/sources/plat1source">
-  <platformSourceId>1</platformSourceId>
-  <name>Platform 1 Source</name>
-  <platformId>1</platformId>
-  <shortname>plat1source</shortname>
+<contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+  <contentSourceId>1</contentSourceId>
+  <name>Platform 2 Source 0</name>
+  <shortname>plat2source0</shortname>
   <sourceUrl>http://plat1source.example.com</sourceUrl>
   <username>foousername</username>
   <password>foopassword</password>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
-  <platformSourceStatus href="http://localhost:8000/api/platforms/1/sources/plat1source/status"/>
-  <configDescriptor href="http://localhost:8000/api/platforms/1/sources/plat1source/descriptor"/>
-</platformSource>
+  <contentSourceType>rhn</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+</contentSource>
 """
 
-platformSourcePUTXml2 = """\
+contentSourcePUTXml2 = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<platformSource id="http://localhost:8000/api/platforms/1/sources/plat1source">
-  <platformSourceId>1</platformSourceId>
-  <name>Platform 1 Source</name>
-  <platformId>1</platformId>
-  <shortname>plat1source</shortname>
+<contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+  <contentSourceId>1</contentSourceId>
+  <name>Platform 2 Source 0</name>
+  <shortname>plat2source0</shortname>
   <sourceUrl>http://plat1source.example.com</sourceUrl>
   <username>foousername2</username>
   <password>foopassword2</password>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
-  <platformSourceStatus href="http://localhost:8000/api/platforms/1/sources/plat1source/status"/>
-  <configDescriptor href="http://localhost:8000/api/platforms/1/sources/plat1source/descriptor"/>
-</platformSource>
+  <contentSourceType>rhn</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+</contentSource>
 """
 
 platformPUTXml = """\

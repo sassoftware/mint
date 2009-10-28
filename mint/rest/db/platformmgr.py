@@ -386,9 +386,7 @@ class PlatformManager(manager.Manager):
         except xmlrpclib.Fault, e:
             return (True, False, e.faultString)
 
-    def updatePlatformSource(self, platformId, platformSourceShortName, source):
-        platformSourceId = \
-            self.db.db.platformSources.getIdFromShortName(platformSourceShortName)
+    def updateSourceInstance(self, shortName, sourceInstance):
         cu = self.db.cursor()
         updSql = """
         UPDATE platformSourceData
@@ -409,18 +407,18 @@ class PlatformManager(manager.Manager):
             AND platformSourceId = ?
         """
 
-        oldSource = self.getPlatformSource(platformSourceShortName)
+        oldSource = self.getSourceInstance(shortName=shortName)
 
         for field in ['username', 'password', 'sourceUrl']:
-            newVal = getattr(source, field)
+            newVal = getattr(sourceInstance, field)
             if getattr(oldSource, field) != newVal:
-                row = cu.execute(selSql, 'value', field, platformSourceId)
+                row = cu.execute(selSql, 'value', field, sourceInstance.contentSourceId)
                 if row.fetchall():
-                    cu.execute(updSql, newVal, field, platformSourceId)
+                    cu.execute(updSql, newVal, field, sourceInstance.contentSourceId)
                 else:
-                    cu.execute(insSql % (field, newVal), platformSourceId)
+                    cu.execute(insSql % (field, newVal), sourceInstance.contentSourceId)
 
-        return self.getPlatformSource(platformSourceShortName)                    
+        return self.getSourceInstance(shortName=shortName)
 
     def updatePlatform(self, platformId, platform):
         cu = self.db.cursor()

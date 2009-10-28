@@ -706,9 +706,9 @@ class Database(DBInterface):
         return self.platformMgr.getSourceInstanceStatus(shortName)
 
     @commitafter
-    def updatePlatformSource(self, platformId, platformSourceShortName, source):
-        return self.platformMgr.updatePlatformSource(platformId, 
-                        platformSourceShortName, source)
+    def updateSourceInstance(self, shortName, sourceInstance):
+        return self.platformMgr.updateSourceInstance(shortName,
+                                    sourceInstance)
 
     @commitafter
     def updatePlatform(self, platformId, platform):

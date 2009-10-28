@@ -29,6 +29,11 @@ class SourceInstancesController(base.BaseController):
     def get(self, request, source, shortName):
         return self.db.getSourceInstance(source, shortName)
 
+    @auth.public
+    @requires('sourceInstance', models.SourceInstance)
+    def update(self, request, source, shortName, sourceInstance):
+        return self.db.updateSourceInstance(shortName, sourceInstance)
+
 class SourceDescriptorController(base.BaseController):
     
     @auth.public
