@@ -201,11 +201,15 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourcePUTXml2, xml)
 
-    def XXXtestPutPlatform(self):
-        # TODO: can be removed once the code is refactored
-        # Need to get platforms first to trigger creation in the db
-        self.testGetPlatforms()
+    def testCreateSourceInstance(self):
+        uri = '/contentSources/rhn/instances/'
+        client = self.getRestClient()
+        req, platform = client.call('POST', uri, 
+                            body=sourceInstancePOSTXml)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(sourceInstancePOSTRespXml, xml)
 
+    def XXXtestPutPlatform(self):
         uri = '/platforms/1'
         client = self.getRestClient()
         req, platform = client.call('PUT', uri, body=platformPUTXml)

@@ -719,8 +719,8 @@ class Database(DBInterface):
         return self.platformMgr.updatePlatform(platformId, platform)
 
     @commitafter
-    def createPlatformSource(self, platformId, source):
-        return self.platformMgr.createPlatformSource(platformId, source)
+    def createPlatformSource(self, source):
+        return self.platformMgr.createPlatformSource(source)
 
     @commitafter
     def deletePlatformSource(self, platformSourceShortName):
