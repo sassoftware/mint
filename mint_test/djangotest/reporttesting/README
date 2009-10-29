@@ -1,0 +1,6 @@
+Using Django is causing come complications in using the existing
+testsuite utilities.  Django has its own testsuite and harness and I
+have included the command to run:
+
+PYTHONPATH=~/hg/products/rbuilder/trunk/mint python
+mint/django_rest/manage.py test rbuilder reporting
