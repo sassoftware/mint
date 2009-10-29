@@ -205,9 +205,17 @@ class PlatformTest(restbase.BaseRestTest):
         uri = '/contentSources/rhn/instances/'
         client = self.getRestClient()
         req, platform = client.call('POST', uri, 
-                            body=sourceInstancePOSTXml)
+                            body=sourcePOSTXml)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(sourceInstancePOSTRespXml, xml)
+        self.assertEquals(sourcePOSTRespXml, xml)
+
+    def testCreateSource2(self):
+        uri = '/contentSources/satellite/instances/'
+        client = self.getRestClient()
+        req, platform = client.call('POST', uri, 
+                            body=sourcePOST2Xml)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(sourcePOSTResp2Xml, xml)
 
     def XXXtestPutPlatform(self):
         uri = '/platforms/1'

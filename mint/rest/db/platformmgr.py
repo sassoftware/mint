@@ -98,7 +98,7 @@ class PlatformManager(manager.Manager):
                                enabled=kw['enabled'],
                                configurable=kw['configurable'])
 
-    def _createContentSourceType(self, name):
+    def _createSourceType(self, name):
         try:
             typeId = self.db.db.contentSourceTypes.getByName(name)
         except mint_error.ItemNotFound, e:
@@ -112,7 +112,7 @@ class PlatformManager(manager.Manager):
                                         configurable=configurable)
 
         for sourceType in sourceTypes:
-            typeId = self._createContentSourceType(sourceType)
+            typeId = self._createSourceType(sourceType)
             self.db.db.platformsContentSourceTypes.new(platformId=platformId,
                             contentSourceTypeId=typeId)
 
@@ -434,7 +434,7 @@ class PlatformManager(manager.Manager):
 
     def _createSource(self, source):
         try:
-            typeId = self._createContentSourceType(source.contentSourceType)
+            typeId = self._createSourceType(source.contentSourceType)
             sourceId = self.db.db.platformSources.new(
                     name=source.name,
                     shortName=source.shortName,

@@ -297,7 +297,7 @@ platformPUTXml = """\
 </platform>
 """
 
-sourceInstancePOSTXml = """\
+sourcePOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource>
   <name>Platform 2 Source 2</name>
@@ -309,7 +309,7 @@ sourceInstancePOSTXml = """\
 </contentSource>
 """
 
-sourceInstancePOSTRespXml = """\
+sourcePOSTRespXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source2">
   <contentSourceId>1</contentSourceId>
@@ -320,5 +320,31 @@ sourceInstancePOSTRespXml = """\
   <orderIndex>1</orderIndex>
   <contentSourceType>rhn</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source2/status"/>
+</contentSource>
+"""
+
+sourcePOST2Xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSource>
+  <name>Platform 2 Source 2</name>
+  <shortname>plat2source2</shortname>
+  <sourceUrl>https://plat2source2.example.com</sourceUrl>
+  <defaultSource>false</defaultSource>
+  <orderIndex>1</orderIndex>
+  <contentSourceType>satellite</contentSourceType>
+</contentSource>
+"""
+
+sourcePOSTResp2Xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSource id="http://localhost:8000/api/contentSources/satellite/instances/plat2source2">
+  <contentSourceId>1</contentSourceId>
+  <name>Platform 2 Source 2</name>
+  <shortname>plat2source2</shortname>
+  <sourceUrl>https://plat2source2.example.com</sourceUrl>
+  <defaultSource>false</defaultSource>
+  <orderIndex>1</orderIndex>
+  <contentSourceType>satellite</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/status"/>
 </contentSource>
 """
