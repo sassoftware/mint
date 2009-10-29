@@ -125,7 +125,6 @@ def getRepository(projectName, repName, cfg,
     nscfg.requireSigs = requireSigs
     nscfg.serializeCommits = cfg.serializeCommits
     nscfg.readOnlyRepository = cfg.readOnlyRepositories
-    nscfg.capsuleServerUrl = indexerUrl
 
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
@@ -310,6 +309,8 @@ class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
             self._getRestDb())
 
     def _setCapsuleServerUrl(self):
+        # XXX FIXME reenable after we have the right content
+        return
         restdb = self._getRestDb()
         indexer = restdb.capsuleMgr.getIndexer()
         if not list(indexer.iterSources()):

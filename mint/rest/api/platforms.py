@@ -34,6 +34,11 @@ class SourceInstanceController(base.BaseController):
     def update(self, request, source, shortName, sourceInstance):
         return self.db.updateSourceInstance(shortName, sourceInstance)
 
+    @auth.public
+    @requires('sourceInstance', models.SourceInstance)
+    def create(self, request, source, sourceInstance):
+        return self.db.createPlatformSource(sourceInstance)
+
 class SourceDescriptorController(base.BaseController):
     
     @auth.public
@@ -53,17 +58,6 @@ class SourceController(base.BaseController):
     @auth.public
     def get(self, request, source):
         return self.db.getSource(source)
-
-    @auth.public
-    @requires('source', models.PlatformSource)
-    def create(self, request, platformId, source):
-        return self.db.createPlatformSource(platformId, source)
-
-    @auth.public
-    @requires('source', models.PlatformSource)
-    def update(self, request, platformId, shortName, source):
-        return self.db.updatePlatformSource(platformId, 
-                    shortName, source)
 
     @auth.public        
     def destroy(self, request, platformId, shortName):

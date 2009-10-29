@@ -374,9 +374,6 @@ class PlatformManager(manager.Manager):
         source = self.getSourceInstance(shortName=shortName)
         return self.getPlatformSourceStatus(source)
 
-    def getPlatformSource(self, sourceShortName):
-        return self.getPlatformSources(None, sourceShortName)
-
     def getPlatformStatus(self, platformId):
         pass
 
@@ -473,7 +470,7 @@ class PlatformManager(manager.Manager):
 
     def createPlatformSource(self, source):
         self._createPlatformSource(source)
-        return self.getPlatformSource(source.shortName)            
+        return self.getSourceInstance(shortName=source.shortName)
 
     def deletePlatformSource(self, platformShortName):
         platformSourceId = \

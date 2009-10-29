@@ -41,13 +41,14 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
             "WHERE label = ?", platformLabel).fetchone()[0]
         class Source(object):
             name = 'sourceName'
+            contentSourceType = 'rhn'
             shortName = 'sourceShortName'
             defaultSource = 1
             orderIndex = 1
             username = 'JeanValjean'
             password = 'SuperSikrit'
             sourceUrl = 'ignoremereally'
-        db.platformMgr.createPlatformSource(platformId, Source())
+        db.platformMgr.createPlatformSource(Source())
         db.commit()
 
     def indexer(self):
