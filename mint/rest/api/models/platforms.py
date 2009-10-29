@@ -2,7 +2,7 @@ import products
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
-class PlatformSourceStatus(Model):
+class SourceStatus(Model):
     class Meta(object):
         name = 'contentSourceStatus'
 
@@ -10,7 +10,7 @@ class PlatformSourceStatus(Model):
     valid = fields.BooleanField()
     message = fields.CharField()
 
-class PlatformSource(Model):
+class Source(Model):
     class Meta(object):
         name = 'contentSource'
 
@@ -47,8 +47,6 @@ class SourceTypes(Model):
     class Meta(object):
         name = 'contentSourceTypes'
     contentSourceTypes = fields.ListField(SourceType, displayName='contentSourceType')
-
-Source = PlatformSource
 
 class ContentSourceInstances(Model):
     class Meta(object):

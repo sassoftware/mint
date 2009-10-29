@@ -39,6 +39,10 @@ class SourceController(base.BaseController):
     def create(self, request, sourceType, source):
         return self.db.createSource(source)
 
+    @auth.public
+    def delete(self, request, sourceType, shortName):
+        return self.db.deleteSource(shortName)
+
 class SourceDescriptorController(base.BaseController):
     
     @auth.public
@@ -58,10 +62,6 @@ class SourceTypeController(base.BaseController):
     @auth.public
     def get(self, request, sourceType):
         return self.db.getSourceType(sourceType)
-
-    @auth.public        
-    def destroy(self, request, sourceType):
-        return self.db.deletePlatformSource(sourceType)
 
 class PlatformStatusController(base.BaseController):
 

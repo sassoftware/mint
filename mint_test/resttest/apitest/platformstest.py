@@ -98,7 +98,7 @@ class PlatformTest(restbase.BaseRestTest):
         self.assertEquals(contentSourceStatusXml, xml)
 
     def testGetContentSourceStatusData(self):
-        source = models.PlatformSource()
+        source = models.Source()
         source.sourceUrl = 'https://example.com'
         source.username = 'foousername'
         source.password = 'foopassword'

@@ -273,7 +273,7 @@ class PlatformManager(manager.Manager):
     def _getCfgSources(self, source=None, sourceShortName=None):        
         sources = {}
         for i, cfgShortName in enumerate(self.cfg.platformSources):
-            source = models.PlatformSource(shortName=cfgShortName,
+            source = models.Source(shortName=cfgShortName,
                                    sourceUrl=self.cfg.platformSourceUrls[i],
                                    name=self.cfg.platformSourceNames[i],
                                    contentSourceType=self.cfg.platformSourceTypes[i],
@@ -370,12 +370,12 @@ class PlatformManager(manager.Manager):
         if not source.username or \
            not source.password or \
            not source.sourceUrl:
-            status = models.PlatformSourceStatus(connected=False, valid=False, 
+            status = models.SourceStatus(connected=False, valid=False, 
                 message="Username, password, and source url must be provided to check a source's status.")
         else:
             ret = self._checkRHNSourceStatus(source.sourceUrl,
                         source.username, source.password)
-            status = models.PlatformSourceStatus(connected=ret[0],
+            status = models.SourceStatus(connected=ret[0],
                                 valid=ret[1], message=ret[2])
 
         return status
