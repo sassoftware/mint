@@ -37,7 +37,7 @@ class SourceController(base.BaseController):
     @auth.public
     @requires('source', models.Source)
     def create(self, request, sourceType, source):
-        return self.db.createPlatformSource(source)
+        return self.db.createSource(source)
 
 class SourceDescriptorController(base.BaseController):
     

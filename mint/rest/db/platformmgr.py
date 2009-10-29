@@ -195,7 +195,7 @@ class PlatformManager(manager.Manager):
         return descriptor
 
     
-    def _getPlatformSourceData(self, platformSourceId):
+    def _getSourceData(self, sourceId):
         sql = """
             SELECT
                 platformSourceData.name,
@@ -206,10 +206,10 @@ class PlatformManager(manager.Manager):
                 platformSourceData.platformSourceId = ?
         """
         cu = self.db.cursor()
-        cu.execute(sql, platformSourceId)
+        cu.execute(sql, sourceId)
         return cu
 
-    def _platformSourceModelFactory(self, row):
+    def _sourceModelFactory(self, row):
         plat = models.Source(
                         contentSourceId=str(row['platformSourceId']),
                         name=row['name'],
@@ -218,7 +218,7 @@ class PlatformManager(manager.Manager):
                         orderIndex=row['orderIndex'],
                         contentSourceType=row['contentSourceType'])
 
-        data = self._getPlatformSourceData(row['platformSourceId'])
+        data = self._getSourceData(row['platformSourceId'])
 
         for row in data:
             setattr(plat, row['name'], row['value'])
@@ -265,7 +265,7 @@ class PlatformManager(manager.Manager):
             
         sources = {}
         for row in cu:
-            source = self._platformSourceModelFactory(row)
+            source = self._sourceModelFactory(row)
             sources[source.shortName] = source
 
         return sources            
@@ -290,9 +290,9 @@ class PlatformManager(manager.Manager):
 
         return sources            
 
-    def _linkPlatformPlatformSource(self, platformId, platformSourceId):
+    def _linkPlatformContentSource(self, platformId, sourceId):
         self.db.db.platformsPlatformSources.new(platformId=platformId,
-                    platformSourceId=platformSourceId)
+                    platformSourceId=sourceId)
 
     def _linkToPlatforms(self, source):
         platformIds = self.db.db.platforms.getAllByType(source.contentSourceType)
@@ -302,14 +302,14 @@ class PlatformManager(manager.Manager):
             except TypeError, e:
                 platId = platformId
 
-            self._linkPlatformPlatformSource(platId,
+            self._linkPlatformContentSource(platId,
                     source.contentSourceId)
 
     def _createSourcesInDB(self, dbSources, cfgSources):
         changed = False
         for cfgSource in cfgSources:
             if not dbSources.has_key(cfgSource):
-                sourceId = self._createPlatformSource(cfgSources[cfgSource])
+                sourceId = self._createSource(cfgSources[cfgSource])
                 cfgSources[cfgSource].contentSourceId = sourceId
                 self._linkToPlatforms(cfgSources[cfgSource])
                 changed = True
@@ -362,14 +362,11 @@ class PlatformManager(manager.Manager):
     def getSource(self, source=None, shortName=None):
         return self.getSources(source, shortName)
 
-    def getSourceStatus(self, shortName):
-        source = self.getSource(shortName=shortName)
-        return self.getPlatformSourceStatus(source)
-
     def getPlatformStatus(self, platformId):
         pass
 
-    def getPlatformSourceStatus(self, source):
+    def getSourceStatus(self, shortName):
+        source = self.getSource(shortName=shortName)
         if not source.username or \
            not source.password or \
            not source.sourceUrl:
@@ -435,10 +432,10 @@ class PlatformManager(manager.Manager):
         cu.execute(sql, platformId)
         return self.getPlatform(platformId)
 
-    def _createPlatformSource(self, source):
+    def _createSource(self, source):
         try:
             typeId = self._createContentSourceType(source.contentSourceType)
-            platformSourceId = self.db.db.platformSources.new(
+            sourceId = self.db.db.platformSources.new(
                     name=source.name,
                     shortName=source.shortName,
                     defaultSource=source.defaultSource,
@@ -456,18 +453,17 @@ class PlatformManager(manager.Manager):
         for field in ['username', 'password', 'sourceUrl']:
             value = getattr(source, field, None)
             if value:
-                cu.execute(sql % (platformSourceId, field, value))
+                cu.execute(sql % (sourceId, field, value))
 
-        return platformSourceId          
+        return sourceId          
 
-    def createPlatformSource(self, source):
-        self._createPlatformSource(source)
+    def createSource(self, source):
+        self._createSource(source)
         return self.getSource(shortName=source.shortName)
 
-    def deletePlatformSource(self, platformShortName):
-        platformSourceId = \
-            self.db.db.platformSources.getIdFromShortName(platformSourceShortName)
-        self.db.db.platformSources.delete(platformSourceId)
+    def deleteSource(self, shortName):
+        sourceId = self.db.db.platformSources.getIdFromShortName(shortName)
+        self.db.db.platformSources.delete(sourceId)
 
 class PlatformNameCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, reposMgr):

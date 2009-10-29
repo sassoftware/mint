@@ -719,12 +719,12 @@ class Database(DBInterface):
         return self.platformMgr.updatePlatform(platformId, platform)
 
     @commitafter
-    def createPlatformSource(self, source):
-        return self.platformMgr.createPlatformSource(source)
+    def createSource(self, source):
+        return self.platformMgr.createSource(source)
 
     @commitafter
-    def deletePlatformSource(self, platformSourceShortName):
-        return self.platformMgr.deletePlatformSource(platformSourceShortName)
+    def deleteSource(self, shortName):
+        return self.platformMgr.deleteSource(shortName)
 
     # doesn't actually commit anything to the database, instead
     # it pushes to the entitlement server.
