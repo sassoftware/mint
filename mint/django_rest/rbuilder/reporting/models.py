@@ -24,7 +24,8 @@ class ReportType(models.Model):
         self.id = rbuilder.IDElement(request.build_absolute_uri("./" +self._uri))
         self.timeCreated = self._timecreated.to_eng_string()
         self.timeModified = self._timeupdated.to_eng_string()
-        self.creator = rbuilder.LinkElement(request.build_absolute_uri("../../users/" + self._creator.username), self._creator.username)
+        if self._creator is not None:
+            self.creator = rbuilder.LinkElement(request.build_absolute_uri("../../users/" + self._creator.username), self._creator.username)
         self.active = bool(self._active)
         self.data = rbuilder.LinkElement(request.build_absolute_uri("./" + self._uri + "/data/"))
         self.descriptor = rbuilder.LinkElement(request.build_absolute_uri("./" + self._uri + "/descriptor/"))

@@ -10,7 +10,7 @@
 from django.db import models
 
 class Users(models.Model):
-    userid = models.IntegerField(primary_key=True)
+    userid = models.AutoField(primary_key=True)
     username = models.CharField(unique=True, max_length=128)
     fullname = models.CharField(max_length=128)
     salt = models.TextField() # This field type is a guess.
@@ -21,6 +21,7 @@ class Users(models.Model):
     timeaccessed = models.DecimalField(max_digits=14, decimal_places=3)
     active = models.SmallIntegerField()
     blurb = models.TextField()
+    
     class Meta:
         db_table = u'users'
         
@@ -28,7 +29,7 @@ class Users(models.Model):
         return self.username
 
 class Products(models.Model):
-    productId = models.IntegerField(primary_key=True, db_column='projectid', blank=True)
+    productId = models.AutoField(primary_key=True, db_column='projectid', blank=True)
     hostname = models.CharField(unique=True, max_length=63)
     name = models.CharField(unique=True, max_length=128)
     namespace = models.CharField(max_length=16)
@@ -64,7 +65,7 @@ class Members(models.Model):
         db_table = u'projectusers'
         
 class Versions(models.Model):
-    productVersionId = models.IntegerField(primary_key=True)
+    productVersionId = models.AutoField(primary_key=True)
     productId = models.ForeignKey(Products, db_column='projectid')
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
@@ -78,7 +79,7 @@ class Versions(models.Model):
         
 
 class Releases(models.Model):
-    pubreleaseid = models.IntegerField(primary_key=True)
+    pubreleaseid = models.AutoField(primary_key=True)
     productId = models.ForeignKey(Products, db_column='projectid', related_name='releasesProduct')
     name = models.CharField(max_length=255)
     version = models.CharField(max_length=32)
@@ -98,9 +99,9 @@ class Releases(models.Model):
         return self.name
                
 class Images(models.Model):
-    imageId = models.IntegerField(primary_key=True, db_column='buildid')
+    imageId = models.AutoField(primary_key=True, db_column='buildid')
     productId = models.ForeignKey(Products, db_column='projectid')
-    pubreleaseid = models.ForeignKey(Releases, db_column='pubreleaseid')
+    pubreleaseid = models.ForeignKey(Releases, null=True, db_column='pubreleaseid')
     buildtype = models.IntegerField()
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -110,8 +111,8 @@ class Images(models.Model):
     trovelastchanged = models.DecimalField(max_digits=14, decimal_places=3)
     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
     createdby = models.ForeignKey(Users, db_column='createdby', related_name='imageCreator')
-    timeupdated = models.DecimalField(max_digits=14, decimal_places=3)
-    updatedby = models.ForeignKey(Users, db_column='updatedby', related_name='imageUpdater')
+    timeupdated = models.DecimalField(max_digits=14, decimal_places=3, null=True)
+    updatedby = models.ForeignKey(Users, db_column='updatedby', related_name='imageUpdater', null=True)
     deleted = models.SmallIntegerField()
     buildcount = models.IntegerField()
     productversionid = models.ForeignKey(Versions, db_column='productversionid')

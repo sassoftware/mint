@@ -69,9 +69,8 @@ USE_ETAGS=True
 ROOT_URLCONF = 'mint.django_rest.urls'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
+    '/srv/code/products/rbuilder/trunk/mint/mint/django_rest/templates/',
+    './mint/django_rest/templates/',
 )
 
 INSTALLED_APPS = (
@@ -79,7 +78,8 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'django.contrib.admin',
+#    'django.contrib.admin',
+    'mint.django_rest.rbuilder',
     'mint.django_rest.rbuilder.reporting',
 )
 

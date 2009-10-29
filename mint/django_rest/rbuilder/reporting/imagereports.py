@@ -16,10 +16,10 @@ import re
 class ImagesPerProduct(Resource):
     
     def _getEpoch(self, kwargs):
-        year = (('year' in kwargs and kwargs['year']) or 1)
-        month = (('month' in kwargs and kwargs['month']) or 1)
-        day = (('day' in kwargs and kwargs['day']) or 1)
-        hour = (('hour' in kwargs and kwargs['hour']) or 0)
+        year = int((('year' in kwargs and kwargs['year']) or 1))
+        month = int((('month' in kwargs and kwargs['month']) or 1))
+        day = int((('day' in kwargs and kwargs['day']) or 1))
+        hour = int((('hour' in kwargs and kwargs['hour']) or 0))
         
         return (time.mktime(datetime(year, month, day, hour).timetuple()))
         
