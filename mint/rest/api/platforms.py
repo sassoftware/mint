@@ -23,16 +23,16 @@ class SourceController(base.BaseController):
 
     @auth.public
     def index(self, request, sourceType):
-        return self.db.getSourceInstances(sourceType, None)
+        return self.db.getSources(sourceType, None)
 
     @auth.public
     def get(self, request, sourceType, shortName):
-        return self.db.getSourceInstance(sourceType, shortName)
+        return self.db.getSource(sourceType, shortName)
 
     @auth.public
     @requires('source', models.Source)
     def update(self, request, sourceType, shortName, source):
-        return self.db.updateSourceInstance(shortName, source)
+        return self.db.updateSource(shortName, source)
 
     @auth.public
     @requires('source', models.Source)
@@ -72,7 +72,7 @@ class PlatformStatusController(base.BaseController):
 class PlatformSourceController(base.BaseController):
     @auth.public
     def index(self, request, platformId):
-        return self.db.getSourceInstances(None, platformId)
+        return self.db.getSources(None, platformId)
 
 class PlatformSourceTypeController(base.BaseController):
     @auth.public

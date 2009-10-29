@@ -160,7 +160,7 @@ contentSourceTypeXml = """\
 </contentSourceType>
 """
 
-contentSourceInstancesXml = """\
+contentSourcesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <instances>
   <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
@@ -186,7 +186,7 @@ contentSourceInstancesXml = """\
 </instances>
 """
 
-contentSourceInstanceXml = """\
+contentSourceXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
   <contentSourceId>1</contentSourceId>
@@ -200,7 +200,7 @@ contentSourceInstanceXml = """\
 </contentSource>
 """
 
-contentSourceInstancesByPlatformXml = """\
+contentSourcesByPlatformXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSources>
   <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">

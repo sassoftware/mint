@@ -153,14 +153,6 @@ class PlatformManager(manager.Manager):
                         label=platformLabel, platformName=platformName,
                         hostname=platformLabel.split('.')[0],
                         enabled=enabled, configurable=configurable)
-            # sources = self.getSourceInstances(platformId=platId)
-            # sourceRefs = []
-            # for src in sources.instance:
-                # sourceRef = models.SourceRef()
-                # sourceRef._contentSourceType = src.contentSourceType
-                # sourceRef._shortName = src.shortName
-                # sourceRefs.append(sourceRef)
-            # plat.contentSources = models.SourceRefs(sourceRefs)
 
             availablePlatforms.append(plat)
 
@@ -352,7 +344,7 @@ class PlatformManager(manager.Manager):
     def getSourceType(self, source):
         return self.getSourceTypes(source)
 
-    def getSourceInstances(self, source=None, shortName=None, platformId=None):
+    def getSources(self, source=None, shortName=None, platformId=None):
         sources = []
         dbSources = self._getSourcesFromDB(None, None, shortName)
         cfgSources = self._getCfgSources(source, shortName)
@@ -367,11 +359,11 @@ class PlatformManager(manager.Manager):
         else:
             return models.SourceInstances(dbSources.values())
 
-    def getSourceInstance(self, source=None, shortName=None):
-        return self.getSourceInstances(source, shortName)
+    def getSource(self, source=None, shortName=None):
+        return self.getSources(source, shortName)
 
     def getSourceStatus(self, shortName):
-        source = self.getSourceInstance(shortName=shortName)
+        source = self.getSource(shortName=shortName)
         return self.getPlatformSourceStatus(source)
 
     def getPlatformStatus(self, platformId):
@@ -402,7 +394,7 @@ class PlatformManager(manager.Manager):
         except xmlrpclib.Fault, e:
             return (True, False, e.faultString)
 
-    def updateSourceInstance(self, shortName, sourceInstance):
+    def updateSource(self, shortName, sourceInstance):
         cu = self.db.cursor()
         updSql = """
         UPDATE platformSourceData
@@ -423,7 +415,7 @@ class PlatformManager(manager.Manager):
             AND platformSourceId = ?
         """
 
-        oldSource = self.getSourceInstance(shortName=shortName)
+        oldSource = self.getSource(shortName=shortName)
 
         for field in ['username', 'password', 'sourceUrl']:
             newVal = getattr(sourceInstance, field)
@@ -434,7 +426,7 @@ class PlatformManager(manager.Manager):
                 else:
                     cu.execute(insSql % (field, newVal), sourceInstance.contentSourceId)
 
-        return self.getSourceInstance(shortName=shortName)
+        return self.getSource(shortName=shortName)
 
     def updatePlatform(self, platformId, platform):
         cu = self.db.cursor()
@@ -470,7 +462,7 @@ class PlatformManager(manager.Manager):
 
     def createPlatformSource(self, source):
         self._createPlatformSource(source)
-        return self.getSourceInstance(shortName=source.shortName)
+        return self.getSource(shortName=source.shortName)
 
     def deletePlatformSource(self, platformShortName):
         platformSourceId = \

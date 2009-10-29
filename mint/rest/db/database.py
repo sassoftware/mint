@@ -690,12 +690,12 @@ class Database(DBInterface):
         return self.platformMgr.getSourceDescriptor(source)
 
     @commitafter
-    def getSourceInstances(self, source, platformId):
-        return self.platformMgr.getSourceInstances(source=source, platformId=platformId)
+    def getSources(self, source, platformId):
+        return self.platformMgr.getSources(source=source, platformId=platformId)
 
     @commitafter
-    def getSourceInstance(self, source, shortName):
-        return self.platformMgr.getSourceInstances(source, shortName)
+    def getSource(self, source, shortName):
+        return self.platformMgr.getSources(source, shortName)
 
     @readonly
     def getSourcesByPlatform(self, platformId):
@@ -710,8 +710,8 @@ class Database(DBInterface):
         return self.platformMgr.getSourceStatus(shortName)
 
     @commitafter
-    def updateSourceInstance(self, shortName, sourceInstance):
-        return self.platformMgr.updateSourceInstance(shortName,
+    def updateSource(self, shortName, sourceInstance):
+        return self.platformMgr.updateSource(shortName,
                                     sourceInstance)
 
     @commitafter

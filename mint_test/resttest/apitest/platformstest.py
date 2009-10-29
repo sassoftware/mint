@@ -104,7 +104,7 @@ class PlatformTest(restbase.BaseRestTest):
         source.password = 'foopassword'
 
         mock.mockFunctionOnce(platformmgr.PlatformManager,
-                              'getSourceInstance', source)
+                              'getSource', source)
         mock.mockFunctionOnce(platformmgr.PlatformManager,
                               '_checkRHNSourceStatus',
                               (True, True, 'Validated Successfully'))
@@ -117,7 +117,7 @@ class PlatformTest(restbase.BaseRestTest):
 
         # Now try and trigger a failure.
         mock.mockFunctionOnce(platformmgr.PlatformManager,
-                              'getSourceInstance', source)
+                              'getSource', source)
         mock.mockFunctionOnce(platformmgr.PlatformManager,
                               '_checkRHNSourceStatus',
                               (True, False, 'Validation Failed'))
@@ -146,24 +146,24 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceTypeXml, xml)
 
-    def testGetSourceInstances(self):
+    def testGetSources(self):
         uri = '/contentSources/rhn/instances'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(contentSourceInstancesXml, xml)
+        self.assertEquals(contentSourcesXml, xml)
 
-    def _getSourceInstance(self, name):
+    def _getSource(self, name):
         uri = '/contentSources/rhn/instances/%s' % name
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         return self._toXml(platform, client, req)
 
-    def testGetSourceInstance(self):
-        xml = self._getSourceInstance('plat2source0')
-        self.assertEquals(contentSourceInstanceXml, xml)
+    def testGetSource(self):
+        xml = self._getSource('plat2source0')
+        self.assertEquals(contentSourceXml, xml)
 
-    def testGetSourceInstancesByPlatform(self):
+    def testGetSourcesByPlatform(self):
         # we already have a platform, so we must assume they've already been
         # created in the db.  call getPlatforms to create them for this test.
         self._getPlatforms()
@@ -172,7 +172,7 @@ class PlatformTest(restbase.BaseRestTest):
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(contentSourceInstancesByPlatformXml, xml)
+        self.assertEquals(contentSourcesByPlatformXml, xml)
     
     def testGetSourceTypesByPlatform(self):
         # we already have a platform, so we must assume they've already been
@@ -185,9 +185,9 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceTypesByPlatformXml, xml)
 
-    def testUpdateSourceInstance(self):
+    def testUpdateSource(self):
         # GET the source instance first, so it will be created
-        self._getSourceInstance('plat2source0')
+        self._getSource('plat2source0')
 
         uri = '/contentSources/rhn/instances/plat2source0'
         client = self.getRestClient()
@@ -201,7 +201,7 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourcePUTXml2, xml)
 
-    def testCreateSourceInstance(self):
+    def testCreateSource(self):
         uri = '/contentSources/rhn/instances/'
         client = self.getRestClient()
         req, platform = client.call('POST', uri, 
