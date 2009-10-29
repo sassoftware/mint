@@ -14,7 +14,7 @@ class SourceStatusController(base.BaseController):
 
     @auth.public
     def index(self, request, sourceType, shortName):
-        return self.db.getSourceInstanceStatus(sourceType, shortName)
+        return self.db.getSourceStatus(sourceType, shortName)
 
 class SourceController(base.BaseController):
     modelName = 'shortName'

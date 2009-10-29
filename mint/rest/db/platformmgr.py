@@ -370,7 +370,7 @@ class PlatformManager(manager.Manager):
     def getSourceInstance(self, source=None, shortName=None):
         return self.getSourceInstances(source, shortName)
 
-    def getSourceInstanceStatus(self, shortName):
+    def getSourceStatus(self, shortName):
         source = self.getSourceInstance(shortName=shortName)
         return self.getPlatformSourceStatus(source)
 
