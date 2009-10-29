@@ -132,19 +132,19 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(sourceDescriptorXml, xml)
 
-    def testGetSources(self):
+    def testGetSourceTypes(self):
         uri = '/contentSources'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(contentSourcesXml, xml)
+        self.assertEquals(contentSourceTypesXml, xml)
 
-    def testGetSource(self):
+    def testGetSourceType(self):
         uri = '/contentSources/rhn'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertEquals(contentSourceXml, xml)
+        self.assertEquals(contentSourceTypeXml, xml)
 
     def testGetSourceInstances(self):
         uri = '/contentSources/rhn/instances'

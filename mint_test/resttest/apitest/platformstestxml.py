@@ -140,7 +140,7 @@ sourceDescriptorXml = """\
 </configDescriptor>
 """
 
-contentSourcesXml = """\
+contentSourceTypesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSources>
   <contentSourceType id="http://localhost:8000/api/contentSources/rhn">
@@ -151,7 +151,7 @@ contentSourcesXml = """\
 </contentSources>
 """
 
-contentSourceXml = """\
+contentSourceTypeXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSourceType id="http://localhost:8000/api/contentSources/rhn">
   <contentSourceType>rhn</contentSourceType>

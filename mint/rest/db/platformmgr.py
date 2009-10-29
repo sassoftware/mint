@@ -218,7 +218,7 @@ class PlatformManager(manager.Manager):
         return cu
 
     def _platformSourceModelFactory(self, row):
-        plat = models.SourceInstance(
+        plat = models.Source(
                         contentSourceId=str(row['platformSourceId']),
                         name=row['name'],
                         shortName=row['shortName'],
@@ -334,7 +334,7 @@ class PlatformManager(manager.Manager):
         
         return models.SourceTypes(types)
 
-    def getSources(self, source=None):
+    def getSourceTypes(self, source=None):
         plats = self._getConfigPlatforms()
         types = []
         strTypes = []
@@ -349,8 +349,8 @@ class PlatformManager(manager.Manager):
 
         return models.ContentSources(types)
 
-    def getSource(self, source):
-        return self.getSources(source)
+    def getSourceType(self, source):
+        return self.getSourceTypes(source)
 
     def getSourceInstances(self, source=None, shortName=None, platformId=None):
         sources = []

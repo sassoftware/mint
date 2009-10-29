@@ -678,12 +678,12 @@ class Database(DBInterface):
         return self.platformMgr.getPlatform(platformId)
 
     @readonly
-    def getSources(self):
-        return self.platformMgr.getSources()
+    def getSourceTypes(self):
+        return self.platformMgr.getSourceTypes()
 
     @readonly
-    def getSource(self, source):
-        return self.platformMgr.getSource(source)
+    def getSourceType(self, source):
+        return self.platformMgr.getSourceType(source)
 
     @readonly
     def getSourceDescriptor(self, source):

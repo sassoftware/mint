@@ -10,58 +10,58 @@ from mint.rest.api import requires
 
 from mint.rest.middleware import auth
 
-class SourceInstanceStatusController(base.BaseController):
+class SourceStatusController(base.BaseController):
 
     @auth.public
-    def index(self, request, source, shortName):
-        return self.db.getSourceInstanceStatus(source, shortName)
+    def index(self, request, sourceType, shortName):
+        return self.db.getSourceInstanceStatus(sourceType, shortName)
 
-class SourceInstanceController(base.BaseController):
+class SourceController(base.BaseController):
     modelName = 'shortName'
 
-    urls = { 'status' : SourceInstanceStatusController }
+    urls = { 'status' : SourceStatusController }
 
     @auth.public
-    def index(self, request, source):
-        return self.db.getSourceInstances(source, None)
+    def index(self, request, sourceType):
+        return self.db.getSourceInstances(sourceType, None)
 
     @auth.public
-    def get(self, request, source, shortName):
-        return self.db.getSourceInstance(source, shortName)
+    def get(self, request, sourceType, shortName):
+        return self.db.getSourceInstance(sourceType, shortName)
 
     @auth.public
-    @requires('sourceInstance', models.SourceInstance)
-    def update(self, request, source, shortName, sourceInstance):
-        return self.db.updateSourceInstance(shortName, sourceInstance)
+    @requires('source', models.Source)
+    def update(self, request, sourceType, shortName, source):
+        return self.db.updateSourceInstance(shortName, source)
 
     @auth.public
-    @requires('sourceInstance', models.SourceInstance)
-    def create(self, request, source, sourceInstance):
-        return self.db.createPlatformSource(sourceInstance)
+    @requires('source', models.Source)
+    def create(self, request, sourceType, source):
+        return self.db.createPlatformSource(source)
 
 class SourceDescriptorController(base.BaseController):
     
     @auth.public
-    def index(self, request, source):
-        return self.db.getSourceDescriptor(source)
+    def index(self, request, sourceType):
+        return self.db.getSourceDescriptor(sourceType)
 
-class SourceController(base.BaseController):
-    modelName = 'source'
+class SourceTypeController(base.BaseController):
+    modelName = 'sourceType'
 
-    urls = { 'instances' : SourceInstanceController,
+    urls = { 'instances' : SourceController,
              'descriptor' : SourceDescriptorController }
 
     @auth.public
     def index(self, request):
-        return self.db.getSources()
+        return self.db.getSourceTypes()
 
     @auth.public
-    def get(self, request, source):
-        return self.db.getSource(source)
+    def get(self, request, sourceType):
+        return self.db.getSourceType(sourceType)
 
     @auth.public        
-    def destroy(self, request, platformId, shortName):
-        return self.db.deletePlatformSource(platformId, shortName)
+    def destroy(self, request, sourceType):
+        return self.db.deletePlatformSource(sourceType)
 
 class PlatformStatusController(base.BaseController):
 

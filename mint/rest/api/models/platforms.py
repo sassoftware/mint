@@ -48,12 +48,12 @@ class SourceTypes(Model):
         name = 'contentSourceTypes'
     contentSourceTypes = fields.ListField(SourceType, displayName='contentSourceType')
 
-SourceInstance = PlatformSource
+Source = PlatformSource
 
 class ContentSourceInstances(Model):
     class Meta(object):
         name = 'contentSources'
-    instance = fields.ListField(SourceInstance, displayName='contentSource')
+    instance = fields.ListField(Source, displayName='contentSource')
 
 class ContentSources(Model):
     contentSourceType = fields.ListField(SourceType)
@@ -61,26 +61,7 @@ class ContentSources(Model):
 class SourceInstances(Model):
     class Meta(object):
         name = 'instances'
-    instance = fields.ListField(SourceInstance, displayName='contentSource')
-
-class SourceRef(Model):
-    href = fields.AbsoluteUrlField(isAttribute=True)
-    _contentSourceType = ''
-    _shortName = ''
-    def get_absolute_url(self):
-        return ('contentSources.instances', self._contentSourceType, self._shortName) 
-
-class SourceRefs(Model):
-    sourceRef = fields.ListField(SourceRef, displayName='contentSource')
-
-class SourceTypeRef(Model):
-    href = fields.AbsoluteUrlField(isAttribute=True)
-    contentSourceType = fields.CharField(display=False)
-    def get_absolute_url(self):
-        return ('contentSources', self.contentSourceType)
-
-class SourceTypeRefs(Model):
-    sourceTypeRef = fields.ListField(SourceTypeRef, displayName='contentSourceType')
+    instance = fields.ListField(Source, displayName='contentSource')
 
 class Platform(Model):
     platformId = fields.CharField()
