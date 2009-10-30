@@ -92,7 +92,7 @@ class PlatformTest(restbase.BaseRestTest):
         self.assertEquals(platformSourceXml, xml)
 
     def testGetContentSourceStatusNoData(self):
-        uri = '/contentSources/rhn/instances/plat2source0/status'
+        uri = '/contentSources/RHN/instances/plat2source0/status'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
@@ -103,7 +103,7 @@ class PlatformTest(restbase.BaseRestTest):
         source.sourceUrl = 'https://example.com'
         source.username = 'foousername'
         source.password = 'foopassword'
-        source.contentSourceType = 'rhn'
+        source.contentSourceType = 'RHN'
 
         mock.mockFunctionOnce(platformmgr.PlatformManager,
                               'getSource', source)
@@ -111,7 +111,7 @@ class PlatformTest(restbase.BaseRestTest):
                               'status',
                               (True, True, 'Validated Successfully'))
 
-        uri = '/contentSources/rhn/instances/plat2source0/status'
+        uri = '/contentSources/RHN/instances/plat2source0/status'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
@@ -132,7 +132,7 @@ class PlatformTest(restbase.BaseRestTest):
                               'status',
                               (True, True, 'Validated Successfully'))
 
-        uri = '/contentSources/rhn/statusTest'
+        uri = '/contentSources/RHN/statusTest'
         client = self.getRestClient()
         req, platform = client.call('POST', uri,
                             body=statusTestPOSTXml)
@@ -141,7 +141,7 @@ class PlatformTest(restbase.BaseRestTest):
         self.assertEquals(statusTestPOSTRespXml, xml)
 
     def testGetSourceDescriptor(self):
-        uri = '/contentSources/rhn/descriptor'
+        uri = '/contentSources/RHN/descriptor'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
@@ -160,21 +160,21 @@ class PlatformTest(restbase.BaseRestTest):
         self.assertEquals(contentSourceTypesXml, xml)
 
     def testGetSourceType(self):
-        uri = '/contentSources/rhn'
+        uri = '/contentSources/RHN'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceTypeXml, xml)
 
     def testGetSources(self):
-        uri = '/contentSources/rhn/instances'
+        uri = '/contentSources/RHN/instances'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourcesXml, xml)
 
     def _getSource(self, name):
-        uri = '/contentSources/rhn/instances/%s' % name
+        uri = '/contentSources/RHN/instances/%s' % name
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
         return self._toXml(platform, client, req)
@@ -209,7 +209,7 @@ class PlatformTest(restbase.BaseRestTest):
         # GET the source instance first, so it will be created
         self._getSource('plat2source0')
 
-        uri = '/contentSources/rhn/instances/plat2source0'
+        uri = '/contentSources/RHN/instances/plat2source0'
         client = self.getRestClient()
         req, platform = client.call('PUT', uri, body=contentSourcePUTXml)
         xml = self._toXml(platform, client, req)
@@ -222,7 +222,7 @@ class PlatformTest(restbase.BaseRestTest):
         self.assertEquals(contentSourcePUTXml2, xml)
 
     def testCreateSource(self):
-        uri = '/contentSources/rhn/instances/'
+        uri = '/contentSources/RHN/instances/'
         client = self.getRestClient()
         req, platform = client.call('POST', uri, 
                             body=sourcePOSTXml)

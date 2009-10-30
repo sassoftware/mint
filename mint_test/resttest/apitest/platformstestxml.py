@@ -182,82 +182,82 @@ sourceDescriptor2Xml = """\
 contentSourceTypesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSources>
-  <contentSourceType id="http://localhost:8000/api/contentSources/rhn">
-    <contentSourceType>rhn</contentSourceType>
-    <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
-    <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
-    <statusTest href="http://localhost:8000/api/contentSources/rhn/statusTest"/>
+  <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
+    <contentSourceType>RHN</contentSourceType>
+    <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
+    <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
+    <statusTest href="http://localhost:8000/api/contentSources/RHN/statusTest"/>
   </contentSourceType>
 </contentSources>
 """
 
 contentSourceTypeXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSourceType id="http://localhost:8000/api/contentSources/rhn">
-  <contentSourceType>rhn</contentSourceType>
-  <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
-  <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
-  <statusTest href="http://localhost:8000/api/contentSources/rhn/statusTest"/>
+<contentSourceType id="http://localhost:8000/api/contentSources/RHN">
+  <contentSourceType>RHN</contentSourceType>
+  <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
+  <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
+  <statusTest href="http://localhost:8000/api/contentSources/RHN/statusTest"/>
 </contentSourceType>
 """
 
 contentSourcesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <instances>
-  <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+  <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
     <contentSourceId>1</contentSourceId>
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
-    <contentSourceType>rhn</contentSourceType>
-    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+    <contentSourceType>RHN</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   </contentSource>
-  <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source1">
+  <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source1">
     <contentSourceId>2</contentSourceId>
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
-    <contentSourceType>rhn</contentSourceType>
-    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source1/status"/>
+    <contentSourceType>RHN</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
   </contentSource>
 </instances>
 """
 
 contentSourceXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+<contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
-  <contentSourceType>rhn</contentSourceType>
-  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+  <contentSourceType>RHN</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
 </contentSource>
 """
 
 contentSourcesByPlatformXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSources>
-  <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+  <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
     <contentSourceId>1</contentSourceId>
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
-    <contentSourceType>rhn</contentSourceType>
-    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+    <contentSourceType>RHN</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   </contentSource>
-  <contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source1">
+  <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source1">
     <contentSourceId>2</contentSourceId>
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
-    <contentSourceType>rhn</contentSourceType>
-    <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source1/status"/>
+    <contentSourceType>RHN</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
   </contentSource>
 </contentSources>
 """
@@ -265,25 +265,25 @@ contentSourcesByPlatformXml = """\
 contentSourceTypesByPlatformXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSourceTypes>
-  <contentSourceType id="http://localhost:8000/api/contentSources/rhn">
-    <contentSourceType>rhn</contentSourceType>
-    <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
-    <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
-    <statusTest href="http://localhost:8000/api/contentSources/rhn/statusTest"/>
+  <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
+    <contentSourceType>RHN</contentSourceType>
+    <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
+    <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
+    <statusTest href="http://localhost:8000/api/contentSources/RHN/statusTest"/>
   </contentSourceType>
 </contentSourceTypes>
 """
 
 contentSourcePUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+<contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
-  <contentSourceType>rhn</contentSourceType>
-  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+  <contentSourceType>RHN</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   <username>foousername</username>
   <password>foopassword</password>
 </contentSource>
@@ -291,14 +291,14 @@ contentSourcePUTXml = """\
 
 contentSourcePUTXml2 = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source0">
+<contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
-  <contentSourceType>rhn</contentSourceType>
-  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+  <contentSourceType>RHN</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   <username>foousername2</username>
   <password>foopassword2</password>
 </contentSource>
@@ -340,20 +340,20 @@ sourcePOSTXml = """\
   <sourceUrl>https://plat2source2.example.com</sourceUrl>
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
-  <contentSourceType>rhn</contentSourceType>
+  <contentSourceType>RHN</contentSourceType>
 </contentSource>
 """
 
 sourcePOSTRespXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSource id="http://localhost:8000/api/contentSources/rhn/instances/plat2source2">
+<contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source2">
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 2</name>
   <shortname>plat2source2</shortname>
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
-  <contentSourceType>rhn</contentSourceType>
-  <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source2/status"/>
+  <contentSourceType>RHN</contentSourceType>
+  <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source2/status"/>
 </contentSource>
 """
 
@@ -393,7 +393,7 @@ statusTestPOSTXml = """\
   <sourceUrl>https://plat2source2.example.com</sourceUrl>
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
-  <contentSourceType>rhn</contentSourceType>
+  <contentSourceType>RHN</contentSourceType>
 </contentSource>
 """
 

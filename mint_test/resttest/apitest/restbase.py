@@ -179,11 +179,13 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
         platformLabel1 = self.mintCfg.availablePlatforms[0]
         pl1 = self.productDefinition.toPlatformDefinition()
+        cst = pl1.newContentSourceType('RHN', 'RHN')
         pl1.setPlatformName('Crowbar Linux 1')
         pl1.saveToRepository(self.cclient, platformLabel1)
 
         platformLabel2 = self.mintCfg.availablePlatforms[1]
         pl2 = self.productDefinition.toPlatformDefinition()
+        cst = pl1.newContentSourceType('RHN', 'RHN')
         pl2.setPlatformName('Crowbar Linux 2')
         pl2.saveToRepository(self.cclient, platformLabel2)
 
