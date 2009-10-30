@@ -43,14 +43,11 @@ class PlatformManager(manager.Manager):
             
             if platDef:
                 platformName = platDef.getPlatformName()
-            # TODO: remove this, just for testing until types are in platform
-            # defn.
-            # if i == 1:
-                # types = ['blue',]
-            # else:
-                # types = ['red',]
-            if 'pnalv' in platformLabel or 'localhost' in platformLabel or 'rhelrepo' in platformLabel:
-                types = ['rhn',]
+                platformProv = platDef.getContentProvider()
+                if platformProv:
+                    types = [t.name for t in platformProv.contentSourceTypes]
+                else:
+                    types = []
             else:
                 types = []
 
