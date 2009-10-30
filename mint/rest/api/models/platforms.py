@@ -47,6 +47,7 @@ class SourceType(Model):
     contentSourceType = fields.CharField()
     instances = fields.UrlField('contentSources.instances', ['contentSourceType'])
     configDescriptor = fields.UrlField('contentSources.descriptor', ['contentSourceType'])
+    statusTest = fields.UrlField('contentSources.statusTest', ['contentSourceType'])
     id = fields.AbsoluteUrlField(isAttribute=True)
 
     def get_absolute_url(self):

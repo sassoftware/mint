@@ -186,6 +186,7 @@ contentSourceTypesXml = """\
     <contentSourceType>rhn</contentSourceType>
     <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
+    <statusTest href="http://localhost:8000/api/contentSources/rhn/statusTest"/>
   </contentSourceType>
 </contentSources>
 """
@@ -196,6 +197,7 @@ contentSourceTypeXml = """\
   <contentSourceType>rhn</contentSourceType>
   <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
   <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
+  <statusTest href="http://localhost:8000/api/contentSources/rhn/statusTest"/>
 </contentSourceType>
 """
 
@@ -267,6 +269,7 @@ contentSourceTypesByPlatformXml = """\
     <contentSourceType>rhn</contentSourceType>
     <instances href="http://localhost:8000/api/contentSources/rhn/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/rhn/descriptor"/>
+    <statusTest href="http://localhost:8000/api/contentSources/rhn/statusTest"/>
   </contentSourceType>
 </contentSourceTypes>
 """

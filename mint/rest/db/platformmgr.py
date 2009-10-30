@@ -26,14 +26,14 @@ class PlatformManager(manager.Manager):
         manager.Manager.__init__(self, cfg, db, auth)
         cacheFile = os.path.join(self.cfg.dataPath, 'data', 
                                  'platformName.cache')
-        self.platformCache = PlatformNameCache(cacheFile, 
+        self.platformCache = PlatformDefCache(cacheFile, 
                                                db.productMgr.reposMgr)
 
     def _iterConfigPlatforms(self):
         apnLength = len(self.cfg.availablePlatformNames)
         for i, platformLabel in enumerate(self.cfg.availablePlatforms):
-            platformName = self.platformCache.get(platformLabel)
-            enabled = bool(platformName)
+            platDef = self.platformCache.get(platformLabel)
+            enabled = bool(platDef)
             if not enabled:
                 # Fall back to the platform label, if
                 # self.cfg.availablePlatformNames is incomplete
@@ -41,6 +41,8 @@ class PlatformManager(manager.Manager):
                 if i < apnLength:
                     platformName = self.cfg.availablePlatformNames[i]
             
+            if platDef:
+                platformName = platDef.getPlatformName()
             # TODO: remove this, just for testing until types are in platform
             # defn.
             # if i == 1:
@@ -484,7 +486,7 @@ class PlatformManager(manager.Manager):
         sourceId = self.db.db.platformSources.getIdFromShortName(shortName)
         self.db.db.platformSources.delete(sourceId)
 
-class PlatformNameCache(persistentcache.PersistentCache):
+class PlatformDefCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, reposMgr):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._reposMgr = weakref.ref(reposMgr)
@@ -494,7 +496,7 @@ class PlatformNameCache(persistentcache.PersistentCache):
             client = self._reposMgr().getAdminClient()
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
-            return platDef.getPlatformName()
+            return platDef
         except Exception, e:
             # Swallowing this exception allows us to have a negative
             # cache entries.  Of course this comes at the cost
