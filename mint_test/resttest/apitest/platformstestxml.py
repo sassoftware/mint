@@ -120,9 +120,10 @@ sourceDescriptorXml = """\
         <desc>Username</desc>
       </descriptions>
       <prompt>
-        <desc>Your RHN Username</desc>
+        <desc>Username</desc>
       </prompt>
       <type>str</type>
+      <password>false</password>
     </field>
     <field>
       <name>password</name>
@@ -131,7 +132,7 @@ sourceDescriptorXml = """\
         <desc>Password</desc>
       </descriptions>
       <prompt>
-        <desc>Your RHN Password</desc>
+        <desc>Password</desc>
       </prompt>
       <type>str</type>
       <password>true</password>

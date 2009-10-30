@@ -165,37 +165,40 @@ class PlatformManager(manager.Manager):
     def getPlatform(self, platformId):
         return self.getPlatforms(platformId)
 
+    def _getSourceInstance(self, source):
+        sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
+        sourceInst = sourceClass()
+        for field in sourceInst.getFieldNames():
+            if hasattr(source, field):
+                setattr(sourceInst, field, source.field)
+
+        return sourceInst                
+
     def getSourceDescriptor(self, source):
-        # TODO remove later
-        source = 'Red Hat Network'
-        desc = models.Description(desc='Configure %s' % source)
-        metadata = models.Metadata(displayName=source,
+        source = self.getSourceType(source)
+        sourceInst = self._getSourceInstance(source)
+
+        desc = models.Description(desc='Configure %s' % sourceInst.name)
+        metadata = models.Metadata(displayName=sourceInst.name,
                     descriptions=[desc])
 
         dFields = []
-        p0 = models.Prompt(desc='Your RHN Username')
-        f0 = models.DescriptorField(name='username',
-                                   required=True,
-                                   descriptions=[models.Description(desc='Username')],
-                                   prompt=p0,
-                                   type='str')
-        dFields.append(f0)                                   
-        p1 = models.Prompt(desc='Your RHN Password')
-        f1 = models.DescriptorField(name='password',
-                                   required=True,
-                                   descriptions=[models.Description(desc='Password')],
-                                   prompt=p1,
-                                   type='str',
-                                   password=True)
-        dFields.append(f1)                                   
-        dataFields = models.DataFields(dFields)
+        for field in sourceInst.fields:
+            p = models.Prompt(desc=field.prompt)
+            f = models.DescriptorField(name=field.name,
+                           required=field.required,
+                           descriptions=[models.Description(desc=field.description)],
+                           prompt=p,
+                           type=field.type,
+                           password=field.password)
+            dFields.append(f)                                   
 
+        dataFields = models.DataFields(dFields)
         descriptor = models.descriptorFactory(metadata=metadata,
                         dataFields=dataFields)
 
         return descriptor
 
-    
     def _getSourceData(self, sourceId):
         sql = """
             SELECT
