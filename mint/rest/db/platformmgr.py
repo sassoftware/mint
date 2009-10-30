@@ -170,7 +170,7 @@ class PlatformManager(manager.Manager):
         sourceInst = sourceClass()
         for field in sourceInst.getFieldNames():
             if hasattr(source, field):
-                setattr(sourceInst, field, source.field)
+                setattr(sourceInst, field, getattr(source, field))
 
         return sourceInst                
 
@@ -350,6 +350,10 @@ class PlatformManager(manager.Manager):
                     strTypes.append(t)
                     types.append(models.SourceType(contentSourceType=t))
 
+        if source:
+            raise mint_error.ItemNotFound(
+                    'Content source type not found: %s' % source)
+
         return models.ContentSources(types)
 
     def getSourceType(self, source):
@@ -376,16 +380,26 @@ class PlatformManager(manager.Manager):
     def getPlatformStatus(self, platformId):
         pass
 
-    def getSourceStatus(self, shortName):
+    def getSourceStatusByName(self, shortName):
         source = self.getSource(shortName=shortName)
-        if not source.username or \
-           not source.password or \
-           not source.sourceUrl:
-            status = models.SourceStatus(connected=False, valid=False, 
-                message="Username, password, and source url must be provided to check a source's status.")
+        return self.getSourceStatus(source)
+
+    def getSourceStatus(self, source):
+        sourceInst = self._getSourceInstance(source)
+
+        missing = []
+        for field in sourceInst.fields:
+            if field.required:
+                val = getattr(source, field.name, None)
+                if not val:
+                    missing.append(field.name)
+
+        if missing:
+            message = "The following fields must be provided to check a source's status: %s." % str(missing)
+            status = models.SourceStatus(connected=False, valid=False,
+                                message=message)
         else:
-            ret = self._checkRHNSourceStatus(source.sourceUrl,
-                        source.username, source.password)
+            ret = sourceInst.status()
             status = models.SourceStatus(connected=ret[0],
                                 valid=ret[1], message=ret[2])
 

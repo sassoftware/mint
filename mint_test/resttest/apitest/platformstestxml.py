@@ -81,7 +81,7 @@ contentSourceStatusXml = """\
 <contentSourceStatus>
   <connected>false</connected>
   <valid>false</valid>
-  <message>Username, password, and source url must be provided to check a source's status.</message>
+  <message>The following fields must be provided to check a source's status: ['username', 'password'].</message>
 </contentSourceStatus>
 """
 
@@ -104,6 +104,44 @@ contentSourceStatusDataFailXml = """\
 """
 
 sourceDescriptorXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Red Hat Network</displayName>
+    <descriptions>
+      <desc>Configure Red Hat Network</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>username</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Username</desc>
+      </descriptions>
+      <prompt>
+        <desc>Username</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>password</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
+    </field>
+  </dataFields>
+</configDescriptor>
+"""
+
+sourceDescriptor2Xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
   <metadata>
@@ -340,4 +378,27 @@ sourcePOSTResp2Xml = """\
   <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/status"/>
   <sourceUrl>https://plat2source2.example.com</sourceUrl>
 </contentSource>
+"""
+
+statusTestPOSTXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSource>
+  <name>Platform 2 Source 2</name>
+  <shortname>plat2source2</shortname>
+  <username>foousername</username>
+  <password>foopassword</password>
+  <sourceUrl>https://plat2source2.example.com</sourceUrl>
+  <defaultSource>false</defaultSource>
+  <orderIndex>1</orderIndex>
+  <contentSourceType>rhn</contentSourceType>
+</contentSource>
+"""
+
+statusTestPOSTRespXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<contentSourceStatus>
+  <connected>true</connected>
+  <valid>true</valid>
+  <message>Validated Successfully</message>
+</contentSourceStatus>
 """

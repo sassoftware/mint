@@ -17,6 +17,7 @@ from conary.lib import util
 from mint import buildtypes
 from mint.rest.api import models
 from mint.rest.db import platformmgr
+from mint.rest.db import contentsources
 from mint.rest.modellib import converter
 
 from mint_test import mock
@@ -98,15 +99,16 @@ class PlatformTest(restbase.BaseRestTest):
         self.assertEquals(contentSourceStatusXml, xml)
 
     def testGetContentSourceStatusData(self):
-        source = models.Source()
+        source = models.RhnSource()
         source.sourceUrl = 'https://example.com'
         source.username = 'foousername'
         source.password = 'foopassword'
+        source.contentSourceType = 'rhn'
 
         mock.mockFunctionOnce(platformmgr.PlatformManager,
                               'getSource', source)
-        mock.mockFunctionOnce(platformmgr.PlatformManager,
-                              '_checkRHNSourceStatus',
+        mock.mockFunctionOnce(contentsources.Rhn,
+                              'status',
                               (True, True, 'Validated Successfully'))
 
         uri = '/contentSources/rhn/instances/plat2source0/status'
@@ -118,12 +120,25 @@ class PlatformTest(restbase.BaseRestTest):
         # Now try and trigger a failure.
         mock.mockFunctionOnce(platformmgr.PlatformManager,
                               'getSource', source)
-        mock.mockFunctionOnce(platformmgr.PlatformManager,
-                              '_checkRHNSourceStatus',
+        mock.mockFunctionOnce(contentsources.Rhn,
+                              'status',
                               (True, False, 'Validation Failed'))
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceStatusDataFailXml, xml)
+
+    def testGetSourceTypeStatus(self):
+        mock.mockFunctionOnce(contentsources.Rhn,
+                              'status',
+                              (True, True, 'Validated Successfully'))
+
+        uri = '/contentSources/rhn/statusTest'
+        client = self.getRestClient()
+        req, platform = client.call('POST', uri,
+                            body=statusTestPOSTXml)
+        xml = self._toXml(platform, client, req)
+
+        self.assertEquals(statusTestPOSTRespXml, xml)
 
     def testGetSourceDescriptor(self):
         uri = '/contentSources/rhn/descriptor'
@@ -131,6 +146,11 @@ class PlatformTest(restbase.BaseRestTest):
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(sourceDescriptorXml, xml)
+
+        # uri = '/contentSources/satellite/descriptor'
+        # req, platform = client.call('GET', uri)
+        # xml = self._toXml(platform, client, req)
+        # self.assertEquals(sourceDescriptor2Xml, xml)
 
     def testGetSourceTypes(self):
         uri = '/contentSources'

@@ -11,22 +11,23 @@ from mint.rest.db import contentsources
 from mint.rest.middleware import auth
 from mint.rest.modellib import converter
 
+def _loadSourceModel(xml, sourceType):
+    sourceModelClass = contentsources.contentSourceTypes[sourceType]
+    source = converter.fromText('xml', xml,
+                        sourceModelClass.model, None, None)
+    return source                            
+
 class SourceStatusController(base.BaseController):
 
     @auth.public
     def index(self, request, sourceType, shortName):
-        return self.db.getSourceStatus(sourceType, shortName)
+        return self.db.getSourceStatusByName(sourceType, shortName)
 
 class SourceController(base.BaseController):
     modelName = 'shortName'
 
     urls = { 'status' : SourceStatusController }
 
-    def _loadSourceModel(self, xml, sourceType):
-        sourceModelClass = contentsources.contentSourceTypes[sourceType]
-        source = converter.fromText('xml', xml,
-                            sourceModelClass.model, None, None)
-        return source                            
 
     @auth.public
     def index(self, request, sourceType):
@@ -39,30 +40,38 @@ class SourceController(base.BaseController):
     @auth.public
     @requires('source', models.Source)
     def update(self, request, sourceType, shortName, source):
-        source = self._loadSourceModel(request.body, sourceType)
+        source = _loadSourceModel(request.body, sourceType)
         return self.db.updateSource(shortName, source)
 
     @auth.public
     @requires('source', models.Source)
     def create(self, request, sourceType, source):
-        source = self._loadSourceModel(request.body, sourceType)
+        source = _loadSourceModel(request.body, sourceType)
         return self.db.createSource(source)
 
     @auth.public
     def delete(self, request, sourceType, shortName):
         return self.db.deleteSource(shortName)
 
-class SourceDescriptorController(base.BaseController):
+class SourceTypeDescriptorController(base.BaseController):
     
     @auth.public
     def index(self, request, sourceType):
         return self.db.getSourceDescriptor(sourceType)
 
+class SourceTypeStatusTest(base.BaseController):
+    @auth.public
+    @requires('source', models.Source)
+    def process(self, request, sourceType, source):
+        source = _loadSourceModel(request.body, sourceType)
+        return self.db.getSourceStatus(source)
+
 class SourceTypeController(base.BaseController):
     modelName = 'sourceType'
 
     urls = { 'instances' : SourceController,
-             'descriptor' : SourceDescriptorController }
+             'descriptor' : SourceTypeDescriptorController,
+             'statusTest' : SourceTypeStatusTest }
 
     @auth.public
     def index(self, request):
