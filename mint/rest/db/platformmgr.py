@@ -173,7 +173,8 @@ class PlatformManager(manager.Manager):
         sourceInst = sourceClass()
         for field in sourceInst.getFieldNames():
             if hasattr(source, field):
-                setattr(sourceInst, field, getattr(source, field))
+                val = str(getattr(source, field))
+                setattr(sourceInst, field, val)
 
         return sourceInst                
 
