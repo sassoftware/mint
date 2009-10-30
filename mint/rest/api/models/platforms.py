@@ -17,9 +17,7 @@ class Source(Model):
     contentSourceId = fields.CharField()
     name = fields.CharField()
     shortName = fields.CharField(displayName='shortname')
-    sourceUrl = fields.CharField()
-    username = fields.CharField()
-    password = fields.CharField()
+
     defaultSource = fields.BooleanField()
     orderIndex = fields.IntegerField()
     contentSourceType = fields.CharField()
@@ -31,6 +29,17 @@ class Source(Model):
 
     def get_absolute_url(self):
         return ('contentSources.instances', self.contentSourceType, self.shortName)
+
+class RhnSource(Source):    
+    class Meta(object):
+        name = 'contentSource'
+    username = fields.CharField()
+    password = fields.CharField()
+
+class SatelliteSource(RhnSource):
+    class Meta(object):
+        name = 'contentSource'
+    sourceUrl = fields.CharField()
 
 class SourceType(Model):
     class Meta(object):

@@ -7,8 +7,9 @@
 from mint.rest.api import base
 from mint.rest.api import models
 from mint.rest.api import requires
-
+from mint.rest.db import contentsources
 from mint.rest.middleware import auth
+from mint.rest.modellib import converter
 
 class SourceStatusController(base.BaseController):
 
@@ -21,6 +22,12 @@ class SourceController(base.BaseController):
 
     urls = { 'status' : SourceStatusController }
 
+    def _loadSourceModel(self, xml, sourceType):
+        sourceModelClass = contentsources.contentSourceTypes[sourceType]
+        source = converter.fromText('xml', xml,
+                            sourceModelClass.model, None, None)
+        return source                            
+
     @auth.public
     def index(self, request, sourceType):
         return self.db.getSources(sourceType, None)
@@ -32,11 +39,13 @@ class SourceController(base.BaseController):
     @auth.public
     @requires('source', models.Source)
     def update(self, request, sourceType, shortName, source):
+        source = self._loadSourceModel(request.body, sourceType)
         return self.db.updateSource(shortName, source)
 
     @auth.public
     @requires('source', models.Source)
     def create(self, request, sourceType, source):
+        source = self._loadSourceModel(request.body, sourceType)
         return self.db.createSource(source)
 
     @auth.public

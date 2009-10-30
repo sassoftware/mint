@@ -15,6 +15,7 @@ from mint import mint_error
 from mint.lib import persistentcache
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest.db import contentsources
 from mint.rest.db import manager
 
 from rpath_proddef import api1 as proddef
@@ -209,21 +210,27 @@ class PlatformManager(manager.Manager):
         cu.execute(sql, sourceId)
         return cu
 
-    def _sourceModelFactory(self, row):
-        plat = models.Source(
-                        contentSourceId=str(row['platformSourceId']),
-                        name=row['name'],
-                        shortName=row['shortName'],
-                        defaultSource=row['defaultSource'],
-                        orderIndex=row['orderIndex'],
-                        contentSourceType=row['contentSourceType'])
+    def _sourceModelFactory(self, **kw):
+        sourceId = kw.get('platformSourceId', None)
+        contentSourceType = kw['contentSourceType']
+        sourceTypeClass = contentsources.contentSourceTypes[contentSourceType]
+        sourceType = sourceTypeClass()
+        model = sourceType.model()
+        
+        for k, v in kw.items():
+            if type(v) == type(int):
+                val = str(v)
+            else:
+                val = v
+            setattr(model, k, val)
 
-        data = self._getSourceData(row['platformSourceId'])
+        if sourceId:
+            model.contentSourceId = sourceId
+            data = self._getSourceData(sourceId)
+            for d in data:
+                setattr(model, d['name'], d['value'])
 
-        for row in data:
-            setattr(plat, row['name'], row['value'])
-
-        return plat
+        return model
 
     def _getSourcesFromDB(self, source, platformId, sourceShortName):
         cu = self.db.cursor()
@@ -265,25 +272,26 @@ class PlatformManager(manager.Manager):
             
         sources = {}
         for row in cu:
-            source = self._sourceModelFactory(row)
+            source = self._sourceModelFactory(**row)
             sources[source.shortName] = source
 
         return sources            
 
-    def _getCfgSources(self, source=None, sourceShortName=None):        
+    def _getCfgSources(self, sourceType=None, sourceShortName=None):        
         sources = {}
         for i, cfgShortName in enumerate(self.cfg.platformSources):
-            source = models.Source(shortName=cfgShortName,
-                                   sourceUrl=self.cfg.platformSourceUrls[i],
-                                   name=self.cfg.platformSourceNames[i],
-                                   contentSourceType=self.cfg.platformSourceTypes[i],
-                                   defaultSource='1',
-                                   orderIndex='0')
+            source = self._sourceModelFactory(
+                                shortName=cfgShortName,
+                                sourceUrl=self.cfg.platformSourceUrls[i],
+                                name=self.cfg.platformSourceNames[i],
+                                contentSourceType=self.cfg.platformSourceTypes[i],
+                                defaultSource='1',
+                                orderIndex='0')
             if sourceShortName and sourceShortName == cfgShortName:
                 sources = {}
                 sources[source.shortName] = source
                 return sources
-            elif source and source == self.cfg.platformSourceTypes[i]:
+            elif sourceType and sourceType == self.cfg.platformSourceTypes[i]:
                 sources[source.shortName] = source
             else:                
                 sources[source.shortName] = source
@@ -391,7 +399,7 @@ class PlatformManager(manager.Manager):
         except xmlrpclib.Fault, e:
             return (True, False, e.faultString)
 
-    def updateSource(self, shortName, sourceInstance):
+    def updateSource(self, shortName, source):
         cu = self.db.cursor()
         updSql = """
         UPDATE platformSourceData
@@ -414,14 +422,17 @@ class PlatformManager(manager.Manager):
 
         oldSource = self.getSource(shortName=shortName)
 
-        for field in ['username', 'password', 'sourceUrl']:
-            newVal = getattr(sourceInstance, field)
+        sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
+        sourceInst = sourceClass()
+
+        for field in sourceInst.getFieldNames():
+            newVal = getattr(source, field)
             if getattr(oldSource, field) != newVal:
-                row = cu.execute(selSql, field, sourceInstance.contentSourceId)
+                row = cu.execute(selSql, field, source.contentSourceId)
                 if row.fetchall():
-                    cu.execute(updSql, newVal, field, sourceInstance.contentSourceId)
+                    cu.execute(updSql, newVal, field, source.contentSourceId)
                 else:
-                    cu.execute(insSql % (field, newVal), sourceInstance.contentSourceId)
+                    cu.execute(insSql % (field, newVal), source.contentSourceId)
 
         return self.getSource(shortName=shortName)
 

@@ -103,7 +103,7 @@ class FixtureCache(object):
                                   'localhost@rpath:plat-2']
 
         cfg.platformSources      = ['plat1source', 'plat2source0', 'plat2source1']
-        cfg.platformSourceTypes  = ['red', 'rhn', 'rhn']
+        cfg.platformSourceTypes  = ['satellite', 'rhn', 'rhn']
         cfg.platformSourceUrls   = ['http://plat1source.example.com',
                                     'https://plat2source0.example.com',
                                     'https://plat2source1.example.com']

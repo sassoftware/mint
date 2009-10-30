@@ -167,7 +167,6 @@ contentSourcesXml = """\
     <contentSourceId>1</contentSourceId>
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
-    <sourceUrl>https://plat2source0.example.com</sourceUrl>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>rhn</contentSourceType>
@@ -177,7 +176,6 @@ contentSourcesXml = """\
     <contentSourceId>2</contentSourceId>
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
-    <sourceUrl>https://plat2source1.example.com</sourceUrl>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>rhn</contentSourceType>
@@ -192,7 +190,6 @@ contentSourceXml = """\
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
-  <sourceUrl>https://plat2source0.example.com</sourceUrl>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
   <contentSourceType>rhn</contentSourceType>
@@ -207,7 +204,6 @@ contentSourcesByPlatformXml = """\
     <contentSourceId>1</contentSourceId>
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
-    <sourceUrl>https://plat2source0.example.com</sourceUrl>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>rhn</contentSourceType>
@@ -217,7 +213,6 @@ contentSourcesByPlatformXml = """\
     <contentSourceId>2</contentSourceId>
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
-    <sourceUrl>https://plat2source1.example.com</sourceUrl>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>rhn</contentSourceType>
@@ -243,13 +238,12 @@ contentSourcePUTXml = """\
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
-  <sourceUrl>http://plat1source.example.com</sourceUrl>
-  <username>foousername</username>
-  <password>foopassword</password>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
   <contentSourceType>rhn</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+  <username>foousername</username>
+  <password>foopassword</password>
 </contentSource>
 """
 
@@ -259,13 +253,12 @@ contentSourcePUTXml2 = """\
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
-  <sourceUrl>http://plat1source.example.com</sourceUrl>
-  <username>foousername2</username>
-  <password>foopassword2</password>
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
   <contentSourceType>rhn</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/rhn/instances/plat2source0/status"/>
+  <username>foousername2</username>
+  <password>foopassword2</password>
 </contentSource>
 """
 
@@ -315,7 +308,6 @@ sourcePOSTRespXml = """\
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 2</name>
   <shortname>plat2source2</shortname>
-  <sourceUrl>https://plat2source2.example.com</sourceUrl>
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
   <contentSourceType>rhn</contentSourceType>
@@ -341,10 +333,10 @@ sourcePOSTResp2Xml = """\
   <contentSourceId>1</contentSourceId>
   <name>Platform 2 Source 2</name>
   <shortname>plat2source2</shortname>
-  <sourceUrl>https://plat2source2.example.com</sourceUrl>
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
   <contentSourceType>satellite</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/status"/>
+  <sourceUrl>https://plat2source2.example.com</sourceUrl>
 </contentSource>
 """
