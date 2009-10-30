@@ -173,3 +173,14 @@ class Model(object):
         if kwargs:
             raise TypeError('%s() got an unexpected keyword argument %r'
                     % (className, sorted(kwargs)[0]))
+
+    def __setattr__(self, attr, value):
+        fields = list(self._fields)
+        lowerFields = [f.lower() for f in fields]
+
+        if attr.lower() in  lowerFields:
+            index = lowerFields.index(attr.lower())
+            fieldName = fields[index]
+            object.__setattr__(self, fieldName, value)
+        else:
+            object.__setattr__(self, attr, value)

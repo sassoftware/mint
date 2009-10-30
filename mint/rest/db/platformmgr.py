@@ -9,6 +9,7 @@ import weakref
 import xmlrpclib
 
 from conary import versions
+from conary.dbstore import sqllib
 from conary.lib import util
 
 from mint import mint_error
@@ -214,6 +215,7 @@ class PlatformManager(manager.Manager):
         return cu
 
     def _sourceModelFactory(self, **kw):
+        kw = sqllib.CaselessDict(kw)
         sourceId = kw.get('platformSourceId', None)
         contentSourceType = kw['contentSourceType']
         sourceTypeClass = contentsources.contentSourceTypes[contentSourceType]
@@ -224,7 +226,7 @@ class PlatformManager(manager.Manager):
             if type(v) == type(int):
                 val = str(v)
             else:
-                val = v
+                val = v 
             setattr(model, k, val)
 
         if sourceId:
@@ -275,7 +277,7 @@ class PlatformManager(manager.Manager):
             
         sources = {}
         for row in cu:
-            source = self._sourceModelFactory(**row)
+            source = self._sourceModelFactory(**dict(row))
             sources[source.shortName] = source
 
         return sources            
@@ -404,17 +406,6 @@ class PlatformManager(manager.Manager):
                                 valid=ret[1], message=ret[2])
 
         return status
-
-    def _checkRHNSourceStatus(self, url, username, password):
-        if url.endswith('/'):
-            url = url[:-1]
-        url = "%s/rpc/api" % url
-        s = util.ServerProxy(url)
-        try:
-            s.auth.login(username, password)
-            return (True, True, 'Validated Successfully.')
-        except xmlrpclib.Fault, e:
-            return (True, False, e.faultString)
 
     def updateSource(self, shortName, source):
         cu = self.db.cursor()
