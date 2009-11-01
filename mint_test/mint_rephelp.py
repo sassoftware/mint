@@ -35,6 +35,7 @@ import mint.client
 from mint.rest.db import reposmgr
 from mint import config
 from mint import cooktypes
+from mint import jobstatus
 from mint import server
 from mint import shimclient
 from mint import buildtypes
@@ -820,12 +821,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         buildTable = builds.BuildsTable(db)
         buildFilesTable = jobs.BuildFilesTable(db)
         dataTable = builds.BuildDataTable(db)
-        buildId = buildTable.new(projectId=projectId, 
-                                 buildType=imageType, name=name,
-                                 description=description, createdBy=userId,
-                                 troveName=troveName,
-                                 troveVersion=troveVersion,
-                                 troveFlavor=troveFlavor)
+        buildId = buildTable.new(projectId=projectId, buildType=imageType,
+                name=name, description=description, createdBy=userId,
+                troveName=troveName, troveVersion=troveVersion,
+                troveFlavor=troveFlavor, status=jobstatus.FINISHED,
+                statusMessage="Job Finished")
         if imageFiles is None:
             digest = sha1()
             digest.update(str(buildId))
@@ -885,6 +885,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         cu = self.db.cursor()
         flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
         cu.execute("UPDATE Builds set troveFlavor=? WHERE buildId=?", flavor, buildId)
+        self.db.commit()
+
+    def setBuildFinished(self, buildId):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Builds SET status = ?, statusMessage = ? "
+                "WHERE buildId = ?", jobstatus.FINISHED, "Job Finished",
+                buildId)
         self.db.commit()
 
     def hideOutput(self):
@@ -975,39 +982,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         project.editLabel(labelId, defaultLabel,
             '%s://localhost:%d/repos/%s/' % (protocol, port, project.hostname),
             label['authType'], label['username'], label['password'], label['entitlement'])
-
-    def writeIsoGenCfg(self):
-        raise SkipTestExeption('this test references deleted code')
-        cfg = jobserver.IsoGenConfig()
-
-        cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
-        cfg.supportedArch   = ['x86', 'x86_64']
-        cfg.cookTypes       = [cooktypes.GROUP_BUILDER]
-        cfg.buildTypes    = [buildtypes.STUB_IMAGE]
-        cfg.logPath         = os.path.join(self.reposDir, "jobserver", "logs")
-        cfg.imagesPath      = os.path.join(self.reposDir, "jobserver", "images")
-        cfg.finishedPath    = os.path.join(self.reposDir, "jobserver", "finished-images")
-        cfg.lockFile        = os.path.join(self.reposDir, "jobserver", "jobserver.pid")
-
-        cfg.jobTypes        = {'cookTypes' : cfg.cookTypes,
-                               'buildTypes' : cfg.buildTypes}
-
-        for x in ["logs", "images", "finished-images"]:
-            util.mkdirChain(os.path.join(self.reposDir, "jobserver", x))
-
-        f = open(self.tmpDir + "/iso_gen.conf", "w")
-        cfg.display(f)
-        f.close()
-
-        f = open(self.tmpDir + "/bootable_image.conf", "w")
-        f.close()
-
-        f = open(self.tmpDir + "/conaryrc", "w")
-        self.cfg.display(f)
-        f.close()
-
-        cfg.configPath = self.tmpDir
-        return cfg
 
     def verifyContentsInFile(self, fileName, contents):
         f = file(fileName)
