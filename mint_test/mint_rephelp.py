@@ -608,15 +608,19 @@ class RestDBMixIn(object):
             digest.update(str(imageId))
             digest = digest.hexdigest()
 
-            imageFiles = [('imagefile_%s.iso' % imageId, 
-                           'Image File %s' % imageId,
-                           1024 * imageId, digest)]
-        for item in imageFiles:
-            path = self.mintCfg.imagesPath + '/%s/%s/%s' % (hostname, imageId,
-                                                            item[0])
+            imageFiles = models.ImageFileList(files=[models.ImageFile(
+                title='Image File %s' % imageId,
+                size=1024 * imageId,
+                sha1=digest,
+                baseFileName='imagefile_%s.iso' % imageId,
+                )])
+
+        for item in imageFiles.files:
+            path = '%s/%s/%s/%s' % (self.mintCfg.imagesPath, hostname, imageId,
+                    item.baseFileName)
             util.mkdirChain(os.path.dirname(path))
             open(path, 'w').write('image data')
-        db.setImageFiles(hostname, imageId, imageFiles)
+        db.imageMgr.setFilesForImage(hostname, imageId, imageFiles)
 
 
 class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):

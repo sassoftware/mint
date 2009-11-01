@@ -320,10 +320,10 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         buildId = data['buildId']
 
-        class MockMcpClient(object):
-            jobStatus = lambda *args, **kwargs: (jobstatus.RUNNING, "starting")
-        client.server._server._getMcpClient = \
-                lambda *args, **kwargs: MockMcpClient()
+        cu = db.cursor()
+        cu.execute("UPDATE Builds SET status = ?, statusMessage = ? "
+                "WHERE buildId = ?", jobstatus.RUNNING, "starting", buildId)
+        db.commit()
 
         self.assertEquals(client.server.getBuildStatus(buildId),
                 {'status': jobstatus.RUNNING, 'message': 'starting'})
@@ -739,7 +739,6 @@ class BuildTest(fixtures.FixturedUnitTest):
                 {'amiId': 'bogusAMIId',
                     'enumArg': '2',
                     'boolArg': False,
-                    'jsversion': 'None',
                     'amiManifestName,': 'bogusManifestName',
                     'stringArg': '', 'intArg': 0})
 

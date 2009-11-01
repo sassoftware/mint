@@ -15,7 +15,12 @@ class ProductImagesController(base.BaseController):
 
     modelName = 'imageId'
 
-    urls = {'files' : {'GET': 'getFiles', 'PUT': 'setFiles'},
+    urls = {
+            'files' : {
+                'GET': 'getFiles',
+                'PUT': 'setFiles',
+                'DELETE': 'deleteFiles',
+                },
             'stop'  : {'POST' : 'stop'},
             'status': {'GET': 'getStatus', 'PUT': 'setStatus'},
             'buildLog': {'GET': 'getBuildLog', 'POST': 'postBuildLog'},
@@ -44,36 +49,31 @@ class ProductImagesController(base.BaseController):
     def getFiles(self, request, hostname, imageId):
         return self.db.listFilesForImage(hostname, imageId)
 
+    def deleteFiles(self, request, hostname, imageId):
+        return self.db.deleteImageFilesForProduct(hostname, imageId)
+
     @auth.public
     def getStatus(self, request, hostname, imageId):
         return self.db.getImageStatus(hostname, imageId)
 
     # job API
-    @staticmethod
-    def _getImageToken(request):
-        imageToken = request.headers.get('X-rBuilder-OutputToken')
-        if not imageToken:
-            raise PermissionDeniedError()
-        return imageToken
-
-    @auth.public # authenticated by image token
+    @auth.tokenRequired
     @requires('status', models.ImageStatus)
     def setStatus(self, request, hostname, imageId, status):
-        imageToken = self._getImageToken(request)
-        return self.db.setImageStatus(hostname, imageId, imageToken, status)
+        return self.db.setImageStatus(hostname, imageId, request.imageToken,
+                status)
 
-    @auth.public # authenticated by image token
+    @auth.tokenRequired
     @requires('files', models.ImageFileList)
     def setFiles(self, request, hostname, imageId, files):
-        imageToken = self._getImageToken(request)
-        return self.db.setFilesForImage(hostname, imageId, imageToken, files)
+        return self.db.setFilesForImage(hostname, imageId, request.imageToken,
+                files)
 
-    @auth.public # authenticated by image token
+    @auth.tokenRequired
     def postBuildLog(self, request, hostname, imageId):
-        imageToken = self._getImageToken(request)
         data = request.read()
-        self.db.appendImageFile(hostname, imageId, 'build.log', imageToken,
-                data)
+        self.db.appendImageFile(hostname, imageId, 'build.log',
+                request.imageToken, data)
 
         # 204 No Content
         return Response(status=204)

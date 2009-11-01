@@ -139,19 +139,18 @@ class ImagesTest(restbase.BaseRestTest):
     <buildCount>0</buildCount>
     <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/1/buildLog"/>
     <imageStatus id="http://%(server)s:%(port)s/api/products/testproject/images/1/status">
-      <code>100</code>
-      <message>Message</message>
+      <code>-1</code>
+      <message></message>
       <isFinal>false</isFinal>
     </imageStatus>
-    <files>
+    <files id="http://%(server)s:%(port)s/api/products/testproject/images/1/files">
       <file>
         <fileId>1</fileId>
-        <imageId>1</imageId>
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
         <baseFileName>imagefile_1.iso</baseFileName>
-        <url fileId="1" urlType="0">http://localhost:8000/downloadImage?fileId=1&amp;urlType=0</url>
+        <url urlType="0">http://localhost:8000/downloadImage?fileId=1&amp;urlType=0</url>
       </file>
     </files>
   </image>
@@ -176,19 +175,18 @@ class ImagesTest(restbase.BaseRestTest):
     <buildCount>0</buildCount>
     <buildLog href="http://%(server)s:%(port)s/api/products/testproject/images/2/buildLog"/>
     <imageStatus id="http://%(server)s:%(port)s/api/products/testproject/images/2/status">
-      <code>100</code>
-      <message>Message</message>
+      <code>-1</code>
+      <message></message>
       <isFinal>false</isFinal>
     </imageStatus>
-    <files>
+    <files id="http://%(server)s:%(port)s/api/products/testproject/images/2/files">
       <file>
         <fileId>2</fileId>
-        <imageId>2</imageId>
         <title>Image File 2</title>
         <size>2048</size>
         <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
         <baseFileName>imagefile_2.iso</baseFileName>
-        <url fileId="2" urlType="0">http://localhost:8000/downloadImage?fileId=2&amp;urlType=0</url>
+        <url urlType="0">http://localhost:8000/downloadImage?fileId=2&amp;urlType=0</url>
       </file>
     </files>
   </image>
@@ -239,9 +237,9 @@ class ImagesTest(restbase.BaseRestTest):
                 headers=headers)
 
         del headers['x-rbuilder-outputtoken']
-        self.assertRaises(PermissionDeniedError, client.call, 'POST',
-                'products/testproject/images/1/buildLog', data,
-                headers=headers)
+        resp = client.call('POST', 'products/testproject/images/1/buildLog',
+                data, headers=headers)[1]
+        self.failUnlessEqual(resp.status, 403)
 
 
 testsetup.main()
