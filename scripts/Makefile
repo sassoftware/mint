@@ -14,6 +14,7 @@ static_files =				\
 	generate-certs.sh		\
 	group-script			\
 	init-extproducts	        \
+	job-cleanup			\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
