@@ -11,6 +11,7 @@ import os.path
 import sys
 import traceback
 from conary.lib.log import logger
+from mint import config
 from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
@@ -31,9 +32,10 @@ class GenericScript(object):
         self.name = os.path.basename(sys.argv[0])
         self.resetLogging()
 
-    def resetLogging(self):
+    def resetLogging(self, quiet=False):
         if self.newLogger:
-            mintutils.setupLogging(self.logPath, consoleLevel=logging.INFO,
+            level = quiet and logging.ERROR or logging.INFO
+            mintutils.setupLogging(self.logPath, consoleLevel=level,
                     fileLevel=logging.DEBUG)
             # Set the conary logger to not eat messages
             logger.setLevel(logging.NOTSET)
@@ -65,6 +67,9 @@ class GenericScript(object):
         if self.logFileName and not self.logPath:
             self.logPath = os.path.join(cfg.logPath, self.logFileName)
             self.resetLogging()
+
+    def loadConfig(self, cfgPath=config.RBUILDER_CONFIG):
+        self.setConfig(config.getConfig(cfgPath))
 
     def run(self):
         """ 

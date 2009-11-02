@@ -4,3 +4,4 @@
 
 28      3   *   *   *       root    /usr/share/rbuilder/scripts/rss-update -q
 45      3   *   *   *       root    /usr/share/rbuilder/scripts/refresh-auth
+*/5     *   *   *   *       root    /usr/share/rbuilder/scripts/job-cleanup -q
