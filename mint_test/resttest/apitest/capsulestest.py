@@ -48,7 +48,7 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
             username = 'JeanValjean'
             password = 'SuperSikrit'
             sourceUrl = 'ignoremereally'
-        db.platformMgr.createPlatformSource(Source())
+        db.platformMgr.createSource(Source())
         db.commit()
 
     def indexer(self):
