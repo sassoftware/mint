@@ -961,6 +961,11 @@ class FixturedUnitTest(testhelp.TestCase):
         testhelp.TestCase.setUp(self)
         resetCache()
 
+        # Prevent the mcp from talking to anyone interesting.
+        server.MintServer._getMcpClient = mock.MockObject()
+        server.MintServer._getMcpClient(
+                ).new_job._mock.setDefaultReturn('0' * 32)
+
     def tearDown(self):
         mock.unmockAll()
         if getattr(server, 'dbConnection', None):

@@ -55,7 +55,6 @@ from conary.lib import util
 from conary.lib.digestlib import sha1
 
 from testrunner.testhelp import SkipTestException, findPorts
-from testutils import mock
 
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this

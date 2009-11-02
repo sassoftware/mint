@@ -1309,9 +1309,6 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         server = client.server._server
         
         # get custom builds
-        client.server._server._getMcpClient = mock.MockObject()
-        client.server._server._getMcpClient().new_job._mock.setDefaultReturn(
-                '0' * 32)
         buildIds = \
             client.newBuildsFromProductDefinition(versionId, 'Custom', False)
             
