@@ -384,6 +384,8 @@ def _createPackageIndex(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['PackageIndex'] = []
         changed = True
+    changed |= db.createIndex("PackageIndex", "PackageIndex_Project_Name_idx",
+            "projectId, name")
     changed |= db.createIndex("PackageIndex", "PackageIndexNameIdx",
         "name, version")
     changed |= db.createIndex("PackageIndex", "PackageIndexProjectIdx",
