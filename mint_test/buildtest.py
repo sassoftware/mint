@@ -12,6 +12,7 @@ import sys
 import time
 import tempfile
 import simplejson
+from testutils import mock
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
@@ -1308,6 +1309,9 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         server = client.server._server
         
         # get custom builds
+        client.server._server._getMcpClient = mock.MockObject()
+        client.server._server._getMcpClient().new_job._mock.setDefaultReturn(
+                '0' * 32)
         buildIds = \
             client.newBuildsFromProductDefinition(versionId, 'Custom', False)
             

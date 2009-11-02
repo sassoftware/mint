@@ -564,7 +564,7 @@ class SiteHandler(WebHandler):
             helperfuncs.setCurrentProductVersion(self.session, projectId, versionId)
             self._setInfo("Successfully created %s %s '%s' version '%s'" % \
                               (isPrivate and "private" or "public", pText, title, version))
-            self._redirectHttp('project/%s' % (hostname,))
+            self._redirectHttp('project/%s' % (hostname,), temporary=True)
         else:
             availablePlatforms = self.client.getAvailablePlatforms()
             kwargs = {'title': title, 
