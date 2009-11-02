@@ -193,6 +193,7 @@ class AuthenticationCallback(object):
             if not imageToken:
                 return Response(status=403)
             request.imageToken = imageToken
+            return None
 
         # require authentication
         if (not getattr(viewMethod, 'public', False)
