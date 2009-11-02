@@ -28,7 +28,6 @@ class SourceController(base.BaseController):
 
     urls = { 'status' : SourceStatusController }
 
-
     @auth.public
     def index(self, request, sourceType):
         return self.db.getSources(sourceType, None)
