@@ -104,7 +104,8 @@ createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
 
 "$scriptdir"/rbuilder-database --migrate \
     || die "Failed to migrate the rBuilder database"
-chown -f apache:apache /srv/rbuilder/data/{db,platformName.cache} 2>/dev/null
+chown -f apache:apache /srv/rbuilder/data/db 2>/dev/null
+rm -f /srv/rbuilder/data/platformName.cache
 
 # Migrate all conary repositories
 "$scriptdir"/migrate-all-projects
