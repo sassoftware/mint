@@ -33,7 +33,7 @@ from conary.repository import errors
 
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
-    def _checkRedirect(self, url, expectedRedirect, code=302):
+    def _checkRedirect(self, url, expectedRedirect, code=301):
         page = self.assertCode(url, code)
         redirectUrl = page.headers.getheader('location')
         self.failUnlessEqual(redirectUrl, expectedRedirect,
