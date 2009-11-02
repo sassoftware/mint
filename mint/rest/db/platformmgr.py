@@ -457,7 +457,7 @@ class PlatformManager(manager.Manager):
             sourceId = self.db.db.platformSources.new(
                     name=source.name,
                     shortName=source.shortName,
-                    defaultSource=source.defaultSource,
+                    defaultSource=int(source.defaultSource),
                     contentSourceTypeId=typeId,
                     orderIndex=source.orderIndex)
         except mint_error.DuplicateItem, e:
@@ -477,6 +477,9 @@ class PlatformManager(manager.Manager):
         return sourceId          
 
     def createSource(self, source):
+        if not source.contentSourceType:
+            raise Exception('Content Source Type must be specified.')
+
         self._createSource(source)
         return self.getSource(shortName=source.shortName)
 
