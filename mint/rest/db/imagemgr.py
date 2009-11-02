@@ -50,8 +50,11 @@ class ImageManager(manager.Manager):
             FROM Builds b
                 JOIN Projects p USING ( projectId )
                 %(join)s
-                LEFT JOIN PublishedReleases pr USING ( pubReleaseId )
-                LEFT JOIN ProductVersions pv USING ( productVersionId )
+                -- NB: USING() would be typical but sqlite seems upset?
+                LEFT JOIN PublishedReleases pr ON (
+                    b.pubReleaseId = pr.pubReleaseId )
+                LEFT JOIN ProductVersions pv ON (
+                    b.productVersionId = pv.productVersionId )
                 LEFT JOIN Users cr_user ON ( b.createdBy = cr_user.userId )
                 LEFT JOIN Users up_user ON ( b.updatedBy = up_user.userId )
                 LEFT JOIN BuildData ami_data ON (
@@ -239,9 +242,6 @@ class ImageManager(manager.Manager):
                 buildDataTable.setDataValue(buildId, name, value, dataType, 
                                             commit=False)
 
-        jsversion = self._getJobServerVersion()
-        buildDataTable.setDataValue(buildId, 'jsversion',
-                               jsversion, data.RDT_STRING, commit=False)
         # clear out all "important flavors"
         for x in buildtypes.flavorFlags.keys():
             buildDataTable.removeDataValue(buildId, x, commit=False)

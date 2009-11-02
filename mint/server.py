@@ -2996,8 +2996,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise mint_error.BuildPublished()
 
-        # image-less builds (i.e. group trove builds) don't actually get built,
-        # they just get stuffed into the DB
         buildDict = self.builds.get(buildId)
         buildType = buildDict['buildType']
 
@@ -3005,8 +3003,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._setBuildFilenames(buildId, [])
 
         if buildType == buildtypes.IMAGELESS:
+            # image-less builds (i.e. group trove builds) don't actually get
+            # built, they just get stuffed into the DB
             self.db.builds.update(buildId, status=jobstatus.FINISHED,
                     statusMessage="Job Finished")
+            return '0' * 32
         else:
             jobData = self.serializeBuild(buildId)
             client = self._getMcpClient()

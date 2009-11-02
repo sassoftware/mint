@@ -1171,6 +1171,7 @@ class SiteHandler(WebHandler):
 
         targetFn = os.path.join(self.cfg.imagesPath, project.hostname,
                 str(buildId), fileName)
+        util.mkdirChain(os.path.dirname(targetFn))
         fObj = AtomicFile(targetFn, 'wb', prefix='img-', suffix='.tmp')
         ctx = digestlib.sha1()
 

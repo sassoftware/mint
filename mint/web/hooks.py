@@ -125,7 +125,6 @@ def getRepository(projectName, repName, cfg,
     nscfg.requireSigs = requireSigs
     nscfg.serializeCommits = cfg.serializeCommits
     nscfg.readOnlyRepository = cfg.readOnlyRepositories
-    nscfg.capsuleServerUrl = indexerUrl
 
     repositoryDir = os.path.join(cfg.reposPath, repName)
 

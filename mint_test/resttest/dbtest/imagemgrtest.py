@@ -10,6 +10,7 @@ from mint import mint_error
 from mint.lib import data
 
 from mint.rest import errors
+from mint.rest.api import models
 from mint.rest.db import imagemgr
 
 from mint_test import mint_rephelp
@@ -108,36 +109,31 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                                   name='Image1')
-        self.setImageFiles(db, 'foo', imageId)
+                name='Image1',
+                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
+
+        # Initial creation -> unknown
         image = db.getImageForProduct('foo', imageId)
-        imageMgr = imagemgr.ImageManager(self.mintCfg, db, db.auth)
-        self.assertEqual(image.imageStatus.code, jobstatus.RUNNING)
-        self.assertEqual(image.imageStatus.message, 'foo')
+        self.assertEqual(image.imageStatus.code, jobstatus.UNKNOWN)
+        self.assertEqual(image.imageStatus.message, '')
         self.assertEqual(image.imageStatus.isFinal, False)
 
-        # No job + image files -> finished
-        image.imageStatus.set_status(jobstatus.WAITING)
-        imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.imageStatus.code, jobstatus.FINISHED)
-        self.failUnlessEqual(image.imageStatus.message, 'Finished')
-        self.failUnlessEqual(image.imageStatus.isFinal, True)
+        # Set by build machinery
+        status = models.ImageStatus(code=jobstatus.RUNNING, message='wait plz')
+        db.setImageStatus('foo', imageId, 'abcdef', status)
 
-        # No job + no image files -> failed
-        image.imageStatus.set_status(jobstatus.WAITING)
-        image.files.files = []
-        imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.imageStatus.code, jobstatus.FAILED)
-        self.failUnlessEqual(image.imageStatus.message, 'Error')
-        self.failUnlessEqual(image.imageStatus.isFinal, True)
+        image = db.getImageForProduct('foo', imageId)
+        self.assertEqual(image.imageStatus.code, jobstatus.RUNNING)
+        self.assertEqual(image.imageStatus.message, 'wait plz')
+        self.assertEqual(image.imageStatus.isFinal, False)
 
-        # Imageless build -> finished
-        image.imageStatus.set_status(jobstatus.WAITING)
-        mock.mockMethod(image.hasBuild, False)
-        imageMgr._updateStatusForImageList([image])
-        self.failUnlessEqual(image.imageStatus.code, jobstatus.FINISHED)
-        self.failUnlessEqual(image.imageStatus.message, 'Finished')
-        self.failUnlessEqual(image.imageStatus.isFinal, True)
+        status = models.ImageStatus(code=jobstatus.FINISHED, message='Is good!')
+        db.setImageStatus('foo', imageId, 'abcdef', status)
+
+        image = db.getImageForProduct('foo', imageId)
+        self.assertEqual(image.imageStatus.code, jobstatus.FINISHED)
+        self.assertEqual(image.imageStatus.message, 'Is good!')
+        self.assertEqual(image.imageStatus.isFinal, True)
 
     def testCreateImage(self):
         db = self.openMintDatabase(createRepos=False)
@@ -157,27 +153,19 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
-        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO)
+        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
+                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
 
-        db.setImageFiles('foo', imageId, [('filename1', 'title')])
-        files = db.getImageForProduct('foo', imageId).files.files
-        self.assertEqual(len(files), 1)
-        file, = files
-        self.assertEqual(file.title, 'title')
-        self.assertEqual(file.urls[0].fileId, 1)
-        self.assertEqual(file.urls[0].urlType, 0)
+        imageFiles = models.ImageFileList(files=[models.ImageFile(
+            baseFileName='filename2', title='title2', size=1024, sha1='sha')])
+        db.setFilesForImage('foo', imageId, 'abcdef', imageFiles)
 
-        db.setImageFiles('foo', imageId, [('filename2', 'title2', 1024, 'sha')])
-        files = db.getImageForProduct('foo', imageId).files.files
-        self.assertEqual(len(files), 1)
-        file, = files
+        file, = db.getImageForProduct('foo', imageId).files.files
         self.assertEqual(file.title, 'title2')
-        self.assertEqual(file.urls[0].fileId, 2)
+        self.assertEqual(file.urls[0].fileId, 1)
         self.assertEqual(file.urls[0].urlType, 0)
         self.assertEqual(file.size, 1024)
         self.assertEqual(file.sha1, 'sha')
-        self.assertRaises(ValueError,
-                db.setImageFiles, 'foo', imageId, 
-                                 [('filename2', 'title2', 1024)])
-        
+
+
 testsetup.main()

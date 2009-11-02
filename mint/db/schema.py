@@ -950,7 +950,7 @@ def _createReportingSchema(db):
         db.tables['reporttype'] = []
         cu.execute("""
             insert into reporttype (uriname,name,description,timecreated,timeupdated,active) values 
-                ('imagePerProduct','Find Images per Product','Show the number of images created for a product by different aggregations',
+                ('imagePerProducts','Find Images per Product','Show the number of images created for a product by different aggregations',
                 1240934903.38,1240934903.38,1)""") 
         changed = True
     changed |= db.createIndex('reporttype',

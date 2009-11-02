@@ -647,13 +647,7 @@ class Database(DBInterface):
                                             buildData)
         image.imageId = imageId
         return imageId
-    
-    @commitafter
-    def setImageFiles(self, hostname, imageId, imageFiles):
-        self.auth.requireAdmin()
-        self.imageMgr.setImageFiles(hostname, imageId, imageFiles)
 
-        
 
     @commitafter
     def createUser(self, username, password, fullName, email, 

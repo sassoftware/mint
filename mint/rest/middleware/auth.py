@@ -27,6 +27,17 @@ def internal(deco):
     deco.internal = True
     return deco
 
+
+def tokenRequired(func):
+    """
+    Mark an image-build-related API function as requiring an authentication
+    token in the HTTP headers. The token will be placed in
+    C{request.imageToken}.
+    """
+    func.tokenRequired = True
+    return func
+
+
 def noDisablement(method):
     """
     Decorator for methods that should work even when the rBuilder's
@@ -176,6 +187,12 @@ class AuthenticationCallback(object):
                 and request.remote[0] != '127.0.0.1'):
             # Request to an internal API from an external IP address
             return Response(status=404)
+
+        if getattr(viewMethod, 'tokenRequired', False):
+            imageToken = request.headers.get('X-rBuilder-OutputToken')
+            if not imageToken:
+                return Response(status=403)
+            request.imageToken = imageToken
 
         # require authentication
         if (not getattr(viewMethod, 'public', False)

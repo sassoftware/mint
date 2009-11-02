@@ -33,7 +33,7 @@ from conary.repository import errors
 
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
-    def _checkRedirect(self, url, expectedRedirect, code=301):
+    def _checkRedirect(self, url, expectedRedirect, code=302):
         page = self.assertCode(url, code)
         redirectUrl = page.headers.getheader('location')
         self.failUnlessEqual(redirectUrl, expectedRedirect,
@@ -385,7 +385,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           {'name'   : 'Bar',
                            'commitEmail': 'email@example.com',
                            'namespace': 'spacemonkey'},
-                          ok_codes = [301])
+                          ok_codes = [302])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
@@ -426,7 +426,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           {'name'   : 'Bar',
                            'isPrivate': 'off',
                            'namespace': 'spacemonkey'},
-                          ok_codes = [301])
+                          ok_codes = [302])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.hidden, False)
@@ -524,6 +524,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         buildSize = 1024 * 1024 * 300
         buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
         build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+        self.setBuildFinished(build.buildId)
 
         self.webLogin('foouser', 'foopass')
 
@@ -563,6 +564,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso')
         build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT,
                 'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso?torrent')
+        self.setBuildFinished(build.buildId)
 
         self.webLogin('foouser', 'foopass')
 
@@ -606,6 +608,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setDataValue('anaconda-custom',
                 'anaconda-custom=/conary.rpath.com@rpl:devel/2.0-1-1[]',
                 data.RDT_TROVE, validate=False)
+        self.setBuildFinished(build.buildId)
 
         # make one of these frozen just to make sure we can handle
         # cases where a frozen version made it into the database
