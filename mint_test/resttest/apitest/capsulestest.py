@@ -41,7 +41,7 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
             "WHERE label = ?", platformLabel).fetchone()[0]
         class Source(object):
             name = 'sourceName'
-            contentSourceType = 'rhn'
+            contentSourceType = 'RHN'
             shortName = 'sourceShortName'
             defaultSource = 1
             orderIndex = 1
