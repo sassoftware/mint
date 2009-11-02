@@ -695,39 +695,26 @@ class ProductVersionTest(restbase.BaseRestTest):
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <imageDefinitions>
-  <imageDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageDefinitions/2ebe0a8a2711b1fd9c45a4a54783d958">
-    <name>Old UI image that has an extra generic flavor in it</name>
-    <displayName>Old UI image that has an extra generic flavor in it</displayName>
-    <imageGroup>group-testproject-appliance</imageGroup>
-    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Development"/>
-    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/QA"/>
-    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Release"/>
-    <container id="http://localhost:8000/api/products/testproject/versions/1.0/containers/applianceIsoImage">
-      <name>applianceIsoImage</name>
-      <displayName>Appliance Installable ISO</displayName>
-      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
-    </container>
-    <architecture id="http://localhost:8000/api/products/testproject/versions/1.0/architectures/x86">
-      <name>x86</name>
-      <displayName>x86 (32-bit)</displayName>
-    </architecture>
-  </imageDefinition>
-  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/24597af6ccdf86fbfdc1b011f61e8204">
-    <name>update iso 64-bit</name>
-    <displayName>update iso 64-bit</displayName>
+  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/71a60de01b7e8675254175584fdb9db2">
+    <name>Citrix XenServer 64-bit</name>
+    <displayName>Citrix XenServer 64-bit</displayName>
     <imageGroup>group-testproject-appliance</imageGroup>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
-    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/updateIsoImage">
-      <name>updateIsoImage</name>
-      <displayName>Update CD/DVD</displayName>
-      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
+    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
+      <name>xenOvaImage</name>
+      <displayName>Citrix XenServer (TM) Appliance</displayName>
+      <options autoResolve="false" baseFileName="" freespace="6789" installLabelPath="" natNetworking="false" swapSize="512" vmMemory="64"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
+    <flavorSet id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/xen">
+      <name>xen</name>
+      <displayName>Xen</displayName>
+    </flavorSet>
   </imageDefinition>
   <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/201264007ec0d331b626ca074a841fa7">
     <name>virtual_irony 32-bit</name>
@@ -750,26 +737,39 @@ class ProductVersionTest(restbase.BaseRestTest):
       <displayName>Virtual Iron</displayName>
     </flavorSet>
   </imageDefinition>
-  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/71a60de01b7e8675254175584fdb9db2">
-    <name>Citrix XenServer 64-bit</name>
-    <displayName>Citrix XenServer 64-bit</displayName>
+  <imageDefinition id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/imageDefinitions/24597af6ccdf86fbfdc1b011f61e8204">
+    <name>update iso 64-bit</name>
+    <displayName>update iso 64-bit</displayName>
     <imageGroup>group-testproject-appliance</imageGroup>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA"/>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release"/>
-    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/xenOvaImage">
-      <name>xenOvaImage</name>
-      <displayName>Citrix XenServer (TM) Appliance</displayName>
-      <options autoResolve="false" baseFileName="" freespace="6789" installLabelPath="" natNetworking="false" swapSize="512" vmMemory="64"/>
+    <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/updateIsoImage">
+      <name>updateIsoImage</name>
+      <displayName>Update CD/DVD</displayName>
+      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
       <displayName>x86 (64-bit)</displayName>
     </architecture>
-    <flavorSet id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/flavorSets/xen">
-      <name>xen</name>
-      <displayName>Xen</displayName>
-    </flavorSet>
+  </imageDefinition>
+  <imageDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageDefinitions/2ebe0a8a2711b1fd9c45a4a54783d958">
+    <name>Old UI image that has an extra generic flavor in it</name>
+    <displayName>Old UI image that has an extra generic flavor in it</displayName>
+    <imageGroup>group-testproject-appliance</imageGroup>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Development"/>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/QA"/>
+    <stage href="http://localhost:8000/api/products/testproject/versions/1.0/stages/Release"/>
+    <container id="http://localhost:8000/api/products/testproject/versions/1.0/containers/applianceIsoImage">
+      <name>applianceIsoImage</name>
+      <displayName>Appliance Installable ISO</displayName>
+      <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" freespace="2048" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false" swapSize="512"/>
+    </container>
+    <architecture id="http://localhost:8000/api/products/testproject/versions/1.0/architectures/x86">
+      <name>x86</name>
+      <displayName>x86 (32-bit)</displayName>
+    </architecture>
   </imageDefinition>
 </imageDefinitions>
 """
