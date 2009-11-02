@@ -28,7 +28,7 @@ class CapsuleManager(manager.Manager):
         cfg.configLine("store %s://%s" % (dbDriver, dbConnectString))
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
-        dataSources = self.db.platformMgr.getSourceInstances().instance
+        dataSources = self.db.platformMgr.getSources().instance
         # XXX we only deal with RHN for now
         if dataSources:
             cfg.configLine("user RHN %s %s" % (dataSources[0].username,
