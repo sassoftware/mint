@@ -8,6 +8,7 @@ import sys
 import weakref
 import xmlrpclib
 
+from conary import errors as conaryErrors
 from conary import versions
 from conary.dbstore import sqllib
 from conary.lib import util
@@ -24,10 +25,11 @@ from rpath_proddef import api1 as proddef
 class PlatformManager(manager.Manager):
     def __init__(self, cfg, db, auth):
         manager.Manager.__init__(self, cfg, db, auth)
+        self._reposMgr = db.productMgr.reposMgr
         cacheFile = os.path.join(self.cfg.dataPath, 'data', 
                                  'platformName.cache')
         self.platformCache = PlatformDefCache(cacheFile, 
-                                               db.productMgr.reposMgr)
+                                              self._reposMgr)
 
     def _iterConfigPlatforms(self):
         apnLength = len(self.cfg.availablePlatformNames)
@@ -380,7 +382,26 @@ class PlatformManager(manager.Manager):
         return self.getSources(source, shortName)
 
     def getPlatformStatus(self, platformId):
-        pass
+        platform = self.getPlatform(platformId)
+        client = self._reposMgr.getAdminClient()
+        platDef = proddef.PlatformDefinition()
+        platStatus = models.PlatformSourceStatus()
+        try:
+            platDef.loadFromRepository(client, platform.label)
+        except conaryErrors.ConaryError, e:
+            platStatus.valid = False
+            platStatus.connected = True
+            platStatus.message = str(e)
+        except Exception, e:
+            platStatus.valid = False
+            platStatus.connected = False
+            platStatus.message = str(e)
+        else:            
+            platStatus.valid = True
+            platStatus.connected = True
+            platStatus.message = '%s is online.' % platform.platformName
+
+        return platStatus
 
     def getSourceStatusByName(self, shortName):
         source = self.getSource(shortName=shortName)

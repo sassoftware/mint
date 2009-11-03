@@ -2,13 +2,18 @@ import products
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
-class SourceStatus(Model):
-    class Meta(object):
-        name = 'contentSourceStatus'
-
+class Status(Model):
     connected = fields.BooleanField()
     valid = fields.BooleanField()
     message = fields.CharField()
+
+class SourceStatus(Status):
+    class Meta(object):
+        name = 'contentSourceStatus'
+
+class PlatformSourceStatus(Status):
+    class Meta(object):
+        name = 'platformSourceStatus'
 
 class Source(Model):
     class Meta(object):
