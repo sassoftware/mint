@@ -96,12 +96,13 @@ class WebHandler(object):
         return returner
 
     def _redirectHttp(self, location='', temporary=False):
-        while location and location[0] == '/':
-            location = location[1:]
-        location = self.baseUrl + location
         self._redirect(location, temporary=temporary)
 
     def _redirect(self, location, temporary = False):
+        if '://' not in location:
+            while location and location[0] == '/':
+                location = location[1:]
+            location = self.baseUrl + location
         setCacheControl(self.req, strict=True)
         self.req.headers_out['Location'] = location
 

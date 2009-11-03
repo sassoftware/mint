@@ -14,17 +14,14 @@
 #
 
 start() {
-    find /var/lib/stompserver/ -type f -exec rm {} +
-    /sbin/service stompserver start
-    /sbin/service mcp start
+    /sbin/service mcp-dispatcher start
     /sbin/service jobmaster start
     /sbin/service httpd reload
 }
 
 stop() {
     /sbin/service jobmaster stop
-    /sbin/service mcp stop
-    /sbin/service stompserver stop
+    /sbin/service mcp-dispatcher stop
 }
 
 case "$1" in
