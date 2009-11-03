@@ -34,8 +34,12 @@ class JobCleanupScript(GenericScript):
         self.loadConfig(options.config_file)
         self.resetLogging(quiet=options.quiet)
 
-        client = mcp.client.Client(self.cfg.queueHost, self.cfg.queuePort)
-        jobs = set(client.list_jobs())
+        try:
+            client = mcp.client.Client(self.cfg.queueHost, self.cfg.queuePort)
+            jobs = set(client.list_jobs())
+        except BuildSystemUnreachableError:
+            log.warning("Build system is unreachable; not doing job cleanup")
+            return
 
         db = database.Database(self.cfg).db
         cu = db.transaction()
@@ -61,24 +65,26 @@ class JobCleanupScript(GenericScript):
             if timeCreated > cutoff:
                 continue
             newStatus = jobstatus.FAILED
+            newMessage = 'Unknown error'
 
             if uuid:
                 if uuid in jobs:
                     # Job is running.
                     continue
                 # Job is definitely dead.
+                newMessage = 'Job terminated unexpectedly'
 
             elif status in (jobstatus.UNKNOWN, jobstatus.NO_JOB):
                 # Migrate from previous versions.
                 # An AMI id or a file that is not a failed build log means the
                 # job was probably successful.
                 if amiId or (title and not title.startswith('Failed')):
+                    newMessage = 'Job Finished'
                     newStatus = jobstatus.FINISHED
 
-            statusMessage = jobstatus.statusNames[newStatus]
             log.info("Setting build %d status to %d %s", buildId, newStatus,
-                    statusMessage)
+                    newMessage)
             cu2.execute("""UPDATE Builds SET status = ?, statusMessage = ?
-                    WHERE buildId = ?""", newStatus, statusMessage, buildId)
+                    WHERE buildId = ?""", newStatus, newMessage, buildId)
 
         db.commit()
