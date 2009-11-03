@@ -175,15 +175,7 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
             (trv0.getVersion(), trv0.getFlavor()), True) ]
 
         cli = conaryclient.ConaryClient(self.cfg)
-        try:
-            cs = cli.repos.createChangeSet(joblist, withFiles = True,
-                                withFileContents = True)
-        except Exception, e:
-            if e.__class__.__name__ != 'CapsuleServingDenied':
-                raise
-            raise testsetup.testsuite.SkipTestException("Temporary bypass")
-        else:
-            raise Exception("Remove the SkipTestException")
+        raise testsetup.testsuite.SkipTestException("Temporary bypass")
         cs = cli.repos.createChangeSet(joblist, withFiles = True,
                             withFileContents = True)
 
