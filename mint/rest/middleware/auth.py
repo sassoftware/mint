@@ -21,6 +21,11 @@ def public(deco):
     deco.public = True
     return deco
 
+# Decorator for methods/functions that require admin
+def admin(deco):
+    deco.admin = True
+    return deco
+
 # Decorator for internal methods/functions. Access should only be allowed from
 # localhost
 def internal(deco):
@@ -194,6 +199,16 @@ class AuthenticationCallback(object):
                 return Response(status=403)
             request.imageToken = imageToken
             return None
+
+        if getattr(viewMethod, 'admin', False):
+            if request.mintAuth is not None:
+                if request.mintAuth.admin:
+                    return None
+                else:
+                    return Response(status=401,
+                             headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
+            else:
+                return Response(status=403)
 
         # require authentication
         if (not getattr(viewMethod, 'public', False)
