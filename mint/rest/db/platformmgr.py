@@ -239,7 +239,7 @@ class PlatformManager(manager.Manager):
 
         return model
 
-    def _getSourcesFromDB(self, source, platformId, sourceShortName):
+    def _getSourcesFromDB(self, sourceType, platformId, sourceShortName):
         cu = self.db.cursor()
         sql = """
             SELECT
@@ -256,8 +256,8 @@ class PlatformManager(manager.Manager):
                 platformSources
         """
 
-        if source:
-            sourceId = self.db.db.contentSourceTypes.getByName(source)
+        if sourceType:
+            sourceId = self.db.db.contentSourceTypes.getByName(sourceType)
 
         if platformId: 
             sql = sql + ', platformsPlatformSources '
@@ -271,7 +271,7 @@ class PlatformManager(manager.Manager):
         elif sourceShortName:
             sql = sql + 'WHERE platformSources.shortName = ?'
             cu.execute(sql, sourceShortName)
-        elif source:
+        elif sourceType:
             sql = sql + """WHERE platformSources.contentSourceTypeId = ?""" 
             cu.execute(sql, sourceId)
         else:
@@ -294,16 +294,26 @@ class PlatformManager(manager.Manager):
                                 contentSourceType=self.cfg.platformSourceTypes[i],
                                 defaultSource='1',
                                 orderIndex='0')
-            if sourceShortName and sourceShortName == cfgShortName:
-                sources = {}
-                sources[source.shortName] = source
-                return sources
-            elif sourceType and sourceType == self.cfg.platformSourceTypes[i]:
-                sources[source.shortName] = source
-            else:                
-                sources[source.shortName] = source
+            sources[source.shortName] = source
 
-        return sources            
+        if sourceType and sourceShortName:
+            filteredSources = [sources[source] for source in sources if
+                               sources[source].shortName==sourceShortName and \
+                               sources[source].contentSourceType==sourceType]
+        elif sourceShortName:
+            filteredSources = [sources[source] for source in sources if
+                               sources[source].shortName==sourceShortName]
+        elif sourceType:
+            filteredSources = [sources[source] for source in sources if
+                               sources[source].contentSourceType==sourceType]
+        else:
+            filteredSources = sources.values()
+
+        sources = {}
+        for source in filteredSources:
+            sources[source.shortName] = source
+
+        return sources
 
     def _linkPlatformContentSource(self, platformId, sourceId):
         self.db.db.platformsPlatformSources.new(platformId=platformId,
@@ -363,13 +373,13 @@ class PlatformManager(manager.Manager):
     def getSourceType(self, source):
         return self.getSourceTypes(source)
 
-    def getSources(self, source=None, shortName=None, platformId=None):
+    def getSources(self, sourceType=None, shortName=None, platformId=None):
         sources = []
         dbSources = self._getSourcesFromDB(None, None, shortName)
-        cfgSources = self._getCfgSources(source, shortName)
+        cfgSources = self._getCfgSources(sourceType, shortName)
         changed = self._createSourcesInDB(dbSources, cfgSources)
 
-        dbSources = self._getSourcesFromDB(source, platformId, shortName)
+        dbSources = self._getSourcesFromDB(sourceType, platformId, shortName)
         
         if shortName:
             return dbSources[shortName]
@@ -378,8 +388,8 @@ class PlatformManager(manager.Manager):
         else:
             return models.SourceInstances(dbSources.values())
 
-    def getSource(self, source=None, shortName=None):
-        return self.getSources(source, shortName)
+    def getSource(self, sourceType=None, shortName=None):
+        return self.getSources(sourceType, shortName)
 
     def getPlatformStatus(self, platformId):
         platform = self.getPlatform(platformId)
@@ -501,7 +511,7 @@ class PlatformManager(manager.Manager):
         if not source.contentSourceType:
             raise Exception('Content Source Type must be specified.')
 
-        self._createSource(source)
+        sourceId = self._createSource(source)
         return self.getSource(shortName=source.shortName)
 
     def deleteSource(self, shortName):

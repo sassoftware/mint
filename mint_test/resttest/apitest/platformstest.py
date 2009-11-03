@@ -39,23 +39,20 @@ class PlatformTest(restbase.BaseRestTest):
     def testGetPlatforms(self):
         return self._testGetPlatforms()
 
-    def testGetPlatformsNotLoggedIn(self):
-        return self._testGetPlatforms(notLoggedIn = True)
-
     def _toXml(self, model, client, req):
         return converter.toText('xml', model, client.controller, req)
 
-    def _getPlatforms(self, notLoggedIn=False):
+    def _getPlatforms(self):
         uri = 'platforms'
         kw = {}
-        if notLoggedIn:
-            kw['username'] = None
+        kw['username'] = 'username'
+        kw['password'] = 'password'
         client = self.getRestClient(**kw)
         req, platforms = client.call('GET', uri)
         return self._toXml(platforms, client, req)
 
-    def _testGetPlatforms(self, notLoggedIn=False):
-        xml = self._getPlatforms(notLoggedIn)
+    def _testGetPlatforms(self):
+        xml = self._getPlatforms()
         self.assertEquals(platformsXml, xml)
 
     def testGetPlatform(self):
@@ -93,7 +90,7 @@ class PlatformTest(restbase.BaseRestTest):
 
     def testGetContentSourceStatusNoData(self):
         uri = '/contentSources/RHN/instances/plat2source0/status'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceStatusXml, xml)
@@ -112,7 +109,7 @@ class PlatformTest(restbase.BaseRestTest):
                               (True, True, 'Validated Successfully'))
 
         uri = '/contentSources/RHN/instances/plat2source0/status'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourceStatusDataXml, xml)
@@ -133,7 +130,7 @@ class PlatformTest(restbase.BaseRestTest):
                               (True, True, 'Validated Successfully'))
 
         uri = '/contentSources/RHN/statusTest'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('POST', uri,
                             body=statusTestPOSTXml)
         xml = self._toXml(platform, client, req)
@@ -142,7 +139,7 @@ class PlatformTest(restbase.BaseRestTest):
 
     def testGetSourceDescriptor(self):
         uri = '/contentSources/RHN/descriptor'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(sourceDescriptorXml, xml)
@@ -168,14 +165,14 @@ class PlatformTest(restbase.BaseRestTest):
 
     def testGetSources(self):
         uri = '/contentSources/RHN/instances'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourcesXml, xml)
 
     def _getSource(self, name):
         uri = '/contentSources/RHN/instances/%s' % name
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('GET', uri)
         return self._toXml(platform, client, req)
 
@@ -189,7 +186,7 @@ class PlatformTest(restbase.BaseRestTest):
         self._getPlatforms()
 
         uri = '/platforms/1/contentSources'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourcesByPlatformXml, xml)
@@ -210,7 +207,7 @@ class PlatformTest(restbase.BaseRestTest):
         self._getSource('plat2source0')
 
         uri = '/contentSources/RHN/instances/plat2source0'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('PUT', uri, body=contentSourcePUTXml)
         xml = self._toXml(platform, client, req)
         self.assertEquals(contentSourcePUTXml, xml)
@@ -223,7 +220,7 @@ class PlatformTest(restbase.BaseRestTest):
 
     def testCreateSource(self):
         uri = '/contentSources/RHN/instances/'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('POST', uri, 
                             body=sourcePOSTXml)
         xml = self._toXml(platform, client, req)
@@ -231,7 +228,7 @@ class PlatformTest(restbase.BaseRestTest):
 
     def testCreateSource2(self):
         uri = '/contentSources/satellite/instances/'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('POST', uri, 
                             body=sourcePOST2Xml)
         xml = self._toXml(platform, client, req)
