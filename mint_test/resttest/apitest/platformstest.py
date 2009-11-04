@@ -100,6 +100,7 @@ class PlatformTest(restbase.BaseRestTest):
         source.sourceUrl = 'https://example.com'
         source.username = 'foousername'
         source.password = 'foopassword'
+        source.name = 'RHN'
         source.contentSourceType = 'RHN'
 
         mock.mockFunctionOnce(platformmgr.PlatformManager,

@@ -114,6 +114,18 @@ sourceDescriptorXml = """\
   </metadata>
   <dataFields>
     <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
       <name>username</name>
       <required>true</required>
       <descriptions>
@@ -152,6 +164,18 @@ sourceDescriptor2Xml = """\
   </metadata>
   <dataFields>
     <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
       <name>username</name>
       <required>true</required>
       <descriptions>
@@ -183,18 +207,6 @@ sourceDescriptor2Xml = """\
       </descriptions>
       <prompt>
         <desc>Source Url</desc>
-      </prompt>
-      <type>str</type>
-      <password>false</password>
-    </field>
-    <field>
-      <name>name</name>
-      <required>true</required>
-      <descriptions>
-        <desc>Content Source Name</desc>
-      </descriptions>
-      <prompt>
-        <desc>Name</desc>
       </prompt>
       <type>str</type>
       <password>false</password>
