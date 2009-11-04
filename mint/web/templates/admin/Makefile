@@ -4,19 +4,7 @@
 # All Rights Reserved
 #
 
-kid_files =			\
-	addExternal.kid		\
-	editOutbound.kid	\
-	editUpdateService.kid	\
-	external.kid		\
-	frontPage.kid		\
-	maintenance.kid		\
-	report.kid		\
-	outbound.kid		\
-	newUser.kid		\
-	admin.kid	\
-	selections.kid		\
-	updateServices.kid
+kid_files = $(wildcard *.kid)
 
 all: kid-build default-all
 

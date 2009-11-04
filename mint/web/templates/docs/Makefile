@@ -4,10 +4,7 @@
 # All Rights Reserved
 #
 
-kid_files =			\
-	dev-tutorial.kid	\
-        minihelp.kid            \
-	user-tutorial.kid
+kid_files = $(wildcard *.kid)
 
 python_files = __init__.py
 

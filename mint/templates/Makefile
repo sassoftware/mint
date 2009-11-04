@@ -4,11 +4,7 @@
 # All Rights Reserved
 #
 
-kid_files = \
-	groupTemplate.kid	\
-	joinRequest.kid		\
-	registerNewUser.kid	\
-	validateNewEmail.kid
+kid_files = $(wildcard *.kid)
 
 python_files = __init__.py
 
