@@ -21,8 +21,8 @@ class TimeSegmentReport(object):
 	            )
         
             def __init__(self, total, time, id = None):
-                self.total = total
-                self.time = time
+                self.total = int(total)
+                self.time = int(time)
                 if id:
                     self.id = id
         
@@ -40,7 +40,7 @@ class TimeSegmentReport(object):
     def addSegment(self, segment):
         if len(self.timeSegments.timeSegment) == 0 or segment.time < self.startTime:
             self.startTime = segment.time
-        if segment.time > self.endTime:    
+        if segment.time > self.endTime:   
             self.endTime = segment.time
         self.timeSegments.timeSegment.append(segment)
 

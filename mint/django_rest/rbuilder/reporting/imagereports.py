@@ -45,7 +45,7 @@ class ImagesPerProduct(Resource):
             where_stmt += " and b.timecreated < %(endtime)s" % locals()
             
         extract_stmt = """date_trunc('%s', timestamp with time zone 'epoch' 
-            AT TIME ZONE 'EST' + cast (b.timecreated as INTEGER) * INTERVAL 
+            + cast (b.timecreated as INTEGER) * INTERVAL 
             '1 second')""" % units
         
         sql_query = """SELECT %(extract_stmt)s, count(1)

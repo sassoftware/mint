@@ -106,8 +106,8 @@ class SystemUpdateCheck(Resource):
                      return HttpResponseBadRequest('Invalid query parameter: %s' % param)       
                
         extract_stmt = """date_trunc('%s', timestamp with time zone 'epoch' 
-            AT TIME ZONE 'EST' + cast (s.updatetime as INTEGER) * INTERVAL 
-            '1 second')""" % units
+             + cast (s.updatetime as INTEGER) * INTERVAL 
+             '1 second')""" % units
 
         where_stmt = ""
         
@@ -134,6 +134,7 @@ class SystemUpdateCheck(Resource):
         for row in rows:
             #import epdb;epdb.st()
             total = row[-1]          
+            print row[0].timetuple()
             t = time.mktime(row[0].timetuple())
             id = request.build_absolute_uri(str(int(t)) + '?timeunits=' + units)
             segment = segreport.timeSegments.Segment(total, t, id)
