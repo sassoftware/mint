@@ -145,9 +145,9 @@ sourceDescriptor2Xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
   <metadata>
-    <displayName>Red Hat Network</displayName>
+    <displayName>Red Hat Satellite</displayName>
     <descriptions>
-      <desc>Configure Red Hat Network</desc>
+      <desc>Configure Red Hat Satellite</desc>
     </descriptions>
   </metadata>
   <dataFields>
@@ -175,6 +175,30 @@ sourceDescriptor2Xml = """\
       <type>str</type>
       <password>true</password>
     </field>
+    <field>
+      <name>sourceUrl</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Source Url</desc>
+      </descriptions>
+      <prompt>
+        <desc>Source Url</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Content Source Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
   </dataFields>
 </configDescriptor>
 """
@@ -187,6 +211,12 @@ contentSourceTypesXml = """\
     <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
     <statusTest href="http://localhost:8000/api/contentSources/RHN/statusTest"/>
+  </contentSourceType>
+  <contentSourceType id="http://localhost:8000/api/contentSources/satellite">
+    <contentSourceType>satellite</contentSourceType>
+    <instances href="http://localhost:8000/api/contentSources/satellite/instances/"/>
+    <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
+    <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>
   </contentSourceType>
 </contentSources>
 """
@@ -259,6 +289,16 @@ contentSourcesByPlatformXml = """\
     <contentSourceType>RHN</contentSourceType>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
   </contentSource>
+  <contentSource id="http://localhost:8000/api/contentSources/satellite/instances/plat1source">
+    <contentSourceId>3</contentSourceId>
+    <name>Platform 1 Source</name>
+    <shortname>plat1source</shortname>
+    <defaultSource>true</defaultSource>
+    <orderIndex>0</orderIndex>
+    <contentSourceType>satellite</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/status"/>
+    <sourceUrl>http://plat1source.example.com</sourceUrl>
+  </contentSource>
 </contentSources>
 """
 
@@ -270,6 +310,12 @@ contentSourceTypesByPlatformXml = """\
     <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
     <statusTest href="http://localhost:8000/api/contentSources/RHN/statusTest"/>
+  </contentSourceType>
+  <contentSourceType id="http://localhost:8000/api/contentSources/satellite">
+    <contentSourceType>satellite</contentSourceType>
+    <instances href="http://localhost:8000/api/contentSources/satellite/instances/"/>
+    <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
+    <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>
   </contentSourceType>
 </contentSourceTypes>
 """

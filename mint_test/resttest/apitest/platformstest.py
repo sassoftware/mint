@@ -144,10 +144,10 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(sourceDescriptorXml, xml)
 
-        # uri = '/contentSources/satellite/descriptor'
-        # req, platform = client.call('GET', uri)
-        # xml = self._toXml(platform, client, req)
-        # self.assertEquals(sourceDescriptor2Xml, xml)
+        uri = '/contentSources/satellite/descriptor'
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(sourceDescriptor2Xml, xml)
 
     def testGetSourceTypes(self):
         uri = '/contentSources'

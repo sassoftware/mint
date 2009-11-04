@@ -676,8 +676,8 @@ class Database(DBInterface):
         return self.platformMgr.getSourceTypes()
 
     @readonly
-    def getSourceType(self, source):
-        return self.platformMgr.getSourceType(source)
+    def getSourceType(self, sourceType):
+        return self.platformMgr.getSourceType(sourceType)
 
     @readonly
     def getSourceDescriptor(self, source):

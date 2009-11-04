@@ -351,7 +351,7 @@ class PlatformManager(manager.Manager):
         
         return models.SourceTypes(types)
 
-    def getSourceTypes(self, source=None):
+    def getSourceTypes(self, sourceType=None):
         plats = self._getConfigPlatforms()
         types = []
         strTypes = []
@@ -359,19 +359,19 @@ class PlatformManager(manager.Manager):
             tList = plats[p]['sourceTypes']
             for t in tList:
                 if t not in strTypes:
-                    if source and source == t:
+                    if sourceType and sourceType == t:
                         return models.SourceType(contentSourceType=t)
                     strTypes.append(t)
                     types.append(models.SourceType(contentSourceType=t))
 
-        if source:
+        if sourceType:
             raise mint_error.ItemNotFound(
                     'Content source type not found: %s' % source)
 
         return models.ContentSources(types)
 
-    def getSourceType(self, source):
-        return self.getSourceTypes(source)
+    def getSourceType(self, sourceType):
+        return self.getSourceTypes(sourceType)
 
     def getSources(self, sourceType=None, shortName=None, platformId=None):
         sources = []

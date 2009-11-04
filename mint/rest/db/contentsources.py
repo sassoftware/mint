@@ -42,6 +42,14 @@ class SourceUrl(Field):
     type = 'str'
     password = False
 
+class Name(Field):
+    name = 'name'
+    required = True
+    description = 'Content Source Name'
+    prompt = 'Name'
+    type = 'str'
+    password = False
+
 class ContentSourceType(object):
     name = None
     fields = []
@@ -96,7 +104,7 @@ class Rhn(ContentSourceType):
 class Satellite(Rhn):
     name = 'Red Hat Satellite'
     authUrl = '%s/rpc/api'
-    fields = [Username(), Password(), SourceUrl()]
+    fields = [Username(), Password(), SourceUrl(), Name()]
     model = models.SatelliteSource
 
 class Proxy(Satellite):
