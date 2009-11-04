@@ -76,6 +76,15 @@ platformSourceXml = """\
 </platformSource>
 """
 
+platformSourceStatusXml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSourceStatus>
+  <connected>true</connected>
+  <valid>true</valid>
+  <message>Crowbar Linux 1 is online.</message>
+</platformSourceStatus>
+"""
+
 contentSourceStatusXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSourceStatus>

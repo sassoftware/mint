@@ -341,7 +341,7 @@ class PlatformManager(manager.Manager):
 
         return changed                
 
-    def getSourcesByPlatform(self, platformId):
+    def getSourceTypesByPlatform(self, platformId):
         platformLabel = self.db.db.platforms.get(platformId)['label']
         platform = self._getConfigPlatforms(platformLabel).values()[0]
 
@@ -512,6 +512,19 @@ class PlatformManager(manager.Manager):
             raise Exception('Content Source Type must be specified.')
 
         sourceId = self._createSource(source)
+        platforms = self.getPlatforms()
+        platformIds = []
+
+        for platform in platforms.platforms:
+            sourceTypes = self.getSourceTypesByPlatform(platform.platformId)
+            sourceTypeStrs = [s.contentSourceType for s in \
+                              sourceTypes.contentSourceTypes]
+            if source.contentSourceType in sourceTypeStrs:
+                platformIds.append(platform.platformId)
+
+        for platformId in platformIds:
+            self._linkPlatformContentSource(platformId, sourceId)
+
         return self.getSource(shortName=source.shortName)
 
     def deleteSource(self, shortName):

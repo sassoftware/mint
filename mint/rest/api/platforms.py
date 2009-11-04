@@ -49,7 +49,7 @@ class SourceController(base.BaseController):
         return self.db.createSource(source)
 
     @auth.admin
-    def delete(self, request, sourceType, shortName):
+    def destroy(self, request, sourceType, shortName):
         return self.db.deleteSource(shortName)
 
 class SourceTypeDescriptorController(base.BaseController):
@@ -93,7 +93,7 @@ class PlatformSourceController(base.BaseController):
 class PlatformSourceTypeController(base.BaseController):
 
     def index(self, request, platformId):
-        return self.db.getSourcesByPlatform(platformId)
+        return self.db.getSourceTypesByPlatform(platformId)
 
 class PlatformController(base.BaseController):
     modelName = "platformId"

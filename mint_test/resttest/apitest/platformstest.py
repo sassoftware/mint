@@ -66,6 +66,17 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(platformXml, xml)
 
+    def testGetPlatformSourceStatus(self):
+        # we already have a platform, so we must assume they've already been
+        # created in the db.  call getPlatforms to create them for this test.
+        self._getPlatforms()
+
+        uri = '/platforms/1/status'
+        client = self.getRestClient(admin=True)
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertEquals(platformSourceStatusXml, xml)
+
     def XXXtestGetPlatformSources(self):        
         # TODO: can be removed once the code is refactored
         # Need to get platforms first to trigger creation in the db
