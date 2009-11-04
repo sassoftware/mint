@@ -13,6 +13,7 @@ import logging
 import mcp.client
 import optparse
 import time
+from mcp.mcp_error import BuildSystemUnreachableError
 from mint import config
 from mint import jobstatus
 from mint.db import database
