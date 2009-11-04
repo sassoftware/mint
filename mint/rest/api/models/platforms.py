@@ -32,6 +32,9 @@ class Source(Model):
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
+    # Field for when a source gets created so we know what platform to link it
+    # to.
+
     def get_absolute_url(self):
         return ('contentSources.instances', self.contentSourceType, self.shortName)
 
