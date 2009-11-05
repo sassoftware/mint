@@ -109,6 +109,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 containerTemplateRef = containerTemplateRef,
                 stages = stageRefs)
         client = db.productMgr.reposMgr.getConaryClientForProduct(shortName)
+        pd.setPlatformName('localhost@rpath:plat-1')
         pd.saveToRepository(client, 'Product Definition commit\n')
         return pd
 

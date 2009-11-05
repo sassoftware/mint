@@ -691,10 +691,25 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.createUser('foouser')
         client = self.getRestClient(username='foouser')
         req, response = client.call('GET', uri, convert = True)
-        exp = """
+        exp = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platform id="http://localhost:8000/api/platforms/1">
+  <platformId>1</platformId>
+  <hostname>localhost@rpath:plat-1</hostname>
+  <platformTroveName></platformTroveName>
+  <label>localhost@rpath:plat-1</label>
+  <platformVersion></platformVersion>
+  <productVersion>1.0</productVersion>
+  <platformName>localhost@rpath:plat-1</platformName>
+  <enabled>false</enabled>
+  <configurable>true</configurable>
+  <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
+  <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
+  <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
+  <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
+</platform>
 """
-        self.failUnlessEqual(response,
-            exp % dict(server = client.server, port = client.port))
+        self.failUnlessEqual(response, exp)
 
     def testSetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
