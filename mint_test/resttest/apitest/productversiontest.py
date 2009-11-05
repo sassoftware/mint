@@ -709,7 +709,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
 </platform>
 """
-        self.failUnlessEqual(response, exp)
+        self.assertXMLEquals(response, exp)
 
     def testSetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
