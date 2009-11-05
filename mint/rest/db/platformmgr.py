@@ -366,7 +366,7 @@ class PlatformManager(manager.Manager):
 
         if sourceType:
             raise mint_error.ItemNotFound(
-                    'Content source type not found: %s' % source)
+                    'Content source type not found: %s' % sourceType)
 
         return models.ContentSources(types)
 
