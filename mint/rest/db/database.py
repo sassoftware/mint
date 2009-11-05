@@ -443,10 +443,10 @@ class Database(DBInterface):
         n,v,f = cmdline.parseTroveSpec(sourceTrove)
         v = versions.VersionFromString(v)
         platform = self.platformMgr.getPlatformByName(platformName)
-        platform.platformTroveName=str(n)
-        platform.platformVersion=str(v.trailingRevision())
-        platform.label=str(v.trailingLabel())
-        platform.productVersion=version
+        platform.platformTroveName = str(n)
+        platform.platformVersion = str(v.trailingRevision())
+        platform.label = str(v.trailingLabel())
+        platform.productVersion = version
         return platform
 
     @readonly    
