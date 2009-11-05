@@ -9,8 +9,12 @@ import testsetup
 
 import os
 import re
+import subprocess
 import time
 
+from conary.lib import digestlib
+from mint import buildtypes
+from mint import jobstatus
 from mint.rest.errors import BuildNotFound, PermissionDeniedError
 from mint_test import mint_rephelp
 import restbase
@@ -241,5 +245,127 @@ class ImagesTest(restbase.BaseRestTest):
                 data, headers=headers)[1]
         self.failUnlessEqual(resp.status, 403)
 
+    def testSetFilesForImage(self):
+        client = self.getRestClient(username='adminuser')
+        token = self._setOutputToken(1)
+
+        headers = {
+                'content-type': 'text/plain',
+                'x-rbuilder-outputtoken': token,
+                }
+        data = """\
+<files>
+  <file title="title1" size="1231" sha1="1231" baseFileName="aaa1" />
+  <file title="title2" size="1232" sha1="1232" baseFileName="aaa2" />
+</files>
+"""
+        resp = client.call('PUT', 'products/testproject/images/1/files',
+                data, headers=headers)[1]
+
+        exp = [
+            ('title1', 1231, '1231', 'aaa1'),
+            ('title2', 1232, '1232', 'aaa2'),
+        ]
+        self.failUnlessEqual(
+            [ (x.title, x.size, x.sha1, x.baseFileName) for x in resp.files ],
+            exp)
+
+
+    class MockKey(object):
+        class MockPolicy(object):
+            class MockACL(object):
+                def add_user_grant(self, permission, user_id):
+                    pass
+
+            def __init__(self):
+                self.acl = self.MockACL()
+
+        def set_contents_from_file(self, fp, cb = None):
+            pass
+
+        def get_acl(self):
+            return self.MockPolicy()
+
+        def set_acl(self, acl):
+            pass
+
+    class MockBucket(object):
+        def __init__(self):
+            pass
+
+        def new_key(self, name):
+            return self.MockKey()
+    MockBucket.MockKey = MockKey
+
+    def testSetImageStatusAMI(self):
+        # Mock uploadBundle
+        from mint import ec2
+        self.mock(ec2.S3Wrapper, 'createBucket',
+            lambda *args, **kwargs: self.MockBucket())
+        self.mock(ec2.EC2Wrapper, 'registerAMI',
+            lambda slf, bucketName, manifestName, *args, **kwargs:
+                ('ami-01234', '%s/%s' % (bucketName, manifestName)))
+
+        # Specifically test AMI uploads here
+        client = self.getRestClient(username='adminuser')
+        db = self.openRestDatabase()
+        token = self._setOutputToken(1)
+
+        # Build 1 becomes AMI
+        db.cursor().execute("UPDATE Builds SET buildType = ? WHERE buildId = ?",
+            buildtypes.AMI, 1)
+
+        # Need to configure EC2
+        targetId = db.db.targets.addTarget('ec2', 'aws')
+        targetData = dict(ec2AccountId = '1234567890',
+            ec2PublicKey = 'ec2PublicKey',
+            ec2PrivateKey = 'ec2PrivateKey',
+            ec2S3Bucket = 's3Bucket',
+        )
+        db.db.targetData.addTargetData(targetId, targetData)
+        db.commit()
+
+        # Create a tarball with stuff in it
+        file(os.path.join(self.workDir, "file.manifest.xml"), "w").write(
+            "<manifest />")
+        for i in range(3):
+            file(os.path.join(self.workDir, "file-%d" % i), "w").write(
+                "Contents for file %d\n" % i)
+        destFile = os.path.join(self.mintCfg.imagesPath, "testproject", "1",
+            "ami-bundle.tar.gz")
+        cmd = ["tar", "zcf", destFile,
+            "-C", self.workDir,
+            "file-0", "file-1", "file-2", "file.manifest.xml",
+            ]
+        retcode = subprocess.call(cmd)
+        self.failUnlessEqual(retcode, 0)
+
+        sha1sum = digestlib.sha1(file(destFile).read()).hexdigest()
+        fileSize = os.stat(destFile).st_size
+
+        headers = {
+                'content-type': 'text/plain',
+                'x-rbuilder-outputtoken': token,
+                }
+        data = """\
+<files>
+  <file title="title1" size="%d" sha1="%s" baseFileName="%s" />
+</files>
+""" % (fileSize, sha1sum, destFile)
+        resp = client.call('PUT', 'products/testproject/images/1/files',
+                data, headers=headers)[1]
+
+        # Update status
+        data = """\
+<imageStatus code="%d" message="%s" />
+""" % (jobstatus.FINISHED, jobstatus.statusNames[jobstatus.FINISHED])
+        resp = client.call('PUT', 'products/testproject/images/1/status',
+                data, headers=headers)[1]
+
+        # Now fetch the image
+        resp = client.call('GET', 'products/testproject/images/1',
+                data, headers=headers)[1]
+
+        self.failUnlessEqual(resp.amiId, 'ami-01234')
 
 testsetup.main()

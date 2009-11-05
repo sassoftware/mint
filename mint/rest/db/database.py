@@ -125,11 +125,12 @@ class Database(DBInterface):
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
+        self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(cfg, self,
                                                            auth))
-            subscribers.append(awshandler.AWSHandler(cfg, self, auth))
+            subscribers.append(self.awsMgr)
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
 
