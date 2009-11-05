@@ -1,10 +1,9 @@
-from django_restapi.resource import HttpMethodNotAllowed
+from django.http import HttpResponseBadRequest
 
 class MethodRequestMiddleware:
     
     def process_request(self, request):
         # Was a '_method' directive in the query request
-        
         if request.REQUEST.has_key('_method'):
             request_method = request.REQUEST['_method'].upper()
             allowable_methods = ['GET','POST','PUT','DELETE',]
@@ -15,6 +14,9 @@ class MethodRequestMiddleware:
                 except AttributeError:
                     request.META['REQUEST_METHOD'] = request_method
             else:
-                raise HttpMethodNotAllowed
+                response = \
+                    HttpResponseBadRequest('INVALID METHOD TYPE: %s' \
+                    % request_method)
+                return response
                 
         return None
