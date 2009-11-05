@@ -71,7 +71,6 @@ def setup():
     pathManager.addExecPath('RESTLIB_PATH')
     pathManager.addExecPath('CREST_PATH')
     pathManager.addExecPath('XOBJ_PATH')
-    pathManager.addExecPath('BOTO_PATH')
     pathManager.addExecPath('XMLLIB_PATH')
     pathManager.addExecPath('PRODUCT_DEFINITION_PATH')
     pathManager.addExecPath('STORAGE_PATH')
