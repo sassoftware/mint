@@ -721,6 +721,12 @@ class MigrateTo_48(SchemaMigration):
     # - Platforms / PlatformSources / PlatformSourceData tables will be
     # created.
     def migrate4(self):
+        # Enable all platforms since this is an update.
+        sql = """
+            UPDATE platforms set enabled = 1
+        """
+        cu = self.db.cursor()
+        cu.execute(sql)
         return True
 
     # 48.5
