@@ -153,14 +153,13 @@ class Platforms(object):
         apnLength = len(self.cfg.availablePlatformNames)
         for i, platformLabel in enumerate(self.cfg.availablePlatforms):
             platDef = self.platformCache.get(platformLabel)
-            enabled = bool(platDef)
-            if not enabled:
+            if not platDef:
                 # Fall back to the platform label, if
                 # self.cfg.availablePlatformNames is incomplete
                 platformName = platformLabel
                 if i < apnLength:
                     platformName = self.cfg.availablePlatformNames[i]
-            
+
             if platDef:
                 platformName = platDef.getPlatformName()
                 platformProv = platDef.getContentProvider()
@@ -171,7 +170,10 @@ class Platforms(object):
             else:
                 types = []
 
-            yield platformLabel, platformName, enabled, types
+            # 0 is for not enabled.
+            # Configured platforms are not enabled by default, they have to be
+            # explicitly enabled in the db.
+            yield platformLabel, platformName, 0, types
 
     def _platformModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
@@ -223,7 +225,7 @@ class Platforms(object):
         for c in cfgPlatforms:
             cfgDict[c.label] = c
 
-        fields = ['platformName', 'enabled', 'configurable', 'hostname',
+        fields = ['platformName', 'configurable', 'hostname',
                   '_sourceTypes']
 
         for c in cfgDict:
@@ -244,6 +246,11 @@ class Platforms(object):
             platforms.append(platform)
         return platforms
 
+
+    def update(self, platformId, platform):
+        self.db.db.platforms.update(platformId, enabled=int(platform.enabled))
+        return self.getById(platformId)
+
     def list(self):
         dbPlatforms = self._listFromDb()
         cfgPlatforms = self._listFromCfg()
@@ -256,7 +263,7 @@ class Platforms(object):
         return models.Platforms(dbPlatforms)
 
     def getStatus(self, platformId):
-        platform = self.listById(platformId)
+        platform = self.getById(platformId)
         client = self._reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
         platStatus = models.PlatformSourceStatus()
@@ -277,7 +284,7 @@ class Platforms(object):
 
         return platStatus
 
-    def listById(self, platformId):
+    def getById(self, platformId):
         platform = self.db.db.platforms.get(platformId)
         platform = self._platformModelFactory(**dict(platform))
         platforms = self._populateFromCfg([platform], self._listFromCfg())
@@ -297,6 +304,7 @@ class ContentSources(object):
         self.contentSourceTypes = contentSourceTypes
 
     def _contentSourceModelFactory(self, *args, **kw):
+
         kw = sqllib.CaselessDict(kw)
         sourceId = kw.get('platformSourceId', None)
         contentSourceType = kw['contentSourceType']
@@ -411,11 +419,52 @@ class ContentSources(object):
             self._linkPlatformToContentSource(platform['platformId'],
                     source.contentSourceId)
 
+    def delete(self, shortName):
+        sourceId = self.db.db.platformSources.getIdFromShortName(shortName)
+        self.db.db.platformSources.delete(sourceId)
+
     def create(self, source):
         if not source.contentSourceType:
             raise Exception('Content Source Type must be specified.')
 
         sourceId = self._create(source)
+
+        return self.getByShortName(source.shortName)
+
+    def update(self, source):
+        cu = self.db.cursor()
+        updSql = """
+        UPDATE platformSourceData
+        SET value = ?
+        WHERE 
+            name = ?
+            AND platformSourceId = ?
+        """
+        selSql = """
+        SELECT value
+        FROM platformSourceData
+        WHERE 
+            name = ?
+            AND platformSourceId = ?
+        """
+
+        oldSource = self.getByShortName(source.shortName)
+
+        sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
+        sourceInst = sourceClass()
+
+        for field in sourceInst.getFieldNames():
+            newVal = getattr(source, field)
+            if getattr(oldSource, field) != newVal:
+                row = cu.execute(selSql, field, source.contentSourceId)
+                if row.fetchall():
+                    cu.execute(updSql, newVal, field, source.contentSourceId)
+                else:
+                    self.db.db.platformSourceData.new(
+                                platformSourceId=source.contentSourceId,
+                                name=field,
+                                value=newVal,
+                                dataType=3)
 
         return self.getByShortName(source.shortName)
 
@@ -475,18 +524,11 @@ class PlatformManager(manager.Manager):
         self.contentSources = ContentSources(db, cfg, self.platforms,
                                 self.contentSourceTypes)
 
-    def _createSourceType(self, name):
-        try:
-            typeId = self.db.db.contentSourceTypes.getByName(name)
-        except mint_error.ItemNotFound, e:
-            typeId = self.db.db.contentSourceTypes.new(name=name)
-        return typeId            
-
     def getPlatforms(self, platformId=None):
         return self.platforms.list()
         
     def getPlatform(self, platformId):
-        return self.platforms.listById(platformId)
+        return self.platforms.getById(platformId)
 
     def getPlatformStatus(self, platformId):
         return self.platforms.getStatus(platformId)
@@ -495,7 +537,7 @@ class PlatformManager(manager.Manager):
         return self.contentSourceTypes.getDescriptor(sourceType)
 
     def getSourceTypesByPlatform(self, platformId):
-        platform = self.platforms.listById(platformId)
+        platform = self.platforms.getById(platformId)
         types = []
         for sourceType in platform._sourceTypes:
             types.append(models.SourceType(contentSourceType=sourceType))
@@ -527,60 +569,17 @@ class PlatformManager(manager.Manager):
     def getSourceStatus(self, source):
         return self.contentSources.getStatus(source)
 
-    def updateSource(self, shortName, source):
-        cu = self.db.cursor()
-        updSql = """
-        UPDATE platformSourceData
-        SET value = ?
-        WHERE 
-            name = ?
-            AND platformSourceId = ?
-        """
-        insSql = """
-        INSERT INTO platformSourceData
-        VALUES (?, ?, ?, 3)
-        """
-        selSql = """
-        SELECT value
-        FROM platformSourceData
-        WHERE 
-            name = ?
-            AND platformSourceId = ?
-        """
-
-        oldSource = self.getSource(shortName=shortName)
-
-        sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
-        sourceInst = sourceClass()
-
-        for field in sourceInst.getFieldNames():
-            newVal = getattr(source, field)
-            if getattr(oldSource, field) != newVal:
-                row = cu.execute(selSql, field, source.contentSourceId)
-                if row.fetchall():
-                    cu.execute(updSql, newVal, field, source.contentSourceId)
-                else:
-                    self.db.db.platformSourceData.new(
-                                platformSourceId=source.contentSourceId,
-                                name=field,
-                                value=newVal,
-                                dataType=3)
-
-        return self.getSource(shortName=shortName)
+    def updateSource(self, source):
+        return self.contentSources.update(source)
 
     def updatePlatform(self, platformId, platform):
-        cu = self.db.cursor()
-        sql = """
-        """
-        cu.execute(sql, platformId)
-        return self.getPlatform(platformId)
+        return self.platforms.update(platformId, platform)
 
     def createSource(self, source):
         return self.contentSources.create(source)
 
     def deleteSource(self, shortName):
-        sourceId = self.db.db.platformSources.getIdFromShortName(shortName)
-        self.db.db.platformSources.delete(sourceId)
+        return self.contentSources.delete(shortName)
 
 class PlatformDefCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, reposMgr):

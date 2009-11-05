@@ -734,7 +734,8 @@ def _createPlatforms(db):
                 platformId  %(PRIMARYKEY)s,
                 label       varchar(255)    NOT NULL UNIQUE,
                 configurable        smallint        NOT NULL    DEFAULT 0,
-                mode varchar(255) check (mode in ('proxied', 'mirrored'))
+                mode varchar(255) check (mode in ('proxied', 'mirrored')),
+                enabled     smallint NOT NULL DEFAULT 0
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Platforms'] = []
         changed = True

@@ -713,8 +713,7 @@ class Database(DBInterface):
 
     @commitafter
     def updateSource(self, shortName, sourceInstance):
-        return self.platformMgr.updateSource(shortName,
-                                    sourceInstance)
+        return self.platformMgr.updateSource(sourceInstance)
 
     @commitafter
     def updatePlatform(self, platformId, platform):

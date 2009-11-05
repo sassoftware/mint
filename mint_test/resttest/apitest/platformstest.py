@@ -246,9 +246,13 @@ class PlatformTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertEquals(sourcePOSTResp2Xml, xml)
 
-    def XXXtestPutPlatform(self):
+    def testUpdatePlatform(self):
+        # we already have a platform, so we must assume they've already been
+        # created in the db.  call getPlatforms to create them for this test.
+        self._getPlatforms()
+
         uri = '/platforms/1'
-        client = self.getRestClient()
+        client = self.getRestClient(admin=True)
         req, platform = client.call('PUT', uri, body=platformPUTXml)
         xml = self._toXml(platform, client, req)
         self.assertEquals(platformPUTXml, xml)

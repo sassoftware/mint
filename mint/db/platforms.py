@@ -16,6 +16,7 @@ from mint.lib import data
 from mint.lib import database
 
 dbReader = database.dbReader
+dbWriter = database.dbWriter
 
 class ContentSourceTypesTable(database.KeyedTable):
     name = 'contentSourceTypes'
@@ -50,7 +51,8 @@ class PlatformsTable(database.KeyedTable):
     fields = [ 'platformId',
                'label',
                'configurable',
-               'mode' ]
+               'mode',
+               'enabled' ]
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -62,7 +64,8 @@ class PlatformsTable(database.KeyedTable):
             SELECT
                 platforms.platformId,
                 platforms.label,
-                platforms.configurable
+                platforms.configurable,
+                platforms.enabled
             FROM
                 platforms
         """
@@ -88,6 +91,17 @@ class PlatformsTable(database.KeyedTable):
         cu.execute(sql, type)
         ret = cu.fetchall()
         return ret
+
+    @dbWriter
+    def update(self, cu, platformId, **kw):
+        sql = """
+            UPDATE platforms
+            SET %s = ?
+            WHERE platformId = ?
+        """
+        for k, v in kw.items():
+            cu.execute(sql % k, v, platformId)
+        return cu.fetchall()            
 
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'

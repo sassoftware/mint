@@ -6,7 +6,7 @@ platformsXml = """\
     <hostname>localhost@rpath:plat-1</hostname>
     <label>localhost@rpath:plat-1</label>
     <platformName>Crowbar Linux 1</platformName>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
     <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
@@ -18,7 +18,7 @@ platformsXml = """\
     <hostname>localhost@rpath:plat-2</hostname>
     <label>localhost@rpath:plat-2</label>
     <platformName>Crowbar Linux 2</platformName>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-2/api"/>
     <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
@@ -35,7 +35,7 @@ platformXml = """\
   <hostname>localhost@rpath:plat-1</hostname>
   <label>localhost@rpath:plat-1</label>
   <platformName>Crowbar Linux 1</platformName>
-  <enabled>true</enabled>
+  <enabled>false</enabled>
   <configurable>true</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
@@ -381,21 +381,9 @@ platformPUTXml = """\
   <enabled>true</enabled>
   <configurable>true</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
-  <sources>
-    <platformSource id="http://localhost:8000/api/platforms/1/sources/plat1source">
-      <platformSourceId>1</platformSourceId>
-      <name>Platform 1 Source</name>
-      <platformId>1</platformId>
-      <shortname>plat1source</shortname>
-      <sourceUrl>http://plat1source.example.com</sourceUrl>
-      <defaultSource>true</defaultSource>
-      <orderIndex>0</orderIndex>
-      <platformSourceStatus href="http://localhost:8000/api/platforms/1/sources/plat1source/status"/>
-      <configDescriptor href="http://localhost:8000/api/platforms/1/sources/plat1source/descriptor"/>
-    </platformSource>
-  </sources>
-  <platformMode>mirrored</platformMode>
+  <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
+  <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
 </platform>
 """
 
