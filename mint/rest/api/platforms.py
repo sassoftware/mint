@@ -30,11 +30,11 @@ class SourceController(base.BaseController):
 
     @auth.admin
     def index(self, request, sourceType):
-        return self.db.getSources(sourceType, None)
+        return self.db.getSources(sourceType)
 
     @auth.admin
     def get(self, request, sourceType, shortName):
-        return self.db.getSource(sourceType, shortName)
+        return self.db.getSource(shortName)
 
     @auth.admin
     @requires('source', models.Source)
@@ -56,7 +56,7 @@ class SourceTypeDescriptorController(base.BaseController):
     
     @auth.admin
     def index(self, request, sourceType):
-        return self.db.getSourceDescriptor(sourceType)
+        return self.db.getSourceTypeDescriptor(sourceType)
 
 class SourceTypeStatusTest(base.BaseController):
     @auth.admin
@@ -88,7 +88,7 @@ class PlatformSourceController(base.BaseController):
 
     @auth.admin
     def index(self, request, platformId):
-        return self.db.getSources(None, platformId)
+        return self.db.getSourcesByPlatform(platformId)
 
 class PlatformSourceTypeController(base.BaseController):
 

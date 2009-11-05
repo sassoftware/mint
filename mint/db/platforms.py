@@ -26,6 +26,19 @@ class ContentSourceTypesTable(database.KeyedTable):
     def getByName(self, name):
         return self.getIdByColumn('name', name)
 
+    @dbReader
+    def getAll(self, cu):
+        sql = """
+            SELECT 
+                contentSourceTypeId,
+                name
+            FROM
+                contentSourceTypes
+        """
+        cu.execute(sql)
+        return cu.fetchall()
+
+
 class PlatformsContentSourceTypesTable(database.DatabaseTable):
     name = 'platformsContentSourceTypes'
     fields = [ 'platformId',
@@ -42,6 +55,20 @@ class PlatformsTable(database.KeyedTable):
     def __init__(self, db, cfg):
         self.cfg = cfg
         database.KeyedTable.__init__(self, db)
+
+    @dbReader
+    def getAll(self, cu):
+        sql = """
+            SELECT
+                platforms.platformId,
+                platforms.label,
+                platforms.configurable
+            FROM
+                platforms
+        """
+
+        cu.execute(sql)
+        return cu.fetchall()
 
     @dbReader
     def getAllByType(self, cu, type):
@@ -78,6 +105,52 @@ class PlatformSourcesTable(database.KeyedTable):
 
     def getIdFromShortName(self, shortName):
         return self.getIdByColumn('shortName', shortName)
+
+    @dbReader
+    def getAll(self, cu):
+        sql = """\
+            SELECT
+                platformSources.platformSourceId,
+                platformSources.name,
+                platformSources.shortName,
+                platformSources.defaultSource,
+                platformSources.orderIndex,
+                contentSourceTypes.name AS contentSourceType
+            FROM
+                contentSourceTypes,
+                platformSources
+            WHERE
+                platformSources.contentSourceTypeId =
+                contentSourceTypes.contentSourceTypeId
+        """
+        cu.execute(sql)
+        return cu.fetchall()
+
+    @dbReader
+    def getByPlatformId(self, cu, platformId):
+        sql = """\
+            SELECT
+                platformSources.platformSourceId,
+                platformSources.name,
+                platformSources.shortName,
+                platformSources.defaultSource,
+                platformSources.orderIndex,
+                contentSourceTypes.name AS contentSourceType
+            FROM
+                contentSourceTypes,
+                platformsPlatformSources,
+                platformSources
+            WHERE
+                platformSources.contentSourceTypeId =
+                contentSourceTypes.contentSourceTypeId
+            AND
+                platformsPlatformSources.platformId = ?
+            AND
+                platformsPlatformSources.platformSourceId =
+                platformSources.platformSourceId
+        """
+        cu.execute(sql, platformId)
+        return cu.fetchall()
 
 class PlatformSourceDataTable(data.GenericDataTable):
     name = 'platformSourceData'

@@ -680,16 +680,20 @@ class Database(DBInterface):
         return self.platformMgr.getSourceType(sourceType)
 
     @readonly
-    def getSourceDescriptor(self, source):
-        return self.platformMgr.getSourceDescriptor(source)
+    def getSourceTypeDescriptor(self, sourceType):
+        return self.platformMgr.getSourceTypeDescriptor(sourceType)
 
     @commitafter
-    def getSources(self, sourceType, platformId):
-        return self.platformMgr.getSources(sourceType=sourceType, platformId=platformId)
+    def getSources(self, sourceType):
+        return self.platformMgr.getSources(sourceType)
 
     @commitafter
-    def getSource(self, sourceType, shortName):
-        return self.platformMgr.getSources(sourceType, shortName)
+    def getSourcesByPlatform(self, platformId):
+        return self.platformMgr.getSourcesByPlatform(platformId)
+
+    @commitafter
+    def getSource(self, shortName):
+        return self.platformMgr.getSource(shortName)
 
     @readonly
     def getSourceTypesByPlatform(self, platformId):

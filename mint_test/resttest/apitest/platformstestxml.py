@@ -226,7 +226,7 @@ sourceDescriptor2Xml = """\
 
 contentSourceTypesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<contentSources>
+<contentSourceTypes>
   <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
     <contentSourceType>RHN</contentSourceType>
     <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
@@ -239,7 +239,7 @@ contentSourceTypesXml = """\
     <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
     <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>
   </contentSourceType>
-</contentSources>
+</contentSourceTypes>
 """
 
 contentSourceTypeXml = """\
@@ -256,7 +256,7 @@ contentSourcesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <instances>
   <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
-    <contentSourceId>1</contentSourceId>
+    <contentSourceId>2</contentSourceId>
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
     <defaultSource>true</defaultSource>
@@ -265,7 +265,7 @@ contentSourcesXml = """\
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   </contentSource>
   <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source1">
-    <contentSourceId>2</contentSourceId>
+    <contentSourceId>3</contentSourceId>
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
     <defaultSource>true</defaultSource>
@@ -279,7 +279,7 @@ contentSourcesXml = """\
 contentSourceXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
-  <contentSourceId>1</contentSourceId>
+  <contentSourceId>2</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
@@ -292,8 +292,18 @@ contentSourceXml = """\
 contentSourcesByPlatformXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSources>
-  <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
+  <contentSource id="http://localhost:8000/api/contentSources/satellite/instances/plat1source">
     <contentSourceId>1</contentSourceId>
+    <name>Platform 1 Source</name>
+    <shortname>plat1source</shortname>
+    <defaultSource>true</defaultSource>
+    <orderIndex>0</orderIndex>
+    <contentSourceType>satellite</contentSourceType>
+    <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/status"/>
+    <sourceUrl>http://plat1source.example.com</sourceUrl>
+  </contentSource>
+  <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
+    <contentSourceId>2</contentSourceId>
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
     <defaultSource>true</defaultSource>
@@ -302,23 +312,13 @@ contentSourcesByPlatformXml = """\
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   </contentSource>
   <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source1">
-    <contentSourceId>2</contentSourceId>
+    <contentSourceId>3</contentSourceId>
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
-  </contentSource>
-  <contentSource id="http://localhost:8000/api/contentSources/satellite/instances/plat1source">
-    <contentSourceId>3</contentSourceId>
-    <name>Platform 1 Source</name>
-    <shortname>plat1source</shortname>
-    <defaultSource>true</defaultSource>
-    <orderIndex>0</orderIndex>
-    <contentSourceType>satellite</contentSourceType>
-    <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/status"/>
-    <sourceUrl>http://plat1source.example.com</sourceUrl>
   </contentSource>
 </contentSources>
 """
@@ -344,7 +344,7 @@ contentSourceTypesByPlatformXml = """\
 contentSourcePUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
-  <contentSourceId>1</contentSourceId>
+  <contentSourceId>2</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
@@ -359,7 +359,7 @@ contentSourcePUTXml = """\
 contentSourcePUTXml2 = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
-  <contentSourceId>1</contentSourceId>
+  <contentSourceId>2</contentSourceId>
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>

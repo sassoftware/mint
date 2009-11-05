@@ -22,14 +22,132 @@ from mint.rest.db import manager
 
 from rpath_proddef import api1 as proddef
 
-class PlatformManager(manager.Manager):
-    def __init__(self, cfg, db, auth):
-        manager.Manager.__init__(self, cfg, db, auth)
+class ContentSourceTypes(object):
+    def __init__(self, db, cfg, platforms):
+        self.db = db
+        self.cfg = cfg
+        self.platforms = platforms
+
+    def _contentSourceTypeModelFactory(self, name):
+        return models.SourceType(contentSourceType=name)
+
+    def _listFromDb(self):
+        dbTypes = self.db.db.contentSourceTypes.getAll()
+        types = []
+        for dbType in dbTypes:  
+            type = self._contentSourceTypeModelFactory(name=dbType['name'])
+            types.append(type)
+
+        return types            
+    
+    def _listFromCfg(self):
+        allTypes = []
+        for label, name, enabled, types in self.platforms._iterConfigPlatforms():
+            for t in types:
+                if t not in allTypes:
+                    allTypes.append(t)
+
+        types = []
+        for type in allTypes:
+            type = self._contentSourceTypeModelFactory(name=type)
+            types.append(type)
+
+        return types
+
+    def _create(self, sourceType):
+        sourceTypeId = self.db.db.contentSourceTypes.new(name=sourceType.contentSourceType)
+        return sourceTypeId
+
+    def _syncDb(self, dbTypes, cfgTypes):
+        changed = False
+        dbNames = [t.contentSourceType for t in dbTypes]
+        for cfgType in cfgTypes:
+            if cfgType.contentSourceType not in dbNames:
+                changed = True
+                self._create(cfgType)
+
+        return changed                
+
+    def listByName(self, sourceTypeName):
+        types = self.list()
+        type = [t for t in types.contentSourceTypes \
+                if t.contentSourceType == \
+                   sourceTypeName]
+
+        return type[0]
+
+    def getIdByName(self, sourceTypeName):
+        types = self.list()
+        return self.db.db.contentSourceTypes.getByName(sourceTypeName)
+
+    def list(self):
+        dbTypes = self._listFromDb()
+        cfgTypes = self._listFromCfg()
+        changed = self._syncDb(dbTypes, cfgTypes)
+        if changed:
+            dbTypes = self._listFromDb()
+
+        return models.SourceTypes(dbTypes)            
+
+    def _getSourceTypeInstance(self, source):
+        sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
+        sourceInst = sourceClass()
+        for field in sourceInst.getFieldNames():
+            if hasattr(source, field):
+                val = str(getattr(source, field))
+                setattr(sourceInst, field, val)
+
+        return sourceInst   
+
+    def _getSourceTypeInstanceByName(self, sourceType):
+        sourceClass = contentsources.contentSourceTypes[sourceType]
+        return sourceClass()
+
+    def getDescriptor(self, sourceType):
+        sourceTypeInst = self._getSourceTypeInstanceByName(sourceType)
+
+        desc = models.Description(desc='Configure %s' % sourceTypeInst.name)
+        metadata = models.Metadata(displayName=sourceTypeInst.name,
+                    descriptions=[desc])
+
+        dFields = []
+        for field in sourceTypeInst.fields:
+            p = models.Prompt(desc=field.prompt)
+            f = models.DescriptorField(name=field.name,
+                           required=field.required,
+                           descriptions=[models.Description(desc=field.description)],
+                           prompt=p,
+                           type=field.type,
+                           password=field.password)
+            dFields.append(f)                                   
+
+        dataFields = models.DataFields(dFields)
+        descriptor = models.descriptorFactory(metadata=metadata,
+                        dataFields=dataFields)
+
+        return descriptor
+
+class Platforms(object):
+
+    def __init__(self, db, cfg, mgr):
+        self.platforms = []
+        self.db = db
+        self.cfg = cfg
         self._reposMgr = db.productMgr.reposMgr
         cacheFile = os.path.join(self.cfg.dataPath, 'data', 
                                  'platformName.cache')
         self.platformCache = PlatformDefCache(cacheFile, 
                                               self._reposMgr)
+        self.contentSourceTypes = ContentSourceTypes(db, cfg, self)
+        self.mgr = mgr
+
+    def _listFromDb(self):
+        platforms = []
+        dbPlatforms = self.db.db.platforms.getAll()
+        for platform in dbPlatforms:
+            platforms.append(self._platformModelFactory(**dict(platform)))
+
+        return platforms            
 
     def _iterConfigPlatforms(self):
         apnLength = len(self.cfg.availablePlatformNames)
@@ -55,168 +173,130 @@ class PlatformManager(manager.Manager):
 
             yield platformLabel, platformName, enabled, types
 
-    def _getConfigPlatforms(self, platformLabel=None):
-        plats = {}
-        for pLabel, pName, enabled, sourceTypes in self._iterConfigPlatforms():
-            if pLabel == platformLabel:
-                plats = {}
-                plats[pLabel] = dict(name=pName, enabled=enabled,
-                                     sourceTypes=sourceTypes)
-                return plats
-            else:
-                plats[pLabel] = dict(name=pName, enabled=enabled,
-                                     sourceTypes=sourceTypes)
-
-        return plats
-
-    def _getPlatformsFromDB(self, platformId=None):
-        cu = self.db.cursor()
-        sql = """
-            SELECT
-                platforms.platformId,
-                platforms.label,
-                platforms.configurable
-            FROM
-                platforms
-        """
-
-        if platformId:
-            sql += ' WHERE platforms.platformId = %s' % platformId
-
-        cu.execute(sql)
-
-        results = {}
-        for row in cu:
-            results[row['label']] = \
-                dict(platformId=str(row['platformId']),
-                     configurable=row['configurable'])
-
-        return results
-
     def _platformModelFactory(self, *args, **kw):
-        return models.Platform(platformId=kw['platformId'],
-                               label=kw['label'],
-                               platformName=kw['platformName'],
-                               hostname=kw['hostname'],
-                               enabled=kw['enabled'],
-                               configurable=kw['configurable'])
+        kw = sqllib.CaselessDict(kw)
+        platformId = kw.get('platformId', None)
+        if platformId:
+            platformId = str(platformId)
+        label = kw.get('label', None)
+        platformName = kw.get('platformName', None)
+        hostname = kw.get('hostname', None)
+        enabled = kw.get('enabled', None)
+        configurable = kw.get('configurable', None)
+        sourceTypes = kw.get('sourceTypes', [])
+        platform = models.Platform(platformId=platformId,
+                               label=label,
+                               platformName=platformName,
+                               hostname=hostname,
+                               enabled=enabled,
+                               configurable=configurable)
+        platform._sourceTypes = sourceTypes                               
+        return platform
 
-    def _createSourceType(self, name):
-        try:
-            typeId = self.db.db.contentSourceTypes.getByName(name)
-        except mint_error.ItemNotFound, e:
-            typeId = self.db.db.contentSourceTypes.new(name=name)
+    def _create(self, platform):
+        platformId = self.db.db.platforms.new(label=platform.label,
+                                        configurable=platform.configurable)
 
-        return typeId            
-
-    def _createPlatformInDB(self, platformLabel, configurable, sourceTypes):
-        configurable = int(configurable)
-        platformId = self.db.db.platforms.new(label=platformLabel,
-                                        configurable=configurable)
-
-        for sourceType in sourceTypes:
-            typeId = self._createSourceType(sourceType)
+        for sourceType in platform._sourceTypes:
+            typeId = self.contentSourceTypes.getIdByName(sourceType)
             self.db.db.platformsContentSourceTypes.new(platformId=platformId,
                             contentSourceTypeId=typeId)
 
-        return str(platformId)                                        
+        return platform
 
-    def _createPlatformsInDB(self, dbPlatforms, cfgPlatforms):
+    def _syncDb(self, dbPlatforms, cfgPlatforms):
         changed = False
-        for label in cfgPlatforms:
-            if not dbPlatforms.has_key(label):
-                # TODO: set configurable correctly
-                self._createPlatformInDB(label, cfgPlatforms[label]['enabled'],
-                        cfgPlatforms[label]['sourceTypes'])
+        dbPlatformLabels = [d.label for d in dbPlatforms]
+
+        for cfgPlatform in cfgPlatforms:
+            if cfgPlatform.label not in dbPlatformLabels:
                 changed = True
+                self._create(cfgPlatform)
+
         return changed                
 
-    def getPlatforms(self, platformId=None):
-        availablePlatforms = []
-        if platformId:
-            platformLabel = self.db.db.platforms.get(platformId)['label']
-        else:
-            platformLabel = None
+    def _populateFromCfg(self, dbPlatforms, cfgPlatforms):
+        dbDict = {}
+        for d in dbPlatforms:
+            dbDict[d.label] = d
+        cfgDict = {}
+        for c in cfgPlatforms:
+            cfgDict[c.label] = c
 
-        dbPlatforms = self._getPlatformsFromDB(platformId)
-        cfgPlatforms = self._getConfigPlatforms(platformLabel)
-        changed = self._createPlatformsInDB(dbPlatforms, cfgPlatforms)
+        fields = ['platformName', 'enabled', 'configurable', 'hostname',
+                  '_sourceTypes']
 
-        # If we created platforms in db, need to refresh dbPlatforms
+        for c in cfgDict:
+            if dbDict.has_key(c):
+                for f in fields:
+                    setattr(dbDict[c], f, getattr(cfgDict[c], f, None))
+
+        return dbDict.values()                    
+
+    def _listFromCfg(self):
+        platforms = []
+        for label, name, enabled, sourceTypes in self._iterConfigPlatforms():
+            platform = self._platformModelFactory(label=label,
+                                platformName=name, 
+                                hostname=label.split('.')[0],
+                                enabled=enabled, configurable=1,
+                                sourceTypes=sourceTypes)
+            platforms.append(platform)
+        return platforms
+
+    def list(self):
+        dbPlatforms = self._listFromDb()
+        cfgPlatforms = self._listFromCfg()
+        changed = self._syncDb(dbPlatforms, cfgPlatforms)
         if changed:
-            dbPlatforms = self._getPlatformsFromDB(platformId)
+            dbPlatforms = self._listFromDb()
+
+        dbPlatforms = self._populateFromCfg(dbPlatforms, cfgPlatforms)            
             
-        for platformLabel in dbPlatforms:
-            platId = dbPlatforms[platformLabel]['platformId']
-            configurable = dbPlatforms[platformLabel]['configurable']
-            platformName = cfgPlatforms[platformLabel]['name']
-            enabled = cfgPlatforms[platformLabel]['enabled']
-            
-            plat = self._platformModelFactory(platformId=platId,
-                        label=platformLabel, platformName=platformName,
-                        hostname=platformLabel.split('.')[0],
-                        enabled=enabled, configurable=configurable)
+        return models.Platforms(dbPlatforms)
 
-            availablePlatforms.append(plat)
+    def getStatus(self, platformId):
+        platform = self.listById(platformId)
+        client = self._reposMgr.getAdminClient()
+        platDef = proddef.PlatformDefinition()
+        platStatus = models.PlatformSourceStatus()
+        try:
+            platDef.loadFromRepository(client, platform.label)
+        except conaryErrors.ConaryError, e:
+            platStatus.valid = False
+            platStatus.connected = True
+            platStatus.message = str(e)
+        except Exception, e:
+            platStatus.valid = False
+            platStatus.connected = False
+            platStatus.message = str(e)
+        else:            
+            platStatus.valid = True
+            platStatus.connected = True
+            platStatus.message = '%s is online.' % platform.platformName
 
-        if platformId:
-            return availablePlatforms[0]
-        else:
-            return models.Platforms(availablePlatforms)
-        
-    def getPlatform(self, platformId):
-        return self.getPlatforms(platformId)
+        return platStatus
 
-    def _getSourceInstance(self, source):
-        sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
-        sourceInst = sourceClass()
-        for field in sourceInst.getFieldNames():
-            if hasattr(source, field):
-                val = str(getattr(source, field))
-                setattr(sourceInst, field, val)
+    def listById(self, platformId):
+        platform = self.db.db.platforms.get(platformId)
+        platform = self._platformModelFactory(**dict(platform))
+        platforms = self._populateFromCfg([platform], self._listFromCfg())
 
-        return sourceInst                
+        return platforms[0]
 
-    def getSourceDescriptor(self, source):
-        source = self.getSourceType(source)
-        sourceInst = self._getSourceInstance(source)
+    def getSources(self, platformId):
+        return self.mgr.contentSources.listByPlatformId(platformId)
 
-        desc = models.Description(desc='Configure %s' % sourceInst.name)
-        metadata = models.Metadata(displayName=sourceInst.name,
-                    descriptions=[desc])
+class ContentSources(object):
 
-        dFields = []
-        for field in sourceInst.fields:
-            p = models.Prompt(desc=field.prompt)
-            f = models.DescriptorField(name=field.name,
-                           required=field.required,
-                           descriptions=[models.Description(desc=field.description)],
-                           prompt=p,
-                           type=field.type,
-                           password=field.password)
-            dFields.append(f)                                   
+    def __init__(self, db, cfg, platforms, contentSourceTypes):
+        self._sources = []
+        self.db = db
+        self.cfg = cfg
+        self.platforms = platforms
+        self.contentSourceTypes = contentSourceTypes
 
-        dataFields = models.DataFields(dFields)
-        descriptor = models.descriptorFactory(metadata=metadata,
-                        dataFields=dataFields)
-
-        return descriptor
-
-    def _getSourceData(self, sourceId):
-        sql = """
-            SELECT
-                platformSourceData.name,
-                platformSourceData.value
-            FROM
-                platformSourceData
-            WHERE
-                platformSourceData.platformSourceId = ?
-        """
-        cu = self.db.cursor()
-        cu.execute(sql, sourceId)
-        return cu
-
-    def _sourceModelFactory(self, **kw):
+    def _contentSourceModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
         sourceId = kw.get('platformSourceId', None)
         contentSourceType = kw['contentSourceType']
@@ -239,186 +319,130 @@ class PlatformManager(manager.Manager):
 
         return model
 
-    def _getSourcesFromDB(self, sourceType, platformId, sourceShortName):
-        cu = self.db.cursor()
+    def _getSourceData(self, sourceId):
         sql = """
             SELECT
-                platformSources.platformSourceId,
-                platformSources.name,
-                platformSources.shortName,
-                platformSources.defaultSource,
-                platformSources.orderIndex,
-                (SELECT contentSourceTypes.name
-                 FROM contentSourceTypes
-                 WHERE platformSources.contentSourceTypeId =
-                       contentSourceTypes.contentSourceTypeId) AS contentSourceType
+                platformSourceData.name,
+                platformSourceData.value
             FROM
-                platformSources
+                platformSourceData
+            WHERE
+                platformSourceData.platformSourceId = ?
+        """
+        cu = self.db.cursor()
+        cu.execute(sql, sourceId)
+        return cu
+
+    def _create(self, source):
+        typeId = self.contentSourceTypes.getIdByName(source.contentSourceType)
+        sourceId = self.db.db.platformSources.new(
+                name=source.name,
+                shortName=source.shortName,
+                defaultSource=int(source.defaultSource),
+                contentSourceTypeId=typeId,
+                orderIndex=source.orderIndex)
+
+        cu = self.db.cursor()
+        sql = """
+        INSERT INTO platformSourceData
+        VALUES (%s, '%s', '%s', 3)
         """
 
-        if sourceType:
-            sourceId = self.db.db.contentSourceTypes.getByName(sourceType)
+        for field in ['username', 'password', 'sourceUrl']:
+            value = getattr(source, field, None)
+            if value:
+                cu.execute(sql % (sourceId, field, value))
 
-        if platformId: 
-            sql = sql + ', platformsPlatformSources '
-            sql = sql + """
-                WHERE 
-                    platformsPlatformSources.platformSourceId =
-                    platformSources.platformSourceId 
-                AND platformsPlatformSources.platformId = ?
-            """
-            cu.execute(sql, platformId)
-        elif sourceShortName:
-            sql = sql + 'WHERE platformSources.shortName = ?'
-            cu.execute(sql, sourceShortName)
-        elif sourceType:
-            sql = sql + """WHERE platformSources.contentSourceTypeId = ?""" 
-            cu.execute(sql, sourceId)
-        else:
-            cu.execute(sql)
-            
-        sources = {}
-        for row in cu:
-            source = self._sourceModelFactory(**dict(row))
-            sources[source.shortName] = source
+        source.contentSourceId = sourceId
+        self._linkToPlatforms(source)
+
+        return sourceId      
+
+    def _syncDb(self, dbSources, cfgSources):
+        changed = False
+        dbNames = [s.shortName for s in dbSources]
+        for cfgSource in cfgSources:
+            if cfgSource.shortName not in dbNames:
+                self._create(cfgSource)
+                changed = True
+
+        return changed                
+
+    def _listFromDb(self):
+        sources = []
+        dbSources = self.db.db.platformSources.getAll()
+        for dbSource in dbSources:
+            source = self._contentSourceModelFactory(**dict(dbSource))
+            sources.append(source)
 
         return sources            
-
-    def _getCfgSources(self, sourceType=None, sourceShortName=None):        
-        sources = {}
+        
+    def _listFromCfg(self):
+        sources = []
         for i, cfgShortName in enumerate(self.cfg.platformSources):
-            source = self._sourceModelFactory(
+            source = self._contentSourceModelFactory(
                                 shortName=cfgShortName,
                                 sourceUrl=self.cfg.platformSourceUrls[i],
                                 name=self.cfg.platformSourceNames[i],
                                 contentSourceType=self.cfg.platformSourceTypes[i],
                                 defaultSource='1',
                                 orderIndex='0')
-            sources[source.shortName] = source
-
-        if sourceType and sourceShortName:
-            filteredSources = [sources[source] for source in sources if
-                               sources[source].shortName==sourceShortName and \
-                               sources[source].contentSourceType==sourceType]
-        elif sourceShortName:
-            filteredSources = [sources[source] for source in sources if
-                               sources[source].shortName==sourceShortName]
-        elif sourceType:
-            filteredSources = [sources[source] for source in sources if
-                               sources[source].contentSourceType==sourceType]
-        else:
-            filteredSources = sources.values()
-
-        sources = {}
-        for source in filteredSources:
-            sources[source.shortName] = source
+            sources.append(source)
 
         return sources
 
-    def _linkPlatformContentSource(self, platformId, sourceId):
+    def list(self):
+        dbSources = self._listFromDb()
+        cfgSources = self._listFromCfg()
+        changed = self._syncDb(dbSources, cfgSources)
+        if changed:
+            dbSources = self._listFromDb()
+
+        return models.SourceInstances(dbSources)            
+
+    def _linkPlatformToContentSource(self, platformId, sourceId):
         self.db.db.platformsPlatformSources.new(platformId=platformId,
                     platformSourceId=sourceId)
 
     def _linkToPlatforms(self, source):
-        platformIds = self.db.db.platforms.getAllByType(source.contentSourceType)
-        for platformId in platformIds:
-            try:
-                platId = platformId[0]
-            except TypeError, e:
-                platId = platformId
+        platforms = self.db.db.platforms.getAllByType(source.contentSourceType)
 
-            self._linkPlatformContentSource(platId,
+        for platform in platforms:
+            self._linkPlatformToContentSource(platform['platformId'],
                     source.contentSourceId)
 
-    def _createSourcesInDB(self, dbSources, cfgSources):
-        changed = False
-        for cfgSource in cfgSources:
-            if not dbSources.has_key(cfgSource):
-                sourceId = self._createSource(cfgSources[cfgSource])
-                cfgSources[cfgSource].contentSourceId = sourceId
-                self._linkToPlatforms(cfgSources[cfgSource])
-                changed = True
+    def create(self, source):
+        if not source.contentSourceType:
+            raise Exception('Content Source Type must be specified.')
 
-        return changed                
+        sourceId = self._create(source)
 
-    def getSourceTypesByPlatform(self, platformId):
-        platformLabel = self.db.db.platforms.get(platformId)['label']
-        platform = self._getConfigPlatforms(platformLabel).values()[0]
+        return self.getByShortName(source.shortName)
 
-        types = []
-        for sourceType in platform['sourceTypes']:
-            types.append(models.SourceType(contentSourceType=sourceType))
-        
-        return models.SourceTypes(types)
+    def getByShortName(self, shortName):
+        sources = self.list()
+        sources = [s for s in sources.instance \
+                   if s.shortName == shortName]
+        return sources[0]
 
-    def getSourceTypes(self, sourceType=None):
-        plats = self._getConfigPlatforms()
-        types = []
-        strTypes = []
-        for p in plats:
-            tList = plats[p]['sourceTypes']
-            for t in tList:
-                if t not in strTypes:
-                    if sourceType and sourceType == t:
-                        return models.SourceType(contentSourceType=t)
-                    strTypes.append(t)
-                    types.append(models.SourceType(contentSourceType=t))
+    def listByType(self, sourceType):
+        sources = self.list()
+        sources = [s for s in sources.instance \
+                   if s.contentSourceType == sourceType]
+        return models.SourceInstances(sources)                   
 
-        if sourceType:
-            raise mint_error.ItemNotFound(
-                    'Content source type not found: %s' % sourceType)
-
-        return models.ContentSources(types)
-
-    def getSourceType(self, sourceType):
-        return self.getSourceTypes(sourceType)
-
-    def getSources(self, sourceType=None, shortName=None, platformId=None):
+    def listByPlatformId(self, platformId):
+        sources = self.list()
+        dbSources = self.db.db.platformSources.getByPlatformId(platformId)
         sources = []
-        dbSources = self._getSourcesFromDB(None, None, shortName)
-        cfgSources = self._getCfgSources(sourceType, shortName)
-        changed = self._createSourcesInDB(dbSources, cfgSources)
+        for dbSource in dbSources:
+            source = self.getByShortName(dbSource['shortName'])
+            sources.append(source)
 
-        dbSources = self._getSourcesFromDB(sourceType, platformId, shortName)
-        
-        if shortName:
-            return dbSources[shortName]
-        elif platformId:
-            return models.ContentSourceInstances(dbSources.values())
-        else:
-            return models.SourceInstances(dbSources.values())
+        return models.ContentSourceInstances(sources)            
 
-    def getSource(self, sourceType=None, shortName=None):
-        return self.getSources(sourceType, shortName)
-
-    def getPlatformStatus(self, platformId):
-        platform = self.getPlatform(platformId)
-        client = self._reposMgr.getAdminClient()
-        platDef = proddef.PlatformDefinition()
-        platStatus = models.PlatformSourceStatus()
-        try:
-            platDef.loadFromRepository(client, platform.label)
-        except conaryErrors.ConaryError, e:
-            platStatus.valid = False
-            platStatus.connected = True
-            platStatus.message = str(e)
-        except Exception, e:
-            platStatus.valid = False
-            platStatus.connected = False
-            platStatus.message = str(e)
-        else:            
-            platStatus.valid = True
-            platStatus.connected = True
-            platStatus.message = '%s is online.' % platform.platformName
-
-        return platStatus
-
-    def getSourceStatusByName(self, shortName):
-        source = self.getSource(shortName=shortName)
-        return self.getSourceStatus(source)
-
-    def getSourceStatus(self, source):
-        sourceInst = self._getSourceInstance(source)
+    def getStatus(self, source):        
+        sourceInst = self.contentSourceTypes._getSourceTypeInstance(source)
 
         missing = []
         for field in sourceInst.fields:
@@ -438,6 +462,71 @@ class PlatformManager(manager.Manager):
 
         return status
 
+class PlatformManager(manager.Manager):
+    def __init__(self, cfg, db, auth):
+        manager.Manager.__init__(self, cfg, db, auth)
+        self._reposMgr = db.productMgr.reposMgr
+        cacheFile = os.path.join(self.cfg.dataPath, 'data', 
+                                 'platformName.cache')
+        self.platformCache = PlatformDefCache(cacheFile, 
+                                              self._reposMgr)
+        self.platforms = Platforms(db, cfg, self)
+        self.contentSourceTypes = ContentSourceTypes(db, cfg, self.platforms)
+        self.contentSources = ContentSources(db, cfg, self.platforms,
+                                self.contentSourceTypes)
+
+    def _createSourceType(self, name):
+        try:
+            typeId = self.db.db.contentSourceTypes.getByName(name)
+        except mint_error.ItemNotFound, e:
+            typeId = self.db.db.contentSourceTypes.new(name=name)
+        return typeId            
+
+    def getPlatforms(self, platformId=None):
+        return self.platforms.list()
+        
+    def getPlatform(self, platformId):
+        return self.platforms.listById(platformId)
+
+    def getPlatformStatus(self, platformId):
+        return self.platforms.getStatus(platformId)
+
+    def getSourceTypeDescriptor(self, sourceType):
+        return self.contentSourceTypes.getDescriptor(sourceType)
+
+    def getSourceTypesByPlatform(self, platformId):
+        platform = self.platforms.listById(platformId)
+        types = []
+        for sourceType in platform._sourceTypes:
+            types.append(models.SourceType(contentSourceType=sourceType))
+        
+        return models.SourceTypes(types)
+
+    def getSourceTypes(self, sourceType=None):
+        return self.contentSourceTypes.list()
+
+    def getSourceType(self, sourceType):
+        return self.contentSourceTypes.listByName(sourceType)
+
+    def getSources(self, sourceType=None):
+        if sourceType:
+            return self.contentSources.listByType(sourceType)
+        else:
+            return self.contentSources.list()
+
+    def getSource(self, shortName):
+        return self.contentSources.getByShortName(shortName)
+
+    def getSourcesByPlatform(self, platformId):
+        return self.platforms.getSources(platformId)
+
+    def getSourceStatusByName(self, shortName):
+        source = self.getSource(shortName=shortName)
+        return self.getSourceStatus(source)
+
+    def getSourceStatus(self, source):
+        return self.contentSources.getStatus(source)
+
     def updateSource(self, shortName, source):
         cu = self.db.cursor()
         updSql = """
@@ -449,7 +538,7 @@ class PlatformManager(manager.Manager):
         """
         insSql = """
         INSERT INTO platformSourceData
-        VALUES (?, '%s', '%s', 3)
+        VALUES (?, ?, ?, 3)
         """
         selSql = """
         SELECT value
@@ -471,7 +560,11 @@ class PlatformManager(manager.Manager):
                 if row.fetchall():
                     cu.execute(updSql, newVal, field, source.contentSourceId)
                 else:
-                    cu.execute(insSql % (field, newVal), source.contentSourceId)
+                    self.db.db.platformSourceData.new(
+                                platformSourceId=source.contentSourceId,
+                                name=field,
+                                value=newVal,
+                                dataType=3)
 
         return self.getSource(shortName=shortName)
 
@@ -482,50 +575,8 @@ class PlatformManager(manager.Manager):
         cu.execute(sql, platformId)
         return self.getPlatform(platformId)
 
-    def _createSource(self, source):
-        try:
-            typeId = self._createSourceType(source.contentSourceType)
-            sourceId = self.db.db.platformSources.new(
-                    name=source.name,
-                    shortName=source.shortName,
-                    defaultSource=int(source.defaultSource),
-                    contentSourceTypeId=typeId,
-                    orderIndex=source.orderIndex)
-        except mint_error.DuplicateItem, e:
-            raise e
-
-        cu = self.db.cursor()
-        sql = """
-        INSERT INTO platformSourceData
-        VALUES (%s, '%s', '%s', 3)
-        """
-
-        for field in ['username', 'password', 'sourceUrl']:
-            value = getattr(source, field, None)
-            if value:
-                cu.execute(sql % (sourceId, field, value))
-
-        return sourceId          
-
     def createSource(self, source):
-        if not source.contentSourceType:
-            raise Exception('Content Source Type must be specified.')
-
-        sourceId = self._createSource(source)
-        platforms = self.getPlatforms()
-        platformIds = []
-
-        for platform in platforms.platforms:
-            sourceTypes = self.getSourceTypesByPlatform(platform.platformId)
-            sourceTypeStrs = [s.contentSourceType for s in \
-                              sourceTypes.contentSourceTypes]
-            if source.contentSourceType in sourceTypeStrs:
-                platformIds.append(platform.platformId)
-
-        for platformId in platformIds:
-            self._linkPlatformContentSource(platformId, sourceId)
-
-        return self.getSource(shortName=source.shortName)
+        return self.contentSources.create(source)
 
     def deleteSource(self, shortName):
         sourceId = self.db.db.platformSources.getIdFromShortName(shortName)
