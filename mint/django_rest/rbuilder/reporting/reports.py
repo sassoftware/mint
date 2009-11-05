@@ -14,10 +14,17 @@ class TimeSegmentReport(object):
     class TimeSegment(object):
         
         class Segment(object):
+            _xobj = xobj.XObjMetadata(
+	            attributes = {
+		             'id' : str,
+				     },
+	            )
         
-            def __init__(self, total, time):
-                self.total = total
-                self.time = time
+            def __init__(self, total, time, id = None):
+                self.total = int(total)
+                self.time = int(time)
+                if id:
+                    self.id = id
         
         def __init__(self):
             self.timeSegment = []
@@ -31,9 +38,10 @@ class TimeSegmentReport(object):
         
         
     def addSegment(self, segment):
-        if (len(self.timeSegments.timeSegment) == 0):
+        if len(self.timeSegments.timeSegment) == 0 or segment.time < self.startTime:
             self.startTime = segment.time
-        self.endTime = segment.time
+        if segment.time > self.endTime:   
+            self.endTime = segment.time
         self.timeSegments.timeSegment.append(segment)
 
         

@@ -22,7 +22,7 @@ class IDElement(object):
 	    )
 
     def __init__(self, uri):
-        self.id = "%(uri)s/" % vars()
+        self.id = "%(uri)s" % vars()
         
     def __repr__(self):
         return unicode(self.id)  

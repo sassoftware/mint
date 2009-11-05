@@ -124,3 +124,11 @@ class Images(models.Model):
         
     def __unicode__(self):
         return self.name
+        
+class Downloads(models.Model):
+    imageId = models.ForeignKey(Images, db_column='urlid')
+    timedownloaded = models.CharField(max_length=14)
+    ip = models.CharField(max_length=64)
+    
+    class Meta:
+        db_table = u'urldownloads'

@@ -51,3 +51,15 @@ class ReportTypes(object):
         
     def addQueryset(self, queryset):
         self.reportType = queryset
+
+class SystemUpdate(models.Model):
+    _systemupdateid = models.AutoField(primary_key=True, db_column='systemupdateid')
+    serverName = models.CharField(max_length=128, db_column='servername')
+    repositoryName = models.CharField(max_length=128, db_column='repositoryname')
+    _updatetime = models.DecimalField(max_digits=14, decimal_places=3, db_column='updatetime')
+    updateUser = models.CharField(max_length=128, db_column='updateuser')
+    
+    class Meta:
+        db_table = u'systemupdate'
+    
+    

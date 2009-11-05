@@ -1,4 +1,4 @@
-from mint.django_rest.rbuilder.models import Images, Products
+from mint.django_rest.rbuilder.models import Images, Products, Downloads
 from mint.django_rest.rbuilder.reporting.reports import TimeSegmentReport
 
 from django.db import connection, transaction
@@ -15,45 +15,27 @@ import re
 
 class ImagesPerProduct(Resource):
     
-    def _getEpoch(self, kwargs):
-        year = int((('year' in kwargs and kwargs['year']) or 1))
-        month = int((('month' in kwargs and kwargs['month']) or 1))
-        day = int((('day' in kwargs and kwargs['day']) or 1))
-        hour = int((('hour' in kwargs and kwargs['hour']) or 0))
-        
-        return (time.mktime(datetime(year, month, day, hour).timetuple()))
-        
-    def _getDayName(self, index):
-        return (calendar.day_name[index])
-    
-    def _getTimeConversion(self, timeUnit):
-        return self._time_units_matrix[timeUnit]['timeConv']
-        
-    def _getCalendarComponents(self, timeUnit):
-        return self._time_units_matrix[timeUnit]['extracts']
-    
     # Handle GET methods
     def read(self, request, report, product):
         
         # Check what parameters were sent as part of the get
-        units = ((request.REQUEST.has_key('timeunits') and request.REQUEST['timeunits']) or 'month')
-        starttime = ((request.REQUEST.has_key('starttime') and request.REQUEST['starttime']) or None)
-        endtime = ((request.REQUEST.has_key('endtime') and request.REQUEST['endtime']) or None)
+        units = ((request.REQUEST.has_key('timeunits') 
+            and request.REQUEST['timeunits']) or 'month')
+        starttime = ((request.REQUEST.has_key('starttime') 
+            and request.REQUEST['starttime']) or None)
+        endtime = ((request.REQUEST.has_key('endtime') 
+            and request.REQUEST['endtime']) or None)
         
-        if units not in self._time_units_matrix:
+        if units not in ('year','month','day','hour'):
             return HttpResponseBadRequest('Invalid timeunits value: %s' % units)
         
         # Make sure that the arguments are only numbers
         pattern = re.compile('^(([0-9]+(\.)?[0-9]+)|([0-9]+))$')    
         for param in (starttime, endtime,):
             if param is not None and not pattern.match(param):
-                     return HttpResponseBadRequest('Invalid query parameter: %s' % param)       
-        
-        extracts = self._getCalendarComponents(units)
-        
-        extract_stmt = ""
-        extract_len = len(extracts)
-        
+                     return HttpResponseBadRequest('Invalid query parameter: %s' 
+                        % param)       
+               
         where_stmt = "p.shortname = '%(product)s' and p.projectid = b.projectid" % locals()
         
         if starttime:
@@ -62,11 +44,10 @@ class ImagesPerProduct(Resource):
         if endtime:
             where_stmt += " and b.timecreated < %(endtime)s" % locals()
             
-        for extract in extracts:
-            extract_stmt += " extract (%s from timestamp with time zone 'epoch' + cast (b.timecreated as INTEGER) * INTERVAL '1 second') "	% extract
-            if (extracts.index(extract) != extract_len - 1):
-                extract_stmt += ","
-                
+        extract_stmt = """date_trunc('%s', timestamp with time zone 'epoch' 
+            + cast (b.timecreated as INTEGER) * INTERVAL 
+            '1 second')""" % units
+        
         sql_query = """SELECT %(extract_stmt)s, count(1)
             from builds b, projects p 
             where %(where_stmt)s 
@@ -91,23 +72,52 @@ class ImagesPerProduct(Resource):
         
         for row in rows:
             total = row[-1]
-            time = self._getTimeConversion(units)(self, dict(zip(extracts,row[:-1])))
-            segment = segreport.timeSegments.Segment(total, time)
+            t =  time.mktime(row[0].timetuple())
+            segment = segreport.timeSegments.Segment(total, t)
             segreport.addSegment(segment)
         
         return HttpResponse(xobj.toxml(segreport, report), "text/plain")
-     
-    # Matrix of time units to the order of time elements to have distinct values
-    _time_units_matrix = {'year': {'extracts' : ['year',],
-                                   'timeConv' : _getEpoch,
-                                  },
-                           'month': {'extracts':['year','month',],
-                                   'timeConv' : _getEpoch,
-                                  },
-                           'day': {'extracts':['year','month','day'],
-                                   'timeConv' : _getEpoch,
-                                  },
-                           'hour': {'extracts':['year','month','day', 'hour'],
-                                   'timeConv' : _getEpoch,
-                                  },     
-                          }
+    
+class ImagesDownloaded(Resource):
+    
+    # Handle GET methods
+    def read(self, request, report, product):
+        
+        # Check what parameters were sent as part of the get
+        units = ((request.REQUEST.has_key('timeunits') 
+            and request.REQUEST['timeunits']) or 'month')
+        starttime = ((request.REQUEST.has_key('starttime') 
+            and request.REQUEST['starttime']) or None)
+        endtime = ((request.REQUEST.has_key('endtime') 
+            and request.REQUEST['endtime']) or None)
+        
+        if units not in ('year','month','day','hour'):
+            return HttpResponseBadRequest('Invalid timeunits value: %s' % units)
+        
+        # Make sure that the arguments are only numbers
+        pattern = re.compile('^(([0-9]+(\.)?[0-9]+)|([0-9]+))$')    
+        for param in (starttime, endtime,):
+            if param is not None and not pattern.match(param):
+                     return HttpResponseBadRequest('Invalid query parameter: %s' 
+                        % param)       
+        
+        size = {'year': {'length':4,'format':'%Y'}, 
+                'month': {'length':6, 'format' : '%Y%m'},
+                'day' : {'length':8, 'format' : '%Y%m%d'},
+                'hour' : {'length':10, 'format' : '%Y%m%d%H'},
+               }
+               
+        rows = Downloads.objects.extra\
+            (select={'time':"SUBSTRING(timedownloaded,1,%d)" %\
+             size[units]['length']}).values('time').distinct().\
+             annotate(downloads = Count('ip'))
+        
+        segreport = TimeSegmentReport(request, units, starttime, endtime)
+        for row in rows:
+            total = row['downloads']
+            t =  time.mktime(time.strptime(row['time'], size[units]['format']))
+            segment = segreport.timeSegments.Segment(total, t)
+            segreport.addSegment(segment)
+        
+        return HttpResponse(xobj.toxml(segreport, report), "text/plain")
+   
