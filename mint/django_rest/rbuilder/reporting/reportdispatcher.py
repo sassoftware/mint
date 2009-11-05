@@ -22,13 +22,13 @@ class ReportTypeDescriptor(Resource):
         
         return HttpResponse(descriptor, "text/plain")       
         
-_reportMatrix = {'imagesPerProduct': 
+_reportMatrix = {'imagesReport': 
   { 'reportClass' : imagereports.ImagesPerProduct,
     'descriptor' : """<?xml version="1.0" encoding="UTF-8"?>
 <views>
     <view
         id="%s"
-        label="Images per Product"
+        label="Image Creation Timeline"
     >
        <pod id="ipc"
           type="SmartLineChart"
