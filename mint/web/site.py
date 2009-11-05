@@ -968,7 +968,8 @@ class SiteHandler(WebHandler):
 
                 build = self.client.getBuild(buildId)
                 project = self.client.getProject(build.projectId) 
-                redirectUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, os.path.basename(filename))
+                redirectUrl = "/images/%s/%d/%s" % (project.hostname, build.id,
+                        os.path.basename(filename))
 
         # record the hit
         urlId = urlIdMap.get(redirectUrl, urlIdMap.get(filename, None))
