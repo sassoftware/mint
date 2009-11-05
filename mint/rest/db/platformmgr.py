@@ -291,6 +291,12 @@ class Platforms(object):
 
         return platforms[0]
 
+    def getByName(self, platformName):
+        platforms = self.list()
+        platform = [p for p in platforms.platforms \
+                    if p.platformName == platformName][0]
+        return platform                    
+
     def getSources(self, platformId):
         return self.mgr.contentSources.listByPlatformId(platformId)
 
@@ -529,6 +535,9 @@ class PlatformManager(manager.Manager):
         
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
+
+    def getPlatformByName(self, platformName):
+        return self.platforms.getByName(platformName)
 
     def getPlatformStatus(self, platformId):
         return self.platforms.getStatus(platformId)

@@ -435,18 +435,19 @@ class Database(DBInterface):
         platformName = pd.getPlatformName()
         sourceTrove = pd.getPlatformSourceTrove()
         if not sourceTrove:
-            return models.Platform(platformTroveName='', platformVersion='',
-                                   label='', platformName='',
-                                   hostname=hostname, 
-                                   productVersion=version)
-        n,v,f = cmdline.parseTroveSpec(pd.getPlatformSourceTrove())
+            platform = self.platformMgr.getPlatformByName(platform)
+            platform.platformTroveName = ''
+            platform.platformVersion = ''
+            platform.productVersion = version
+            return platform
+        n,v,f = cmdline.parseTroveSpec(sourceTrove)
         v = versions.VersionFromString(v)
-        return models.Platform(platformTroveName=str(n), # convert from unicode
-                               platformVersion=str(v.trailingRevision()), 
-                               label=str(v.trailingLabel()),
-                               platformName=platformName,
-                               hostname=hostname,
-                               productVersion=version)
+        platform = self.platformMgr.getPlatformByName(platformName)
+        platform.platformTroveName=str(n)
+        platform.platformVersion=str(v.trailingRevision())
+        platform.label=str(v.trailingLabel())
+        platform.productVersion=version
+        return platform
 
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):
