@@ -685,6 +685,17 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
+    def testGetProductVersionPlatform(self):
+        uriTemplate = 'products/%s/versions/%s/platform'
+        uri = uriTemplate % (self.productShortName, self.productVersion)
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('GET', uri, convert = True)
+        exp = """
+"""
+        self.failUnlessEqual(response,
+            exp % dict(server = client.server, port = client.port))
+
     def testSetImageDefinitions(self):
         uriTemplate = 'products/%s/versions/%s/imageDefinitions'
         uri = uriTemplate % (self.productShortName, self.productVersion)
