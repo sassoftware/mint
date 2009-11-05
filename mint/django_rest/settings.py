@@ -69,6 +69,7 @@ USE_ETAGS=True
 ROOT_URLCONF = 'mint.django_rest.urls'
 
 TEMPLATE_DIRS = (
+    '/usr/lib64/python2.4/site-packages/mint/django_rest/templates/',
     '/srv/code/products/rbuilder/trunk/mint/mint/django_rest/templates/',
     './mint/django_rest/templates/',
 )
