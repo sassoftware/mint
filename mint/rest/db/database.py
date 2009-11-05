@@ -435,7 +435,7 @@ class Database(DBInterface):
         platformName = pd.getPlatformName()
         sourceTrove = pd.getPlatformSourceTrove()
         if not sourceTrove:
-            platform = self.platformMgr.getPlatformByName(platform)
+            platform = self.platformMgr.getPlatformByName(platformName)
             platform.platformTroveName = ''
             platform.platformVersion = ''
             platform.productVersion = version
