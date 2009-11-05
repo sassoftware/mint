@@ -62,7 +62,10 @@ class TargetDataTable(database.DatabaseTable):
                 targetId)
         res = {}
         for name, value in cu.fetchall():
-            res[name] = simplejson.loads(value)
+            v = simplejson.loads(value)
+            if isinstance(v, unicode):
+                v = v.encode("ascii")
+            res[name] = v
         return res
 
     def deleteTargetData(self, targetId):

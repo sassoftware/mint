@@ -15,6 +15,7 @@ from mint import buildtypes
 from mint import jobstatus
 from mint import helperfuncs
 from mint import mint_error
+from mint import notices_callbacks
 from mint import urltypes
 from mint.lib import data
 from mint.rest import errors
@@ -187,10 +188,15 @@ class ImageManager(manager.Manager):
             """, imageId)
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
         # Grab the build type
+        imageType = self._getImageType(imageId)
+        self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
+
+    def _getImageType(self, imageId):
+        cu = self.db.cursor()
         cu.execute('''SELECT buildType FROM Builds
                       WHERE buildId = ?''', imageId)
         imageType = cu.fetchone()[0]
-        self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
+        return imageType
 
     def listImagesForRelease(self, fqdn, releaseId):
         return self._getImages(fqdn, '', ' AND b.pubReleaseId=?',
@@ -266,10 +272,67 @@ class ImageManager(manager.Manager):
         return models.ImageStatus(row)
 
     def setImageStatus(self, imageId, status):
+        self._postFinished(imageId, status)
+        self._createNotices(imageId, status)
         cu = self.db.cursor()
         cu.execute("""UPDATE Builds SET status = ?, statusMessage = ?
                 WHERE buildId = ?""", status.code, status.message, imageId)
         return self.getImageStatus(imageId)
+
+    def _postFinished(self, imageId, status):
+        if status.code != jobstatus.FINISHED:
+            return
+        imageType = self._getImageType(imageId)
+        if imageType != buildtypes.AMI:
+            # for now we only have to do something special for AMIs
+            return
+        # Fetch the image path
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT FilesUrls.url
+              FROM BuildFiles
+              JOIN BuildFilesUrlsMap USING (fileId)
+              JOIN FilesUrls USING (urlId)
+             WHERE BuildFiles.buildId = ?
+               AND FilesUrls.urlType = ?
+        """, imageId, urltypes.LOCAL)
+        for row in cu:
+            url = row[0]
+            if not os.path.exists(url):
+                continue
+            bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(url)
+            amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
+                bucketName, manifestName)
+            self.db.db.buildData.setDataValue(imageId, 'amiId', amiId,
+                data.RDT_STRING)
+            self.db.db.buildData.setDataValue(imageId, 'amiManifestName,',
+                manifestPath, data.RDT_STRING)
+
+    def _createNotices(self, imageId, status):
+        # XXX FIXME: add notices
+        return
+        username = self.users.get(bld.createdBy)['username']
+        buildType = buildtypes.typeNamesMarketing.get(bld.buildType)
+
+        notices = notices_callbacks.AMIImageNotices(self.cfg, username)
+        notices.notify_built(bld.name, buildType, time.time(),
+            project.name, project.version, [ amiId ])
+
+    def _getImageInfoForNotices(self, imageId, status):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT Projects.name, Projects.version, Users.username,
+                   Builds.buildType,
+                   BuildData.value AS amiId,
+              FROM Builds
+              JOIN Projects USING (projectId)
+              JOIN Users ON (Builds.createdBy = Users.userId)
+         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
+                                 BuildData.name = 'amiId' )
+             WHERE Builds.buildId = ?
+        """, imageId)
+        # XXX FIXME: add notices
+        return
 
     def setFilesForImage(self, fqdn, imageId, files):
         hostname = fqdn.split('.')[0]
