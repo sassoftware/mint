@@ -37,8 +37,24 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         cu = db.cursor()
         cu.execute(sql, platformLabel, mode)
 
+        sql = """
+            INSERT INTO contentSourceTypes (name)
+            VALUES (?)
+        """
+        cu.execute(sql, 'RHN')
+
         platformId = cu.execute("SELECT platformId FROM Platforms "
             "WHERE label = ?", platformLabel).fetchone()[0]
+        typeId = cu.execute("SELECT contentSourceTypeId FROM "
+            "contentSourceTypes WHERE name = 'RHN'").fetchone()[0]
+
+        sql = """
+            INSERT INTO platformsContentSourceTypes 
+            (platformId, contentSourceTypeId)
+            VALUES (?, ?)
+        """
+        cu.execute(sql, platformId, typeId)
+
         class Source(object):
             name = 'sourceName'
             contentSourceType = 'RHN'
