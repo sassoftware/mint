@@ -225,7 +225,7 @@ class Platforms(object):
         for c in cfgPlatforms:
             cfgDict[c.label] = c
 
-        fields = ['platformName', 'configurable', 'hostname',
+        fields = ['platformName', 'hostname',
                   '_sourceTypes']
 
         for c in cfgDict:
@@ -237,11 +237,13 @@ class Platforms(object):
 
     def _listFromCfg(self):
         platforms = []
+        # TODO remove when configurable is read from the plat def/config
+        configurable = 0
         for label, name, enabled, sourceTypes in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
                                 platformName=name, 
                                 hostname=label.split('.')[0],
-                                enabled=enabled, configurable=1,
+                                enabled=enabled, configurable=configurable,
                                 sourceTypes=sourceTypes)
             platforms.append(platform)
         return platforms
