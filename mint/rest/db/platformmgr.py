@@ -279,6 +279,11 @@ class Platforms(object):
             platStatus.valid = False
             platStatus.connected = False
             platStatus.message = str(e)
+            # Hard code a helpful message for the sle platform.
+            if 'sle.rpath.com' in platform.label:
+                platStatus.message = "This platform requires a " + \
+                    "commercial license.  You are either missing the " + \
+                    "entitlement for this platform or it is no longer valid"
         else:            
             platStatus.valid = True
             platStatus.connected = True
