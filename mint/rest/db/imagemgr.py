@@ -293,7 +293,8 @@ class ImageManager(manager.Manager):
                 sizeTotal = 1024
             pct = sizeCurrent * 100.0 / sizeTotal
             message = "Uploading AMI: %d%%" % (pct, )
-            status = models.ImageStatus(jobstatus.RUNNING, message)
+            status = models.ImageStatus()
+            status.set_status(jobstatus.RUNNING, message)
             self.manager.db.setVisibleImageStatus(self.imageId, status)
             self.manager.db.log_message("Uploading %s (%s/%s): %.1f%%, %s/%s",
                 fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)

@@ -33,6 +33,7 @@ from mint.rest.db import usermgr
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 class DBInterface(object):
+    _logFormat = "%(asctime)s %(levelname)s - %(message)s"
     def __init__(self, db):
         self._holdCommits = False
         self.db = db
@@ -40,7 +41,9 @@ class DBInterface(object):
         self._log = self.logger.log
 
     def getLogger(self):
+        formatter = logging.Formatter(self._logFormat)
         handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
         logger = logging.Logger(self.__class__.__name__)
         logger.addHandler(handler)
         return logger
