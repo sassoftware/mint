@@ -4,11 +4,13 @@
 # All Rights Reserved
 #
 import decorator
+import logging
 
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.dbstore import sqllib
 
+from mint import jobstatus
 from mint import mint_error
 from mint import projects
 from mint import userlevels
@@ -34,6 +36,20 @@ class DBInterface(object):
     def __init__(self, db):
         self._holdCommits = False
         self.db = db
+        self.logger = self.getLogger()
+        self._log = self.logger.log
+
+    def getLogger(self):
+        handler = logging.StreamHandler()
+        logger = logging.Logger(self.__class__.__name__)
+        logger.addHandler(handler)
+        return logger
+
+    def log_message(self, format, *args):
+        return self._log(logging.INFO, format, *args)
+
+    def log_error(self, format, *args):
+        return self._log(logging.ERROR, format, *args)
 
     def _getOne(self, cu, exception, key):
         res = cu.fetchone()
@@ -603,9 +619,34 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageStatus(imageId)
 
-    @commitafter
     def setImageStatus(self, hostname, imageId, imageToken, status):
         self.auth.requireImageToken(hostname, imageId, imageToken)
+        if status.isFinal:
+            try:
+                # This method is not running in a single transaction, since it
+                # may want to update the status
+                self._finalImageProcessing(imageId, status)
+            except:
+                self.rollback()
+                self._holdCommits = False
+                self.cancelImageBuild(imageId)
+                raise
+        return self.setVisibleImageStatus(imageId, status)
+
+    def _finalImageProcessing(self, imageId, status):
+        self.imageMgr.finalImageProcessing(imageId, status)
+
+    @commitafter
+    def setVisibleImageStatus(self, imageId, status):
+        return self.imageMgr.setImageStatus(imageId, status)
+
+    @commitafter
+    def cancelImageBuild(self, imageId):
+        """Only set the status if it's a non-terminal state"""
+        status = self.imageMgr.getImageStatus(imageId)
+        if status.isFinal:
+            return
+        status.set_status(jobstatus.FAILED, message = "Unknown error")
         return self.imageMgr.setImageStatus(imageId, status)
 
     @readonly

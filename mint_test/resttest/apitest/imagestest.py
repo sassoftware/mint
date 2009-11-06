@@ -280,8 +280,9 @@ class ImagesTest(restbase.BaseRestTest):
             def __init__(self):
                 self.acl = self.MockACL()
 
-        def set_contents_from_file(self, fp, cb = None):
-            pass
+        def set_contents_from_file(self, fp, cb = None, policy = None):
+            if cb:
+                cb(10, 16)
 
         def get_acl(self):
             return self.MockPolicy()
@@ -294,6 +295,9 @@ class ImagesTest(restbase.BaseRestTest):
             pass
 
         def new_key(self, name):
+            return self.MockKey()
+
+        def get_key(self, name):
             return self.MockKey()
     MockBucket.MockKey = MockKey
 
