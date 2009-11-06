@@ -99,9 +99,10 @@ class PlatformsTable(database.KeyedTable):
             SET %s = ?
             WHERE platformId = ?
         """
+        platformId = int(platformId)
         for k, v in kw.items():
             cu.execute(sql % k, v, platformId)
-        return cu.fetchall()            
+        return []
 
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'
