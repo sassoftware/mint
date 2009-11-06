@@ -295,8 +295,8 @@ class ImageManager(manager.Manager):
             message = "Uploading AMI: %d%%" % (pct, )
             status = models.ImageStatus(jobstatus.RUNNING, message)
             self.manager.db.setVisibleImageStatus(self.imageId, status)
-            self.manager.db.log_message("Uploading %s (%s/%s): %s/%s, %.1f",
-                fileName, fileIdx, fileTotal, sizeCurrent, sizeTotal, pct)
+            self.manager.db.log_message("Uploading %s (%s/%s): %.1f%%, %s/%s",
+                fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)
 
     def _postFinished(self, imageId, status):
         if status.code != jobstatus.FINISHED:
