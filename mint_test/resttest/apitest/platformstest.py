@@ -30,7 +30,7 @@ from rpath_proddef import api1 as proddef
 
 ResponseError = restClient.ResponseError
 
-class PlatformTest(restbase.BaseRestTest):
+class PlatformsTest(restbase.BaseRestTest):
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
         self.setupProduct()

@@ -225,7 +225,7 @@ class Platforms(object):
         for c in cfgPlatforms:
             cfgDict[c.label] = c
 
-        fields = ['platformName', 'configurable', 'hostname',
+        fields = ['platformName', 'hostname',
                   '_sourceTypes']
 
         for c in cfgDict:
@@ -237,11 +237,13 @@ class Platforms(object):
 
     def _listFromCfg(self):
         platforms = []
+        # TODO remove when configurable is read from the plat def/config
+        configurable = 0
         for label, name, enabled, sourceTypes in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
                                 platformName=name, 
                                 hostname=label.split('.')[0],
-                                enabled=enabled, configurable=1,
+                                enabled=enabled, configurable=configurable,
                                 sourceTypes=sourceTypes)
             platforms.append(platform)
         return platforms
@@ -277,6 +279,11 @@ class Platforms(object):
             platStatus.valid = False
             platStatus.connected = False
             platStatus.message = str(e)
+            # Hard code a helpful message for the sle platform.
+            if 'sle.rpath.com' in platform.label:
+                platStatus.message = "This platform requires a " + \
+                    "commercial license.  You are either missing the " + \
+                    "entitlement for this platform or it is no longer valid"
         else:            
             platStatus.valid = True
             platStatus.connected = True
