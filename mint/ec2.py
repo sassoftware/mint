@@ -284,17 +284,18 @@ class S3Wrapper(object):
 
             fileName = os.path.basename(archiveMember.name)
             key = bucket.new_key(fileName)
-            # Grant permissions to za-team
-            acl = key.get_acl()
-            acl.acl.add_user_grant('READ', self.amazonEC2UserId)
-            key.set_acl(acl)
 
             if callback:
                 cb = self.UploadCallback(callback, archiveMember.name,
                     i + 1, fileCount, sum(fileSizes[:i]), totalSize).callback
             else:
                 cb = None
-            key.set_contents_from_file(nFileObj, cb=cb)
+            key.set_contents_from_file(nFileObj, cb=cb, policy='private')
+            # Grant permissions to za-team
+            key = bucket.get_key(fileName)
+            acl = key.get_acl()
+            acl.acl.add_user_grant('READ', self.amazonEC2UserId)
+            key.set_acl(acl)
         if manifests:
             return (bucketName, manifests[0])
         return (bucketName, None)
