@@ -292,11 +292,15 @@ class ImageManager(manager.Manager):
             if sizeTotal == 0:
                 sizeTotal = 1024
             pct = sizeCurrent * 100.0 / sizeTotal
-            message = "Uploading AMI: %d%%" % (pct, )
-            status = models.ImageStatus(jobstatus.RUNNING, message)
-            self.manager.db.setVisibleImageStatus(self.imageId, status)
-            self.manager.db.log_message("Uploading %s (%s/%s): %s/%s, %.1f",
-                fileName, fileIdx, fileTotal, sizeCurrent, sizeTotal, pct)
+            message = "Uploading bundle: %d%%" % (pct, )
+            self.manager._setStatus(self.imageId, message = message)
+            self.manager.db.log_message("Uploading %s (%s/%s): %.1f%%, %s/%s",
+                fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)
+
+    def _setStatus(self, imageId, code = jobstatus.RUNNING, message = ''):
+        status = models.ImageStatus()
+        status.set_status(code, message)
+        self.db.setVisibleImageStatus(imageId, status)
 
     def _postFinished(self, imageId, status):
         if status.code != jobstatus.FINISHED:
@@ -324,6 +328,7 @@ class ImageManager(manager.Manager):
             self.db.log_message("Uploading bundle")
             bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(
                 url, callback = uploadCallback.callback)
+            self._setStatus(imageId, message = "Registering AMI")
             self.db.log_message("Registering AMI for %s/%s", bucketName,
                 manifestName)
             amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
