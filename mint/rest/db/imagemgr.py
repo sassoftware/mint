@@ -272,12 +272,31 @@ class ImageManager(manager.Manager):
         return models.ImageStatus(row)
 
     def setImageStatus(self, imageId, status):
-        self._postFinished(imageId, status)
-        self._createNotices(imageId, status)
         cu = self.db.cursor()
         cu.execute("""UPDATE Builds SET status = ?, statusMessage = ?
                 WHERE buildId = ?""", status.code, status.message, imageId)
         return self.getImageStatus(imageId)
+
+    def finalImageProcessing(self, imageId, status):
+        self._postFinished(imageId, status)
+        self._createNotices(imageId, status)
+
+    class UploadCallback(object):
+        def __init__(self, manager, imageId):
+            self.manager = manager
+            self.imageId = imageId
+
+        def callback(self, fileName, fileIdx, fileTotal,
+                currentFileBytes, totalFileBytes, sizeCurrent, sizeTotal):
+            # Nice percentages
+            if sizeTotal == 0:
+                sizeTotal = 1024
+            pct = sizeCurrent * 100.0 / sizeTotal
+            message = "Uploading AMI: %d%%" % (pct, )
+            status = models.ImageStatus(jobstatus.RUNNING, message)
+            self.manager.db.setVisibleImageStatus(self.imageId, status)
+            self.manager.db.log_message("Uploading %s (%s/%s): %s/%s, %.1f",
+                fileName, fileIdx, fileTotal, sizeCurrent, sizeTotal, pct)
 
     def _postFinished(self, imageId, status):
         if status.code != jobstatus.FINISHED:
@@ -286,6 +305,7 @@ class ImageManager(manager.Manager):
         if imageType != buildtypes.AMI:
             # for now we only have to do something special for AMIs
             return
+        self.db.log_message("Finishing AMI image")
         # Fetch the image path
         cu = self.db.cursor()
         cu.execute("""
@@ -296,17 +316,25 @@ class ImageManager(manager.Manager):
              WHERE BuildFiles.buildId = ?
                AND FilesUrls.urlType = ?
         """, imageId, urltypes.LOCAL)
+        uploadCallback = self.UploadCallback(self, imageId)
         for row in cu:
             url = row[0]
             if not os.path.exists(url):
                 continue
-            bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(url)
+            self.db.log_message("Uploading bundle")
+            bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(
+                url, callback = uploadCallback.callback)
+            self.db.log_message("Registering AMI for %s/%s", bucketName,
+                manifestName)
             amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
                 bucketName, manifestName)
+            self.db.log_message("Registered AMI %s for %s", amiId,
+                manifestPath)
             self.db.db.buildData.setDataValue(imageId, 'amiId', amiId,
                 data.RDT_STRING)
             self.db.db.buildData.setDataValue(imageId, 'amiManifestName,',
                 manifestPath, data.RDT_STRING)
+            self.db.commit()
 
     def _createNotices(self, imageId, status):
         # XXX FIXME: add notices
