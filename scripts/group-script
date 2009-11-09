@@ -166,10 +166,19 @@ else
     echo Skipping certificate generation due to chrooting
 fi
 
-# Restart rMake after update + cert generation.
-if [ -f /var/lock/subsys/rmake ]
+# Restart rMake after update + cert generation. This also straightens things out
+# for the first update after the messagebus was split.
+#   -- 5.0.0 - 2008-12-01
+#   -- 5.5.0 - 2009-11-09
+if [ "x$is_chrooted" == "x" ]
 then
-    service rmake restart
+    # Stop the old message bus
+    service rmake stop
+    # Start or restart the new message bus
+    service rmake-messagebus condstop
+    service rmake-messagebus start
+    # Start rmake
+    service rmake start
     service rmake-node restart
 fi
 
