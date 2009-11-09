@@ -37,22 +37,6 @@ class DBInterface(object):
     def __init__(self, db):
         self._holdCommits = False
         self.db = db
-        self.logger = self.getLogger()
-        self._log = self.logger.log
-
-    def getLogger(self):
-        formatter = logging.Formatter(self._logFormat)
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-        logger = logging.Logger(self.__class__.__name__)
-        logger.addHandler(handler)
-        return logger
-
-    def log_message(self, format, *args):
-        return self._log(logging.INFO, format, *args)
-
-    def log_error(self, format, *args):
-        return self._log(logging.ERROR, format, *args)
 
     def _getOne(self, cu, exception, key):
         res = cu.fetchone()
