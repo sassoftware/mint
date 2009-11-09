@@ -33,8 +33,8 @@ class ImagesPerProduct(Resource):
         pattern = re.compile('^(([0-9]+(\.)?[0-9]+)|([0-9]+))$')    
         for param in (starttime, endtime,):
             if param is not None and not pattern.match(param):
-                     return HttpResponseBadRequest('Invalid query parameter: %s' 
-                        % param)       
+                return HttpResponseBadRequest('Invalid query parameter: %s' 
+                    % param)       
                
         where_stmt = "p.shortname = '%(product)s' and p.projectid = b.projectid" % locals()
         
@@ -98,14 +98,8 @@ class ImagesDownloaded(Resource):
         pattern = re.compile('^(([0-9]+(\.)?[0-9]+)|([0-9]+))$')    
         for param in (starttime, endtime,):
             if param is not None and not pattern.match(param):
-                     return HttpResponseBadRequest('Invalid query parameter: %s' 
+                return HttpResponseBadRequest('Invalid query parameter: %s' 
                         % param)       
-        
-        size = {'year': {'length':4,'format':'%Y'}, 
-                'month': {'length':6, 'format' : '%Y%m'},
-                'day' : {'length':8, 'format' : '%Y%m%d'},
-                'hour' : {'length':10, 'format' : '%Y%m%d%H'},
-               }
                
         rows = Downloads.objects.extra\
             (select={'time':"SUBSTRING(timedownloaded,1,%d)" %\
@@ -120,4 +114,76 @@ class ImagesDownloaded(Resource):
             segreport.addSegment(segment)
         
         return HttpResponse(xobj.toxml(segreport, report), "text/plain")
-   
+ 
+class ApplianceDownloads(Resource):
+
+    # Handle GET methods
+    def read(self, request, report, product):
+        
+        # Check what parameters were sent as part of the get
+        units = ((request.REQUEST.has_key('timeunits') 
+            and request.REQUEST['timeunits']) or 'month')
+        starttime = ((request.REQUEST.has_key('starttime') 
+            and request.REQUEST['starttime']) or None)
+        endtime = ((request.REQUEST.has_key('endtime') 
+            and request.REQUEST['endtime']) or None)
+        
+        if units not in ('year','month','day','hour'):
+            return HttpResponseBadRequest('Invalid timeunits value: %s' % units)
+        
+        # Make sure that the arguments are only numbers
+        pattern = re.compile('^(([0-9]+(\.)?[0-9]+)|([0-9]+))$')    
+        for param in (starttime, endtime,):
+            if param is not None and not pattern.match(param):
+                return HttpResponseBadRequest('Invalid query parameter: %s' 
+                        % param)       
+
+        length = size[units]['length']
+        
+        where_stmt = """p.projectid=b.projectid and dl.urlid =  bfu.urlid 
+            and bf.fileid = bfu.urlid and bf.buildid = b.buildid
+            and p.shortname = '%(product)s'""" % locals()
+        
+        if starttime:
+            startpoint = time.strftime('%Y%m%d%H%M%S', time.localtime(float(starttime)))
+            where_stmt += " and timedownloaded > %s" % startpoint
+            
+        if endtime:
+            endpoint = time.strftime('%Y%m%d%H%M%S', time.localtime(float(endtime)))
+            where_stmt += " and timedownloaded < %s" % endpoint     
+        
+#FIXME: This needs to be more djangoized and the table relationships can use another look               
+        sql_query = """select DISTINCT (SUBSTRING(timedownloaded,1,%(length)d)) AS "time", COUNT(dl."ip") AS "downloads" 
+            FROM urldownloads dl, projects p, builds b, buildfilesurlsmap bfu, buildfiles bf
+            where %(where_stmt)s
+            GROUP BY SUBSTRING(timedownloaded,1,%(length)d)"""
+        
+        cursor = connection.cursor()
+        
+        cursor.execute(sql_query % locals())
+        
+        segreport = TimeSegmentReport(request, units, starttime, endtime)
+        
+        rows = cursor.fetchall()
+
+        #Check to see if any rows were returned and if the cause was due to 
+        #nonexistent product
+        if not rows:
+            try:
+                product = Products.objects.get(shortname=product)
+            except Products.DoesNotExist, data:
+                raise Http404(data)
+ 
+        for row in rows:
+            total = row[1]
+            t =  time.mktime(time.strptime(row[0], size[units]['format']))
+            segment = segreport.timeSegments.Segment(total, t)
+            segreport.addSegment(segment)
+        
+        return HttpResponse(xobj.toxml(segreport, report), "text/plain")
+
+size = {'year': {'length':4,'format':'%Y'}, 
+                'month': {'length':6, 'format' : '%Y%m'},
+                'day' : {'length':8, 'format' : '%Y%m%d'},
+                'hour' : {'length':10, 'format' : '%Y%m%d%H'},
+               }

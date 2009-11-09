@@ -21,7 +21,8 @@ class ReportTypeDescriptor(Resource):
         descriptor = _reportMatrix[report]['descriptor'] % request.build_absolute_uri()
         
         return HttpResponse(descriptor, "text/plain")       
-        
+
+# FIXME:  This is tied to the views.py code          
 _reportMatrix = {'imagesReport': 
   { 'reportClass' : imagereports.ImagesPerProduct,
     'descriptor' : """<?xml version="1.0" encoding="UTF-8"?>
@@ -73,6 +74,28 @@ _reportMatrix = {'imagesReport':
     <view
         id="%s"
         label="Images Downloaded"
+    >
+       <pod id="ipc"
+          type="SmartLineChart"
+          title="System Updates"
+          rootElement="quarters"
+          dataElement="file"
+          dateField="report_day"
+          dateUnits="days"
+          selectedViewIndex="0"
+          dataTipUnitLabel="$*"
+          dataTipLabelField="Total"
+       />
+   </view>
+</views>"""
+  },
+  'applianceDownloads': 
+  { 'reportClass' : imagereports.ApplianceDownloads,
+    'descriptor' : """<?xml version="1.0" encoding="UTF-8"?>
+<views>
+    <view
+        id="%s"
+        label="Appliance Downloads"
     >
        <pod id="ipc"
           type="SmartLineChart"
