@@ -8,11 +8,13 @@ import sys
 import weakref
 import xmlrpclib
 
+from conary import conarycfg
 from conary import errors as conaryErrors
 from conary import versions
 from conary.dbstore import sqllib
 from conary.lib import util
 
+from mint import config
 from mint import mint_error
 from mint.lib import persistentcache
 from mint.rest import errors
@@ -248,9 +250,59 @@ class Platforms(object):
             platforms.append(platform)
         return platforms
 
+    def _setupPlatform(self, platform):
+        platformId = int(platform.platformId)
+        platformName = str(platform.platformName)
+        platformLabel = str(platform.label)
+        hostName = str(platform.hostname)
+
+        label = versions.Label(platform.label)
+        host = str(label.getHost())
+        url = 'http://%s/conary/' % (host)
+        domainName = '.'.join(host.split('.')[-2:])
+
+        # Not sure why, but when this import is at the top of the file, it
+        # fails to import (at least in the testsuite)
+        from mint import shimclient
+
+        authToken = (self.cfg.authUser, self.cfg.authPass)
+        client = shimclient.ShimMintClient(self.cfg, authToken)
+
+        try:
+            projectId = client.newExternalProject(platformName, 
+                                  hostName, domainName, platformLabel,
+                                  url, True)
+        except mint_error.DuplicateHostname, e:
+            # External project must already be setup for this platform.
+            project = client.getProjectByHostname(hostName)
+            projectId = project.projectId
+
+        platformId = int(platformId)
+        authType = 'entitlement'
+        conaryCfg = conarycfg.ConaryConfiguration(False)
+        conaryCfg.read(config.CONARY_CONFIG)
+        conaryCfg.readEntitlementDirectory()
+        entitlement = conaryCfg.entitlement.find(host)
+
+        if not entitlement:
+            entitlement = ''
+            return (projectId, None)
+        else:
+            entitlement = entitlement[0][1]
+
+        mirrorId = client.getInboundMirror(projectId)
+        if not mirrorId:
+            mirrorId = client.addInboundMirror(projectId, [platformLabel],
+                                url, authType, '', '', entitlement, True)
+
+        return (projectId, mirrorId)
 
     def update(self, platformId, platform):
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled))
+
+        if platform.enabled:
+            self._setupPlatform(platform)
+
         return self.getById(platformId)
 
     def list(self):
