@@ -330,7 +330,6 @@ class ImageManager(manager.Manager):
             if not os.path.exists(url):
                 continue
             log.info("Uploading bundle")
-            log.info("Uploading bundle")
             bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(
                 url, callback = uploadCallback.callback)
             self._setStatus(imageId, message = "Registering AMI")
