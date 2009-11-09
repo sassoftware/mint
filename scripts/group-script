@@ -172,14 +172,18 @@ fi
 #   -- 5.5.0 - 2009-11-09
 if [ "x$is_chrooted" == "x" ]
 then
-    # Stop the old message bus
+    # Stop everything
+    service jobmaster condstop
+    service mcp-dispatcher condstop
+    [ -e /var/lock/subsys/rmake-node ] && service rmake-node stop
     service rmake stop
-    # Start or restart the new message bus
     service rmake-messagebus condstop
+    # Start everything
     service rmake-messagebus start
-    # Start rmake
     service rmake start
-    service rmake-node restart
+    service rmake-node start
+    service mcp-dispatcher start
+    service jobmaster start
 fi
 
 # Fix notifications with a bad GUID
