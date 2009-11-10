@@ -40,4 +40,10 @@ class SystemUpdate(models.Model):
     class Meta:
         db_table = u'systemupdate'
     
+class RepositoryLogStatus(models.Model):
+    logname = models.CharField(primary_key=True, max_length=128)
+    inode = models.IntegerField()
+    logoffset = models.IntegerField()
     
+    class Meta:
+        db_table = u'repositorylogstatus'

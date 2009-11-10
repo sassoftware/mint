@@ -734,6 +734,10 @@ class MigrateTo_48(SchemaMigration):
     def migrate5(self):
         return True
 
+    # 48.6
+    # - Dashboard Repository Log scraping table 
+    def migrate6(self):
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
