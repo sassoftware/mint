@@ -861,6 +861,21 @@ def _createCapsuleIndexerSchema(db):
         'ci_rhn_nevra_n_e_v_r_a_idx_uq', 'name, epoch, version, release, arch',
         unique = True)
 
+    tableName = 'ci_rhn_package_failed'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_package_failed (
+                package_id %(PRIMARYKEY)s
+                    REFERENCES ci_rhn_package ON DELETE CASCADE,
+                failed_timestamp INTEGER NOT NULL,
+                failed_msg VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_rhn_packages',
+        'ci_rhn_packages_nevra_id_last_modified_idx_uq',
+        'nevra_id, last_modified', unique = True)
+
     tableName = 'ci_rhn_packages'
     if tableName not in db.tables:
         cu.execute("""
