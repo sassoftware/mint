@@ -959,7 +959,7 @@ def _createRepositoryLogSchema(db):
                 servername character varying(128) NOT NULL,
                 repositoryname character varying(128) NOT NULL,
                 updatetime numeric(14,3) NOT NULL,
-                updateuser character varying(128) NOT NULL,
+                updateuser character varying(128) NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['systemupdate'] = []
         changed = True
