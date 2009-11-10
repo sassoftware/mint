@@ -4,8 +4,6 @@
 # All rights reserved.
 #
 
-SUBDIRS = assets
-
 template_files = $(wildcard *.html)
 
 all: default-all
