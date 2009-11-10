@@ -872,9 +872,6 @@ def _createCapsuleIndexerSchema(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
-    changed |= db.createIndex('ci_rhn_packages',
-        'ci_rhn_packages_nevra_id_last_modified_idx_uq',
-        'nevra_id, last_modified', unique = True)
 
     tableName = 'ci_rhn_packages'
     if tableName not in db.tables:
