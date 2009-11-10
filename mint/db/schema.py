@@ -970,9 +970,9 @@ def _createRepositoryLogSchema(db):
         cu.execute("""
             CREATE TABLE repositorylogstatus
             (
-                logname %(PRIMARYKEY)s, 
+                logname %(PRIMARYKEY)s,
                 inode integer NOT NULL,
-                logoffset integer NOT NULL,
+                logoffset integer NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['repositorylogstatus'] = []
         changed = True
