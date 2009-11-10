@@ -866,7 +866,7 @@ def _createCapsuleIndexerSchema(db):
         cu.execute("""
             CREATE TABLE ci_rhn_package_failed (
                 package_id %(PRIMARYKEY)s
-                    REFERENCES ci_rhn_package ON DELETE CASCADE,
+                    REFERENCES ci_rhn_packages ON DELETE CASCADE,
                 failed_timestamp INTEGER NOT NULL,
                 failed_msg VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
