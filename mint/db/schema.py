@@ -865,7 +865,7 @@ def _createCapsuleIndexerSchema(db):
     if tableName not in db.tables:
         cu.execute("""
             CREATE TABLE ci_rhn_package_failed (
-                package_failed_id %(PRIMARYKEY)s
+                package_failed_id %(PRIMARYKEY)s,
                 package_id INTEGER NOT NULL
                     REFERENCES ci_rhn_packages ON DELETE CASCADE,
                 failed_timestamp INTEGER NOT NULL,
