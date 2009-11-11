@@ -13,10 +13,8 @@ DATABASE_ENGINE = 'postgresql_psycopg2'           # 'postgresql_psycopg2', 'post
 DATABASE_NAME = 'mint'             # Or path to database file if using sqlite3.
 DATABASE_USER = 'postgres'             # Not used with sqlite3.
 DATABASE_PASSWORD = ''         # Not used with sqlite3.
-#DATABASE_HOST = 'localhost'             # Set to empty string for localhost. Not used with sqlite3.
-#DATABASE_PORT = '6432'             # Set to empty string for default. Not used with sqlite3.
-DATABASE_HOST = 'rbatest01'             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = '5439'
+DATABASE_HOST = 'localhost'             # Set to empty string for localhost. Not used with sqlite3.
+DATABASE_PORT = '6432'             # Set to empty string for default. Not used with sqlite3.
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
