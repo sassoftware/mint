@@ -6,6 +6,7 @@
 
 from conary.lib import util
 from mint.rest.db import manager
+from mint.rest.api import models
 
 import rpath_capsule_indexer
 
@@ -45,3 +46,18 @@ class CapsuleManager(manager.Manager):
     def getIndexer(self):
         cfg = self.getIndexerConfig()
         return rpath_capsule_indexer.Indexer(cfg)
+
+    def getIndexerErrors(self, platformId = None):
+        indexer = self.getIndexer()
+
+        errors = indexer.model.getPackageDownloadFailures()
+        ret = models.ResourceErrors()
+        for err in errors:
+            # For now we only have DownloadError as code
+            e = models.ResourceError(id = err.package_failed_id,
+                platformId = platformId,
+                message = err.failed_msg,
+                timestamp = err.failed_timestamp,
+                code = 'DownloadError')
+            ret.resourceError.append(e)
+        return ret

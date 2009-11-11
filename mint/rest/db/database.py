@@ -668,6 +668,9 @@ class Database(DBInterface):
         self.auth.requireImageToken(hostname, imageId, imageToken)
         return self.imageMgr.setFilesForImage(hostname, imageId, files)
 
+    def getPlatformContentErrors(self, platformId):
+        return self.capsuleMgr.getIndexerErrors(platformId)
+
     @commitafter
     def createImage(self, hostname, image, buildData=None):
         self.auth.requireProductDeveloper(hostname)

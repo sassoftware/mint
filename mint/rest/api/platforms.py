@@ -95,12 +95,18 @@ class PlatformSourceTypeController(base.BaseController):
     def index(self, request, platformId):
         return self.db.getSourceTypesByPlatform(platformId)
 
+class PlatformContentErrorsController(base.BaseController):
+    def index(self, request, platformId):
+        return self.db.getPlatformContentErrors(platformId)
+
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
     urls = { 'status' : PlatformStatusController,
              'contentSources' : PlatformSourceController,
-             'contentSourceTypes' : PlatformSourceTypeController }
+             'contentSourceTypes' : PlatformSourceTypeController,
+             'errors' : PlatformContentErrorsController,
+           }
 
     def index(self, request):
         return self.db.getPlatforms()
