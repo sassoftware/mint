@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 8)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -865,10 +865,12 @@ def _createCapsuleIndexerSchema(db):
     if tableName not in db.tables:
         cu.execute("""
             CREATE TABLE ci_rhn_package_failed (
-                package_id %(PRIMARYKEY)s
+                package_failed_id %(PRIMARYKEY)s
+                package_id INTEGER NOT NULL
                     REFERENCES ci_rhn_packages ON DELETE CASCADE,
                 failed_timestamp INTEGER NOT NULL,
-                failed_msg VARCHAR NOT NULL
+                failed_msg VARCHAR NOT NULL,
+                resolved VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
