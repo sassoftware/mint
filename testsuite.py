@@ -63,8 +63,6 @@ def setup():
 
     pathManager.addExecPath('MCP_PATH')
 
-    pathManager.addExecPath('JOB_SLAVE_PATH')
-
     pathManager.addExecPath('RAA_PATH')
     pathManager.addExecPath('RAA_TEST_PATH')
     
