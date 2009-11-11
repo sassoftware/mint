@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 6)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 7)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -970,7 +970,7 @@ def _createRepositoryLogSchema(db):
         cu.execute("""
             CREATE TABLE repositorylogstatus
             (
-                logname %(PRIMARYKEY)s,
+                logname varchar(128) PRIMARY KEY,
                 inode integer NOT NULL,
                 logoffset integer NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
