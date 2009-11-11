@@ -6,7 +6,7 @@ from mint.django_rest.rbuilder.models import Users
 from xobj import xobj
 
 # Create your models here.
-class ReportType(object):
+class Report(object):
     
     #xobj Elements   
     def populateElements(self, request):
@@ -22,13 +22,13 @@ class ReportType(object):
 	    elements = ['name','description','descriptor','data','timeCreated','timeModified','creator',]
 	    )
 
-class ReportTypes(object):
+class Reports(object):
     
     def __init__(self):
-        self.__class__.__name__ = 'reportTypes'
+        self.__class__.__name__ = 'reports'
         
     def addQueryset(self, queryset):
-        self.reportType = queryset
+        self.report = queryset
 
 class SystemUpdate(models.Model):
     _systemupdateid = models.AutoField(primary_key=True, db_column='systemupdateid')

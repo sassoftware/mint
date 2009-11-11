@@ -16,7 +16,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # (r'^admin/', include(admin.site.urls)),
-    url(r'^api/reports/type/$', views.ReportTypeView()),
-    url(r'^api/reports/type/(.*?)/descriptor/?$', reportdispatcher.ReportTypeDescriptor()),
-    url(r'^api/reports/type/(.*?)/data/(.*?)/?$', reportdispatcher.ReportDispatcher()),
+    url(r'^api/reports/$', views.ReportView()),
+    url(r'^api/reports/(.*?)/descriptor/?$', reportdispatcher.ReportDescriptor()),
+    url(r'^api/reports/(.*?)/data/(.*?)/?$', reportdispatcher.ReportDispatcher()),
 )

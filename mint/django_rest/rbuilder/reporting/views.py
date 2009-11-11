@@ -1,30 +1,30 @@
 from mint.django_rest.rbuilder.xobj_responder import xobjResponder
-from mint.django_rest.rbuilder.reporting.models import ReportType, ReportTypes
+from mint.django_rest.rbuilder.reporting.models import Report, Reports
 
 from xobj import xobj
 
 from django.http import HttpResponse
 from django_restapi.resource import Resource
 
-class ReportTypeView(Resource):
+class ReportView(Resource):
 
     # Handle GET methods
     def read(self, request):
         queryset = []
-        for type in _reporttypes.values():
-            rt = ReportType()
+        for type in _reports.values():
+            report = Report()
             for attr in type.items():              
-                setattr(rt, attr[0], attr[1])
+                setattr(report, attr[0], attr[1])
             
-            rt.populateElements(request)    
-            queryset.append(rt)
+            report.populateElements(request)    
+            queryset.append(report)
         
-        obj = ReportTypes()
+        obj = Reports()
         obj.addQueryset(queryset)
         return HttpResponse(xobj.toxml(obj, obj.__class__.__name__), "text/plain")     
 
 # FIXME:  This is tied to the reportdispatcher.py code        
-_reporttypes = {
+_reports = {
     'imagesReport': { 'uri' : 'imagesReport',
                       'name' : 'Image Creation Timeline',
                       'description': 'Show the number of images created for a product by different aggregations',

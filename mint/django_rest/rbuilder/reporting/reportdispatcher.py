@@ -15,7 +15,7 @@ class ReportDispatcher(Resource):
             
         return Resource.dispatch(self, request, obj(), *args, **kwargs)
         
-class ReportTypeDescriptor(Resource):
+class ReportDescriptor(Resource):
 
     def read(self, request, report):       
         descriptor = _reportMatrix[report]['descriptor'] % request.build_absolute_uri()
