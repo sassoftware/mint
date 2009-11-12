@@ -107,6 +107,10 @@ class PlatformLoadController(base.BaseController):
     def create(self, request, platformId, platformLoad):
         return self.db.loadPlatform(platformId, platformLoad)
 
+class PlatformContentErrorsController(base.BaseController):
+    def index(self, request, platformId):
+        return self.db.getPlatformContentErrors(platformId)
+
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
@@ -114,6 +118,8 @@ class PlatformController(base.BaseController):
              'contentSources' : PlatformSourceController,
              'contentSourceTypes' : PlatformSourceTypeController,
              'load' : PlatformLoadController }
+             'errors' : PlatformContentErrorsController,
+           }
 
     def index(self, request):
         return self.db.getPlatforms()

@@ -137,6 +137,38 @@ class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
         channels = indexer.model.enumerateChannels()
         self.failUnlessEqual(len(channels), 4)
 
+    def testGetPlatformSourceErrors(self):
+        client = self.getRestClient(admin = True)
+        req, response = client.call('GET', '/platforms')
+
+        # Refresh
+        uri = 'capsules/rpm/content'
+        req, response = client.call('POST', uri)
+
+        indexer = base.IndexerTestMixIn.indexer(self)
+        pkgKey = ('with-config-special', None, '0.2', '1', 'noarch')
+        pkgSha1 = '4daf5f932e248a32758876a1f8ff12a5f58b1a54'
+
+        pkg = indexer.getPackage(pkgKey, pkgSha1)
+
+        # Mark it as missing
+        pkg.path = None
+
+        failures = indexer.model.getPackageDownloadFailures()
+        self.failUnlessEqual(len(failures), 0)
+
+        indexer.model.addPackageDownloadFailure(pkg, "manual failure")
+        failures = indexer.model.getPackageDownloadFailures()
+        self.failUnlessEqual(len(failures), 1)
+        timestamp = failures[0].failed_timestamp
+        indexer.model.commit()
+
+        uri = '/platforms/1/errors'
+        req, errorList = client.call('GET', uri)
+        self.failUnlessEqual(
+            [ (x.id, x.code, x.message, x.timestamp)
+                for x in errorList.resourceError ],
+            [ (1, 'DownloadError', 'manual failure', timestamp) ])
 
 class CapsulesTestRemote(restbase.BaseRestTest):
     # This controller should mock access from non-localhost

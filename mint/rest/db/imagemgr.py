@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import logging
 import os
 import sys
 import time
@@ -23,6 +24,9 @@ from mint.rest.db import manager
 from mint.rest.api import models
 
 from conary.lib import cfgtypes
+
+log = logging.getLogger(__name__)
+
 
 class ImageManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
@@ -294,7 +298,7 @@ class ImageManager(manager.Manager):
             pct = sizeCurrent * 100.0 / sizeTotal
             message = "Uploading bundle: %d%%" % (pct, )
             self.manager._setStatus(self.imageId, message = message)
-            self.manager.db.log_message("Uploading %s (%s/%s): %.1f%%, %s/%s",
+            log.info("Uploading %s (%s/%s): %.1f%%, %s/%s",
                 fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)
 
     def _setStatus(self, imageId, code = jobstatus.RUNNING, message = ''):
@@ -309,7 +313,7 @@ class ImageManager(manager.Manager):
         if imageType != buildtypes.AMI:
             # for now we only have to do something special for AMIs
             return
-        self.db.log_message("Finishing AMI image")
+        log.info("Finishing AMI image")
         # Fetch the image path
         cu = self.db.cursor()
         cu.execute("""
@@ -325,15 +329,15 @@ class ImageManager(manager.Manager):
             url = row[0]
             if not os.path.exists(url):
                 continue
-            self.db.log_message("Uploading bundle")
+            log.info("Uploading bundle")
             bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(
                 url, callback = uploadCallback.callback)
             self._setStatus(imageId, message = "Registering AMI")
-            self.db.log_message("Registering AMI for %s/%s", bucketName,
+            log.info("Registering AMI for %s/%s", bucketName,
                 manifestName)
             amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
                 bucketName, manifestName)
-            self.db.log_message("Registered AMI %s for %s", amiId,
+            log.info("Registered AMI %s for %s", amiId,
                 manifestPath)
             self.db.db.buildData.setDataValue(imageId, 'amiId', amiId,
                 data.RDT_STRING)

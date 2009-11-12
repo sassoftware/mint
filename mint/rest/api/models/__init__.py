@@ -14,6 +14,7 @@ class RMCUrlField(fields.CalculatedField):
 
 
 from mint.rest.api.models.builddefinitions import *
+from mint.rest.api.models.capsules import *
 from mint.rest.api.models.members import *
 from mint.rest.api.models.siteauth import *
 from mint.rest.api.models.users import *
@@ -35,6 +36,7 @@ class RbuilderStatus(Model):
     users                   = fields.UrlField('users', None)
     platforms               = fields.UrlField('platforms', None)
     registration            = fields.UrlField('registration', None)
+    reports                 = fields.UrlField('reports', None)
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
 

@@ -29,7 +29,8 @@ static_files =				\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
-	set-password
+	set-password                    \
+	repository-log-scrape
 
 generated_files =	\
 	rbuilder_database.py

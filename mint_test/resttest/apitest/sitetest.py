@@ -44,6 +44,7 @@ class SiteTest(restbase.BaseRestTest):
   <users href="http://%(server)s:%(port)s/api/users/"/>
   <platforms href="http://%(server)s:%(port)s/api/platforms/"/>
   <registration href="http://%(server)s:%(port)s/api/registration"/>
+  <reports href="http://%(server)s:%(port)s/api/reports"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
 </rbuilderStatus>

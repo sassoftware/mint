@@ -27,7 +27,8 @@ class RbuilderRestServer(RestController):
             'contentSources' : platforms.SourceTypeController,
             'registration' : registration.RegistrationController,
             'notices'  : notices.NoticesController,
-            'capsules'  : capsules.CapsulesController,}
+            'capsules'  : capsules.CapsulesController,
+            'reports'  : 'getReportsList',}
 
     def __init__(self, cfg, db):
         self.cfg = cfg
@@ -54,3 +55,7 @@ class RbuilderRestServer(RestController):
         if result[-1] == '/':
             return result[:-1] + request.extension  + '/'
         return result + request.extension
+
+    # This is a handoff to the django URIs
+    def getReportsList(self, request):
+        return None

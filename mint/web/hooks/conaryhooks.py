@@ -1,45 +1,29 @@
 #
 # Copyright (c) 2005-2009 rPath, Inc.
 #
-# All Rights Reserved
+# All rights reserved.
 #
 
 from mod_python import apache
 
 import logging
 import os
-import re
-import socket
-import shutil
-import sys
-import tempfile
 import time
 import traceback
 import urllib
 import base64
 
-from mint import config
-from mint import users
-from mint.lib import mintutils
-from mint.lib import profile
 from mint import mint_error
 from mint import maintenance
 from mint.db.projects import transTables
-from mint.helperfuncs import extractBasePath
-from mint.logerror import logWebErrorAndEmail
-from mint.rest.server import restHandler
+from mint.rest.errors import ProductNotFound
 from mint.web import app
-from mint.web.rpchooks import rpcHandler
 from mint.web import cresthandler
-from mint.web.catalog import catalogHandler
-from mint.web.webhandler import normPath, setCacheControl, HttpError
+from mint.web.webhandler import normPath
 
 from conary.web import webauth
 from conary import dbstore, conarycfg
-from conary import versions
 from conary.dbstore import sqlerrors
-from conary.lib import coveragehook
-from conary.lib import util as conary_util
 from conary.repository import shimclient, transport
 from conary.repository.netrepos import proxy
 from conary.repository.netrepos import netserver
@@ -49,22 +33,14 @@ from conary.server import apachemethods
 log = logging.getLogger(__name__)
 
 
-BUFFER=1024 * 256
-
-
 # Global cached objects
-cfg = None
 repositories = {}
 proxy_repository = None
 
 
-def getProtocol(isSecure):
-    return isSecure and "https" or "http"
-
 def post(port, isSecure, repos, cfg, db, req):
     repos, shimRepo = repos
 
-    protocol = getProtocol(isSecure)
     if repos:
         items = req.uri.split('/')
         if len(items) >= 4 and items[1] == 'repos' and items[3] == 'api':
@@ -87,8 +63,6 @@ CONARY_GET_COMMANDS = ["changeset", "getOpenPGPKey"]
 def get(port, isSecure, repos, cfg, db, req):
     repos, shimRepo = repos
 
-    protocol = getProtocol(isSecure)
-
     uri = req.uri
     if uri.endswith('/'):
         uri = uri[:-1]
@@ -105,6 +79,7 @@ def get(port, isSecure, repos, cfg, db, req):
                     cfg, db, repos, req)
     webfe = app.MintApp(req, cfg, repServer = shimRepo, db=db)
     return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
+
 
 def getRepositoryMap(cfg):
     conaryrc = os.path.join(cfg.dataPath, 'config', 'conaryrc')
@@ -130,7 +105,8 @@ def getRepository(projectName, repName, cfg,
 
     nscfg.repositoryDB = dbTuple
     nscfg.changesetCacheDir = os.path.join(cfg.dataPath, 'cscache')
-    nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
+    nscfg.contentsDir = " ".join(x % repName
+            for x in cfg.reposContentsDir.split(" "))
 
     nscfg.serverName = [repName]
     nscfg.tmpDir = os.path.join(cfg.dataPath, 'tmp')
@@ -139,13 +115,8 @@ def getRepository(projectName, repName, cfg,
                     or None
     nscfg.repositoryMap = getRepositoryMap(cfg)
 
-    if os.path.basename(req.uri) == "changeset":
-       rest = os.path.dirname(req.uri) + "/"
-    else:
-       rest = req.uri
-
-    urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
-        (req.hostname, projectName)
+    urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % (req.hostname,
+            projectName)
 
     # set up the commitAction
     buildLabel = repName + "@" + cfg.defaultBranch
@@ -190,7 +161,8 @@ def getRepository(projectName, repName, cfg,
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         try:
-            netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase, reposDb)
+            netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase,
+                    reposDb)
         except sqlerrors.DatabaseLocked:
             reposDb.close()
             time.sleep(0.1)
@@ -213,6 +185,7 @@ class RestRequestError(Exception):
     def __init__(self, code, msg):
         self.code = code
         self.msg = msg
+        Exception.__init__(self, code, msg)
 
 
 class RestProxyOpener(transport.URLOpener):
@@ -281,7 +254,7 @@ def proxyExternalRestRequest(cfg, db, method, projectHostName,
     port = req.connection.local_addr[1]
     myUrlBase = proxyServer.basicUrl % {'protocol':protocol,
                                         'port':port}
-    myUrlBase += 'repos/%s/' %(projectHostName)
+    myUrlBase += 'repos/%s/' % (projectHostName,)
 
     # translate the response
     l = []
@@ -347,7 +320,8 @@ class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
 
         fromFile = proxy.ProxyRepositoryServer.CapsuleDownloader.fromFile
 
-def conaryHandler(req, db, cfg, pathInfo):
+def conaryHandler(context):
+    req, cfg = context.req, context.cfg
     maintenance.enforceMaintenanceMode(cfg)
 
     auth = webauth.getAuth(req)
@@ -373,9 +347,9 @@ def conaryHandler(req, db, cfg, pathInfo):
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     # resolve the conary repository names
-    (projectHostName, projectId, actualRepName, external, database,
+    (projectHostName, _, actualRepName, external, database,
             localMirror, commitEmail
-            ) = _resolveProjectRepos(db, hostName, domainName)
+            ) = _resolveProjectRepos(context.db, hostName, domainName)
 
     # do not require signatures when committing to a local mirror
     if localMirror:
@@ -446,7 +420,8 @@ def conaryHandler(req, db, cfg, pathInfo):
         myHostPort = "%s:%d" % (req.connection.local_ip,
                 req.connection.local_addr[1])
         if myHostPort in via:
-            apache.log_error('Internal Conary Proxy was attempting an infinite loop (request %s, via %s)' % (req.hostname, via))
+            apache.log_error('Internal Conary Proxy was attempting an infinite '
+                    'loop (request %s, via %s)' % (req.hostname, via))
             raise apache.SERVER_RETURN, apache.HTTP_BAD_GATEWAY
 
         if proxy_repository:
@@ -473,7 +448,7 @@ def conaryHandler(req, db, cfg, pathInfo):
         proxyServer.cfg.entitlement = conarycfg.EntitlementList()
         proxyServer.cfg.user = conarycfg.UserInformation()
         if cfg.injectUserAuth:
-            _updateUserSet(db, proxyServer.cfg)
+            _updateUserSet(context.db, proxyServer.cfg)
         shimRepo = None
 
     try:
@@ -481,13 +456,16 @@ def conaryHandler(req, db, cfg, pathInfo):
             # use proxyServer config for http proxy and auth data
             if not projectHostName:
                 projectHostName = hostName
-            return proxyExternalRestRequest(cfg, db, method, projectHostName, proxyServer, req)
+            return proxyExternalRestRequest(cfg, context.db, projectHostName,
+                    proxyServer, req)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
-            return post(port, secure, (proxyServer, shimRepo), cfg, db, req)
+            return post(port, secure, (proxyServer, shimRepo), cfg, context.db,
+                    req)
         elif method == "GET":
-            return get(port, secure, (proxyServer, shimRepo), cfg, db, req)
+            return get(port, secure, (proxyServer, shimRepo), cfg, context.db,
+                    req)
         elif method == "PUT":
             if proxyServer:
                 return apachemethods.putFile(port, secure, proxyServer, req)
@@ -499,22 +477,6 @@ def conaryHandler(req, db, cfg, pathInfo):
         if doReset and hasattr(repServer, 'reset'):
             repServer.reset()
 
-
-def mintHandler(req, db, cfg, pathInfo):
-    webfe = app.MintApp(req, cfg, db=db)
-    return webfe._handle(pathInfo)
-
-urls = (
-    (r'^/changeset/',        conaryHandler),
-    (r'^/conary/',           conaryHandler),
-    (r'^/repos/',            conaryHandler),
-    (r'^/catalog/',          catalogHandler),
-    (r'^/api/',              restHandler),
-    (r'^/xmlrpc/',           rpcHandler),
-    (r'^/jsonrpc/',          rpcHandler),
-    (r'^/xmlrpc-private/',   rpcHandler),
-    (r'^/',                  mintHandler),
-)
 
 
 def _updateUserSet(db, cfgObj):
@@ -558,24 +520,26 @@ def _resolveProjectRepos(db, hostname, domainname):
     cu = db.cursor()
     cu.execute("""SELECT projectId, domainname, external, %s,
                      EXISTS(SELECT * FROM InboundMirrors
-                     WHERE projectId=targetProjectId) AS localMirror, commitEmail
+                     WHERE projectId=targetProjectId) AS localMirror,
+                     commitEmail
                   FROM Projects WHERE hostname=? %s""" % (
                       (db.driver == 'mysql' and '`database`' or 'database'),
                       extraWhere),
                   hostname)
     try:
-        rs = cu.fetchone()
-        if rs:
-            projectId, projectDomainName, external, database, localMirror, commitEmail = rs
+        project = cu.fetchone()
+        if project:
+            (projectId, projectDomainName, external, database, localMirror,
+                    commitEmail) = project
             projectHostName = hostname
             possibleRepName = "%s.%s" % (projectHostName, projectDomainName)
 
             # Optionally remap the repository name (forward lookup)
             cu.execute("SELECT toName FROM RepNameMap WHERE fromName = ?",
                     possibleRepName)
-            rs = cu.fetchone()
-            if rs:
-                actualRepName = rs[0]
+            mapping = cu.fetchone()
+            if mapping:
+                actualRepName = mapping[0]
             else:
                 actualRepName = possibleRepName
 
@@ -584,133 +548,29 @@ def _resolveProjectRepos(db, hostname, domainname):
             possibleRepName = "%s.%s" % (hostname, domainname)
             # XXX: This is not guaranteed to be unique, so we'll make it so.
             #      (not sure that this matters on rBA, actually)
-            cu.execute("""SELECT fromName FROM repNameMap where toName = ? LIMIT 1""",\
-                    possibleRepName)
-            rs = cu.fetchone()
-            if rs:
-                fromName = rs[0]
+            cu.execute("""SELECT fromName FROM repNameMap where toName = ?
+                    LIMIT 1""", possibleRepName)
+            mapping = cu.fetchone()
+            if mapping:
+                fromName = mapping[0]
                 projectHostName = fromName[0:fromName.find('.')]
                 projectDomainName = fromName[fromName.find('.')+1:]
 
                 cu.execute("""SELECT projectId, external, %s,
                                 EXISTS(SELECT * FROM InboundMirrors
-                                            WHERE projectId=targetProjectId) AS localMirror
+                                WHERE projectId=targetProjectId) AS localMirror
                               FROM Projects WHERE hostname=? AND domainname=?"""
-                                    % ((db.driver == 'mysql' and '`database`' or 'database'),),
+                                % ((db.driver == 'mysql' and '`database`'
+                                    or 'database'),),
                               projectHostName, projectDomainName)
-                rs = cu.fetchone()
-                if rs:
-                    projectId, external, database, localMirror = rs
+                project = cu.fetchone()
+                if project:
+                    projectId, external, database, localMirror = project
                     actualRepName = possibleRepName
 
     except (IndexError, TypeError):
-        import traceback
-        tb = traceback.format_exc()
-        apache.log_error("error in _resolveProjectRepos('%s'):" % hostname)
-        for line in tb.split("\n"):
-            apache.log_error(line, apache.APLOG_DEBUG)
+        log.exception("Error in _resolveProjectRepos:")
         actualRepName = None
 
-    return projectHostName, projectId, actualRepName, external, database, localMirror, commitEmail
-
-
-def handler(req):
-    coveragehook.install()
-    if not req.hostname:
-        return apache.HTTP_BAD_REQUEST
-
-    # Direct logging to httpd error_log.
-    mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
-    # Silence some noisy third-party components.
-    for name in ('stomp.py', 'boto'):
-        logging.getLogger(name).setLevel(logging.ERROR)
-
-    # only reload the configuration file if it's changed
-    # since our last read
-    cfgPath = req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
-
-    global cfg
-    if not cfg:
-        cfg = config.getConfig(cfgPath)
-
-    if "basePath" not in req.get_options():
-        cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
-        pathInfo = req.path_info
-    else:
-        cfg.basePath = req.get_options()['basePath']
-        # chop off the provided base path
-        pathInfo = normPath(req.uri[len(cfg.basePath):])
-
-    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-
-    prof = profile.Profile(cfg)
-
-    if not req.uri.startswith(cfg.basePath + 'setup/') and not cfg.configured:
-        if req.uri == cfg.basePath + 'pwCheck':
-            # allow pwCheck requests to go through without being
-            # redirected - they will simply return "False"
-            pass
-        else:
-            req.headers_out['Location'] = cfg.basePath + "setup/"
-            raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
-
-    prof.startHttp(req.uri)
-
-    ret = apache.HTTP_NOT_FOUND
-    try:
-        for match, urlHandler in urls:
-            if re.match(match, pathInfo):
-                try:
-                    ret = urlHandler(req, db, cfg, pathInfo)
-                except HttpError, e:
-                    raise apache.SERVER_RETURN, e.code
-                except apache.SERVER_RETURN, e:
-                    raise apache.SERVER_RETURN, e
-                except mint_error.MaintenanceMode, e:
-                    # this is a conary client, or an unknown python browser
-                    if 'User-agent' in req.headers_in and \
-                           req.headers_in['User-agent'] == transport.Transport.user_agent:
-                        return apache.HTTP_SERVICE_UNAVAILABLE
-                    else:
-                        # this page offers a way to log in. vice standard error
-                        # we must force a redirect to ensure half finished
-                        # work flowpaths don't trigger more errors.
-                        setCacheControl(req, strict=True)
-                        mode = maintenance.getMaintenanceMode(cfg)
-                        if mode == maintenance.EXPIRED_MODE:
-                            # Bounce to flex UI for registration
-                            if cfg.basePath.endswith('web/'):
-                                cfg.basePath = cfg.basePath[:-4]
-                            req.headers_out['Location'] = cfg.basePath + 'ui/'
-                        else:
-                            # Bounce to maintenance page
-                            req.headers_out['Location'] = cfg.basePath + 'maintenance'
-                        return apache.HTTP_MOVED_TEMPORARILY
-                except:
-                    # we only want to handle errors in production mode
-                    if cfg.debugMode or req.bytes_sent > 0:
-                        raise
-
-                    # Generate a nice traceback and email it to
-                    # interested parties
-                    exception, e, bt = sys.exc_info()
-                    logWebErrorAndEmail(req, cfg, exception, e, bt)
-                    del exception, e, bt
-
-                    # Send an error page to the user and set the status
-                    # code to 500 (internal server error).
-                    req.status = 500
-                    try:
-                        ret = mintHandler(req, db, cfg, '/unknownError')
-                    except:
-                        # Some requests cause MintApp to choke on setup
-                        # We've already logged the error, so just display
-                        # the apache ISE page.
-                        ret = apache.HTTP_INTERNAL_SERVER_ERROR
-                break
-    finally:
-        prof.stopHttp(req.uri)
-        if db:
-            db.close()
-        coveragehook.save()
-    return ret
+    return (projectHostName, projectId, actualRepName, external, database,
+            localMirror, commitEmail)

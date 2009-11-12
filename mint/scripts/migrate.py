@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 5)
+    Version = (48, 8)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -734,6 +734,25 @@ class MigrateTo_48(SchemaMigration):
     def migrate5(self):
         return True
 
+    # 48.6
+    # - Dashboard Repository Log scraping table 
+    def migrate6(self):
+        return True
+
+    # 48.7
+    # - Fix type of logname column
+    def migrate7(self):
+        drop_tables(self.db, 'repositorylogstatus')
+        schema._createRepositoryLogSchema(self.db)
+        return True
+
+    # 48.8
+    # Drop ci_rhn_package_failed (added in 48.6) and recreate it with
+    # additional columns
+    def migrate8(self):
+        drop_tables(self.db, 'ci_rhn_package_failed')
+        schema._createCapsuleIndexerSchema(self.db)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

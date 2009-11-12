@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 8)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -893,6 +893,20 @@ def _createCapsuleIndexerSchema(db):
     changed |= db.createIndex('ci_rhn_packages',
         'ci_rhn_packages_nevra_id_sha1sum_idx', 'nevra_id, sha1sum')
 
+    tableName = 'ci_rhn_package_failed'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_rhn_package_failed (
+                package_failed_id %(PRIMARYKEY)s,
+                package_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_packages ON DELETE CASCADE,
+                failed_timestamp INTEGER NOT NULL,
+                failed_msg VARCHAR NOT NULL,
+                resolved VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+
     tableName = 'ci_rhn_channel_package'
     if tableName not in db.tables:
         cu.execute("""
@@ -946,33 +960,36 @@ def _createCapsuleIndexerSchema(db):
 
     return changed
 
-def _createReportingSchema(db):
-    # Report types for the dashboard nd reporting
+def _createRepositoryLogSchema(db):
+    # Repository Log scraping table and the status table for th scraper 
     cu = db.cursor()
     changed = False
 
-    if 'reporttype' not in db.tables:
+    if 'systemupdate' not in db.tables:
         cu.execute("""
-            CREATE TABLE reporttype
+            CREATE TABLE systemupdate
             (
-                reporttypeid %(PRIMARYKEY)s, 
-                URIname character varying(128) NOT NULL,
-                name character varying(128) NOT NULL,
-                description text NOT NULL,
-                timecreated numeric(14,3) NOT NULL,
-                timeupdated numeric(14,3) NOT NULL,
-                active smallint NOT NULL,
-                creatorid integer
-                    REFERENCES Users ( userId ) ON DELETE SET NULL
+                systemupdateid %(PRIMARYKEY)s, 
+                servername character varying(128) NOT NULL,
+                repositoryname character varying(128) NOT NULL,
+                updatetime numeric(14,3) NOT NULL,
+                updateuser character varying(128) NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['reporttype'] = []
-        cu.execute("""
-            insert into reporttype (uriname,name,description,timecreated,timeupdated,active) values 
-                ('imagePerProducts','Find Images per Product','Show the number of images created for a product by different aggregations',
-                1240934903.38,1240934903.38,1)""") 
+        db.tables['systemupdate'] = []
         changed = True
-    changed |= db.createIndex('reporttype',
-        'reporttype_uriname_uq', 'URIname', unique=True)
+    changed |= db.createIndex('systemupdate',
+        'systemupdate_repo_idx', 'repositoryname')
+
+    if 'repositorylogstatus' not in db.tables:
+        cu.execute("""
+            CREATE TABLE repositorylogstatus
+            (
+                logname varchar(128) PRIMARY KEY,
+                inode integer NOT NULL,
+                logoffset integer NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['repositorylogstatus'] = []
+        changed = True
 
     return changed
 
@@ -1003,7 +1020,7 @@ def createSchema(db, doCommit=True):
     changed |= _createTargets(db)
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
-    changed |= _createReportingSchema(db)
+    changed |= _createRepositoryLogSchema(db)
 
     if doCommit:
         db.commit()

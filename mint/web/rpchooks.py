@@ -21,7 +21,12 @@ from mint.web.webhandler import getHttpAuth
 from conary.lib import coveragehook
 from conary.repository import errors
 
-def rpcHandler(req, db, cfg, pathInfo = None):
+
+def rpcHandler(context):
+    return _rpcHandler(context.req, context.db, context.cfg)
+
+
+def _rpcHandler(req, db, cfg, pathInfo = None):
     mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
 
     maintenance.enforceMaintenanceMode(cfg)
@@ -87,7 +92,7 @@ def handler(req):
     cfg = config.getConfig(req.filename)
 
     try:
-        return rpcHandler(req, None, cfg)
+        return _rpcHandler(req, None, cfg)
     except:
         e_type, e_value, e_tb = sys.exc_info()
         logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')
