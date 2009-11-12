@@ -9,19 +9,27 @@ from django_restapi.resource import Resource
 class ReportView(Resource):
 
     # Handle GET methods
-    def read(self, request):
-        queryset = []
-        for type in _reports.values():
+    def read(self, request, reportName):
+        if reportName:
             report = Report()
-            for attr in type.items():              
+            for attr in _reports[reportName].items():              
                 setattr(report, attr[0], attr[1])
-            
-            report.populateElements(request)    
-            queryset.append(report)
-        
-        obj = Reports()
-        obj.addQueryset(queryset)
-        return HttpResponse(xobj.toxml(obj, obj.__class__.__name__), "text/plain")     
+                
+            report.populateElements(request)
+            return HttpResponse(xobj.toxml(report, 'report'), "text/plain")
+        else:
+	        queryset = []
+	        for type in _reports.values():
+	            report = Report()
+	            for attr in type.items():              
+	                setattr(report, attr[0], attr[1])
+	            
+	            report.populateElements(request)    
+	            queryset.append(report)
+	        
+	        obj = Reports()
+	        obj.addQueryset(queryset)
+	        return HttpResponse(xobj.toxml(obj, obj.__class__.__name__), "text/plain")     
 
 # FIXME:  This is tied to the reportdispatcher.py code        
 _reports = {
