@@ -733,7 +733,6 @@ def _createPlatforms(db):
             CREATE TABLE Platforms (
                 platformId  %(PRIMARYKEY)s,
                 label       varchar(255)    NOT NULL UNIQUE,
-                configurable        smallint        NOT NULL    DEFAULT 0,
                 mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
                 enabled     smallint NOT NULL DEFAULT 0
             ) %(TABLEOPTS)s""" % db.keywords)

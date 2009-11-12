@@ -92,7 +92,7 @@ class ContentSourceTypes(object):
     
     def _listFromCfg(self):
         allTypes = []
-        for label, name, enabled, types in self.platforms._iterConfigPlatforms():
+        for label, name, enabled, types, configurable in self.platforms._iterConfigPlatforms():
             for t in types:
                 if t not in allTypes:
                     allTypes.append(t)
@@ -220,10 +220,14 @@ class Platforms(object):
             else:
                 types = []
 
-            # 0 is for not enabled.
-            # Configured platforms are not enabled by default, they have to be
+            
+            # Platforms are not enabled by default, they have to be
             # explicitly enabled in the db.
-            yield platformLabel, platformName, 0, types
+            enabled = 0
+
+            configurable = platformLabel in self.cfg.configurablePlatforms
+
+            yield platformLabel, platformName, enabled, types, configurable
 
     def _platformModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
@@ -248,8 +252,7 @@ class Platforms(object):
         return platform
 
     def _create(self, platform):
-        platformId = self.db.db.platforms.new(label=platform.label,
-                                        configurable=platform.configurable)
+        platformId = self.db.db.platforms.new(label=platform.label)
 
         for sourceType in platform._sourceTypes:
             typeId = self.contentSourceTypes.getIdByName(sourceType)
@@ -278,7 +281,7 @@ class Platforms(object):
             cfgDict[c.label] = c
 
         fields = ['platformName', 'hostname',
-                  '_sourceTypes']
+                  '_sourceTypes', 'configurable']
 
         for c in cfgDict:
             if dbDict.has_key(c):
@@ -289,9 +292,7 @@ class Platforms(object):
 
     def _listFromCfg(self):
         platforms = []
-        # TODO remove when configurable is read from the plat def/config
-        configurable = 0
-        for label, name, enabled, sourceTypes in self._iterConfigPlatforms():
+        for label, name, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
                                 platformName=name, 
                                 hostname=label.split('.')[0],

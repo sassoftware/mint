@@ -233,6 +233,7 @@ class MintConfig(ConfigFile):
     # have an entitlement
     availablePlatformNames  = (CfgList(CfgString), [])
     availablePlatforms      = (CfgList(CfgString), [])
+    configurablePlatforms   = (CfgList(CfgString), [])
     # Parallel lists of platform sources
     platformSourceNames      = (CfgList(CfgString), [])
     platformSourceUrls       = (CfgList(CfgString), [])
