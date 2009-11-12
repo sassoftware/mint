@@ -117,7 +117,7 @@ class PlatformController(base.BaseController):
     urls = { 'status' : PlatformStatusController,
              'contentSources' : PlatformSourceController,
              'contentSourceTypes' : PlatformSourceTypeController,
-             'load' : PlatformLoadController }
+             'load' : PlatformLoadController,
              'errors' : PlatformContentErrorsController,
            }
 
