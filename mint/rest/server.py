@@ -35,9 +35,9 @@ class RbuilderRESTHandler(object):
         return self.handler.handle(req, self.pathPrefix)
 
 
-def restHandler(req, db, cfg, pathInfo = None):
+def restHandler(context):
     coveragehook.install()
-    topLevel = os.path.join(cfg.basePath, 'api')
-    db = database.Database(cfg, db=db)
-    handler = RbuilderRESTHandler(topLevel, cfg, db)
-    return handler.handle(req)
+    topLevel = os.path.join(context.cfg.basePath, 'api')
+    db = database.Database(context.cfg, db=context.db)
+    handler = RbuilderRESTHandler(topLevel, context.cfg, db)
+    return handler.handle(context.req)
