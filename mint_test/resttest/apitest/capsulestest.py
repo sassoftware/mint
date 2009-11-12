@@ -154,8 +154,13 @@ class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
         # Mark it as missing
         pkg.path = None
 
+        failures = indexer.model.getPackageDownloadFailures()
+        self.failUnlessEqual(len(failures), 0)
+
         indexer.model.addPackageDownloadFailure(pkg, "manual failure")
-        timestamp = indexer.model.getPackageDownloadFailures()[0].failed_timestamp
+        failures = indexer.model.getPackageDownloadFailures()
+        self.failUnlessEqual(len(failures), 1)
+        timestamp = failures[0].failed_timestamp
         indexer.model.commit()
 
         uri = '/platforms/1/errors'
