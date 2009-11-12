@@ -260,9 +260,6 @@ class ProductManager(manager.Manager):
         self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
 
-        # TODO: remove this later
-        self.reposMgr.createRepositorySafe(productId)
-
         return productId
 
     def deleteExternalProduct(self, productId):
