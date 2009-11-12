@@ -240,7 +240,7 @@ class ProductManager(manager.Manager):
                                 'targetProjectId', productId)
                 allLabels = self.db.db.inboundMirrors.get(mirrorId,
                                 ['allLabels'])['allLabels']
-            except errors.ItemNotFound, e:
+            except mint_error.ItemNotFound, e:
                 mirrorId = None
                 allLabels = None
 
@@ -250,9 +250,11 @@ class ProductManager(manager.Manager):
                 self.reposMgr.checkExternalRepositoryAccess(hostname, domainname,
                                                             url, authInfo)
                 # Add the mirror, only create the local repository if no
-                # mirror was already found.
+                # mirror was found.
+                createRepo = not mirrorId
                 self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
-                                                url, authInfo, createRepo=mirrorId)
+                                                url, authInfo,
+                                                createRepo=createRepo)
         else:
             self.reposMgr.addExternalRepository(productId, 
                                                 hostname, domainname, url,

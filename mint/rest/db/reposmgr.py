@@ -354,7 +354,7 @@ class RepositoryManager(manager.Manager):
         return fqdn            
 
     def addIncomingMirror(self, productId, hostname, domainname, url,
-                          authInfoi, createRepo=True):
+                          authInfo, createRepo=True):
         fqdn = self._getFqdn(hostname, domainname)
         label = fqdn + '@rpl:1'
 

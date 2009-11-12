@@ -701,12 +701,14 @@ class ProductVersionTest(restbase.BaseRestTest):
   <platformVersion></platformVersion>
   <productVersion>1.0</productVersion>
   <platformName>localhost@rpath:plat-1</platformName>
+  <mode>manual</mode>
   <enabled>false</enabled>
   <configurable>false</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
+  <load href="http://localhost:8000/api/platforms/1/load/"/>
 </platform>
 """
         self.assertXMLEquals(response, exp)

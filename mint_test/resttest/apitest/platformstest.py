@@ -218,6 +218,9 @@ class PlatformsTest(restbase.BaseRestTest):
         # GET the source instance first, so it will be created
         self._getSource('plat2source0')
 
+        mock.mockFunctionOnce(platformmgr.Platforms,
+                              '_setupPlatform', 1)
+
         uri = '/contentSources/RHN/instances/plat2source0'
         client = self.getRestClient(admin=True)
         req, platform = client.call('PUT', uri, body=contentSourcePUTXml)
@@ -250,6 +253,9 @@ class PlatformsTest(restbase.BaseRestTest):
         # we already have a platform, so we must assume they've already been
         # created in the db.  call getPlatforms to create them for this test.
         self._getPlatforms()
+
+        mock.mockFunctionOnce(platformmgr.Platforms,
+                              '_setupPlatform', 1)
 
         uri = '/platforms/1'
         client = self.getRestClient(admin=True)

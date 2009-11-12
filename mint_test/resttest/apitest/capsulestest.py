@@ -33,7 +33,7 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
             VALUES (?, ?)
         """
         platformLabel = 'myPlatform'
-        mode = 'mirrored'
+        mode = 'manual'
         cu = db.cursor()
         cu.execute(sql, platformLabel, mode)
 
