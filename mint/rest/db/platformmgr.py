@@ -354,9 +354,6 @@ class Platforms(object):
         self.backgroundRun(self._load, platformId, jobId, inFile, outFilePath,
                            repos)
 
-        # TODO:
-        # self._load(platformId, jobId, inFile, outFilePath, repos)
-    
         return platLoad
 
     def _load(self, platformId, jobId, inFile, outFilePath, repos):
