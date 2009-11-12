@@ -1,4 +1,5 @@
 from mint.django_rest.rbuilder.models import Images, Products, Downloads
+from mint.django_rest.rbuilder import reporting
 from mint.django_rest.rbuilder.reporting.reports import TimeSegmentReport
 
 from django.db import connection, transaction
@@ -82,7 +83,7 @@ class ImagesDownloaded(Resource):
     
     # Handle GET methods
     def read(self, request, report, product):
-        
+
         # Check what parameters were sent as part of the get
         units = ((request.REQUEST.has_key('timeunits') 
             and request.REQUEST['timeunits']) or 'month')
@@ -91,7 +92,7 @@ class ImagesDownloaded(Resource):
         endtime = ((request.REQUEST.has_key('endtime') 
             and request.REQUEST['endtime']) or None)
         
-        if units not in ('year','month','day','hour'):
+        if units not in reporting._time_units_matrix:
             return HttpResponseBadRequest('Invalid timeunits value: %s' % units)
         
         # Make sure that the arguments are only numbers

@@ -21,7 +21,16 @@ def _incrementMonth(starttime):
     return time.mktime(tuple(timelist))           
     
 def _incrementDay(starttime):
-    return starttime + 60 * 60 * 24
+    incrtime = starttime + 60 * 60 * 24
+    timetuple = time.localtime(incrtime)
+    #Make sure DST didn't offset the increment
+    hours = timetuple[3]
+    if hours != 0:
+        if hours == 23:
+            incrtime += 60 * 60
+        elif hours == 1:
+            incrtime -= 60 * 60  
+    return incrtime 
     
 def _incrementHour(starttime):
     return starttime + 60 * 60

@@ -15,7 +15,7 @@ import calendar
 import re
 
 class SystemUpdateCheck(Resource):
-        
+       
     def _getResource(self, request, report, resource):
         units = ((request.REQUEST.has_key('timeunits') and 
             request.REQUEST['timeunits']) or 'month')
@@ -62,14 +62,14 @@ class SystemUpdateCheck(Resource):
         endtime = ((request.REQUEST.has_key('endtime') and 
             request.REQUEST['endtime']) or None)
         
-        if units not in self._time_units_matrix:
+        if units not in reporting._time_units_matrix:
             return HttpResponseBadRequest('Invalid timeunits value: %s' % units)
         
         # Make sure that the arguments are only numbers
         pattern = re.compile('^(([0-9]+(\.)?[0-9]+)|([0-9]+))$')    
         for param in (starttime, endtime,):
             if param is not None and not pattern.match(param):
-                     return HttpResponseBadRequest('Invalid query parameter: %s' % param)       
+                return HttpResponseBadRequest('Invalid query parameter: %s' % param)       
                
         extract_stmt = """date_trunc('%s', timestamp with time zone 'epoch' 
              + cast (s.updatetime as INTEGER) * INTERVAL 
