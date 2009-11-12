@@ -734,7 +734,7 @@ def _createPlatforms(db):
                 platformId  %(PRIMARYKEY)s,
                 label       varchar(255)    NOT NULL UNIQUE,
                 configurable        smallint        NOT NULL    DEFAULT 0,
-                mode varchar(255) check (mode in ('proxied', 'mirrored')),
+                mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
                 enabled     smallint NOT NULL DEFAULT 0
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Platforms'] = []
@@ -805,6 +805,18 @@ def _createPlatforms(db):
                     REFERENCES platformSources ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsPlatformSources'] = []
+        changed = True
+
+    if 'PlatformLoadJobs' not in db.tables:
+        cu.execute("""
+            CREATE TABLE PlatformLoadJobs (
+                jobId %(PRIMARYKEY)s,
+                platformId          integer         NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                message             varchar(255) NOT NULL,
+                done                smallint NOT NULL DEFAULT 0
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformLoadJobs'] = []
         changed = True
 
     return changed

@@ -749,6 +749,10 @@ class Database(DBInterface):
     def getPlatformStatus(self, platformId):
         return self.platformMgr.getPlatformStatus(platformId)
 
+    @readonly
+    def getPlatformLoadStatus(self, platformId, jobId):
+        return self.platformMgr.getPlatformLoadStatus(platformId, jobId)
+
     @commitafter
     def getSourceStatusByName(self, sourceType, shortName):
         return self.platformMgr.getSourceStatusByName(shortName)
@@ -764,6 +768,10 @@ class Database(DBInterface):
     @commitafter
     def updatePlatform(self, platformId, platform):
         return self.platformMgr.updatePlatform(platformId, platform)
+
+    @commitafter
+    def loadPlatform(self, platformId, platformLoad):
+        return self.platformMgr.loadPlatform(platformId, platformLoad)
 
     @commitafter
     def createSource(self, source):

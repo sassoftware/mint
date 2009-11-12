@@ -10,6 +10,7 @@ import os
 import weakref
 
 from mint import helperfuncs
+from mint import mint_error
 from mint import userlevels
 from mint.db import projects
 from mint.db import repository as reposdb
@@ -23,6 +24,7 @@ from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
 from conary.conaryclient import filetypes
+from conary.dbstore import sqlerrors
 from conary.deps import deps
 from conary.lib import util
 from conary.repository import errors as reposerrors
@@ -43,6 +45,12 @@ class RepositoryManager(manager.Manager):
 
     def close(self):
         self.reposManager.close()
+
+    def createRepositorySafe(self, productId, createMaps=True):
+        try:
+            self.createRepository(productId, createMaps)
+        except mint_error.RepositoryAlreadyExists, e:
+            pass
 
     def createRepository(self, productId, createMaps=True):
         repos = self.reposManager.getRepositoryFromProjectId(productId)
@@ -337,35 +345,43 @@ class RepositoryManager(manager.Manager):
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
 
-    def addIncomingMirror(self, productId, hostname, domainname, url, authInfo):
+    def _getFqdn(self, hostname, domainname):
         if domainname:
             fqdn = '%s.%s' % (hostname, domainname)
         else:
             fqdn = hostname
-        self._checkExternalRepositoryAccess(fqdn, url, authInfo)
 
-        mirrorOrder = self._getNextMirrorOrder()
-        mirrorId = self.db.db.inboundMirrors.new(
-                targetProjectId=productId,
-                sourceLabels = fqdn + '@rpl:1',
-                sourceUrl = url, 
-                sourceAuthType=authInfo.authType,
-                sourceUsername = authInfo.username,
-                sourcePassword = authInfo.password,
-                sourceEntitlement = authInfo.entitlement,
-                mirrorOrder = mirrorOrder, allLabels = 1)
+        return fqdn            
 
-        self.createRepository(productId)
+    def addIncomingMirror(self, productId, hostname, domainname, url,
+                          authInfoi, createRepo=True):
+        fqdn = self._getFqdn(hostname, domainname)
+        label = fqdn + '@rpl:1'
+
+        try:
+            mirrorId = self.db.db.inboundMirrors.getIdByColumn(
+                    'sourceLabels', label)
+        except mint_error.ItemNotFound, e:
+            mirrorOrder = self._getNextMirrorOrder()
+            mirrorId = self.db.db.inboundMirrors.new(
+                    targetProjectId=productId,
+                    sourceLabels = label,
+                    sourceUrl = url, 
+                    sourceAuthType=authInfo.authType,
+                    sourceUsername = authInfo.username,
+                    sourcePassword = authInfo.password,
+                    sourceEntitlement = authInfo.entitlement,
+                    mirrorOrder = mirrorOrder, allLabels = 1)
+
+        if createRepo:
+            self.createRepository(productId)
 
         self._generateConaryrcFile()
 
     def addExternalRepository(self, productId, hostname, domainname, url, 
                               authInfo):
-        if domainname:
-            fqdn = '%s.%s' % (hostname, domainname)
-        else:
-            fqdn = hostname
-        self._checkExternalRepositoryAccess(fqdn, url, authInfo)
+        self.checkExternalRepositoryAccess(hostname, domainname, url, authInfo)
+        fqdn = self._getFqdn(hostname, domainname)
         self._setLabel(productId, fqdn, url, authInfo)
 
     def _setLabel(self, productId, fqdn, url, authInfo):
@@ -393,22 +409,27 @@ class RepositoryManager(manager.Manager):
         hostname = fqdn.split('.', 1)[0]
         localFqdn = hostname + "." + self.cfg.projectDomainName.split(':')[0]
         if fqdn != localFqdn:
-            self.db.db.repNameMap.new(localFqdn, fqdn)
+            try:
+                self.db.db.repNameMap.new(localFqdn, fqdn)
+            except sqlerrors.ColumnNotUnique, e:
+                # Map already exists
+                pass
         self._generateConaryrcFile()
 
-    def _checkExternalRepositoryAccess(self, hostname, url, authInfo):
+    def checkExternalRepositoryAccess(self, hostname, domainname, url, authInfo):
+        fqdn = self._getFqdn(hostname, domainname)
         cfg = self.getConaryConfig()
-        cfg.configLine('repositoryMap %s %s' % (hostname, url))
+        cfg.configLine('repositoryMap %s %s' % (fqdn, url))
         if authInfo.authType == 'entitlement':
-            cfg.entitlement.addEntitlement(hostname, authInfo.entitlement)
+            cfg.entitlement.addEntitlement(fqdn, authInfo.entitlement)
         elif authInfo.authType == 'userpass':
-            cfg.configLine('user %s %s %s' % (hostname, authInfo.username,
+            cfg.configLine('user %s %s %s' % (fqdn, authInfo.username,
                                               authInfo.password))
 
         nc = conaryclient.ConaryClient(cfg).getRepos()
         try:
             # use 2**64 to ensure we won't make the server do much
-            nc.getNewTroveList(hostname, '4611686018427387904')
+            nc.getNewTroveList(fqdn, '4611686018427387904')
         except reposerrors.InsufficientPermission, e:
             raise errors.ExternalRepositoryMirrorError(url, e)
         except reposerrors.OpenError, e:

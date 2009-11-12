@@ -132,6 +132,17 @@ class RepNameMapTable(database.DatabaseTable):
         count = cu.fetchone()[0]
         return bool(count)
 
+    def getCountByToName(self, toName):
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM RepNameMap WHERE toName = ?", toName)
+        count = cu.fetchone()[0]
+        return bool(count)
+
+    @database.dbWriter
+    def deleteByToName(self, cu, toName):
+        cu.execute("DELETE FROM RepNameMap WHERE toName = ?", toName)
+        return
+
 class UpdateServicesTable(database.KeyedTable):
     name = 'UpdateServices'
     key = 'updateServiceId'

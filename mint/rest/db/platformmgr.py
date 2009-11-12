@@ -5,16 +5,22 @@
 #
 import os
 import sys
+import tempfile
 import weakref
 import xmlrpclib
 
 from conary import conarycfg
 from conary import errors as conaryErrors
 from conary import versions
+from conary.conaryclient import callbacks
+from conary.dbstore import sqlerrors
 from conary.dbstore import sqllib
+from conary.build import lookaside
 from conary.lib import util
+from conary.repository import changeset
 
 from mint import config
+from mint import jobstatus
 from mint import mint_error
 from mint.lib import persistentcache
 from mint.rest import errors
@@ -23,6 +29,48 @@ from mint.rest.db import contentsources
 from mint.rest.db import manager
 
 from rpath_proddef import api1 as proddef
+
+class PlatformLoadCallback(callbacks.ChangesetCallback):
+    def __init__(self, db, platformId, loadJobId, totalKB, *args, **kw):
+        self.db = db
+        self.platformId = platformId
+        self.loadJobId = loadJobId
+        self.totalKB = totalKB
+        callbacks.ChangesetCallback.__init__(self, *args, **kw)
+        
+    def _message(self, txt, usePrefix=True):
+        if usePrefix:
+            message = self.prefix + txt
+        else:
+            message = txt
+
+        try:
+            self.db.db.platformLoadJobs.update(self.loadJobId, platformId=self.platformId, message=message)
+        except sqlerrors.CursorError, e:
+            reopened = self.db.db.reopen()
+            if reopened:
+                self.db.db.platformLoadJobs.update(self.loadJobId, platformId=self.platformId, message=message)
+
+    def done(self):
+        self.db.db.platformLoadJobs.update(self.loadJobId, done=1)
+
+    def downloading(self, got, rate):
+        self._downloading('Downloading', got, rate, self.totalKB)
+
+    def _downloading(self, msg, got, rate, total):
+        self.csMsg("%s %dMB of %dMB (%d%%) at %dKB/sec"
+                   % (msg, got/1024/1024, total/1024/1024, (got*100)/total, 
+                      rate/1024))
+        self.update()                      
+
+    def sendingChangeset(self, got, need):
+        if need != 0:
+            self._message("Committing changeset "
+                          "(%dKB (%d%%) of %dKB at %dKB/sec)..."
+                          % (got/1024/1024, (got*100)/need, need/1024/1024, self.rate/1024))
+        else:
+            self._message("Committing changeset "
+                          "(%dKB at %dKB/sec)..." % (got/1024/1024, self.rate/1024))
 
 class ContentSourceTypes(object):
     def __init__(self, db, cfg, platforms):
@@ -188,12 +236,14 @@ class Platforms(object):
         enabled = kw.get('enabled', None)
         configurable = kw.get('configurable', None)
         sourceTypes = kw.get('sourceTypes', [])
+        mode = kw.get('mode', 'manual')
         platform = models.Platform(platformId=platformId,
                                label=label,
                                platformName=platformName,
                                hostname=hostname,
                                enabled=enabled,
-                               configurable=configurable)
+                               configurable=configurable,
+                               mode=mode)
         platform._sourceTypes = sourceTypes                               
         return platform
 
@@ -250,52 +300,109 @@ class Platforms(object):
             platforms.append(platform)
         return platforms
 
+    def backgroundRun(self, function, *args, **kw):
+        pid = os.fork()
+        if pid:
+            os.waitpid(pid, 0)
+            return
+        try:
+            try:
+                pid = os.fork()
+                if pid:
+                    # The first child exits and is waited by the parent
+                    # the finally part will do the os._exit
+                    return
+                # Redirect stdin, stdout, stderr
+                fd = os.open(os.devnull, os.O_RDWR)
+                #os.dup2(fd, 0)
+                #os.dup2(fd, 1)
+                #os.dup2(fd, 2)
+                os.close(fd)
+                # Create new process group
+                #os.setsid()
+
+                os.chdir('/')
+                function(*args, **kw)
+            except Exception:
+                try:
+                    ei = sys.exc_info()
+                    # TODO log error
+                    # self.log_error('Daemonized process exception',
+                                   # exc_info = ei)
+                finally:
+                    os._exit(1)
+        finally:
+            os._exit(0)
+
+    def load(self, platformId, platformLoad):
+        platform = self.getById(platformId)
+        host = platform.label.split('@')[:1][0]
+        repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
+        uri = platformLoad.uri
+        headers = {}
+        fd, outFilePath = tempfile.mkstemp('.ccs', 'platform-load-')
+
+        finder = lookaside.FileFinder(None, None)
+        inFile = finder._fetchUrl(uri, headers)
+
+        jobId = self.db.db.platformLoadJobs.new(platformId=platformId, message='')
+        platLoad = models.PlatformLoad()
+        platLoad.jobId = jobId
+        platLoad.platformId = platformId
+        platLoad.uri = platformLoad.uri
+
+        self.backgroundRun(self._load, platformId, jobId, inFile, outFilePath,
+                           repos)
+
+        # TODO:
+        # self._load(platformId, jobId, inFile, outFilePath, repos)
+    
+        return platLoad
+
+    def _load(self, platformId, jobId, inFile, outFilePath, repos):
+        totalKB = int(inFile.headers['content-length'])
+        callback = PlatformLoadCallback(self.db, platformId, jobId, totalKB)
+
+        outFile = open(outFilePath, 'w')
+        total = util.copyfileobj(inFile, outFile,
+                                 callback=callback.downloading)
+        outFile.close()
+
+        callback._message('Download Complete. Figuring out what to commit..')
+        cs = changeset.ChangeSetFromFile(outFilePath) 
+        needsCommit = cs.removeCommitted(repos)
+        if needsCommit:
+            repos.commitChangeSet(cs, callback=callback, mirror=True)
+            callback._message('Commit completed.')
+        else:
+            callback._message('Nothing needs to be committed. Local Repository '
+                              'is up to date.')
+        callback.done()            
+
+        return 
+
     def _setupPlatform(self, platform):
         platformId = int(platform.platformId)
         platformName = str(platform.platformName)
         platformLabel = str(platform.label)
-        hostName = str(platform.hostname)
-
+        hostname = str(platform.hostname)
         label = versions.Label(platform.label)
         host = str(label.getHost())
         url = 'http://%s/conary/' % (host)
-        domainName = '.'.join(host.split('.')[-2:])
+        domainname = '.'.join(host.split('.')[1:])
 
-        # Not sure why, but when this import is at the top of the file, it
-        # fails to import (at least in the testsuite)
-        from mint import shimclient
+        # Use the entitlement from /srv/rbuilder/data/authorization.xml
+        entitlement = self.db.siteAuth.entitlementKey
+        authInfo = models.AuthInfo(authType='entitlement',
+                                   entitlement=entitlement)
 
-        authToken = (self.cfg.authUser, self.cfg.authPass)
-        client = shimclient.ShimMintClient(self.cfg, authToken)
+        productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
+                        domainname, url, authInfo, mirror=True)
 
-        try:
-            projectId = client.newExternalProject(platformName, 
-                                  hostName, domainName, platformLabel,
-                                  url, True)
-        except mint_error.DuplicateHostname, e:
-            # External project must already be setup for this platform.
-            project = client.getProjectByHostname(hostName)
-            projectId = project.projectId
+        # TODO: remove this later
+        self.db.productMgr.reposMgr.createRepositorySafe(productId)
 
-        platformId = int(platformId)
-        authType = 'entitlement'
-        conaryCfg = conarycfg.ConaryConfiguration(False)
-        conaryCfg.read(config.CONARY_CONFIG)
-        conaryCfg.readEntitlementDirectory()
-        entitlement = conaryCfg.entitlement.find(host)
-
-        if not entitlement:
-            entitlement = ''
-            return (projectId, None)
-        else:
-            entitlement = entitlement[0][1]
-
-        mirrorId = client.getInboundMirror(projectId)
-        if not mirrorId:
-            mirrorId = client.addInboundMirror(projectId, [platformLabel],
-                                url, authType, '', '', entitlement, True)
-
-        return (projectId, mirrorId)
+        return productId
 
     def update(self, platformId, platform):
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled))
@@ -342,6 +449,18 @@ class Platforms(object):
             platStatus.message = '%s is online.' % platform.platformName
 
         return platStatus
+
+    def getLoadStatus(self, platformId, jobId):
+        status = models.PlatformLoadStatus()
+        message = self.db.db.platformLoadJobs.get(jobId)['message']
+        done = self.db.db.platformLoadJobs.get(jobId)['done']
+        if bool(done):
+            code = jobstatus.FINISHED
+        else:
+            code = jobstatus.RUNNING
+
+        status.set_status(code, message)
+        return status
 
     def getById(self, platformId):
         platform = self.db.db.platforms.get(platformId)
@@ -598,8 +717,14 @@ class PlatformManager(manager.Manager):
     def getPlatformByName(self, platformName):
         return self.platforms.getByName(platformName)
 
+    def loadPlatform(self, platformId, platformLoad):
+        return self.platforms.load(platformId, platformLoad)
+
     def getPlatformStatus(self, platformId):
         return self.platforms.getStatus(platformId)
+
+    def getPlatformLoadStatus(self, platformId, jobId):
+        return self.platforms.getLoadStatus(platformId, jobId)
 
     def getSourceTypeDescriptor(self, sourceType):
         return self.contentSourceTypes.getDescriptor(sourceType)

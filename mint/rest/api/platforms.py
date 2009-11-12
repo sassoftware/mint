@@ -95,12 +95,25 @@ class PlatformSourceTypeController(base.BaseController):
     def index(self, request, platformId):
         return self.db.getSourceTypesByPlatform(platformId)
 
+class PlatformLoadController(base.BaseController):
+    modelName = 'jobId'
+    
+    @auth.admin
+    def get(self, request, platformId, jobId):
+        return self.db.getPlatformLoadStatus(platformId, jobId)
+
+    @auth.admin
+    @requires('platformLoad', models.PlatformLoad)
+    def create(self, request, platformId, platformLoad):
+        return self.db.loadPlatform(platformId, platformLoad)
+
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
     urls = { 'status' : PlatformStatusController,
              'contentSources' : PlatformSourceController,
-             'contentSourceTypes' : PlatformSourceTypeController }
+             'contentSourceTypes' : PlatformSourceTypeController,
+             'load' : PlatformLoadController }
 
     def index(self, request):
         return self.db.getPlatforms()

@@ -213,25 +213,62 @@ class ProductManager(manager.Manager):
         cu = self.db.cursor()
         createTime = time.time()
         creatorId = self.auth.userId > 0 and self.auth.userId or None
-        cu.execute('''INSERT INTO Projects (name, creatorId, description,
-                shortname, hostname, domainname, fqdn, projecturl, external,
-                timeModified, timeCreated, backupExternal, database)
-                VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
-                title, creatorId, hostname, hostname, domainname,
-                '%s.%s' % (hostname, domainname),
-                createTime, createTime, int(backupExternal),
-                self.cfg.defaultDatabase)
-        productId = cu.lastrowid
+
+        try:
+            product = self.getProduct(hostname)
+            productId = product.productId
+        except errors.ItemNotFound:
+            productId = None
+
+        if not productId:
+            # Need a new entry in projects table.
+            cu.execute('''INSERT INTO Projects (name, creatorId, description,
+                    shortname, hostname, domainname, fqdn, projecturl, external,
+                    timeModified, timeCreated, backupExternal, database)
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                    title, creatorId, hostname, hostname, domainname,
+                    '%s.%s' % (hostname, domainname),
+                    createTime, createTime, int(backupExternal),
+                    self.cfg.defaultDatabase)
+            productId = cu.lastrowid
+
         if mirror:
-            self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
-                                            url, authInfo)
+            # Is there already an inbound mirror for this project that's
+            # mirroring all labels?
+            try:
+                mirrorId = self.db.db.inboundMirrors.getIdByColumn(
+                                'targetProjectId', productId)
+                allLabels = self.db.db.inboundMirrors.get(mirrorId,
+                                ['allLabels'])['allLabels']
+            except errors.ItemNotFound, e:
+                mirrorId = None
+                allLabels = None
+
+            if not allLabels:
+                # Need to create a new inbound mirror.
+                # Verify the external repository is reachable.
+                self.reposMgr.checkExternalRepositoryAccess(hostname, domainname,
+                                                            url, authInfo)
+                # Add the mirror, only create the local repository if no
+                # mirror was already found.
+                self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
+                                                url, authInfo, createRepo=mirrorId)
         else:
             self.reposMgr.addExternalRepository(productId, 
                                                 hostname, domainname, url,
                                                 authInfo)
         self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
+
+        # TODO: remove this later
+        self.reposMgr.createRepositorySafe(productId)
+
         return productId
+
+    def deleteExternalProduct(self, productId):
+        cu = self.db.cursor()
+        self.db.db.projects.delete(productId)
+        return
 
     def _getMemberLevel(self, projectId, userId):
         # internal fn because it takes projectId + userId 

@@ -65,7 +65,8 @@ class PlatformsTable(database.KeyedTable):
                 platforms.platformId,
                 platforms.label,
                 platforms.configurable,
-                platforms.enabled
+                platforms.enabled,
+                platforms.mode
             FROM
                 platforms
         """
@@ -103,6 +104,14 @@ class PlatformsTable(database.KeyedTable):
         for k, v in kw.items():
             cu.execute(sql % k, v, platformId)
         return []
+
+class PlatformLoadJobsTable(database.KeyedTable):
+    name = 'platformLoadJobs'
+    key = 'jobId'
+    fields = [ 'jobId',
+               'platformId',
+               'message',
+               'done' ]
 
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'

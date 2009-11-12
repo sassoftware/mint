@@ -1,4 +1,5 @@
 import products
+from mint import jobstatus
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
@@ -84,6 +85,7 @@ class Platform(Model):
     platformVersion = fields.CharField()
     productVersion = fields.CharField()
     platformName = fields.CharField()
+    mode = fields.CharField()
     enabled = fields.BooleanField()
     configurable = fields.BooleanField()
     repositoryUrl  = products.RepositoryRestUrlField()
@@ -95,6 +97,7 @@ class Platform(Model):
     # contentSourceTypes = fields.ModelField(SourceTypeRefs)
     contentSourceTypes = fields.UrlField('platforms.contentSourceTypes',
                                          ['platformId'])
+    load = fields.UrlField('platforms.load', ['platformId'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
@@ -103,3 +106,34 @@ class Platform(Model):
 
 class Platforms(Model):
     platforms = fields.ListField(Platform, displayName='platform')
+
+class PlatformLoadStatusStub(Model):
+    id = fields.AbsoluteUrlField(isAttribute=True)
+
+    def get_absolute_url(self):
+        return ('platforms.load', self.platformId, self.jobId)
+
+class PlatformLoad(Model):
+    uri = fields.CharField()
+    jobId = fields.IntegerField()
+    platformId = fields.IntegerField()
+    job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
+    # platformLoadStatus = fields.ModelField(PlatformLoadStatusStub)
+
+class PlatformLoadStatus(Model):
+    code = fields.IntegerField()
+    message = fields.CharField()
+    isFinal = fields.BooleanField()
+
+
+    def set_status(self, code=None, message=None):
+        if code is not None:
+            self.code = code
+        if message is not None:
+            self.message = message
+        elif code is not None:
+            # Use a default message if the code changed but no message was
+            # provided.
+            self.message = jobstatus.statusNames[self.code]
+        self.isFinal = self.code in jobstatus.terminalStatuses
+
