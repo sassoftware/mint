@@ -396,9 +396,6 @@ class Platforms(object):
         productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
                         domainname, url, authInfo, mirror=True)
 
-        # TODO: remove this later
-        self.db.productMgr.reposMgr.createRepositorySafe(productId)
-
         return productId
 
     def update(self, platformId, platform):
