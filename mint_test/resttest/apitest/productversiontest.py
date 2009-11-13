@@ -703,7 +703,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <platformName>localhost@rpath:plat-1</platformName>
   <mode>manual</mode>
   <enabled>false</enabled>
-  <configurable>false</configurable>
+  <configurable>true</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
