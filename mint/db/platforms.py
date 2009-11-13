@@ -50,7 +50,6 @@ class PlatformsTable(database.KeyedTable):
     key = 'platformId'
     fields = [ 'platformId',
                'label',
-               'configurable',
                'mode',
                'enabled' ]
 
@@ -64,11 +63,12 @@ class PlatformsTable(database.KeyedTable):
             SELECT
                 platforms.platformId,
                 platforms.label,
-                platforms.configurable,
                 platforms.enabled,
                 platforms.mode
             FROM
                 platforms
+            ORDER BY
+                platforms.platformId
         """
 
         cu.execute(sql)

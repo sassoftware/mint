@@ -8,7 +8,7 @@ platformsXml = """\
     <platformName>Crowbar Linux 1</platformName>
     <mode>manual</mode>
     <enabled>false</enabled>
-    <configurable>false</configurable>
+    <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
     <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
@@ -22,7 +22,7 @@ platformsXml = """\
     <platformName>Crowbar Linux 2</platformName>
     <mode>manual</mode>
     <enabled>false</enabled>
-    <configurable>false</configurable>
+    <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-2/api"/>
     <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
@@ -41,7 +41,7 @@ platformXml = """\
   <platformName>Crowbar Linux 1</platformName>
   <mode>manual</mode>
   <enabled>false</enabled>
-  <configurable>false</configurable>
+  <configurable>true</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
@@ -386,7 +386,7 @@ platformPUTXml = """\
   <platformName>Crowbar Linux 1</platformName>
   <mode>manual</mode>
   <enabled>true</enabled>
-  <configurable>false</configurable>
+  <configurable>true</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
