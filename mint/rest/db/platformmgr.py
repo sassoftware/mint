@@ -298,7 +298,9 @@ class Platforms(object):
                     dIndex = dbLabels.index(c)
                     setattr(dbPlatforms[dIndex], f,
                             getattr(cfgPlatforms[i], f, None))
-            platforms.append(dbPlatforms[dIndex])                            
+                platforms.append(dbPlatforms[dIndex])                            
+            else:
+                platforms.append(cfgPlatforms[i])
 
         # Append any other platforms not found in the cfg onto our new list.
         for i, d in enumerate(dbLabels):
