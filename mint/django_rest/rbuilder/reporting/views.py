@@ -9,7 +9,7 @@ from django_restapi.resource import Resource
 class ReportView(Resource):
 
     # Handle GET methods
-    def read(self, request, reportName):
+    def read(self, request, reportName=None):
 
         if reportName:
             report = Report()
