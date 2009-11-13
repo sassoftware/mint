@@ -1,4 +1,4 @@
-from mint.django_rest.rbuilder.models import Users
+from mint.django_rest.rbuilder.models import Users, UserGroups
 import md5
 import base64
 
@@ -19,6 +19,14 @@ def getAuth(request):
             pass
 
     return (None, None)
+    
+def isAdmin(user):
+     if user is not None and isinstance(user, Users):
+         groups = user.groups.all()
+         admingroup = UserGroups.objects.get(usergroup='MintAdmin')
+         if admingroup in groups:
+             return True
+     return False
 
 class rBuilderBackend:
 

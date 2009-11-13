@@ -9,6 +9,16 @@
 
 from django.db import models
 
+class UserGroups(models.Model):
+    usergroupid = models.AutoField(primary_key=True)
+    usergroup = models.CharField(unique=True, max_length=128)
+    
+    class Meta:
+        db_table = u'usergroups'
+        
+    def __unicode__(self):
+        return self.usergroup
+
 class Users(models.Model):
     userid = models.AutoField(primary_key=True)
     username = models.CharField(unique=True, max_length=128)
@@ -21,13 +31,21 @@ class Users(models.Model):
     timeaccessed = models.DecimalField(max_digits=14, decimal_places=3)
     active = models.SmallIntegerField()
     blurb = models.TextField()
+    groups = models.ManyToManyField(UserGroups, through="UserGroupMembers", related_name='groups')
     
     class Meta:
         db_table = u'users'
         
     def __unicode__(self):
         return self.username
-
+        
+class UserGroupMembers(models.Model):
+    usergroupid = models.ForeignKey(UserGroups, db_column='usergroupid', related_name='group')
+    userid = models.ForeignKey(Users, db_column='userid', related_name='usermember')
+    
+    class Meta:
+        db_table = u'usergroupmembers'
+    
 class Products(models.Model):
     productId = models.AutoField(primary_key=True, db_column='projectid', blank=True)
     hostname = models.CharField(unique=True, max_length=63)
