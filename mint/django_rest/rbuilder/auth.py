@@ -36,7 +36,7 @@ class rBuilderBackend:
             m = md5.new(user.salt + password)
             if (m.hexdigest() == user.passwd):
        	        return user
-        except User.DoesNotExist:
+        except Users.DoesNotExist:
             pass
 
         return None
