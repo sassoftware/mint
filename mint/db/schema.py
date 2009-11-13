@@ -734,7 +734,7 @@ def _createPlatforms(db):
                 platformId  %(PRIMARYKEY)s,
                 label       varchar(255)    NOT NULL UNIQUE,
                 mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
-                enabled     smallint NOT NULL DEFAULT 0
+                enabled     smallint NOT NULL DEFAULT 1
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Platforms'] = []
         changed = True

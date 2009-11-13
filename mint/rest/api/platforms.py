@@ -108,6 +108,7 @@ class PlatformLoadController(base.BaseController):
         return self.db.loadPlatform(platformId, platformLoad)
 
 class PlatformContentErrorsController(base.BaseController):
+    @auth.admin
     def index(self, request, platformId):
         return self.db.getPlatformContentErrors(platformId)
 
@@ -121,9 +122,11 @@ class PlatformController(base.BaseController):
              'errors' : PlatformContentErrorsController,
            }
 
+    @auth.public
     def index(self, request):
         return self.db.getPlatforms()
 
+    @auth.public
     def get(self, request, platformId):        
         return self.db.getPlatform(platformId)
 
