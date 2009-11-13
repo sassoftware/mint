@@ -55,6 +55,6 @@ _reports = {
                          'name' : 'Downloads for an Appliance',
                          'description' : 'Show the number of images downloaded by Appliance',
                          'timecreated' : 1240934903,
-                          'enabled' : False,
+                          'enabled' : True,
                        },
 }       
