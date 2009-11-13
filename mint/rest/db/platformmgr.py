@@ -788,6 +788,18 @@ class PlatformManager(manager.Manager):
     def deleteSource(self, shortName):
         return self.contentSources.delete(shortName)
 
+    def getContentEnabledPlatformLabels(self):
+        sql = """
+            SELECT DISTINCT Platforms.label
+                       FROM Platforms
+                       JOIN PlatformsContentSourceTypes USING (platformId)
+                       JOIN ContentSourceTypes USING (contentSourceTypeId)
+                      WHERE Platforms.enabled != 0
+        """
+        cu = self.db.cursor()
+        cu.execute(sql)
+        return [ x[0] for x in cu ]
+
 class PlatformDefCache(persistentcache.PersistentCache):
     def __init__(self, cacheFile, reposMgr):
         persistentcache.PersistentCache.__init__(self, cacheFile)

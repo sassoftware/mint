@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+from conary import versions
 from conary.lib import util
 from mint.rest.db import manager
 from mint.rest.api import models
@@ -29,6 +30,16 @@ class CapsuleManager(manager.Manager):
         cfg.configLine("store %s://%s" % (dbDriver, dbConnectString))
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
+
+        # Grab labels for enabled platforms that have capsule content
+        labels = self.db.platformMgr.getContentEnabledPlatformLabels()
+        for label in labels:
+            try:
+                label = versions.Label(label).getHost()
+            except versions.ParseError:
+                # Oh well, try to use it as is
+                pass
+            cfg.configLine("injectCapsuleContentServers %s" % label)
         dataSources = self.db.platformMgr.getSources().instance
         # XXX we only deal with RHN for now
         if dataSources:
