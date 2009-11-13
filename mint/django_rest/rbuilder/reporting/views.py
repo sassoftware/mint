@@ -10,6 +10,7 @@ class ReportView(Resource):
 
     # Handle GET methods
     def read(self, request, reportName):
+
         if reportName:
             report = Report()
             for attr in _reports[reportName].items():              
@@ -37,24 +38,24 @@ _reports = {
                       'name' : 'Image Creation Timeline',
                       'description': 'Show the number of images created for a product by different aggregations',
                       'timecreated': 1240934903,
-                      'enabled' : True,
+                      'adminReport' : True,
                     },
     'systemUpdateCheck' : { 'uri' : 'systemUpdateCheck',
-                               'name' : 'System Update Check',
-                               'description' : 'Show the number of systems checking for updates from this rBuilder Appliance',
-                               'timecreated' : 1240934903,
-                               'enabled' : False,
+                            'name' : 'System Update Check',
+                            'description' : 'Show the number of systems checking for updates from this rBuilder Appliance',
+                            'timecreated' : 1240934903,
+                            'adminReport' : False,
                              },
     'imageDownloads' : { 'uri' : 'imageDownloads',
                          'name' : 'Images Downloaded',
                          'description' : 'Show the number of images downloaded by systems',
                          'timecreated' : 1240934903,
-                          'enabled' : False,
+                         'adminReport' : False,
                        },
     'applianceDownloads' : { 'uri' : 'applianceDownloads',
                          'name' : 'Downloads for an Appliance',
                          'description' : 'Show the number of images downloaded by Appliance',
                          'timecreated' : 1240934903,
-                          'enabled' : True,
+                         'adminReport' : True,
                        },
 }       
