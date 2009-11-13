@@ -28,7 +28,7 @@ class RbuilderRestServer(RestController):
             'registration' : registration.RegistrationController,
             'notices'  : notices.NoticesController,
             'capsules'  : capsules.CapsulesController,
-            'reports'  : 'getReportsList',}
+            'reports/'  : 'getReportsList',}
 
     def __init__(self, cfg, db):
         self.cfg = cfg
