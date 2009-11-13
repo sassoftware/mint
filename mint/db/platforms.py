@@ -67,6 +67,8 @@ class PlatformsTable(database.KeyedTable):
                 platforms.mode
             FROM
                 platforms
+            ORDER BY
+                platforms.platformId
         """
 
         cu.execute(sql)
