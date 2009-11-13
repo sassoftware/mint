@@ -200,14 +200,14 @@ class RestProxyOpener(transport.URLOpener):
     http_error_401 = http_error_default
 
 
-def proxyExternalRestRequest(cfg, db, method, projectHostName,
-                             proxyServer, req):
+def proxyExternalRestRequest(context, projectHostName, proxyServer):
+    cfg, req = context.cfg, context.req
     # FIXME: this only works with entitlements, not user:password
 
     # /repos/rap/api/foo -> api/foo
     path = '/'.join(req.unparsed_uri.split('/')[3:])
     # get the upstream repo url and label
-    urlBase, label = _getUpstreamInfoForExternal(db, projectHostName)
+    urlBase, label = _getUpstreamInfoForExternal(context.db, projectHostName)
     # no external project?  maybe it's a non-entitled platform
     if not urlBase:
         found = False
@@ -456,8 +456,8 @@ def conaryHandler(context):
             # use proxyServer config for http proxy and auth data
             if not projectHostName:
                 projectHostName = hostName
-            return proxyExternalRestRequest(cfg, context.db, projectHostName,
-                    proxyServer, req)
+            return proxyExternalRestRequest(context, projectHostName,
+                    proxyServer)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
