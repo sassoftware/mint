@@ -273,22 +273,30 @@ class Platforms(object):
         return changed                
 
     def _populateFromCfg(self, dbPlatforms, cfgPlatforms):
-        dbDict = {}
-        for d in dbPlatforms:
-            dbDict[d.label] = d
-        cfgDict = {}
-        for c in cfgPlatforms:
-            cfgDict[c.label] = c
+        dbLabels = [p.label for p in dbPlatforms]
+        cfgLabels = [p.label for p in cfgPlatforms]
 
         fields = ['platformName', 'hostname',
                   '_sourceTypes', 'configurable']
 
-        for c in cfgDict:
-            if dbDict.has_key(c):
-                for f in fields:
-                    setattr(dbDict[c], f, getattr(cfgDict[c], f, None))
+        platforms = []
 
-        return dbDict.values()                    
+        # For each platform in cfgPlatform, populate any of it's attributes
+        # onto the models that were loaded from the db.
+        for i, c in enumerate(cfgLabels):
+            if c in dbLabels:
+                for f in fields:
+                    dIndex = dbLabels.index(c)
+                    setattr(dbPlatforms[dIndex], f,
+                            getattr(cfgPlatforms[i], f, None))
+            platforms.append(dbPlatforms[dIndex])                            
+
+        # Append any other platforms not found in the cfg onto our new list.
+        for i, d in enumerate(dbLabels):
+            if d not in cfgLabels:
+                platforms.append(dbPlatforms[i])
+
+        return platforms
 
     def _listFromCfg(self):
         platforms = []
