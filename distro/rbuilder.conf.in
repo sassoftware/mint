@@ -78,6 +78,11 @@ acceptablePlatforms      sle.rpath.com@rpath:sles-10-devel
 acceptablePlatforms      centos.rpath.com@rpath:centos-5-devel
 acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 
+platformSources          RHN
+platformSourceUrls       https://rhn.redhat.com
+platformSourceNames      Red Hat Network
+platformSourceTypes      RHN
+
 noticesRssFeed http://www.rpath.com/corp/index.php?option=com_bca-rss-syndicator&feed_id=3
 noticesRssFeed http://blogs.rpath.com/wpmu/rpath-technical-announcements/feed/
 
