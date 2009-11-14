@@ -288,6 +288,11 @@ class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
         indexer = restdb.capsuleMgr.getIndexer()
         if not list(indexer.iterSources()):
             return
+        labels = restdb.capsuleMgr.getContentInjectionServers()
+        if not labels:
+            return
+        for label in labels:
+            self.cfg.configLine("injectCapsuleContentServers %s" % label)
         # It really doesn't matter what the capsule server URL is, as long as
         # it is not None
         self.cfg.capsuleServerUrl = 'direct'

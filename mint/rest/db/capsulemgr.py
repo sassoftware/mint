@@ -31,15 +31,6 @@ class CapsuleManager(manager.Manager):
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
 
-        # Grab labels for enabled platforms that have capsule content
-        labels = self.db.platformMgr.getContentEnabledPlatformLabels()
-        for label in labels:
-            try:
-                label = versions.Label(label).getHost()
-            except versions.ParseError:
-                # Oh well, try to use it as is
-                pass
-            cfg.configLine("injectCapsuleContentServers %s" % label)
         dataSources = self.db.platformMgr.getSources().instance
         # XXX we only deal with RHN for now
         if dataSources:
@@ -53,6 +44,19 @@ class CapsuleManager(manager.Manager):
 
         util.mkdirChain(capsuleDataDir)
         return cfg
+
+    def getContentInjectionServers(self):
+        # Grab labels for enabled platforms that have capsule content
+        labels = self.db.platformMgr.getContentEnabledPlatformLabels()
+        ret = []
+        for label in labels:
+            try:
+                label = versions.Label(label).getHost()
+            except versions.ParseError:
+                # Oh well, try to use it as is
+                pass
+            ret.append(label)
+        return ret
 
     def getIndexer(self):
         cfg = self.getIndexerConfig()
