@@ -258,6 +258,8 @@ class Platforms(object):
         # already created, they must have used a platform already, and
         # therefore they should be enabled.
         projects = self.db.db.projects.getProjectsList()
+        # Remove rmake-repository from the list, we don't want to count that.
+        projects = [p for p in projects if p[2] != 'rmake-repository']
         enabled = projects and 1 or 0
 
         platformId = self.db.db.platforms.new(label=platform.label,
