@@ -82,8 +82,12 @@ class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
                 self.remote = ('127.0.0.1', 12345)
 
     def setUp(self):
-        restbase.BaseRestTest.setUp(self)
-        IndexerSetupMixIn.setUp(self)
+        try:
+            restbase.BaseRestTest.setUp(self)
+            IndexerSetupMixIn.setUp(self)
+        except Exception, e:
+            self.tearDown()
+            raise e
 
     def testGetContent(self):
         # Make sure we populate the indexer's db

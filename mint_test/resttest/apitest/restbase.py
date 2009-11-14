@@ -51,8 +51,12 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
     productHostname = "%s.%s" % (productShortName, productDomainName)
 
     def setUp(self):
-        mint_rephelp.MintDatabaseHelper.setUp(self)
-        self.mockProddef()
+        try:
+            mint_rephelp.MintDatabaseHelper.setUp(self)
+            self.mockProddef()
+        except Exception, e:
+            self.tearDown()
+            raise e
         
     def tearDown(self):
         mint_rephelp.MintDatabaseHelper.tearDown(self)
