@@ -421,7 +421,7 @@ class Platforms(object):
             productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
                             domainname, url, authInfo, mirror=True)
         except mint_error.RepositoryAlreadyExists, e:
-            pass
+            productId = self.db.productMgr.getProduct(host)
 
         return productId
 
