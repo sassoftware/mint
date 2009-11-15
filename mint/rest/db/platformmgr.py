@@ -574,8 +574,18 @@ class ContentSources(object):
     def _syncDb(self, dbSources, cfgSources):
         changed = False
         dbNames = [s.shortName for s in dbSources]
+
+        createdPlatforms = False
         for cfgSource in cfgSources:
             if cfgSource.shortName not in dbNames:
+
+                # Before creating a source (which links sources to platforms),
+                # we need to make sure all platforms exist in the db (by
+                # calling list()).  Save a flag so we only do it once.
+                if not createdPlatforms:
+                    self.platforms.list()
+                    createdPlatforms = True
+
                 self._create(cfgSource)
                 changed = True
 
