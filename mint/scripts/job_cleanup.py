@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 class JobCleanupScript(GenericScript):
     logFileName = 'scripts.log'
     newLogger = True
+    timeout = 120
 
     def action(self):
         parser = optparse.OptionParser()

@@ -8,6 +8,7 @@ import fcntl
 import logging
 import os
 import os.path
+import signal
 import sys
 import traceback
 from conary.lib.log import logger
@@ -27,6 +28,7 @@ class GenericScript(object):
     logFileName = None
     logPath = None
     newLogger = False
+    timeout = None
 
     def __init__(self):
         self.name = os.path.basename(sys.argv[0])
@@ -77,6 +79,12 @@ class GenericScript(object):
         """
         try:
             return self._run()
+        except KeyboardInterrupt:
+            print
+            print 'interrupted'
+            return 1
+        except SystemExit, err:
+            return err.code
         except:
             log.exception("Unhandled exception in script:")
             return 1
@@ -117,6 +125,10 @@ class GenericScript(object):
             return self._runAction()
 
     def _runAction(self):
+        if self.timeout:
+            signal.signal(signal.SIGALRM, self._onTimeout)
+            signal.alarm(self.timeout)
+
         exitcode = 1
         try:
             exitcode = self.action()
@@ -128,6 +140,9 @@ class GenericScript(object):
             log.exception("Unhandled exception in script action:")
         self.cleanup()
         return exitcode
+
+    def _onTimeout(self, signum, sigtb):
+        raise RuntimeError("script %s timed out" % (self.name,))
 
 
 # XXX: this should probably be /var/lock, but we need a properly setgid()
