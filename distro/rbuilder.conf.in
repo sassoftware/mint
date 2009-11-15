@@ -85,7 +85,7 @@ acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 configurablePlatforms   rhelrepo.eng.rpath.com@rpath:rhel-5-containertest
 configurablePlatforms   rhelrepo.eng.rpath.com@rpath:rhel-4-containertest
 
-platformSources          RHN
+platformSources          redhatnetwork
 platformSourceUrls       https://rhn.redhat.com
 platformSourceNames      Red Hat Network
 platformSourceTypes      RHN
