@@ -10,7 +10,7 @@ class InboundMirrorsTable(database.KeyedTable):
     key = 'inboundMirrorId'
 
     fields = ['inboundMirrorId', 'targetProjectId', 'sourceLabels',
-              'sourceUrls', 'sourceAuthType', 'sourceUsername',
+              'sourceUrl', 'sourceAuthType', 'sourceUsername',
               'sourcePassword', 'sourceEntitlement',
               'mirrorOrder', 'allLabels']
 

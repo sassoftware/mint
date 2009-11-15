@@ -259,7 +259,8 @@ class Platforms(object):
         # therefore they should be enabled.
         projects = self.db.db.projects.getProjectsList()
         # Remove rmake-repository from the list, we don't want to count that.
-        projects = [p for p in projects if p[2] != 'rmake-repository']
+        rmakeRepoName = 'rmake-repository - rMake Repository'
+        projects = [p for p in projects if p[2] != rmakeRepoName]
         enabled = projects and 1 or 0
 
         platformId = self.db.db.platforms.new(label=platform.label,
@@ -415,8 +416,12 @@ class Platforms(object):
         authInfo = models.AuthInfo(authType='entitlement',
                                    entitlement=entitlement)
 
-        productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
-                        domainname, url, authInfo, mirror=True)
+        # TODO: remove this exception handling?
+        try:
+            productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
+                            domainname, url, authInfo, mirror=True)
+        except mint_error.RepositoryAlreadyExists, e:
+            pass
 
         return productId
 
@@ -662,8 +667,8 @@ class ContentSources(object):
                 else:
                     self.db.db.platformSourceData.new(
                                 platformSourceId=source.contentSourceId,
-                                name=field,
-                                value=newVal,
+                                name=str(field),
+                                value=str(newVal),
                                 dataType=3)
 
         return self.getByShortName(source.shortName)
@@ -809,7 +814,22 @@ class PlatformDefCache(persistentcache.PersistentCache):
 
     def _refresh(self, labelStr):
         try:
-            client = self._reposMgr().getAdminClient()
+            reposMgr = self._reposMgr()
+            client = reposMgr.getAdminClient()
+
+            # TODO: figure out the right thing to do here.
+            # Need to look at inboundmirrors table to get the sourceurl from
+            # the platform in order to read the platdef, so that we bypass the
+            # local repo already setup for the platform.
+            sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
+            if sourceUrl:
+                from mint.db import repository as reposdb
+                host = labelStr.split('@')[0]
+                entitlement = reposMgr.db.siteAuth.entitlementKey
+                serverProxy = reposMgr.reposManager.getServerProxy(host,
+                    sourceUrl, None, [entitlement])
+                client.repos.c.cache[host] = serverProxy
+
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             return platDef
