@@ -388,8 +388,10 @@ class RepositoryManager(manager.Manager):
             return []
 
     def addExternalRepository(self, productId, hostname, domainname, url, 
-                              authInfo):
-        self.checkExternalRepositoryAccess(hostname, domainname, url, authInfo)
+                              authInfo, mirror=True):
+        # Validate the entitlement if we're mirroring.
+        if mirror:
+            self.checkExternalRepositoryAccess(hostname, domainname, url, authInfo)
         fqdn = self._getFqdn(hostname, domainname)
         self._setLabel(productId, fqdn, url, authInfo)
 
