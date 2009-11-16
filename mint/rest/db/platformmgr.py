@@ -311,8 +311,6 @@ class Platforms(object):
                     setattr(dbPlatforms[dIndex], f,
                             getattr(cfgPlatforms[i], f, None))
                 platforms.append(dbPlatforms[dIndex])                            
-            else:
-                platforms.append(cfgPlatforms[i])
 
         # Link the platforms to all of it's source types.
         for p in platforms:
@@ -391,6 +389,7 @@ class Platforms(object):
 
         self.backgroundRun(self._load, platformId, jobId, inFile, outFilePath,
                            repos)
+        # self._load(platformId, jobId, inFile, outFilePath, repos)
 
         return platLoad
 
@@ -433,8 +432,9 @@ class Platforms(object):
 
         # TODO: remove this exception handling?
         try:
+            mirror = platformLabel in self.cfg.configurablePlatforms
             productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
-                            domainname, url, authInfo, mirror=True)
+                            domainname, url, authInfo, mirror=mirror)
         except mint_error.RepositoryAlreadyExists, e:
             productId = self.db.productMgr.getProduct(host)
 
