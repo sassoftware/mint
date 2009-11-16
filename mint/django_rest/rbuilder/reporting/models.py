@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from django.db import models
 
-from mint.django_rest import rbuilder
+from mint.django_rest import rbuilder, logger
 from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.models import Users
 

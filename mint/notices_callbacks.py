@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2009 rPath, Inc.
 #
 # All Rights Reserved
@@ -189,7 +188,7 @@ class ImageNotices(PackageNoticesCallback):
 class AMIImageNotices(ImageNotices):
     @classmethod
     def getEntryDescription(cls, ent):
-        amiId = ent[0]
+        amiId = ent
         ret = []
         ret.append(cls._template % ("AMI", amiId))
         return ret

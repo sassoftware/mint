@@ -606,13 +606,15 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageStatus(imageId)
 
-    def setImageStatus(self, hostname, imageId, imageToken, status):
+    def setImageStatus(self, hostname, imageId, imageToken, status,
+            urlBase = None):
         self.auth.requireImageToken(hostname, imageId, imageToken)
         if status.isFinal:
             try:
                 # This method is not running in a single transaction, since it
                 # may want to update the status
-                self._finalImageProcessing(imageId, status)
+                self._finalImageProcessing(imageId, status,
+                    urlBase = urlBase)
             except:
                 self.rollback()
                 self._holdCommits = False
@@ -620,8 +622,9 @@ class Database(DBInterface):
                 raise
         return self.setVisibleImageStatus(imageId, status)
 
-    def _finalImageProcessing(self, imageId, status):
-        self.imageMgr.finalImageProcessing(imageId, status)
+    def _finalImageProcessing(self, imageId, status, urlBase = None):
+        self.imageMgr.finalImageProcessing(imageId, status,
+            urlBase = urlBase)
 
     @commitafter
     def setVisibleImageStatus(self, imageId, status):
@@ -668,8 +671,17 @@ class Database(DBInterface):
         self.auth.requireImageToken(hostname, imageId, imageToken)
         return self.imageMgr.setFilesForImage(hostname, imageId, files)
 
-    def getPlatformContentErrors(self, platformId):
-        return self.capsuleMgr.getIndexerErrors(platformId)
+    def getPlatformContentErrors(self, contentSourceName, instanceName):
+        return self.capsuleMgr.getIndexerErrors(contentSourceName, instanceName)
+
+    def getPlatformContentError(self, contentSourceName, instanceName, errorId):
+        return self.capsuleMgr.getIndexerError(contentSourceName, instanceName,
+            errorId)
+
+    def updatePlatformContentError(self, contentSourceName, instanceName,
+            errorId, resourceError):
+        return self.capsuleMgr.updateIndexerError(contentSourceName,
+            instanceName, errorId, resourceError)
 
     @commitafter
     def createImage(self, hostname, image, buildData=None):

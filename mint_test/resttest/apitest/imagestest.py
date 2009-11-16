@@ -12,9 +12,10 @@ import re
 import subprocess
 import time
 
-from conary.lib import digestlib
+from conary.lib import digestlib, util
 from mint import buildtypes
 from mint import jobstatus
+from mint import notices_store
 from mint.rest.errors import BuildNotFound, PermissionDeniedError
 from mint_test import mint_rephelp
 import restbase
@@ -23,6 +24,17 @@ class ImagesTest(restbase.BaseRestTest):
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
         self.setupReleases()
+
+    def setUpNotices(self):
+        class Counter(object):
+            counter = 0
+            def _generateString(slf, length):
+                slf.__class__.counter += 1
+                return str(slf.counter)
+        # Predictable IDs
+        self.counter = counter = Counter()
+        self.mock(notices_store.DiskStorage, '_generateString',
+                  counter._generateString)
 
     def testDeleteImage(self):
         # image 1 is not published yet
@@ -301,7 +313,72 @@ class ImagesTest(restbase.BaseRestTest):
             return self.MockKey()
     MockBucket.MockKey = MockKey
 
+    def testSetImageStatus(self):
+        self.setUpNotices()
+
+        username = 'adminuser'
+        client = self.getRestClient(username=username)
+        db = self.openRestDatabase()
+        token = self._setOutputToken(1)
+
+        # Build 1 becomes vmware
+        db.cursor().execute("UPDATE Builds SET buildType = ? WHERE buildId = ?",
+            buildtypes.VMWARE_IMAGE, 1)
+        db.commit()
+
+        headers = {
+                'content-type': 'text/plain',
+                'x-rbuilder-outputtoken': token,
+                }
+        fileList = [
+            ("file1.txt", "content file 1"),
+            ("file2.txt", "content file 2"),
+        ]
+        imagesPath = os.path.join(self.mintCfg.imagesPath, "testproject", "1")
+        util.mkdirChain(imagesPath)
+        dataTempl = """<file title="title1" size="%d" sha1="%s" baseFileName="%s" />"""
+        url = 'products/testproject/images/1/files'
+        fileXmlData = []
+        for fileName, fileContents in fileList:
+            destFile = os.path.join(imagesPath, fileName)
+            file(destFile, "w").write(fileContents)
+            sha1sum = digestlib.sha1(fileContents).hexdigest()
+            fileSize = len(fileContents)
+            fileXmlData.append(dataTempl % (fileSize, sha1sum, destFile))
+        xml = "<files>%s</files>" % '\n'.join(fileXmlData)
+        resp = client.call('PUT', url, xml, headers = headers)[1]
+        from mint.rest.api.models.images import ImageFileList
+        self.failUnlessEqual(resp.__class__, ImageFileList)
+
+        # Update status
+        data = """\
+<imageStatus code="%d" message="%s" />
+""" % (jobstatus.FINISHED, jobstatus.statusNames[jobstatus.FINISHED])
+        url = 'products/testproject/images/1/status'
+        resp = client.call('PUT', url, data, headers=headers)[1]
+
+        # Now fetch the image
+        resp = client.call('GET', 'products/testproject/images/1',
+                data, headers=headers)[1]
+
+        self.failUnlessEqual(
+            sorted(x.baseFileName for x in resp.files.files),
+            ['file1.txt', 'file2.txt'])
+
+        store = notices_store.createStore(
+            os.path.join(self.mintCfg.dataPath, 'notices'), username)
+        notice = [ x for x in store.enumerateStoreUser('builder') ][0]
+        contents = notice.content
+        contents = re.sub('Created On:&lt;/b&gt; .*</desc',
+            'Created On:&lt;/b&gt; @CREATED-ON@</desc', contents)
+        contents = re.sub('<date>.*</date>',
+            '<date>@DATE@</date>', contents)
+        self.failUnlessEqual(contents, """\
+<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware (R) Virtual Appliance&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file1.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://localhost:8000/downloadImage?fileId=4"&gt;http://localhost:8000/downloadImage?fileId=4&lt;/a&gt;&lt;br/&gt;&lt;b&gt;File Name:&lt;/b&gt; file2.txt&lt;br/&gt;&lt;b&gt;Download URL:&lt;/b&gt; &lt;a href="http://localhost:8000/downloadImage?fileId=5"&gt;http://localhost:8000/downloadImage?fileId=5&lt;/a&gt;&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
+
+
     def testSetImageStatusAMI(self):
+        self.setUpNotices()
         # Mock uploadBundle
         from mint import ec2
         self.mock(ec2.S3Wrapper, 'createBucket',
@@ -310,8 +387,9 @@ class ImagesTest(restbase.BaseRestTest):
             lambda slf, bucketName, manifestName, *args, **kwargs:
                 ('ami-01234', '%s/%s' % (bucketName, manifestName)))
 
+        username = 'adminuser'
         # Specifically test AMI uploads here
-        client = self.getRestClient(username='adminuser')
+        client = self.getRestClient(username=username)
         db = self.openRestDatabase()
         token = self._setOutputToken(1)
 
@@ -358,6 +436,8 @@ class ImagesTest(restbase.BaseRestTest):
 """ % (fileSize, sha1sum, destFile)
         resp = client.call('PUT', 'products/testproject/images/1/files',
                 data, headers=headers)[1]
+        from mint.rest.api.models.images import ImageFileList
+        self.failUnlessEqual(resp.__class__, ImageFileList)
 
         # Update status
         data = """\
@@ -371,5 +451,16 @@ class ImagesTest(restbase.BaseRestTest):
                 data, headers=headers)[1]
 
         self.failUnlessEqual(resp.amiId, 'ami-01234')
+
+        store = notices_store.createStore(
+            os.path.join(self.mintCfg.dataPath, 'notices'), username)
+        notice = [ x for x in store.enumerateStoreUser('builder') ][0]
+        contents = notice.content
+        contents = re.sub('Created On:&lt;/b&gt; .*</desc',
+            'Created On:&lt;/b&gt; @CREATED-ON@</desc', contents)
+        contents = re.sub('<date>.*</date>',
+            '<date>@DATE@</date>', contents)
+        self.failUnlessEqual(contents, """\
+<item><title>Image `Image 1' built (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; Amazon Machine Image (EC2)&lt;br/&gt;&lt;b&gt;AMI:&lt;/b&gt; ami-01234&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>success</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
 
 testsetup.main()

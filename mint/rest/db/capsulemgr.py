@@ -7,6 +7,7 @@
 from conary import versions
 from conary.lib import util
 from mint.rest.db import manager
+from restlib import response
 from mint.rest.api import models
 
 import rpath_capsule_indexer
@@ -62,17 +63,46 @@ class CapsuleManager(manager.Manager):
         cfg = self.getIndexerConfig()
         return rpath_capsule_indexer.Indexer(cfg)
 
-    def getIndexerErrors(self, platformId = None):
+    def getIndexerErrors(self, contentSourceName, instanceName):
         indexer = self.getIndexer()
 
         errors = indexer.model.getPackageDownloadFailures()
         ret = models.ResourceErrors()
         for err in errors:
             # For now we only have DownloadError as code
-            e = models.ResourceError(id = err.package_failed_id,
-                platformId = platformId,
+            e = self._oneFailure(err, contentSourceName, instanceName)
+            ret.resourceError.append(e)
+        return ret
+
+    def getIndexerError(self, contentSourceName, instanceName, errorId):
+        indexer = self.getIndexer()
+
+        err = indexer.model.getPackageDownloadFailure(errorId)
+        if not err:
+            return response.Response(status = 404)
+        return self._oneFailure(err, contentSourceName, instanceName)
+
+    def updateIndexerError(self, contentSourceName, instanceName, errorId,
+            resourceError):
+        indexer = self.getIndexer()
+
+        err = indexer.model.getPackageDownloadFailure(errorId)
+        if not err:
+            return response.Response(status = 404)
+        err.resolved = resourceError.resolvedMessage
+        indexer.model.commit()
+
+        err = indexer.model.getPackageDownloadFailure(errorId)
+        return self._oneFailure(err, contentSourceName, instanceName)
+
+    @classmethod
+    def _oneFailure(cls, err, contentSourceName, instanceName):
+        ret = models.ResourceError(id = err.package_failed_id,
+                contentSourceName = contentSourceName,
+                instanceName = instanceName,
                 message = err.failed_msg,
                 timestamp = err.failed_timestamp,
+                resolved = bool(err.resolved),
+                resolvedMessage = err.resolved,
                 code = 'DownloadError')
-            ret.resourceError.append(e)
         return ret

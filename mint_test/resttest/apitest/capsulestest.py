@@ -167,12 +167,38 @@ class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
         timestamp = failures[0].failed_timestamp
         indexer.model.commit()
 
-        uri = '/platforms/1/errors'
+        uri = '/contentSources/A/instances/B/errors'
         req, errorList = client.call('GET', uri)
         self.failUnlessEqual(
             [ (x.id, x.code, x.message, x.timestamp)
                 for x in errorList.resourceError ],
             [ (1, 'DownloadError', 'manual failure', timestamp) ])
+
+        uri = "%s/1" % uri
+        req, error = client.call('GET', uri)
+        self.failUnlessEqual(error.id, 1)
+        self.failUnlessEqual(error.resolved, False)
+
+        # Test failure
+        uri2 = uri + '321321'
+        req, resp = client.call('GET', uri2)
+        self.failUnlessEqual(resp.status, 404)
+
+        # Test resolving it
+        xmlData = """\
+            <resourceError id="123">
+                <resolved>true</resolved>
+                <resolvedMessage>No really, it's resolved</resolvedMessage>
+            </resourceError>
+        """
+
+        req, resp = client.call('PUT', uri, xmlData)
+        self.failUnlessEqual(resp.resolved, True)
+        self.failUnlessEqual(resp.resolvedMessage, "No really, it's resolved")
+
+        uri = '/contentSources/A/instances/B/errors'
+        req, errorList = client.call('GET', uri)
+        self.failUnlessEqual(errorList.resourceError, [])
 
 class CapsulesTestRemote(restbase.BaseRestTest):
     # This controller should mock access from non-localhost

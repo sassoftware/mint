@@ -11,10 +11,12 @@ class ResourceError(Model):
     resolved = fields.BooleanField()
     resolvedMessage = fields.CharField()
     timestamp = fields.IntegerField()
-    platformId = fields.CharField(display = False)
+    contentSourceName = fields.CharField(display = False)
+    instanceName = fields.CharField(display = False)
 
     def get_absolute_url(self):
-        return ('platforms', self.platformId, "errors", str(self.id))
+        return ('contentSources', self.contentSourceName,
+            "instances", self.instanceName, "errors", str(self.id))
 
 class ResourceErrors(Model):
     resourceError = fields.ListField(ResourceError)
