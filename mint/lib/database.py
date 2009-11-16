@@ -172,11 +172,11 @@ class DatabaseTable(object):
             (self.name, fields_, ",".join('?' * len(values)))
 
         try:
-            cu.execute(*[stmt] + values)
+            ret = cu.execute(*[stmt] + values)
         except sqlerrors.ColumnNotUnique:
             raise DuplicateItem(self.name)
 
-        return cu.lastid()
+        return ret
 
 class KeyedTable(DatabaseTable):
     """

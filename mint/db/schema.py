@@ -761,6 +761,9 @@ def _createPlatforms(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsContentSourceTypes'] = []
         changed = True
+    changed |= db.createIndex('PlatformsContentSourceTypes',
+            'PlatformsContentSourceTypes_platformId_contentSourceTypeId_uq',
+            'platformId,contentSourceTypeId', unique = True)
 
     if 'PlatformSources' not in db.tables:
         cu.execute("""

@@ -284,6 +284,15 @@ class Platforms(object):
 
         return changed                
 
+    def _linkToSourceType(self, platformId, contentSourceTypeId):
+        try:
+            platformId = int(platformId)
+            contentSourceTypeId = int(contentSourceTypeId)
+            self.db.db.platformsContentSourceTypes.new(platformId=platformId,
+                contentSourceTypeId=contentSourceTypeId)
+        except mint_error.DuplicateItem, e:
+            pass
+
     def _populateFromCfg(self, dbPlatforms, cfgPlatforms):
         dbLabels = [p.label for p in dbPlatforms]
         cfgLabels = [p.label for p in cfgPlatforms]
@@ -304,6 +313,12 @@ class Platforms(object):
                 platforms.append(dbPlatforms[dIndex])                            
             else:
                 platforms.append(cfgPlatforms[i])
+
+        # Link the platforms to all of it's source types.
+        for p in platforms:
+            for sourceType in p._sourceTypes:
+                id = self.mgr.contentSourceTypes.getIdByName(sourceType)
+                self._linkToSourceType(p.platformId, id)
 
         # Append any other platforms not found in the cfg onto our new list.
         for i, d in enumerate(dbLabels):
