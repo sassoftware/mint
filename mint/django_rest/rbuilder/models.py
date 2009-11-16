@@ -150,3 +150,11 @@ class Downloads(models.Model):
     
     class Meta:
         db_table = u'urldownloads'
+
+class Sessions(models.Model):
+    sessionId = models.AutoField(primary_key=True, db_column='sessidx')
+    sid = models.CharField(max_length=64, unique=True)
+    data = models.TextField()
+    
+    class Meta:
+        db_table = u'sessions'

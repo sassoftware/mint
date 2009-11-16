@@ -15,3 +15,11 @@ def getlogger():
 def debug(msg):
     logger = getlogger()
     logger.debug(msg)
+    
+def error(msg):
+    logger = getlogger()
+    logger.error(msg)
+
+def exception(msg):
+    logger = getlogger()
+    logger.exception(msg)

@@ -1,3 +1,7 @@
+from mint.django_rest import logger
+from mint.django_rest.rbuilder import auth
+
+from django.contrib.auth import authenticate
 from django.http import HttpResponseBadRequest
 
 class MethodRequestMiddleware:
@@ -18,5 +22,14 @@ class MethodRequestMiddleware:
                     HttpResponseBadRequest('INVALID METHOD TYPE: %s' \
                     % request_method)
                 return response
-                
+        # Mark the request as from an admin
+        request._is_admin = False        
+        username, password = auth.getAuth(request)
+        if username:
+            user = authenticate(username = username, password = password)
+            request._is_admin = auth.isAdmin(user)
+        return None
+
+    def process_exception(self, request, exception):
+        logger.exception(exception)
         return None

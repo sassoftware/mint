@@ -1,8 +1,6 @@
-from django.contrib.auth import authenticate
 from django.db import models
 
 from mint.django_rest import rbuilder, logger
-from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.models import Users
 
 from xobj import xobj
@@ -12,15 +10,12 @@ class Report(object):
     
     #xobj Elements   
     def populateElements(self, request):
-        username, password = auth.getAuth(request)
-        user = authenticate(username = username, password = password)
-        admin = auth.isAdmin(user)
         
         self.id = rbuilder.IDElement(request.build_absolute_uri("./" +self.uri))
         self.data = rbuilder.LinkElement(request.build_absolute_uri("./" + self.uri + "/data/"))
         self.descriptor = rbuilder.LinkElement(request.build_absolute_uri("./" + self.uri + "/descriptor/"))
         if self.adminReport:
-            self.enabled = admin
+            self.enabled = request._is_admin
         else:
             self.enabled = True 
     

@@ -1,7 +1,8 @@
 from mint.django_rest import logger
-from mint.django_rest.rbuilder.models import Users, UserGroups
+from mint.django_rest.rbuilder.models import Users, UserGroups, Sessions
 import md5
 import base64
+import cPickle
 
 from mod_python import Cookie
 
@@ -11,14 +12,18 @@ def getCookieAuth(request):
     # we need the underlying request object since restlib doesn't
     # have support for cookies yet.
     try:
-        cookies = Cookie.get_cookies(request, Cookie.Cookie)
+        cookies = request.COOKIES
     except:
         cookies = {}
     if 'pysid' not in cookies:
-        return None
+        return (None, None)
 
-    sid = cookies['pysid'].value
-    logger.debug(sid)
+    sid = cookies['pysid']
+
+    session = Sessions.objects.get(sid='c398c89325842841874444a900aab2c6')
+    d = cPickle.loads(str(session.data))
+    username, password = d['_data']['authToken']
+    return (username, password)
         
 def getAuth(request):
     auth_header = {}
@@ -35,7 +40,9 @@ def getAuth(request):
             return (username, password)
         except:
             pass
-
+    else:
+        return getCookieAuth(request)
+        
     return (None, None)
     
 def isAdmin(user):

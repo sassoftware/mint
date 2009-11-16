@@ -11,8 +11,7 @@ class ReportView(Resource):
 
     # Handle GET methods
     def read(self, request, reportName=None):
-        import epdb; epdb.st()
-        auth.getCookieAuth(request)
+        auth.getCookieAuth(requst)
 
         if reportName:
             report = Report()
