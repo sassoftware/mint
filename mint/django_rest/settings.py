@@ -79,12 +79,10 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-#    'django.contrib.admin',
     'mint.django_rest.rbuilder',
     'mint.django_rest.rbuilder.reporting',
 )
 
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
-    'django.contrib.auth.backends.ModelBackend',
 )
