@@ -97,9 +97,13 @@ waitForPg
 
 service pgbouncer restart
 
+# Create rbuilder user for initial setup OR give it createdb permissions to fix
+# up an earlier mistake. -- 5.5.0 2009-11-16
+createuser -SdRU postgres rbuilder &>/dev/null || \
+    psql -U postgres -qc 'ALTER ROLE rbuilder CREATEDB'
+
 # Migrate the mint database (or create it if it doesn't exist)
 createlang -U postgres plpgsql template1 &>/dev/null
-createuser -SDRU postgres rbuilder &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
 
 "$scriptdir"/rbuilder-database --migrate \
