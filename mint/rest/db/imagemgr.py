@@ -281,9 +281,9 @@ class ImageManager(manager.Manager):
                 WHERE buildId = ?""", status.code, status.message, imageId)
         return self.getImageStatus(imageId)
 
-    def finalImageProcessing(self, imageId, status):
+    def finalImageProcessing(self, imageId, status, urlBase = None):
         self._postFinished(imageId, status)
-        self._createNotices(imageId, status)
+        self._createNotices(imageId, status, urlBase = urlBase)
 
     class UploadCallback(object):
         def __init__(self, manager, imageId):
@@ -315,15 +315,7 @@ class ImageManager(manager.Manager):
             return
         log.info("Finishing AMI image")
         # Fetch the image path
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT FilesUrls.url
-              FROM BuildFiles
-              JOIN BuildFilesUrlsMap USING (fileId)
-              JOIN FilesUrls USING (urlId)
-             WHERE BuildFiles.buildId = ?
-               AND FilesUrls.urlType = ?
-        """, imageId, urltypes.LOCAL)
+        cu = self._getImageFiles(imageId)
         uploadCallback = self.UploadCallback(self, imageId)
         for row in cu:
             url = row[0]
@@ -345,15 +337,50 @@ class ImageManager(manager.Manager):
                 manifestPath, data.RDT_STRING)
             self.db.commit()
 
-    def _createNotices(self, imageId, status):
-        # XXX FIXME: add notices
-        return
-        username = self.users.get(bld.createdBy)['username']
-        buildType = buildtypes.typeNamesMarketing.get(bld.buildType)
+    def _createNotices(self, imageId, status, urlBase = None):
+        sql = """
+            SELECT Projects.hostname, ProductVersions.name, Users.username,
+                   Builds.name, Builds.buildType, BuildData.value AS amiId
+              FROM Builds
+              JOIN Projects USING ( projectId )
+         LEFT JOIN ProductVersions ON
+                (Builds.productVersionId = ProductVersions.productVersionId)
+         LEFT JOIN Users ON ( Builds.createdBy = Users.userId )
+         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
+                                 BuildData.name = 'amiId' )
+             WHERE Builds.buildId = ?
+        """
+        cu = self.db.cursor()
+        cu.execute(sql, imageId)
+        row = cu.fetchone()
+        projectName, projectVersion, imageCreator, imageName, imageType, amiId = row
+        imageType = buildtypes.typeNamesMarketing.get(imageType)
 
-        notices = notices_callbacks.AMIImageNotices(self.cfg, username)
-        notices.notify_built(bld.name, buildType, time.time(),
-            project.name, project.version, [ amiId ])
+        downloadUrlTemplate = "%sdownloadImage?fileId=%%d" % (
+            self.cfg.basePath, )
+        if urlBase:
+            downloadUrlTemplate = urlBase + downloadUrlTemplate
+        if amiId is not None:
+            notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
+            imageFiles = [ amiId ]
+        else:
+            notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
+            imageFiles = [ (x[0], downloadUrlTemplate % x[1])
+                for x in self._getImageFiles(imageId) ]
+        notices.notify_built(imageName, imageType, time.time(),
+            projectName, projectVersion, imageFiles)
+
+    def _getImageFiles(self, imageId):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT FilesUrls.url, BuildFilesUrlsMap.fileId
+              FROM BuildFiles
+              JOIN BuildFilesUrlsMap USING (fileId)
+              JOIN FilesUrls USING (urlId)
+             WHERE BuildFiles.buildId = ?
+               AND FilesUrls.urlType = ?
+        """, imageId, urltypes.LOCAL)
+        return cu
 
     def _getImageInfoForNotices(self, imageId, status):
         cu = self.db.cursor()
