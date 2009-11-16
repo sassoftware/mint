@@ -442,6 +442,7 @@ class Platforms(object):
 
     def update(self, platformId, platform):
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled))
+        self.db.db.platforms.update(platformId, mode=platform.mode)
 
         if platform.enabled:
             self._setupPlatform(platform)
