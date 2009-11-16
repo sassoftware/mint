@@ -11,7 +11,7 @@ class ReportView(Resource):
 
     # Handle GET methods
     def read(self, request, reportName=None):
-        auth.getCookieAuth(requst)
+        auth.getCookieAuth(request)
 
         if reportName:
             report = Report()
