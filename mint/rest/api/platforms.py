@@ -23,10 +23,28 @@ class SourceStatusController(base.BaseController):
     def index(self, request, sourceType, shortName):
         return self.db.getSourceStatusByName(sourceType, shortName)
 
+class SourceErrorsController(base.BaseController):
+    modelName = 'errorId'
+
+    @auth.admin
+    def index(self, request, sourceType, shortName):
+        return self.db.getPlatformContentErrors(sourceType, shortName)
+
+    @auth.admin
+    def get(self, request, sourceType, shortName, errorId):
+        return self.db.getPlatformContentError(sourceType, shortName, errorId)
+
+    @auth.admin
+    @requires('resourceError', models.ResourceError)
+    def update(self, request, sourceType, shortName, errorId, resourceError):
+        return self.db.updatePlatformContentError(sourceType, shortName,
+            errorId, resourceError)
+
 class SourceController(base.BaseController):
     modelName = 'shortName'
 
-    urls = { 'status' : SourceStatusController }
+    urls = { 'status' : SourceStatusController,
+             'errors' : SourceErrorsController, }
 
     @auth.admin
     def index(self, request, sourceType):
@@ -107,11 +125,6 @@ class PlatformLoadController(base.BaseController):
     def create(self, request, platformId, platformLoad):
         return self.db.loadPlatform(platformId, platformLoad)
 
-class PlatformContentErrorsController(base.BaseController):
-    @auth.admin
-    def index(self, request, platformId):
-        return self.db.getPlatformContentErrors(platformId)
-
 class PlatformController(base.BaseController):
     modelName = "platformId"
 
@@ -119,7 +132,6 @@ class PlatformController(base.BaseController):
              'contentSources' : PlatformSourceController,
              'contentSourceTypes' : PlatformSourceTypeController,
              'load' : PlatformLoadController,
-             'errors' : PlatformContentErrorsController,
            }
 
     @auth.public
