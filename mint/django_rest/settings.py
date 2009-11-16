@@ -86,3 +86,5 @@ INSTALLED_APPS = (
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
 )
+
+LOG_FILE = '/var/log/rbuilder/django_rest.log'

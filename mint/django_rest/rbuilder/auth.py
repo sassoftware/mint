@@ -1,7 +1,25 @@
+from mint.django_rest import logger
 from mint.django_rest.rbuilder.models import Users, UserGroups
 import md5
 import base64
 
+from mod_python import Cookie
+
+def getCookieAuth(request):
+    # the pysid cookie contains the session reference that we can use to
+    # look up the proper credentials
+    # we need the underlying request object since restlib doesn't
+    # have support for cookies yet.
+    try:
+        cookies = Cookie.get_cookies(request, Cookie.Cookie)
+    except:
+        cookies = {}
+    if 'pysid' not in cookies:
+        return None
+
+    sid = cookies['pysid'].value
+    logger.debug(sid)
+        
 def getAuth(request):
     auth_header = {}
     if 'Authorization' in request.META:

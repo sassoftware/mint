@@ -1,3 +1,4 @@
+from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.xobj_responder import xobjResponder
 from mint.django_rest.rbuilder.reporting.models import Report, Reports
 
@@ -10,6 +11,8 @@ class ReportView(Resource):
 
     # Handle GET methods
     def read(self, request, reportName=None):
+        import epdb; epdb.st()
+        auth.getCookieAuth(request)
 
         if reportName:
             report = Report()
