@@ -82,7 +82,7 @@ class ExternalRepositoryAccessError(Exception):
         if self.url:
             msg = ("Error contacting remote repository. "
                    " Please ensure entitlement and repository "
-                   " URL are correct. (%s)" % str(e))
+                   " URL are correct. (%s)" % str(self.e))
         else:
             msg = ("Error contacting remote repository."
                    " Please ensure entitlement is correct."
