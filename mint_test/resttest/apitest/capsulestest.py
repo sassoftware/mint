@@ -196,6 +196,10 @@ class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
         self.failUnlessEqual(resp.resolved, True)
         self.failUnlessEqual(resp.resolvedMessage, "No really, it's resolved")
 
+        uri = '/contentSources/A/instances/B/errors'
+        req, errorList = client.call('GET', uri)
+        self.failUnlessEqual(errorList.resourceError, [])
+
 class CapsulesTestRemote(restbase.BaseRestTest):
     # This controller should mock access from non-localhost
     class ControllerFactory(restbase.Controller):
