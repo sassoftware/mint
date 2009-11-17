@@ -45,6 +45,17 @@ class PlatformsContentSourceTypesTable(database.DatabaseTable):
     fields = [ 'platformId',
                'contentSourceTypeId' ]
 
+    @dbReader
+    def getAllByPlatformId(self, cu, platformId):
+        sql = """
+            SELECT platformId, contentSourceTypeId
+            FROM platformsContentSourceTypes
+            WHERE platformId = ?
+        """
+        cu.execute(sql, platformId)
+
+        return cu.fetchall()
+
 class PlatformsTable(database.KeyedTable):
     name = 'platforms'
     key = 'platformId'

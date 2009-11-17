@@ -285,13 +285,17 @@ class Platforms(object):
         return changed                
 
     def _linkToSourceType(self, platformId, contentSourceTypeId):
-        try:
-            platformId = int(platformId)
-            contentSourceTypeId = int(contentSourceTypeId)
-            self.db.db.platformsContentSourceTypes.new(platformId=platformId,
-                contentSourceTypeId=contentSourceTypeId)
-        except mint_error.DuplicateItem, e:
-            pass
+        platformId = int(platformId)
+        contentSourceTypeId = int(contentSourceTypeId)
+
+        # If the link is already there, do nothing
+        types = self.db.db.platformsContentSourceTypes.getAllByPlatformId(platformId)
+        for t in types:
+            if t[1] == contentSourceTypeId:
+                return
+
+        self.db.db.platformsContentSourceTypes.new(platformId=platformId,
+            contentSourceTypeId=contentSourceTypeId)
 
     def _populateFromCfg(self, dbPlatforms, cfgPlatforms):
         dbLabels = [p.label for p in dbPlatforms]
