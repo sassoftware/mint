@@ -156,7 +156,7 @@ class ContentSourceTypes(object):
     def getDescriptor(self, sourceType):
         sourceTypeInst = self._getSourceTypeInstanceByName(sourceType)
 
-        desc = models.Description(desc='Configure %s' % sourceTypeInst.name)
+        desc = models.Description(desc='%s Configuration' % sourceTypeInst.name)
         metadata = models.Metadata(displayName=sourceTypeInst.name,
                     descriptions=[desc])
 

@@ -124,7 +124,7 @@ sourceDescriptorXml = """\
   <metadata>
     <displayName>Red Hat Network</displayName>
     <descriptions>
-      <desc>Configure Red Hat Network</desc>
+      <desc>Red Hat Network Configuration</desc>
     </descriptions>
   </metadata>
   <dataFields>
@@ -174,7 +174,7 @@ sourceDescriptor2Xml = """\
   <metadata>
     <displayName>Red Hat Satellite</displayName>
     <descriptions>
-      <desc>Configure Red Hat Satellite</desc>
+      <desc>Red Hat Satellite Configuration</desc>
     </descriptions>
   </metadata>
   <dataFields>
