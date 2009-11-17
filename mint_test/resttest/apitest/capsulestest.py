@@ -26,13 +26,13 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         self._addPlatformSources(db)
         self.capsulecfg = db.capsuleMgr.getIndexerConfig()
 
-    def _addPlatformSources(self, db):
+    def _addPlatformSources(self, db, platformLabel = 'localhost1'):
         # XXX nasty hacks to produce some data in the hopefully proper format
         sql = """
             INSERT INTO Platforms (label, mode)
             VALUES (?, ?)
         """
-        platformLabel = 'myPlatform'
+        platformLabel = platformLabel
         mode = 'manual'
         cu = db.cursor()
         cu.execute(sql, platformLabel, mode)
@@ -253,10 +253,19 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
             (trv0.getVersion(), trv0.getFlavor()), True) ]
 
         cli = conaryclient.ConaryClient(self.cfg)
-        raise testsetup.testsuite.SkipTestException("Temporary bypass")
         cs = cli.repos.createChangeSet(joblist, withFiles = True,
                             withFileContents = True)
-
+        # Fetch the apache error log
+        errorLog = os.path.join(self.mintServers.servers[0].serverRoot,
+            'error_log')
+        # Make sure we have entries for capsule requests
+        lines = [ x.strip() for x in file(errorLog) ]
+        downloaded = None
+        for line in lines:
+            if line.endswith("Retrieving package with key ('with-config-special', None, '0.2', '1', 'noarch'), sha1sum 4daf5f932e248a32758876a1f8ff12a5f58b1a54"):
+                downloaded = line
+                break
+        self.failUnless(downloaded)
 
 if __name__ == "__main__":
         testsetup.main()

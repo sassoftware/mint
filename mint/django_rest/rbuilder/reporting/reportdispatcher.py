@@ -10,7 +10,11 @@ class ReportDispatcher(Resource):
         
         if args[0] not in _reportMatrix:
             raise Http404('Report Type: %s' % args[0])
-        
+        if _reportMatrix[args[0]]['admin'] and not request._is_admin:
+            response =  HttpResponse('Access denied', mimetype="text/plain")
+            response.status_code = 403
+            return response
+
         obj = _reportMatrix[args[0]]['reportClass']
             
         return Resource.dispatch(self, request, obj(), *args, **kwargs)
@@ -25,6 +29,7 @@ class ReportDescriptor(Resource):
 # FIXME:  This is tied to the views.py code          
 _reportMatrix = {'imagesReport': 
   { 'reportClass' : imagereports.ImagesPerProduct,
+    'admin' : False,
     'descriptor' : """<?xml version="1.0" encoding="UTF-8"?>
 <views>
     <view
@@ -47,6 +52,7 @@ _reportMatrix = {'imagesReport':
   },
   'systemUpdateCheck': 
   { 'reportClass' : rbuilderreports.SystemUpdateCheck,
+    'admin' : True,
     'descriptor' : """<?xml version="1.0" encoding="UTF-8"?>
 <views>
     <view
@@ -69,6 +75,7 @@ _reportMatrix = {'imagesReport':
   },
   'imageDownloads': 
   { 'reportClass' : imagereports.ImagesDownloaded,
+    'admin' : True,
     'descriptor' : """<?xml version="1.0" encoding="UTF-8"?>
 <views>
     <view
@@ -91,6 +98,7 @@ _reportMatrix = {'imagesReport':
   },
   'applianceDownloads': 
   { 'reportClass' : imagereports.ApplianceDownloads,
+    'admin' : False,
     'descriptor' : """<?xml version="1.0" encoding="UTF-8"?>
 <views>
     <view
