@@ -26,13 +26,13 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         self._addPlatformSources(db)
         self.capsulecfg = db.capsuleMgr.getIndexerConfig()
 
-    def _addPlatformSources(self, db):
+    def _addPlatformSources(self, db, platformLabel = 'localhost1'):
         # XXX nasty hacks to produce some data in the hopefully proper format
         sql = """
             INSERT INTO Platforms (label, mode)
             VALUES (?, ?)
         """
-        platformLabel = 'myPlatform'
+        platformLabel = platformLabel
         mode = 'manual'
         cu = db.cursor()
         cu.execute(sql, platformLabel, mode)
@@ -253,7 +253,6 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
             (trv0.getVersion(), trv0.getFlavor()), True) ]
 
         cli = conaryclient.ConaryClient(self.cfg)
-        raise testsetup.testsuite.SkipTestException("Temporary bypass")
         cs = cli.repos.createChangeSet(joblist, withFiles = True,
                             withFileContents = True)
 
