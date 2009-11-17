@@ -749,6 +749,14 @@ class MigrateTo_48(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         return True
 
+    # 48.9
+    # Add projectId column to platforms table.
+    def migrate9(self):
+        cu.execute("""ALTER TABLE platforms ADD COLUMN projectId smallint
+            REFERENCES projects ON DELETE SET NULL""")
+        return True            
+        
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
