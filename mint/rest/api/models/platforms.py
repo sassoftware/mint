@@ -30,6 +30,9 @@ class Source(Model):
     contentSourceStatus = fields.UrlField(
                                 'contentSources.instances.status',
                                 ['contentSourceType', 'shortName'])
+    contentSourceErrors = fields.UrlField(
+                                'contentSources.instances.errors',
+                                ['contentSourceType', 'shortName'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
