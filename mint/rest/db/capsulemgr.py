@@ -89,7 +89,14 @@ class CapsuleManager(manager.Manager):
         err = indexer.model.getPackageDownloadFailure(errorId)
         if not err:
             return response.Response(status = 404)
-        err.resolved = resourceError.resolvedMessage
+
+        # sqlalchemy doesn't like unicode passed to psycopg2, but it seems to
+        # only be a problem when run from apache
+        resolvedMessage = resourceError.resolvedMessage
+        if resolvedMessage is not None:
+            resolvedMessage = str(resolvedMessage)
+        err.resolved = resolvedMessage
+
         indexer.model.commit()
 
         err = indexer.model.getPackageDownloadFailure(errorId)
