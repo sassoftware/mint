@@ -18,6 +18,7 @@ from mint.lib import mintutils
 from mint.logerror import logWebErrorAndEmail
 from mint.web.webhandler import getHttpAuth
 
+from conary import dbstore
 from conary.lib import coveragehook
 from conary.repository import errors
 
@@ -90,11 +91,15 @@ def _rpcHandler(req, db, cfg, pathInfo = None):
 def handler(req):
     coveragehook.install()
     cfg = config.getConfig(req.filename)
+    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
     try:
-        return _rpcHandler(req, None, cfg)
-    except:
-        e_type, e_value, e_tb = sys.exc_info()
-        logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')
-        del e_tb
-        return apache.HTTP_INTERNAL_SERVER_ERROR
+        try:
+            return _rpcHandler(req, db, cfg)
+        except:
+            e_type, e_value, e_tb = sys.exc_info()
+            logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')
+            del e_tb
+            return apache.HTTP_INTERNAL_SERVER_ERROR
+    finally:
+        db.close()
