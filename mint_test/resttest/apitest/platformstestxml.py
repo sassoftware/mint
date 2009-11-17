@@ -269,7 +269,7 @@ contentSourcesXml = """\
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
-    <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
+    <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   </contentSource>
   <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source1">
     <contentSourceId>3</contentSourceId>
@@ -279,7 +279,7 @@ contentSourcesXml = """\
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
-    <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/errors/"/>
+    <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/errors/"/>
   </contentSource>
 </instances>
 """
@@ -294,7 +294,7 @@ contentSourceXml = """\
   <orderIndex>0</orderIndex>
   <contentSourceType>RHN</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
-  <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
+  <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
 </contentSource>
 """
 
@@ -309,7 +309,7 @@ contentSourcesByPlatformXml = """\
     <orderIndex>0</orderIndex>
     <contentSourceType>satellite</contentSourceType>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/status"/>
-    <contentSourceErrors href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/errors/"/>
+    <resourceErrors href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/errors/"/>
     <sourceUrl>http://plat1source.example.com</sourceUrl>
   </contentSource>
   <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source0">
@@ -320,7 +320,7 @@ contentSourcesByPlatformXml = """\
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
-    <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
+    <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   </contentSource>
   <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source1">
     <contentSourceId>3</contentSourceId>
@@ -330,7 +330,7 @@ contentSourcesByPlatformXml = """\
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
-    <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/errors/"/>
+    <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/errors/"/>
   </contentSource>
 </contentSources>
 """
@@ -363,7 +363,7 @@ contentSourcePUTXml = """\
   <orderIndex>0</orderIndex>
   <contentSourceType>RHN</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
-  <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
+  <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   <username>foousername</username>
   <password>foopassword</password>
 </contentSource>
@@ -379,7 +379,7 @@ contentSourcePUTXml2 = """\
   <orderIndex>0</orderIndex>
   <contentSourceType>RHN</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
-  <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
+  <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   <username>foousername2</username>
   <password>foopassword2</password>
 </contentSource>
@@ -425,7 +425,7 @@ sourcePOSTRespXml = """\
   <orderIndex>1</orderIndex>
   <contentSourceType>RHN</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source2/status"/>
-  <contentSourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source2/errors/"/>
+  <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source2/errors/"/>
 </contentSource>
 """
 
@@ -451,7 +451,7 @@ sourcePOSTResp2Xml = """\
   <orderIndex>1</orderIndex>
   <contentSourceType>satellite</contentSourceType>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/status"/>
-  <contentSourceErrors href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/errors/"/>
+  <resourceErrors href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/errors/"/>
   <sourceUrl>https://plat2source2.example.com</sourceUrl>
 </contentSource>
 """
