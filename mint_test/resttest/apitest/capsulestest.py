@@ -255,7 +255,17 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
         cli = conaryclient.ConaryClient(self.cfg)
         cs = cli.repos.createChangeSet(joblist, withFiles = True,
                             withFileContents = True)
-
+        # Fetch the apache error log
+        errorLog = os.path.join(self.mintServers.servers[0].serverRoot,
+            'error_log')
+        # Make sure we have entries for capsule requests
+        lines = [ x.strip() for x in file(errorLog) ]
+        downloaded = None
+        for line in lines:
+            if line.endswith("Retrieving package with key ('with-config-special', None, '0.2', '1', 'noarch'), sha1sum 4daf5f932e248a32758876a1f8ff12a5f58b1a54"):
+                downloaded = line
+                break
+        self.failUnless(downloaded)
 
 if __name__ == "__main__":
         testsetup.main()
