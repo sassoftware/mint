@@ -217,6 +217,13 @@ class ProductManager(manager.Manager):
         try:
             product = self.getProduct(hostname)
             productId = product.productId
+
+            # Need to look in the labels table to see if there is a different
+            # repository url there.
+            labelIdMap, repoMap, userMap, entMap = \
+                self.db.db.labels.getLabelsForProject(productId) 
+            fqdn = self.reposMgr._getFqdn(hostname, domainname)
+            url = repoMap.get(fqdn, url)
         except errors.ItemNotFound:
             productId = None
 
@@ -235,14 +242,15 @@ class ProductManager(manager.Manager):
         if mirror:
             # Is there already an inbound mirror for this project that's
             # mirroring all labels?
-            try:
-                mirrorId = self.db.db.inboundMirrors.getIdByColumn(
-                                'targetProjectId', productId)
-                allLabels = self.db.db.inboundMirrors.get(mirrorId,
-                                ['allLabels'])['allLabels']
-            except mint_error.ItemNotFound, e:
-                mirrorId = None
-                allLabels = None
+            mirrorId = None
+            allLabels = None
+            mirrors = self.db.db.inboundMirrors.getIdByHostname(hostname)
+            if mirrors:
+                for m in mirrors:
+                    if m[2]:
+                        mirrorId = m[0]
+                        allLabels = True
+                        break
 
             if not allLabels:
                 # Need to create a new inbound mirror.

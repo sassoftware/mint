@@ -14,6 +14,20 @@ class InboundMirrorsTable(database.KeyedTable):
               'sourcePassword', 'sourceEntitlement',
               'mirrorOrder', 'allLabels']
 
+    def getIdByHostname(self, hostname):
+        cu = self.db.cursor()
+        sql = """
+            SELECT inboundMirrorId, sourceLabels, allLabels
+            FROM inboundMirrors
+        """
+        cu.execute(sql)
+        rows = cu.fetchall()
+        ret = []
+        for row in rows:
+            host = row[1].split('@')[0]
+            ret.append(row)
+        return ret
+
 class OutboundMirrorsTable(database.KeyedTable):
     name = 'OutboundMirrors'
     key = 'outboundMirrorId'
