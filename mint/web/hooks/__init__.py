@@ -145,8 +145,11 @@ def _tryHandler(urlHandler, context):
     try:
         return urlHandler(context)
 
-    except (HttpError, apache.SERVER_RETURN), err:
+    except HttpError, err:
         return err.code
+
+    except apache.SERVER_RETURN:
+        raise
 
     except mint_error.MaintenanceMode:
         if (req.headers_in.get('User-agent', None) ==
