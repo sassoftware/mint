@@ -515,7 +515,13 @@ def _getUpstreamInfoForExternal(db, fqdn):
 
 
 def _resolveProjectRepos(db, hostname, fqdn):
-    # Start with some reasonable assumptions
+    if fqdn:
+        where = 'fqdn = ?'
+        whereArg = fqdn
+    else:
+        where = 'hostname = ?'
+        whereArg = hostname
+
     external = True
     localMirror = False
     projectHostName = None
@@ -523,13 +529,6 @@ def _resolveProjectRepos(db, hostname, fqdn):
     database = None
     commitEmail = None
     fqdn = None
-
-    if fqdn:
-        where = 'fqdn = ?'
-        whereArg = fqdn
-    else:
-        where = 'hostname = ?'
-        whereArg = hostname
 
     # Determine if the project is local by checking the projects table
     cu = db.cursor()
