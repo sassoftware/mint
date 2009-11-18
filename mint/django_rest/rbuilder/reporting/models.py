@@ -10,10 +10,12 @@ class Report(object):
     
     #xobj Elements   
     def populateElements(self, request):
-        
-        self.id = rbuilder.IDElement(request.build_absolute_uri("./" +self.uri))
-        self.data = rbuilder.LinkElement(request.build_absolute_uri("./" + self.uri + "/data/"))
-        self.descriptor = rbuilder.LinkElement(request.build_absolute_uri("./" + self.uri + "/descriptor/"))
+        url = ((request.build_absolute_uri().find(self.uri + "/") != -1 
+            and request.build_absolute_uri()) 
+            or request.build_absolute_uri( self.uri + "/"))
+        self.id = rbuilder.IDElement(url)
+        self.data = rbuilder.LinkElement(url + "data/")
+        self.descriptor = rbuilder.LinkElement(url + "descriptor/")
         if self.adminReport:
             self.enabled = request._is_admin
         else:
