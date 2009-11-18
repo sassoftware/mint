@@ -15,6 +15,7 @@ from mint_test import mint_rephelp
 
 class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
     def testGetAndCreateProductVersion(self):
+        import epdb; epdb.st()  
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.setDbUser(db, 'admin')

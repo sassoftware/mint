@@ -419,6 +419,44 @@ class Platforms(object):
 
         return 
 
+    def _getProjectId(self, platformId):
+        return self.db.db.platforms.get(platformId)['projectId']
+
+    def _getUsableProject(self, platformId, hostname):
+        # See if there is project already setup that shares
+        # the fqdn of the platform.
+        try:
+            projectId = self.db.db.projects.getProjectIdByFQDN(hostname)
+        except mint_error.ItemNotFound, e:
+            projectId = None
+
+        if projectId:
+            # Check if the project is external.
+            project = self.db.db.projects.get(projectId)
+            external = project['external'] == 1 and True or False
+
+            if external:
+                # Look up any repo maps from the labels table.
+                labelIdMap, repoMap, userMap, entMap = \
+                    self.db.db.labels.getLabelsForProject(projectId) 
+                url = repoMap.get(hostname, url)
+
+                # Check if there is a mirror set up.
+                try:
+                    mirrorId = self.db.db.inboundMirrors.getIdByColumn(
+                                'targetProjectId', projectId)
+                    # Just add the project to our platform
+                    self.db.db.platforms.update(platformId, projectId=projectId)
+                except mint_error.ItemNotFound, e:
+                    # Add an inboud mirror for this external project.
+                    self.db.productMgr.reposMgr.addIncomingMirror(
+                        projectId, host, domainname, url, authInfo, True)
+            else:
+                # Not an external Project, fail.
+                raise errors.InvalidProjectForPlatform()
+
+        return projectId
+
     def _setupPlatform(self, platform):
         platformId = int(platform.platformId)
         platformName = str(platform.platformName)
@@ -434,15 +472,23 @@ class Platforms(object):
         authInfo = models.AuthInfo(authType='entitlement',
                                    entitlement=entitlement)
 
-        # TODO: remove this exception handling?
-        try:
-            mirror = platformLabel in self.cfg.configurablePlatforms
-            productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
-                            domainname, url, authInfo, mirror=mirror)
-        except mint_error.RepositoryAlreadyExists, e:
-            productId = self.db.productMgr.getProduct(host)
+        # Get the productId to see if this platform has already been
+        # associated with an external product.
+        projectId = self._getProjectId(platformId, hostname)
 
-        return productId
+        if not projectId:
+            projectId = self._getUsableProject(platformId)
+
+        if not projectId:            
+            # Still no project, we need to create a new one.
+            try:
+                mirror = platformLabel in self.cfg.configurablePlatforms
+                projectId = self.db.productMgr.createExternalProduct(platformName, hostname, 
+                                domainname, url, authInfo, mirror=mirror)
+            except mint_error.RepositoryAlreadyExists, e:
+                projectId = self.db.productMgr.getProjectIdByFQDN(hostname)
+
+        return projectId
 
     def update(self, platformId, platform):
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled))

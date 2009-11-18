@@ -37,6 +37,12 @@ class AuthHeaderError(mint_error.InvalidError):
 class InvalidSearchType(mint_error.MintError):
     pass
 
+class InvalidProjectForPlatform(mint_error.MintError):
+    """
+    A non-external project already exists that shares the fully qualified
+    domainname of the platform that is being enabled.
+    """
+
 class ProductNotFound(ItemNotFound):
     status = 404
 

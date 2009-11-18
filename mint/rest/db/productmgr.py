@@ -240,29 +240,12 @@ class ProductManager(manager.Manager):
             productId = cu.lastrowid
 
         if mirror:
-            # Is there already an inbound mirror for this project that's
-            # mirroring all labels?
-            mirrorId = None
-            allLabels = None
-            mirrors = self.db.db.inboundMirrors.getIdByHostname(hostname)
-            if mirrors:
-                for m in mirrors:
-                    if m[2]:
-                        mirrorId = m[0]
-                        allLabels = True
-                        break
-
-            if not allLabels:
-                # Need to create a new inbound mirror.
-                # Verify the external repository is reachable.
-                self.reposMgr.checkExternalRepositoryAccess(hostname, domainname,
-                                                            url, authInfo)
-                # Add the mirror, only create the local repository if no
-                # mirror was found.
-                createRepo = not mirrorId
-                self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
-                                                url, authInfo,
-                                                createRepo=createRepo)
+            # Verify the external repo is reachable (and has a mirror
+            # permissions), and create a new mirror.
+            self.reposMgr.checkExternalRepositoryAccess(hostname, domainname,
+                                                        url, authInfo)
+            self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
+                                            url, authInfo, True)
         else:
             self.reposMgr.addExternalRepository(productId, 
                                                 hostname, domainname, url,
