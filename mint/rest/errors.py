@@ -86,7 +86,7 @@ class ExternalRepositoryAccessError(Exception):
         else:
             msg = ("Error contacting remote repository."
                    " Please ensure entitlement is correct."
-                   " (%s)" % str(e))
+                   " (%s)" % str(self.e))
 
 import inspect
 __all__ = []
