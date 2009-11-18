@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import logging
 import os
 import sys
 import tempfile
@@ -17,6 +18,7 @@ from conary.dbstore import sqlerrors
 from conary.dbstore import sqllib
 from conary.build import lookaside
 from conary.lib import util
+from conary.repository import errors as reposErrors
 from conary.repository import changeset
 
 from mint import config
@@ -29,6 +31,9 @@ from mint.rest.db import contentsources
 from mint.rest.db import manager
 
 from rpath_proddef import api1 as proddef
+
+log = logging.getLogger(__name__)
+
 
 class PlatformLoadCallback(callbacks.ChangesetCallback):
     def __init__(self, db, platformId, loadJobId, totalKB, *args, **kw):
@@ -235,19 +240,16 @@ class Platforms(object):
         if platformId:
             platformId = str(platformId)
         label = kw.get('label', None)
+        fqdn = label.split('@')[0]
         platformName = kw.get('platformName', None)
-        hostname = kw.get('hostname', None)
         enabled = kw.get('enabled', None)
         configurable = kw.get('configurable', None)
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
-        platform = models.Platform(platformId=platformId,
-                               label=label,
-                               platformName=platformName,
-                               hostname=hostname,
-                               enabled=enabled,
-                               configurable=configurable,
-                               mode=mode)
+        platform = models.Platform(platformId=platformId, label=label,
+                platformName=platformName, enabled=enabled,
+                configurable=configurable, mode=mode,
+                repositoryHostname=fqdn)
         platform._sourceTypes = sourceTypes                               
         return platform
 
@@ -285,13 +287,17 @@ class Platforms(object):
         return changed                
 
     def _linkToSourceType(self, platformId, contentSourceTypeId):
-        try:
-            platformId = int(platformId)
-            contentSourceTypeId = int(contentSourceTypeId)
-            self.db.db.platformsContentSourceTypes.new(platformId=platformId,
-                contentSourceTypeId=contentSourceTypeId)
-        except mint_error.DuplicateItem, e:
-            pass
+        platformId = int(platformId)
+        contentSourceTypeId = int(contentSourceTypeId)
+
+        # If the link is already there, do nothing
+        types = self.db.db.platformsContentSourceTypes.getAllByPlatformId(platformId)
+        for t in types:
+            if t[1] == contentSourceTypeId:
+                return
+
+        self.db.db.platformsContentSourceTypes.new(platformId=platformId,
+            contentSourceTypeId=contentSourceTypeId)
 
     def _populateFromCfg(self, dbPlatforms, cfgPlatforms):
         dbLabels = [p.label for p in dbPlatforms]
@@ -330,7 +336,6 @@ class Platforms(object):
         for label, name, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
                                 platformName=name, 
-                                hostname=label.split('.')[0],
                                 enabled=enabled, configurable=configurable,
                                 sourceTypes=sourceTypes)
             platforms.append(platform)
@@ -419,11 +424,10 @@ class Platforms(object):
         platformId = int(platform.platformId)
         platformName = str(platform.platformName)
         platformLabel = str(platform.label)
-        hostname = str(platform.hostname)
         label = versions.Label(platform.label)
         host = str(label.getHost())
         url = 'http://%s/conary/' % (host)
-        domainname = '.'.join(host.split('.')[1:])
+        hostname, domainname = host.split('.', 1)
 
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
         entitlement = self.db.siteAuth.entitlementKey
@@ -433,8 +437,8 @@ class Platforms(object):
         # TODO: remove this exception handling?
         try:
             mirror = platformLabel in self.cfg.configurablePlatforms
-            productId = self.db.productMgr.createExternalProduct(platformName, hostname, 
-                            domainname, url, authInfo, mirror=mirror)
+            productId = self.db.productMgr.createExternalProduct(platformName,
+                    hostname, domainname, url, authInfo, mirror=mirror)
         except mint_error.RepositoryAlreadyExists, e:
             productId = self.db.productMgr.getProduct(host)
 
@@ -859,10 +863,14 @@ class PlatformDefCache(persistentcache.PersistentCache):
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             return platDef
-        except Exception, e:
-            # Swallowing this exception allows us to have a negative
-            # cache entries.  Of course this comes at the cost
-            # of swallowing exceptions...
-            print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (labelStr, str(e))
-            sys.stderr.flush()
+        except reposErrors.InsufficientPermission, err:
+            log.error("Failed to lookup platform definition on label %s: %s",
+                    labelStr, str(err))
+            return None
+        except proddef.ProductDefinitionTroveNotFoundError, err:
+            log.error("Failed to find product definition %s for platform.",
+                    str(err))
+        except:
+            log.exception("Failed to lookup platform definition on label %s:",
+                    labelStr)
             return None

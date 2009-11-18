@@ -56,7 +56,6 @@ excludeBuildTypes       LIVE_ISO
 useInternalConaryProxy  True
 
 # Available platforms (these are officially supported)
-availablePlatforms      rhelrepo.eng.rpath.com@rpath:rhel-5-containertest
 availablePlatforms      rheltest.eng.rpath.com@rpath:rhel-4-bootstrap
 availablePlatforms      sle.rpath.com@rpath:sles-11
 availablePlatforms      sle.rpath.com@rpath:sles-10
@@ -66,7 +65,6 @@ availablePlatforms      scientific.rpath.com@rpath:sl-5
 availablePlatforms      conary.rpath.com@rpl:2
 
 # Available platform names. Should match the order of availablePlatforms
-availablePlatformNames  Red Hat Enterprise Linux 5
 availablePlatformNames  Red Hat Enterprise Linux 4
 availablePlatformNames  SLES 11 Delivered by rPath
 availablePlatformNames  SLES 10 Delivered by rPath
@@ -82,8 +80,7 @@ acceptablePlatforms      sle.rpath.com@rpath:sles-10-devel
 acceptablePlatforms      centos.rpath.com@rpath:centos-5-devel
 acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 
-configurablePlatforms   rhelrepo.eng.rpath.com@rpath:rhel-5-containertest
-configurablePlatforms   rhelrepo.eng.rpath.com@rpath:rhel-4-containertest
+configurablePlatforms   rheltest.eng.rpath.com@rpath:rhel-4-bootstrap
 
 platformSources          redhatnetwork
 platformSourceUrls       https://rhn.redhat.com

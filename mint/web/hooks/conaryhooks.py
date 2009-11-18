@@ -200,31 +200,28 @@ class RestProxyOpener(transport.URLOpener):
     http_error_401 = http_error_default
 
 
-def proxyExternalRestRequest(context, projectHostName, proxyServer):
+def proxyExternalRestRequest(context, fqdn, proxyServer):
     cfg, req = context.cfg, context.req
     # FIXME: this only works with entitlements, not user:password
 
     # /repos/rap/api/foo -> api/foo
     path = '/'.join(req.unparsed_uri.split('/')[3:])
     # get the upstream repo url and label
-    urlBase, label = _getUpstreamInfoForExternal(context.db, projectHostName)
+    urlBase, label, hostName = _getUpstreamInfoForExternal(context.db, fqdn)
     # no external project?  maybe it's a non-entitled platform
     if not urlBase:
         found = False
         for label in cfg.availablePlatforms:
-            if label.split('.')[0] == projectHostName:
-                serverName = label.split('@')[0]
-                urlBase = 'http://%s/conary/' % serverName
+            if label.split('@')[0].lower() == fqdn.lower():
+                urlBase = 'http://%s/conary/' % fqdn
                 found = True
                 break
         if not found:
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
     url = ''.join((urlBase, path))
-    # grab the server name from the label
-    serverName = label.split('@')[0]
     # build the entitlement to send in the header
     l = []
-    for entitlement in proxyServer.cfg.entitlement.find(serverName):
+    for entitlement in proxyServer.cfg.entitlement.find(fqdn):
         if entitlement[0] is None:
             l.append("* %s" % (base64.b64encode(entitlement[1])))
         else:
@@ -234,7 +231,7 @@ def proxyExternalRestRequest(context, projectHostName, proxyServer):
 
     opener = RestProxyOpener(proxies=proxyServer.cfg.proxy)
     opener.addheader('X-Conary-Entitlement', entitlement)
-    opener.addheader('X-Conary-Servername', serverName)
+    opener.addheader('X-Conary-Servername', fqdn)
     opener.addheader('User-agent', transport.Transport.user_agent)
 
     # make the request
@@ -243,6 +240,7 @@ def proxyExternalRestRequest(context, projectHostName, proxyServer):
     except RestRequestError, e:
         if e.code != apache.HTTP_FORBIDDEN:
             # translate all errors to a 502
+            log.error("Cannot proxy REST request to %s: %s", urlBase, e)
             return apache.HTTP_BAD_GATEWAY
         return e.code
 
@@ -254,7 +252,7 @@ def proxyExternalRestRequest(context, projectHostName, proxyServer):
     port = req.connection.local_addr[1]
     myUrlBase = proxyServer.basicUrl % {'protocol':protocol,
                                         'port':port}
-    myUrlBase += 'repos/%s/' % (projectHostName,)
+    myUrlBase += 'repos/%s/' % (hostName,)
 
     # translate the response
     l = []
@@ -338,13 +336,17 @@ def conaryHandler(context):
         requireSigs = False
 
     paths = normPath(req.uri).split("/")
+    fqdn = hostName = None
     if "repos" in paths:
-        hostName = paths[paths.index('repos') + 1]
-        domainName = None
+        hostPart = paths[paths.index('repos') + 1]
+        if '.' in hostPart:
+            fqdn = hostPart
+            if fqdn.endswith('.'):
+                fqdn = fqdn[:-1]
+        else:
+            hostName = hostPart
     else:
-        parts = req.hostname.split(".")
-        hostName = parts[0]
-        domainName = ".".join(parts[1:])
+        fqdn = req.hostname
 
     method = req.method.upper()
     port = req.connection.local_addr[1]
@@ -353,7 +355,14 @@ def conaryHandler(context):
     # resolve the conary repository names
     (projectHostName, _, actualRepName, external, database,
             localMirror, commitEmail
-            ) = _resolveProjectRepos(context.db, hostName, domainName)
+            ) = _resolveProjectRepos(context.db, hostName, fqdn)
+
+    # By now we must know the FQDN, either from the request itself or from
+    # the project looked up in the database.
+    if not fqdn and not actualRepName:
+        log.warning("Unknown project %s in request for %s", hostName,
+                req.uri)
+        return apache.HTTP_NOT_FOUND
 
     # do not require signatures when committing to a local mirror
     if localMirror:
@@ -458,10 +467,9 @@ def conaryHandler(context):
     try:
         if proxyRestRequest:
             # use proxyServer config for http proxy and auth data
-            if not projectHostName:
-                projectHostName = hostName
-            return proxyExternalRestRequest(context, projectHostName,
-                    proxyServer)
+            if not fqdn:
+                fqdn = req.hostname
+            return proxyExternalRestRequest(context, fqdn, proxyServer)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
@@ -495,86 +503,47 @@ def _updateUserSet(db, cfgObj):
         elif authType == 'entitlement':
             cfgObj.entitlement.addEntitlement(host, entitlement)
 
-def _getUpstreamInfoForExternal(db, hostname):
+
+def _getUpstreamInfoForExternal(db, fqdn):
     cu = db.cursor()
-    cu.execute("""SELECT url, label FROM Labels JOIN projects USING(projectId)
-                  WHERE hostName=?""", (hostname,))
+    cu.execute("""SELECT url, label, hostname
+        FROM Labels JOIN projects USING(projectId) WHERE fqdn = ?""", fqdn)
     ret = cu.fetchall()
     if len(ret) < 1:
-        return None, None
+        return None, None, None
     return ret[0]
 
-def _resolveProjectRepos(db, hostname, domainname):
+
+def _resolveProjectRepos(db, hostname, fqdn):
     # Start with some reasonable assumptions
     external = True
     localMirror = False
     projectHostName = None
-    projectDomainName = None
     projectId = None
     database = None
-    actualRepName = possibleRepName = None
     commitEmail = None
+    fqdn = None
 
-    if domainname:
-        extraWhere = "AND domainname = '%s'" % domainname
+    if fqdn:
+        where = 'fqdn = ?'
+        whereArg = fqdn
     else:
-        extraWhere = ""
+        where = 'hostname = ?'
+        whereArg = hostname
 
     # Determine if the project is local by checking the projects table
     cu = db.cursor()
-    cu.execute("""SELECT projectId, domainname, external, %s,
-                     EXISTS(SELECT * FROM InboundMirrors
-                     WHERE projectId=targetProjectId) AS localMirror,
-                     commitEmail
-                  FROM Projects WHERE hostname=? %s""" % (
-                      (db.driver == 'mysql' and '`database`' or 'database'),
-                      extraWhere),
-                  hostname)
-    try:
-        project = cu.fetchone()
-        if project:
-            (projectId, projectDomainName, external, database, localMirror,
-                    commitEmail) = project
-            projectHostName = hostname
-            possibleRepName = "%s.%s" % (projectHostName, projectDomainName)
+    cu.execute("""
+        SELECT projectId, hostname, fqdn, external, %s, commitEmail,
+            EXISTS(SELECT * FROM InboundMirrors
+                WHERE projectId=targetProjectId) AS localMirror
+        FROM Projects WHERE %s""" % (
+                (db.driver == 'mysql' and '`database`' or 'database'), where),
+            whereArg)
+    project = cu.fetchone()
+    if project:
+        (projectId, projectHOstName, fqdn, external, database, commitEmail,
+                localMirror) = project
 
-            # Optionally remap the repository name (forward lookup)
-            cu.execute("SELECT toName FROM RepNameMap WHERE fromName = ?",
-                    possibleRepName)
-            mapping = cu.fetchone()
-            if mapping:
-                actualRepName = mapping[0]
-            else:
-                actualRepName = possibleRepName
-
-        if not actualRepName:
-            # Reverse lookup in repNameMap (ugh)
-            possibleRepName = "%s.%s" % (hostname, domainname)
-            # XXX: This is not guaranteed to be unique, so we'll make it so.
-            #      (not sure that this matters on rBA, actually)
-            cu.execute("""SELECT fromName FROM repNameMap where toName = ?
-                    LIMIT 1""", possibleRepName)
-            mapping = cu.fetchone()
-            if mapping:
-                fromName = mapping[0]
-                projectHostName = fromName[0:fromName.find('.')]
-                projectDomainName = fromName[fromName.find('.')+1:]
-
-                cu.execute("""SELECT projectId, external, %s,
-                                EXISTS(SELECT * FROM InboundMirrors
-                                WHERE projectId=targetProjectId) AS localMirror
-                              FROM Projects WHERE hostname=? AND domainname=?"""
-                                % ((db.driver == 'mysql' and '`database`'
-                                    or 'database'),),
-                              projectHostName, projectDomainName)
-                project = cu.fetchone()
-                if project:
-                    projectId, external, database, localMirror = project
-                    actualRepName = possibleRepName
-
-    except (IndexError, TypeError):
-        log.exception("Error in _resolveProjectRepos:")
-        actualRepName = None
-
-    return (projectHostName, projectId, actualRepName, external, database,
+    return (projectHostName, projectId, fqdn, external, database,
             localMirror, commitEmail)

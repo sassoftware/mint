@@ -3,13 +3,13 @@ platformsXml = """\
 <platforms>
   <platform id="http://localhost:8000/api/platforms/1">
     <platformId>1</platformId>
-    <hostname>localhost@rpath:plat-1</hostname>
+    <repositoryHostname>localhost</repositoryHostname>
     <label>localhost@rpath:plat-1</label>
     <platformName>Crowbar Linux 1</platformName>
     <mode>manual</mode>
     <enabled>true</enabled>
     <configurable>true</configurable>
-    <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
+    <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
     <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
@@ -17,13 +17,13 @@ platformsXml = """\
   </platform>
   <platform id="http://localhost:8000/api/platforms/2">
     <platformId>2</platformId>
-    <hostname>localhost@rpath:plat-2</hostname>
+    <repositoryHostname>localhost</repositoryHostname>
     <label>localhost@rpath:plat-2</label>
     <platformName>Crowbar Linux 2</platformName>
     <mode>manual</mode>
     <enabled>true</enabled>
     <configurable>true</configurable>
-    <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-2/api"/>
+    <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
     <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
     <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
@@ -36,13 +36,13 @@ platformXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <platform id="http://localhost:8000/api/platforms/1">
   <platformId>1</platformId>
-  <hostname>localhost@rpath:plat-1</hostname>
+  <repositoryHostname>localhost</repositoryHostname>
   <label>localhost@rpath:plat-1</label>
   <platformName>Crowbar Linux 1</platformName>
   <mode>manual</mode>
   <enabled>true</enabled>
   <configurable>true</configurable>
-  <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
+  <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
@@ -389,13 +389,13 @@ platformPUTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <platform id="http://localhost:8000/api/platforms/1">
   <platformId>1</platformId>
-  <hostname>localhost@rpath:plat-1</hostname>
+  <repositoryHostname>localhost</repositoryHostname>
   <label>localhost@rpath:plat-1</label>
   <platformName>Crowbar Linux 1</platformName>
   <mode>manual</mode>
   <enabled>true</enabled>
   <configurable>true</configurable>
-  <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
+  <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>

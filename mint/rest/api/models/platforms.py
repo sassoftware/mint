@@ -1,7 +1,26 @@
-import products
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All rights reserved.
+#
+
 from mint import jobstatus
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
+
+
+class _RepositoryUrlField(fields.AbstractUrlField):
+    name = 'api'
+    def _getUrl(self, parent, context):
+        base = context.request.baseUrl
+        if base.endswith('/api'):
+            base = base[:-4]
+        fqdn = parent.repositoryHostname
+        # Must be able to distinguish a shortname from a single-label FQDN
+        if '.' not in fqdn:
+            fqdn += '.'
+        return '%s/repos/%s/%s' % (base, fqdn, self.name)
+
 
 class Status(Model):
     connected = fields.BooleanField()
@@ -82,8 +101,9 @@ class SourceInstances(Model):
 
 class Platform(Model):
     platformId = fields.CharField()
-    hostname = fields.CharField()
+    #hostname = fields.CharField()
     platformTroveName = fields.CharField()
+    repositoryHostname = fields.CharField()
     label = fields.CharField()
     platformVersion = fields.CharField()
     productVersion = fields.CharField()
@@ -91,7 +111,7 @@ class Platform(Model):
     mode = fields.CharField()
     enabled = fields.BooleanField()
     configurable = fields.BooleanField()
-    repositoryUrl  = products.RepositoryRestUrlField()
+    repositoryUrl = _RepositoryUrlField()
     # contentSources = fields.ModelField(SourceRefs)
     contentSources = fields.UrlField('platforms.contentSources',
                                      ['platformId'])

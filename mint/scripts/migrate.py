@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 8)
+    Version = (48, 9)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -748,6 +748,14 @@ class MigrateTo_48(SchemaMigration):
         drop_tables(self.db, 'ci_rhn_package_failed')
         schema._createCapsuleIndexerSchema(self.db)
         return True
+
+    # 48.9
+    # Add projectId column to platforms table.
+    def migrate9(self):
+        cu.execute("""ALTER TABLE platforms ADD COLUMN projectId smallint
+            REFERENCES projects ON DELETE SET NULL""")
+        return True            
+        
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

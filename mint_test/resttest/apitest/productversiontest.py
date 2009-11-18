@@ -695,8 +695,8 @@ class ProductVersionTest(restbase.BaseRestTest):
 <?xml version='1.0' encoding='UTF-8'?>
 <platform id="http://localhost:8000/api/platforms/1">
   <platformId>1</platformId>
-  <hostname>localhost@rpath:plat-1</hostname>
   <platformTroveName></platformTroveName>
+  <repositoryHostname>localhost</repositoryHostname>
   <label>localhost@rpath:plat-1</label>
   <platformVersion></platformVersion>
   <productVersion>1.0</productVersion>
@@ -704,7 +704,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <mode>manual</mode>
   <enabled>true</enabled>
   <configurable>true</configurable>
-  <repositoryUrl href="http://localhost:8000/repos/localhost@rpath:plat-1/api"/>
+  <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
