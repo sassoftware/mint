@@ -20,10 +20,15 @@ def getCookieAuth(request):
 
     sid = cookies['pysid']
 
-    session = Sessions.objects.get(sid=sid)
-    d = cPickle.loads(str(session.data))
-    username, password = d['_data']['authToken']
-    return (username, password)
+    try:
+        session = Sessions.objects.get(sid=sid)
+        d = cPickle.loads(str(session.data))
+        username, password = d['_data']['authToken']
+        return (username, password)
+    except:
+        pass
+        
+    return (None, None)
         
 def getAuth(request):
     auth_header = {}
