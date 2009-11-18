@@ -752,6 +752,7 @@ class MigrateTo_48(SchemaMigration):
     # 48.9
     # Add projectId column to platforms table.
     def migrate9(self):
+        cu = self.db.cursor()
         cu.execute("""ALTER TABLE platforms ADD COLUMN projectId smallint
             REFERENCES projects ON DELETE SET NULL""")
         return True            
