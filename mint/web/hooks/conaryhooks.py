@@ -160,6 +160,8 @@ def getRepository(projectName, repName, cfg,
                     (dbTuple, str(err)))
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
+        restDb = _addCapsuleConfig(cfg, reposDb, nscfg)
+
         try:
             netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase,
                     reposDb)
@@ -171,15 +173,30 @@ def getRepository(projectName, repName, cfg,
     else:
         raise
 
-    if 'changesetCacheDir' in nscfg.keys():
-        # XXX FIXME: deal with capsules
-        repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
-    else:
-        repos = netRepos
+    repos = SimpleRepositoryFilter(restDb, nscfg, urlBase, netRepos)
     shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, reposDb)
 
     return netRepos, repos, shim
 
+def _getRestDb(mintCfg, db):
+    from mint.rest.db import database as rdb
+    restDb = rdb.Database(cfg, db)
+    return restDb
+
+def _addCapsuleConfig(mintCfg, mintDb, conaryReposCfg):
+    restDb = _getRestDb(mintCfg, mintDb)
+    # XXX we should speed these up by combining into a single call
+    indexer = restDb.capsuleMgr.getIndexer()
+    if list(indexer.iterSources()):
+        return
+    contentInjectionServers = restDb.capsuleMgr.getContentInjectionServers()
+    if not contentInjectionServers or repName not in contentInjectionServers:
+        return
+    conaryReposCfg.excludeCapsuleContents = True
+    # These settings are only used by the filter
+    conaryReposCfg.injectCapsuleContentServers = contentInjectionServers
+    conaryReposCfg.capsuleServerUrl = "direct"
+    return restDb
 
 class RestRequestError(Exception):
     def __init__(self, code, msg):
@@ -271,43 +288,13 @@ def proxyExternalRestRequest(context, fqdn, proxyServer):
     f.close()
     return apache.OK
 
-class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
-    def __init__(self, mintCfg, *args, **kwargs):
-        proxy.ProxyRepositoryServer.__init__(self, *args, **kwargs)
-        self._mintCfg = mintCfg
-        self._setCapsuleServerUrl()
-        self.CapsuleDownloader = lambda x: self._CapsuleDownloader(
-            self._getRestDb())
-
-    def _setCapsuleServerUrl(self):
-        # XXX FIXME reenable after we have the right content
-        restdb = self._getRestDb()
-        indexer = restdb.capsuleMgr.getIndexer()
-        if not list(indexer.iterSources()):
-            return
-        labels = restdb.capsuleMgr.getContentInjectionServers()
-        if not labels:
-            return
-        for label in labels:
-            self.cfg.configLine("injectCapsuleContentServers %s" % label)
-        # It really doesn't matter what the capsule server URL is, as long as
-        # it is not None
-        self.cfg.capsuleServerUrl = 'direct'
-
-    def _getRestDb(self):
-        cfg = self._mintCfg
-        from mint.db import database
-        from mint.rest.db import database as rdb
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        restdb = rdb.Database(cfg, database.Database(cfg, db))
-        return restdb
-
+class CapsuleFilterMixIn(object):
     class _CapsuleDownloader(object):
-        def __init__(self, restdb):
-            self._restdb = restdb
+        def __init__(self, restDb):
+            self._restDb = restDb
 
         def downloadCapsule(self, capsuleKey, sha1sum):
-            indexer = self._restdb.capsuleMgr.getIndexer()
+            indexer = self._restDb.capsuleMgr.getIndexer()
             # XXX FIXME: error handling
             pkg = indexer.getPackage(capsuleKey, sha1sum)
             fobj = file(indexer.getFullFilePath(pkg))
@@ -315,12 +302,29 @@ class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
 
         def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileName,
                 fileSha1sum):
-            indexer = self._restdb.capsuleMgr.getIndexer()
+            indexer = self._restDb.capsuleMgr.getIndexer()
             fobj = indexer.getFileFromPackage(capsuleKey, capsuleSha1sum,
                 fileName, fileSha1sum)
             return self.fromFile(fobj)
 
-        fromFile = proxy.ProxyRepositoryServer.CapsuleDownloader.fromFile
+        fromFile = proxy.ChangesetFilter.CapsuleDownloader.fromFile
+
+    def __init__(self):
+        self.CapsuleDownloader = lambda x: self._CapsuleDownloader(
+            self._restDb)
+
+class SimpleRepositoryFilter(proxy.SimpleRepositoryFilter, CapsuleFilterMixIn):
+    withCapsuleInjection = True
+    def __init__(self, restDb, nscfg, urlBase, netRepos):
+        self._restDb = restDb
+        proxy.SimpleRepositoryFilter.__init__(self, nscfg, urlBase, netRepos)
+        CapsuleFilterMixIn.__init__(self)
+
+class ProxyRepositoryServer(proxy.ProxyRepositoryServer, CapsuleFilterMixIn):
+    def __init__(self, restDb, *args, **kwargs):
+        self._restDb = restDb
+        proxy.ProxyRepositoryServer.__init__(self, *args, **kwargs)
+        CapsuleFilterMixIn.__init__(self)
 
 def conaryHandler(context):
     req, cfg = context.req, context.cfg
@@ -454,8 +458,11 @@ def conaryHandler(context):
                 domain = cfg.siteDomainName + ':%(port)d'
             urlBase = "%%(protocol)s://%s.%s/" % \
                     (cfg.hostName, domain)
+            # XXX For now we won't support injection into external projects
+            # that are not mirrored
+            restDb = None
             proxyServer = proxy_repository = ProxyRepositoryServer(
-                    cfg, proxycfg, urlBase)
+                    restDb, proxycfg, urlBase)
 
         # inject known authentication (userpass and entitlement)
         proxyServer.cfg.entitlement = conarycfg.EntitlementList()
