@@ -15,7 +15,9 @@ import base64
 
 from mint import mint_error
 from mint import maintenance
+from mint.db import database as mdb
 from mint.db.projects import transTables
+from mint.rest.db import database as rdb
 from mint.rest.errors import ProductNotFound
 from mint.web import app
 from mint.web import cresthandler
@@ -91,8 +93,10 @@ def getRepositoryMap(cfg):
     else:
         return {}
 
-def getRepository(projectName, repName, cfg,
-        req, dbTuple, localMirror, requireSigs, commitEmail):
+def getRepository(projectName, repName, context,
+        dbTuple, localMirror, requireSigs, commitEmail):
+
+    cfg, req = context.cfg, context.req
 
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
@@ -160,7 +164,7 @@ def getRepository(projectName, repName, cfg,
                     (dbTuple, str(err)))
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
-        restDb = _addCapsuleConfig(cfg, reposDb, nscfg)
+        restDb = _addCapsuleConfig(context, nscfg, repName)
 
         try:
             netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase,
@@ -178,16 +182,18 @@ def getRepository(projectName, repName, cfg,
 
     return netRepos, repos, shim
 
-def _getRestDb(mintCfg, db):
-    from mint.rest.db import database as rdb
-    restDb = rdb.Database(cfg, db)
+
+def _getRestDb(context):
+    mintDb = mdb.Database(context.cfg, context.db)
+    restDb = rdb.Database(context.cfg, mintDb, dbOnly=True)
     return restDb
 
-def _addCapsuleConfig(mintCfg, mintDb, conaryReposCfg):
-    restDb = _getRestDb(mintCfg, mintDb)
+
+def _addCapsuleConfig(context, conaryReposCfg, repName):
+    restDb = _getRestDb(context)
     # XXX we should speed these up by combining into a single call
     indexer = restDb.capsuleMgr.getIndexer()
-    if list(indexer.iterSources()):
+    if not list(indexer.iterSources()):
         return
     contentInjectionServers = restDb.capsuleMgr.getContentInjectionServers()
     if not contentInjectionServers or repName not in contentInjectionServers:
@@ -197,6 +203,7 @@ def _addCapsuleConfig(mintCfg, mintDb, conaryReposCfg):
     conaryReposCfg.injectCapsuleContentServers = contentInjectionServers
     conaryReposCfg.capsuleServerUrl = "direct"
     return restDb
+
 
 class RestRequestError(Exception):
     def __init__(self, code, msg):
@@ -316,9 +323,13 @@ class CapsuleFilterMixIn(object):
 class SimpleRepositoryFilter(proxy.SimpleRepositoryFilter, CapsuleFilterMixIn):
     withCapsuleInjection = True
     def __init__(self, restDb, nscfg, urlBase, netRepos):
-        self._restDb = restDb
         proxy.SimpleRepositoryFilter.__init__(self, nscfg, urlBase, netRepos)
+        self.setRestDb(restDb)
+
+    def setRestDb(self, restDb):
+        self._restDb = restDb
         CapsuleFilterMixIn.__init__(self)
+
 
 class ProxyRepositoryServer(proxy.ProxyRepositoryServer, CapsuleFilterMixIn):
     def __init__(self, restDb, *args, **kwargs):
@@ -407,7 +418,7 @@ def conaryHandler(context):
         else:
             # Create a new connection.
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
-                    actualRepName, cfg, req, dbTuple, localMirror, requireSigs,
+                    actualRepName, context, dbTuple, localMirror, requireSigs,
                     commitEmail)
 
             if not repServer:
@@ -416,6 +427,8 @@ def conaryHandler(context):
             # Cache non-pooled connections by way of their repository
             # instance.
             repositories[repHash] = (repServer, proxyServer, shimRepo)
+
+        proxyServer.setRestDb(_getRestDb(context))
 
         # Reset the repository server when we're done with it.
         doReset = True
