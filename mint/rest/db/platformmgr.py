@@ -473,7 +473,7 @@ class Platforms(object):
         if len(parts) == 1:
             domainname = ''
         else:
-            domainname = parts[1:]
+            domainname = ''.join(parts[1:])
 
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
         entitlement = self.db.siteAuth.entitlementKey
