@@ -62,7 +62,8 @@ class PlatformsTable(database.KeyedTable):
     fields = [ 'platformId',
                'label',
                'mode',
-               'enabled' ]
+               'enabled',
+               'projectId' ]
 
     def __init__(self, db, cfg):
         self.cfg = cfg

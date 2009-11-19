@@ -37,7 +37,7 @@ _cachedCfg = None
 
 class RepositoryManager(manager.Manager):
     def __init__(self, cfg, db, auth):
-	manager.Manager.__init__(self, cfg, db, auth)
+        manager.Manager.__init__(self, cfg, db, auth)
         self.cfg = cfg
         self.auth = auth
         self.profiler = None

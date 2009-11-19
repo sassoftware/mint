@@ -420,9 +420,11 @@ class Platforms(object):
         return 
 
     def _getProjectId(self, platformId):
-        return self.db.db.platforms.get(platformId)['projectId']
+        plat = self.db.db.platforms.get(platformId)
+        return plat.get('projectId', None)
 
-    def _getUsableProject(self, platformId, hostname):
+    def _getUsableProject(self, platformId, hostname, host, domainname, url,
+                          authInfo):
         # See if there is project already setup that shares
         # the fqdn of the platform.
         try:
@@ -445,12 +447,13 @@ class Platforms(object):
                 try:
                     mirrorId = self.db.db.inboundMirrors.getIdByColumn(
                                 'targetProjectId', projectId)
-                    # Just add the project to our platform
-                    self.db.db.platforms.update(platformId, projectId=projectId)
                 except mint_error.ItemNotFound, e:
                     # Add an inboud mirror for this external project.
                     self.db.productMgr.reposMgr.addIncomingMirror(
                         projectId, host, domainname, url, authInfo, True)
+                # Add the project to our platform
+                self.db.db.platforms.update(platformId, projectId=projectId)
+
             else:
                 # Not an external Project, fail.
                 raise errors.InvalidProjectForPlatform()
@@ -474,10 +477,11 @@ class Platforms(object):
 
         # Get the productId to see if this platform has already been
         # associated with an external product.
-        projectId = self._getProjectId(platformId, hostname)
+        projectId = self._getProjectId(platformId)
 
         if not projectId:
-            projectId = self._getUsableProject(platformId)
+            projectId = self._getUsableProject(platformId, hostname, host,
+                            domainname, url, authInfo)
 
         if not projectId:            
             # Still no project, we need to create a new one.
@@ -487,6 +491,8 @@ class Platforms(object):
                                 domainname, url, authInfo, mirror=mirror)
             except mint_error.RepositoryAlreadyExists, e:
                 projectId = self.db.productMgr.getProjectIdByFQDN(hostname)
+
+            self.db.db.platforms.update(platformId, projectId=projectId)
 
         return projectId
 
