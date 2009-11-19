@@ -4,16 +4,18 @@ from mint.django_rest.rbuilder.reporting.models import Report, Reports
 
 from xobj import xobj
 
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django_restapi.resource import Resource
 
 class ReportView(Resource):
 
     # Handle GET methods
     def read(self, request, reportName=None):
-        auth.getCookieAuth(request)
 
         if reportName:
+            if reportName not in _reports:
+                raise Http404
+                
             report = Report()
             for attr in _reports[reportName].items():              
                 setattr(report, attr[0], attr[1])

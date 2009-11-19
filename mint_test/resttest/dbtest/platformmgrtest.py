@@ -33,7 +33,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         # This data should match what's setup in the cfg,
         # and platform defn
         p = models.Platform(platformName='Crowbar Linux 1',
-                            hostname='localhost',
                             label='localhost@rpath:plat-1',
                             mode='manual',
                             platformId=platformId,

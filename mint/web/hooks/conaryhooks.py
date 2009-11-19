@@ -15,7 +15,9 @@ import base64
 
 from mint import mint_error
 from mint import maintenance
+from mint.db import database as mdb
 from mint.db.projects import transTables
+from mint.rest.db import database as rdb
 from mint.rest.errors import ProductNotFound
 from mint.web import app
 from mint.web import cresthandler
@@ -91,8 +93,10 @@ def getRepositoryMap(cfg):
     else:
         return {}
 
-def getRepository(projectName, repName, cfg,
-        req, dbTuple, localMirror, requireSigs, commitEmail):
+def getRepository(projectName, repName, context,
+        dbTuple, localMirror, requireSigs, commitEmail):
+
+    cfg, req = context.cfg, context.req
 
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
@@ -160,6 +164,8 @@ def getRepository(projectName, repName, cfg,
                     (dbTuple, str(err)))
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
+        restDb = _addCapsuleConfig(context, nscfg, repName)
+
         try:
             netRepos = netserver.NetworkRepositoryServer(nscfg, urlBase,
                     reposDb)
@@ -171,14 +177,32 @@ def getRepository(projectName, repName, cfg,
     else:
         raise
 
-    if 'changesetCacheDir' in nscfg.keys():
-        # XXX FIXME: deal with capsules
-        repos = proxy.SimpleRepositoryFilter(nscfg, urlBase, netRepos)
-    else:
-        repos = netRepos
+    repos = SimpleRepositoryFilter(restDb, nscfg, urlBase, netRepos)
     shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, reposDb)
 
     return netRepos, repos, shim
+
+
+def _getRestDb(context):
+    mintDb = mdb.Database(context.cfg, context.db)
+    restDb = rdb.Database(context.cfg, mintDb, dbOnly=True)
+    return restDb
+
+
+def _addCapsuleConfig(context, conaryReposCfg, repName):
+    restDb = _getRestDb(context)
+    # XXX we should speed these up by combining into a single call
+    indexer = restDb.capsuleMgr.getIndexer()
+    if not list(indexer.iterSources()):
+        return
+    contentInjectionServers = restDb.capsuleMgr.getContentInjectionServers()
+    if not contentInjectionServers or repName not in contentInjectionServers:
+        return
+    conaryReposCfg.excludeCapsuleContents = True
+    # These settings are only used by the filter
+    conaryReposCfg.injectCapsuleContentServers = contentInjectionServers
+    conaryReposCfg.capsuleServerUrl = "direct"
+    return restDb
 
 
 class RestRequestError(Exception):
@@ -200,31 +224,28 @@ class RestProxyOpener(transport.URLOpener):
     http_error_401 = http_error_default
 
 
-def proxyExternalRestRequest(context, projectHostName, proxyServer):
+def proxyExternalRestRequest(context, fqdn, proxyServer):
     cfg, req = context.cfg, context.req
     # FIXME: this only works with entitlements, not user:password
 
     # /repos/rap/api/foo -> api/foo
     path = '/'.join(req.unparsed_uri.split('/')[3:])
     # get the upstream repo url and label
-    urlBase, label = _getUpstreamInfoForExternal(context.db, projectHostName)
+    urlBase, label, hostName = _getUpstreamInfoForExternal(context.db, fqdn)
     # no external project?  maybe it's a non-entitled platform
     if not urlBase:
         found = False
         for label in cfg.availablePlatforms:
-            if label.split('.')[0] == projectHostName:
-                serverName = label.split('@')[0]
-                urlBase = 'http://%s/conary/' % serverName
+            if label.split('@')[0].lower() == fqdn.lower():
+                urlBase = 'http://%s/conary/' % fqdn
                 found = True
                 break
         if not found:
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
     url = ''.join((urlBase, path))
-    # grab the server name from the label
-    serverName = label.split('@')[0]
     # build the entitlement to send in the header
     l = []
-    for entitlement in proxyServer.cfg.entitlement.find(serverName):
+    for entitlement in proxyServer.cfg.entitlement.find(fqdn):
         if entitlement[0] is None:
             l.append("* %s" % (base64.b64encode(entitlement[1])))
         else:
@@ -234,7 +255,7 @@ def proxyExternalRestRequest(context, projectHostName, proxyServer):
 
     opener = RestProxyOpener(proxies=proxyServer.cfg.proxy)
     opener.addheader('X-Conary-Entitlement', entitlement)
-    opener.addheader('X-Conary-Servername', serverName)
+    opener.addheader('X-Conary-Servername', fqdn)
     opener.addheader('User-agent', transport.Transport.user_agent)
 
     # make the request
@@ -243,6 +264,7 @@ def proxyExternalRestRequest(context, projectHostName, proxyServer):
     except RestRequestError, e:
         if e.code != apache.HTTP_FORBIDDEN:
             # translate all errors to a 502
+            log.error("Cannot proxy REST request to %s: %s", urlBase, e)
             return apache.HTTP_BAD_GATEWAY
         return e.code
 
@@ -254,7 +276,7 @@ def proxyExternalRestRequest(context, projectHostName, proxyServer):
     port = req.connection.local_addr[1]
     myUrlBase = proxyServer.basicUrl % {'protocol':protocol,
                                         'port':port}
-    myUrlBase += 'repos/%s/' % (projectHostName,)
+    myUrlBase += 'repos/%s/' % (hostName,)
 
     # translate the response
     l = []
@@ -273,43 +295,13 @@ def proxyExternalRestRequest(context, projectHostName, proxyServer):
     f.close()
     return apache.OK
 
-class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
-    def __init__(self, mintCfg, *args, **kwargs):
-        proxy.ProxyRepositoryServer.__init__(self, *args, **kwargs)
-        self._mintCfg = mintCfg
-        self._setCapsuleServerUrl()
-        self.CapsuleDownloader = lambda x: self._CapsuleDownloader(
-            self._getRestDb())
-
-    def _setCapsuleServerUrl(self):
-        # XXX FIXME reenable after we have the right content
-        restdb = self._getRestDb()
-        indexer = restdb.capsuleMgr.getIndexer()
-        if not list(indexer.iterSources()):
-            return
-        labels = restdb.capsuleMgr.getContentInjectionServers()
-        if not labels:
-            return
-        for label in labels:
-            self.cfg.configLine("injectCapsuleContentServers %s" % label)
-        # It really doesn't matter what the capsule server URL is, as long as
-        # it is not None
-        self.cfg.capsuleServerUrl = 'direct'
-
-    def _getRestDb(self):
-        cfg = self._mintCfg
-        from mint.db import database
-        from mint.rest.db import database as rdb
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        restdb = rdb.Database(cfg, database.Database(cfg, db))
-        return restdb
-
+class CapsuleFilterMixIn(object):
     class _CapsuleDownloader(object):
-        def __init__(self, restdb):
-            self._restdb = restdb
+        def __init__(self, restDb):
+            self._restDb = restDb
 
         def downloadCapsule(self, capsuleKey, sha1sum):
-            indexer = self._restdb.capsuleMgr.getIndexer()
+            indexer = self._restDb.capsuleMgr.getIndexer()
             # XXX FIXME: error handling
             pkg = indexer.getPackage(capsuleKey, sha1sum)
             fobj = file(indexer.getFullFilePath(pkg))
@@ -317,12 +309,33 @@ class ProxyRepositoryServer(proxy.ProxyRepositoryServer):
 
         def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileName,
                 fileSha1sum):
-            indexer = self._restdb.capsuleMgr.getIndexer()
+            indexer = self._restDb.capsuleMgr.getIndexer()
             fobj = indexer.getFileFromPackage(capsuleKey, capsuleSha1sum,
                 fileName, fileSha1sum)
             return self.fromFile(fobj)
 
-        fromFile = proxy.ProxyRepositoryServer.CapsuleDownloader.fromFile
+        fromFile = proxy.ChangesetFilter.CapsuleDownloader.fromFile
+
+    def __init__(self):
+        self.CapsuleDownloader = lambda x: self._CapsuleDownloader(
+            self._restDb)
+
+class SimpleRepositoryFilter(proxy.SimpleRepositoryFilter, CapsuleFilterMixIn):
+    withCapsuleInjection = True
+    def __init__(self, restDb, nscfg, urlBase, netRepos):
+        proxy.SimpleRepositoryFilter.__init__(self, nscfg, urlBase, netRepos)
+        self.setRestDb(restDb)
+
+    def setRestDb(self, restDb):
+        self._restDb = restDb
+        CapsuleFilterMixIn.__init__(self)
+
+
+class ProxyRepositoryServer(proxy.ProxyRepositoryServer, CapsuleFilterMixIn):
+    def __init__(self, restDb, *args, **kwargs):
+        self._restDb = restDb
+        proxy.ProxyRepositoryServer.__init__(self, *args, **kwargs)
+        CapsuleFilterMixIn.__init__(self)
 
 def conaryHandler(context):
     req, cfg = context.req, context.cfg
@@ -338,13 +351,17 @@ def conaryHandler(context):
         requireSigs = False
 
     paths = normPath(req.uri).split("/")
+    fqdn = hostName = None
     if "repos" in paths:
-        hostName = paths[paths.index('repos') + 1]
-        domainName = None
+        hostPart = paths[paths.index('repos') + 1]
+        if '.' in hostPart:
+            fqdn = hostPart
+            if fqdn.endswith('.'):
+                fqdn = fqdn[:-1]
+        else:
+            hostName = hostPart
     else:
-        parts = req.hostname.split(".")
-        hostName = parts[0]
-        domainName = ".".join(parts[1:])
+        fqdn = req.hostname
 
     method = req.method.upper()
     port = req.connection.local_addr[1]
@@ -353,7 +370,14 @@ def conaryHandler(context):
     # resolve the conary repository names
     (projectHostName, _, actualRepName, external, database,
             localMirror, commitEmail
-            ) = _resolveProjectRepos(context.db, hostName, domainName)
+            ) = _resolveProjectRepos(context.db, hostName, fqdn)
+
+    # By now we must know the FQDN, either from the request itself or from
+    # the project looked up in the database.
+    if not fqdn and not actualRepName:
+        log.warning("Unknown project %s in request for %s", hostName,
+                req.uri)
+        return apache.HTTP_NOT_FOUND
 
     # do not require signatures when committing to a local mirror
     if localMirror:
@@ -394,7 +418,7 @@ def conaryHandler(context):
         else:
             # Create a new connection.
             repServer, proxyServer, shimRepo = getRepository(projectHostName,
-                    actualRepName, cfg, req, dbTuple, localMirror, requireSigs,
+                    actualRepName, context, dbTuple, localMirror, requireSigs,
                     commitEmail)
 
             if not repServer:
@@ -403,6 +427,8 @@ def conaryHandler(context):
             # Cache non-pooled connections by way of their repository
             # instance.
             repositories[repHash] = (repServer, proxyServer, shimRepo)
+
+        proxyServer.setRestDb(_getRestDb(context))
 
         # Reset the repository server when we're done with it.
         doReset = True
@@ -445,8 +471,11 @@ def conaryHandler(context):
                 domain = cfg.siteDomainName + ':%(port)d'
             urlBase = "%%(protocol)s://%s.%s/" % \
                     (cfg.hostName, domain)
+            # XXX For now we won't support injection into external projects
+            # that are not mirrored
+            restDb = None
             proxyServer = proxy_repository = ProxyRepositoryServer(
-                    cfg, proxycfg, urlBase)
+                    restDb, proxycfg, urlBase)
 
         # inject known authentication (userpass and entitlement)
         proxyServer.cfg.entitlement = conarycfg.EntitlementList()
@@ -458,10 +487,9 @@ def conaryHandler(context):
     try:
         if proxyRestRequest:
             # use proxyServer config for http proxy and auth data
-            if not projectHostName:
-                projectHostName = hostName
-            return proxyExternalRestRequest(context, projectHostName,
-                    proxyServer)
+            if not fqdn:
+                fqdn = req.hostname
+            return proxyExternalRestRequest(context, fqdn, proxyServer)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
@@ -495,86 +523,46 @@ def _updateUserSet(db, cfgObj):
         elif authType == 'entitlement':
             cfgObj.entitlement.addEntitlement(host, entitlement)
 
-def _getUpstreamInfoForExternal(db, hostname):
+
+def _getUpstreamInfoForExternal(db, fqdn):
     cu = db.cursor()
-    cu.execute("""SELECT url, label FROM Labels JOIN projects USING(projectId)
-                  WHERE hostName=?""", (hostname,))
+    cu.execute("""SELECT url, label, hostname
+        FROM Labels JOIN projects USING(projectId) WHERE fqdn = ?""", fqdn)
     ret = cu.fetchall()
     if len(ret) < 1:
-        return None, None
+        return None, None, None
     return ret[0]
 
-def _resolveProjectRepos(db, hostname, domainname):
-    # Start with some reasonable assumptions
+
+def _resolveProjectRepos(db, hostname, fqdn):
+    if fqdn:
+        where = 'fqdn = ?'
+        whereArg = fqdn
+    else:
+        where = 'hostname = ?'
+        whereArg = hostname
+
     external = True
     localMirror = False
     projectHostName = None
-    projectDomainName = None
     projectId = None
     database = None
-    actualRepName = possibleRepName = None
     commitEmail = None
-
-    if domainname:
-        extraWhere = "AND domainname = '%s'" % domainname
-    else:
-        extraWhere = ""
+    fqdn = None
 
     # Determine if the project is local by checking the projects table
     cu = db.cursor()
-    cu.execute("""SELECT projectId, domainname, external, %s,
-                     EXISTS(SELECT * FROM InboundMirrors
-                     WHERE projectId=targetProjectId) AS localMirror,
-                     commitEmail
-                  FROM Projects WHERE hostname=? %s""" % (
-                      (db.driver == 'mysql' and '`database`' or 'database'),
-                      extraWhere),
-                  hostname)
-    try:
-        project = cu.fetchone()
-        if project:
-            (projectId, projectDomainName, external, database, localMirror,
-                    commitEmail) = project
-            projectHostName = hostname
-            possibleRepName = "%s.%s" % (projectHostName, projectDomainName)
+    cu.execute("""
+        SELECT projectId, hostname, fqdn, external, %s, commitEmail,
+            EXISTS(SELECT * FROM InboundMirrors
+                WHERE projectId=targetProjectId) AS localMirror
+        FROM Projects WHERE %s""" % (
+                (db.driver == 'mysql' and '`database`' or 'database'), where),
+            whereArg)
+    project = cu.fetchone()
+    if project:
+        (projectId, projectHOstName, fqdn, external, database, commitEmail,
+                localMirror) = project
 
-            # Optionally remap the repository name (forward lookup)
-            cu.execute("SELECT toName FROM RepNameMap WHERE fromName = ?",
-                    possibleRepName)
-            mapping = cu.fetchone()
-            if mapping:
-                actualRepName = mapping[0]
-            else:
-                actualRepName = possibleRepName
-
-        if not actualRepName:
-            # Reverse lookup in repNameMap (ugh)
-            possibleRepName = "%s.%s" % (hostname, domainname)
-            # XXX: This is not guaranteed to be unique, so we'll make it so.
-            #      (not sure that this matters on rBA, actually)
-            cu.execute("""SELECT fromName FROM repNameMap where toName = ?
-                    LIMIT 1""", possibleRepName)
-            mapping = cu.fetchone()
-            if mapping:
-                fromName = mapping[0]
-                projectHostName = fromName[0:fromName.find('.')]
-                projectDomainName = fromName[fromName.find('.')+1:]
-
-                cu.execute("""SELECT projectId, external, %s,
-                                EXISTS(SELECT * FROM InboundMirrors
-                                WHERE projectId=targetProjectId) AS localMirror
-                              FROM Projects WHERE hostname=? AND domainname=?"""
-                                % ((db.driver == 'mysql' and '`database`'
-                                    or 'database'),),
-                              projectHostName, projectDomainName)
-                project = cu.fetchone()
-                if project:
-                    projectId, external, database, localMirror = project
-                    actualRepName = possibleRepName
-
-    except (IndexError, TypeError):
-        log.exception("Error in _resolveProjectRepos:")
-        actualRepName = None
-
-    return (projectHostName, projectId, actualRepName, external, database,
+    return (projectHostName, projectId, fqdn, external, database,
             localMirror, commitEmail)
