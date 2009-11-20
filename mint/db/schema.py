@@ -823,7 +823,8 @@ def _createPlatforms(db):
                 platformId          integer         NOT NULL
                     REFERENCES platforms ON DELETE CASCADE,
                 message             varchar(255) NOT NULL,
-                done                smallint NOT NULL DEFAULT 0
+                done                smallint NOT NULL DEFAULT 0,
+                error               smallint NOT NULL DEFAULT 0
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformLoadJobs'] = []
         changed = True
