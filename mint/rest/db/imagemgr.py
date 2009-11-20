@@ -281,9 +281,9 @@ class ImageManager(manager.Manager):
                 WHERE buildId = ?""", status.code, status.message, imageId)
         return self.getImageStatus(imageId)
 
-    def finalImageProcessing(self, imageId, status, urlBase = None):
+    def finalImageProcessing(self, imageId, status):
         self._postFinished(imageId, status)
-        self._createNotices(imageId, status, urlBase = urlBase)
+        self._createNotices(imageId, status)
 
     class UploadCallback(object):
         def __init__(self, manager, imageId):
@@ -337,7 +337,7 @@ class ImageManager(manager.Manager):
                 manifestPath, data.RDT_STRING)
             self.db.commit()
 
-    def _createNotices(self, imageId, status, urlBase = None):
+    def _createNotices(self, imageId, status):
         sql = """
             SELECT Projects.hostname, ProductVersions.name, Users.username,
                    Builds.name, Builds.buildType, BuildData.value AS amiId
@@ -356,10 +356,8 @@ class ImageManager(manager.Manager):
         projectName, projectVersion, imageCreator, imageName, imageType, amiId = row
         imageType = buildtypes.typeNamesMarketing.get(imageType)
 
-        downloadUrlTemplate = "%sdownloadImage?fileId=%%d" % (
-            self.cfg.basePath, )
-        if urlBase:
-            downloadUrlTemplate = urlBase + downloadUrlTemplate
+        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%%d" % (
+            self.cfg.siteHost, self.cfg.basePath, )
         if amiId is not None:
             notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
             imageFiles = [ amiId ]

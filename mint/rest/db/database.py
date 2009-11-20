@@ -606,15 +606,13 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageStatus(imageId)
 
-    def setImageStatus(self, hostname, imageId, imageToken, status,
-            urlBase = None):
+    def setImageStatus(self, hostname, imageId, imageToken, status):
         self.auth.requireImageToken(hostname, imageId, imageToken)
         if status.isFinal:
             try:
                 # This method is not running in a single transaction, since it
                 # may want to update the status
-                self._finalImageProcessing(imageId, status,
-                    urlBase = urlBase)
+                self._finalImageProcessing(imageId, status)
             except:
                 self.rollback()
                 self._holdCommits = False
@@ -622,9 +620,8 @@ class Database(DBInterface):
                 raise
         return self.setVisibleImageStatus(imageId, status)
 
-    def _finalImageProcessing(self, imageId, status, urlBase = None):
-        self.imageMgr.finalImageProcessing(imageId, status,
-            urlBase = urlBase)
+    def _finalImageProcessing(self, imageId, status):
+        self.imageMgr.finalImageProcessing(imageId, status)
 
     @commitafter
     def setVisibleImageStatus(self, imageId, status):

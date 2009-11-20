@@ -60,10 +60,8 @@ class ProductImagesController(base.BaseController):
     @auth.tokenRequired
     @requires('status', models.ImageStatus)
     def setStatus(self, request, hostname, imageId, status):
-        # XXX we shouldn't use an internal API
-        rawBase, _ = request._getRawPath()
         return self.db.setImageStatus(hostname, imageId, request.imageToken,
-                status, urlBase = rawBase)
+                status)
 
     @auth.tokenRequired
     @requires('files', models.ImageFileList)
