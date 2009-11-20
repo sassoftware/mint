@@ -123,7 +123,8 @@ class PlatformLoadJobsTable(database.KeyedTable):
     fields = [ 'jobId',
                'platformId',
                'message',
-               'done' ]
+               'done',
+               'error' ]
 
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'

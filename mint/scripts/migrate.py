@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 9)
+    Version = (48, 10)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -757,6 +757,13 @@ class MigrateTo_48(SchemaMigration):
             REFERENCES projects ON DELETE SET NULL""")
         return True            
         
+    # 48.10
+    # Add error column to platformLoadJobs
+    def migrate10(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE platformLoadJobs ADD COLUMN error smallint
+            NOT NULL DEFAULT 0""")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

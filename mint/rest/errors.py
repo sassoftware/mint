@@ -43,6 +43,13 @@ class InvalidProjectForPlatform(mint_error.MintError):
     domainname of the platform that is being enabled.
     """
 
+class PlatformLoadFileNotFound(mint_error.MintError):
+    def __init__(self, uri):
+        self.uri = uri
+
+    def __str__(self):
+        return "Load file %s could not be downloaded." % self.uri
+
 class ProductNotFound(ItemNotFound):
     status = 404
 

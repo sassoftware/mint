@@ -59,6 +59,10 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
     def done(self):
         self.db.db.platformLoadJobs.update(self.loadJobId, done=1)
 
+    def error(self, e):
+        self.db.db.platformLoadJobs.update(self.loadJobId, error=1)
+        self._message("Load failed: %s" % e)
+
     def downloading(self, got, rate):
         self._downloading('Downloading', got, rate, self.totalKB)
 
@@ -364,12 +368,11 @@ class Platforms(object):
 
                 os.chdir('/')
                 function(*args, **kw)
-            except Exception:
+            except Exception, e:
                 try:
                     ei = sys.exc_info()
-                    # TODO log error
-                    # self.log_error('Daemonized process exception',
-                                   # exc_info = ei)
+                    if hasattr(function, 'error'):
+                        function.error(self, e, ei)
                 finally:
                     os._exit(1)
         finally:
@@ -386,6 +389,9 @@ class Platforms(object):
         finder = lookaside.FileFinder(None, None)
         inFile = finder._fetchUrl(uri, headers)
 
+        if not inFile:
+            raise errors.PlatformLoadFileNotFound(uri)
+
         jobId = self.db.db.platformLoadJobs.new(platformId=platformId, message='')
         platLoad = models.PlatformLoad()
         platLoad.jobId = jobId
@@ -401,6 +407,10 @@ class Platforms(object):
     def _load(self, platformId, jobId, inFile, outFilePath, repos):
         totalKB = int(inFile.headers['content-length'])
         callback = PlatformLoadCallback(self.db, platformId, jobId, totalKB)
+
+        # Save a reference to the callback so that we have access to it in the
+        # _load_error method.
+        self.callback = callback
 
         outFile = open(outFilePath, 'w')
         total = util.copyfileobj(inFile, outFile,
@@ -419,6 +429,12 @@ class Platforms(object):
         callback.done()            
 
         return 
+
+    def _load_error(self, e, ei):
+        log.error("Platform slice manual load failed. Exception: %s\n "
+                  "Traceback: %s" % (e, ei))
+        self.callback.error(e)                  
+    _load.error = _load_error
 
     def _getProjectId(self, platformId):
         plat = self.db.db.platforms.get(platformId)
@@ -552,8 +568,11 @@ class Platforms(object):
         status = models.PlatformLoadStatus()
         message = self.db.db.platformLoadJobs.get(jobId)['message']
         done = self.db.db.platformLoadJobs.get(jobId)['done']
+        error = self.db.db.platformLoadJobs.get(jobId)['error']
         if bool(done):
             code = jobstatus.FINISHED
+        elif bool(error):
+            code = jobstatus.ERROR
         else:
             code = jobstatus.RUNNING
 
