@@ -67,8 +67,8 @@ class ContentSourceType(object):
         f = self.fields[field] 
         f.value = value
 
-    def __getattr__(self, attr):
-        fieldNames = self.getFieldNames()
+    def __getattribute__(self, attr):
+        fieldNames = object.__getattribute__(self, 'getFieldNames')()
         if attr not in fieldNames:
             return object.__getattribute__(self, attr)
 
@@ -77,7 +77,7 @@ class ContentSourceType(object):
         return f.value
 
     def getFieldNames(self):
-        return [f.name for f in self.fields]
+        return [f.name for f in object.__getattribute__(self, 'fields')]
 
     def status(self, *args, **kw):
         raise NotImplementedError
@@ -103,7 +103,7 @@ class Rhn(ContentSourceType):
 
 class Satellite(Rhn):
     name = 'Red Hat Satellite'
-    authUrl = '%s/rpc/api'
+    authUrl = 'rpc/api'
     fields = [Name(), Username(), Password(), SourceUrl()]
     model = models.SatelliteSource
 

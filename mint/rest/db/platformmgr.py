@@ -357,14 +357,8 @@ class Platforms(object):
                     # The first child exits and is waited by the parent
                     # the finally part will do the os._exit
                     return
-                # Redirect stdin, stdout, stderr
                 fd = os.open(os.devnull, os.O_RDWR)
-                #os.dup2(fd, 0)
-                #os.dup2(fd, 1)
-                #os.dup2(fd, 2)
                 os.close(fd)
-                # Create new process group
-                #os.setsid()
 
                 os.chdir('/')
                 function(*args, **kw)
