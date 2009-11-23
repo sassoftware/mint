@@ -83,11 +83,14 @@ class ContentSourceType(object):
         raise NotImplementedError
 
 class Rhn(ContentSourceType):
-    name = 'Red Hat Network'
     authUrl = 'rpc/api'
     fields = [Name(), Username(), Password()]
     model = models.RhnSource
     sourceUrl = 'https://rhn.redhat.com'
+
+    def __init__(self):
+        self.name = 'Red Hat Network'
+        ContentSourceType.__init__(self)
 
     def status(self):
         url = self.sourceUrl
@@ -102,14 +105,20 @@ class Rhn(ContentSourceType):
             return (True, False, e.faultString)
 
 class Satellite(Rhn):
-    name = 'Red Hat Satellite'
     authUrl = 'rpc/api'
     fields = [Name(), Username(), Password(), SourceUrl()]
     model = models.SatelliteSource
 
+    def __init__(self):
+        self.name = 'Red Hat Satellite'
+        ContentSourceType.__init__(self)
+
 class Proxy(Satellite):
-    name = 'Red Hat Proxy'
     
+    def __init__(self):
+        self.name = 'Red Hat Proxy'
+        ContentSourceType.__init__(self)
+
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,
                       'proxy' : Proxy}
