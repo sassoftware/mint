@@ -693,22 +693,12 @@ class ProductVersionTest(restbase.BaseRestTest):
         req, response = client.call('GET', uri, convert = True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<platform id="http://localhost:8000/api/platforms/1">
-  <platformId>1</platformId>
-  <platformTroveName></platformTroveName>
-  <repositoryHostname>localhost</repositoryHostname>
-  <label>localhost@rpath:plat-1</label>
+<platform id="http://localhost:8000/api/products/testproject/versions/1.0/platform">
+  <platformTroveName />
+  <label/>
   <platformVersion></platformVersion>
   <productVersion>1.0</productVersion>
   <platformName>localhost@rpath:plat-1</platformName>
-  <mode>manual</mode>
-  <enabled>true</enabled>
-  <configurable>true</configurable>
-  <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
-  <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
-  <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
-  <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
-  <load href="http://localhost:8000/api/platforms/1/load/"/>
 </platform>
 """
         self.assertXMLEquals(response, exp)
