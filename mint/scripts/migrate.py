@@ -722,6 +722,14 @@ class MigrateTo_48(SchemaMigration):
     # created.
     def migrate4(self):
         schema._createPlatforms(self.db)
+
+        # Since this is a migration, it must be an update, so we want to
+        # get all the platforms created in the db, and then enable them all.
+        cu = self.db.cursor()
+        for label in self.cfg.availablePlatforms:
+            cu.execute("INSERT INTO platforms(label) values(?)", label)
+        cu.execute("UPDATE platforms SET enabled=1")
+
         return True
 
     # 48.5
@@ -732,60 +740,37 @@ class MigrateTo_48(SchemaMigration):
     # 48.6
     # - Dashboard Repository Log scraping table 
     def migrate6(self):
-        return True
-
-    # 48.7
-    # - Fix type of logname column
-    def migrate7(self):
-        drop_tables(self.db, 'repositorylogstatus')
         schema._createRepositoryLogSchema(self.db)
         return True
 
+    # 48.7
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
+    def migrate7(self):
+        return True
+
     # 48.8
-    # Drop ci_rhn_package_failed (added in 48.6) and recreate it with
-    # additional columns
+    # Add Indexer schema
     def migrate8(self):
-        drop_tables(self.db, 'ci_rhn_package_failed')
         schema._createCapsuleIndexerSchema(self.db)
         return True
 
     # 48.9
-    # Add projectId column to platforms table.
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
     def migrate9(self):
-        cu = self.db.cursor()
-        cu.execute("""ALTER TABLE platforms ADD COLUMN projectId smallint
-            REFERENCES projects ON DELETE SET NULL""")
         return True            
         
     # 48.10
-    # Add error column to platformLoadJobs
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
     def migrate10(self):
-        cu = self.db.cursor()
-        cu.execute("""ALTER TABLE platformLoadJobs ADD COLUMN error smallint
-            NOT NULL DEFAULT 0""")
         return True
 
     # 48.11
-    # ContentSourceTypes is gone
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
     def migrate11(self):
-        cu = self.db.cursor()
-        cu.execute("""ALTER TABLE PlatformSources
-            ADD COLUMN contentSourceType varchar(255) NOT NULL DEFAULT 'RHN'""")
-        cu.execute("""ALTER TABLE PlatformsContentSourceTypes
-            ADD COLUMN contentSourceType varchar(255) NOT NULL DEFAULT 'RHN'""")
-        cu.execute("""UPDATE PlatformSources AS ps
-            SET contentSourceType = (SELECT ContentSourceTypes.name
-                FROM ContentSourceTypes
-                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)""")
-        cu.execute("""UPDATE PlatformsContentSourceTypes AS ps
-            SET contentSourceType = (SELECT ContentSourceTypes.name
-                FROM ContentSourceTypes
-                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)""")
-        cu.execute("""ALTER TABLE PlatformSources
-                    DROP COLUMN contentSourceTypeId""")
-        cu.execute("""ALTER TABLE PlatformsContentSourceTypes
-                    DROP COLUMN contentSourceTypeId""")
-        drop_tables(self.db, 'ContentSourceTypes')
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

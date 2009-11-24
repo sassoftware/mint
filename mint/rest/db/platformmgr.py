@@ -249,19 +249,8 @@ class Platforms(object):
         return platform
 
     def _create(self, platform):
-        # If this is a new install of rba, we want to create platforms as
-        # disabled.  If it was an upgrade, we want to create them as enabled.
-        # There's no great way to tell this, but if there are projects
-        # already created, they must have used a platform already, and
-        # therefore they should be enabled.
-        projects = self.db.db.projects.getProjectsList()
-        # Remove rmake-repository from the list, we don't want to count that.
-        rmakeRepoName = 'rmake-repository - rMake Repository'
-        projects = [p for p in projects if p[2] != rmakeRepoName]
-        enabled = projects and 1 or 0
-
         platformId = self.db.db.platforms.new(label=platform.label,
-                                              enabled=enabled)
+                                              enabled=0)
 
         for sourceType, isSingleton in platform._sourceTypes:
             typeName = self.contentSourceTypes.getIdByName(sourceType)
