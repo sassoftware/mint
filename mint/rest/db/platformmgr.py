@@ -530,6 +530,11 @@ class Platforms(object):
         localMessage = ''
         localConnected = False
 
+        openMsg = "Repository not responding: %s."
+        connectMsg = "Error connecting to repository %s: %s."
+        pDefNotFoundMsg = "Platform definition not found in repository %s."
+        successMsg = "Repository online: %s."
+
         if platform.mode == 'auto':
             client = self._reposMgr.getAdminClient()
             from mint.db import repository as reposdb
@@ -547,51 +552,55 @@ class Platforms(object):
             except reposErrors.OpenError, e:
                 remote = False
                 remoteConnected = False
-                remoteMessage = "Could not open remote repository."
+                remoteMessage = openMsg % sourceUrl
             except conaryErrors.ConaryError, e:
                 remote = False
                 remoteConnected = True
-                remoteMessage = "Error connecting to remote repository: %s. " % e
+                remoteMessage = connectMsg % (sourceUrl, e)
             except proddef.ProductDefinitionTroveNotFoundError, e:
                 remote = False
                 remoteConnected = True
-                remoteMessage = "Platform Definition not found in remote repository."
+                remoteMessage = pDefNotFoundMsg % sourceUrl
             except Exception, e:
                 remote = False
                 remoteConnected = False
                 # Hard code a helpful message for the sle platform.
                 if 'sle.rpath.com' in platform.label:
-                    platStatus.message = "This platform requires a " + \
+                    remoteMessage = "This platform requires a " + \
                         "commercial license.  You are either missing the " + \
                         "entitlement for this platform or it is no longer valid"
+                else:
+                    remoteMessage = connectMsg % sourceUrl
             else:            
                 remote = True
-                remoteMessage = 'Remote repository for %s is online.' % platform.platformName
+                remoteMessage = successMsg % sourceUrl
 
         client = self._reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
+        url = self._reposMgr._getFullRepositoryMap()[platform.repositoryHostname]
 
         try:
             platDef.loadFromRepository(client, platform.label)
         except reposErrors.OpenError, e:
             local = False
             localConnected = False
-            localMessage = "Could not open local repository."
+            localMessage = openMsg % url 
         except conaryErrors.ConaryError, e:
             local = False
             localConnected = True
-            localMessage = "Error connecting to local repository: %s. " % e
+            localMessage = connectMsg % (url, e)
         except proddef.ProductDefinitionTroveNotFoundError, e:
             local = False
             localConnected = True
-            localMessage = "Platform Definition not found in local repository."
+            localMessage = pDefNotFoundMsg % url
         except Exception, e:
             local = False
             localConnected = False
+            localMessage = connectMsg % (url, e)
         else:            
             local = True
             localConnected = True
-            localMessage = 'Local repository for %s is online.' % platform.platformName
+            localMessage = successMsg % url
 
         platStatus.valid = local and remote
         platStatus.connected = localConnected and remoteConnected
