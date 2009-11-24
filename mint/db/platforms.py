@@ -18,37 +18,15 @@ from mint.lib import database
 dbReader = database.dbReader
 dbWriter = database.dbWriter
 
-class ContentSourceTypesTable(database.KeyedTable):
-    name = 'contentSourceTypes'
-    key = 'contentSourceTypeId'
-    fields = [ 'contentSourceTypeId',
-               'name' ]
-
-    def getByName(self, name):
-        return self.getIdByColumn('name', name)
-
-    @dbReader
-    def getAll(self, cu):
-        sql = """
-            SELECT 
-                contentSourceTypeId,
-                name
-            FROM
-                contentSourceTypes
-        """
-        cu.execute(sql)
-        return cu.fetchall()
-
-
 class PlatformsContentSourceTypesTable(database.DatabaseTable):
     name = 'platformsContentSourceTypes'
     fields = [ 'platformId',
-               'contentSourceTypeId' ]
+               'contentSourceType' ]
 
     @dbReader
     def getAllByPlatformId(self, cu, platformId):
         sql = """
-            SELECT platformId, contentSourceTypeId
+            SELECT platformId, contentSourceType
             FROM platformsContentSourceTypes
             WHERE platformId = ?
         """
@@ -93,13 +71,10 @@ class PlatformsTable(database.KeyedTable):
                 platforms.platformId
             FROM 
                 platforms,
-                platformsContentSourceTypes,
-                contentSourceTypes
+                platformsContentSourceTypes
             WHERE
                 platforms.platformId = platformsContentSourceTypes.platformId
-            AND platformsContentSourceTypes.contentSourceTypeId =
-                contentSourceTypes.contentSourceTypeId
-            AND contentSourceTypes.name = ?
+            AND platformsContentSourceTypes.contentSourceType = ?
         """
         cu.execute(sql, type)
         ret = cu.fetchall()
@@ -152,13 +127,9 @@ class PlatformSourcesTable(database.KeyedTable):
                 platformSources.shortName,
                 platformSources.defaultSource,
                 platformSources.orderIndex,
-                contentSourceTypes.name AS contentSourceType
+                platformSources.contentSourceType
             FROM
-                contentSourceTypes,
                 platformSources
-            WHERE
-                platformSources.contentSourceTypeId =
-                contentSourceTypes.contentSourceTypeId
         """
         cu.execute(sql)
         return cu.fetchall()
@@ -172,15 +143,11 @@ class PlatformSourcesTable(database.KeyedTable):
                 platformSources.shortName,
                 platformSources.defaultSource,
                 platformSources.orderIndex,
-                contentSourceTypes.name AS contentSourceType
+                platformSources.contentSourceType
             FROM
-                contentSourceTypes,
                 platformsPlatformSources,
                 platformSources
             WHERE
-                platformSources.contentSourceTypeId =
-                contentSourceTypes.contentSourceTypeId
-            AND
                 platformsPlatformSources.platformId = ?
             AND
                 platformsPlatformSources.platformSourceId =

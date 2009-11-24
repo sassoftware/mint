@@ -184,7 +184,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
         platformLabel1 = self.mintCfg.availablePlatforms[0]
         pl1 = self.productDefinition.toPlatformDefinition()
-        cst = pl1.newContentSourceType('RHN', 'RHN')
+        cst = pl1.newContentSourceType('RHN', 'RHN', isSingleton = True)
         cst2 = pl1.newContentSourceType('satellite', 'satellite')
         ds = pl1.newDataSource('Channel 1', 'Channel 1')
         pl1.setContentProvider('Crowbar', 'Crowbar', [cst, cst2], [ds])

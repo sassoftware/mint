@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 10)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 11)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -746,31 +746,18 @@ def _createPlatforms(db):
         db.tables['Platforms'] = []
         changed = True
 
-    if 'ContentSourceTypes' not in db.tables:
-        cu.execute("""
-            CREATE TABLE ContentSourceTypes (
-                contentSourceTypeId %(PRIMARYKEY)s,
-                name varchar(255) NOT NULL
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['ContentSourceTypes'] = []
-        changed = True
-    changed |= db.createIndex('ContentSourceTypes',
-            'ContentSourceTypes_name_uq',
-            'name', unique = True)
-
     if 'PlatformsContentSourceTypes' not in db.tables:
         cu.execute("""
             CREATE TABLE PlatformsContentSourceTypes (
                 platformId  integer NOT NULL
                     REFERENCES platforms ON DELETE CASCADE,
-                contentSourceTypeId integer NOT NULL
-                    REFERENCES contentSourceTypes ON DELETE CASCADE
+                contentSourceType  varchar(255) NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsContentSourceTypes'] = []
         changed = True
     changed |= db.createIndex('PlatformsContentSourceTypes',
-            'PlatformsContentSourceTypes_platformId_contentSourceTypeId_uq',
-            'platformId,contentSourceTypeId', unique = True)
+            'PlatformsContentSourceTypes_platformId_contentSourceType_uq',
+            'platformId,contentSourceType', unique = True)
 
     if 'PlatformSources' not in db.tables:
         cu.execute("""
@@ -779,8 +766,7 @@ def _createPlatforms(db):
                 name       varchar(255)    NOT NULL,
                 shortName  varchar(255)    NOT NULL UNIQUE,
                 defaultSource    smallint  NOT NULL DEFAULT 0,
-                contentSourceTypeId    integer    NOT NULL
-                    REFERENCES ContentSourceTypes,
+                contentSourceType  varchar(255) NOT NULL,
                 orderIndex  smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformSources'] = []

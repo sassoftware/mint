@@ -98,66 +98,45 @@ class ContentSourceTypes(object):
         self.cfg = cfg
         self.platforms = platforms
 
-    def _contentSourceTypeModelFactory(self, name):
-        return models.SourceType(contentSourceType=name)
+    def _contentSourceTypeModelFactory(self, name, singleton = None, id = None):
+        if id is None:
+            id = name
+        return models.SourceType(contentSourceType=name, singleton=singleton,
+            id = name)
 
-    def _listFromDb(self):
-        dbTypes = self.db.db.contentSourceTypes.getAll()
-        types = []
-        for dbType in dbTypes:  
-            type = self._contentSourceTypeModelFactory(name=dbType['name'])
-            types.append(type)
-
-        return types            
-    
     def _listFromCfg(self):
+        allTypesMap = dict()
         allTypes = []
-        for label, name, enabled, types, configurable in self.platforms._iterConfigPlatforms():
-            for t in types:
+        for label, name, enabled, sourceTypes, configurable in self.platforms._iterConfigPlatforms():
+            for t, isSingleton in sourceTypes:
                 if t not in allTypes:
                     allTypes.append(t)
+                    allTypesMap[t] = isSingleton
 
-        types = []
-        for type in allTypes:
-            type = self._contentSourceTypeModelFactory(name=type)
-            types.append(type)
+        stypes = []
+        for stype in allTypes:
+            isSingleton = allTypesMap[stype]
+            stype = self._contentSourceTypeModelFactory(name=stype,
+                singleton=isSingleton)
+            stypes.append(stype)
 
-        return types
-
-    def _create(self, sourceType):
-        sourceTypeId = self.db.db.contentSourceTypes.new(name=sourceType.contentSourceType)
-        return sourceTypeId
-
-    def _syncDb(self, dbTypes, cfgTypes):
-        changed = False
-        dbNames = [t.contentSourceType for t in dbTypes]
-        for cfgType in cfgTypes:
-            if cfgType.contentSourceType not in dbNames:
-                changed = True
-                self._create(cfgType)
-
-        return changed                
+        return stypes
 
     def listByName(self, sourceTypeName):
-        types = self.list()
-        type = [t for t in types.contentSourceTypes \
-                if t.contentSourceType == \
-                   sourceTypeName]
+        stypes = self.list()
+        stype = [t for t in stypes.contentSourceTypes
+                 if t.contentSourceType == sourceTypeName]
 
-        return type[0]
+        return stype[0]
 
     def getIdByName(self, sourceTypeName):
-        types = self.list()
-        return self.db.db.contentSourceTypes.getByName(sourceTypeName)
+        s = self.listByName(sourceTypeName)
+        return s.id
 
     def list(self):
-        dbTypes = self._listFromDb()
         cfgTypes = self._listFromCfg()
-        changed = self._syncDb(dbTypes, cfgTypes)
-        if changed:
-            dbTypes = self._listFromDb()
 
-        return models.SourceTypes(dbTypes)            
+        return models.SourceTypes(cfgTypes)
 
     def _getSourceTypeInstance(self, source):
         sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
@@ -234,7 +213,8 @@ class Platforms(object):
                 platformName = platDef.getPlatformName()
                 platformProv = platDef.getContentProvider()
                 if platformProv:
-                    types = [t.name for t in platformProv.contentSourceTypes]
+                    types = [(t.name, t.isSingleton)
+                        for t in platformProv.contentSourceTypes]
                 else:
                     types = []
             else:
@@ -283,10 +263,10 @@ class Platforms(object):
         platformId = self.db.db.platforms.new(label=platform.label,
                                               enabled=enabled)
 
-        for sourceType in platform._sourceTypes:
-            typeId = self.contentSourceTypes.getIdByName(sourceType)
+        for sourceType, isSingleton in platform._sourceTypes:
+            typeName = self.contentSourceTypes.getIdByName(sourceType)
             self.db.db.platformsContentSourceTypes.new(platformId=platformId,
-                            contentSourceTypeId=typeId)
+                            contentSourceType=typeName)
 
         return platform
 
@@ -301,18 +281,17 @@ class Platforms(object):
 
         return changed                
 
-    def _linkToSourceType(self, platformId, contentSourceTypeId):
+    def _linkToSourceType(self, platformId, contentSourceType):
         platformId = int(platformId)
-        contentSourceTypeId = int(contentSourceTypeId)
 
         # If the link is already there, do nothing
         types = self.db.db.platformsContentSourceTypes.getAllByPlatformId(platformId)
         for t in types:
-            if t[1] == contentSourceTypeId:
+            if t[1] == contentSourceType:
                 return
 
         self.db.db.platformsContentSourceTypes.new(platformId=platformId,
-            contentSourceTypeId=contentSourceTypeId)
+            contentSourceType=contentSourceType)
 
     def _populateFromCfg(self, dbPlatforms, cfgPlatforms):
         dbLabels = [p.label for p in dbPlatforms]
@@ -335,9 +314,9 @@ class Platforms(object):
 
         # Link the platforms to all of it's source types.
         for p in platforms:
-            for sourceType in p._sourceTypes:
-                id = self.mgr.contentSourceTypes.getIdByName(sourceType)
-                self._linkToSourceType(p.platformId, id)
+            for sourceType, isSingleton in p._sourceTypes:
+                contentSourceType = self.mgr.contentSourceTypes.getIdByName(sourceType)
+                self._linkToSourceType(p.platformId, contentSourceType)
 
         # Append any other platforms not found in the cfg onto our new list.
         for i, d in enumerate(dbLabels):
@@ -706,12 +685,12 @@ class ContentSources(object):
         return cu
 
     def _create(self, source):
-        typeId = self.contentSourceTypes.getIdByName(source.contentSourceType)
+        typeName = self.contentSourceTypes.getIdByName(source.contentSourceType)
         sourceId = self.db.db.platformSources.new(
                 name=source.name,
                 shortName=source.shortName,
                 defaultSource=int(source.defaultSource),
-                contentSourceTypeId=typeId,
+                contentSourceType=typeName,
                 orderIndex=source.orderIndex)
 
         cu = self.db.cursor()
@@ -925,9 +904,10 @@ class PlatformManager(manager.Manager):
     def getSourceTypesByPlatform(self, platformId):
         platform = self.platforms.getById(platformId)
         types = []
-        for sourceType in platform._sourceTypes:
-            types.append(models.SourceType(contentSourceType=sourceType))
-        
+        for sourceType, isSingleton in platform._sourceTypes:
+            types.append(models.SourceType(contentSourceType=sourceType,
+                singleton=isSingleton))
+
         return models.SourceTypes(types)
 
     def getSourceTypes(self, sourceType=None):
@@ -972,7 +952,6 @@ class PlatformManager(manager.Manager):
             SELECT DISTINCT Platforms.label
                        FROM Platforms
                        JOIN PlatformsContentSourceTypes USING (platformId)
-                       JOIN ContentSourceTypes USING (contentSourceTypeId)
                       WHERE Platforms.enabled != 0
         """
         cu = self.db.cursor()

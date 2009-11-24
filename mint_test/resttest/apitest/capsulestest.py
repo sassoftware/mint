@@ -22,9 +22,33 @@ from capsule_indexertest import base
 
 class IndexerSetupMixIn(base.IndexerTestMixIn):
     def setUpIndexerCfg(self):
+        self.mockPlatformLoadFromRepository()
         db = self.openRestDatabase()
         self._addPlatformSources(db)
         self.capsulecfg = db.capsuleMgr.getIndexerConfig()
+
+    def mockPlatformLoadFromRepository(self):
+        def mockLoadFromRepository(slf, client, label):
+            slf.parseStream("""\
+<platformDefinition>
+    <contentProvider name="rhn" description="Red Hat Network">
+      <contentSourceType name="RHN"
+        description="Red Hat Network Hosted" isSingleton="true" />
+      <contentSourceType name="satellite"
+        description="Red Hat Network Satellite" />
+      <contentSourceType name="proxy"
+        description="Red Hat Network Proxy" />
+      <dataSource name="rhel-i386-server-5"
+        description="Red Hat Enterprise Linux (v. 5 for 32-bit x86)" />
+      <dataSource name="rhel-x86_64-server-5"
+        description="Red Hat Enterprise Linux (v. 5 for 64-bit x86_64)" />
+    </contentProvider>
+</platformDefinition>
+""")
+            slf._sourceTrove = "%s=%s" % (slf._troveName, label)
+        from rpath_proddef import api1 as proddef
+        self.mock(proddef.PlatformDefinition, 'loadFromRepository',
+            mockLoadFromRepository)
 
     def _addPlatformSources(self, db, platformLabel = 'localhost1'):
         # XXX nasty hacks to produce some data in the hopefully proper format
@@ -37,23 +61,15 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         cu = db.cursor()
         cu.execute(sql, platformLabel, mode)
 
-        sql = """
-            INSERT INTO contentSourceTypes (name)
-            VALUES (?)
-        """
-        cu.execute(sql, 'RHN')
-
         platformId = cu.execute("SELECT platformId FROM Platforms "
             "WHERE label = ?", platformLabel).fetchone()[0]
-        typeId = cu.execute("SELECT contentSourceTypeId FROM "
-            "contentSourceTypes WHERE name = 'RHN'").fetchone()[0]
 
         sql = """
-            INSERT INTO platformsContentSourceTypes 
-            (platformId, contentSourceTypeId)
+            INSERT INTO platformsContentSourceTypes
+            (platformId, contentSourceType)
             VALUES (?, ?)
         """
-        cu.execute(sql, platformId, typeId)
+        cu.execute(sql, platformId, 'RHN')
 
         class Source(object):
             name = 'sourceName'

@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 10)
+    Version = (48, 11)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -763,6 +763,25 @@ class MigrateTo_48(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("""ALTER TABLE platformLoadJobs ADD COLUMN error smallint
             NOT NULL DEFAULT 0""")
+        return True
+
+    # 48.11
+    # ContentSourceTypes is gone
+    def migrate11(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE PlatformSources
+            ADD COLUMN contentSourceType varchar(255) NOT NULL DEFAULT 'RHN'""")
+        cu.execute("""ALTER TABLE PlatformsContentSourceTypes
+            ADD COLUMN contentSourceType varchar(255) NOT NULL DEFAULT 'RHN'""")
+        cu.execute("""UPDATE PlatformSources AS ps
+            SET contentSourceType = (SELECT ContentSourceTypes.name
+                FROM ContentSourceTypes
+                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)"""
+        cu.execute("""UPDATE PlatformsContentSourceTypes AS ps
+            SET contentSourceType = (SELECT ContentSourceTypes.name
+                FROM ContentSourceTypes
+                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)"""
+        drop_tables(self.db, 'ContentSourceTypes')
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
