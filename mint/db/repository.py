@@ -587,6 +587,8 @@ class RepositoryHandle(object):
         self.restore(dumpPath)
         os.unlink(dumpPath)
 
+        log.info("Preload of %s is complete", self.fqdn)
+
         return True
 
     # Repository management
@@ -769,6 +771,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
 
         self.drop()
         if os.path.exists(path):
+            log.info("Restoring database dump for project %s", self.fqdn)
             self._create(empty=True)
 
             host, port, user, database = self._splitParams()
