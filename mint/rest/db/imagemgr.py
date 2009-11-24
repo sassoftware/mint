@@ -356,6 +356,8 @@ class ImageManager(manager.Manager):
         projectName, projectVersion, imageCreator, imageName, imageType, amiId = row
         imageType = buildtypes.typeNamesMarketing.get(imageType)
 
+        failed = (status.code != jobstatus.FINISHED)
+
         downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%%d" % (
             self.cfg.siteHost, self.cfg.basePath, )
         if amiId is not None:
@@ -365,8 +367,10 @@ class ImageManager(manager.Manager):
             notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
             imageFiles = [ (x[0], downloadUrlTemplate % x[1])
                 for x in self._getImageFiles(imageId) ]
-        notices.notify_built(imageName, imageType, time.time(),
-            projectName, projectVersion, imageFiles)
+
+        method = (failed and notices.notify_error) or notices.notify_built
+        method(imageName, imageType, time.time(), projectName, projectVersion,
+            imageFiles)
 
     def _getImageFiles(self, imageId):
         cu = self.db.cursor()
