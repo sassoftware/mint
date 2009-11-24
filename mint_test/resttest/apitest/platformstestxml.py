@@ -7,7 +7,7 @@ platformsXml = """\
     <label>localhost@rpath:plat-1</label>
     <platformName>Crowbar Linux 1</platformName>
     <mode>manual</mode>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
@@ -21,7 +21,7 @@ platformsXml = """\
     <label>localhost@rpath:plat-2</label>
     <platformName>Crowbar Linux 2</platformName>
     <mode>manual</mode>
-    <enabled>true</enabled>
+    <enabled>false</enabled>
     <configurable>true</configurable>
     <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
@@ -40,7 +40,7 @@ platformXml = """\
   <label>localhost@rpath:plat-1</label>
   <platformName>Crowbar Linux 1</platformName>
   <mode>manual</mode>
-  <enabled>true</enabled>
+  <enabled>false</enabled>
   <configurable>true</configurable>
   <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
