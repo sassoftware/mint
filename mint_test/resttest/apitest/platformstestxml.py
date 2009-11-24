@@ -87,7 +87,7 @@ platformSourceStatusXml = """\
 <platformSourceStatus>
   <connected>true</connected>
   <valid>true</valid>
-  <message> Local repository for Crowbar Linux 1 is online.</message>
+  <message> Repository online: http://localhost:8000/repos/localhost.</message>
 </platformSourceStatus>
 """
 

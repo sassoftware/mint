@@ -17,6 +17,7 @@ from conary.lib import util
 from mint import buildtypes
 from mint.rest.api import models
 from mint.rest.db import platformmgr
+from mint.rest.db import reposmgr
 from mint.rest.db import contentsources
 from mint.rest.modellib import converter
 
@@ -70,6 +71,10 @@ class PlatformsTest(restbase.BaseRestTest):
         # we already have a platform, so we must assume they've already been
         # created in the db.  call getPlatforms to create them for this test.
         self._getPlatforms()
+
+        mock.mockFunctionOnce(reposmgr.RepositoryManager,
+            '_getFullRepositoryMap', 
+            {'localhost' : 'http://localhost:8000/repos/localhost'})
 
         uri = '/platforms/1/status'
         client = self.getRestClient(admin=True)
