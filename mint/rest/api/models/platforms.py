@@ -16,6 +16,8 @@ class _RepositoryUrlField(fields.AbstractUrlField):
         if base.endswith('/api'):
             base = base[:-4]
         fqdn = parent.repositoryHostname
+        if fqdn is None:
+            return None
         # Must be able to distinguish a shortname from a single-label FQDN
         if '.' not in fqdn:
             fqdn += '.'
@@ -102,7 +104,6 @@ class SourceInstances(Model):
 
 class Platform(Model):
     platformId = fields.CharField()
-    #hostname = fields.CharField()
     platformTroveName = fields.CharField()
     repositoryHostname = fields.CharField()
     label = fields.CharField()
@@ -127,6 +128,16 @@ class Platform(Model):
 
     def get_absolute_url(self):
         return ('platforms', self.platformId)
+
+class ProductPlatform(Platform):
+    # This represents the platform object that is embedded inside a product.
+    class Meta(object):
+        name = 'platform'
+
+    hostname = fields.CharField(display = False)
+    def get_absolute_url(self):
+        return ('products', self.hostname, 'versions', self.productVersion,
+            'platform')
 
 class Platforms(Model):
     platforms = fields.ListField(Platform, displayName='platform')
