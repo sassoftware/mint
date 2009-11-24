@@ -76,6 +76,7 @@ from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogg
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
+from mcp import mcp_error
 from rpath_proddef import api1 as proddef
 
 
@@ -3849,7 +3850,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return descendants
 
     def _getMcpClient(self):
-        return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
+        try:
+            return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
+        except mcp_error.BuildSystemUnreachableError:
+            util.rethrow(mint_error.BuildSystemDown)
 
 
     #
