@@ -572,7 +572,7 @@ class Platforms(object):
             except conaryErrors.ConaryError, e:
                 remote = False
                 remoteConnected = True
-                remoteMessage = "Error connection to remote repository: %s. " % e
+                remoteMessage = "Error connecting to remote repository: %s. " % e
             except proddef.ProductDefinitionTroveNotFoundError, e:
                 remote = False
                 remoteConnected = True
@@ -591,8 +591,7 @@ class Platforms(object):
 
         client = self._reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
-        message = "There was a problem contacting the local repository " + \
-                  "for this platform: %s."
+
         try:
             platDef.loadFromRepository(client, platform.label)
         except reposErrors.OpenError, e:
@@ -602,7 +601,7 @@ class Platforms(object):
         except conaryErrors.ConaryError, e:
             local = False
             localConnected = True
-            localMessage = "Error connection to local repository: %s. " % e
+            localMessage = "Error connecting to local repository: %s. " % e
         except proddef.ProductDefinitionTroveNotFoundError, e:
             local = False
             localConnected = True
