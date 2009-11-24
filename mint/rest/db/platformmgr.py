@@ -41,6 +41,7 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
         self.platformId = platformId
         self.loadJobId = loadJobId
         self.totalKB = totalKB
+        self.prefix = ''
         callbacks.ChangesetCallback.__init__(self, *args, **kw)
         
     def _message(self, txt, usePrefix=True):
@@ -75,11 +76,21 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
     def sendingChangeset(self, got, need):
         if need != 0:
             self._message("Committing changeset "
-                          "(%dKB (%d%%) of %dKB at %dKB/sec)..."
+                          "(%dMB (%d%%) of %dMB at %dKB/sec)..."
                           % (got/1024/1024, (got*100)/need, need/1024/1024, self.rate/1024))
         else:
             self._message("Committing changeset "
                           "(%dKB at %dKB/sec)..." % (got/1024/1024, self.rate/1024))
+
+    def creatingDatabaseTransaction(self, troveNum, troveCount):
+        """
+        @see: callbacks.UpdateCallback.creatingDatabaseTransaction
+        """
+        self._message("Creating database transaction (%d of %d)" %
+		      (troveNum, troveCount))
+
+    def committingTransaction(self):
+        self._message("Committing database transaction")
 
 class ContentSourceTypes(object):
     def __init__(self, db, cfg, platforms):
@@ -405,7 +416,7 @@ class Platforms(object):
         # Save a reference to the callback so that we have access to it in the
         # _load_error method.
         self.callback = callback
-
+        
         outFile = open(outFilePath, 'w')
         total = util.copyfileobj(inFile, outFile,
                                  callback=callback.downloading)
@@ -531,32 +542,90 @@ class Platforms(object):
             
         return models.Platforms(dbPlatforms)
 
-    def getStatus(self, platformId):
-        platform = self.getById(platformId)
+    def _getStatus(self, platform):
+        platStatus = models.PlatformSourceStatus()
+        remote = True
+        remoteMessage = ''
+        remoteConnected = True
+        local = False
+        localMessage = ''
+        localConnected = False
+
+        if platform.mode == 'auto':
+            client = self._reposMgr.getAdminClient()
+            from mint.db import repository as reposdb
+            host = platform.label.split('@')[0]
+            entitlement = self.db.productMgr.reposMgr.db.siteAuth.entitlementKey
+            # Go straight to the host as defined by the platform, bypassing
+            # any local repo map.
+            sourceUrl = "https://%s/conary/" % host
+            try:
+                serverProxy = self.db.productMgr.reposMgr.reposManager.getServerProxy(host,
+                    sourceUrl, None, [entitlement])
+                client.repos.c.cache[host] = serverProxy
+                platDef = proddef.PlatformDefinition()
+                platDef.loadFromRepository(client, platform.label)
+            except reposErrors.OpenError, e:
+                remote = False
+                remoteConnected = False
+                remoteMessage = "Could not open remote repository."
+            except conaryErrors.ConaryError, e:
+                remote = False
+                remoteConnected = True
+                remoteMessage = "Error connection to remote repository: %s. " % e
+            except proddef.ProductDefinitionTroveNotFoundError, e:
+                remote = False
+                remoteConnected = True
+                remoteMessage = "Platform Definition not found in remote repository."
+            except Exception, e:
+                remote = False
+                remoteConnected = False
+                # Hard code a helpful message for the sle platform.
+                if 'sle.rpath.com' in platform.label:
+                    platStatus.message = "This platform requires a " + \
+                        "commercial license.  You are either missing the " + \
+                        "entitlement for this platform or it is no longer valid"
+            else:            
+                remote = True
+                remoteMessage = 'Remote repository for %s is online.' % platform.platformName
+
         client = self._reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
-        platStatus = models.PlatformSourceStatus()
+        message = "There was a problem contacting the local repository " + \
+                  "for this platform: %s."
         try:
             platDef.loadFromRepository(client, platform.label)
+        except reposErrors.OpenError, e:
+            local = False
+            localConnected = False
+            localMessage = "Could not open local repository."
         except conaryErrors.ConaryError, e:
-            platStatus.valid = False
-            platStatus.connected = True
-            platStatus.message = str(e)
+            local = False
+            localConnected = True
+            localMessage = "Error connection to local repository: %s. " % e
+        except proddef.ProductDefinitionTroveNotFoundError, e:
+            local = False
+            localConnected = True
+            localMessage = "Platform Definition not found in local repository."
         except Exception, e:
-            platStatus.valid = False
-            platStatus.connected = False
-            platStatus.message = str(e)
-            # Hard code a helpful message for the sle platform.
-            if 'sle.rpath.com' in platform.label:
-                platStatus.message = "This platform requires a " + \
-                    "commercial license.  You are either missing the " + \
-                    "entitlement for this platform or it is no longer valid"
+            local = False
+            localConnected = False
         else:            
-            platStatus.valid = True
-            platStatus.connected = True
-            platStatus.message = '%s is online.' % platform.platformName
+            local = True
+            localMessage = 'Local repository for %s is online.' % platform.platformName
+
+        platStatus.valid = local and remote
+        platStatus.connected = localConnected and remoteConnected
+        platStatus.message = ' '.join([remoteMessage, localMessage])
 
         return platStatus
+
+    def getStatusTest(self, platform):
+        return self._getStatus(platform)
+
+    def getStatus(self, platformId):
+        platform = self.getById(platformId)
+        return self._getStatus(platform)
 
     def getLoadStatus(self, platformId, jobId):
         status = models.PlatformLoadStatus()
@@ -843,6 +912,9 @@ class PlatformManager(manager.Manager):
 
     def getPlatformStatus(self, platformId):
         return self.platforms.getStatus(platformId)
+
+    def getPlatformStatusTest(self, platform):
+        return self.platforms.getStatusTest(platform)
 
     def getPlatformLoadStatus(self, platformId, jobId):
         return self.platforms.getLoadStatus(platformId, jobId)

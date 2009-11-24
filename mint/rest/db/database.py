@@ -746,6 +746,10 @@ class Database(DBInterface):
         return self.platformMgr.getPlatformStatus(platformId)
 
     @readonly
+    def getPlatformStatusTest(self, platform):
+        return self.platformMgr.getPlatformStatusTest(platform)
+
+    @readonly
     def getPlatformLoadStatus(self, platformId, jobId):
         return self.platformMgr.getPlatformLoadStatus(platformId, jobId)
 

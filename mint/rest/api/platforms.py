@@ -98,7 +98,12 @@ class SourceTypeController(base.BaseController):
 
 class PlatformStatusController(base.BaseController):
 
-    @auth.admin
+    @auth.public
+    @requires('platform', models.Platform)
+    def process(self, request, platformId, platform):
+        return self.db.getPlatformStatusTest(platform)
+
+    @auth.public
     def index(self, request, platformId):
         return self.db.getPlatformStatus(platformId)
 
