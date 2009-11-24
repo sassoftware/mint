@@ -87,7 +87,7 @@ platformSourceStatusXml = """\
 <platformSourceStatus>
   <connected>true</connected>
   <valid>true</valid>
-  <message>Crowbar Linux 1 is online.</message>
+  <message> Local repository for Crowbar Linux 1 is online.</message>
 </platformSourceStatus>
 """
 

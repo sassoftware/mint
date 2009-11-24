@@ -612,6 +612,7 @@ class Platforms(object):
             localConnected = False
         else:            
             local = True
+            localConnected = True
             localMessage = 'Local repository for %s is online.' % platform.platformName
 
         platStatus.valid = local and remote
