@@ -218,10 +218,10 @@ sourceDescriptor2Xml = """\
       <name>sourceUrl</name>
       <required>true</required>
       <descriptions>
-        <desc>Source Url</desc>
+        <desc>Source URL</desc>
       </descriptions>
       <prompt>
-        <desc>Source Url</desc>
+        <desc>Source URL</desc>
       </prompt>
       <type>str</type>
       <password>false</password>

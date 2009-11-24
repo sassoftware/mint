@@ -37,8 +37,8 @@ class Password(Field):
 class SourceUrl(Field):
     name = 'sourceUrl'
     required = True
-    description = 'Source Url'
-    prompt = 'Source Url'
+    description = 'Source URL'
+    prompt = 'Source URL'
     type = 'str'
     password = False
 
