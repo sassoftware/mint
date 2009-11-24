@@ -57,10 +57,6 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         except Exception, e:
             self.tearDown()
             raise e
-        
-    def tearDown(self):
-        mint_rephelp.MintDatabaseHelper.tearDown(self)
-        self.unMockProddef()
 
     ControllerFactory = None
 
@@ -163,19 +159,14 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         db.publishRelease(self.productShortName, releaseId2, True)
 
     def mockProddef(self):
+        oldLoadFromRepository = proddef.PlatformDefinition.loadFromRepository
+        def newLoadFromRepository(slf, *args, **kw):
+            oldClient = args[0]
+            label = args[1]
+            return oldLoadFromRepository(slf, self.cclient, label)
 
-        def newLoadFromRepository(*args, **kw):
-            platdef = args[0]
-            oldClient = args[1]
-            label = args[2]
-            return self.oldLoadFromRepository(platdef, self.cclient, label)
-
-        self.oldLoadFromRepository = proddef.PlatformDefinition.loadFromRepository
-        proddef.PlatformDefinition.loadFromRepository = newLoadFromRepository
-
-    def unMockProddef(self):
-        proddef.PlatformDefinition.loadFromRepository = \
-            self.oldLoadFromRepository
+        self.mock(proddef.PlatformDefinition, 'loadFromRepository',
+            newLoadFromRepository)
 
     def setupPlatforms(self):
         repos = self.openRepository()
