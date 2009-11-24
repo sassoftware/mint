@@ -776,11 +776,15 @@ class MigrateTo_48(SchemaMigration):
         cu.execute("""UPDATE PlatformSources AS ps
             SET contentSourceType = (SELECT ContentSourceTypes.name
                 FROM ContentSourceTypes
-                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)"""
+                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)""")
         cu.execute("""UPDATE PlatformsContentSourceTypes AS ps
             SET contentSourceType = (SELECT ContentSourceTypes.name
                 FROM ContentSourceTypes
-                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)"""
+                WHERE ContentSourceTypes.contentSourceTypeId = ps.contentSourceTypeId)""")
+cu.execute("""ALTER TABLE PlatformSources
+            DROP COLUMN contentSourceTypeId""")
+cu.execute("""ALTER TABLE PlatformsContentSourceTypes
+            DROP COLUMN contentSourceTypeId""")
         drop_tables(self.db, 'ContentSourceTypes')
         return True
 
