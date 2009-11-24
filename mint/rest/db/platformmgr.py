@@ -852,7 +852,8 @@ class ContentSources(object):
                     missing.append(field.name)
 
         if missing:
-            message = "The following fields must be provided to check a source's status: %s." % str(missing)
+            message = "The following fields must be provided to check " + \
+                      "a source's status: %s." % ', '.join(missing)
             status = models.SourceStatus(connected=False, valid=False,
                                 message=message)
         else:

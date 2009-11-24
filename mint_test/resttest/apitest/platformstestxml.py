@@ -96,7 +96,7 @@ contentSourceStatusXml = """\
 <contentSourceStatus>
   <connected>false</connected>
   <valid>false</valid>
-  <message>The following fields must be provided to check a source's status: ['username', 'password'].</message>
+  <message>The following fields must be provided to check a source's status: username, password.</message>
 </contentSourceStatus>
 """
 
