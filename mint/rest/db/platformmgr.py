@@ -249,8 +249,12 @@ class Platforms(object):
         return platform
 
     def _create(self, platform):
-        platformId = self.db.db.platforms.new(label=platform.label,
-                                              enabled=0)
+        try:
+            platformId = self.db.db.platforms.new(label=platform.label,
+                                                  enabled=0)
+        except mint_error.DuplicateItem, e:
+            log.error("Error creating platform %s, it must already "
+                      "exist: %s" % (platform.label, e))
 
         for sourceType, isSingleton in platform._sourceTypes:
             typeName = self.contentSourceTypes.getIdByName(sourceType)
@@ -684,12 +688,16 @@ class ContentSources(object):
 
     def _create(self, source):
         typeName = self.contentSourceTypes.getIdByName(source.contentSourceType)
-        sourceId = self.db.db.platformSources.new(
-                name=source.name,
-                shortName=source.shortName,
-                defaultSource=int(source.defaultSource),
-                contentSourceType=typeName,
-                orderIndex=source.orderIndex)
+        try:
+            sourceId = self.db.db.platformSources.new(
+                    name=source.name,
+                    shortName=source.shortName,
+                    defaultSource=int(source.defaultSource),
+                    contentSourceType=typeName,
+                    orderIndex=source.orderIndex)
+        except mint_error.DuplicateItem, e:
+            log.error("Error creating content source %s, it must already "
+                      "exist: %s" % (source.shortName, e))
 
         cu = self.db.cursor()
         sql = """

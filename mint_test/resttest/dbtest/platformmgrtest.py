@@ -10,6 +10,7 @@ from mint import mint_error
 from mint import userlevels
 from mint.rest import errors
 from mint.rest.api import models
+from mint.rest.db import platformmgr
 from mint.rest.db import reposmgr
 
 from mint_test import mint_rephelp
@@ -130,4 +131,14 @@ class PlatformManagerTest(restbase.BaseRestTest):
         # assert productId matches the product we created
         self.assertEquals(plat['projectId'], productId)
 
+    def testCreateDuplicatePlatform(self):
+        p = self._getPlatform()
+        p.platformId = 1
+        p._sourceTypes = []
 
+        mock.mock(platformmgr.log, 'error')
+        
+        self.db.platformMgr.platforms._create(p)
+        platformmgr.log.error._mock.assertCalled('Error creating platform '
+            'localhost@rpath:plat-1, it must already exist: Duplicate '
+            'item in platforms')
