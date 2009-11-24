@@ -83,6 +83,7 @@ acceptablePlatforms      centos.rpath.com@rpath:centos-5-devel
 acceptablePlatforms      rap.rpath.com@rpath:linux-1-devel
 
 configurablePlatforms   rheltest.eng.rpath.com@rpath:rhel-4-bootstrap
+configurablePlatforms   rheltest.eng.rpath.com@rpath:rhel-5-bootstrap
 
 platformSources          redhatnetwork
 platformSourceUrls       https://rhn.redhat.com
