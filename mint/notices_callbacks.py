@@ -158,7 +158,20 @@ class ImageNotices(PackageNoticesCallback):
     _template = "<b>%s:</b> %s"
     def notify_built(self, buildName, buildType, buildTime,
                      projectName, projectVersion, imageFiles):
-        category = ((buildName == "Failed build log") and "error") or "success"
+        category = "success"
+        return self._notify(category, buildName, buildType, buildTime,
+            projectName, projectVersion, imageFiles)
+
+    def notify_error(self, buildName, buildType, buildTime,
+                     projectName, projectVersion, imageFiles):
+        category = "error"
+        # No images on error
+        imageFiles = []
+        return self._notify(category, buildName, buildType, buildTime,
+            projectName, projectVersion, imageFiles)
+
+    def _notify(self, category, buildName, buildType, buildTime,
+                projectName, projectVersion, imageFiles):
         lines = []
         lines.append(self._template % ("Appliance Name", projectName))
         lines.append(self._template % ("Appliance Major Version", projectVersion))
@@ -169,12 +182,12 @@ class ImageNotices(PackageNoticesCallback):
         lines.append(self._template % ("Created On", self.formatTime(buildTime)))
         description = self._lineSep.join(lines)
 
-        title = "Image `%s' built (%s version %s)" % (buildName, projectName,
+        statesMap = dict(error = "failed to build", success = "built")
+        st = statesMap[category]
+        title = "Image `%s' %s (%s version %s)" % (buildName, st, projectName,
             projectVersion)
         buildDate = self.formatRFC822Time(buildTime)
         self._storeNotice(title, description, category, buildDate)
-
-    notify_error = notify_built
 
     @classmethod
     def getEntryDescription(cls, ent):
