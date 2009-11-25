@@ -17,6 +17,7 @@ class Field(object):
     type = None
     value = None
     password = None
+    encrypted = False
 
 class Username(Field):
     name = 'username'
@@ -25,6 +26,7 @@ class Username(Field):
     prompt = 'Username'
     type = 'str'
     password = False
+    encrypted = True
 
 class Password(Field):
     name = 'password'
@@ -33,6 +35,7 @@ class Password(Field):
     prompt = 'Password'
     type = 'str'
     password = True
+    encrypted = True
 
 class SourceUrl(Field):
     name = 'sourceUrl'
@@ -78,6 +81,10 @@ class ContentSourceType(object):
 
     def getFieldNames(self):
         return [f.name for f in object.__getattribute__(self, 'fields')]
+
+    def getEncryptedFieldNames(self):
+        return [f.name for f in object.__getattribute__(self, 'fields') \
+                if f.encrypted]
 
     def status(self, *args, **kw):
         raise NotImplementedError

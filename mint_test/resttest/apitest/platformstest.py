@@ -228,6 +228,7 @@ class PlatformsTest(restbase.BaseRestTest):
         req, platform = client.call('PUT', uri, body=contentSourcePUTXml)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(contentSourcePUTXml, xml)
+        import epdb; epdb.st()  
 
         # Now that username/password is set in db, PUT again to test an 
         # update.

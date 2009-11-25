@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import base64
 import logging
 import os
 import sys
@@ -656,6 +657,7 @@ class ContentSources(object):
         sourceTypeClass = contentsources.contentSourceTypes[contentSourceType]
         sourceType = sourceTypeClass()
         model = sourceType.model()
+        encFields = sourceType.getEncryptedFieldNames()
         
         for k, v in kw.items():
             if type(v) == type(int):
@@ -668,7 +670,11 @@ class ContentSources(object):
             model.contentSourceId = sourceId
             data = self._getSourceData(sourceId)
             for d in data:
-                setattr(model, d['name'], d['value'])
+                if d['name'] in encFields:
+                    value = base64.decodestring(d['value'])
+                else:
+                    value = d['value']
+                setattr(model, d['name'], value)
 
         return model
 
@@ -811,18 +817,24 @@ class ContentSources(object):
 
         sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
         sourceInst = sourceClass()
+        encFields = sourceInst.getEncryptedFieldNames()
 
         for field in sourceInst.getFieldNames():
-            newVal = getattr(source, field)
+            newVal = str(getattr(source, field))
+
+            if field in encFields:
+                newVal = base64.encodestring(newVal)
+
             if getattr(oldSource, field) != newVal:
                 row = cu.execute(selSql, field, source.contentSourceId)
                 if row.fetchall():
-                    cu.execute(updSql, newVal, field, source.contentSourceId)
+                    cu.execute(updSql, newVal, field, 
+                        source.contentSourceId)
                 else:
                     self.db.db.platformSourceData.new(
                                 platformSourceId=source.contentSourceId,
                                 name=str(field),
-                                value=str(newVal),
+                                value=newVal,
                                 dataType=3)
 
         return self.getByShortName(source.shortName)
@@ -978,6 +990,9 @@ class PlatformDefCache(persistentcache.PersistentCache):
             log.error("Failed to lookup platform definition on label %s: %s",
                     labelStr, str(err))
             return None
+        except proddef.ProductDefinitionTroveNotFoundError, e:
+            # Re-raise so this can be handled by the _refresh method.
+            raise e
         except:
             log.exception("Failed to lookup platform definition on label %s:",
                     labelStr)
@@ -998,17 +1013,21 @@ class PlatformDefCache(persistentcache.PersistentCache):
             # Need to look at inboundmirrors table to get the sourceurl 
             # for the platform so that we bypass the local repo.
             sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
-            if sourceUrl:
+            host = labelStr.split('@')[0]
+
+            if not sourceUrl:
+                # Try going straight to the platform label
+                sourceUrl = "https://%s/conary/" % host
+
+            try:
                 from mint.db import repository as reposdb
-                host = labelStr.split('@')[0]
                 entitlement = reposMgr.db.siteAuth.entitlementKey
                 serverProxy = reposMgr.reposManager.getServerProxy(host,
                     sourceUrl, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
                 platDef = self._getPlatDef(client, labelStr)
                 return platDef
-            else:
-                log.error("No platform source label to search for platform "
-                          "definition.")
-                raise e
+            except Exception, e:
+                log.error("Platform Definition not found for %s: %s" % (labelStr, e))
+                return None
 
