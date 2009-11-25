@@ -970,15 +970,33 @@ class PlatformDefCache(persistentcache.PersistentCache):
         persistentcache.PersistentCache.__init__(self, cacheFile)
         self._reposMgr = weakref.ref(reposMgr)
 
-    def _refresh(self, labelStr):
+    def _getPlatDef(self, client, labelStr):
         try:
-            reposMgr = self._reposMgr()
-            client = reposMgr.getAdminClient()
+            platDef = proddef.PlatformDefinition()
+            platDef.loadFromRepository(client, labelStr)
+        except reposErrors.InsufficientPermission, err:
+            log.error("Failed to lookup platform definition on label %s: %s",
+                    labelStr, str(err))
+            return None
+        except:
+            log.exception("Failed to lookup platform definition on label %s:",
+                    labelStr)
+            return None
 
-            # TODO: figure out the right thing to do here.
-            # Need to look at inboundmirrors table to get the sourceurl from
-            # the platform in order to read the platdef, so that we bypass the
-            # local repo already setup for the platform.
+        return platDef            
+
+    def _refresh(self, labelStr):
+        reposMgr = self._reposMgr()
+        try:
+            client = reposMgr.getAdminClient()
+            platDef = self._getPlatDef(client, labelStr)
+            return platDef
+        except proddef.ProductDefinitionTroveNotFoundError, e:
+            log.error("Failed to find product definition  for platform.  Will "
+                      "try looking on platform source label.")
+
+            # Need to look at inboundmirrors table to get the sourceurl 
+            # for the platform so that we bypass the local repo.
             sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
             if sourceUrl:
                 from mint.db import repository as reposdb
@@ -987,18 +1005,10 @@ class PlatformDefCache(persistentcache.PersistentCache):
                 serverProxy = reposMgr.reposManager.getServerProxy(host,
                     sourceUrl, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
+                platDef = self._getPlatDef(client, labelStr)
+                return platDef
+            else:
+                log.error("No platform source label to search for platform "
+                          "definition.")
+                raise e
 
-            platDef = proddef.PlatformDefinition()
-            platDef.loadFromRepository(client, labelStr)
-            return platDef
-        except reposErrors.InsufficientPermission, err:
-            log.error("Failed to lookup platform definition on label %s: %s",
-                    labelStr, str(err))
-            return None
-        except proddef.ProductDefinitionTroveNotFoundError, err:
-            log.error("Failed to find product definition %s for platform.",
-                    str(err))
-        except:
-            log.exception("Failed to lookup platform definition on label %s:",
-                    labelStr)
-            return None

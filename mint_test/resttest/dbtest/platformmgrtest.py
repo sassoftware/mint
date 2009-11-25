@@ -8,6 +8,7 @@ from rpath_proddef import api1 as proddef
 from mint import mint_error
 
 from mint import userlevels
+from mint.db import repository as reposdb
 from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import platformmgr
@@ -142,3 +143,35 @@ class PlatformManagerTest(restbase.BaseRestTest):
         platformmgr.log.error._mock.assertCalled('Error creating platform '
             'localhost@rpath:plat-1, it must already exist: Duplicate '
             'item in platforms')
+
+    def testNoPlatDefLocalRepo(self):
+        mock.mock(platformmgr.PlatformDefCache, '_getPlatDef')
+        platformmgr.PlatformDefCache._getPlatDef._mock.raiseErrorOnAccess(
+            proddef.ProductDefinitionTroveNotFoundError)
+
+        self.assertRaises(proddef.ProductDefinitionTroveNotFoundError,
+            self.db.platformMgr.getPlatforms)
+
+        # now, simulate that a different platform source label was found
+        mock.unmockAll()
+        mock.mock(platformmgr.PlatformDefCache, '_getPlatDef')
+        platformmgr.PlatformDefCache._getPlatDef._mock.raiseErrorOnAccess(
+            proddef.ProductDefinitionTroveNotFoundError)
+        platformmgr.PlatformDefCache._getPlatDef._mock.setDefaultReturn(None)
+        mock.mock(reposmgr.RepositoryManager, 'getIncomingMirrorUrlByLabel')
+        reposmgr.RepositoryManager.getIncomingMirrorUrlByLabel._mock.setReturn(
+            'localhost@rpath:plat-1', 'localhost@rpath:plat-1')
+        mock.mock(reposdb.RepositoryManager, 'getServerProxy')
+        reposdb.RepositoryManager.getServerProxy._mock.setReturn(
+            self.cclient.repos.c.cache['localhost'],
+            'localhost', 'localhost@rpath:plat-1', None, [None])
+
+        self.db.platformMgr.getPlatforms()
+
+        self.assertEquals(3,
+            len(platformmgr.PlatformDefCache._getPlatDef._mock.calls))
+
+
+
+
+
