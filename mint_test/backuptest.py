@@ -8,7 +8,6 @@ testsuite.setup()
 
 import sys
 import os
-import mock
 import StringIO
 
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -20,6 +19,8 @@ from mint.scripts import backup
 from conary import dbstore
 from conary.conaryclient import ConaryClient
 from conary.lib import util
+
+from testutils import mock
 
 import fixtures
 

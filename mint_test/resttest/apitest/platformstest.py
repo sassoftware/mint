@@ -21,7 +21,7 @@ from mint.rest.db import reposmgr
 from mint.rest.db import contentsources
 from mint.rest.modellib import converter
 
-from mint_test import mock
+from testutils import mock
 
 import restbase
 from platformstestxml import *

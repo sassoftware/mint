@@ -5,7 +5,6 @@
 # All rights reserved
 #
 
-import mock
 import re
 import os
 import testsuite
@@ -22,6 +21,8 @@ from conary import deps
 from conary.conaryclient import ConaryClient
 from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
+
+from testutils import mock
 
 runTest = False
 debug = False

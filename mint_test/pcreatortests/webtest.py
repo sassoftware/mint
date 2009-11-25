@@ -8,13 +8,13 @@
 import sys
 from mint_test import testsetup
 from mint_test import mint_rephelp
-from mint_test import mock
 from mint_test import webprojecttest
 from mint_test.mint_rephelp import FQDN
 from pcreator import factorydata
 
 from conary.lib import util
 from testrunner import pathManager
+from testutils import mock
 
 from factory_test.factorydatatest import basicXmlDef
 
