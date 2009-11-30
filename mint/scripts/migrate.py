@@ -722,14 +722,6 @@ class MigrateTo_48(SchemaMigration):
     # created.
     def migrate4(self):
         schema._createPlatforms(self.db)
-
-        # Since this is a migration, it must be an update, so we want to
-        # get all the platforms created in the db, and then enable them all.
-        cu = self.db.cursor()
-        for label in self.cfg.availablePlatforms:
-            cu.execute("INSERT INTO platforms(label) values(?)", label)
-        cu.execute("UPDATE platforms SET enabled=1")
-
         return True
 
     # 48.5

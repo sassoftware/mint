@@ -1,0 +1,64 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2009 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+import sys
+import traceback
+
+from mint import config
+from mint import users
+from mint.db import database
+from mint.rest.db import authmgr
+from mint.rest.db import database as restDb
+
+def enablePlatforms():
+    cfg = config.MintConfig()
+    cfg.read(config.RBUILDER_CONFIG)
+
+    db = database.Database(cfg)
+    authToken = (cfg.authUser, cfg.authPass)
+    mintAdminGroupId = db.userGroups.getMintAdminId()
+    cu = db.cursor()
+    cu.execute("SELECT MIN(userId) from userGroupMembers "
+               "WHERE userGroupId = ?", mintAdminGroupId)
+    ret = cu.fetchall()
+    userId = ret[0][0]
+
+    mintAuth = users.Authorization(
+                username=cfg.authUser, 
+                token=authToken,
+                admin=True,
+                userId=userId)
+    auth = authmgr.AuthenticationManager(cfg, db)
+    auth.setAuth(mintAuth, authToken)
+
+    rdb = restDb.Database(cfg, db, auth)
+
+    platforms = rdb.getPlatforms()
+
+    enabledPlatforms = []
+
+    for platform in platforms.platforms:
+        if not platform.enabled:
+            platform.enabled = True
+            rdb.updatePlatform(platform.platformId, platform)
+            enabledPlatforms.append(platform.label)
+
+    return enabledPlatforms            
+
+if __name__ == '__main__':
+    print "Enabling platforms...", 
+    try:
+        enabledPlatforms = enablePlatforms()
+        if enabledPlatforms:
+            print ', '.join(enabledPlatforms)
+        else:
+            print "No platforms to enabled."
+    except Exception, e:
+        tb = sys.exc_info()[2]
+        sys.exit("Failed enabling platforms: %s" % e)
+        traceback.print_tb(tb)
+
