@@ -418,8 +418,8 @@ class Platforms(object):
         plat = self.db.db.platforms.get(platformId)
         return plat.get('projectId', None)
 
-    def _getUsableProject(self, platformId, hostname, host, domainname, url,
-                          authInfo):
+    def _getUsableProject(self, platformId, hostname, domainname, url,
+                          authInfo, mirror):
         # See if there is project already setup that shares
         # the fqdn of the platform.
         try:
@@ -438,14 +438,16 @@ class Platforms(object):
                     self.db.db.labels.getLabelsForProject(projectId) 
                 url = repoMap.get(hostname, url)
 
-                # Check if there is a mirror set up.
-                try:
-                    mirrorId = self.db.db.inboundMirrors.getIdByColumn(
-                                'targetProjectId', projectId)
-                except mint_error.ItemNotFound, e:
-                    # Add an inboud mirror for this external project.
-                    self.db.productMgr.reposMgr.addIncomingMirror(
-                        projectId, host, domainname, url, authInfo, True)
+                if mirror:
+                    # Check if there is a mirror set up.
+                    try:
+                        mirrorId = self.db.db.inboundMirrors.getIdByColumn(
+                                    'targetProjectId', projectId)
+                    except mint_error.ItemNotFound, e:
+                        # Add an inboud mirror for this external project.
+                        self.db.productMgr.reposMgr.addIncomingMirror(
+                            projectId, hostname, domainname, url, authInfo, True)
+
                 # Add the project to our platform
                 self.db.db.platforms.update(platformId, projectId=projectId)
 
@@ -460,14 +462,15 @@ class Platforms(object):
         platformName = str(platform.platformName)
         platformLabel = str(platform.label)
         label = versions.Label(platform.label)
-        host = str(label.getHost())
-        url = 'http://%s/conary/' % (host)
-        parts = host.split('.', 1)
-        hostname = parts[0]
+        hostname = str(label.getHost())
+        parts = hostname.split('.', 1)
+        host = parts[0]
+        url = 'http://%s/conary/' % (hostname)
         if len(parts) == 1:
             domainname = ''
         else:
             domainname = ''.join(parts[1:])
+        mirror = platformLabel in self.cfg.configurablePlatforms
 
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
         entitlement = self.db.siteAuth.entitlementKey
@@ -479,17 +482,16 @@ class Platforms(object):
         projectId = self._getProjectId(platformId)
 
         if not projectId:
-            projectId = self._getUsableProject(platformId, hostname, host,
-                            domainname, url, authInfo)
+            projectId = self._getUsableProject(platformId, hostname,
+                            domainname, url, authInfo, mirror)
 
         if not projectId:            
             # Still no project, we need to create a new one.
             try:
-                mirror = platformLabel in self.cfg.configurablePlatforms
-                projectId = self.db.productMgr.createExternalProduct(platformName, hostname, 
+                projectId = self.db.productMgr.createExternalProduct(platformName, host, 
                                 domainname, url, authInfo, mirror=mirror)
             except mint_error.RepositoryAlreadyExists, e:
-                projectId = self.db.productMgr.getProjectIdByFQDN(hostname)
+                projectId = self.db.db.projects.getProjectIdByFQDN(hostname)
 
             self.db.db.platforms.update(platformId, projectId=projectId)
 
