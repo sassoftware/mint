@@ -136,7 +136,6 @@ class ContentSourceTypes(object):
 
     def list(self):
         cfgTypes = self._listFromCfg()
-
         return models.SourceTypes(cfgTypes)
 
     def _getSourceTypeInstance(self, source):

@@ -145,14 +145,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
             'item in platforms')
 
     def testNoPlatDefLocalRepo(self):
-        mock.mock(platformmgr.PlatformDefCache, '_getPlatDef')
-        platformmgr.PlatformDefCache._getPlatDef._mock.raiseErrorOnAccess(
-            proddef.ProductDefinitionTroveNotFoundError)
-
-        self.assertRaises(proddef.ProductDefinitionTroveNotFoundError,
-            self.db.platformMgr.getPlatforms)
-
-        # now, simulate that a different platform source label was found
+        # simulate that a different platform source label was found
         mock.unmockAll()
         mock.mock(platformmgr.PlatformDefCache, '_getPlatDef')
         platformmgr.PlatformDefCache._getPlatDef._mock.raiseErrorOnAccess(
