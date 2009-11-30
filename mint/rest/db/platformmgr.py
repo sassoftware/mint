@@ -719,10 +719,10 @@ class ContentSources(object):
         for field in ['username', 'password', 'sourceUrl']:
             value = getattr(source, field, None)
 
-            if field in encFields:
-                value = base64.encodestring(value)
-
             if value:
+                if field in encFields :
+                    value = base64.encodestring(value)
+
                 cu.execute(sql % (sourceId, field, value))
 
         source.contentSourceId = sourceId
