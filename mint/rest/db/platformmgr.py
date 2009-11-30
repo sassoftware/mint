@@ -712,8 +712,16 @@ class ContentSources(object):
         VALUES (%s, '%s', '%s', 3)
         """
 
+        sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
+        sourceInst = sourceClass()
+        encFields = sourceInst.getEncryptedFieldNames()
+
         for field in ['username', 'password', 'sourceUrl']:
             value = getattr(source, field, None)
+
+            if field in encFields:
+                value = base64.encodestring(value)
+
             if value:
                 cu.execute(sql % (sourceId, field, value))
 
