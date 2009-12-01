@@ -541,6 +541,12 @@ class Platforms(object):
         localMessage = ''
         localConnected = False
 
+        if not platform.enabled:
+           platStatus.valid = False
+           platStatus.connected = False
+           platStatus.message = "Platform must be enabled to check it's status."
+           return platStatus
+
         openMsg = "Repository not responding: %s."
         connectMsg = "Error connecting to repository %s: %s."
         pDefNotFoundMsg = "Platform definition not found in repository %s."

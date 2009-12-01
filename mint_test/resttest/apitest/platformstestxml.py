@@ -481,3 +481,20 @@ statusTestPOSTRespXml = """\
   <message>Validated Successfully</message>
 </contentSourceStatus>
 """
+
+platformStatusXml = """\
+<platformSourceStatus>
+  <connected>false</connected>
+  <valid>false</valid>
+  <message>Platform must be enabled to check it's status.</message>
+</platformSourceStatus>
+"""
+
+platformStatus2Xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSourceStatus>
+  <connected>true</connected>
+  <valid>true</valid>
+  <message> Repository online: http://localhost/conary/.</message>
+</platformSourceStatus>
+"""

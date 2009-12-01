@@ -265,5 +265,29 @@ class PlatformsTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformPUTXml, xml)
 
+    def testGetPlatformStatus(self):
+        self._getPlatforms()
+        uri = '/platforms/1/status'
+        client = self.getRestClient(admin=True)
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertXMLEquals(platformStatusXml, xml)
+
+        # Enable the platform
+        mock.mockFunctionOnce(platformmgr.Platforms,
+                              '_setupPlatform', 1)
+        uri2 = '/platforms/1'
+        req, platform = client.call('PUT', uri2, body=platformPUTXml)
+
+        # Check the status now
+        mock.mockFunctionOnce(proddef.PlatformDefinition,
+                              'loadFromRepository', 1)
+        mock.mockFunctionOnce(reposmgr.RepositoryManager,
+                              '_getFullRepositoryMap', 
+                              {'localhost':'http://localhost/conary/'})
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertXMLEquals(platformStatus2Xml, xml)
+
 if __name__ == "__main__":
         testsetup.main()
