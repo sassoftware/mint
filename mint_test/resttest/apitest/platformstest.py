@@ -76,6 +76,14 @@ class PlatformsTest(restbase.BaseRestTest):
             '_getFullRepositoryMap', 
             {'localhost' : 'http://localhost:8000/repos/localhost'})
 
+        client = self.getRestClient(admin=True)
+
+        # Enable the platform
+        mock.mockFunctionOnce(platformmgr.Platforms,
+                              '_setupPlatform', 1)
+        uri2 = '/platforms/1'
+        req, platform = client.call('PUT', uri2, body=platformPUTXml)
+
         uri = '/platforms/1/status'
         client = self.getRestClient(admin=True)
         req, platform = client.call('GET', uri)
