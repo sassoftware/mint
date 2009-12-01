@@ -375,12 +375,15 @@ class Platforms(object):
         platLoad.platformId = platformId
         platLoad.uri = platformLoad.uri
 
-        self.backgroundRun(self._load, platformId, jobId, inFile, outFilePath,
+        self.backgroundRun(self._load, platform, jobId, inFile, outFilePath,
                            repos)
 
         return platLoad
 
-    def _load(self, platformId, jobId, inFile, outFilePath, repos):
+    def _load(self, platform, jobId, inFile, outFilePath, repos):
+        platformId = platform.platformId
+        label = platform.label
+        
         totalKB = int(inFile.headers['content-length'])
         callback = PlatformLoadCallback(self.db, platformId, jobId, totalKB)
 
@@ -395,6 +398,9 @@ class Platforms(object):
 
         callback._message('Download Complete. Figuring out what to commit..')
         cs = changeset.ChangeSetFromFile(outFilePath) 
+        
+        removedTroves = self._filterChangeSet(cs, label)
+
         needsCommit = cs.removeCommitted(repos)
         if needsCommit:
             repos.commitChangeSet(cs, callback=callback, mirror=True)
@@ -405,6 +411,17 @@ class Platforms(object):
         callback.done()            
 
         return 
+
+    def _filterChangeSet(self, cs, label):
+        removedTroves = []
+        for trove in cs.iterNewTroveList():
+            if trove.getNewVersion().branch().label().asString() != label:
+                removedTroves.append((trove.getName(), trove.getNewVersion(),
+                                        trove.getNewFlavor()))
+                cs.delNewTrove(trove.getName(), trove.getNewVersion(),
+                                trove.getNewFlavor())
+
+        return removedTroves
 
     def _load_error(self, e, ei):
         log.error("Platform slice manual load failed. Exception: %s\n "
