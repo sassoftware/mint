@@ -878,7 +878,7 @@ class ContentSources(object):
             if field.required:
                 val = getattr(source, field.name, None)
                 if not val:
-                    missing.append(field.name)
+                    missing.append(field.prompt)
 
         if missing:
             message = "The following fields must be provided to check " + \

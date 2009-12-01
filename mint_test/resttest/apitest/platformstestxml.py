@@ -96,7 +96,7 @@ contentSourceStatusXml = """\
 <contentSourceStatus>
   <connected>false</connected>
   <valid>false</valid>
-  <message>The following fields must be provided to check a source's status: username, password.</message>
+  <message>The following fields must be provided to check a source's status: User Name, Password.</message>
 </contentSourceStatus>
 """
 
@@ -144,10 +144,10 @@ sourceDescriptorXml = """\
       <name>username</name>
       <required>true</required>
       <descriptions>
-        <desc>Username</desc>
+        <desc>User Name</desc>
       </descriptions>
       <prompt>
-        <desc>Username</desc>
+        <desc>User Name</desc>
       </prompt>
       <type>str</type>
       <password>false</password>
@@ -194,10 +194,10 @@ sourceDescriptor2Xml = """\
       <name>username</name>
       <required>true</required>
       <descriptions>
-        <desc>Username</desc>
+        <desc>User Name</desc>
       </descriptions>
       <prompt>
-        <desc>Username</desc>
+        <desc>User Name</desc>
       </prompt>
       <type>str</type>
       <password>false</password>

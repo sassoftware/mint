@@ -25,8 +25,8 @@ class Field(object):
 class Username(Field):
     name = 'username'
     required = True
-    description = 'Username'
-    prompt = 'Username'
+    description = 'User Name'
+    prompt = 'User Name'
     type = 'str'
     password = False
     encrypted = True
