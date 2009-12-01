@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import logging
+
 from conary import versions
 from conary.lib import util
 from mint.rest.db import manager
@@ -11,6 +13,11 @@ from restlib import response
 from mint.rest.api import models
 
 import rpath_capsule_indexer
+
+class Indexer(rpath_capsule_indexer.Indexer):
+    class SourceChannels(rpath_capsule_indexer.Indexer.SourceChannels):
+        def getLogger(self):
+            return logging.getLogger(__name__)
 
 class CapsuleManager(manager.Manager):
     def getIndexerConfig(self):
@@ -61,7 +68,7 @@ class CapsuleManager(manager.Manager):
 
     def getIndexer(self):
         cfg = self.getIndexerConfig()
-        return rpath_capsule_indexer.Indexer(cfg)
+        return Indexer(cfg)
 
     def getIndexerErrors(self, contentSourceName, instanceName):
         indexer = self.getIndexer()
