@@ -3,11 +3,14 @@
 #
 # All Rights Reserved
 #
+import logging
 import xmlrpclib
 
 from conary.lib import util
 
 from mint.rest.api import models
+
+log = logging.getLogger(__name__)
 
 class Field(object):
     name = None
@@ -105,11 +108,18 @@ class Rhn(ContentSourceType):
             url = url[:-1]
         url = "%s/%s" % (self.sourceUrl, self.authUrl)
         s = util.ServerProxy(url)
+        msg = "Cannot connect to this resource. Verify you have provided correct information."
         try:
             s.auth.login(self.username, self.password)
             return (True, True, 'Validated Successfully.')
         except xmlrpclib.Fault, e:
-            return (True, False, e.faultString)
+            log.error("Error validating content source %s: %s" \
+                        % (self.name, e))
+            return (True, False, msg)
+        except Exception, e:
+            log.error("Error validating content source %s: %s" \
+                        % (self.name, e))
+            return (False, False, msg)
 
 class Satellite(Rhn):
     authUrl = 'rpc/api'
