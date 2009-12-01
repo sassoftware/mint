@@ -13,6 +13,7 @@ def _incrementYear(starttime):
 def _incrementMonth(starttime):
     timetuple = time.localtime(starttime)
     timelist = list(timetuple)
+    timelist[8] = -1
     if timelist[1] == 12:
         timelist[0] = timelist[0] + 1
         timelist[1] = 1
