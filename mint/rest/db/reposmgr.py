@@ -46,18 +46,15 @@ class RepositoryManager(manager.Manager):
     def close(self):
         self.reposManager.close()
 
-    def createRepositorySafe(self, productId, createMaps=True):
+    def createRepositorySafe(self, productId, authInfo, createMaps=True):
         try:
-            self.createRepository(productId, createMaps)
+            self.createRepository(productId, authInfo, createMaps)
         except mint_error.RepositoryAlreadyExists, e:
             pass
 
-    def createRepository(self, productId, createMaps=True):
+    def createRepository(self, productId, authInfo, createMaps=True):
         repos = self.reposManager.getRepositoryFromProjectId(productId)
 
-        # Add entry in Labels table.
-        authInfo = models.AuthInfo('userpass',
-                self.cfg.authUser, self.cfg.authPass)
         if createMaps:
             self._setLabel(productId, repos.fqdn, repos.getURL(), authInfo)
 
@@ -374,7 +371,7 @@ class RepositoryManager(manager.Manager):
                     mirrorOrder = mirrorOrder, allLabels = 1)
 
         if createRepo:
-            self.createRepository(productId)
+            self.createRepository(productId, authInfo)
 
         self._generateConaryrcFile()
 
@@ -420,11 +417,9 @@ class RepositoryManager(manager.Manager):
         hostname = fqdn.split('.', 1)[0]
         localFqdn = hostname + "." + self.cfg.projectDomainName.split(':')[0]
         if fqdn != localFqdn:
-            try:
+            count = self.db.db.repNameMap.getCountByFromName(localFqdn)
+            if not count:
                 self.db.db.repNameMap.new(localFqdn, fqdn)
-            except sqlerrors.ColumnNotUnique, e:
-                # Map already exists
-                pass
         self._generateConaryrcFile()
 
     def checkExternalRepositoryAccess(self, hostname, domainname, url, authInfo):

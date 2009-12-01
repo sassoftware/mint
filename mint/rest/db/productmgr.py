@@ -160,7 +160,9 @@ class ProductManager(manager.Manager):
             version=version,
             commit=False)
 
-        self.reposMgr.createRepository(projectId)
+        authInfo = models.AuthInfo('userpass',
+                self.cfg.authUser, self.cfg.authPass)
+        self.reposMgr.createRepository(projectId, authInfo)
 
         # can only add members after the repository is set up
         if self.auth.userId >= 0:

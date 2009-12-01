@@ -4,7 +4,8 @@
 #
 # All Rights Reserved
 #
-
+import os
+import pwd
 import sys
 import traceback
 
@@ -13,6 +14,14 @@ from mint import users
 from mint.db import database
 from mint.rest.db import authmgr
 from mint.rest.db import database as restDb
+
+def _chown(root, uid, gid):
+    os.chown(root, uid, gid)
+    for root, dirs, paths in os.walk(root):
+        for path in paths:
+            os.chown(os.path.join(root, path), uid, gid)
+        for dir in dirs:
+            _chown(os.path.join(root, dir), uid, gid)
 
 def enablePlatforms():
     cfg = config.MintConfig()
@@ -47,6 +56,11 @@ def enablePlatforms():
             rdb.updatePlatform(platform.platformId, platform)
             enabledPlatforms.append(platform.label)
 
+            if platform.label in cfg.configurablePlatforms:
+                uid, gid = pwd.getpwnam('apache')[2:4]
+                _chown('/srv/rbuilder/repos/%s' % platform.repositoryHostname, 
+                        uid, gid)
+
     return enabledPlatforms            
 
 if __name__ == '__main__':
@@ -56,9 +70,9 @@ if __name__ == '__main__':
         if enabledPlatforms:
             print ', '.join(enabledPlatforms)
         else:
-            print "No platforms to enabled."
+            print "No platforms to enable."
     except Exception, e:
         tb = sys.exc_info()[2]
-        sys.exit("Failed enabling platforms: %s" % e)
         traceback.print_tb(tb)
+        sys.exit("Failed enabling platforms: %s" % e)
 
