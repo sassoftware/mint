@@ -377,7 +377,6 @@ class Platforms(object):
 
         self.backgroundRun(self._load, platformId, jobId, inFile, outFilePath,
                            repos)
-        # self._load(platformId, jobId, inFile, outFilePath, repos)
 
         return platLoad
 

@@ -52,8 +52,12 @@ class RepositoryManager(manager.Manager):
         except mint_error.RepositoryAlreadyExists, e:
             pass
 
-    def createRepository(self, productId, authInfo, createMaps=True):
+    def createRepository(self, productId, authInfo=None, createMaps=True):
         repos = self.reposManager.getRepositoryFromProjectId(productId)
+
+        if not authInfo:
+            authInfo = models.AuthInfo('userpass',
+                    self.cfg.authUser, self.cfg.authPass)
 
         if createMaps:
             self._setLabel(productId, repos.fqdn, repos.getURL(), authInfo)
