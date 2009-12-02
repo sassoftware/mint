@@ -253,13 +253,19 @@ class Platforms(object):
             platformId = self.db.db.platforms.new(label=platform.label,
                                                   enabled=0)
         except mint_error.DuplicateItem, e:
+            platformId = self.db.db.platforms.getIdByColumn('label',
+                            platform.label)
             log.error("Error creating platform %s, it must already "
                       "exist: %s" % (platform.label, e))
 
         for sourceType, isSingleton in platform._sourceTypes:
             typeName = self.contentSourceTypes.getIdByName(sourceType)
-            self.db.db.platformsContentSourceTypes.new(platformId=platformId,
-                            contentSourceType=typeName)
+            try:
+                self.db.db.platformsContentSourceTypes.new(platformId=platformId,
+                                contentSourceType=typeName)
+            except mint_error.DuplicateItem, e:
+                # No need to raise this, the data is already created.
+                pass
 
         return platform
 
