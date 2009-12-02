@@ -15,8 +15,8 @@ from rmake import plugins
 from rmake.build import buildcfg
 from rmake.cmdline import helper
 from rmake.errors import OpenError
+from rmake.node import nodecfg
 
-from rmake_node import nodecfg
 
 from rPath import rmakemanagement
 
