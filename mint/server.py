@@ -3545,10 +3545,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 allLabels,
                 mirrorOrder
             FROM InboundMirrors
-            LEFT JOIN Platforms AS Platforms
-                ON Platforms.projectId = InboundMirrors.targetProjectId
+            LEFT OUTER JOIN Platforms AS Platforms
+                ON InboundMirrors.targetProjectId = Platforms.projectId
             WHERE
-                Platforms.mode = 'auto'
+                COALESCE(Platforms.mode, 'auto')  = 'auto'
             ORDER BY mirrorOrder""")
         return [[y is not None and y or '' for y in x[:-1]] + \
                 [x[-1]] for x in cu.fetchall()]
