@@ -3532,9 +3532,24 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAdmin
     def getInboundMirrors(self):
         cu = self.db.cursor()
-        cu.execute("""SELECT inboundMirrorId, targetProjectId, sourceLabels, sourceUrl,
-            sourceAuthType, sourceUsername, sourcePassword, sourceEntitlement, allLabels
-            FROM InboundMirrors ORDER BY mirrorOrder""")
+        cu.execute("""
+            SELECT DISTINCT
+                inboundMirrorId,
+                targetProjectId,
+                sourceLabels,
+                sourceUrl,
+                sourceAuthType,
+                sourceUsername,
+                sourcePassword,
+                sourceEntitlement,
+                allLabels,
+                mirrorOrder
+            FROM InboundMirrors
+            LEFT JOIN Platforms AS Platforms
+                ON Platforms.projectId = InboundMirrors.targetProjectId
+            WHERE
+                Platforms.mode = 'auto'
+            ORDER BY mirrorOrder""")
         return [[y is not None and y or '' for y in x[:-1]] + \
                 [x[-1]] for x in cu.fetchall()]
 
