@@ -46,18 +46,17 @@ class RepositoryManager(manager.Manager):
     def close(self):
         self.reposManager.close()
 
-    def createRepositorySafe(self, productId, authInfo, createMaps=True):
+    def createRepositorySafe(self, productId, createMaps=True):
         try:
-            self.createRepository(productId, authInfo, createMaps)
+            self.createRepository(productId, createMaps)
         except mint_error.RepositoryAlreadyExists, e:
             pass
 
-    def createRepository(self, productId, authInfo=None, createMaps=True):
+    def createRepository(self, productId, createMaps=True):
         repos = self.reposManager.getRepositoryFromProjectId(productId)
 
-        if not authInfo:
-            authInfo = models.AuthInfo('userpass',
-                    self.cfg.authUser, self.cfg.authPass)
+        authInfo = models.AuthInfo('userpass',
+                self.cfg.authUser, self.cfg.authPass)
 
         if createMaps:
             self._setLabel(productId, repos.fqdn, repos.getURL(), authInfo)
@@ -375,7 +374,7 @@ class RepositoryManager(manager.Manager):
                     mirrorOrder = mirrorOrder, allLabels = 1)
 
         if createRepo:
-            self.createRepository(productId, authInfo)
+            self.createRepository(productId)
 
         self._generateConaryrcFile()
 
