@@ -3542,8 +3542,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 sourceUsername,
                 sourcePassword,
                 sourceEntitlement,
-                allLabels,
-                mirrorOrder
+                mirrorOrder,
+                allLabels
             FROM InboundMirrors
             LEFT OUTER JOIN Platforms AS Platforms
                 ON InboundMirrors.targetProjectId = Platforms.projectId
