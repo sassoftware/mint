@@ -152,7 +152,7 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         self.assertEqual(cfg.repositoryMap['localhost.abc'],
                 'https://test.rpath.local2:0/repos/localhost/')
         self.assertEqual(cfg.user.find('localhost.abc'),
-                ('test', 'foo'))
+                ('mintauth', 'mintpass'))
 
     def testIsProductExternal(self):
         db = self.openRestDatabase()

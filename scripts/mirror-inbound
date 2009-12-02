@@ -36,7 +36,7 @@ class MirrorInbound(MirrorScript):
         for label in mirroredLabels:
             inboundMirrorId, targetProjectId, sourceLabels, sourceUrl, \
                     sourceAuthType, sourceUser, sourcePass, \
-                    sourceEntitlement, allLabels = label
+                    sourceEntitlement, mirrorOrder, allLabels = label
             targetProject = client.getProject(targetProjectId)
             log.info("Mirroring %s", targetProject.name)
 
