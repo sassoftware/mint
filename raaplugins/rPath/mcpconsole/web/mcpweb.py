@@ -53,14 +53,10 @@ class MCPConsole(rAAWebPlugin):
         self.errors = []
 
     def getMcpClient(self):
-        cfg = mcpclient.MCPClientConfig()
         try:
-            cfg.read('/srv/rbuilder/mcp/client-config')
-            c = mcpclient.MCPClient(cfg)
+            c = mcpclient.Client()
         except:
-            exc_cl, exc, bt = sys.exc_info()
-            log.error(''.join(traceback.format_tb(bt)))
-            log.error(exc)
+            log.exception("Could not connect to dispatcher:")
             c = None
         return c
 
@@ -69,76 +65,14 @@ class MCPConsole(rAAWebPlugin):
     @marshallMessages
     def index(self):
         mcpClient = self.getMcpClient()
-        if mcpClient:
-            try:
-                jobStatus = mcpClient.jobStatus()
+        if not mcpClient:
+            return {'disabled' : True}
 
-                # sort helpers
-                sortOrder = ['-', '1', '2', '0', '3', '4']
-                cmpKey = lambda x: sortOrder.index(str(x[1]['status'][0])[0])
-
-                # get all the jobs into a list and sort by status then name,
-                # with the jobid descending
-                jobs = [(k, jobStatus[k]) for k in jobStatus]
-                jobs.sort(lambda a, b: cmp(cmpKey(a), cmpKey(b)) or cmp(b[0], a[0]))
-
-                # truncate the list to 10 stopped jobs ( 5 cooks, 5 builds )
-                running = [x for x in jobs if x[1]['status'][0] <  mint.jobstatus.FINISHED]
-                stopped = [x for x in jobs if x[1]['status'][0] >= mint.jobstatus.FINISHED]
-
-                # split the stopped jobs into 5 cooks and 5 image builds due
-                # to lack of a decent sort key
-                stopped_builds = [x for x in stopped if     'build' in x[0]][0:5]
-                stopped_cooks  = [x for x in stopped if not 'build' in x[0]][0:5]
-
-                jobs = running + stopped_builds + stopped_cooks
-
-                return {'jobStatus' : jobs, 'disabled' : False}
-            finally:
-                mcpClient.disconnect()
-        return {'disabled' : True}
-
-    @raa.web.expose(template="rPath.mcpconsole.templates.nodes")
-    @raa.web.require(raa.authorization.NotAnonymous())
-    @marshallMessages
-    def nodes(self):
-        mcpClient = self.getMcpClient()
-        if mcpClient:
-            try:
-                nodeStatus = mcpClient.nodeStatus()
-                return {'nodeStatus' : nodeStatus, 'disabled' : False}
-            finally:
-                mcpClient.disconnect()
-        return {'disabled' : True}
-
-    # rpc interface for javascript
-    @raa.web.expose()
-    @raa.web.require(raa.authorization.NotAnonymous())
-    def getJobStatus(self):
-        mcpClient = None
-        while not mcpClient:
-            mcpClient = self.getMcpClient()
-            if not mcpClient:
-                time.sleep(1)
-            else:
-                try:
-                    return mcpClient.jobStatus()
-                finally:
-                    mcpClient.disconnect()
-
-    # rpc interface for javascript
-    @raa.web.expose()
-    @raa.web.require(raa.authorization.NotAnonymous())
-    def getNodeStatus(self):
-        while not mcpClient:
-            mcpClient = self.getMcpClient()
-            if not mcpClient:
-                time.sleep(1)
-            else:
-                try:
-                    return mcpClient.nodeStatus()
-                finally:
-                    mcpClient.disconnect()
+        return {
+                'disabled': False,
+                'queued': mcpClient.list_queued_jobs(),
+                'nodes': mcpClient.list_nodes(),
+                }
 
     @raa.web.expose()
     @raa.web.require(raa.authorization.NotAnonymous())
@@ -146,35 +80,14 @@ class MCPConsole(rAAWebPlugin):
         mcpClient = self.getMcpClient()
         if mcpClient:
             try:
-                try:
-                    mcpClient.stopJob(jobId)
-                except Exception, e:
-                    self.errors.append(str(e))
-                else:
-                    self.messages.append('Sent kill request for job: %s' % jobId)
-            finally:
-                mcpClient.disconnect()
+                mcpClient.stop_job(jobId)
+            except Exception, e:
+                self.errors.append(str(e))
+            else:
+                self.messages.append('Sent kill request for job: %s' % jobId)
         else:
             self.errors.append("Could not connect to MCP")
         raa.web.raiseHttpRedirect('index', 302)
-
-    @raa.web.expose()
-    @raa.web.require(raa.authorization.NotAnonymous())
-    def stopSlave(self, slaveId):
-        mcpClient = self.getMcpClient()
-        if mcpClient:
-            try:
-                try:
-                    mcpClient.stopSlave(slaveId)
-                except Exception, e:
-                    self.errors.append(str(e))
-                else:
-                    self.messages.append('Sent kill request for %s' %  slaveId)
-            finally:
-                mcpClient.disconnect()
-        else:
-            self.errors.append("Could not connect to MCP")
-        raa.web.raiseHttpRedirect('nodes', 302)
 
     @raa.web.expose()
     @raa.web.require(raa.authorization.NotAnonymous())
@@ -184,18 +97,15 @@ class MCPConsole(rAAWebPlugin):
             mcpClient = self.getMcpClient()
             if mcpClient:
                 try:
-                    try:
-                        mcpClient.setSlaveLimit(masterId, limit)
-                    except Exception, e:
-                        self.errors.append(str(e))
-                    else:
-                        self.messages.append('Sent slave limit for %s to %d' % \
-                                                 (masterId, limit))
-                finally:
-                    mcpClient.disconnect()
+                    mcpClient.set_node_slots(masterId, limit)
+                except Exception, e:
+                    self.errors.append(str(e))
+                else:
+                    self.messages.append('Set slot limit for %s to %d'
+                            % (masterId, limit))
             else:
                 self.errors.append("Could not connect to MCP")
         else:
             self.errors.append("Limit must be an integer")
-        raa.web.raiseHttpRedirect('nodes', 302)
+        raa.web.raiseHttpRedirect('index', 302)
 
