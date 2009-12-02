@@ -685,6 +685,41 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
+    def testSetProductVersionPlatform(self):
+        self.setupPlatforms()
+        self.mock(restbase.proddef.PlatformDefinition, 'snapshotVersions',
+            lambda slf, conaryClient, platformVersion = None: None)
+        uriTemplate = 'products/%s/versions/%s/platform'
+        uri = uriTemplate % (self.productShortName, self.productVersion)
+        client = self.getRestClient(username='foouser', admin=True)
+
+        label = self.mintCfg.availablePlatforms[1]
+        data = """\
+<platform>
+  <label>%s</label>
+</platform>
+""" % label
+        req, response = client.call('PUT', uri, data, convert = True)
+        expected = """\
+<platform id="http://localhost:8000/api/products/testproject/versions/1.0/platform">
+  <platformId>2</platformId>
+  <platformTroveName>platform-definition</platformTroveName>
+  <label>localhost@rpath:plat-2</label>
+  <platformVersion>4.0-1</platformVersion>
+  <productVersion>1.0</productVersion>
+  <platformName>Crowbar Linux 2</platformName>
+  <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
+  <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
+  <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
+  <load href="http://localhost:8000/api/platforms/2/load/"/>
+</platform>
+"""
+        self.assertXMLEquals(response, expected)
+
+        # Make sure a GET fetches the same thing
+        req, response = client.call('GET', uri, convert = True)
+        self.assertXMLEquals(response, expected)
+
     def testGetProductVersionPlatform(self):
         uriTemplate = 'products/%s/versions/%s/platform'
         uri = uriTemplate % (self.productShortName, self.productVersion)

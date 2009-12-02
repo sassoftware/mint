@@ -660,6 +660,17 @@ class Platforms(object):
                     if p.platformName == platformName][0]
         return platform                    
 
+    def getByLabel(self, platformLabel):
+        if platformLabel is None:
+            return None
+        # XXX Surely we can do this without enumerating all platforms first
+        platforms = self.list()
+        platforms = [p for p in platforms.platforms \
+                    if p.label == platformLabel]
+        if not platforms:
+            return None
+        return platforms[0]
+
     def getSources(self, platformId):
         return self.mgr.contentSources.listByPlatformId(platformId)
 
@@ -935,6 +946,9 @@ class PlatformManager(manager.Manager):
 
     def getPlatformByName(self, platformName):
         return self.platforms.getByName(platformName)
+
+    def getPlatformByLabel(self, platformLabel):
+        return self.platforms.getByLabel(platformLabel)
 
     def loadPlatform(self, platformId, platformLoad):
         return self.platforms.load(platformId, platformLoad)
