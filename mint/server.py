@@ -3505,7 +3505,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         fqdn = versions.Label(sourceLabels[0]).getHost()
         if createDB:
-            hostname, domainname = fqdn.split('.', 1)
             self.restDb.productMgr.reposMgr.createRepository(targetProjectId,
                     createMaps=False)
 
