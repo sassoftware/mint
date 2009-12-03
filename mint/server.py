@@ -3488,10 +3488,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         mirrorOrder = cu.fetchone()[0]
 
         project = self.projects.get(targetProjectId)
+        createDB = False
         if not project['database']:
             # Project was not previously assigned a database.
             self.projects.update(targetProjectId,
                     database=self.cfg.defaultDatabase)
+            createDB = True
 
         x = self.inboundMirrors.new(targetProjectId=targetProjectId,
                 sourceLabels = ' '.join(sourceLabels),
@@ -3502,9 +3504,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 mirrorOrder = mirrorOrder, allLabels = int(allLabels))
 
         fqdn = versions.Label(sourceLabels[0]).getHost()
-        if not os.path.exists(os.path.join(self.cfg.reposPath, fqdn)):
-            hostname = fqdn.split(".")[0]
-            domainname = ".".join(fqdn.split(".")[1:])
+        if createDB:
+            hostname, domainname = fqdn.split('.', 1)
             self.restDb.productMgr.reposMgr.createRepository(targetProjectId,
                     createMaps=False)
 
