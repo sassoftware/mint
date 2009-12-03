@@ -441,10 +441,10 @@ class Platforms(object):
         removedTroves = []
         for trove in cs.iterNewTroveList():
             if trove.getNewVersion().branch().label().asString() != label:
-                removedTroves.append((trove.getName(), trove.getNewVersion(),
-                                        trove.getNewFlavor()))
-                cs.delNewTrove(trove.getName(), trove.getNewVersion(),
-                                trove.getNewFlavor())
+                removedTroves.append(trove.getNewNameVersionFlavor())
+
+        for tup in removedTroves:
+            cs.delNewTrove(*tup)
 
         return removedTroves
 
