@@ -4,10 +4,9 @@
 # All Rights Reserved
 #
 
-import logging
-
 from conary import versions
 from conary.lib import util
+from mint.lib import mintutils
 from mint.rest.db import manager
 from restlib import response
 from mint.rest.api import models
@@ -16,8 +15,11 @@ import rpath_capsule_indexer
 
 class Indexer(rpath_capsule_indexer.Indexer):
     class SourceChannels(rpath_capsule_indexer.Indexer.SourceChannels):
+        LOGFILE_PATH = None
         def getLogger(self):
-            return logging.getLogger(__name__)
+            logger = mintutils.setupLogging(logger = __name__,
+                logPath = self.LOGFILE_PATH)
+            return logger
 
 class CapsuleManager(manager.Manager):
     def getIndexerConfig(self):
@@ -39,11 +41,23 @@ class CapsuleManager(manager.Manager):
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
 
-        dataSources = self.db.platformMgr.getSources().instance
-        # XXX we only deal with RHN for now
-        if dataSources:
-            cfg.configLine("user RHN %s %s" % (dataSources[0].username,
-                dataSources[0].password))
+        dataSources = self.db.platformMgr.getSources().instance or []
+        for idx, dataSource in enumerate(dataSources):
+            if None in (dataSource.username, dataSource.password):
+                # Not fully configured yet
+                continue
+            if dataSource.contentSourceType == 'RHN':
+                dsn = 'RHN'
+                sourceHost = None
+            else:
+                dsn = 'source_%d' % idx
+                sourceHost = dataSource.sourceUrl
+                if '/' in sourceHost:
+                    sourceHost = util.urlSplit(sourceHost)[3]
+            cfg.configLine("user %s %s %s" % (dsn, dataSource.username,
+                dataSource.password))
+            if sourceHost:
+                cfg.configLine("source %s %s" % (dsn, sourceHost))
         # XXX channels are hardcoded for now
         cfg.configLine("channels rhel-i386-as-4")
         cfg.configLine("channels rhel-x86_64-as-4")
@@ -68,6 +82,8 @@ class CapsuleManager(manager.Manager):
 
     def getIndexer(self):
         cfg = self.getIndexerConfig()
+        Indexer.SourceChannels.LOGFILE_PATH = util.joinPaths(self.cfg.logPath,
+            'capsule-indexer.log')
         return Indexer(cfg)
 
     def getIndexerErrors(self, contentSourceName, instanceName):

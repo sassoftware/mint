@@ -52,6 +52,19 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         self.mock(proddef.PlatformDefinition, 'loadFromRepository',
             mockLoadFromRepository)
 
+    class Source(object):
+        name = 'sourceName'
+        contentSourceType = 'RHN'
+        shortName = 'sourceShortName'
+        defaultSource = 1
+        orderIndex = 1
+        username = 'JeanValjean'
+        password = 'SuperSikrit'
+        sourceUrl = 'ignoremereally'
+
+    def _getSources(self):
+        return [ self.Source() ]
+
     def _addPlatformSources(self, db, platformLabel = 'localhost1'):
         # XXX nasty hacks to produce some data in the hopefully proper format
         sql = """
@@ -73,16 +86,8 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         """
         cu.execute(sql, platformId, 'RHN')
 
-        class Source(object):
-            name = 'sourceName'
-            contentSourceType = 'RHN'
-            shortName = 'sourceShortName'
-            defaultSource = 1
-            orderIndex = 1
-            username = 'JeanValjean'
-            password = 'SuperSikrit'
-            sourceUrl = 'ignoremereally'
-        db.platformMgr.createSource(Source())
+        for source in self._getSources():
+            db.platformMgr.createSource(source)
         db.commit()
 
     def indexer(self):
@@ -91,7 +96,7 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         indexer.refresh()
         return indexer
 
-class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
+class BaseCapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
     # This controller should mock access from localhost
     class ControllerFactory(restbase.Controller):
         class RequestFactory(restbase.MockRequest):
@@ -107,6 +112,7 @@ class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
             self.tearDown()
             raise e
 
+class CapsulesTest(BaseCapsulesTest):
     def testGetContent(self):
         # Make sure we populate the indexer's db
         indexer = self.indexer()
@@ -288,6 +294,71 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
                 break
         raise testsetup.testsuite.SkipTestException("Fails in bamboo")
         self.failUnless(downloaded, lines)
+
+class NoCapsulesConfiguredTest(BaseCapsulesTest):
+    def _getSources(self):
+        src = self.Source()
+        src.username = None
+        return [ src ]
+
+    def testRefreshNoSources(self):
+        indexer = base.IndexerTestMixIn.indexer(self)
+        channelLabel = 'rhel-x86_64-server-5'
+        # Make sure we don't have any content in the channels
+        channels = indexer.model.enumerateChannels()
+        self.failUnlessEqual(channels, [])
+        uri = 'capsules/rpm/content'
+        client = self.getRestClient()
+        req, response = client.call('POST', uri)
+        self.failUnlessEqual(response.status, 204)
+        channels = indexer.model.enumerateChannels()
+        self.failUnlessEqual(len(channels), 0)
+
+class MultiSourceCapsulesTest(BaseCapsulesTest):
+    def _getSources(self):
+        src = self.Source()
+
+        sat = self.Source()
+        sat.contentSourceType = 'satellite'
+        sat.name = 'RHN satellite'
+        sat.shortName = 'satellite'
+        sat.sourceUrl = 'https://blah/foo'
+        sat.username = 'JeanValjeanSatellite'
+
+        proxy1 = self.Source()
+        proxy1.contentSourceType = 'proxy'
+        proxy1.name = 'RHN Proxy 1'
+        proxy1.shortName = 'proxy1'
+        proxy1.sourceUrl = 'https://proxy1/foo'
+        proxy1.username = 'JeanValjeanProxy1'
+
+        proxy2 = self.Source()
+        proxy2.contentSourceType = 'proxy'
+        proxy2.name = 'RHN Proxy 2'
+        proxy2.shortName = 'proxy2'
+        proxy2.sourceUrl = 'https://proxy2/foo'
+        proxy2.password = None
+        return [ proxy1, proxy2, src, sat ]
+
+    def testRefreshMultipleSources(self):
+        indexer = base.IndexerTestMixIn.indexer(self)
+        channelLabel = 'rhel-x86_64-server-5'
+        # Make sure we don't have any content in the channels
+        channels = indexer.model.enumerateChannels()
+        self.failUnlessEqual(channels, [])
+        uri = 'capsules/rpm/content'
+        client = self.getRestClient()
+        req, response = client.call('POST', uri)
+        self.failUnlessEqual(response.status, 204)
+        channels = indexer.model.enumerateChannels()
+        self.failUnlessEqual(len(channels), 4)
+
+        # Check that we generated the config correctly
+        db = self.openRestDatabase()
+        indexer = db.capsuleMgr.getIndexer()
+        sources = list(indexer.iterSources())
+        self.failUnlessEqual([x.username for x in sources],
+            ['JeanValjeanProxy1', 'JeanValjeanSatellite', 'JeanValjean'])
 
 if __name__ == "__main__":
         testsetup.main()
