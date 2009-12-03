@@ -55,6 +55,15 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         assert(image1.imageId == imageId)
         assert(image2.imageId == imageId2)
 
+        # Try the ordering both ways
+        imageIds = [ imageId, imageId2 ]
+        ret = db.imageMgr._getFilesForImages('hostName', imageIds)
+        self.failUnlessEqual([x.imageId for x in ret ], imageIds)
+
+        imageIds.reverse()
+        ret = db.imageMgr._getFilesForImages('hostName', imageIds)
+        self.failUnlessEqual([x.imageId for x in ret ], imageIds)
+
     def testListImagesForTrove(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
