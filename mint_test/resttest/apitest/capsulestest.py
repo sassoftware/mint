@@ -20,6 +20,8 @@ ResponseError = restClient.ResponseError
 import rpath_capsule_indexer
 from capsule_indexertest import base
 
+from testutils import mock
+
 class IndexerSetupMixIn(base.IndexerTestMixIn):
     def setUpIndexerCfg(self):
         self.mockPlatformLoadFromRepository()
@@ -159,6 +161,9 @@ class CapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
 
     def testGetPlatformSourceErrors(self):
         client = self.getRestClient(admin = True)
+        from mint.rest.db import platformmgr
+        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
+                        True)
         req, response = client.call('GET', '/platforms')
 
         # Refresh

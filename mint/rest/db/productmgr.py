@@ -241,11 +241,6 @@ class ProductManager(manager.Manager):
                     self.cfg.defaultDatabase)
             productId = cu.lastrowid
 
-        # Verify the external repo is reachable (and has a mirror
-        # permissions)
-        self.reposMgr.checkExternalRepositoryAccess(hostname, domainname,
-                                                    url, authInfo)
-
         if mirror:
             self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
                                             url, authInfo, True)

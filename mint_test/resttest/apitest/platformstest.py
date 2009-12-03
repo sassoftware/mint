@@ -36,6 +36,8 @@ class PlatformsTest(restbase.BaseRestTest):
         restbase.BaseRestTest.setUp(self)
         self.setupProduct()
         self.setupPlatforms()
+        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
+                        True)
 
     def testGetPlatforms(self):
         return self._testGetPlatforms()

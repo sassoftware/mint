@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 import tempfile
+import traceback
 import weakref
 import xmlrpclib
 
@@ -321,8 +322,26 @@ class Platforms(object):
         for i, d in enumerate(dbLabels):
             if d not in cfgLabels:
                 platforms.append(dbPlatforms[i])
+        
+        # Also check for mirroring permissions to the platform. This is the
+        # best place to do this, since this method always gets called when
+        # fetching a platform.
+        for p in platforms:
+            p.mirrorPermission = self._checkMirrorPermissions(p)
 
         return platforms
+
+    def _checkMirrorPermissions(self, platform):
+        try:
+            self.db.productMgr.reposMgr.checkExternalRepositoryAccess(
+                self._getHostname(platform), 
+                self._getDomainname(platform), 
+                self._getUrl(platform), 
+                self._getAuthInfo())
+        except errors.ExternalRepositoryMirrorError, e:
+            return False
+        else:
+            return True
 
     def _listFromCfg(self):
         platforms = []
@@ -355,7 +374,7 @@ class Platforms(object):
                 try:
                     ei = sys.exc_info()
                     if hasattr(function, 'error'):
-                        function.error(self, e, ei)
+                        function.error(self, e, traceback.print_exc(ei))
                 finally:
                     os._exit(1)
         finally:
@@ -478,25 +497,47 @@ class Platforms(object):
 
         return projectId
 
-    def _setupPlatform(self, platform):
-        platformId = int(platform.platformId)
-        platformName = str(platform.platformName)
-        platformLabel = str(platform.label)
+    def _getHostname(self, platform):
         label = versions.Label(platform.label)
-        hostname = str(label.getHost())
+        return str(label.getHost())
+
+    def _getHost(self, platform):
+        hostname = self._getHostname(platform)
+        parts = hostname.split('.', 1)
+        return parts[0]
+
+    def _getDomainname(self, platform):
+        hostname = self._getHostname(platform)
         parts = hostname.split('.', 1)
         host = parts[0]
-        url = 'http://%s/conary/' % (hostname)
         if len(parts) == 1:
             domainname = ''
         else:
             domainname = ''.join(parts[1:])
-        mirror = platformLabel in self.cfg.configurablePlatforms
 
+        return domainname
+
+    def _getUrl(self, platform):
+        hostname = self._getHostname(platform)
+        return 'https://%s/conary/' % (hostname)
+
+    def _getAuthInfo(self):
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
         entitlement = self.db.siteAuth.entitlementKey
         authInfo = models.AuthInfo(authType='entitlement',
                                    entitlement=entitlement)
+        return authInfo
+
+    def _setupPlatform(self, platform):
+        platformId = int(platform.platformId)
+        platformName = str(platform.platformName)
+        hostname = self._getHostname(platform)
+        host = self._getHost(platform)
+        url = self._getUrl(platform)
+        domainname = self._getDomainname(platform)
+        mirror = platform.label in self.cfg.configurablePlatforms
+
+        authInfo = self._getAuthInfo()
 
         # Get the productId to see if this platform has already been
         # associated with an external product.
@@ -600,7 +641,8 @@ class Platforms(object):
 
         client = self._reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
-        url = self._reposMgr._getFullRepositoryMap()[platform.repositoryHostname]
+        url = self._reposMgr._getFullRepositoryMap().get(
+                platform.repositoryHostname, self._getUrl(platform))
 
         try:
             platDef.loadFromRepository(client, platform.label)

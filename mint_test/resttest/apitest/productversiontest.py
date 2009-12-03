@@ -16,6 +16,7 @@ from conary.lib import util
 
 import restbase
 from restlib import client as restClient
+from testutils import mock
 ResponseError = restClient.ResponseError
 
 class ProductVersionTest(restbase.BaseRestTest):
@@ -687,6 +688,9 @@ class ProductVersionTest(restbase.BaseRestTest):
 
     def testSetProductVersionPlatform(self):
         self.setupPlatforms()
+        from mint.rest.db import platformmgr
+        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
+                        True)
         self.mock(restbase.proddef.PlatformDefinition, 'snapshotVersions',
             lambda slf, conaryClient, platformVersion = None: None)
         uriTemplate = 'products/%s/versions/%s/platform'
