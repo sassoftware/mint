@@ -323,11 +323,14 @@ class Platforms(object):
             if d not in cfgLabels:
                 platforms.append(dbPlatforms[i])
         
-        # Also check for mirroring permissions to the platform. This is the
-        # best place to do this, since this method always gets called when
-        # fetching a platform.
+        # Also check for mirroring permissions for configurable platforms.
+        # This is the best place to do this, since this method always gets
+        # called when fetching a platform.
         for p in platforms:
-            p.mirrorPermission = self._checkMirrorPermissions(p)
+            if p.label in self.cfg.configurablePlatforms:
+                p.mirrorPermission = self._checkMirrorPermissions(p)
+            else:
+                p.mirrorPermission = False
 
         return platforms
 
