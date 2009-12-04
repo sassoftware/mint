@@ -17,8 +17,10 @@ class Indexer(rpath_capsule_indexer.Indexer):
     class SourceChannels(rpath_capsule_indexer.Indexer.SourceChannels):
         LOGFILE_PATH = None
         def getLogger(self):
+            consoleLevel = (self.LOGFILE_PATH is None
+                and mintutils.logging.WARNING) or None
             logger = mintutils.setupLogging(logger = __name__,
-                logPath = self.LOGFILE_PATH)
+                consoleLevel = consoleLevel, logPath = self.LOGFILE_PATH)
             return logger
 
 class CapsuleManager(manager.Manager):
