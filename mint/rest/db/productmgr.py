@@ -229,6 +229,10 @@ class ProductManager(manager.Manager):
         except errors.ItemNotFound:
             productId = None
 
+        database = None
+        if mirror:
+            database = self.cfg.defaultDatabase
+
         if not productId:
             # Need a new entry in projects table.
             cu.execute('''INSERT INTO Projects (name, creatorId, description,
@@ -237,8 +241,7 @@ class ProductManager(manager.Manager):
                     VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
                     '%s.%s' % (hostname, domainname),
-                    createTime, createTime, int(backupExternal),
-                    self.cfg.defaultDatabase)
+                    createTime, createTime, int(backupExternal), database)
             productId = cu.lastrowid
 
         if mirror:

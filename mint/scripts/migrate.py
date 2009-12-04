@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 11)
+    Version = (48, 12)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -763,6 +763,18 @@ class MigrateTo_48(SchemaMigration):
     # Preserved for previous migration no longer needed, we don't want to
     # decrease the version number.
     def migrate11(self):
+        return True
+
+    # 48.12
+    # - Clear the database column for proxied external projects.
+    def migrate12(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            UPDATE Projects p SET database = NULL
+            WHERE external = 1 AND NOT EXISTS (
+                SELECT * FROM InboundMirrors m
+                WHERE p.projectId = m.targetProjectId
+            )""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
