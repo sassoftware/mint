@@ -12,6 +12,7 @@ class AuthenticationManager(manager.Manager):
     def __init__(self, cfg, db):
         manager.Manager.__init__(self, cfg, db, None)
         self.auth = None
+        self.authToken = None
         self.username = None
         self.fullName = None
         self.userId = None

@@ -286,7 +286,7 @@ class RepositoryManager(manager.Manager):
             else:
                 cfg.name = 'rBuilder Administration'
                 cfg.contact = 'rbuilder'
-        else:
+        elif self.auth.authToken:
             # use current user for everything that's unspecified
             cfg.user.addServerGlob('*', 
                                    self.auth.authToken[0],
