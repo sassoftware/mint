@@ -84,8 +84,6 @@ class CapsuleManager(manager.Manager):
         cfg = self.getIndexerConfig()
         Indexer.SourceChannels.LOGFILE_PATH = util.joinPaths(self.cfg.logPath,
             'capsule-indexer.log')
-        # Disable for now to make the tests pass
-        Indexer.SourceChannels.LOGFILE_PATH = None
         return Indexer(cfg)
 
     def getIndexerErrors(self, contentSourceName, instanceName):
