@@ -85,8 +85,9 @@ class Database(object):
         self._db = db
         self._autoDb = False
 
-        tables = self._openDb()
+        self._openDb()
 
+    def _copyTables(self, tables):
         self.labels = tables.labels
         self.projects = tables.projects
         self.buildFiles = tables.buildFiles
@@ -129,8 +130,6 @@ class Database(object):
         self.targets = tables.targets
         self.targetData = tables.targetData
 
-        self.normalizeMirrorOrder()
-
     @property
     def db(self):
         return self._db
@@ -150,12 +149,20 @@ class Database(object):
         except sqlerrors.SchemaVersionError:
             rethrow(mint_error.DatabaseVersionMismatch, False)
 
-        return TableCache(self._db, self._cfg)
+        tables = TableCache(self._db, self._cfg)
+        self._copyTables(tables)
+        self.normalizeMirrorOrder()
 
     def close(self):
         if self._autoDb:
             self._db.close()
             self._db = None
+
+    def reopen_fork(self, forked=False):
+        """Re-open the database connection after a fork()."""
+        self._db.close_fork()
+        self._db = None
+        self._openDb()
 
     def cursor(self):
         return self._db.cursor()

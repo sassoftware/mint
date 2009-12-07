@@ -370,6 +370,7 @@ class Platforms(object):
                     return
 
                 os.chdir('/')
+                self.db.db.reopen_fork()
                 function(*args, **kw)
             except:
                 try:
