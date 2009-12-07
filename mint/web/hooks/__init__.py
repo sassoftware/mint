@@ -66,15 +66,15 @@ def mintHandler(context):
 
 
 urls = (
-    (r'^/changeset/',        conaryHandler),
-    (r'^/conary/',           conaryHandler),
-    (r'^/repos/',            conaryHandler),
-    (r'^/catalog/',          catalogHandler),
-    (r'^/api/',              restHandler),
-    (r'^/xmlrpc/',           rpcHandler),
-    (r'^/jsonrpc/',          rpcHandler),
-    (r'^/xmlrpc-private/',   rpcHandler),
-    (r'^/',                  mintHandler),
+    ('/changeset/',        conaryHandler),
+    ('/conary/',           conaryHandler),
+    ('/repos/',            conaryHandler),
+    ('/catalog/',          catalogHandler),
+    ('/api/',              restHandler),
+    ('/xmlrpc/',           rpcHandler),
+    ('/jsonrpc/',          rpcHandler),
+    ('/xmlrpc-private/',   rpcHandler),
+    ('/',                  mintHandler),
 )
 
 
@@ -128,7 +128,7 @@ def handler(req):
     ret = apache.HTTP_NOT_FOUND
     try:
         for match, urlHandler in urls:
-            if re.match(match, pathInfo):
+            if pathInfo.startswith(match):
                 ret = _tryHandler(urlHandler, context)
                 break
     finally:
