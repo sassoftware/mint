@@ -13,7 +13,9 @@ import time
 
 from conary import conaryclient
 from conary import dbstore
+from conary import errors as conaryErrors
 from conary.lib import util
+from conary.repository import errors as reposErrors
 from mint import buildtypes
 from mint.rest.api import models
 from mint.rest.db import platformmgr
@@ -92,27 +94,27 @@ class PlatformsTest(restbase.BaseRestTest):
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml, xml)
 
-    def XXXtestGetPlatformSources(self):        
-        # TODO: can be removed once the code is refactored
-        # Need to get platforms first to trigger creation in the db
-        self.testGetPlatforms()
-
-        uri = '/platforms/1/sources'
-        client = self.getRestClient()
+        mock.mock(proddef.PlatformDefinition, 'loadFromRepository')
+        proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
+            reposErrors.OpenError)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertXMLEquals(platformSourcesXml, xml)
-
-    def XXXtestGetPlatformSource(self):        
-        # TODO: can be removed once the code is refactored
-        # Need to get platforms first to trigger creation in the db
-        self.testGetPlatforms()
-
-        uri = '/platforms/1/sources/plat1source'
-        client = self.getRestClient()
+        self.assertXMLEquals(platformSourceStatusXml2, xml)
+        proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
+            conaryErrors.ConaryError)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
-        self.assertXMLEquals(platformSourceXml, xml)
+        self.assertXMLEquals(platformSourceStatusXml3, xml)
+        proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
+            proddef.ProductDefinitionTroveNotFoundError)
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertXMLEquals(platformSourceStatusXml4, xml)
+        proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
+            Exception)
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertXMLEquals(platformSourceStatusXml5, xml)
 
     def testGetContentSourceStatusNoData(self):
         uri = '/contentSources/RHN/instances/plat2source0/status'

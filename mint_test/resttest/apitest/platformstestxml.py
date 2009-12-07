@@ -90,7 +90,43 @@ platformSourceStatusXml = """\
 <platformSourceStatus>
   <connected>true</connected>
   <valid>true</valid>
-  <message> Repository online: http://localhost:8000/repos/localhost.</message>
+  <message>Available.</message>
+</platformSourceStatus>
+"""
+
+platformSourceStatusXml2 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSourceStatus>
+  <connected>false</connected>
+  <valid>false</valid>
+  <message> Repository not responding: https://localhost/conary/.</message>
+</platformSourceStatus>
+"""
+
+platformSourceStatusXml3 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSourceStatus>
+  <connected>true</connected>
+  <valid>false</valid>
+  <message> Error connecting to repository https://localhost/conary/: .</message>
+</platformSourceStatus>
+"""
+
+platformSourceStatusXml4 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSourceStatus>
+  <connected>true</connected>
+  <valid>false</valid>
+  <message> Platform definition not found in repository https://localhost/conary/.</message>
+</platformSourceStatus>
+"""
+
+platformSourceStatusXml5 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<platformSourceStatus>
+  <connected>false</connected>
+  <valid>false</valid>
+  <message> Error connecting to repository https://localhost/conary/: .</message>
 </platformSourceStatus>
 """
 
@@ -499,6 +535,6 @@ platformStatus2Xml = """\
 <platformSourceStatus>
   <connected>true</connected>
   <valid>true</valid>
-  <message> Repository online: http://localhost/conary/.</message>
+  <message>Available.</message>
 </platformSourceStatus>
 """
