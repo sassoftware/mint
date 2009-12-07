@@ -600,7 +600,7 @@ class Platforms(object):
         openMsg = "Repository not responding: %s."
         connectMsg = "Error connecting to repository %s: %s."
         pDefNotFoundMsg = "Platform definition not found in repository %s."
-        successMsg = "Repository online: %s."
+        successMsg = "Available."
 
         if platform.mode == 'auto':
             client = self._reposMgr.getAdminClient()
@@ -609,7 +609,7 @@ class Platforms(object):
             entitlement = self.db.productMgr.reposMgr.db.siteAuth.entitlementKey
             # Go straight to the host as defined by the platform, bypassing
             # any local repo map.
-            sourceUrl = "https://%s/conary/" % host
+            sourceUrl = self._getUrl(platform)
             try:
                 serverProxy = self.db.productMgr.reposMgr.reposManager.getServerProxy(host,
                     sourceUrl, None, [entitlement])
@@ -637,10 +637,7 @@ class Platforms(object):
                         "commercial license.  You are either missing the " + \
                         "entitlement for this platform or it is no longer valid"
                 else:
-                    remoteMessage = connectMsg % sourceUrl
-            else:            
-                remote = True
-                remoteMessage = successMsg % sourceUrl
+                    remoteMessage = connectMsg % (sourceUrl, e)
 
         client = self._reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
@@ -668,11 +665,13 @@ class Platforms(object):
         else:            
             local = True
             localConnected = True
-            localMessage = successMsg % url
 
         platStatus.valid = local and remote
         platStatus.connected = localConnected and remoteConnected
-        platStatus.message = ' '.join([remoteMessage, localMessage])
+        if platStatus.valid:
+            platStatus.message = successMsg
+        else:
+            platStatus.message = ' '.join([remoteMessage, localMessage])
 
         return platStatus
 
