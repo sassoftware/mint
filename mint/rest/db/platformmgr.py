@@ -368,16 +368,17 @@ class Platforms(object):
                     # The first child exits and is waited by the parent
                     # the finally part will do the os._exit
                     return
-                fd = os.open(os.devnull, os.O_RDWR)
-                os.close(fd)
 
                 os.chdir('/')
                 function(*args, **kw)
-            except Exception, e:
+            except:
                 try:
-                    ei = sys.exc_info()
+                    exc_info = sys.exc_info()
                     if hasattr(function, 'error'):
-                        function.error(self, e, traceback.print_exc(ei))
+                        function.error(self, exc_info)
+                    else:
+                        log.error("Unhandled error in background operation:",
+                                exc_info=exc_info)
                 finally:
                     os._exit(1)
         finally:
@@ -451,10 +452,10 @@ class Platforms(object):
 
         return removedTroves
 
-    def _load_error(self, e, ei):
-        log.error("Platform slice manual load failed. Exception: %s\n "
-                  "Traceback: %s" % (e, ei))
-        self.callback.error(e)                  
+    def _load_error(self, exc_info):
+        log.error("Unhandled error in platform slice manual load:",
+                exc_info=exc_info)
+        self.callback.error(exc_info[1])
     _load.error = _load_error
 
     def _getProjectId(self, platformId):
