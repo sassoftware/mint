@@ -20,7 +20,8 @@ class Indexer(rpath_capsule_indexer.Indexer):
             consoleLevel = (self.LOGFILE_PATH is None
                 and mintutils.logging.WARNING) or None
             logger = mintutils.setupLogging(logger = __name__,
-                consoleLevel = consoleLevel, logPath = self.LOGFILE_PATH)
+                consoleLevel=consoleLevel, consoleFormat='apache',
+                logPath=self.LOGFILE_PATH)
             return logger
 
 class CapsuleManager(manager.Manager):
