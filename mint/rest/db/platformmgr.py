@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 import tempfile
+import traceback
 import weakref
 import xmlrpclib
 
@@ -253,13 +254,19 @@ class Platforms(object):
             platformId = self.db.db.platforms.new(label=platform.label,
                                                   enabled=0)
         except mint_error.DuplicateItem, e:
+            platformId = self.db.db.platforms.getIdByColumn('label',
+                            platform.label)
             log.error("Error creating platform %s, it must already "
                       "exist: %s" % (platform.label, e))
 
         for sourceType, isSingleton in platform._sourceTypes:
             typeName = self.contentSourceTypes.getIdByName(sourceType)
-            self.db.db.platformsContentSourceTypes.new(platformId=platformId,
-                            contentSourceType=typeName)
+            try:
+                self.db.db.platformsContentSourceTypes.new(platformId=platformId,
+                                contentSourceType=typeName)
+            except mint_error.DuplicateItem, e:
+                # No need to raise this, the data is already created.
+                pass
 
         return platform
 
@@ -315,8 +322,29 @@ class Platforms(object):
         for i, d in enumerate(dbLabels):
             if d not in cfgLabels:
                 platforms.append(dbPlatforms[i])
+        
+        # Also check for mirroring permissions for configurable platforms.
+        # This is the best place to do this, since this method always gets
+        # called when fetching a platform.
+        for p in platforms:
+            if p.label in self.cfg.configurablePlatforms:
+                p.mirrorPermission = self._checkMirrorPermissions(p)
+            else:
+                p.mirrorPermission = False
 
         return platforms
+
+    def _checkMirrorPermissions(self, platform):
+        try:
+            self.db.productMgr.reposMgr.checkExternalRepositoryAccess(
+                self._getHostname(platform), 
+                self._getDomainname(platform), 
+                self._getUrl(platform), 
+                self._getAuthInfo())
+        except errors.ExternalRepositoryMirrorError, e:
+            return False
+        else:
+            return True
 
     def _listFromCfg(self):
         platforms = []
@@ -340,16 +368,17 @@ class Platforms(object):
                     # The first child exits and is waited by the parent
                     # the finally part will do the os._exit
                     return
-                fd = os.open(os.devnull, os.O_RDWR)
-                os.close(fd)
 
                 os.chdir('/')
                 function(*args, **kw)
-            except Exception, e:
+            except:
                 try:
-                    ei = sys.exc_info()
+                    exc_info = sys.exc_info()
                     if hasattr(function, 'error'):
-                        function.error(self, e, ei)
+                        function.error(self, exc_info)
+                    else:
+                        log.error("Unhandled error in background operation:",
+                                exc_info=exc_info)
                 finally:
                     os._exit(1)
         finally:
@@ -375,13 +404,15 @@ class Platforms(object):
         platLoad.platformId = platformId
         platLoad.uri = platformLoad.uri
 
-        self.backgroundRun(self._load, platformId, jobId, inFile, outFilePath,
+        self.backgroundRun(self._load, platform, jobId, inFile, outFilePath,
                            repos)
-        # self._load(platformId, jobId, inFile, outFilePath, repos)
 
         return platLoad
 
-    def _load(self, platformId, jobId, inFile, outFilePath, repos):
+    def _load(self, platform, jobId, inFile, outFilePath, repos):
+        platformId = platform.platformId
+        label = platform.label
+        
         totalKB = int(inFile.headers['content-length'])
         callback = PlatformLoadCallback(self.db, platformId, jobId, totalKB)
 
@@ -396,6 +427,9 @@ class Platforms(object):
 
         callback._message('Download Complete. Figuring out what to commit..')
         cs = changeset.ChangeSetFromFile(outFilePath) 
+        
+        removedTroves = self._filterChangeSet(cs, label)
+
         needsCommit = cs.removeCommitted(repos)
         if needsCommit:
             repos.commitChangeSet(cs, callback=callback, mirror=True)
@@ -407,10 +441,21 @@ class Platforms(object):
 
         return 
 
-    def _load_error(self, e, ei):
-        log.error("Platform slice manual load failed. Exception: %s\n "
-                  "Traceback: %s" % (e, ei))
-        self.callback.error(e)                  
+    def _filterChangeSet(self, cs, label):
+        removedTroves = []
+        for trove in cs.iterNewTroveList():
+            if trove.getNewVersion().branch().label().asString() != label:
+                removedTroves.append(trove.getNewNameVersionFlavor())
+
+        for tup in removedTroves:
+            cs.delNewTrove(*tup)
+
+        return removedTroves
+
+    def _load_error(self, exc_info):
+        log.error("Unhandled error in platform slice manual load:",
+                exc_info=exc_info)
+        self.callback.error(exc_info[1])
     _load.error = _load_error
 
     def _getProjectId(self, platformId):
@@ -456,25 +501,47 @@ class Platforms(object):
 
         return projectId
 
-    def _setupPlatform(self, platform):
-        platformId = int(platform.platformId)
-        platformName = str(platform.platformName)
-        platformLabel = str(platform.label)
+    def _getHostname(self, platform):
         label = versions.Label(platform.label)
-        hostname = str(label.getHost())
+        return str(label.getHost())
+
+    def _getHost(self, platform):
+        hostname = self._getHostname(platform)
+        parts = hostname.split('.', 1)
+        return parts[0]
+
+    def _getDomainname(self, platform):
+        hostname = self._getHostname(platform)
         parts = hostname.split('.', 1)
         host = parts[0]
-        url = 'http://%s/conary/' % (hostname)
         if len(parts) == 1:
             domainname = ''
         else:
             domainname = ''.join(parts[1:])
-        mirror = platformLabel in self.cfg.configurablePlatforms
 
+        return domainname
+
+    def _getUrl(self, platform):
+        hostname = self._getHostname(platform)
+        return 'https://%s/conary/' % (hostname)
+
+    def _getAuthInfo(self):
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
         entitlement = self.db.siteAuth.entitlementKey
         authInfo = models.AuthInfo(authType='entitlement',
                                    entitlement=entitlement)
+        return authInfo
+
+    def _setupPlatform(self, platform):
+        platformId = int(platform.platformId)
+        platformName = str(platform.platformName)
+        hostname = self._getHostname(platform)
+        host = self._getHost(platform)
+        url = self._getUrl(platform)
+        domainname = self._getDomainname(platform)
+        mirror = platform.label in self.cfg.configurablePlatforms
+
+        authInfo = self._getAuthInfo()
 
         # Get the productId to see if this platform has already been
         # associated with an external product.
@@ -525,6 +592,12 @@ class Platforms(object):
         localMessage = ''
         localConnected = False
 
+        if not platform.enabled:
+           platStatus.valid = False
+           platStatus.connected = False
+           platStatus.message = "Platform must be enabled to check it's status."
+           return platStatus
+
         openMsg = "Repository not responding: %s."
         connectMsg = "Error connecting to repository %s: %s."
         pDefNotFoundMsg = "Platform definition not found in repository %s."
@@ -572,7 +645,8 @@ class Platforms(object):
 
         client = self._reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
-        url = self._reposMgr._getFullRepositoryMap()[platform.repositoryHostname]
+        url = self._reposMgr._getFullRepositoryMap().get(
+                platform.repositoryHostname, self._getUrl(platform))
 
         try:
             platDef.loadFromRepository(client, platform.label)
@@ -637,6 +711,17 @@ class Platforms(object):
         platform = [p for p in platforms.platforms \
                     if p.platformName == platformName][0]
         return platform                    
+
+    def getByLabel(self, platformLabel):
+        if platformLabel is None:
+            return None
+        # XXX Surely we can do this without enumerating all platforms first
+        platforms = self.list()
+        platforms = [p for p in platforms.platforms \
+                    if p.label == platformLabel]
+        if not platforms:
+            return None
+        return platforms[0]
 
     def getSources(self, platformId):
         return self.mgr.contentSources.listByPlatformId(platformId)
@@ -705,6 +790,7 @@ class ContentSources(object):
         except mint_error.DuplicateItem, e:
             log.error("Error creating content source %s, it must already "
                       "exist: %s" % (source.shortName, e))
+            return self.db.db.platformSources.getIdFromShortName(source.shortName)
 
         cu = self.db.cursor()
         sql = """
@@ -913,6 +999,9 @@ class PlatformManager(manager.Manager):
 
     def getPlatformByName(self, platformName):
         return self.platforms.getByName(platformName)
+
+    def getPlatformByLabel(self, platformLabel):
+        return self.platforms.getByLabel(platformLabel)
 
     def loadPlatform(self, platformId, platformLoad):
         return self.platforms.load(platformId, platformLoad)

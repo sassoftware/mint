@@ -445,12 +445,21 @@ class Database(DBInterface):
         n,v,f = cmdline.parseTroveSpec(sourceTrove)
         v = versions.VersionFromString(v)
         # convert trove name from unicode
+        platformLabel = str(v.trailingLabel())
+        localPlatform = self.platformMgr.getPlatformByLabel(platformLabel)
+        platformId = None
+        platformEnabled = None
+        if localPlatform:
+            platformId = localPlatform.platformId
+            platformEnabled = bool(localPlatform.enabled)
         return models.ProductPlatform(platformTroveName=str(n),
             platformVersion=str(v.trailingRevision()),
-            label=str(v.trailingLabel()),
+            label=platformLabel,
             platformName=platformName,
             hostname=hostname,
-            productVersion=version)
+            productVersion=version,
+            enabled=platformEnabled,
+            platformId = platformId)
 
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):

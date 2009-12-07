@@ -723,6 +723,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
                 self.securePort = server.securePort
             else:
                 self.securePort = 0
+        util.mkdirChain(self.mintCfg.logPath)
         self.db = self.openMintDatabase()
         try:
             cli, userId = self.quickMintAdmin('intuser', 'intpass')

@@ -160,6 +160,8 @@ class ProductManager(manager.Manager):
             version=version,
             commit=False)
 
+        authInfo = models.AuthInfo('userpass',
+                self.cfg.authUser, self.cfg.authPass)
         self.reposMgr.createRepository(projectId)
 
         # can only add members after the repository is set up
@@ -227,6 +229,10 @@ class ProductManager(manager.Manager):
         except errors.ItemNotFound:
             productId = None
 
+        database = None
+        if mirror:
+            database = self.cfg.defaultDatabase
+
         if not productId:
             # Need a new entry in projects table.
             cu.execute('''INSERT INTO Projects (name, creatorId, description,
@@ -235,15 +241,10 @@ class ProductManager(manager.Manager):
                     VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
                     title, creatorId, hostname, hostname, domainname,
                     '%s.%s' % (hostname, domainname),
-                    createTime, createTime, int(backupExternal),
-                    self.cfg.defaultDatabase)
+                    createTime, createTime, int(backupExternal), database)
             productId = cu.lastrowid
 
         if mirror:
-            # Verify the external repo is reachable (and has a mirror
-            # permissions), and create a new mirror.
-            self.reposMgr.checkExternalRepositoryAccess(hostname, domainname,
-                                                        url, authInfo)
             self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
                                             url, authInfo, True)
         else:

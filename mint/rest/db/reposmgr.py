@@ -55,9 +55,9 @@ class RepositoryManager(manager.Manager):
     def createRepository(self, productId, createMaps=True):
         repos = self.reposManager.getRepositoryFromProjectId(productId)
 
-        # Add entry in Labels table.
         authInfo = models.AuthInfo('userpass',
                 self.cfg.authUser, self.cfg.authPass)
+
         if createMaps:
             self._setLabel(productId, repos.fqdn, repos.getURL(), authInfo)
 
@@ -286,7 +286,7 @@ class RepositoryManager(manager.Manager):
             else:
                 cfg.name = 'rBuilder Administration'
                 cfg.contact = 'rbuilder'
-        else:
+        elif self.auth.authToken:
             # use current user for everything that's unspecified
             cfg.user.addServerGlob('*', 
                                    self.auth.authToken[0],
@@ -389,9 +389,6 @@ class RepositoryManager(manager.Manager):
 
     def addExternalRepository(self, productId, hostname, domainname, url, 
                               authInfo, mirror=True):
-        # Validate the entitlement if we're mirroring.
-        if mirror:
-            self.checkExternalRepositoryAccess(hostname, domainname, url, authInfo)
         fqdn = self._getFqdn(hostname, domainname)
         self._setLabel(productId, fqdn, url, authInfo)
 
@@ -420,11 +417,9 @@ class RepositoryManager(manager.Manager):
         hostname = fqdn.split('.', 1)[0]
         localFqdn = hostname + "." + self.cfg.projectDomainName.split(':')[0]
         if fqdn != localFqdn:
-            try:
+            count = self.db.db.repNameMap.getCountByFromName(localFqdn)
+            if not count:
                 self.db.db.repNameMap.new(localFqdn, fqdn)
-            except sqlerrors.ColumnNotUnique, e:
-                # Map already exists
-                pass
         self._generateConaryrcFile()
 
     def checkExternalRepositoryAccess(self, hostname, domainname, url, authInfo):

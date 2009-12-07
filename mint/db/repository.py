@@ -224,7 +224,7 @@ class RepositoryHandle(object):
         return self._projectInfo['fqdn']
     @property
     def hasDatabase(self):
-        return bool((not self.isExternal) or self.isLocalMirror)
+        return self._projectInfo['database'] is not None
     @property
     def isExternal(self):
         return bool(self._projectInfo['external'])
@@ -270,12 +270,11 @@ class RepositoryHandle(object):
         Return the "database tuple" for this project. Don't call this
         directly if you intend to open the database; use getReposDB().
         """
-        if not self.hasDatabase:
+        database = self._projectInfo['database']
+        if database is None:
             raise RuntimeError("Cannot open database for external project %r"
                     % (self.shortName,))
-
-        database = self._projectInfo['database']
-        if ' ' in database:
+        elif ' ' in database:
             # It's a connect string w/ driver and path
             driver, path = database.split(' ', 1)
         else:

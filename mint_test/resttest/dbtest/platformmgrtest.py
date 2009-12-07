@@ -26,6 +26,8 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.setDbUser(self.db, 'admin')
+        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
+                        True)
 
     def _getPlatform(self):
         # Set up the platforms in the db before enabling it.

@@ -119,7 +119,6 @@ class ImageManager(manager.Manager):
             return images[0]
         return models.ImageList(images)
 
-
     def _getFilesForImages(self, hostname, imageIds):
         imageIds = [int(x) for x in imageIds]
         if not imageIds:
@@ -152,9 +151,11 @@ class ImageManager(manager.Manager):
                 file.baseFileName = os.path.basename(url)
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
 
+        # Order image files in a list parallel to imageIds
+        imageFilesList = [ filesByImageId[x] for x in imageIds ]
         return [models.ImageFileList(hostname=hostname, imageId=imageId,
             files=sorted(imageFiles.values(), key=lambda x: x.idx))
-            for (imageId, imageFiles) in filesByImageId.iteritems()]
+            for (imageId, imageFiles) in zip(imageIds, imageFilesList) ]
 
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)

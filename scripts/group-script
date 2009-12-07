@@ -122,6 +122,7 @@ usermod -a -G apache raa-web
 
 # Create a project for rMake to use as a repository.
 sudo -u apache "$scriptdir"/rmake-setup
+RMAKE_EXISTED=$?
 
 # Make sure the site authorization is up to date.
 "$scriptdir"/refresh-auth
@@ -142,6 +143,19 @@ fi
 if [ "x$is_chrooted" == "x" ]
 then
     service httpd start
+fi
+
+# If rmake repo didn't exist, this must be a new install, so only touch the
+# platforms file.  If it did exist, it must be an update, so only run the
+# script if the platforms file doesn't exist.
+PLATFORMS_FILE=/srv/rbuilder/data/enable_platforms
+if [ "$RMAKE_EXISTED" = "0" ]
+then
+    touch "$PLATFORMS_FILE"
+elif [ ! -e "$PLATFORMS_FILE" ]
+then
+    "$scriptdir"/enable_platforms
+    touch "$PLATFORMS_FILE"
 fi
 
 ### Extra Steps
