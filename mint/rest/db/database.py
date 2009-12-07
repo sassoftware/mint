@@ -447,13 +447,18 @@ class Database(DBInterface):
         # convert trove name from unicode
         platformLabel = str(v.trailingLabel())
         localPlatform = self.platformMgr.getPlatformByLabel(platformLabel)
-        platformId = (localPlatform and localPlatform.platformId) or None
+        platformId = None
+        platformEnabled = None
+        if localPlatform:
+            platformId = localPlatform.platformId
+            platformEnabled = bool(localPlatform.enabled)
         return models.ProductPlatform(platformTroveName=str(n),
             platformVersion=str(v.trailingRevision()),
             label=platformLabel,
             platformName=platformName,
             hostname=hostname,
             productVersion=version,
+            enabled=platformEnabled,
             platformId = platformId)
 
     @readonly    

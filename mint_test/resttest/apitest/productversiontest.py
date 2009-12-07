@@ -712,6 +712,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <platformVersion>4.0-1</platformVersion>
   <productVersion>1.0</productVersion>
   <platformName>Crowbar Linux 2</platformName>
+  <enabled>false</enabled>
   <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
