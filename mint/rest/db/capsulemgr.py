@@ -18,8 +18,8 @@ class Indexer(rpath_capsule_indexer.Indexer):
         LOGFILE_PATH = None
         def getLogger(self):
             consoleLevel = (self.LOGFILE_PATH is None
-                and mintutils.logging.WARNING) or None
-            logger = mintutils.setupLogging(logger = __name__,
+                and mintutils.logging.WARNING) or mintutils.logging.CRITICAL
+            logger = mintutils.setupLogging(logger=__name__,
                 consoleLevel=consoleLevel, consoleFormat='apache',
                 logPath=self.LOGFILE_PATH)
             return logger
