@@ -231,7 +231,7 @@ def proxyExternalRestRequest(context, fqdn, proxyServer):
     # /repos/rap/api/foo -> api/foo
     path = '/'.join(req.unparsed_uri.split('/')[3:])
     # get the upstream repo url and label
-    urlBase, label, hostName = _getUpstreamInfoForExternal(context.db, fqdn)
+    urlBase, label = _getUpstreamInfoForExternal(context.db, fqdn)
     # no external project?  maybe it's a non-entitled platform
     if not urlBase:
         found = False
@@ -269,14 +269,11 @@ def proxyExternalRestRequest(context, fqdn, proxyServer):
         return e.code
 
     # form up the base URL to this repository on rBuilder
-    if req.is_https():
+    if req.subprocess_env.get('HTTPS', '') == 'on':
         protocol = 'https'
     else:
         protocol = 'http'
-    port = req.connection.local_addr[1]
-    myUrlBase = proxyServer.basicUrl % {'protocol':protocol,
-                                        'port':port}
-    myUrlBase += 'repos/%s/' % (hostName,)
+    myUrlBase = '%s://%s/repos/%s/' % (protocol, req.hostname, fqdn)
 
     # translate the response
     l = []
@@ -526,11 +523,11 @@ def _updateUserSet(db, cfgObj):
 
 def _getUpstreamInfoForExternal(db, fqdn):
     cu = db.cursor()
-    cu.execute("""SELECT url, label, hostname
+    cu.execute("""SELECT url, label
         FROM Labels JOIN projects USING(projectId) WHERE fqdn = ?""", fqdn)
     ret = cu.fetchall()
     if len(ret) < 1:
-        return None, None, None
+        return None, None
     return ret[0]
 
 
