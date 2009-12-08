@@ -94,6 +94,7 @@ class ContentSourceType(object):
 
 class Rhn(ContentSourceType):
     authUrl = 'rpc/api'
+    xmlrpcUrl = 'XMLRPC'
     fields = [Name(), Username(), Password()]
     model = models.RhnSource
     sourceUrl = 'https://rhn.redhat.com'
@@ -110,8 +111,7 @@ class Rhn(ContentSourceType):
         s = util.ServerProxy(url)
         msg = "Cannot connect to this resource. Verify you have provided correct information."
         try:
-            s.auth.login(self.username, self.password)
-            return (True, True, 'Validated Successfully.')
+            session = s.auth.login(self.username, self.password)
         except xmlrpclib.Fault, e:
             log.error("Error validating content source %s: %s" \
                         % (self.name, e))
@@ -120,6 +120,16 @@ class Rhn(ContentSourceType):
             log.error("Error validating content source %s: %s" \
                         % (self.name, e))
             return (False, False, msg)
+
+        # Just use the rhel 4 channel label here, both rhel 4 and rhel 5 pull
+        # from the same entitlement pool.
+        remaining = s.channel.software.availableEntitlements(session,
+                        'rhel-i386-as-4')
+
+        if remaining <= 0:
+            return (False, False, "Insufficient Channel Entitlements.")
+
+        return (True, True, 'Validated Successfully.')
 
 class Satellite(Rhn):
     authUrl = 'rpc/api'
