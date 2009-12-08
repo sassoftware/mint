@@ -297,7 +297,7 @@ class rBASetup(rAAWebPlugin):
             schedId = self.callBackendAsync(sched, 'firstTimeSetup', normalizedOptions)
             self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
             # store the rBA Admin username, for use in other functions
-            self.setPropertyValue('RBA_ADMIN', normalizedOptions['new_username'], RDT_INT)
+            self.setPropertyValue('RBA_ADMIN', normalizedOptions['new_username'], RDT_STRING)
             # raa.web.raiseHttpRedirect('/rbasetup/rBASetup/firstTimeSetup')
             return True
         else:
