@@ -48,6 +48,7 @@ class Source(Model):
     defaultSource = fields.BooleanField()
     orderIndex = fields.IntegerField()
     contentSourceType = fields.CharField()
+    enabled = fields.BooleanField()
     contentSourceStatus = fields.UrlField(
                                 'contentSources.instances.status',
                                 ['contentSourceType', 'shortName'])

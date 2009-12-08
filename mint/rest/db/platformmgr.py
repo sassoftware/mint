@@ -762,6 +762,13 @@ class ContentSources(object):
                     value = d['value']
                 setattr(model, d['name'], value)
 
+        model.enabled = True
+        for field in sourceType.fields:
+            if field.required:
+                val = getattr(model, field.name, None)
+                if not val:
+                    model.enabled = False
+
         return model
 
     def _getSourceData(self, sourceId):

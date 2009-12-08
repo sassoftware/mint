@@ -309,6 +309,7 @@ contentSourcesXml = """\
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
+    <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
     <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   </contentSource>
@@ -319,6 +320,7 @@ contentSourcesXml = """\
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
+    <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
     <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/errors/"/>
   </contentSource>
@@ -334,6 +336,7 @@ contentSourceXml = """\
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
   <contentSourceType>RHN</contentSourceType>
+  <enabled>false</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
 </contentSource>
@@ -349,6 +352,7 @@ contentSourcesByPlatformXml = """\
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>satellite</contentSourceType>
+    <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/status"/>
     <resourceErrors href="http://localhost:8000/api/contentSources/satellite/instances/plat1source/errors/"/>
     <sourceUrl>http://plat1source.example.com</sourceUrl>
@@ -360,6 +364,7 @@ contentSourcesByPlatformXml = """\
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
+    <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
     <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   </contentSource>
@@ -370,6 +375,7 @@ contentSourcesByPlatformXml = """\
     <defaultSource>true</defaultSource>
     <orderIndex>0</orderIndex>
     <contentSourceType>RHN</contentSourceType>
+    <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
     <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/errors/"/>
   </contentSource>
@@ -404,6 +410,7 @@ contentSourcePUTXml = """\
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
   <contentSourceType>RHN</contentSourceType>
+  <enabled>true</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   <username>foousername</username>
@@ -420,6 +427,7 @@ contentSourcePUTXml2 = """\
   <defaultSource>true</defaultSource>
   <orderIndex>0</orderIndex>
   <contentSourceType>RHN</contentSourceType>
+  <enabled>true</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
   <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/errors/"/>
   <username>foousername2</username>
@@ -467,6 +475,7 @@ sourcePOSTRespXml = """\
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
   <contentSourceType>RHN</contentSourceType>
+  <enabled>false</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source2/status"/>
   <resourceErrors href="http://localhost:8000/api/contentSources/RHN/instances/plat2source2/errors/"/>
 </contentSource>
@@ -493,6 +502,7 @@ sourcePOSTResp2Xml = """\
   <defaultSource>false</defaultSource>
   <orderIndex>1</orderIndex>
   <contentSourceType>satellite</contentSourceType>
+  <enabled>false</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/status"/>
   <resourceErrors href="http://localhost:8000/api/contentSources/satellite/instances/plat2source2/errors/"/>
   <sourceUrl>https://plat2source2.example.com</sourceUrl>
