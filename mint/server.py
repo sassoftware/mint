@@ -3011,10 +3011,16 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return '0' * 32
         else:
             jobData = self.serializeBuild(buildId)
-            client = self._getMcpClient()
-            uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
-            self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
-            return uuid
+            try:
+                client = self._getMcpClient()
+                uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
+                self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+                return uuid
+            except:
+                log.exception("Failed to start image job:")
+                self.db.builds.update(buildId, status=jobstatus.FAILED,
+                        statusMessage="Failed to start image job - check logs")
+                raise
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
