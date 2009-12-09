@@ -22,6 +22,7 @@ from conary.build import lookaside
 from conary.lib import util
 from conary.repository import errors as reposErrors
 from conary.repository import changeset
+from conary.repository import filecontainer
 
 from mint import config
 from mint import jobstatus
@@ -53,11 +54,13 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
             message = txt
 
         try:
-            self.db.db.platformLoadJobs.update(self.loadJobId, platformId=self.platformId, message=message)
+            self.db.db.platformLoadJobs.update(self.loadJobId, 
+                platformId=self.platformId, message=message)
         except sqlerrors.CursorError, e:
             reopened = self.db.db.reopen()
             if reopened:
-                self.db.db.platformLoadJobs.update(self.loadJobId, platformId=self.platformId, message=message)
+                self.db.db.platformLoadJobs.update(self.loadJobId, 
+                    platformId=self.platformId, message=message)
 
     def done(self):
         self.db.db.platformLoadJobs.update(self.loadJobId, done=1)
@@ -70,9 +73,15 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
         self._downloading('Downloading', got, rate, self.totalKB)
 
     def _downloading(self, msg, got, rate, total):
-        self.csMsg("%s %dMB of %dMB (%d%%) at %dKB/sec"
-                   % (msg, got/1024/1024, total/1024/1024, (got*100)/total, 
-                      rate/1024))
+        if not total:
+            totalMsg = ''
+            totalPct = ''
+        else:
+            totalMsg = 'of %dMB ' % (total / 1024 / 1024)
+            totalPct = '(%d%%) ' % ((got * 100) / total)
+
+        self.csMsg("%s %dMB %s%sat %dKB/sec"
+                   % (msg, got/1024/1024, totalMsg, totalPct, rate/1024))
         self.update()                      
 
     def sendingChangeset(self, got, need):
@@ -406,20 +415,21 @@ class Platforms(object):
         platLoad.uri = platformLoad.uri
 
         self.backgroundRun(self._load, platform, jobId, inFile, outFilePath,
-                           repos)
+                           uri, repos)
 
         return platLoad
 
-    def _load(self, platform, jobId, inFile, outFilePath, repos):
+    def _load(self, platform, jobId, inFile, outFilePath, uri, repos):
         platformId = platform.platformId
-        label = platform.label
-        
-        totalKB = int(inFile.headers['content-length'])
-        callback = PlatformLoadCallback(self.db, platformId, jobId, totalKB)
-
+        callback = PlatformLoadCallback(self.db, platformId, jobId, None)
         # Save a reference to the callback so that we have access to it in the
         # _load_error method.
         self.callback = callback
+
+
+        if inFile.headers.has_key('content-length'):
+            totalKB = int(inFile.headers['content-length'])
+            callback.totalKB = totalKB
         
         outFile = open(outFilePath, 'w')
         total = util.copyfileobj(inFile, outFile,
@@ -427,11 +437,13 @@ class Platforms(object):
         outFile.close()
 
         callback._message('Download Complete. Figuring out what to commit..')
-        cs = changeset.ChangeSetFromFile(outFilePath) 
-        
-        removedTroves = self._filterChangeSet(cs, label)
-
+        try:
+            cs = changeset.ChangeSetFromFile(outFilePath) 
+        except filecontainer.BadContainer:
+            raise Exception("%s is not a valid conary changeset." % uri)
+        removedTroves = self._filterChangeSet(cs, platform.label)
         needsCommit = cs.removeCommitted(repos)
+
         if needsCommit:
             repos.commitChangeSet(cs, callback=callback, mirror=True)
             callback._message('Commit completed.')
