@@ -357,7 +357,7 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         db = self.openRestDatabase()
         indexer = db.capsuleMgr.getIndexer()
         sources = list(indexer.iterSources())
-        self.failUnlessEqual([x.username for x in sources],
+        self.failUnlessEqual([x.rpc.username for x in sources],
             ['JeanValjeanProxy1', 'JeanValjeanSatellite', 'JeanValjean'])
 
 if __name__ == "__main__":
