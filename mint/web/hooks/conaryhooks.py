@@ -13,6 +13,8 @@ import traceback
 import urllib
 import base64
 
+import rpath_capsule_indexer
+
 from mint import mint_error
 from mint import maintenance
 from mint.db import database as mdb
@@ -23,6 +25,7 @@ from mint.web import app
 from mint.web import cresthandler
 from mint.web.webhandler import normPath
 
+from conary import errors as cerrors
 from conary.web import webauth
 from conary import dbstore, conarycfg
 from conary.dbstore import sqlerrors
@@ -299,16 +302,27 @@ class CapsuleFilterMixIn(object):
 
         def downloadCapsule(self, capsuleKey, sha1sum):
             indexer = self._restDb.capsuleMgr.getIndexer()
-            # XXX FIXME: error handling
-            pkg = indexer.getPackage(capsuleKey, sha1sum)
+            msgTmpl = ("Error downloading capsule. "
+                "Upstream error message: (fault code: %s) %s")
+            try:
+                pkg = indexer.getPackage(capsuleKey, sha1sum)
+            except rpath_capsule_indexer.RPCError, e:
+                raise cerrors.RepositoryError(msgTmpl %
+                    (e.faultCode, e.faultString))
             fobj = file(indexer.getFullFilePath(pkg))
             return self.fromFile(fobj)
 
         def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileName,
                 fileSha1sum):
             indexer = self._restDb.capsuleMgr.getIndexer()
-            fobj = indexer.getFileFromPackage(capsuleKey, capsuleSha1sum,
-                fileName, fileSha1sum)
+            msgTmpl = ("Error downloading file from capsule. "
+                "Upstream error message: (fault code: %s) %s")
+            try:
+                fobj = indexer.getFileFromPackage(capsuleKey, capsuleSha1sum,
+                    fileName, fileSha1sum)
+            except rpath_capsule_indexer.RPCError, e:
+                raise cerrors.RepositoryError(msgTmpl %
+                    (e.faultCode, e.faultString))
             return self.fromFile(fobj)
 
         fromFile = proxy.ChangesetFilter.CapsuleDownloader.fromFile
