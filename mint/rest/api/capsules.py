@@ -7,6 +7,8 @@
 import os
 import urllib
 
+import rpath_capsule_indexer
+
 from mint import notices_store
 from mint.rest.api import base
 from mint.rest.middleware import auth, response
@@ -47,7 +49,10 @@ class ContentController(base.BaseController):
     @auth.public
     def create(self, req, capsuleType, **kwargs):
         indexer = self.db.capsuleMgr.getIndexer()
-        indexer.refresh()
+        try:
+            indexer.refresh()
+        except rpath_capsule_indexer.RPCError, e:
+            return response.response.Response(status = 500)
         return response.response.Response(content_type = "text/plain",
             status = 204)
 
