@@ -12,12 +12,8 @@ from lxml import etree as ET
 from mint import notices_store
 from mint import packagecreator
 
-class PackageNoticesCallback(packagecreator.callbacks.Callback):
+class NoticesCallback(packagecreator.callbacks.Callback):
     context = "builder"
-
-    _labelTroveName = "Name"
-    _labelTroveVersion = "Version"
-    _labelTitle = "Package Build"
 
     _lineSep = "<br/>"
 
@@ -26,24 +22,18 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         self.store = notices_store.createStore(
             os.path.join(cfg.dataPath, "notices"), userId)
 
-    def _notify(self, troveBuilder, job):
-        troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
-        title, buildDate = self.getJobMeta(job, troveBinaries)
-        description = self.getJobInformation(job, troveBinaries)
+    def _notify(self, *args, **kw):
+        raise NotImplementedError
 
-        category = (job.isFailed() and "error") or "success"
-        self._storeNotice(title, description, category, buildDate)
-
-    def _storeNotice(self, title, description, category, buildDate):
+    def _storeNotice(self, title, description, category, noticeDate):
         # Create the dummy notice so we can secure a guid
         notice = self.store.storeUser(self.context, "")
         guid = self.getNoticesUrl(notice.id)
-        item = self.makeItem(title, description, category, buildDate, guid)
+        item = self.makeItem(title, description, category, noticeDate, guid)
         notice.content = item
         self.store.storeUser(None, notice)
 
-    notify_committed = _notify
-    notify_error = _notify
+
 
     def getNoticesUrl(self, noticeId):
         return '/'.join(["/api/users", self.userId,
@@ -74,6 +64,64 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
 
         return ET.tostring(item, xml_declaration = False,
             encoding = 'UTF-8')
+
+    @classmethod
+    def formatTime(cls, tstamp):
+        # set up timezone stuff
+        if time.daylight:
+            offset = -time.altzone
+        else:
+            offset = -time.timezone
+        tzfmt = "%+03d:%02d" % (offset / 3600, (offset % 3600) / 30)
+        s = time.strftime('%a %b %d %H:%M:%S %%s %Y', time.localtime(tstamp))
+        s = s % 'UTC%s' % tzfmt
+        return s
+
+    @classmethod
+    def formatRFC822Time(cls, tstamp):
+        # set up timezone stuff
+        if time.daylight:
+            offset = -time.altzone
+        else:
+            offset = -time.timezone
+        tzfmt = "%+03d%02d" % (offset / 3600, (offset % 3600) / 30)
+        s = time.strftime('%d %b %Y %H:%M:%S %%s', time.localtime(tstamp))
+        s = s % tzfmt
+        return s
+
+    @classmethod
+    def formatSeconds(cls, secs):
+        return "%02d:%02d:%02d" % (secs / 3600, (secs % 3600) / 60, secs % 60)
+
+class RbaSetupNoticeCallback(NoticesCallback):
+
+    def __init__(self, *args, **kw):
+        self.title = 'rBuilder setup complete'
+        self.noticeDate = self.formatTime(time.time())
+        self.description = 'Setup completed on %s' % self.noticeDate
+        self.category = 'success'
+        NoticesCallback.__init__(self, *args, **kw)
+
+    def notify(self):
+        self._storeNotice(self.title, self.description, self.category, self.noticeDate)
+
+class PackageNoticesCallback(NoticesCallback):
+    context = "builder"
+
+    _labelTroveName = "Name"
+    _labelTroveVersion = "Version"
+    _labelTitle = "Package Build"
+
+    def _notify(self, troveBuilder, job):
+        troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
+        title, buildDate = self.getJobMeta(job, troveBinaries)
+        description = self.getJobInformation(job, troveBinaries)
+
+        category = (job.isFailed() and "error") or "success"
+        self._storeNotice(title, description, category, buildDate)
+
+    notify_committed = _notify
+    notify_error = _notify
 
     @classmethod
     def getJobBuiltTroves(cls, tb, job):
@@ -123,33 +171,6 @@ class PackageNoticesCallback(packagecreator.callbacks.Callback):
         ret.append("")
         return cls._lineSep.join(ret)
 
-    @classmethod
-    def formatTime(cls, tstamp):
-        # set up timezone stuff
-        if time.daylight:
-            offset = -time.altzone
-        else:
-            offset = -time.timezone
-        tzfmt = "%+03d:%02d" % (offset / 3600, (offset % 3600) / 30)
-        s = time.strftime('%a %b %d %H:%M:%S %%s %Y', time.localtime(tstamp))
-        s = s % 'UTC%s' % tzfmt
-        return s
-
-    @classmethod
-    def formatRFC822Time(cls, tstamp):
-        # set up timezone stuff
-        if time.daylight:
-            offset = -time.altzone
-        else:
-            offset = -time.timezone
-        tzfmt = "%+03d%02d" % (offset / 3600, (offset % 3600) / 30)
-        s = time.strftime('%d %b %Y %H:%M:%S %%s', time.localtime(tstamp))
-        s = s % tzfmt
-        return s
-
-    @classmethod
-    def formatSeconds(cls, secs):
-        return "%02d:%02d:%02d" % (secs / 3600, (secs % 3600) / 60, secs % 60)
 
 class ApplianceNoticesCallback(PackageNoticesCallback):
     _labelTitle = "Build"
