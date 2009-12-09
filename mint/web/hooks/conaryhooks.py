@@ -572,7 +572,7 @@ def _resolveProjectRepos(db, hostname, fqdn):
             whereArg)
     project = cu.fetchone()
     if project:
-        (projectId, projectHOstName, fqdn, external, database, commitEmail,
+        (projectId, projectHostName, fqdn, external, database, commitEmail,
                 localMirror) = project
 
     return (projectHostName, projectId, fqdn, external, database,
