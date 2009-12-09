@@ -39,6 +39,7 @@ install: default-install
 	# system dist (data)
 	install -D -m0644 bootman.conf $(DESTDIR)/etc/bootloader.d/rbuilder.conf
 	install -D -m0644 firewall $(DESTDIR)/etc/firewall
+	install -D -m0644 firewall6 $(DESTDIR)/etc/firewall6
 	install -D -m0644 rbuilder.logrotate $(DESTDIR)/etc/logrotate.d/rbuilder
 	install -D -m0644 rbuilder.cron $(DESTDIR)/etc/cron.d/rbuilder.cron
 	install -D -m0644 httpd.conf $(DESTDIR)/etc/httpd/conf.d/rbuilder-common

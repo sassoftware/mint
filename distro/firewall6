@@ -1,24 +1,21 @@
-## Base firewall configuration
+## Base firewall configuration (IPv6)
 *filter
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
+:FROM-SLAVE - [0:0]
 
 ## INPUT rules
 # Allow loopback
 -A INPUT -i lo -j ACCEPT
-# Jobslave traffic shouldn't be using IPv4
--A INPUT -i jm.+ -j DROP
+# Route jobslave traffic through its own chain.
+-A INPUT -i jm.+ -j FROM-SLAVE
 # Allow already-established connections
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 # Allow ICMP
--A INPUT -p icmp --icmp-type any -j ACCEPT
-# Allow SSH, SNMP, nagios
+-A INPUT -p icmpv6 -j ACCEPT
+# Allow SSH
 -A INPUT -m tcp -p tcp --dport 22 -j ACCEPT
--A INPUT -m state --state NEW -m tcp -p tcp --dport 161 -j ACCEPT
--A INPUT -m state --state NEW -m udp -p udp --dport 161 -j ACCEPT
--A INPUT -m state --state NEW -m tcp -p tcp --dport 35000 -j ACCEPT
--A INPUT -m state --state NEW -m udp -p udp --dport 35000 -j ACCEPT
 # HTTP/S for rBuilder
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
@@ -29,8 +26,17 @@
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 9999 -j ACCEPT
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 50900 -j ACCEPT
 # Reject anything that hasn't been allowed yet
--A INPUT -m tcp -p tcp -j REJECT --reject-with tcp-reset
--A INPUT -j REJECT
+-A INPUT -j REJECT --reject-with adm-prohibited
+
+## From jobslave to the rBuilder (not the outside world)
+# Allow ICMPv6
+-A FROM-SLAVE -p ipv6-icmp -j ACCEPT
+# Allow proxy
+-A FROM-SLAVE -m tcp -p tcp --dport 7770 -j ACCEPT
+# XXX: allow http until there is a restricted conary proxy port
+-A FROM-SLAVE -m tcp -p tcp --dport 80 -j ACCEPT
+# Reject anything that hasn't been allowed yet
+-A FROM-SLAVE -j REJECT --reject-with adm-prohibited
 
 
 COMMIT
