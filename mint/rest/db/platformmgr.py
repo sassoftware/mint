@@ -219,6 +219,7 @@ class Platforms(object):
                 if i < apnLength:
                     platformName = self.cfg.availablePlatformNames[i]
 
+            platformUsageTerms = None
             if platDef:
                 platformName = platDef.getPlatformName()
                 platformUsageTerms = platDef.getPlatformUsageTerms()
