@@ -4131,7 +4131,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getProductDefinitionForVersion(self, versionId):
         pd = self._getProductDefinitionForVersionObj(versionId)
         sio = StringIO.StringIO()
-        pd.serialize(sio)
+        # Since we write back what we read in, we should not validate here
+        pd.serialize(sio, validate = False)
         return sio.getvalue()
 
     @private
