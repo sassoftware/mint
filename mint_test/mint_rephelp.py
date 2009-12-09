@@ -987,6 +987,23 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         f = file(fileName)
         assert(contents in f.read())
 
+    def inboundMirror(self, debug = False):
+        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
+              self.port
+
+        scriptPath = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+            'scripts')
+        mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
+        assert(os.access(mirrorScript, os.X_OK))
+        cfg = self.mintServers.getServer(0).serverRoot + '/rbuilder.conf'
+        cmd = "%s %s -c %s" % (mirrorScript, url, cfg)
+        if debug:
+            os.system(cmd + ' --show-mirror-cfg')
+        else:
+            #self.captureAllOutput( os.system, cmd)
+            os.system(cmd)
+
+
     def __del__(self):
         try:
             self.stop()

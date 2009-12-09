@@ -45,19 +45,6 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
             self.addCollection('test%d' % i, '1.0', [ "test%d:runtime" % i ],
                               repos = repos)
 
-    def inboundMirror(self):
-        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
-              self.port
-
-        mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
-        assert(os.access(mirrorScript, os.X_OK))
-        cfg = self.servers.getServer(0).serverRoot + '/rbuilder.conf'
-        cmd = "%s %s -c %s" % (mirrorScript, url, cfg)
-        if debug:
-            os.system(cmd + ' --show-mirror-cfg')
-        else:
-            self.captureAllOutput( os.system, cmd)
-
     def outboundMirror(self):
         import xmlrpclib
         oldxmlrpclib = xmlrpclib
