@@ -111,12 +111,13 @@ createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
 chown -f apache:apache /srv/rbuilder/data/db /srv/rbuilder/repos/* 2>/dev/null
 rm -f /srv/rbuilder/data/platformName.cache
 
-# Migrate all conary repositories
-"$scriptdir"/migrate-all-projects
-
 # Migrate the mint config
 "$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
 chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
+
+# Migrate all conary repositories
+"$scriptdir"/migrate-all-projects
+
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
