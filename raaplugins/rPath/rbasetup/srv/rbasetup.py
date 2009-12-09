@@ -20,6 +20,7 @@ from rPath.rbasetup import lib
 
 from mint import config
 from mint import helperfuncs
+from mint import notices_callbacks
 from mint import rmake_setup
 from mint import shimclient
 from mint.lib.siteauth import SiteAuthorization
@@ -357,5 +358,11 @@ class rBASetup(rAASrvPlugin):
         # Done
         self.message += "Setup is complete.\n"
         self.reportMessage(execId, self.message)
+
+        cfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
+        cb = notices_callbacks.RbaSetupNoticeCallback(cfg,
+                options.get('new_username'))
+        cb.notify()
+
         return { 'step': lib.FTS_STEP_COMPLETE, 'message': self.message }
 
