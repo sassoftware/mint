@@ -219,6 +219,7 @@ class Platforms(object):
                 if i < apnLength:
                     platformName = self.cfg.availablePlatformNames[i]
 
+            platformUsageTerms = None
             if platDef:
                 platformName = platDef.getPlatformName()
                 platformUsageTerms = platDef.getPlatformUsageTerms()
@@ -339,11 +340,12 @@ class Platforms(object):
         # Also check for mirroring permissions for configurable platforms.
         # This is the best place to do this, since this method always gets
         # called when fetching a platform.
-        for p in platforms:
-            if p.label in self.cfg.configurablePlatforms:
-                p.mirrorPermission = self._checkMirrorPermissions(p)
-            else:
-                p.mirrorPermission = False
+        if self.db.siteAuth:
+            for p in platforms:
+                if p.label in self.cfg.configurablePlatforms:
+                    p.mirrorPermission = self._checkMirrorPermissions(p)
+                else:
+                    p.mirrorPermission = False
 
         return platforms
 
@@ -545,10 +547,12 @@ class Platforms(object):
 
     def _getAuthInfo(self):
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
-        entitlement = self.db.siteAuth.entitlementKey
-        authInfo = models.AuthInfo(authType='entitlement',
-                                   entitlement=entitlement)
-        return authInfo
+        if self.db.siteAuth:
+            entitlement = self.db.siteAuth.entitlementKey
+            return models.AuthInfo(authType='entitlement',
+                    entitlement=entitlement)
+        else:
+            return models.AuthInfo(authType='none')
 
     def _setupPlatform(self, platform):
         platformId = int(platform.platformId)
