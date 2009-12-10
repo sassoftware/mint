@@ -24,6 +24,13 @@
    inkscape:export-ydpi="90">
   <defs
      id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 384 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="1024 : 384 : 1"
+       inkscape:persp3d-origin="512 : 256 : 1"
+       id="perspective2918" />
     <linearGradient
        id="linearGradient4124">
       <stop
@@ -44,7 +51,7 @@
        x2="39.620323"
        y2="460.18985"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.5928175,0,0,1.5928175,2.6174336,-287.16985)" />
+       gradientTransform="matrix(1.5699253,0,0,1.5792477,7.0350362,-285.01166)" />
     <filter
        id="filter3369"
        inkscape:label="Drop shadow"
@@ -89,22 +96,23 @@
      objecttolerance="10"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.1065185"
-     inkscape:cx="519.60187"
-     inkscape:cy="393.45422"
+     inkscape:zoom="1.2109375"
+     inkscape:cx="512"
+     inkscape:cy="384"
      inkscape:document-units="px"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer4"
      showgrid="false"
-     borderlayer="true"
+     borderlayer="false"
      inkscape:showpageshadow="false"
      showguides="true"
      inkscape:guide-bbox="true"
-     inkscape:window-width="1400"
-     inkscape:window-height="979"
-     inkscape:window-x="1600"
-     inkscape:window-y="25"
-     showborder="true"
-     inkscape:window-maximized="1" />
+     inkscape:window-width="1508"
+     inkscape:window-height="1179"
+     inkscape:window-x="92"
+     inkscape:window-y="0"
+     showborder="false"
+     inkscape:window-maximized="1"
+     inkscape:snap-page="true" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -120,15 +128,15 @@
      inkscape:label="gradient-bg"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,288)"
+     style="display:inline"
      sodipodi:insensitive="true">
     <rect
        style="fill:url(#linearGradient4130);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.75;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        id="rect2738"
-       width="1038.8268"
-       height="774.59912"
-       x="-4.4152431"
-       y="-290.18387" />
+       width="1024"
+       height="768"
+       x="0"
+       y="0" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -195,11 +203,12 @@
   <g
      inkscape:groupmode="layer"
      id="layer6"
-     inkscape:label="rpath-corner">
+     inkscape:label="rpath-corner"
+     style="display:inline">
     <switch
        style="display:inline"
        id="switch4699"
-       transform="matrix(0.9854082,0,0,0.9854082,868.23127,28.670511)">
+       transform="matrix(0.9854082,0,0,0.9854082,894.23127,28.670511)">
       <foreignObject
          requiredExtensions="http://ns.adobe.com/AdobeIllustrator/10.0/"
          x="0"
@@ -353,7 +362,7 @@
      style="display:inline"
      transform="translate(0,288)">
     <switch
-       transform="matrix(2.2577672,0,0,2.2577672,156.34366,-1.666596)"
+       transform="matrix(2.2577672,0,0,2.2577672,156.34366,-27.666596)"
        id="switch4525"
        style="filter:url(#filter3369)">
       <foreignObject
@@ -414,5 +423,74 @@
         </g>
       </g>
     </switch>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="syslinux-mask"
+     style="display:none"
+     sodipodi:insensitive="true">
+    <rect
+       style="fill:#000000;fill-opacity:0.30666671;fill-rule:evenodd;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2919"
+       width="736.54437"
+       height="385.89505"
+       x="143.69394"
+       y="26.03319" />
+    <text
+       xml:space="preserve"
+       style="font-size:63.82972336px;font-style:normal;font-weight:normal;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="255.09007"
+       y="226.27388"
+       id="text3693"><tspan
+         sodipodi:role="line"
+         id="tspan3695"
+         x="255.09007"
+         y="226.27388">SYSLINUX MENU</tspan></text>
+    <rect
+       style="fill:#000000;fill-opacity:0.30666671;stroke:none"
+       id="rect3697"
+       width="1023.9323"
+       height="123.81176"
+       x="-0.90373546"
+       y="411.92822" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 143.69394,78.44985 736.54439,0"
+       id="path3701" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="35.245686"
+       y="469.7673"
+       id="text3719"><tspan
+         sodipodi:role="line"
+         id="tspan3721"
+         x="35.245686"
+         y="469.7673">SYSLINUX ENTRY AREA</tspan></text>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer7"
+     inkscape:label="splashy-mask"
+     style="display:none"
+     sodipodi:insensitive="true">
+    <rect
+       style="fill:#7f7f7f;fill-opacity:1;stroke:#000000;stroke-opacity:1"
+       id="rect3713"
+       width="820.5918"
+       height="40.668095"
+       x="101.21837"
+       y="689.375" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;fill:#ff9c00;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="377.76141"
+       y="724.62067"
+       id="text3715"><tspan
+         sodipodi:role="line"
+         id="tspan3717"
+         x="377.76141"
+         y="724.62067">SPLASHY BAR</tspan></text>
   </g>
 </svg>
