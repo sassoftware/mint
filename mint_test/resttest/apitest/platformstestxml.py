@@ -267,6 +267,12 @@ sourceDescriptor2Xml = """\
       </prompt>
       <type>str</type>
       <password>false</password>
+      <constraints>
+        <descriptions>
+          <desc>URL must begin with ftp://, http://, or https://</desc>
+        </descriptions>
+        <regexp>^(http|https|ftp):\/\/.*</regexp>
+      </constraints>
     </field>
   </dataFields>
 </configDescriptor>
