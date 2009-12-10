@@ -50,6 +50,9 @@ install: default-install
 	install -D -m0755 rbuilder.tmpwatch $(DESTDIR)/etc/cron.daily/rbuilder.tmpwatch
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/init.d/rbuilder
+	# splashy theme
+	install -D -m0644 splashy.xml $(DESTDIR)/usr/share/splashy/themes/rbuilder/theme.xml
+	install -D -m0644 FreeSans.ttf $(DESTDIR)/usr/share/splashy/themes/rbuilder/FreeSans.ttf
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
