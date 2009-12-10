@@ -172,12 +172,16 @@ class ContentSourceTypes(object):
         dFields = []
         for field in sourceTypeInst.fields:
             p = models.Prompt(desc=field.prompt)
-            f = models.DescriptorField(name=field.name,
-                           required=field.required,
-                           descriptions=[models.Description(desc=field.description)],
-                           prompt=p,
-                           type=field.type,
-                           password=field.password)
+
+            c = None
+            if hasattr(field, 'regexp'):
+                c = models.Constraints(regexp=field.regexp,
+                            descriptions=[models.Description(desc=field.regexpDescription)])
+
+            f = models.DescriptorField(name=field.name, required=field.required,
+                        descriptions=[models.Description(desc=field.description)],
+                        prompt=p, type=field.type, password=field.password,
+                        constraints=c)
             dFields.append(f)                                   
 
         dataFields = models.DataFields(dFields)

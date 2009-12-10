@@ -47,6 +47,8 @@ class SourceUrl(Field):
     prompt = 'Source URL'
     type = 'str'
     password = False
+    regexp = '^(http|https|ftp):\/\/.*'
+    regexpDescription = 'URL must begin with ftp://, http://, or https://'
 
 class Name(Field):
     name = 'name'
