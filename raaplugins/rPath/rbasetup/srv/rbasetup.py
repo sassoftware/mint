@@ -361,7 +361,7 @@ class rBASetup(rAASrvPlugin):
         # Since this plugin runs as root, we need to reset the permissions of
         # the rbuilder notices dir to apache.
         uid, gid = pwd.getpwnam('apache')[2:4]
-        _chown('/srv/rbuilder/notices', uid, gid)
+        self._chown('/srv/rbuilder/notices', uid, gid)
 
         cfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
         cb = notices_callbacks.RbaSetupNoticeCallback(cfg,
