@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 12)
+    Version = (48, 13)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -775,6 +775,16 @@ class MigrateTo_48(SchemaMigration):
                 SELECT * FROM InboundMirrors m
                 WHERE p.projectId = m.targetProjectId
             )""")
+        return True
+
+    # 48.13
+    # - nevra.epoch is not nullable - but we won't enforce the constraint here
+    # we will only convert the data
+    def migrate13(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            UPDATE ci_rhn_nevra SET epoch = -1 WHERE epoch IS NULL
+        """)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

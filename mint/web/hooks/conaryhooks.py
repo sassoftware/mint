@@ -196,7 +196,7 @@ def _addCapsuleConfig(context, conaryReposCfg, repName):
     restDb = _getRestDb(context)
     # XXX we should speed these up by combining into a single call
     indexer = restDb.capsuleMgr.getIndexer()
-    if not list(indexer.iterSources()):
+    if not list(indexer.iterSources(valid = False)):
         return
     contentInjectionServers = restDb.capsuleMgr.getContentInjectionServers()
     if not contentInjectionServers or repName not in contentInjectionServers:
