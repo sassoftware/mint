@@ -4,7 +4,7 @@
     py:extends="raa.templates.master">
 
 <!--
-Copyright (c) 2006-2008 rPath, Inc.
+Copyright (c) 2006-2010 rPath, Inc.
     All Rights Reserved
 -->
 
@@ -180,7 +180,7 @@ Copyright (c) 2006-2008 rPath, Inc.
         </p>
 
         <p>
-        Copyright &#169; 2005 - 2009.  rPath, Inc.  All rights reserved.
+        Copyright &#169; 2005 - 2010.  rPath, Inc.  All rights reserved.
         </p>
         
         <p>
