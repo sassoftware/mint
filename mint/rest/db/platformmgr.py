@@ -118,7 +118,7 @@ class ContentSourceTypes(object):
     def _listFromCfg(self):
         allTypesMap = dict()
         allTypes = []
-        for label, name, enabled, sourceTypes, configurable in self.platforms._iterConfigPlatforms():
+        for label, name, usageTerms, enabled, sourceTypes, configurable in self.platforms._iterConfigPlatforms():
             for t, isSingleton in sourceTypes:
                 if t not in allTypes:
                     allTypes.append(t)
@@ -172,12 +172,16 @@ class ContentSourceTypes(object):
         dFields = []
         for field in sourceTypeInst.fields:
             p = models.Prompt(desc=field.prompt)
-            f = models.DescriptorField(name=field.name,
-                           required=field.required,
-                           descriptions=[models.Description(desc=field.description)],
-                           prompt=p,
-                           type=field.type,
-                           password=field.password)
+
+            c = None
+            if hasattr(field, 'regexp'):
+                c = models.Constraints(regexp=field.regexp,
+                            descriptions=[models.Description(desc=field.regexpDescription)])
+
+            f = models.DescriptorField(name=field.name, required=field.required,
+                        descriptions=[models.Description(desc=field.description)],
+                        prompt=p, type=field.type, password=field.password,
+                        constraints=c)
             dFields.append(f)                                   
 
         dataFields = models.DataFields(dFields)
@@ -219,8 +223,10 @@ class Platforms(object):
                 if i < apnLength:
                     platformName = self.cfg.availablePlatformNames[i]
 
+            platformUsageTerms = None
             if platDef:
                 platformName = platDef.getPlatformName()
+                platformUsageTerms = platDef.getPlatformUsageTerms()
                 platformProv = platDef.getContentProvider()
                 if platformProv:
                     types = [(t.name, t.isSingleton)
@@ -237,7 +243,8 @@ class Platforms(object):
 
             configurable = platformLabel in self.cfg.configurablePlatforms
 
-            yield platformLabel, platformName, enabled, types, configurable
+            yield (platformLabel, platformName, platformUsageTerms,
+                enabled, types, configurable)
 
     def _platformModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
@@ -251,11 +258,13 @@ class Platforms(object):
         configurable = kw.get('configurable', None)
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
+        platformUsageTerms = kw.get('platformUsageTerms')
         platform = models.Platform(platformId=platformId, label=label,
                 platformName=platformName, enabled=enabled,
+                platformUsageTerms=platformUsageTerms,
                 configurable=configurable, mode=mode,
                 repositoryHostname=fqdn)
-        platform._sourceTypes = sourceTypes                               
+        platform._sourceTypes = sourceTypes
         return platform
 
     def _create(self, platform):
@@ -306,7 +315,7 @@ class Platforms(object):
         dbLabels = [p.label for p in dbPlatforms]
         cfgLabels = [p.label for p in cfgPlatforms]
 
-        fields = ['platformName', 'hostname',
+        fields = ['platformName', 'platformUsageTerms', 'hostname',
                   '_sourceTypes', 'configurable']
 
         platforms = []
@@ -335,11 +344,12 @@ class Platforms(object):
         # Also check for mirroring permissions for configurable platforms.
         # This is the best place to do this, since this method always gets
         # called when fetching a platform.
-        for p in platforms:
-            if p.label in self.cfg.configurablePlatforms:
-                p.mirrorPermission = self._checkMirrorPermissions(p)
-            else:
-                p.mirrorPermission = False
+        if self.db.siteAuth:
+            for p in platforms:
+                if p.label in self.cfg.configurablePlatforms:
+                    p.mirrorPermission = self._checkMirrorPermissions(p)
+                else:
+                    p.mirrorPermission = False
 
         return platforms
 
@@ -357,9 +367,10 @@ class Platforms(object):
 
     def _listFromCfg(self):
         platforms = []
-        for label, name, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
+        for label, name, usageTerms, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
-                                platformName=name, 
+                                platformName=name,
+                                platformUsageTerms=usageTerms,
                                 enabled=enabled, configurable=configurable,
                                 sourceTypes=sourceTypes)
             platforms.append(platform)
@@ -540,10 +551,12 @@ class Platforms(object):
 
     def _getAuthInfo(self):
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
-        entitlement = self.db.siteAuth.entitlementKey
-        authInfo = models.AuthInfo(authType='entitlement',
-                                   entitlement=entitlement)
-        return authInfo
+        if self.db.siteAuth:
+            entitlement = self.db.siteAuth.entitlementKey
+            return models.AuthInfo(authType='entitlement',
+                    entitlement=entitlement)
+        else:
+            return models.AuthInfo(authType='none')
 
     def _setupPlatform(self, platform):
         platformId = int(platform.platformId)

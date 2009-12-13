@@ -180,6 +180,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         ds = pl1.newDataSource('Channel 1', 'Channel 1')
         pl1.setContentProvider('Crowbar', 'Crowbar', [cst, cst2], [ds])
         pl1.setPlatformName('Crowbar Linux 1')
+        pl1.setPlatformUsageTerms('Terms of Use 1')
         pl1.saveToRepository(self.cclient, platformLabel1)
 
         platformLabel2 = self.mintCfg.availablePlatforms[1]
@@ -188,6 +189,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         ds = pl1.newDataSource('Channel 1', 'Channel 1')
         pl1.setContentProvider('Crowbar', 'Crowbar', [cst], [ds])
         pl2.setPlatformName('Crowbar Linux 2')
+        pl2.setPlatformUsageTerms('Terms of Use 2')
         pl2.saveToRepository(self.cclient, platformLabel2)
 
     def getConaryClient(self):

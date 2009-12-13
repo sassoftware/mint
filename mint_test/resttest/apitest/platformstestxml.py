@@ -6,6 +6,7 @@ platformsXml = """\
     <repositoryHostname>localhost</repositoryHostname>
     <label>localhost@rpath:plat-1</label>
     <platformName>Crowbar Linux 1</platformName>
+    <platformUsageTerms>Terms of Use 1</platformUsageTerms>
     <mode>manual</mode>
     <enabled>false</enabled>
     <configurable>true</configurable>
@@ -21,6 +22,7 @@ platformsXml = """\
     <repositoryHostname>localhost</repositoryHostname>
     <label>localhost@rpath:plat-2</label>
     <platformName>Crowbar Linux 2</platformName>
+    <platformUsageTerms>Terms of Use 2</platformUsageTerms>
     <mode>manual</mode>
     <enabled>false</enabled>
     <configurable>true</configurable>
@@ -41,6 +43,7 @@ platformXml = """\
   <repositoryHostname>localhost</repositoryHostname>
   <label>localhost@rpath:plat-1</label>
   <platformName>Crowbar Linux 1</platformName>
+  <platformUsageTerms>Terms of Use 1</platformUsageTerms>
   <mode>manual</mode>
   <enabled>false</enabled>
   <configurable>true</configurable>
@@ -264,6 +267,12 @@ sourceDescriptor2Xml = """\
       </prompt>
       <type>str</type>
       <password>false</password>
+      <constraints>
+        <descriptions>
+          <desc>URL must begin with ftp://, http://, or https://</desc>
+        </descriptions>
+        <regexp>^(http|https|ftp):\/\/.*</regexp>
+      </constraints>
     </field>
   </dataFields>
 </configDescriptor>
@@ -442,6 +451,7 @@ platformPUTXml = """\
   <repositoryHostname>localhost</repositoryHostname>
   <label>localhost@rpath:plat-1</label>
   <platformName>Crowbar Linux 1</platformName>
+  <platformUsageTerms>Terms of Use 1</platformUsageTerms>
   <mode>manual</mode>
   <enabled>true</enabled>
   <configurable>true</configurable>

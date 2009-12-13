@@ -111,6 +111,7 @@ class Platform(Model):
     platformVersion = fields.CharField()
     productVersion = fields.CharField()
     platformName = fields.CharField()
+    platformUsageTerms = fields.CharField()
     mode = fields.CharField()
     enabled = fields.BooleanField()
     configurable = fields.BooleanField()

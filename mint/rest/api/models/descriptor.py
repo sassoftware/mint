@@ -14,6 +14,10 @@ class Metadata(Model):
 class Prompt(Model):
     desc = fields.CharField()
 
+class Constraints(Model):
+    descriptions = fields.ListField(Description)
+    regexp = fields.CharField()
+
 class DescriptorField(Model):
     name = fields.CharField()
     required = fields.BooleanField()
@@ -21,6 +25,7 @@ class DescriptorField(Model):
     prompt = fields.ModelField(Prompt)
     type = fields.CharField()
     password = fields.BooleanField()
+    constraints = fields.ModelField(Constraints)
 
 class DataFields(Model):
     field = fields.ListField(DescriptorField)

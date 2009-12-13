@@ -155,7 +155,7 @@ then
     touch "$PLATFORMS_FILE"
 elif [ ! -e "$PLATFORMS_FILE" ]
 then
-    "$scriptdir"/enable_platforms
+    "$scriptdir"/enable-platforms
     touch "$PLATFORMS_FILE"
 fi
 

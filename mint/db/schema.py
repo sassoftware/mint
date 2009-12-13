@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 12)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 13)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -858,7 +858,7 @@ def _createCapsuleIndexerSchema(db):
             CREATE TABLE ci_rhn_nevra (
                 nevra_id %(PRIMARYKEY)s,
                 name VARCHAR NOT NULL,
-                epoch INTEGER,
+                epoch INTEGER NOT NULL,
                 version VARCHAR NOT NULL,
                 release VARCHAR NOT NULL,
                 arch VARCHAR NOT NULL
