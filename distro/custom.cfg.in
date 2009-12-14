@@ -3,6 +3,7 @@ server.supplemental_groups = ['apache']
 plugins.disable = ['/configure/ConaryConf', '/flipflop/Update', '/factoryreset/FactoryReset', '/loadmirror/LoadMirror']
 product.productName="rBuilder Appliance"
 product.productVersion="@VERSION@"
+product.companyCopyYears="2006-2010"
 services.Services.hidden = True
 apphome.visible = True
 apphome.text = "rBuilder"
