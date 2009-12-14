@@ -590,11 +590,11 @@ class Platforms(object):
         return projectId
 
     def update(self, platformId, platform):
-        self.db.db.platforms.update(platformId, enabled=int(platform.enabled))
-        self.db.db.platforms.update(platformId, mode=platform.mode)
-
         if platform.enabled:
             self._setupPlatform(platform)
+
+        self.db.db.platforms.update(platformId, enabled=int(platform.enabled))
+        self.db.db.platforms.update(platformId, mode=platform.mode)
 
         return self.getById(platformId)
 
