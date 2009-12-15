@@ -120,7 +120,7 @@ platformSourceStatusXml4 = """\
 <platformSourceStatus>
   <connected>true</connected>
   <valid>false</valid>
-  <message> Platform definition not found in repository https://localhost/conary/.</message>
+  <message> Repository is empty, please manually load the base slice for this platform available from http://docs.rpath.com/platforms/platform_repositories.html.</message>
 </platformSourceStatus>
 """
 
