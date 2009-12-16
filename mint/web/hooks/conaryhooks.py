@@ -309,6 +309,8 @@ class CapsuleFilterMixIn(object):
             except rpath_capsule_indexer.RPCError, e:
                 raise cerrors.RepositoryError(msgTmpl %
                     (e.faultCode, e.faultString))
+            if pkg is None:
+                raise cerrors.RepositoryError("Error downloading capsule.  Please check the repository logs and verify credentials")
             fobj = file(indexer.getFullFilePath(pkg))
             return self.fromFile(fobj)
 
