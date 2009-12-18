@@ -1,6 +1,9 @@
 #!/usr/bin/python
 from mint.scripts import refresh_auth
-import sys
+import os, pwd, sys
 
 if __name__ == '__main__':
-    sys.exit(refresh_auth.RefreshAuthScript().run())
+    refresh_auth.RefreshAuthScript().run()
+    uid, gid = pwd.getpwnam('apache')[2:4]
+    os.chown('/srv/rbuilder/data/authorization.cfg', uid, gid)
+    os.chown('/srv/rbuilder/data/authorization.xml', uid, gid)
