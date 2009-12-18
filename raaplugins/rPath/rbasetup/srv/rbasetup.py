@@ -367,8 +367,7 @@ class rBASetup(rAASrvPlugin):
         # the rbuilder notices dir to apache.
         uid, gid = pwd.getpwnam('apache')[2:4]
         self._chown('/srv/rbuilder/notices', uid, gid)
-        # reset the permissions of the data dir to apache
-        self._chown('/srv/rbuilder/data', uid, gid)
+
         return { 'step': lib.FTS_STEP_COMPLETE, 'message': self.message }
 
     def _chown(self, root, uid, gid):
