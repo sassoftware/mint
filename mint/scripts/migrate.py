@@ -787,6 +787,25 @@ class MigrateTo_48(SchemaMigration):
         """)
         return True
 
+class MigrateTo_49(SchemaMigration):
+    Version = (49, 0)
+
+    # 49.0
+    # - Added TargetUserCredentials
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            CREATE TABLE TargetUserCredentials (
+                targetId        integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                userId          integer             NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                name            varchar(255)        NOT NULL,
+                value           text,
+                PRIMARY KEY ( targetId, userId, name )
+            ) %(TABLEOPTS)s """ % self.db.keywords)
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
