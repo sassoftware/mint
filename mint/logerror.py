@@ -112,7 +112,6 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
 
     # send email
     if cfg and doEmail:
-        return
         base_exception = traceback.format_exception_only(
             e_type, e_value)[-1].strip()
         if cfg.rBuilderOnline:
