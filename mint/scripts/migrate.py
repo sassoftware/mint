@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 13)
+    Version = (48, 14)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -786,6 +786,11 @@ class MigrateTo_48(SchemaMigration):
             UPDATE ci_rhn_nevra SET epoch = -1 WHERE epoch IS NULL
         """)
         return True
+
+    # 48.14
+    # Drop the platformLoadJobs table
+    def migrate14(self):
+        drop_tables(self.db, 'platformLoadJobs')
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
