@@ -218,6 +218,7 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     cfg.reposContentsDir = " ".join([reposDir + "/contents1/%s/", reposDir + "/contents2/%s/"])
 
     cfg.dataPath = reposDir
+    cfg.storagePath = reposDir + '/jobs'
     cfg.logPath = reposDir + '/logs'
     cfg.imagesPath = reposDir + '/images/'
     cfg.siteAuthCfgPath = reposDir + '/authorization.cfg'
