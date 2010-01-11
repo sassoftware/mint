@@ -28,7 +28,6 @@ log = logging.getLogger(__name__)
 # database schema major version
 RBUILDER_DB_VERSION = sqllib.DBversion(49, 0)
 
-
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
     retUpdate = db.createTrigger(table, column, "UPDATE")
@@ -814,19 +813,6 @@ def _createPlatforms(db):
                     REFERENCES platformSources ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsPlatformSources'] = []
-        changed = True
-
-    if 'PlatformLoadJobs' not in db.tables:
-        cu.execute("""
-            CREATE TABLE PlatformLoadJobs (
-                jobId %(PRIMARYKEY)s,
-                platformId          integer         NOT NULL
-                    REFERENCES platforms ON DELETE CASCADE,
-                message             varchar(255) NOT NULL,
-                done                smallint NOT NULL DEFAULT 0,
-                error               smallint NOT NULL DEFAULT 0
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['PlatformLoadJobs'] = []
         changed = True
 
     return changed

@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 13)
+    Version = (48, 14)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -792,6 +792,7 @@ class MigrateTo_49(SchemaMigration):
 
     # 49.0
     # - Added TargetUserCredentials
+    # - Dropped platformLoadJobs table
     def migrate(self):
         cu = self.db.cursor()
         cu.execute("""
@@ -804,6 +805,9 @@ class MigrateTo_49(SchemaMigration):
                 value           text,
                 PRIMARY KEY ( targetId, userId, name )
             ) %(TABLEOPTS)s """ % self.db.keywords)
+
+        drop_tables(self.db, 'platformLoadJobs')
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
