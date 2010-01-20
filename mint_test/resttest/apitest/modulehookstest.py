@@ -23,32 +23,33 @@ import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-class SiteTest(restbase.BaseRestTest):
+class ModuleHooksTest(restbase.BaseRestTest):
+
+    def setUp(self):
+        restbase.BaseRestTest.setUp(self)
+        self.f1 = open('/tmp/test1.swf','w')
+        self.f2 = open('/tmp/test2.swf','w')
+        
+    def tearDown(self):
+        os.remove(self.f1.name)
+        os.remove(self.f2.name)
+
     def testGetInfo(self):
-        uriTemplate = ''
+        uriTemplate = '/moduleHooks'
         uri = uriTemplate
         client = self.getRestClient()
+        self.mintCfg.moduleHooksDir = '/tmp'
         req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<rbuilderStatus id="http://%(server)s:%(port)s/api">
-  <version>%(version)s</version>
-  <conaryVersion>%(conaryversion)s</conaryVersion>
-  <isRBO>false</isRBO>
-  <identity>
-    <rbuilderId></rbuilderId>
-    <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>
-    <registered>false</registered>
-  </identity>
-  <products href="http://%(server)s:%(port)s/api/products/"/>
-  <users href="http://%(server)s:%(port)s/api/users/"/>
-  <platforms href="http://%(server)s:%(port)s/api/platforms/"/>
-  <registration href="http://%(server)s:%(port)s/api/registration"/>
-  <reports href="http://%(server)s:%(port)s/api/reports/"/>
-  <moduleHooks href="http://%(server)s:%(port)s/api/moduleHooks/"/>
-  <maintMode>false</maintMode>
-  <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
-</rbuilderStatus>
+<moduleHooks>
+  <moduleHook>
+    <url>hooks/test1.swf</url>
+  </moduleHook>
+  <moduleHook>
+    <url>hooks/test2.swf</url>
+  </moduleHook>
+</moduleHooks>
 """
         self.assertBlobEquals(response,
              exp % dict(port = client.port, server = client.server,
