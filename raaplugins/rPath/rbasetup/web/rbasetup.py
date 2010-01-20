@@ -316,7 +316,9 @@ class rBASetup(rAAWebPlugin):
             (currentStatus['status'] == constants.TASK_SUCCESS and
              not self.getPropertyValue('FINALIZED', False)):
             sched = schedule.ScheduleOnce(time.time() + 1)
-            schedId = self.callBackendAsync(sched, 'firstTimeSetup', dict(retry=True))
+            schedId = self.callBackendAsync(sched, 'firstTimeSetup',
+                        dict(retry=True, 
+                             new_username=self.getPropertyValue('RBA_ADMIN')))
             self.deletePropertyValue('FTS_SCHEDID')
             self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
             return self._getFirstTimeSetupStatus()
