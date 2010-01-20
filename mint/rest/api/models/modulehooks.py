@@ -13,5 +13,5 @@ class ModuleHook(Model):
 class ModuleHooks(Model):
     class Meta(object):
         name = 'moduleHooks'
-    moduleHooks = fields.ListField(ModuleHook, displayName='moduleHooks')
+    moduleHooks = fields.ListField(ModuleHook, displayName='moduleHook')
 
