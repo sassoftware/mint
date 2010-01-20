@@ -784,6 +784,10 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                 util.execute("psql %s -f '%s' '%s' >/dev/null"
                         % (cxnArgs, path, dbName))
 
+            db = self.getReposDB(skipCache=True)
+            db.analyze()
+            db.close()
+
 
 class MultiShimServerCache(object):
     """
