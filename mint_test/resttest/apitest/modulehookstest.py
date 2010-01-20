@@ -43,12 +43,12 @@ class ModuleHooksTest(restbase.BaseRestTest):
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <moduleHooks>
-  <moduleHooks>
+  <moduleHook>
     <url>hooks/test1.swf</url>
-  </moduleHooks>
-  <moduleHooks>
+  </moduleHook>
+  <moduleHook>
     <url>hooks/test2.swf</url>
-  </moduleHooks>
+  </moduleHook>
 </moduleHooks>
 """
         self.assertBlobEquals(response,
