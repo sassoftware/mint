@@ -166,7 +166,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.assertEquals(3,
             len(platformmgr.PlatformDefCache._getPlatDef._mock.calls))
 
-
-
-
+if __name__ == "__main__":
+        testsetup.main()
 
