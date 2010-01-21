@@ -617,7 +617,7 @@ class Platforms(object):
         if not platform.enabled:
            platStatus.valid = False
            platStatus.connected = False
-           platStatus.message = "Platform must be enabled to check it's status."
+           platStatus.message = "Platform must be enabled to check its status."
            return platStatus
 
         openMsg = "Repository not responding: %s."
