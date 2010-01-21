@@ -8,11 +8,8 @@ import logging
 import os
 import sys
 import tempfile
-import traceback
 import weakref
-import xmlrpclib
 
-from conary import conarycfg
 from conary import errors as conaryErrors
 from conary import versions
 from conary.conaryclient import callbacks
@@ -24,7 +21,6 @@ from conary.repository import errors as reposErrors
 from conary.repository import changeset
 from conary.repository import filecontainer
 
-from mint import config
 from mint import jobstatus
 from mint import mint_error
 from mint.lib import persistentcache
