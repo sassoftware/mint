@@ -21,6 +21,9 @@ reposContentsDir        /srv/rbuilder/repos/%s/contents/
 # Base directory (as seen by webserver)
 basePath                /
 
+# Storage path (used for background job information)
+storagePath             /srv/rbuilder/storage
+
 # Support contact information
 supportContactTXT       your local system administrator
 supportContactHTML      <p>your local system administrator</p>
