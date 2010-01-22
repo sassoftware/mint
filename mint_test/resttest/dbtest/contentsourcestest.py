@@ -57,14 +57,16 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
 
         proxies = dict(https = "https://blah")
 
-        s1 = contentsources.contentSourceTypes['satellite'](proxies = proxies)
-        s1.name = name1
-        s1.sourceUrl = url1
-        s1.username = 'my_user'
-        s1.password = 'sikritPass'
+        for ctype in [ 'satellite', 'proxy']:
+            del _transportProxies[:]
+            s1 = contentsources.contentSourceTypes[ctype](proxies = proxies)
+            s1.name = name1
+            s1.sourceUrl = url1
+            s1.username = 'my_user'
+            s1.password = 'sikritPass'
 
-        s1.status()
-        self.failUnlessEqual(_transportProxies, [proxies] * 2)
+            s1.status()
+            self.failUnlessEqual(_transportProxies, [proxies] * 2)
 
 
 testsetup.main()
