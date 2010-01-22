@@ -152,8 +152,8 @@ class Satellite(Rhn):
             self.username, self.password, serverName, proxies = proxies)
 
 class Proxy(Satellite):
-    def __init__(self):
-        Satellite.__init__(self)
+    def __init__(self, proxies = None):
+        Satellite.__init__(self, proxies=proxies)
         self.name = 'Red Hat Proxy'
 
 contentSourceTypes = {'RHN' : Rhn,
