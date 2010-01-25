@@ -99,14 +99,22 @@ class AMIPermissionsManager(object):
         tarObject = tarfile.TarFile.open(filePath, "r:gz")
         return client.uploadBundle(tarObject, s3Bucket, callback = callback)
 
-    def registerAMI(self, bucketName, manifestName):
+    def registerAMI(self, bucketName, manifestName, readers = None,
+            writers = None):
         targetData = self.getTargetData()
-        launchUsers = targetData.get('ec2LaunchUsers')
-        launchGroups = targetData.get('ec2LaunchGroups')
+        launchUsers = targetData.get('ec2LaunchUsers', [])
+        launchGroups = targetData.get('ec2LaunchGroups', [])
+        readers = readers or []
+        writers = writers or []
+        if readers or writers:
+            # This is coming from server.py's serializeBuild
+            launchUsers = readers + writers
+            launchGroups = []
         client = self._getEC2Client()
         amiId, amiManifestName = client.registerAMI(bucketName, manifestName,
             ec2LaunchUsers = launchUsers,
             ec2LaunchGroups = launchGroups)
+
         return amiId, amiManifestName
 
     def _getEC2Client(self):

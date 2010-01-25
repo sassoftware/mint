@@ -383,9 +383,15 @@ class ImagesTest(restbase.BaseRestTest):
         from mint import ec2
         self.mock(ec2.S3Wrapper, 'createBucket',
             lambda *args, **kwargs: self.MockBucket())
-        self.mock(ec2.EC2Wrapper, 'registerAMI',
-            lambda slf, bucketName, manifestName, *args, **kwargs:
-                ('ami-01234', '%s/%s' % (bucketName, manifestName)))
+
+        statusFile = os.path.join(self.workDir, "registerAMI.status")
+        def mockedRegisterAMI(slf, bucketName, manifestName, *args, **kwargs):
+            f = file(statusFile, "a")
+            f.write("ec2LaunchUsers: %s\n" % kwargs.get('ec2LaunchUsers'))
+            f.write("ec2LaunchGroups: %s\n" % kwargs.get('ec2LaunchGroups'))
+            f.close()
+            return ('ami-01234', '%s/%s' % (bucketName, manifestName))
+        self.mock(ec2.EC2Wrapper, 'registerAMI', mockedRegisterAMI)
 
         username = 'adminuser'
         # Specifically test AMI uploads here
@@ -405,6 +411,23 @@ class ImagesTest(restbase.BaseRestTest):
             ec2S3Bucket = 's3Bucket',
         )
         db.db.targetData.addTargetData(targetId, targetData)
+        users = [ 'testUser1', 'testUser2' ]
+        for i, uname in enumerate(users):
+            params = dict(username = uname,
+                password = "password",
+                email = "%s@rpath.com" % uname,
+                fullName = "",
+                displayEmail = "",
+                blurb = "")
+            userId = db.userMgr.createUser(**params)
+            db.setMemberLevel(self.productShortName, uname, 'user')
+            userData = [ ('awsAccountNumber', "%010d" % i),
+                         ('awsPublicAccessKeyId', "Public Key Id %d" % i),
+                         ('awsSecretAccessKey', "Secret Key %d" % i), ]
+            dType = 0
+            for k, v in userData:
+                db.db.userData.setDataValue(userId, k, v, dType, commit=False)
+
         db.commit()
 
         # Create a tarball with stuff in it
@@ -445,6 +468,13 @@ class ImagesTest(restbase.BaseRestTest):
 """ % (jobstatus.FINISHED, jobstatus.statusNames[jobstatus.FINISHED])
         resp = client.call('PUT', 'products/testproject/images/1/status',
                 data, headers=headers)[1]
+
+        # Check that we passed in additional launch users
+        rows = [ x.strip() for x in file(statusFile) ]
+        self.failUnlessEqual(rows, [
+            "ec2LaunchUsers: ['0000000000', '0000000001']",
+            "ec2LaunchGroups: []",
+        ])
 
         # Now fetch the image
         resp = client.call('GET', 'products/testproject/images/1',
