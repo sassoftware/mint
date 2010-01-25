@@ -111,7 +111,6 @@ class MintConfig(ConfigFile):
     profiling               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
     smallBugsEmail          = (CfgString, None)
-    storagePath             = (CfgString, None)
 
     # Handler configuration
     basePath                = (CfgString, '/', "URI root for this rBuilder")

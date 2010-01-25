@@ -208,7 +208,7 @@ class Platforms(object):
         self.contentSourceTypes = ContentSourceTypes(db, cfg, self)
         self.mgr = mgr
         self.jobStore = PlatformJobStore(
-            os.path.join(self.cfg.storagePath, 'jobs'))
+            os.path.join(self.cfg.dataPath, 'jobs'))
         self.loader = LoadRunner(self._load)
 
     def _listFromDb(self):
