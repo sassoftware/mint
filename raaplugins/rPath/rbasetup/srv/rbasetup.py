@@ -305,6 +305,7 @@ class rBASetup(rAASrvPlugin):
          -- create initial external projects
         """
         retry = options.get('retry', False)
+        new_username = options.get('new_username')
         self.message = ""
 
         newCfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
@@ -313,7 +314,6 @@ class rBASetup(rAASrvPlugin):
 
         # don't re-add the admin user if it's just a retry
         if not retry:
-            new_username = options.get('new_username')
             new_password = options.get('new_password')
             new_email = options.get('new_email')
 
@@ -360,8 +360,7 @@ class rBASetup(rAASrvPlugin):
         self.reportMessage(execId, self.message)
 
         cfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
-        cb = notices_callbacks.RbaSetupNoticeCallback(cfg,
-                options.get('new_username'))
+        cb = notices_callbacks.RbaSetupNoticeCallback(cfg, new_username)
         cb.notify()
         # Since this plugin runs as root, we need to reset the permissions of
         # the rbuilder notices dir to apache.
