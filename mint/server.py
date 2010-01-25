@@ -4635,7 +4635,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
             self.db = dbConnection
         else:
-            self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
+            self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver, timeout=cfg.dbTimeout)
             dbConnection = self.db
 
         # reopen a dead database

@@ -569,7 +569,7 @@ def handler(req):
 
     global db
     if not db:
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver, timeout=cfg.dbTimeout)
     else:
         db.rollback()
 

@@ -124,6 +124,7 @@ class MintConfig(ConfigFile):
     reposContentsDir        = os.path.join(os.path.sep, 'srv', 'rbuilder', 'repos', '%s', 'contents', '')
     dbPath                  = None
     dbDriver                = 'sqlite'
+    dbTimeout               = (cfgtypes.CfgInt, 15000)
     imagesPath              = None
     siteDomainName          = (cfgtypes.CfgString, 'rpath.com',
         "Domain of the rBuilder site. For example, <b><tt>example.com</tt></b>")
