@@ -8,12 +8,8 @@ import logging
 import os
 import sys
 import tempfile
-import traceback
 import weakref
-import xmlrpclib
 
-
-from conary import conarycfg
 from conary import errors as conaryErrors
 from conary import versions
 from conary.conaryclient import callbacks
@@ -25,7 +21,6 @@ from conary.repository import errors as reposErrors
 from conary.repository import changeset
 from conary.repository import filecontainer
 
-from mint import config
 from mint import jobstatus
 from mint import mint_error
 from mint.lib import persistentcache
@@ -145,7 +140,7 @@ class ContentSourceTypes(object):
 
     def _getSourceTypeInstance(self, source):
         sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
-        sourceInst = sourceClass()
+        sourceInst = sourceClass(proxies = self.db.cfg.proxy)
         for field in sourceInst.getFieldNames():
             if hasattr(source, field):
                 val = str(getattr(source, field))
@@ -155,7 +150,7 @@ class ContentSourceTypes(object):
 
     def _getSourceTypeInstanceByName(self, sourceType):
         sourceClass = contentsources.contentSourceTypes[sourceType]
-        return sourceClass()
+        return sourceClass(proxies = self.db.cfg.proxy)
 
     def getDescriptor(self, sourceType):
         sourceTypeInst = self._getSourceTypeInstanceByName(sourceType)
@@ -626,7 +621,7 @@ class Platforms(object):
         if not platform.enabled:
            platStatus.valid = False
            platStatus.connected = False
-           platStatus.message = "Platform must be enabled to check it's status."
+           platStatus.message = "Platform must be enabled to check its status."
            return platStatus
 
         openMsg = "Repository not responding: %s."

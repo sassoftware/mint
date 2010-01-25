@@ -4,7 +4,9 @@
 # All Rights Reserved
 #
 import logging
-import xmlrpclib
+import urllib
+
+import rpath_capsule_indexer
 
 from conary.lib import util
 
@@ -95,38 +97,39 @@ class ContentSourceType(object):
         raise NotImplementedError
 
 class Rhn(ContentSourceType):
-    authUrl = 'rpc/api'
     xmlrpcUrl = 'XMLRPC'
     fields = [Name(), Username(), Password()]
     model = models.RhnSource
     sourceUrl = 'https://rhn.redhat.com'
+    cfg = rpath_capsule_indexer.IndexerConfig()
+    cfg.channels.append('rhel-i386-as-4')
+    # Just use the rhel 4 channel label here, both rhel 4 and rhel 5 pull
+    # from the same entitlement pool.
 
-    def __init__(self):
+    def __init__(self, proxies = None):
         self.name = 'Red Hat Network'
+        self.__dict__['proxies'] = proxies or {}
         ContentSourceType.__init__(self)
 
+    def getDataSource(self, proxies):
+        srcChannels = rpath_capsule_indexer.SourceChannels(self.cfg)
+        return rpath_capsule_indexer.Indexer.Source_RHN(srcChannels,
+            self.username, self.password, proxies = proxies)
+
     def status(self):
-        url = self.sourceUrl
-        if url.endswith('/'):
-            url = url[:-1]
-        url = "%s/%s" % (self.sourceUrl, self.authUrl)
-        s = util.ServerProxy(url)
         msg = "Cannot connect to this resource. Verify you have provided correct information."
         try:
-            session = s.auth.login(self.username, self.password)
-        except xmlrpclib.Fault, e:
+            ds = self.getDataSource(self.__dict__['proxies'])
+        except rpath_capsule_indexer.RPCError, e:
             log.error("Error validating content source %s: %s" \
                         % (self.name, e))
             return (True, False, msg)
-        except Exception, e:
-            log.error("Error validating content source %s: %s" \
-                        % (self.name, e))
+        if not ds.isValid:
+            log.error("Error validating content source %s" \
+                        % (self.name, ))
             return (False, False, msg)
 
-        # Just use the rhel 4 channel label here, both rhel 4 and rhel 5 pull
-        # from the same entitlement pool.
-        remaining = s.channel.software.availableEntitlements(session,
-                        'rhel-i386-as-4')
+        remaining = ds.getAvailableEntitlements(self.cfg.channels[0])
 
         if remaining <= 0:
             return (False, False, "Insufficient Channel Entitlements.")
@@ -134,19 +137,24 @@ class Rhn(ContentSourceType):
         return (True, True, 'Validated Successfully.')
 
 class Satellite(Rhn):
-    authUrl = 'rpc/api'
     fields = [Name(), Username(), Password(), SourceUrl()]
     model = models.SatelliteSource
 
-    def __init__(self):
+    def __init__(self, proxies = None):
+        Rhn.__init__(self, proxies=proxies)
         self.name = 'Red Hat Satellite'
-        ContentSourceType.__init__(self)
+
+    def getDataSource(self, proxies):
+        # We only need the server name
+        serverName = util.urlSplit(self.sourceUrl)[3]
+        srcChannels = rpath_capsule_indexer.SourceChannels(self.cfg)
+        return rpath_capsule_indexer.Indexer.Source(srcChannels, self.name,
+            self.username, self.password, serverName, proxies = proxies)
 
 class Proxy(Satellite):
-    
-    def __init__(self):
+    def __init__(self, proxies = None):
+        Satellite.__init__(self, proxies=proxies)
         self.name = 'Red Hat Proxy'
-        ContentSourceType.__init__(self)
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,

@@ -360,6 +360,19 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         self.failUnlessEqual([x.rpc.username for x in sources],
             ['JeanValjeanProxy1', 'JeanValjeanSatellite', 'JeanValjean'])
 
+    def testSetProxies(self):
+        db = self.openRestDatabase()
+        cfg = db.capsuleMgr.getIndexerConfig()
+        self.failUnlessEqual(cfg.proxy, {})
+
+        # Add proxy information to the rest db
+        proxyDict = dict(http = "http://foo.bar:1234",
+                         https = "https://foo.baz:1234")
+        db.cfg.proxy = proxyDict
+
+        cfg = db.capsuleMgr.getIndexerConfig()
+        self.failUnlessEqual(cfg.proxy, proxyDict)
+
 if __name__ == "__main__":
         testsetup.main()
 

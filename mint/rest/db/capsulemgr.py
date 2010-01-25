@@ -67,6 +67,9 @@ class CapsuleManager(manager.Manager):
         cfg.configLine("channels rhel-i386-server-5")
         cfg.configLine("channels rhel-x86_64-server-5")
 
+        # Copy proxy information
+        cfg.proxy = self.db.cfg.proxy.copy()
+
         util.mkdirChain(capsuleDataDir)
         return cfg
 
