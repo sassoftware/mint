@@ -198,6 +198,10 @@ class MirrorScript(scriptlibrary.SingletonScript):
                 dest = "test", default = False,
                 help = "show how mirrorRepository would be called "
                        "(don't actually mirror)")
+        op.add_option("--include-sources", action = "store_true",
+                      dest = "includeSources", default = False,
+                      help = "include source troves for group-based "
+                             "mirroring")
         (self.options, self.args) = op.parse_args()
         if len(self.args) < 1:
             op.error("missing URL to rBuilder XML-RPC interface")
@@ -234,6 +238,9 @@ class MirrorScript(scriptlibrary.SingletonScript):
             self.log.info("Full sync requested on this mirror")
         if self.options.syncSigs:
             self.log.info("Full signature sync requested on this mirror")
+
+        if self.options.includeSources:
+            mirrorCfg.includeSources = True
 
         # first time through, we should pass in sync options;
         # subsequent passes should use the mirror marks

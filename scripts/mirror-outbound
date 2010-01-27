@@ -101,26 +101,6 @@ class MirrorOutbound(MirrorScript):
                     releases = client.getMirrorableReleasesByProject(
                         int(sourceProjectId))
 
-                    # Create the mirror user, deleting it if it already
-                    # exists
-                    try:
-                        privRepos.deleteUserByName(reposHost, mirrorUser)
-                    except errors.UserNotFound:
-                        pass
-                    mirrorPassword = helperfuncs.genPassword(64)
-                    privRepos.addUser(reposHost, mirrorUser, mirrorPassword)
-
-                    # Create the mirror role if it doesn't exist yet
-                    try:
-                        privRepos.addRole(reposHost, mirrorRole)
-                        privRepos.addAcl(reposHost, mirrorRole, 'ravenous-bugblatter-beast',
-                            reposHost + '@dummy:label')
-                    except errors.RoleAlreadyExists:
-                        pass
-                    privRepos.setRoleCanMirror(reposHost, mirrorRole, True)
-                    privRepos.updateRoleMembers(reposHost, mirrorRole,
-                        [mirrorUser])
-
                     # Get the list of troves that *should* be mirrored
                     newTroves = set()
                     for pubReleaseId in releases:
@@ -132,49 +112,16 @@ class MirrorOutbound(MirrorScript):
                             # troveVersion has a timestamp;
                             # listTroveAccess will not. "un-freeze"
                             #the version to make sure they match.
-                            version = str(versions.ThawVersion(
-                                build.troveVersion))
+                            version = versions.ThawVersion(build.troveVersion)
                             flavor = deps.ThawFlavor(build.troveFlavor)
                             newTroves.add((name, version, flavor))
 
-                    # Get the list of troves that *are* marked for mirroring
-                    oldTroves = set()
-                    for name, version, flavor in privRepos.listTroveAccess(
-                      reposHost, mirrorRole):
-                        oldTroves.add((name, str(version), flavor))
-
-                    # Add and remove trove access as needed to make
-                    # trove access match the mirrorable published
-                    # release list.
-                    removeAccess = [(n, versions.VersionFromString(v), f)
-                        for (n, v, f) in oldTroves - newTroves]
-                    if removeAccess:
-                        privRepos.deleteTroveAccess(mirrorRole, removeAccess)
-
-                    addAccess = [(n, versions.VersionFromString(v), f)
-                        for (n, v, f) in newTroves - oldTroves]
-                    if addAccess:
-                        privRepos.addTroveAccess(mirrorRole, addAccess)
-
-                    # Now that we've brought trove access up to date,
-                    # delete our admin access to this project's
-                    # repository and replace it with the mirror user.
-                    user = conarycfg.UserInformation(data for data in
-                        sourceCfg.user if data[0] != reposHost)
-                    entitlement = conarycfg.EntitlementList(data for data in
-                        sourceCfg.entitlement if data[0] != reposHost)
-                    user.insert(0, (reposHost, (mirrorUser, mirrorPassword)))
-                    sourceCfg.user = sourceCCfg.user = user
-                    sourceCfg.entitlement = sourceCCfg.entitlement = entitlement
-
-                    # And re-open the repository
-                    sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()
-
-                    # Configure for recursive mirroring of available groups
-                    names = set('+' + x[0] for x in newTroves)
+                    # we probably don't need matchTroves here anymore
+                    # names = set('+' + x[0] for x in newTroves)
                     cfg.labels = []
-                    cfg.configLine('matchTroves ' + ' '.join(names))
+                    # cfg.configLine('matchTroves ' + ' '.join(names))
                     cfg.configLine('recurseGroups True')
+                    cfg.troveList = newTroves
 
                     # For now, always force a full sync, as older
                     # releases may have been added to the mirrorable
@@ -227,10 +174,6 @@ class MirrorOutbound(MirrorScript):
                 finally:
                     if fullSync:
                         client.setOutboundMirrorSync(outboundMirrorId, False)
-
-                if useReleases:
-                    # Delete temporary mirror user
-                    privRepos.deleteUserByName(reposHost, mirrorUser)
 
             except KeyboardInterrupt, ke:
                 self.log.info("Outbound mirror killed by user")
