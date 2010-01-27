@@ -1,4 +1,4 @@
-Changes in @NEW@:
+Changes in 4.1.5:
 ================
 
 Web Front End Changes
@@ -9,6 +9,11 @@ Bug Fixes
 ---------------------
 * the mirror-outbound script now uses rBuilder's internal conary proxy 
   (RBA-4845)
+
+New Feature
+---------------------
+* the mirror-outbound script now takes an option to mirror the sources
+  for all troves in a group (RBL-5671)
 
 Changes in 4.1.4:
 ================
