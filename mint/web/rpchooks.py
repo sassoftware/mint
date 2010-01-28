@@ -103,3 +103,4 @@ def handler(req):
             return apache.HTTP_INTERNAL_SERVER_ERROR
     finally:
         db.close()
+        logging.shutdown()
