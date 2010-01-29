@@ -136,6 +136,7 @@ def handler(req):
         if context.db:
             context.db.close()
         coveragehook.save()
+        logging.shutdown()
     return ret
 
 

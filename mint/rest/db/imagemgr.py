@@ -328,8 +328,11 @@ class ImageManager(manager.Manager):
             self._setStatus(imageId, message = "Registering AMI")
             log.info("Registering AMI for %s/%s", bucketName,
                 manifestName)
+            projectId = self._getProjectForImage(imageId)
+            getEC2AccountNumbersForProjectUsers = self.db.db.projectUsers.getEC2AccountNumbersForProjectUsers
+            writers, readers = getEC2AccountNumbersForProjectUsers(projectId)
             amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
-                bucketName, manifestName)
+                bucketName, manifestName, readers = readers, writers = writers)
             log.info("Registered AMI %s for %s", amiId,
                 manifestPath)
             self.db.db.buildData.setDataValue(imageId, 'amiId', amiId,
@@ -337,6 +340,13 @@ class ImageManager(manager.Manager):
             self.db.db.buildData.setDataValue(imageId, 'amiManifestName,',
                 manifestPath, data.RDT_STRING)
             self.db.commit()
+
+    def _getProjectForImage(self, imageId):
+        sql = "SELECT projectId FROM Builds WHERE buildId = ?"
+        cu = self.db.cursor()
+        cu.execute(sql, imageId)
+        row = cu.fetchone()
+        return row[0]
 
     def _createNotices(self, imageId, status):
         sql = """

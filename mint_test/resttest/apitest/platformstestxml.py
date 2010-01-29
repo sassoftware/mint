@@ -546,7 +546,7 @@ platformStatusXml = """\
 <platformSourceStatus>
   <connected>false</connected>
   <valid>false</valid>
-  <message>Platform must be enabled to check it's status.</message>
+  <message>Platform must be enabled to check its status.</message>
 </platformSourceStatus>
 """
 
