@@ -3,7 +3,6 @@
 # tmpwatch for rBuilder appliance
 
 # dump stale cached changesets after two weeks
-/usr/sbin/tmpwatch 336 /srv/rbuilder/changesets
 /usr/sbin/tmpwatch 336 /srv/rbuilder/cscache
 
 # clean outdated cache files on the Conary repositories

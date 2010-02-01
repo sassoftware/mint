@@ -55,6 +55,7 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
+from mint.rest.db.platformmgr import PlatformDefCache
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint import packagecreator
 
@@ -240,36 +241,6 @@ def typeCheck(*paramTypes):
         return wrapper
     return deco
 
-class PlatformNameCache(persistentcache.PersistentCache):
-
-    def __init__(self, cacheFile, conarycfg, server):
-        persistentcache.PersistentCache.__init__(self, cacheFile)
-        self._cclient = conaryclient.ConaryClient(conarycfg)
-        self._server = weakref.ref(server)
-
-    def _refresh(self, labelStr):
-        try:
-            hostname = versions.Label(labelStr).getHost()
-            # we require that the first section of the label be unique
-            # across all repositories we access.
-            hostname = hostname.split('.')[0]
-            try:
-                projectId = self._server().getProjectIdByHostname(hostname)
-                cfg = self._server()._getProjectConaryConfig(
-                                    projects.Project(self._server(), projectId))
-                client = conaryclient.ConaryClient(cfg)
-            except mint_error.ItemNotFound:
-                client = self._cclient
-            platDef = proddef.PlatformDefinition()
-            platDef.loadFromRepository(client, labelStr)
-            return platDef.getPlatformName()
-        except Exception, e:
-            # Swallowing this exception allows us to have a negative
-            # cache entries.  Of course this comes at the cost
-            # of swallowing exceptions...
-            print >> sys.stderr, "failed to lookup platform definition on label %s: %s" % (labelStr, str(e))
-            sys.stderr.flush()
-            return None
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -1896,9 +1867,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def addLabel(self, projectId, label, url, authType, username, password, entitlement):
         self._filterProjectAccess(projectId)
-        # this is overly agressive but should ensure that adding an
-        # entitlement enables access to the correct platform
-        self.platformNameCache.clear()
         return self.labels.addLabel(projectId, label, url, authType, username, password, entitlement)
 
     @typeCheck(int)
@@ -1918,9 +1886,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             password, entitlement)
         if self.cfg.createConaryRcFile:
             self._generateConaryRcFile()
-        # this is overly agressive but should ensure that adding an
-        # entitlement enables access to the correct platform
-        self.platformNameCache.clear()
         return True
 
     @typeCheck(int, int)
@@ -4948,12 +4913,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         @rtype: C{list} of C{tuple}s. Each tuple is a pair; first element is
            the platform label, the second element is the platform name.
         """
-        availablePlatforms = []
-        for platformLabel in self.cfg.availablePlatforms:
-            platformName = self.platformNameCache.get(platformLabel)
-            if platformName:
-                availablePlatforms.append((platformLabel, platformName))
-        return availablePlatforms
+        return zip(self.cfg.availablePlatforms, self.cfg.availablePlatformNames)
 
     def isPlatformAcceptable(self, platformLabel):
         return (platformLabel in set(self.cfg.acceptablePlatforms + self.cfg.availablePlatforms))
@@ -4967,7 +4927,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.db = mint.db.database.Database(cfg, db=db)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
-        self._platformNameCache = None
         self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
         self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
 
@@ -4998,15 +4957,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #if self.db.tablesReloaded:
         #    self._generateConaryRcFile()
         self.newsCache.refresh()
-
-    def _getNameCache(self):
-        if self._platformNameCache is None:
-            self._platformNameCache = PlatformNameCache(
-                os.path.join(self.cfg.dataPath, 'data', 'platformName.cache'),
-                helperfuncs.getBasicConaryConfiguration(self.cfg), self)
-        return self._platformNameCache
-
-    platformNameCache = property(_getNameCache)
 
     @typeCheck(int)
     @requiresAdmin
