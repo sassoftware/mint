@@ -1143,6 +1143,10 @@ class WebRepositoryHelper(BaseWebHelper):
                 url = urlparse.urljoin(url, newurl)
             except webunittest.HTTPError, error:
                 raise self.failureException, str(error)
+            except self.failureException, err:
+                if 'HTTP Response 500:' in str(err):
+                    self.showHttpdError()
+                raise
 
         return response
 
@@ -1153,6 +1157,34 @@ class WebRepositoryHelper(BaseWebHelper):
                      'password': password})
         self.failUnless('/logout' in page.body)
         return page
+
+    def showHttpdError(self):
+        server = self.mintServers.servers[0]
+        if not server:
+            return
+        logPath = os.path.join(server.reposDir, 'httpd/error_log')
+        if not os.path.isfile(logPath):
+            return
+        logFile = open(logPath)
+        for line in logFile:
+            if 'Traceback (most recent call last):' in line:
+                print 'Error from httpd/error_log:'
+
+                # unwind mod_python's awful traceback formatting
+                tb = re.compile(r'^\[.*?\] \[error\] \[client .*?\] '
+                        r'(.*?)(?:\\n(.*))?$')
+
+                one, two = tb.match(line).groups()
+                print one, two
+                for line in logFile:
+                    match = tb.match(line)
+                    if match:
+                        one, two = match.groups()
+                        print one
+                        if two:
+                            print two
+                    else:
+                        print line
 
 
 class FakeRequest(object):

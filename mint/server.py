@@ -55,7 +55,6 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
-from mint.rest.db.platformmgr import PlatformDefCache
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
 from mint import packagecreator
 
@@ -4112,11 +4111,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # TODO put back overrides
 
-        projectCfg = self._getProjectConaryConfig(project)
-        projectCfg['name'] = self.auth.username
-        projectCfg['contact'] = self.auth.fullName or ''
-        repos = self._getProjectRepo(project, pcfg=projectCfg)
-        cclient = conaryclient.ConaryClient(projectCfg, repos=repos)
+        cclient = self.reposMgr.getClient(self.auth.userId)
         if rebaseToPlatformLabel:
             pd.rebase(cclient, rebaseToPlatformLabel)
         pd.saveToRepository(cclient,
