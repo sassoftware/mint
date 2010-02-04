@@ -64,6 +64,7 @@ class UpdatePackageIndex(PackageIndexer):
             # Clear out Package index if the timestamp in PackageIndexMark == 0
             cu.execute("""DELETE FROM PackageIndex WHERE
                               (SELECT mark FROM PackageIndexMark) = 0""")
+            self.db.commit()
 
             cu.execute("""SELECT Projects.projectId, troveName, Commits.version,
                                  timestamp
