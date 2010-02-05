@@ -25,5 +25,6 @@ class ModuleController(base.BaseController):
 
                 moduleHooksList.moduleHooks.append(
                     models.ModuleHook( os.path.join('hooks',file)))
+        moduleHooksList.moduleHooks.sort()
         return moduleHooksList
 
