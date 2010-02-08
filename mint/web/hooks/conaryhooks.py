@@ -500,9 +500,8 @@ def conaryHandler(context):
     try:
         if proxyRestRequest:
             # use proxyServer config for http proxy and auth data
-            if not fqdn:
-                fqdn = req.hostname
-            return proxyExternalRestRequest(context, fqdn, proxyServer)
+            return proxyExternalRestRequest(context, actualRepName,
+                    proxyServer)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
