@@ -26,8 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 13)
-
+RBUILDER_DB_VERSION = sqllib.DBversion(49, 0)
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -727,6 +726,20 @@ def _createTargets(db):
         db.tables['TargetData'] = []
         changed = True
 
+    if 'TargetUserCredentials' not in db.tables:
+        cu.execute("""
+            CREATE TABLE TargetUserCredentials (
+                targetId        integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                userId          integer             NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                name            varchar(255)        NOT NULL,
+                value           text,
+                PRIMARY KEY ( targetId, userId, name )
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['TargetUserCredentials'] = []
+        changed = True
+
     return changed
 
 def _createPlatforms(db):
@@ -800,19 +813,6 @@ def _createPlatforms(db):
                     REFERENCES platformSources ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsPlatformSources'] = []
-        changed = True
-
-    if 'PlatformLoadJobs' not in db.tables:
-        cu.execute("""
-            CREATE TABLE PlatformLoadJobs (
-                jobId %(PRIMARYKEY)s,
-                platformId          integer         NOT NULL
-                    REFERENCES platforms ON DELETE CASCADE,
-                message             varchar(255) NOT NULL,
-                done                smallint NOT NULL DEFAULT 0,
-                error               smallint NOT NULL DEFAULT 0
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['PlatformLoadJobs'] = []
         changed = True
 
     return changed

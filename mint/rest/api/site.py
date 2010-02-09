@@ -12,6 +12,7 @@ from mint import constants
 from mint import maintenance
 from mint.rest.api import capsules
 from mint.rest.api import models
+from mint.rest.api import modulehooks
 from mint.rest.api import product
 from mint.rest.api import notices
 from mint.rest.api import platforms
@@ -28,7 +29,8 @@ class RbuilderRestServer(RestController):
             'registration' : registration.RegistrationController,
             'notices'  : notices.NoticesController,
             'capsules'  : capsules.CapsulesController,
-            'reports/'  : 'getReportsList',}
+            'reports/'  : 'getReportsList',
+            'moduleHooks' : modulehooks.ModuleController,}
 
     def __init__(self, cfg, db):
         self.cfg = cfg
