@@ -71,6 +71,7 @@ def setup():
     pathManager.addExecPath('XOBJ_PATH')
     pathManager.addExecPath('XMLLIB_PATH')
     pathManager.addExecPath('PRODUCT_DEFINITION_PATH')
+    pathManager.addExecPath('JOB_PATH')
     pathManager.addExecPath('STORAGE_PATH')
     pathManager.addExecPath('CATALOG_SERVICE_PATH')
     pathManager.addExecPath('CAPSULE_INDEXER_PATH')
