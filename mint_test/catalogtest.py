@@ -18,6 +18,7 @@ import ec2test
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
 from catalogService import handler, storage
+from catalogService.rest.database import RestDatabase
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def setUp(self):
@@ -31,18 +32,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 "Expected redirect to %s, got %s" % \
                         (expectedRedirect, redirectUrl))
 
-
-    @staticmethod
-    def normalizeXML(data):
-        """lxml will produce the header with single quotes for its attributes,
-        while xmllint uses double quotes. This function normalizes the data"""
-        return data.replace(
-            "<?xml version='1.0' encoding='UTF-8'?>",
-            '<?xml version="1.0" encoding="UTF-8"?>').strip()
-
-    def assertXMLEquals(self, first, second):
-        self.failUnlessEqual(self.normalizeXML(first),
-                             self.normalizeXML(second))
 
     def testBasicAuth(self):
         username, password = 'foouser', 'foopass'
@@ -66,34 +55,38 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cli.connect()
 
         tests = [
-            None,
-            'NoSuchAuthMethodExists aa',
-            'Basic',
-            'Basic a',
-            'Basic YQ==',
+            (None, 401, "Unauthorized"),
+            ('NoSuchAuthMethodExists aa', 400,
+                "AuthHeaderError: Your authentication header could not be decoded"),
+            ('Basic', 401, "Unauthorized"),
+            ('Basic a', 400,
+                "AuthHeaderError: Your authentication header could not be decoded"),
+            ('Basic YQ==', 400,
+                "AuthHeaderError: Your authentication header could not be decoded"),
         ]
-        errMsg = """\
+        errMsgTmpl = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <fault>
-  <code>401</code>
-  <message>Unauthorized</message>
+  <code>%s</code>
+  <message>%s</message>
 </fault>
 """
-        for h in tests:
+        for h, errCode, errMsg in tests:
             headers = dict()
             if h:
                 headers['Authorization'] = h
             err = self.failUnlessRaises(client.ResponseError,
                 cli.request, "GET", headers = headers)
-            self.failUnlessEqual(err.status, 401)
-            self.failUnlessEqual(err.contents, errMsg)
+            self.failUnlessEqual(err.status, errCode)
+            self.failUnlessEqual(err.contents, errMsgTmpl % (errCode, errMsg))
 
     def testGetImagesNoCred(self):
         # Enable EC2 in rbuilder
-        storagePath = os.path.join(self.mintCfg.dataPath,
-            'catalog', 'configuration', 'ec2', 'aws')
-        store = storage.DiskStorage(storage.StorageConfig(storagePath))
-        store.set("enabled", 1)
+        restdb = self.openRestDatabase()
+        restdb.targetMgr.addTarget('ec2', 'aws', dict(
+            ec2PublicKey = 'Public Key',
+            ec2PrivateKey = 'Private Key',
+            ec2AccountId = '867-5309',))
 
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
@@ -105,7 +98,17 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 "<code>400</code>\n  <message>Target credentials not set for "
                 "user</message>\n</fault>\n")
 
+    def openRestDatabase(self):
+        restdb = mint_rephelp.WebRepositoryHelper.openRestDatabase(self)
+        restdb = RestDatabase(restdb.cfg, restdb.db)
+        return restdb
+
     def testGetImagesNoSession(self):
+        restdb = self.openRestDatabase()
+        restdb.targetMgr.addTarget('ec2', 'aws', dict(
+            ec2PublicKey = 'Public Key',
+            ec2PrivateKey = 'Private Key',
+            ec2AccountId = '867-5309',))
         page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [401])
 
     def testEnumerateNoImages(self):
