@@ -14,6 +14,7 @@ class _DisplayField(Model):
     hostname = fields.CharField(display=False)
     version = fields.CharField(display=False)
     stageName = fields.CharField(display=False)
+    platform = fields.CharField(display=False)
 
 class Architecture(_DisplayField):
     id = fields.AbsoluteUrlField(isAttribute = True)

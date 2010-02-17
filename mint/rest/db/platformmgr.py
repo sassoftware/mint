@@ -108,7 +108,7 @@ class ContentSourceTypes(object):
     def _listFromCfg(self):
         allTypesMap = dict()
         allTypes = []
-        for label, name, usageTerms, enabled, sourceTypes, configurable in self.platforms._iterConfigPlatforms():
+        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable in self.platforms._iterConfigPlatforms():
             for t, isSingleton in sourceTypes:
                 if t not in allTypes:
                     allTypes.append(t)
@@ -235,9 +235,10 @@ class Platforms(object):
                         for t in platformProv.contentSourceTypes]
                 else:
                     types = []
+                platformBuildTypes = platDef.getBuildTemplates()
             else:
                 types = []
-
+                platformBuildTypes = []
             
             # Platforms are not enabled by default, they have to be
             # explicitly enabled in the db.
@@ -246,7 +247,7 @@ class Platforms(object):
             configurable = platformLabel in self.cfg.configurablePlatforms
 
             yield (platformLabel, platformName, platformUsageTerms,
-                enabled, types, configurable)
+                platformBuildTypes, enabled, types, configurable)
 
     def _platformModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
@@ -256,6 +257,7 @@ class Platforms(object):
         label = kw.get('label', None)
         fqdn = label.split('@')[0]
         platformName = kw.get('platformName', None)
+        platformBuildTypes = kw.get('platformBuildTypes', [])
         enabled = kw.get('enabled', None)
         configurable = kw.get('configurable', None)
         sourceTypes = kw.get('sourceTypes', [])
@@ -267,6 +269,7 @@ class Platforms(object):
                 configurable=configurable, mode=mode,
                 repositoryHostname=fqdn)
         platform._sourceTypes = sourceTypes
+        platform._buildTypes = platformBuildTypes
         return platform
 
     def _create(self, platform):
@@ -318,7 +321,7 @@ class Platforms(object):
         cfgLabels = [p.label for p in cfgPlatforms]
 
         fields = ['platformName', 'platformUsageTerms', 'hostname',
-                  '_sourceTypes', 'configurable']
+                  '_sourceTypes', '_buildTypes', 'configurable']
 
         platforms = []
 
@@ -369,10 +372,11 @@ class Platforms(object):
 
     def _listFromCfg(self):
         platforms = []
-        for label, name, usageTerms, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
+        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
                                 platformName=name,
                                 platformUsageTerms=usageTerms,
+                                platformBuildTypes=buildTypes,
                                 enabled=enabled, configurable=configurable,
                                 sourceTypes=sourceTypes)
             platforms.append(platform)
@@ -1036,6 +1040,62 @@ class PlatformManager(manager.Manager):
 
     def getPlatformByName(self, platformName):
         return self.platforms.getByName(platformName)
+
+    def getPlatformImageTypeDefs(self, request, platformId):
+        platform = self.platforms.getById(platformId)
+        templates = models.PlatformBuildTemplates()
+        platDef = self.platformCache.get(platform.label)
+        from mint import buildtypes
+        from mint.rest.api import productversion
+        buildDefModels = []
+        for buildDef in platform._buildTypes:
+            kw = {'platform':platformId}
+            buildDefId = productversion.BuildDefinitionMixIn.getBuildDefId(buildDef)
+            extra = {'platform':platformId, 'imageTypeDefinitions': buildDefId}
+            displayName = getattr(buildDef, "displayName", buildDef.name)
+            kw.update(dict(name = buildDef.name,
+                displayName = displayName,
+                id = buildDefId))
+            
+            if buildDef.flavorSetRef:
+                fset = buildDef.flavorSetRef
+                fset = platDef.getFlavorSet(fset)
+                if fset:
+                    kw['flavorSet'] = models.PlatformFlavorSet(id = fset.name,
+                                                        name = fset.name,
+                                                        displayName = fset.displayName, **extra)
+
+            if buildDef.architectureRef:
+                arch = buildDef.architectureRef
+                arch = platDef.getArchitecture(arch)
+                if arch:
+                    kw['architecture'] = models.PlatformArchitecture(id = arch.name,
+                                                            name = arch.name,
+                                                            displayName = arch.displayName, **extra)
+
+            if buildDef.containerTemplateRef:
+                ctemplRef = buildDef.containerTemplateRef
+                ctempl = platDef.getContainerTemplate(ctemplRef)
+                if ctempl and ctemplRef in buildtypes.xmlTagNameImageTypeMap:
+                    displayName = buildtypes.xmlTagNameImageTypeMap[ctemplRef]
+                    displayName = buildtypes.typeNamesMarketing[displayName]
+                    if hasattr(buildDef, 'getBuildImage'):
+                    # This is a build
+                        imageField = buildDef.getBuildImage()
+                    else:
+                    # This is a build template
+                        imageField = ctempl
+                    imageParams = models.ImageParams(**imageField.fields)
+                    kw['container'] = models.PlatformContainerFormat(
+                        id = ctemplRef,
+                        name = ctemplRef,
+                        displayName = displayName,
+                        options = imageParams, **extra)
+
+            model = models.PlatformBuildTemplate(**kw)
+            buildDefModels.append(model)
+        bdefs = models.BuildTemplates(buildTemplates = buildDefModels)
+        return bdefs
 
     def getPlatformByLabel(self, platformLabel):
         return self.platforms.getByLabel(platformLabel)

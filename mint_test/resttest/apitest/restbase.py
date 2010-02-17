@@ -40,9 +40,9 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         ('VMware ESX 64-bit', 'vmware', 'x86_64', 'vmwareEsxImage'),
     ]
     buildTemplates = buildDefs
-    architectures = [ ]
-    containerTemplates = [ ]
-    flavorSets = [ ]
+    architectures = []
+    containerTemplates = []
+    flavorSets = []
     productVersion = '1.0'
     productName = 'Project 1'
     productShortName = 'testproject'
@@ -172,7 +172,6 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         repos = self.openRepository()
         self.cclient = self.getConaryClient()
         self.cclient.repos = repos
-
         platformLabel1 = self.mintCfg.availablePlatforms[0]
         pl1 = self.productDefinition.toPlatformDefinition()
         cst = pl1.newContentSourceType('RHN', 'RHN', isSingleton = True)
@@ -181,6 +180,12 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl1.setContentProvider('Crowbar', 'Crowbar', [cst, cst2], [ds])
         pl1.setPlatformName('Crowbar Linux 1')
         pl1.setPlatformUsageTerms('Terms of Use 1')
+        pl1.addArchitecture('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
+        pl1.addArchitecture('x86_64', 'x86 (64-bit)', 'is:x86_64 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
+        pl1.addFlavorSet('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware')
+        pl1.addFlavorSet('vmware','VMware','~vmware, ~!xen, !domU, ~!dom0')
+        pl1.addContainerTemplate(pl1.imageType('vmwareEsxImage', {'autoResolve':'false', 'natNetworking':'true', 'baseFileName':'', 'vmSnapshots':'false', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}))
+        pl1.addContainerTemplate(pl1.imageType('xenOvaImage', {'autoResolve':'false', 'baseFileName':'', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}))
         pl1.saveToRepository(self.cclient, platformLabel1)
 
         platformLabel2 = self.mintCfg.availablePlatforms[1]

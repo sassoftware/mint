@@ -5,6 +5,7 @@
 #
 
 from mint import jobstatus
+from mint.rest.api.models import builddefinitions
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
@@ -126,6 +127,8 @@ class Platform(Model):
     contentSourceTypes = fields.UrlField('platforms.contentSourceTypes',
                                          ['platformId'])
     load = fields.UrlField('platforms.load', ['platformId'])
+    imageTypeDefinitions = fields.UrlField('platforms.imageTypeDefinitions',
+                                         ['platformId'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
@@ -175,3 +178,35 @@ class PlatformLoadStatus(Model):
             self.message = jobstatus.statusNames[self.code]
         self.isFinal = self.code in jobstatus.terminalStatuses
 
+class PlatformArchitecture(builddefinitions.Architecture):
+    imageTypeDefinitions = fields.CharField(display=False)
+    def get_absolute_url(self):
+        return ('platforms', self.platform, 'imagesTypeDefinitions', 
+            self.imageTypeDefinitions, 'architectures',
+            self.id)
+
+class PlatformFlavorSet(builddefinitions.FlavorSet):
+    imageTypeDefinitions = fields.CharField(display=False)
+    def get_absolute_url(self):
+        return ('platforms', self.platform, 'imagesTypeDefinitions', 
+            self.imageTypeDefinitions,'flavorsets',
+            self.id)
+    
+class PlatformContainerFormat(builddefinitions.ContainerFormat):
+    imageTypeDefinitions = fields.CharField(display=False)
+    def get_absolute_url(self):
+        return ('platforms', self.platform, 'imagesTypeDefinitions', 
+            self.imageTypeDefinitions,'containers',
+            self.id)
+
+class PlatformBuildTemplate(builddefinitions.BuildTemplate):
+    container = fields.ModelField(PlatformContainerFormat)
+    architecture = fields.ModelField(PlatformArchitecture)
+    flavorSet = fields.ModelField(PlatformFlavorSet)
+
+    def get_absolute_url(self):
+        return ('platforms.imageTypeDefinitions', self.platform, self.id)
+
+class PlatformBuildTemplates(builddefinitions.BuildTemplates):
+    buildTemplates = fields.ListField(PlatformBuildTemplate,
+            displayName = 'imageTypeDefinition')

@@ -34,6 +34,18 @@ from rpath_proddef import api1 as proddef
 ResponseError = restClient.ResponseError
 
 class PlatformsTest(restbase.BaseRestTest):
+    architectures = [
+           # ('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)'),
+           # ('x86_64', 'x86 (64-bit)', 'is:x86_64 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
+    ]
+    containerTemplates = [
+           # ('vmwareEsxImage', {'autoResolve':'false', 'natNetworking':'true', 'baseFileName':'', 'vmSnapshots':'false', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}),
+           # ('xenOvaImage', {'autoResolve':'false', 'baseFileName':'', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}),
+    ]
+    flavorSets = [
+           # ('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware'),
+           # ('vmware','VMware','~vmware, ~!xen, !domU, ~!dom0'),
+    ]
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
         self.setupProduct()
@@ -70,6 +82,16 @@ class PlatformsTest(restbase.BaseRestTest):
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformXml, xml)
+
+    def testGetImageTypeDefinitions(self):
+        # we already have a platform, so we must assume they've already been
+        # created in the db.  call getPlatforms to create them for this test.
+        self._getPlatforms()
+        uri = '/platforms/1/imageTypeDefinitions'
+        client = self.getRestClient()
+        req, platform = client.call('GET', uri)
+        xml = self._toXml(platform, client, req)
+        self.assertXMLEquals(platformImageDefXml, xml)
 
     def testGetPlatformSourceStatus(self):
         # we already have a platform, so we must assume they've already been

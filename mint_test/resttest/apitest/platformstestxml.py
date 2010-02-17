@@ -16,6 +16,7 @@ platformsXml = """\
     <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
     <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
     <load href="http://localhost:8000/api/platforms/1/load/"/>
+    <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
   </platform>
   <platform id="http://localhost:8000/api/platforms/2">
     <platformId>2</platformId>
@@ -32,6 +33,7 @@ platformsXml = """\
     <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
     <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
     <load href="http://localhost:8000/api/platforms/2/load/"/>
+    <imageTypeDefinitions href="http://localhost:8000/api/platforms/2/imageTypeDefinitions"/>
   </platform>
 </platforms>
 """
@@ -53,6 +55,7 @@ platformXml = """\
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
   <load href="http://localhost:8000/api/platforms/1/load/"/>
+  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
 </platform>
 """
 
@@ -461,6 +464,7 @@ platformPUTXml = """\
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
   <load href="http://localhost:8000/api/platforms/1/load/"/>
+  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
 </platform>
 """
 
@@ -557,4 +561,77 @@ platformStatus2Xml = """\
   <valid>true</valid>
   <message>Available.</message>
 </platformSourceStatus>
+"""
+
+platformImageDefXml = """\
+<imageTypeDefinitions>
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204">
+    <name>Citrix XenServer 32-bit</name>
+    <displayName>Citrix XenServer 32-bit</displayName>
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/containers/xenOvaImage">
+      <name>xenOvaImage</name>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
+      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
+    </container>
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/architectures/x86">
+      <name>x86</name>
+      <displayName>x86</displayName>
+    </architecture>
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/9a1ffeb422bd48550ac2f3ccef4b6204/flavorsets/xen">
+      <name>xen</name>
+      <displayName>Xen DomU</displayName>
+    </flavorSet>
+  </imageTypeDefinition>
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/71a60de01b7e8675254175584fdb9db2">
+    <name>Citrix XenServer 64-bit</name>
+    <displayName>Citrix XenServer 64-bit</displayName>
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/containers/xenOvaImage">
+      <name>xenOvaImage</name>
+      <displayName>Citrix(R) XenServer(TM) Appliance</displayName>
+      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
+    </container>
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/architectures/x86_64">
+      <name>x86_64</name>
+      <displayName>x86 (64-bit)</displayName>
+    </architecture>
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/71a60de01b7e8675254175584fdb9db2/flavorsets/xen">
+      <name>xen</name>
+      <displayName>Xen DomU</displayName>
+    </flavorSet>
+  </imageTypeDefinition>
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/072f6883c0290204e26de6f4e66c5c54">
+    <name>VMware ESX 32-bit</name>
+    <displayName>VMware ESX 32-bit</displayName>
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/containers/vmwareEsxImage">
+      <name>vmwareEsxImage</name>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
+    </container>
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/architectures/x86">
+      <name>x86</name>
+      <displayName>x86</displayName>
+    </architecture>
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/072f6883c0290204e26de6f4e66c5c54/flavorsets/vmware">
+      <name>vmware</name>
+      <displayName>VMware</displayName>
+    </flavorSet>
+  </imageTypeDefinition>
+  <imageTypeDefinition id="http://localhost:8000/api/platforms/1/imageTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1">
+    <name>VMware ESX 64-bit</name>
+    <displayName>VMware ESX 64-bit</displayName>
+    <container id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/containers/vmwareEsxImage">
+      <name>vmwareEsxImage</name>
+      <displayName>VMware(R) ESX(R) Server Virtual Appliance</displayName>
+      <options autoResolve="true" baseFileName="" freespace="1024" installLabelPath="" natNetworking="true" swapSize="512" vmMemory="256" vmSnapshots="true"/>
+    </container>
+    <architecture id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/architectures/x86_64">
+      <name>x86_64</name>
+      <displayName>x86 (64-bit)</displayName>
+    </architecture>
+    <flavorSet id="http://localhost:8000/api/platforms/1/imagesTypeDefinitions/e0b2438053d04a63f74ef5e7794e42a1/flavorsets/vmware">
+      <name>vmware</name>
+      <displayName>VMware</displayName>
+    </flavorSet>
+  </imageTypeDefinition>
+</imageTypeDefinitions>
 """
