@@ -717,6 +717,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
   <load href="http://localhost:8000/api/platforms/2/load/"/>
+  <imageTypeDefinitions href="http://localhost:8000/api/platforms/2/imageTypeDefinitions"/>
 </platform>
 """
         self.assertXMLEquals(response, expected)
