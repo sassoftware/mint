@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import os
+import tarfile
 
 try:
     import boto
@@ -15,6 +17,7 @@ except ImportError:
     _boto_present = False
 
 import xml.dom.minidom
+from conary.lib import util
 
 from mint.db import ec2
 from mint.lib import database
@@ -242,6 +245,61 @@ class S3Wrapper(object):
             kwargs['proxy'], kwargs['proxy_port'] = splitUrl[1:5]
         return kwargs
 
+    class UploadCallback(object):
+        def __init__(self, callback, fileName, fileIdx, fileTotal,
+                sizeCurrent, sizeTotal):
+            self.fileName = fileName
+            self.fileIdx = fileIdx
+            self.fileTotal = fileTotal
+            self.sizeCurrent = sizeCurrent
+            self.sizeTotal = sizeTotal
+            self._callback = callback
+
+        def callback(self, currentBytes, totalBytes):
+            self._callback(self.fileName, self.fileIdx, self.fileTotal,
+                currentBytes, totalBytes,
+                self.sizeCurrent + currentBytes, self.sizeTotal)
+
+    def createBucket(self, bucketName):
+        bucket = self.s3conn.create_bucket(bucketName)
+        return bucket
+
+    # This is the magical za-team user that needs read access to the S3
+    # files, in order for EC2 to be able to use them
+    amazonEC2UserId = '6aa5a366c34c1cbe25dc49211496e913e0351eb0e8c37aa3477e40942ec6b97c'
+
+    def uploadBundle(self, tarObject, bucketName, callback = None):
+        bucket = self.createBucket(bucketName)
+        members = [ x for x in tarObject
+            if x.type in tarfile.REGULAR_TYPES ]
+        fileSizes = [ x.size for x in members ]
+        fileCount = len(fileSizes)
+        totalSize = sum(fileSizes)
+        manifests = [ os.path.basename(x.name) for x in members
+            if x.name.endswith('.manifest.xml') ]
+        for i, archiveMember in enumerate(members):
+            fileObj = tarObject.extractfile(archiveMember)
+            nFileObj = util.BoundedStringIO()
+            util.copyfileobj(fileObj, nFileObj)
+
+            fileName = os.path.basename(archiveMember.name)
+            key = bucket.new_key(fileName)
+
+            if callback:
+                cb = self.UploadCallback(callback, archiveMember.name,
+                    i + 1, fileCount, sum(fileSizes[:i]), totalSize).callback
+            else:
+                cb = None
+            key.set_contents_from_file(nFileObj, cb=cb, policy='private')
+            # Grant permissions to za-team
+            key = bucket.get_key(fileName)
+            acl = key.get_acl()
+            acl.acl.add_user_grant('READ', self.amazonEC2UserId)
+            key.set_acl(acl)
+        if manifests:
+            return (bucketName, manifests[0])
+        return (bucketName, None)
+
 class EC2Wrapper(object):
 
     __slots__ = ('ec2conn', 'accountId', 'accessKey', 'secretKey')
@@ -365,3 +423,23 @@ class EC2Wrapper(object):
             return True
         except EC2ResponseError, e:
             raise mint_error.EC2Exception(ErrorResponseObject(e))       
+
+    def registerAMI(self, bucketName, manifestName, ec2LaunchGroups = None,
+                ec2LaunchUsers = None):
+        amiId = None
+        amiS3ManifestName = '%s/%s' % (bucketName,
+            os.path.basename(manifestName))
+        try:
+            amiId = str(self.ec2conn.register_image(amiS3ManifestName))
+            if ec2LaunchGroups:
+                self.ec2conn.modify_image_attribute(amiId,
+                    attribute='launchPermission',
+                    operation='add', groups=ec2LaunchGroups)
+            if ec2LaunchUsers:
+                self.ec2conn.modify_image_attribute(amiId,
+                    attribute='launchPermission',
+                    operation='add', user_ids=ec2LaunchUsers)
+        except EC2ResponseError, e:
+            raise mint_error.EC2Exception(ErrorResponseObject(e))
+
+        return amiId, amiS3ManifestName

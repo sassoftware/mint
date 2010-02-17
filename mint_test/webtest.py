@@ -303,7 +303,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project', 'shortname': 'test',
                     'domainname': MINT_PROJECT_DOMAIN,
-                    'prodtype': 'Component', 'version': '1.0'})
+                    'prodtype': 'Component',
+                    'version': '1.0',
+                    'platformLabel': '',
+                    })
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getName(), 'Test Project')
@@ -326,7 +329,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                  'isPrivate': False,
                  'prodtype': 'Appliance',
                  'namespace': self.mintCfg.namespace,
-                 'version': '1.0'})
+                 'version': '1.0',
+                 'platformLabel': '',
+                 })
 
         project = client.getProjectByHostname("test")
         self.failUnlessEqual(project.getApplianceValue(), 'yes')
@@ -340,7 +345,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project 2', 'shortname': 'test2',
                  'domainname': MINT_PROJECT_DOMAIN,
-                 'prodtype': 'Component', 'version': '1.0'})
+                 'prodtype': 'Component',
+                 'version': '1.0',
+                 'platformLabel': '',
+                 })
 
         project = client.getProjectByHostname("test2")
         self.failUnlessEqual(project.getApplianceValue(), 'no')
@@ -354,7 +362,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, self.fetchWithRedirect,
                 {'title': 'Test Project 3', 'shortname': 'test3',
                  'domainname': MINT_PROJECT_DOMAIN,
-                 'prodtype': 'Component', 'version': '1.0'})
+                 'prodtype': 'Component',
+                 'version': '1.0',
+                 'platformLabel': '',
+                 })
 
         project = client.getProjectByHostname("test3")
         self.failUnlessEqual(project.getApplianceValue(), 'no')
@@ -385,7 +396,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           {'name'   : 'Bar',
                            'commitEmail': 'email@example.com',
                            'namespace': 'spacemonkey'},
-                          ok_codes = [301])
+                          ok_codes = [302])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.name, 'Bar')
@@ -426,7 +437,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           {'name'   : 'Bar',
                            'isPrivate': 'off',
                            'namespace': 'spacemonkey'},
-                          ok_codes = [301])
+                          ok_codes = [302])
 
         project = client.getProject(projectId)
         self.failUnlessEqual(project.hidden, False)
@@ -524,6 +535,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         buildSize = 1024 * 1024 * 300
         buildSha1 = '0123456789ABCDEF01234567890ABCDEF0123456'
         build.setFiles([['foo.iso', 'Foo ISO Image', buildSize, buildSha1]])
+        self.setBuildFinished(build.buildId)
 
         self.webLogin('foouser', 'foopass')
 
@@ -563,6 +575,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                 'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso')
         build.addFileUrl(fileId, urltypes.AMAZONS3TORRENT,
                 'http://s3.amazonaws.com/ExtraCrispyChicken/foo.iso?torrent')
+        self.setBuildFinished(build.buildId)
 
         self.webLogin('foouser', 'foopass')
 
@@ -606,6 +619,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         build.setDataValue('anaconda-custom',
                 'anaconda-custom=/conary.rpath.com@rpl:devel/2.0-1-1[]',
                 data.RDT_TROVE, validate=False)
+        self.setBuildFinished(build.buildId)
 
         # make one of these frozen just to make sure we can handle
         # cases where a frozen version made it into the database
@@ -1543,39 +1557,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         project.editLabel(labelId, extLabel, self.cfg.repositoryMap[hostname],
                           authType, userpass[0], userpass[1], '')
 
-    def addPlatform(self, label, name='Platform for %(label)s'):
-        from rpath_proddef import api1 as proddef
-        from StringIO import StringIO
-        pd = proddef.PlatformDefinition()
-        pd.setPlatformName(name % dict(label=label))
-        stream = StringIO('w+')
-        pd.serialize(stream)
-        stream.seek(0)
-        self.addComponent('platform-definition:source=%s' % label, 
-                            [('platform-definition.xml', stream.read())])
-
     def testGetAvailablePlatforms(self):
         client = self.startMintServer(useProxy=True)
-        self.addPlatform('localhost@rpl:plat')
-        self.mintCfg.availablePlatforms.append('localhost@rpl:plat')
-
-        # before we add the external product, we don't have access to
-        # this product - there's no repomap.
         platforms = client.getAvailablePlatforms()
-        assert(not platforms)
-
-        # when we add localhost as an external repository, we
-        # can now access the platform
-        repos, hostname = self.addExternalRepository(client)
-        platforms = client.getAvailablePlatforms()
-        assert(platforms == [['localhost@rpl:plat', 
-                              'Platform for localhost@rpl:plat']])
-
-        # put the wrong password in, and now we can no longer access the
-        # repository.
-        self.editExternalRepository(client, hostname, userpass=('test', 'bar') )
-        platforms = client.getAvailablePlatforms()
-        assert(not platforms)
+        self.assertEquals(platforms, [['localhost@rpl:plat',
+                'My Spiffy Platform']])
 
     def testGetAllImagesByType(self):
         client, userId = self.quickMintUser('foouser', 'foopass')

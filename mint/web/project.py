@@ -39,8 +39,6 @@ from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.errors import TroveNotFound, ParseError
 
-from mcp import mcp_error
-
 from rpath_proddef import api1 as proddef
 
 import simplejson
@@ -97,7 +95,7 @@ class BaseProjectHandler(WebHandler, productversion.ProductVersionView):
     def handler_customizations(self, context):
         """ Override this if necessary """
 
-    def _predirect(self, path = "", temporary = False):
+    def _predirect(self, path = "", temporary=True):
         self._redirectHttp('project/%s/%s' % (self.project.hostname, path),
                 temporary=temporary)
 
@@ -309,22 +307,10 @@ class ProjectHandler(BaseProjectHandler, PackageCreatorMixin):
         else:
             build = self.client.getBuild(buildId)
 
-        # enforce that job doesn't conflict
-        res = build.getStatus()
-        jobStatus, msg = res['status'], res['message']
-        if jobStatus not in (jobstatus.NO_JOB, jobstatus.FINISHED,
-                             jobstatus.FAILED):
-            self._addErrors("You cannot alter this image because a "
-                            "conflicting image is currently being generated.")
-            self._predirect("build?id=%d" % buildId)
-            return
-
         distTroveName, distTroveVersion, distTroveFlavor = parseTroveSpec(distTroveSpec)
         build.setTrove(distTroveName, distTroveVersion, distTroveFlavor.freeze())
         build.setName(name)
         build.setDesc(desc)
-
-        jobArch = helperfuncs.getArchFromFlavor(distTroveFlavor)
 
         # handle buildType check box state changes
         buildType = int(kwargs['buildtype'])

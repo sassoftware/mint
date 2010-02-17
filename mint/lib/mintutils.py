@@ -25,6 +25,7 @@ def setupLogging(logPath=None, consoleLevel=logging.WARNING,
 
     logger = logging.getLogger(logger)
     logger.handlers = []
+    logger.propagate = False
     level = 100
 
     # Console handler

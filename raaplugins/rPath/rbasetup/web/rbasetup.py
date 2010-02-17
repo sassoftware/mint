@@ -8,6 +8,7 @@ import md5
 import simplejson
 import re
 import socket
+import urllib
 
 from gettext import gettext as _
 import raa
@@ -295,6 +296,8 @@ class rBASetup(rAAWebPlugin):
             sched = schedule.ScheduleOnce(time.time() + 1)
             schedId = self.callBackendAsync(sched, 'firstTimeSetup', normalizedOptions)
             self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
+            # store the rBA Admin username, for use in other functions
+            self.setPropertyValue('RBA_ADMIN', normalizedOptions['new_username'], RDT_STRING)
             # raa.web.raiseHttpRedirect('/rbasetup/rBASetup/firstTimeSetup')
             return True
         else:
@@ -313,7 +316,9 @@ class rBASetup(rAAWebPlugin):
             (currentStatus['status'] == constants.TASK_SUCCESS and
              not self.getPropertyValue('FINALIZED', False)):
             sched = schedule.ScheduleOnce(time.time() + 1)
-            schedId = self.callBackendAsync(sched, 'firstTimeSetup', dict(retry=True))
+            schedId = self.callBackendAsync(sched, 'firstTimeSetup',
+                        dict(retry=True, 
+                             new_username=self.getPropertyValue('RBA_ADMIN')))
             self.deletePropertyValue('FTS_SCHEDID')
             self.setPropertyValue('FTS_SCHEDID', schedId, RDT_INT)
             return self._getFirstTimeSetupStatus()
@@ -399,6 +404,8 @@ class rBASetup(rAAWebPlugin):
         # mark done in the wizard
         self.wizardDone()
         
-        # redirect to the rbuilder itself
+        # redirect to the rbuilder login screen
         fqdn = raa.web.getRequestHostname()
-        raa.web.raiseHttpRedirect("http://%s/" % (fqdn,))
+        query = { 'username': self.getPropertyValue('RBA_ADMIN', 'admin'),
+                  'msg': urllib.quote("Please sign in below to enable platforms and complete the setup process.") }
+        raa.web.raiseHttpRedirect("http://%s/ui/#/login?%s" % (fqdn, "&".join(["%s=%s" % (k, query[k]) for k in query.keys()])))

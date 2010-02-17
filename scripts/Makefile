@@ -10,10 +10,12 @@ static_files =				\
 	check-repository		\
 	deleteproject			\
 	ec2-terminator			\
+	enable-platforms	\
 	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
 	init-extproducts	        \
+	job-cleanup			\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
@@ -28,7 +30,8 @@ static_files =				\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
-	set-password
+	set-password                    \
+	repository-log-scrape
 
 generated_files =	\
 	rbuilder_database.py

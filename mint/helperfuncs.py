@@ -592,10 +592,6 @@ def parseVersion(vStr):
     return None
 
 REPOSITORY_LABELS = {
-        'rap':      ('rap.rpath.com@rpath:linux-2',
-                        'rPath Appliance Platform - Linux Service'),
-        'rpath':    ('conary.rpath.com@rpl:2', 'rPath Linux'),
-        'sle':      ('sle.rpath.com@rpath:sles-10', 'SUSE Linux 10'),
         'products': ('products.rpath.com@rpath:rapa-3',
                         'rPath Products Repository'),
     }

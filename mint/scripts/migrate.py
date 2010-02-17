@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 3)
+    Version = (48, 13)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -717,6 +717,75 @@ class MigrateTo_48(SchemaMigration):
 
         return True
 
+    # 48.4
+    # - Platforms / PlatformSources / PlatformSourceData tables will be
+    # created.
+    def migrate4(self):
+        schema._createPlatforms(self.db)
+        return True
+
+    # 48.5
+    # - Dashboard report type table 
+    def migrate5(self):
+        return True
+
+    # 48.6
+    # - Dashboard Repository Log scraping table 
+    def migrate6(self):
+        schema._createRepositoryLogSchema(self.db)
+        return True
+
+    # 48.7
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
+    def migrate7(self):
+        return True
+
+    # 48.8
+    # Add Indexer schema
+    def migrate8(self):
+        schema._createCapsuleIndexerSchema(self.db)
+        return True
+
+    # 48.9
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
+    def migrate9(self):
+        return True            
+        
+    # 48.10
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
+    def migrate10(self):
+        return True
+
+    # 48.11
+    # Preserved for previous migration no longer needed, we don't want to
+    # decrease the version number.
+    def migrate11(self):
+        return True
+
+    # 48.12
+    # - Clear the database column for proxied external projects.
+    def migrate12(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            UPDATE Projects p SET database = NULL
+            WHERE external = 1 AND NOT EXISTS (
+                SELECT * FROM InboundMirrors m
+                WHERE p.projectId = m.targetProjectId
+            )""")
+        return True
+
+    # 48.13
+    # - nevra.epoch is not nullable - but we won't enforce the constraint here
+    # we will only convert the data
+    def migrate13(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            UPDATE ci_rhn_nevra SET epoch = -1 WHERE epoch IS NULL
+        """)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
@@ -736,15 +805,10 @@ def majorMinor(major):
 
 
 def tryMigrate(db, func):
-    db.transaction()
-    try:
-        rv = func()
-    except:
-        db.rollback()
-        raise
-    else:
-        db.commit()
-    return rv
+    # Do all migration steps in one transaction so a failure in createSchema
+    # will abort the whole thing. Otherwise we wouldn't rerun the createSchema
+    # because the schema version has already been updated.
+    return func(skipCommit=True)
 
 
 # entry point that migrates the schema

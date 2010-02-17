@@ -1,10 +1,10 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2009 rPath, Inc.
 #
 # All Rights Reserved
 #
 
-SUBDIRS = db lib reports rest scripts templates web 
+SUBDIRS = db django_rest lib reports rest scripts templates web 
 
 python_files = $(wildcard *.py)
 

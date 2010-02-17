@@ -19,8 +19,8 @@ import fixtures
 from conary.lib import util
 
 from testrunner import pathManager
+from testutils import mock
 
-import mock
 import sys
 import os
 

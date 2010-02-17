@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = templates content
+SUBDIRS = templates content hooks
 
 python_files = $(wildcard *.py)
 

@@ -23,7 +23,7 @@ from conary.conaryclient import filetypes
 from conary import changelog
 from conary import versions
 
-import fixtures
+from mint_test import fixtures
 from mint_test import mint_rephelp
 
 from mint import packagecreator

@@ -160,6 +160,8 @@ class ProductManager(manager.Manager):
             version=version,
             commit=False)
 
+        authInfo = models.AuthInfo('userpass',
+                self.cfg.authUser, self.cfg.authPass)
         self.reposMgr.createRepository(projectId)
 
         # can only add members after the repository is set up
@@ -213,25 +215,51 @@ class ProductManager(manager.Manager):
         cu = self.db.cursor()
         createTime = time.time()
         creatorId = self.auth.userId > 0 and self.auth.userId or None
-        cu.execute('''INSERT INTO Projects (name, creatorId, description,
-                shortname, hostname, domainname, fqdn, projecturl, external,
-                timeModified, timeCreated, backupExternal, database)
-                VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
-                title, creatorId, hostname, hostname, domainname,
-                '%s.%s' % (hostname, domainname),
-                createTime, createTime, int(backupExternal),
-                self.cfg.defaultDatabase)
-        productId = cu.lastrowid
+
+        try:
+            product = self.getProduct(hostname)
+            productId = product.productId
+
+            # Need to look in the labels table to see if there is a different
+            # repository url there.
+            labelIdMap, repoMap, userMap, entMap = \
+                self.db.db.labels.getLabelsForProject(productId) 
+            fqdn = self.reposMgr._getFqdn(hostname, domainname)
+            url = repoMap.get(fqdn, url)
+        except errors.ItemNotFound:
+            productId = None
+
+        database = None
+        if mirror:
+            database = self.cfg.defaultDatabase
+
+        if not productId:
+            # Need a new entry in projects table.
+            cu.execute('''INSERT INTO Projects (name, creatorId, description,
+                    shortname, hostname, domainname, fqdn, projecturl, external,
+                    timeModified, timeCreated, backupExternal, database)
+                    VALUES (?, ?, '', ?, ?, ?, ?, '', 1, ?, ?, ?, ?)''',
+                    title, creatorId, hostname, hostname, domainname,
+                    '%s.%s' % (hostname, domainname),
+                    createTime, createTime, int(backupExternal), database)
+            productId = cu.lastrowid
+
         if mirror:
             self.reposMgr.addIncomingMirror(productId, hostname, domainname, 
-                                            url, authInfo)
+                                            url, authInfo, True)
         else:
             self.reposMgr.addExternalRepository(productId, 
                                                 hostname, domainname, url,
-                                                authInfo)
+                                                authInfo, mirror)
         self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
+
         return productId
+
+    def deleteExternalProduct(self, productId):
+        cu = self.db.cursor()
+        self.db.db.projects.delete(productId)
+        return
 
     def _getMemberLevel(self, projectId, userId):
         # internal fn because it takes projectId + userId 

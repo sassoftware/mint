@@ -1,6 +1,6 @@
 import sys
 
-import fixtures
+from mint_test import fixtures
 
 class _RestFixture(object):
     def __init__(self, test):

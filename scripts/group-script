@@ -97,26 +97,33 @@ waitForPg
 
 service pgbouncer restart
 
+# Create rbuilder user for initial setup OR give it createdb permissions to fix
+# up an earlier mistake. -- 5.5.0 2009-11-16
+createuser -SdRU postgres rbuilder &>/dev/null || \
+    psql -U postgres -qc 'ALTER ROLE rbuilder CREATEDB'
+
 # Migrate the mint database (or create it if it doesn't exist)
 createlang -U postgres plpgsql template1 &>/dev/null
-createuser -SDRU postgres rbuilder &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
 
 "$scriptdir"/rbuilder-database --migrate \
     || die "Failed to migrate the rBuilder database"
-chown -f apache:apache /srv/rbuilder/data/{db,platformName.cache} 2>/dev/null
-
-# Migrate all conary repositories
-"$scriptdir"/migrate-all-projects
+chown -f apache:apache /srv/rbuilder/data/db /srv/rbuilder/repos/* 2>/dev/null
+rm -f /srv/rbuilder/data/platformName.cache
 
 # Migrate the mint config
 "$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
 chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
+
+# Migrate all conary repositories
+"$scriptdir"/migrate-all-projects
+
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
 # Create a project for rMake to use as a repository.
 sudo -u apache "$scriptdir"/rmake-setup
+RMAKE_EXISTED=$?
 
 # Make sure the site authorization is up to date.
 "$scriptdir"/refresh-auth
@@ -137,6 +144,19 @@ fi
 if [ "x$is_chrooted" == "x" ]
 then
     service httpd start
+fi
+
+# If rmake repo didn't exist, this must be a new install, so only touch the
+# platforms file.  If it did exist, it must be an update, so only run the
+# script if the platforms file doesn't exist.
+PLATFORMS_FILE=/srv/rbuilder/data/enable_platforms
+if [ "$RMAKE_EXISTED" = "0" ]
+then
+    touch "$PLATFORMS_FILE"
+elif [ ! -e "$PLATFORMS_FILE" ]
+then
+    "$scriptdir"/enable-platforms
+    touch "$PLATFORMS_FILE"
 fi
 
 ### Extra Steps
@@ -165,11 +185,24 @@ else
     echo Skipping certificate generation due to chrooting
 fi
 
-# Restart rMake after update + cert generation.
-if [ -f /var/lock/subsys/rmake ]
+# Restart rMake after update + cert generation. This also straightens things out
+# for the first update after the messagebus was split.
+#   -- 5.0.0 - 2008-12-01
+#   -- 5.5.0 - 2009-11-09
+if [ "x$is_chrooted" == "x" ]
 then
-    service rmake restart
-    service rmake-node restart
+    # Stop everything
+    service jobmaster condstop
+    service mcp-dispatcher condstop
+    [ -e /var/lock/subsys/rmake-node ] && service rmake-node stop
+    service rmake stop
+    service rmake-messagebus condstop
+    # Start everything
+    service rmake-messagebus start
+    service rmake start
+    service rmake-node start
+    service mcp-dispatcher start
+    service jobmaster start
 fi
 
 # Fix notifications with a bad GUID

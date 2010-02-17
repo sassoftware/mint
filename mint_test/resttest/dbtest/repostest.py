@@ -151,7 +151,6 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         cfg = reposMgr.getConaryConfig()
         self.assertEqual(cfg.repositoryMap['localhost.abc'],
                 'https://test.rpath.local2:0/repos/localhost/')
-        # FIXME - is this right??
         self.assertEqual(cfg.user.find('localhost.abc'),
                 ('mintauth', 'mintpass'))
 
