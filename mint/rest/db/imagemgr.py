@@ -446,3 +446,20 @@ class ImageManager(manager.Manager):
                     fileId, urlId)
 
         return self.listFilesForImage(hostname, imageId)
+
+    def getAllBuildsByType(self, imageType):
+        images = self.db.db.builds.getAllBuildsByType(imageType,
+            self.db.auth.userId)
+        hostname = None
+        imageIds = []
+        for imageData in images:
+            hostname = buildData.pop('hostname')
+            imageIds.append(buildData['buildId'])
+        if not imageIds:
+            return []
+        imageFilesList = self._getFilesForImages(hostname, imageIds)
+        for imageData, imageObj in zip(images, imageFilesList):
+            if not imageObj.urls:
+                continue
+            imageData['sha1'] = imageObjs.urls[0].sha1
+        return images
