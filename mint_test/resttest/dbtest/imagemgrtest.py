@@ -124,6 +124,9 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.failUnlessEqual(
             [ [ x['sha1'] for x in img['files'] ] for img in images],
             [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ] ])
+        self.failUnlessEqual(
+            [ [ x['baseFileName'] for x in img['files'] ] for img in images],
+            [ [ 'imagefile_1.iso' ] ])
 
     def testAddImageStatus(self):
         db = self.openMintDatabase(createRepos=False)
