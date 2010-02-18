@@ -24,9 +24,6 @@ class RbuilderCatalogRESTHandler(handler_apache.ApacheRESTHandler):
         handler_apache.ApacheRESTHandler.__init__(self, pathPrefix,
             restdb)
 
-    def handle(self, req):
-        return self.handler.handle(req, self.pathPrefix)
-
 def catalogHandler(context):
     coveragehook.install()
     maintenance.enforceMaintenanceMode(context.cfg)
