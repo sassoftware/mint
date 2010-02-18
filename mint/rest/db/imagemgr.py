@@ -147,6 +147,7 @@ class ImageManager(manager.Manager):
             else:
                 file = imageFiles[fileId] = models.ImageFile(d)
                 file.urls = []
+                file.sha1 = d['sha1']
             if url:
                 file.baseFileName = os.path.basename(url)
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
@@ -447,19 +448,22 @@ class ImageManager(manager.Manager):
 
         return self.listFilesForImage(hostname, imageId)
 
-    def getAllBuildsByType(self, imageType):
+    def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
             self.db.auth.userId)
         hostname = None
         imageIds = []
         for imageData in images:
-            hostname = buildData.pop('hostname')
-            imageIds.append(buildData['buildId'])
+            hostname = imageData.pop('hostname')
+            imageIds.append(imageData['buildId'])
         if not imageIds:
             return []
         imageFilesList = self._getFilesForImages(hostname, imageIds)
-        for imageData, imageObj in zip(images, imageFilesList):
-            if not imageObj.urls:
-                continue
-            imageData['sha1'] = imageObjs.urls[0].sha1
+        for imageData, imageFileList in zip(images, imageFilesList):
+            imageFileData = [
+                dict(fileId = x.fileId, sha1 = x.sha1,
+                     baseFileName = x.baseFileName,
+                     idx = x.idx, size = x.size)
+                for x in imageFileList.files ]
+            imageData['files'] = imageFileData
         return images
