@@ -127,6 +127,9 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.failUnlessEqual(
             [ [ x['baseFileName'] for x in img['files'] ] for img in images],
             [ [ 'imagefile_1.iso' ] ])
+        self.failUnlessEqual(
+            [ [ x['downloadUrl'] for x in img['files'] ] for img in images],
+            [ [ 'https://test.rpath.local:0/downloadImage?fileId=1' ] ])
 
     def testAddImageStatus(self):
         db = self.openMintDatabase(createRepos=False)

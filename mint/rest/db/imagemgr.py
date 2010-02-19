@@ -370,19 +370,22 @@ class ImageManager(manager.Manager):
 
         failed = (status.code != jobstatus.FINISHED)
 
-        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%%d" % (
-            self.cfg.siteHost, self.cfg.basePath, )
         if amiId is not None:
             notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
             imageFiles = [ amiId ]
         else:
             notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
-            imageFiles = [ (x[0], downloadUrlTemplate % x[1])
+            imageFiles = [ (x[0], self.getDownloadUrl(x[1]))
                 for x in self._getImageFiles(imageId) ]
 
         method = (failed and notices.notify_error) or notices.notify_built
         method(imageName, imageType, time.time(), projectName, projectVersion,
             imageFiles)
+
+    def getDownloadUrl(self, fileId):
+        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%d"
+        return downloadUrlTemplate % (
+            self.cfg.siteHost, self.cfg.basePath, fileId)
 
     def _getImageFiles(self, imageId):
         cu = self.db.cursor()
@@ -463,7 +466,8 @@ class ImageManager(manager.Manager):
             imageFileData = [
                 dict(fileId = x.fileId, sha1 = x.sha1,
                      baseFileName = x.baseFileName,
-                     idx = x.idx, size = x.size)
+                     idx = x.idx, size = x.size,
+                     downloadUrl = self.getDownloadUrl(x.fileId),)
                 for x in imageFileList.files ]
             imageData['files'] = imageFileData
         return images
