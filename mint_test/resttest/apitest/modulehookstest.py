@@ -39,23 +39,8 @@ class ModuleHooksTest(restbase.BaseRestTest):
         uri = uriTemplate
         client = self.getRestClient()
         self.mintCfg.moduleHooksDir = '/tmp'
-        req, response = client.call('GET', uri, convert=True)
-        exp = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<moduleHooks>
-  <moduleHook>
-    <url>hooks/test1.swf</url>
-  </moduleHook>
-  <moduleHook>
-    <url>hooks/test2.swf</url>
-  </moduleHook>
-</moduleHooks>
-"""
-        self.assertBlobEquals(response,
-             exp % dict(port = client.port, server = client.server,
-                         version=constants.mintVersion,
-                         conaryversion=conaryConstants.version,
-                         proddefVer=proddef.BaseDefinition.version))
+        response = client.call('GET', uri, convert=False)[1]
+        self.failUnlessEqual(len(response.moduleHooks), 2)
 
 if __name__ == "__main__":
         testsetup.main()
