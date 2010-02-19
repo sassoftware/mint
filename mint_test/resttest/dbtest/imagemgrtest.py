@@ -126,7 +126,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
             [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ] ])
         self.failUnlessEqual(
             [ [ x['baseFileName'] for x in img['files'] ] for img in images],
-            [ [ 'imagefile_1.iso' ] ])
+            [ [ 'foo-0.1-' ] ])
         self.failUnlessEqual(
             [ [ x['downloadUrl'] for x in img['files'] ] for img in images],
             [ [ 'https://test.rpath.local:0/downloadImage?fileId=1' ] ])

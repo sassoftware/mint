@@ -124,6 +124,8 @@ class ImageManager(manager.Manager):
         if not imageIds:
             return []
 
+        imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
+
         cu = self.db.cursor()
         sql = '''
             SELECT
@@ -148,8 +150,7 @@ class ImageManager(manager.Manager):
                 file = imageFiles[fileId] = models.ImageFile(d)
                 file.urls = []
                 file.sha1 = d['sha1']
-            if url:
-                file.baseFileName = os.path.basename(url)
+            file.baseFileName = imagesBaseFileNameMap[imageId]
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
 
         # Order image files in a list parallel to imageIds
@@ -157,6 +158,59 @@ class ImageManager(manager.Manager):
         return [models.ImageFileList(hostname=hostname, imageId=imageId,
             files=sorted(imageFiles.values(), key=lambda x: x.idx))
             for (imageId, imageFiles) in zip(imageIds, imageFilesList) ]
+
+    def getImagesBaseFileName(self, hostname, imageIds):
+        imageIds = [int(x) for x in imageIds]
+        if not imageIds:
+            return {}
+
+        cu = self.db.cursor()
+        # We join Builds with BuildData in a subquery first, to find out the
+        # base file name; the outer join will make sure we get NULL if
+        # baseFileName is not set.
+        sql = '''
+            SELECT b.buildId, b.troveName, b.troveVersion, b.troveFlavor,
+                   bd.baseFileName
+              FROM Builds AS b
+         LEFT JOIN (
+                    SELECT buildId, value AS baseFileName
+                      FROM Builds
+                      JOIN BuildData USING (buildId)
+                     WHERE BuildData.name ='baseFileName'
+                   ) AS bd USING (buildId)
+             WHERE b.buildId IN ( %(images)s )
+            '''
+        sql %= dict(images=','.join('%d' % x for x in imageIds))
+        cu.execute(sql)
+        imageTroveMap = dict(
+            (r['buildId'],
+                (r['troveName'], r['troveVersion'], r['troveFlavor'],
+                    r['baseFileName']))
+             for r in cu)
+        ret = {}
+        for imageId in imageIds:
+            troveName, troveVersion, troveFlavor, baseFileName = imageTroveMap[imageId]
+            baseFileName = self._sanitizeString(baseFileName)
+            if not baseFileName:
+                troveVersion = helperfuncs.parseVersion(troveVersion)
+                troveArch = helperfuncs.getArchFromFlavor(troveFlavor)
+                baseFileName = "%(name)s-%(version)s-%(arch)s" % dict(
+                    # XXX One would assume hostname == troveName, but that's
+                    # how server.py had the code written
+                    name = hostname,
+                    version = troveVersion.trailingRevision().version,
+                    arch = troveArch)
+            ret[imageId] = baseFileName
+        return ret
+
+    @classmethod
+    def _sanitizeString(cls, string):
+        if string is None:
+            return ''
+        # Copied from mint/server.py
+        return ''.join(
+            [(x.isalnum() or x in ('-', '.')) and x or '_'
+            for x in string])
 
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)
