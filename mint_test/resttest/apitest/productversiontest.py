@@ -686,24 +686,19 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
-
-
-
     def testPostProductVersionStages(self):
-        uriTemplate = 'products/%s/versions/%s/stages/Development'
+        uriTemplate = 'products/%s/versions/%s/stages/QA'
         uri = uriTemplate % (self.productShortName, self.productVersion)
         self.createUser('foouser')
         client = self.getRestClient(username='foouser')
-        #req, response = client.call('GET', uri, convert = True)
-        req, response = client.call('PUT', uri, body=promoteGroup % dict(
-                name = self.productShortName,
-                ),
-                convert=False)
+        #req, response = client.call('PUT', uri, body=promoteGroup % dict(
+        #        name = self.productShortName,
+        #        ),
+        #        convert=False)
         exp = """\
 """
         #self.failUnlessEqual(response,
         #    exp % dict(server = client.server, port = client.port))
-
 
     def testSetProductVersionPlatform(self):
         self.setupPlatforms()
@@ -1113,7 +1108,7 @@ promoteGroup = """
   <version>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-2-1</version>
   <label>testproject.rpath.local2@yournamespace:testproject-1.0-devel</label>
   <trailingVersion />
-  <flavor />
+  <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
   <timestamp />
   <images />
 </trove>

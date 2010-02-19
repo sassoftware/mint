@@ -462,7 +462,39 @@ class Database(DBInterface):
             platformId = platformId)
 
     def createProductVersionStage(self, hostname, version, stageName, trove):
+        pd = self.productMgr.getProductVersionDefinition(hostname, version)
+        nextStage = stageName
+        nextLabel = pd.getLabelForStage(nextStage)
+        activeStage = None
+        activeLabel = trove.label
+
+        for stage in pd.getStages():
+            if str(stage.name) == stageName:
+                break
+            activeStage = stage.name
+
+        # Get a list of all labels that are in the product's search
+        # path (including subtroves).
+        platformLabels = set()
+        platformTroves = []
+        for searchElement in pd.getGroupSearchPaths():
+            if searchElement.troveName:
+                version = searchElement.label
+                if searchElement.version:
+                    version += '/' + searchElement.version
+                platformTroves.append((searchElement.troveName, version, None))
+            elif searchElement.label:
+                platformLabels.add(searchElement.label)
         
+        client = self.productMgr.reposMgr.getConaryClient()
+        allTroves = [(trove.name,trove.version,trove.flavor)]
+        fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
+        promoteMap = dict((versions.Label(str(fromLabel)), versions.VersionFromString(str(toLabel))) for (fromLabel, toLabel) in fromTo.iteritems())
+        success, cs = client.createSiblingCloneChangeSet(promoteMap,allTroves,cloneSources=True)
+        
+        if success:
+            client.getRepos().commitChangeSet(cs)
+
         return None
 
     @readonly    
