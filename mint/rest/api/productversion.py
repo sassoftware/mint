@@ -116,7 +116,7 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
         return self.db.getProductVersionStage(hostname, version, stageName)
 
     @requires('trove', models.Trove)
-    def create(self, request, hostname, version, stageName, trove):
+    def update(self, request, hostname, version, stageName, trove):
         return self.db.createProductVersionStage(hostname, version, stageName, trove)
     
     @auth.public
