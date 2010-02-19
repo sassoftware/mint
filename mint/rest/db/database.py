@@ -461,6 +461,10 @@ class Database(DBInterface):
             enabled=platformEnabled,
             platformId = platformId)
 
+    def createProductVersionStage(self, hostname, version, stageName, trove):
+        
+        return None
+
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)

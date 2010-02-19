@@ -686,6 +686,25 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
+
+
+
+    def testPostProductVersionStages(self):
+        uriTemplate = 'products/%s/versions/%s/stages/Development'
+        uri = uriTemplate % (self.productShortName, self.productVersion)
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        #req, response = client.call('GET', uri, convert = True)
+        req, response = client.call('PUT', uri, body=promoteGroup % dict(
+                name = self.productShortName,
+                ),
+                convert=False)
+        exp = """\
+"""
+        #self.failUnlessEqual(response,
+        #    exp % dict(server = client.server, port = client.port))
+
+
     def testSetProductVersionPlatform(self):
         self.setupPlatforms()
         from mint.rest.db import platformmgr
@@ -1085,6 +1104,19 @@ newProductVersion1 = """
   <name>%(version)s</name>
   <nameSpace />
 </productVersion>
+"""
+
+promoteGroup = """
+<trove>
+  <hostname />
+  <name>group-%(name)s-appliance</name>
+  <version>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-2-1</version>
+  <label>testproject.rpath.local2@yournamespace:testproject-1.0-devel</label>
+  <trailingVersion />
+  <flavor />
+  <timestamp />
+  <images />
+</trove>
 """
 
 
