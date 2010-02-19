@@ -147,6 +147,7 @@ class ImageManager(manager.Manager):
             else:
                 file = imageFiles[fileId] = models.ImageFile(d)
                 file.urls = []
+                file.sha1 = d['sha1']
             if url:
                 file.baseFileName = os.path.basename(url)
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
@@ -369,19 +370,22 @@ class ImageManager(manager.Manager):
 
         failed = (status.code != jobstatus.FINISHED)
 
-        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%%d" % (
-            self.cfg.siteHost, self.cfg.basePath, )
         if amiId is not None:
             notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
             imageFiles = [ amiId ]
         else:
             notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
-            imageFiles = [ (x[0], downloadUrlTemplate % x[1])
+            imageFiles = [ (x[0], self.getDownloadUrl(x[1]))
                 for x in self._getImageFiles(imageId) ]
 
         method = (failed and notices.notify_error) or notices.notify_built
         method(imageName, imageType, time.time(), projectName, projectVersion,
             imageFiles)
+
+    def getDownloadUrl(self, fileId):
+        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%d"
+        return downloadUrlTemplate % (
+            self.cfg.siteHost, self.cfg.basePath, fileId)
 
     def _getImageFiles(self, imageId):
         cu = self.db.cursor()
@@ -446,3 +450,24 @@ class ImageManager(manager.Manager):
                     fileId, urlId)
 
         return self.listFilesForImage(hostname, imageId)
+
+    def getAllImagesByType(self, imageType):
+        images = self.db.db.builds.getAllBuildsByType(imageType,
+            self.db.auth.userId)
+        hostname = None
+        imageIds = []
+        for imageData in images:
+            hostname = imageData.pop('hostname')
+            imageIds.append(imageData['buildId'])
+        if not imageIds:
+            return []
+        imageFilesList = self._getFilesForImages(hostname, imageIds)
+        for imageData, imageFileList in zip(images, imageFilesList):
+            imageFileData = [
+                dict(fileId = x.fileId, sha1 = x.sha1,
+                     baseFileName = x.baseFileName,
+                     idx = x.idx, size = x.size,
+                     downloadUrl = self.getDownloadUrl(x.fileId),)
+                for x in imageFileList.files ]
+            imageData['files'] = imageFileData
+        return images
