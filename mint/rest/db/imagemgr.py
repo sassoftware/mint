@@ -110,10 +110,13 @@ class ImageManager(manager.Manager):
             image.imageStatus = status
             images.append(image)
 
-        imagesFiles = self._getFilesForImages(hostname,
-                (x.imageId for x in images))
+        imageIds = [ x.imageId for x in images ]
+        imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
+
+        imagesFiles = self._getFilesForImages(hostname, imageIds)
         for image, imageFiles in zip(images, imagesFiles):
             image.files = imageFiles
+            image.baseFileName = imagesBaseFileNameMap[image.imageId]
 
         if getOne:
             return images[0]
@@ -123,8 +126,6 @@ class ImageManager(manager.Manager):
         imageIds = [int(x) for x in imageIds]
         if not imageIds:
             return []
-
-        imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
 
         cu = self.db.cursor()
         sql = '''
@@ -150,7 +151,8 @@ class ImageManager(manager.Manager):
                 file = imageFiles[fileId] = models.ImageFile(d)
                 file.urls = []
                 file.sha1 = d['sha1']
-            file.baseFileName = imagesBaseFileNameMap[imageId]
+            if url:
+                file.fileName = os.path.basename(url)
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
 
         # Order image files in a list parallel to imageIds
@@ -491,7 +493,7 @@ class ImageManager(manager.Manager):
             fileId = cu.lastrowid
 
             # ... then the URL ...
-            fileName = os.path.basename(file.baseFileName)
+            fileName = os.path.basename(file.fileName)
             filePath = os.path.join(self.cfg.imagesPath, hostname,
                     str(imageId), fileName)
             cu.execute("INSERT INTO FilesUrls ( urlType, url) VALUES ( ?, ? )",
@@ -515,13 +517,16 @@ class ImageManager(manager.Manager):
             imageIds.append(imageData['buildId'])
         if not imageIds:
             return []
+        imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
         imageFilesList = self._getFilesForImages(hostname, imageIds)
         for imageData, imageFileList in zip(images, imageFilesList):
             imageFileData = [
                 dict(fileId = x.fileId, sha1 = x.sha1,
-                     baseFileName = x.baseFileName,
+                     fileName = x.fileName,
                      idx = x.idx, size = x.size,
                      downloadUrl = self.getDownloadUrl(x.fileId),)
                 for x in imageFileList.files ]
             imageData['files'] = imageFileData
+            imageId = imageData['buildId']
+            imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
