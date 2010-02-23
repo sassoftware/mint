@@ -160,7 +160,9 @@ class ConaryHandler(WebHandler, productversion.ProductVersionView):
         # the walkTroveSet() will request a changeset for every
         # trove in the chain.  then iterFilesInTrove() will
         # request it again just to retrieve the filelist.
-        for trove in self.repos.walkTroveSet(parentTrove, withFiles = False, asTuple = False):
+        for trove in self.repos.walkTroveSet(parentTrove, withFiles = False):
+            # XXX: This is needed once conary 2.1.10 or later is included.
+            #, asTuple = False):
             files = self.repos.iterFilesInTrove(
                 trove.getName(),
                 trove.getVersion(),
