@@ -117,7 +117,7 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
 
     @requires('trove', models.Trove)
     def update(self, request, hostname, version, stageName, trove):
-        return self.db.createProductVersionStage(hostname, version, stageName, trove)
+        return self.db.updateProductVersionStage(hostname, version, stageName, trove)
     
     @auth.public
     def getImages(self, request, hostname, version, stageName):

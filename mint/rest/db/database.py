@@ -9,6 +9,7 @@ import logging
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.dbstore import sqllib
+from conary.deps import deps
 
 from mint import jobstatus
 from mint import mint_error
@@ -461,36 +462,30 @@ class Database(DBInterface):
             enabled=platformEnabled,
             platformId = platformId)
 
-    def createProductVersionStage(self, hostname, version, stageName, trove):
+    def updateProductVersionStage(self, hostname, version, stageName, trove):
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
-        nextStage = stageName
+        nextStage = str(stageName)
         nextLabel = pd.getLabelForStage(nextStage)
         activeStage = None
-        activeLabel = trove.label
+        activeLabel = str(trove.label)
 
         for stage in pd.getStages():
-            if str(stage.name) == stageName:
+            if str(stage.name) == nextStage:
                 break
             activeStage = stage.name
 
-        # Get a list of all labels that are in the product's search
-        # path (including subtroves).
-        platformLabels = set()
-        platformTroves = []
-        for searchElement in pd.getGroupSearchPaths():
-            if searchElement.troveName:
-                version = searchElement.label
-                if searchElement.version:
-                    version += '/' + searchElement.version
-                platformTroves.append((searchElement.troveName, version, None))
-            elif searchElement.label:
-                platformLabels.add(searchElement.label)
-        
         client = self.productMgr.reposMgr.getConaryClient()
-        allTroves = [(trove.name,trove.version,trove.flavor)]
+
+        allTroves = [(str(trove.name),
+                        versions.VersionFromString(str(trove.version)),
+                        deps.parseFlavor(str(trove.flavor)))]
         fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
-        promoteMap = dict((versions.Label(str(fromLabel)), versions.VersionFromString(str(toLabel))) for (fromLabel, toLabel) in fromTo.iteritems())
-        success, cs = client.createSiblingCloneChangeSet(promoteMap,allTroves,cloneSources=True)
+
+        promoteMap = dict((versions.Label(str(fromLabel)), 
+                        versions.VersionFromString(str(toLabel))) 
+                        for (fromLabel, toLabel) in fromTo.iteritems())
+        success, cs = client.createSiblingCloneChangeSet(promoteMap,
+                        allTroves,cloneSources=True)
         
         if success:
             client.getRepos().commitChangeSet(cs)
