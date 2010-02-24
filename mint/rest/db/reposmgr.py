@@ -424,7 +424,7 @@ class RepositoryManager(manager.Manager):
 
     def checkExternalRepositoryAccess(self, hostname, domainname, url, authInfo):
         fqdn = self._getFqdn(hostname, domainname)
-        cfg = self.getConaryConfig()
+        cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
         cfg.configLine('repositoryMap %s %s' % (fqdn, url))
         if authInfo.authType == 'entitlement':
             cfg.entitlement.addEntitlement(fqdn, authInfo.entitlement)
