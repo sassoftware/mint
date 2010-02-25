@@ -119,7 +119,8 @@ class PlatformSourceTypeController(base.BaseController):
         return self.db.getSourceTypesByPlatform(platformId)
 
 class PlatformImageTypeController(base.BaseController):
-
+    
+    @auth.public
     def index(self, request, platformId):
         return self.db.getPlatformImageTypeDefs(request, platformId)
 

@@ -361,7 +361,7 @@ class Platforms(object):
     def _checkMirrorPermissions(self, platform):
         try:
             self.db.productMgr.reposMgr.checkExternalRepositoryAccess(
-                self._getHostname(platform), 
+                self._getHost(platform), 
                 self._getDomainname(platform), 
                 self._getUrl(platform), 
                 self._getAuthInfo())
