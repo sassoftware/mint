@@ -559,8 +559,11 @@ class ProductManager(manager.Manager):
         promoteJob.stage = stageName
         promoteJob.group = str(trove.name)
         
+        client = self.reposMgr.getConaryClient()
+        pd = self.getProductVersionDefinition(hostname, version)
+
         rpath_job.BackgroundRunner(self._promoteGroup) (
-                job, hostname, version, stageName, trove)        
+                client, pd, job, hostname, version, stageName, trove)        
  
         return promoteJob
 
@@ -581,12 +584,9 @@ class ProductManager(manager.Manager):
         status.set_status(code, message)
         return status
 
-    def _promoteGroup(self, job, hostname, version, stageName, trove): 
+    def _promoteGroup(self, client, pd job, hostname, version, stageName, trove): 
        
         callback = ProductVersionCallback(hostname, version, job) 
-        
-        client = self.reposMgr.getConaryClient()
-        pd = self.getProductVersionDefinition(hostname, version)
         
         nextStage = str(stageName)
         nextLabel = pd.getLabelForStage(nextStage)
