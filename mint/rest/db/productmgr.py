@@ -584,7 +584,7 @@ class ProductManager(manager.Manager):
         status.set_status(code, message)
         return status
 
-    def _promoteGroup(self, client, pd job, hostname, version, stageName, trove): 
+    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trove): 
        
         callback = ProductVersionCallback(hostname, version, job) 
         
