@@ -30,6 +30,7 @@ from mint.rest.db import publisher
 from mint.rest.db import releasemgr
 from mint.rest.db import usermgr
 
+from rpath_job import api1 as rpath_job
 
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
@@ -463,34 +464,10 @@ class Database(DBInterface):
             platformId = platformId)
 
     def updateProductVersionStage(self, hostname, version, stageName, trove):
-        pd = self.productMgr.getProductVersionDefinition(hostname, version)
-        nextStage = str(stageName)
-        nextLabel = pd.getLabelForStage(nextStage)
-        activeStage = None
-        activeLabel = str(trove.label)
+        return self.productMgr.updateProductVersionStage(hostname, version, stageName, trove)
 
-        for stage in pd.getStages():
-            if str(stage.name) == nextStage:
-                break
-            activeStage = stage.name
-
-        client = self.productMgr.reposMgr.getConaryClient()
-
-        allTroves = [(str(trove.name),
-                        versions.VersionFromString(str(trove.version)),
-                        deps.parseFlavor(str(trove.flavor)))]
-        fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
-
-        promoteMap = dict((versions.Label(str(fromLabel)), 
-                        versions.VersionFromString(str(toLabel))) 
-                        for (fromLabel, toLabel) in fromTo.iteritems())
-        success, cs = client.createSiblingCloneChangeSet(promoteMap,
-                        allTroves,cloneSources=True)
-        
-        if success:
-            client.getRepos().commitChangeSet(cs)
-
-        return None
+    def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
+        return self.productMgr.getGroupPromoteJobStatus(hostname, version, stage, jobId)
 
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):

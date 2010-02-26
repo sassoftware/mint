@@ -8,10 +8,15 @@ import os
 import itertools
 import time
 
+from conary import versions
+from conary.conaryclient import callbacks
+from conary.deps import deps
 from conary.lib import util
 from rpath_proddef import api1 as proddef
+from rpath_job import api1 as rpath_job
 
 from mint import helperfuncs
+from mint import jobstatus
 from mint import mint_error
 from mint import projects
 from mint import userlevels
@@ -23,10 +28,40 @@ from mint.rest.db import reposmgr
 from mint.templates import groupTemplate
 
 
+class ProductVersionCallback(object):
+    def __init__(self, hostname, version, job):
+        self.hostname = hostname
+        self.version = version
+        self.job = job
+        self.prefix = ''
+
+    def _message(self, txt, usePrefix=True):
+        if usePrefix:
+            message = self.prefix + txt
+        else:
+            message = txt
+
+        self.job.message = message
+
+    def done(self):
+        self.job.status = self.job.STATUS_COMPLETED
+
+    def error(self, e):
+        self.job.status = self.job.STATUS_FAILED
+        self._message("Promote failed: %s" % e)
+
+    def committingTransaction(self):
+        self._message("Committing database transaction")
+
+class ProductJobStore(rpath_job.JobStore):
+    _storageSubdir = 'product-load-jobs'
+
 class ProductManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
 	manager.Manager.__init__(self, cfg, db, auth, publisher)
         self.reposMgr = reposmgr.RepositoryManager(cfg, db, auth)
+        self.jobStore = ProductJobStore(
+            os.path.join(self.cfg.dataPath, 'jobs'))
 
     def _getProducts(self, whereClauses=(), limit=None, offset=0):
         whereClauses = list(whereClauses)
@@ -513,3 +548,76 @@ class ProductManager(manager.Manager):
             flavorSetRef = flavorSetRef,
             image = prodDef.imageType(None, imageFields),
             stages = stages)
+
+    def updateProductVersionStage(self, hostname, version, stageName, trove):
+        job = self.jobStore.create()
+
+        promoteJob = models.GroupPromoteJob()
+        promoteJob.jobId = job.id
+        promoteJob.hostname = hostname
+        promoteJob.version = version
+        promoteJob.stage = stageName
+        promoteJob.group = str(trove.name)
+        
+        rpath_job.BackgroundRunner(self._promoteGroup) (
+                job, hostname, version, stageName, trove)        
+ 
+        return promoteJob
+
+    def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
+        job = self.jobStore.get(jobId)
+        status = models.GroupPromoteJobStatus()
+        message = job.message
+        done = True and job.status == job.STATUS_COMPLETED or False
+        error = True and job.status == job.STATUS_FAILED or False
+
+        if bool(done):
+            code = jobstatus.FINISHED
+        elif bool(error):
+            code = jobstatus.ERROR
+        else:
+            code = jobstatus.RUNNING
+
+        status.set_status(code, message)
+        return status
+
+    def _promoteGroup(self, job, hostname, version, stageName, trove): 
+       
+        callback = ProductVersionCallback(hostname, version, job) 
+        
+        client = self.reposMgr.getConaryClient()
+        pd = self.getProductVersionDefinition(hostname, version)
+        
+        nextStage = str(stageName)
+        nextLabel = pd.getLabelForStage(nextStage)
+        activeStage = None
+        activeLabel = str(trove.label)
+
+        for stage in pd.getStages():
+            if str(stage.name) == nextStage:
+                break
+            activeStage = stage.name
+        
+        callback._message('Getting all trove information for the promotion')
+
+        allTroves = [(str(trove.name),
+                     versions.VersionFromString(str(trove.version)),
+                     deps.parseFlavor(str(trove.flavor)))]
+        fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
+
+        promoteMap = dict((versions.Label(str(fromLabel)),
+                        versions.VersionFromString(str(toLabel)))
+                        for (fromLabel, toLabel) in fromTo.iteritems())
+        
+        callback._message('Creating clone changeset')
+        success, cs = client.createSiblingCloneChangeSet(promoteMap,
+                        allTroves,cloneSources=True)
+
+        if success:
+            callback._message('Committing ChangeSet')
+            client.getRepos().commitChangeSet(cs)
+            callback.done()
+        else:
+            callback.error('Changeset was not cloned')
+
+        return

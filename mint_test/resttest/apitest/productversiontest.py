@@ -686,19 +686,24 @@ class ProductVersionTest(restbase.BaseRestTest):
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
 
-    def testPostProductVersionStages(self):
+    def testPutProductVersionStages(self):
         uriTemplate = 'products/%s/versions/%s/stages/QA'
         uri = uriTemplate % (self.productShortName, self.productVersion)
         self.createUser('foouser')
         client = self.getRestClient(username='foouser')
-        #req, response = client.call('PUT', uri, body=promoteGroup % dict(
-        #        name = self.productShortName,
-        #        ),
-        #        convert=False)
+        req, response = client.call('PUT', uri, body=promoteGroup % dict(
+                name = self.productShortName,
+                ),
+                convert=False)
         exp = """\
 """
         #self.failUnlessEqual(response,
         #    exp % dict(server = client.server, port = client.port))
+
+        uriTemplate = 'products/%s/versions/%s/stages/QA/jobs/%s'
+        uri = uriTemplate % (self.productShortName, self.productVersion
+                             ,response.jobId)
+        req, response = client.call('GET', uri, convert=True)
 
     def testSetProductVersionPlatform(self):
         self.setupPlatforms()
