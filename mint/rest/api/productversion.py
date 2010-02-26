@@ -100,11 +100,21 @@ class BuildDefinitionMixIn(object):
             digest.update(buildDef.flavorSetRef)
         return digest.hexdigest()
 
+class PromotionJobStatusController(base.BaseController):
+    modelName = 'jobs'
+
+    def index(self, request, hostname, version, stageName):
+        return self.db.getGroupPromoteJobStatuses(hostname, version, stageName)
+
+    def get(self, request, hostname, version, stageName, jobs):
+        return self.db.getGroupPromoteJobStatus(hostname, version, stageName, jobs)
+
 class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
     modelName = 'stageName'
 
     urls = {'images' : dict(GET='getImages'),
             'imageDefinitions' : dict(GET='getImageDefinitions'),
+            'jobs' : PromotionJobStatusController,
            }
 
     @auth.public
@@ -133,7 +143,6 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
             models.BuildDefinition) for x in buildDefs ]
         bdefs = models.BuildDefinitions(buildDefinitions = buildDefModels)
         return bdefs
-
 
 class ProductVersionDefinition(base.BaseController):
 
