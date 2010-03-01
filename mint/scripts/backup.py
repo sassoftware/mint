@@ -133,6 +133,8 @@ def restore(cfg):
                     repoHandle.projectId)
             localMirror = cu.fetchone_dict()
 
+            cu.execute("UPDATE Projects SET database = NULL "
+                    "WHERE projectId = ?", repoHandle.projectId)
             cu.execute( \
                     "UPDATE Labels SET url=?, username=?, password=?" \
                         " WHERE projectId=?",
