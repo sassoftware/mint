@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2009-2010 rPath, Inc.
 #
 # All rights reserved.
 #
@@ -12,10 +12,12 @@ A unified interface to rBuilder project repositories.
 import errno
 import logging
 import os
+import time
 import weakref
 from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
+from conary.dbstore.sqlerrors import CursorError
 from conary.lib import util
 from conary.repository import errors as reposerrors
 from conary.repository import netclient
@@ -699,6 +701,24 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         controlPath = base + 'postgres'
         return dbstore.connect(controlPath, driver)
 
+    def _getBouncerConnection(self):
+        """Return a connection to pgbouncer."""
+        driver, path = self.dbTuple
+
+        # Discard everything except the host/port
+        if '/' in path:
+            start = path.find('@')
+            end = path.find('/')
+            host = path[start + 1 : end]
+        else:
+            host = 'localhost:6432'
+
+        # Fill in the rest
+        # NB: don't use the pgpool driver or it will try to interrogate
+        # the admindb for schema information, which doesn't work.
+        bouncerPath = 'pgbouncer@%s/pgbouncer' % (host,)
+        return dbstore.connect(bouncerPath, 'postgresql')
+
     def _dbExists(self, controlDb):
         ccu = controlDb.cursor()
         ccu.execute("""SELECT COUNT(*) FROM pg_catalog.pg_database
@@ -736,24 +756,37 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             return
 
         name = self._getName()
-        useBouncer = ':6432/' in self.dbTuple[1]
-        if useBouncer:
-            # pgbouncer normally holds idle connections for 45 seconds.
-            # PAUSEing causes it to close those connections, and prevents new
-            # ones from opening until the RESUME.
-
-            # Our psql bindings don't work with pgbouncer, so we have to do
-            # something incredibly lame...
-            util.execute("psql -U pgbouncer -p 6432 -c 'PAUSE %s'" % (name,))
+        bcu = None
+        if ':6432/' in self.dbTuple[1]:
+            # pgbouncer normally holds idle connections for 45 seconds. Our
+            # version supports a custom KILL command that terminates all open
+            # client and server connections to that database and prevents new
+            # ones until the following RESUME. A little bit of trickery is
+            # needed to get around the fact that python-pgsql's primary API
+            # always uses prepared statements, which aren't supported by
+            # pgbouncer's admin interface.
+            bouncerDb = self._getBouncerConnection()
+            bcu = bouncerDb.cursor()
+            bcu._cursor._source.query("KILL " + name)
 
         try:
             ccu = controlDb.cursor()
-            ccu.execute("DROP DATABASE %s" % (name,))
+            for n in range(5):
+                try:
+                    ccu.execute("DROP DATABASE %s" % (name,))
+                except CursorError, err:
+                    if 'is being accessed by other users' not in err.msg:
+                        raise
+                    time.sleep(1.0)
+                else:
+                    break
+            else:
+                log.error("Could not drop repository database %r because a "
+                        "connection is still open -- continuing.", name)
 
         finally:
-            if useBouncer:
-                util.execute("psql -U pgbouncer -p 6432 -c 'RESUME %s'"
-                        % (name,))
+            if bcu:
+                bcu._cursor._source.query("RESUME " + name)
 
     def dump(self, path):
         controlDb = self._getControlConnection()
@@ -780,7 +813,6 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                 util.execute("pg_restore %s --single-transaction "
                         "-d '%s' '%s'" % (cxnArgs, database, path))
             else:
-                # XXX: test this codepath (backups) before shipping 5.5
                 util.execute("psql %s -f '%s' '%s' >/dev/null"
                         % (cxnArgs, path, dbName))
 
