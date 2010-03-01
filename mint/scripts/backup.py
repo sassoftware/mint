@@ -133,14 +133,17 @@ def restore(cfg):
                     repoHandle.projectId)
             localMirror = cu.fetchone_dict()
 
+            # Copy permissions from InboundMirrors to Labels
             cu.execute("UPDATE Projects SET database = NULL "
                     "WHERE projectId = ?", repoHandle.projectId)
-            cu.execute( \
-                    "UPDATE Labels SET url=?, username=?, password=?" \
-                        " WHERE projectId=?",
-                localMirror['sourceUrl'],
-                localMirror['sourceUsername'],
-                localMirror['sourcePassword'], repoHandle.projectId)
+            cu.execute("UPDATE Labels SET url = ?, authtype = ?, username = ?, "
+                    "password = ?, entitlement = ? WHERE projectId = ?",
+                    localMirror['sourceUrl'],
+                    localMirror['sourceAuthType'],
+                    localMirror['sourceUsername'],
+                    localMirror['sourcePassword'],
+                    localMirror['sourceEntitlement'],
+                    repoHandle.projectId)
 
             cu.execute( \
                 "DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
