@@ -787,6 +787,12 @@ class MigrateTo_48(SchemaMigration):
         """)
         return True
 
+    # 48.14
+    # - create ci_rhn_errata_nevra_channel, drop ci_rhn_errata_package
+    def migrate14(self):
+        schema._createCapsuleIndexerSchema(self.db)
+        drop_tables(self.db, 'ci_rhn_errata_package')
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
