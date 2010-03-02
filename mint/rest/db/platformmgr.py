@@ -30,15 +30,16 @@ from mint.rest.db import contentsources
 from mint.rest.db import manager
 
 from rpath_proddef import api1 as proddef
+from rpath_job import api1 as rpath_job
 
 log = logging.getLogger(__name__)
 
 
 class PlatformLoadCallback(callbacks.ChangesetCallback):
-    def __init__(self, db, platformId, loadJobId, totalKB, *args, **kw):
+    def __init__(self, db, platformId, job, totalKB, *args, **kw):
         self.db = db
         self.platformId = platformId
-        self.loadJobId = loadJobId
+        self.job = job
         self.totalKB = totalKB
         self.prefix = ''
         callbacks.ChangesetCallback.__init__(self, *args, **kw)
@@ -49,20 +50,13 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
         else:
             message = txt
 
-        try:
-            self.db.db.platformLoadJobs.update(self.loadJobId, 
-                platformId=self.platformId, message=message)
-        except sqlerrors.CursorError, e:
-            reopened = self.db.db.reopen()
-            if reopened:
-                self.db.db.platformLoadJobs.update(self.loadJobId, 
-                    platformId=self.platformId, message=message)
+        self.job.message = message
 
     def done(self):
-        self.db.db.platformLoadJobs.update(self.loadJobId, done=1)
+        self.job.status = self.job.STATUS_COMPLETED
 
     def error(self, e):
-        self.db.db.platformLoadJobs.update(self.loadJobId, error=1)
+        self.job.status = self.job.STATUS_FAILED
         self._message("Load failed: %s" % e)
 
     def downloading(self, got, rate):
@@ -186,6 +180,15 @@ class ContentSourceTypes(object):
 
         return descriptor
 
+class PlatformJobStore(rpath_job.JobStore):
+    _storageSubdir = 'platform-load-jobs'
+
+class LoadRunner(rpath_job.BackgroundRunner):
+    def handleError(self, exc_info):
+        log.error("Unhandled error in platform slice manual load:",
+                exc_info=exc_info)
+        self.callback.error(exc_info[1])
+
 class Platforms(object):
 
     def __init__(self, db, cfg, mgr):
@@ -199,6 +202,9 @@ class Platforms(object):
                                               self._reposMgr)
         self.contentSourceTypes = ContentSourceTypes(db, cfg, self)
         self.mgr = mgr
+        self.jobStore = PlatformJobStore(
+            os.path.join(self.cfg.dataPath, 'jobs'))
+        self.loader = LoadRunner(self._load)
 
     def _listFromDb(self):
         platforms = []
@@ -419,20 +425,23 @@ class Platforms(object):
         if not inFile:
             raise errors.PlatformLoadFileNotFound(uri)
 
-        jobId = self.db.db.platformLoadJobs.new(platformId=platformId, message='')
+        job = self.jobStore.create()
+
+        # jobId = self.db.db.platformLoadJobs.new(platformId=platformId, message='')
         platLoad = models.PlatformLoad()
-        platLoad.jobId = jobId
+        platLoad.jobId = job.id
         platLoad.platformId = platformId
         platLoad.uri = platformLoad.uri
 
-        self.backgroundRun(self._load, platform, jobId, inFile, outFilePath,
-                           uri, repos)
+        self.loader(platform, job, inFile, outFilePath, uri, repos)
+        # self.backgroundRun(self._load, platform, jobId, inFile, outFilePath,
+                           # uri, repos)
 
         return platLoad
 
-    def _load(self, platform, jobId, inFile, outFilePath, uri, repos):
+    def _load(self, platform, job, inFile, outFilePath, uri, repos):
         platformId = platform.platformId
-        callback = PlatformLoadCallback(self.db, platformId, jobId, None)
+        callback = PlatformLoadCallback(self.db, platformId, job, None)
         # Save a reference to the callback so that we have access to it in the
         # _load_error method.
         self.callback = callback
@@ -476,11 +485,6 @@ class Platforms(object):
 
         return removedTroves
 
-    def _load_error(self, exc_info):
-        log.error("Unhandled error in platform slice manual load:",
-                exc_info=exc_info)
-        self.callback.error(exc_info[1])
-    _load.error = _load_error
 
     def _getProjectId(self, platformId):
         plat = self.db.db.platforms.get(platformId)
@@ -713,10 +717,12 @@ class Platforms(object):
         return self._getStatus(platform)
 
     def getLoadStatus(self, platformId, jobId):
+        job = self.jobStore.get(jobId)
         status = models.PlatformLoadStatus()
-        message = self.db.db.platformLoadJobs.get(jobId)['message']
-        done = self.db.db.platformLoadJobs.get(jobId)['done']
-        error = self.db.db.platformLoadJobs.get(jobId)['error']
+        message = job.message
+        done = True and job.status == job.STATUS_COMPLETED or False
+        error = True and job.status == job.STATUS_FAILED or False
+
         if bool(done):
             code = jobstatus.FINISHED
         elif bool(error):

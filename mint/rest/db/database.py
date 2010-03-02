@@ -9,6 +9,7 @@ import logging
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.dbstore import sqllib
+from conary.deps import deps
 
 from mint import jobstatus
 from mint import mint_error
@@ -29,6 +30,7 @@ from mint.rest.db import publisher
 from mint.rest.db import releasemgr
 from mint.rest.db import usermgr
 
+from rpath_job import api1 as rpath_job
 
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
@@ -460,6 +462,12 @@ class Database(DBInterface):
             productVersion=version,
             enabled=platformEnabled,
             platformId = platformId)
+
+    def updateProductVersionStage(self, hostname, version, stageName, trove):
+        return self.productMgr.updateProductVersionStage(hostname, version, stageName, trove)
+
+    def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
+        return self.productMgr.getGroupPromoteJobStatus(hostname, version, stage, jobId)
 
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):
