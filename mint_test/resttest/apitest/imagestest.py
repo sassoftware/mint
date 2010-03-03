@@ -165,10 +165,11 @@ class ImagesTest(restbase.BaseRestTest):
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
-        <baseFileName>imagefile_1.iso</baseFileName>
+        <fileName>imagefile_1.iso</fileName>
         <url urlType="0">http://localhost:8000/downloadImage?fileId=1&amp;urlType=0</url>
       </file>
     </files>
+    <baseFileName>testproject-1-</baseFileName>
   </image>
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
@@ -201,10 +202,11 @@ class ImagesTest(restbase.BaseRestTest):
         <title>Image File 2</title>
         <size>2048</size>
         <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
-        <baseFileName>imagefile_2.iso</baseFileName>
+        <fileName>imagefile_2.iso</fileName>
         <url urlType="0">http://localhost:8000/downloadImage?fileId=2&amp;urlType=0</url>
       </file>
     </files>
+    <baseFileName>testproject-1-</baseFileName>
   </image>
 </images>
 """
@@ -267,8 +269,8 @@ class ImagesTest(restbase.BaseRestTest):
                 }
         data = """\
 <files>
-  <file title="title1" size="1231" sha1="1231" baseFileName="aaa1" />
-  <file title="title2" size="1232" sha1="1232" baseFileName="aaa2" />
+  <file title="title1" size="1231" sha1="1231" fileName="aaa1" />
+  <file title="title2" size="1232" sha1="1232" fileName="aaa2" />
 </files>
 """
         resp = client.call('PUT', 'products/testproject/images/1/files',
@@ -279,7 +281,8 @@ class ImagesTest(restbase.BaseRestTest):
             ('title2', 1232, '1232', 'aaa2'),
         ]
         self.failUnlessEqual(
-            [ (x.title, x.size, x.sha1, x.baseFileName) for x in resp.files ],
+            [ (x.title, x.size, x.sha1, x.fileName)
+                for x in resp.files ],
             exp)
 
 
@@ -336,7 +339,7 @@ class ImagesTest(restbase.BaseRestTest):
         ]
         imagesPath = os.path.join(self.mintCfg.imagesPath, "testproject", "1")
         util.mkdirChain(imagesPath)
-        dataTempl = """<file title="title1" size="%d" sha1="%s" baseFileName="%s" />"""
+        dataTempl = """<file title="title1" size="%d" sha1="%s" fileName="%s" />"""
         url = 'products/testproject/images/1/files'
         fileXmlData = []
         for fileName, fileContents in fileList:
@@ -362,8 +365,9 @@ class ImagesTest(restbase.BaseRestTest):
                 data, headers=headers)[1]
 
         self.failUnlessEqual(
-            sorted(x.baseFileName for x in resp.files.files),
+            sorted(x.fileName for x in resp.files.files),
             ['file1.txt', 'file2.txt'])
+        self.failUnlessEqual(resp.baseFileName, 'testproject-1-')
 
         store = notices_store.createStore(
             os.path.join(self.mintCfg.dataPath, 'notices'), username)
@@ -454,7 +458,7 @@ class ImagesTest(restbase.BaseRestTest):
                 }
         data = """\
 <files>
-  <file title="title1" size="%d" sha1="%s" baseFileName="%s" />
+  <file title="title1" size="%d" sha1="%s" fileName="%s" />
 </files>
 """ % (fileSize, sha1sum, destFile)
         resp = client.call('PUT', 'products/testproject/images/1/files',

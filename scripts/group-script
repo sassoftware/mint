@@ -118,6 +118,10 @@ chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
 # Migrate all conary repositories
 "$scriptdir"/migrate-all-projects
 
+# Create the jobs directory 
+mkdir /srv/rbuilder/jobs &> /dev/null
+chown -f apache:apache /srv/rbuilder/jobs
+
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
