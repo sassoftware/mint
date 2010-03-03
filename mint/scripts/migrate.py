@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 13)
+    Version = (48, 14)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -786,6 +786,12 @@ class MigrateTo_48(SchemaMigration):
             UPDATE ci_rhn_nevra SET epoch = -1 WHERE epoch IS NULL
         """)
         return True
+
+    # 48.14
+    # - create ci_rhn_errata_nevra_channel, drop ci_rhn_errata_package
+    def migrate14(self):
+        schema._createCapsuleIndexerSchema(self.db)
+        drop_tables(self.db, 'ci_rhn_errata_package')
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

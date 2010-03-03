@@ -98,6 +98,13 @@ def restore(cfg):
     if driver == 'pgpool':
         driver = 'postgresql'
         path = path.replace(':6432', ':5439')
+        # HACK: mint config says to connect as rbuilder@ but pgbouncer.ini
+        # rewrites it all to postgres@, so the path through the bouncer ends up
+        # creating everything as owned by postgres and now that we try to
+        # connect around it we can't. So, make things worse and connect as
+        # postgres here, too!
+        path = path.replace('rbuilder@', 'postgres@')
+
     db = dbstore.connect(path, driver)
     schema.loadSchema(db, cfg, should_migrate=True)
     log.info("mintdb successfully restored")
@@ -119,15 +126,24 @@ def restore(cfg):
         elif repoHandle.isExternal:
             # Inbound mirrors that didn't get backed up revert to cache mode.
             log.warning("External project %r was not backed up; reverting to "
-                    "cached mode.", repoHandle.shortname)
+                    "cached mode.", repoHandle.shortName)
             repoHandle.drop()
 
-            cu.execute( \
-                    "UPDATE Labels SET url=?, username=?, password=?" \
-                        " WHERE projectId=?",
-                localMirror['sourceUrl'],
-                localMirror['sourceUsername'],
-                localMirror['sourcePassword'], repoHandle.projectId)
+            cu.execute("SELECT * FROM InboundMirrors WHERE targetProjectId=?",
+                    repoHandle.projectId)
+            localMirror = cu.fetchone_dict()
+
+            # Copy permissions from InboundMirrors to Labels
+            cu.execute("UPDATE Projects SET database = NULL "
+                    "WHERE projectId = ?", repoHandle.projectId)
+            cu.execute("UPDATE Labels SET url = ?, authtype = ?, username = ?, "
+                    "password = ?, entitlement = ? WHERE projectId = ?",
+                    localMirror['sourceUrl'],
+                    localMirror['sourceAuthType'],
+                    localMirror['sourceUsername'],
+                    localMirror['sourcePassword'],
+                    localMirror['sourceEntitlement'],
+                    repoHandle.projectId)
 
             cu.execute( \
                 "DELETE FROM InboundMirrors WHERE inboundMirrorId=?",
