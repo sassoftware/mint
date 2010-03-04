@@ -1578,6 +1578,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @requiresAuth
     @private
     def setUserDataValue(self, username, name, value):
+        if name in ['awsAccountNumber', 'awsPublicAccessKeyId',
+                'awsSecretAccessKey']:
+            raise RuntimeError("Should not set EC2 credentials using this call")
         userId = self.getUserIdByName(username)
         if userId != self.auth.userId and not self.auth.admin:
             raise mint_error.PermissionDenied
@@ -4767,7 +4770,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ret = dict()
         for x in usertemplates.userPrefsAWSTemplate.keys():
             ret[x] = ''
-        ret.update(self.userData.getDataDict(userId))
+        creds = self.restDb.targetMgr.getTargetCredentialsForUserId(
+            self.db.EC2TargetType, self.db.EC2TargetName, userId)
+        # Keep the interface similar
+        remap = [ ('accountId', 'awsAccountNumber'),
+            ('publicAccessKeyId', 'awsPublicAccessKeyId'),
+            ('secretAccessKey', 'awsSecretAccessKey') ]
+        ret.update((okey, creds.get(nkey, '')) for (nkey, okey) in remap)
         return ret
 
     @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),), bool)
@@ -4800,35 +4809,37 @@ If you would not like to be %s %s of this project, you may resign from this proj
         publicKey = awsPublicAccessKeyId.strip().replace(' ','')
         secretKey = awsSecretAccessKey.strip().replace(' ','')
         
-        newValues = dict(awsAccountNumber=accountNum,
-                         awsPublicAccessKeyId=publicKey,
-                         awsSecretAccessKey=secretKey)
+        newValues = dict(accountId=accountNum,
+                         publicAccessKeyId=publicKey,
+                         secretAccessKey=secretKey)
 
-        awsFound, oldAwsAccountNumber = self.userData.getDataValue(userId, 
-                                        'awsAccountNumber')
-       
+        targetType = self.db.EC2TargetType
+        targetName = self.db.EC2TargetName
+
+        oldUserCreds = self.restDb.targetMgr.getTargetCredentialsForUserId(
+            targetType, targetName, userId)
+        oldAwsAccountNumber = oldUserCreds.get('accountId')
+
         # Validate and add the credentials with EC2 if they're specified.
         if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
             if not force:
-                self.validateEC2Credentials((newValues['awsAccountNumber'],
-                                             newValues['awsPublicAccessKeyId'],
-                                             newValues['awsSecretAccessKey']))
+                self.validateEC2Credentials((newValues['accountId'],
+                                             newValues['publicAccessKeyId'],
+                                             newValues['secretAccessKey']))
         try:
             self.db.transaction()
-            for key, (dType, default, _, _, _, _) in \
-                    usertemplates.userPrefsAWSTemplate.iteritems():
-                if not newValues['awsAccountNumber']:
-                    self.userData.removeDataValue(userId, key)
-                else:
-                    val = newValues.get(key, default)
-                    self.userData.setDataValue(userId, key, val, dType,
-                            commit=False)
+            if not accountNum:
+                self.restDb.targetMgr.deleteTargetCredentialsForUserId(
+                    targetType, targetName, userId)
+            else:
+                self.restDb.targetMgr.setTargetCredentialsForUserId(
+                    targetType, targetName, userId, newValues)
 
-            self.amiPerms.setUserKey(userId, oldAwsAccountNumber, 
-                                     newValues['awsAccountNumber'])
+            self.amiPerms.setUserKey(userId, oldAwsAccountNumber,
+                                     newValues['accountId'])
         except Exception, e:
             self.db.rollback()
-            raise                
+            raise
         else:
             self.db.commit()
             return True

@@ -28,6 +28,7 @@ from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
 from mint.rest.db import releasemgr
+from mint.rest.db import targetmgr
 from mint.rest.db import usermgr
 
 from rpath_job import api1 as rpath_job
@@ -130,6 +131,7 @@ class Database(DBInterface):
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
+        self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
         self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
         if subscribers is None:
             subscribers = []

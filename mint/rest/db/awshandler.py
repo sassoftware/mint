@@ -29,6 +29,7 @@ class AWSHandler(manager.Manager):
 
     def notify_UserCancelled(self, event, userId):
         # yuck.
+        raise RuntimeError("Need to find test for this")
         awsFound, oldAwsAccountNumber = self.db.userData.getDataValue(
                                                 userId, 'awsAccountNumber')
         self.amiPerms.setUserKey(userId, oldAwsAccountNumber, None)

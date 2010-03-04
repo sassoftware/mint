@@ -1272,7 +1272,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             # Launch perms were reset
             self.assertTrue(self.resetLaunchPermissionsCalled)
             # launch perms were added to the owner and developer in the product
-            self.assertEquals(2, len(self.launchPermissions))
+            self.assertEquals(len(self.launchPermissions), 2)
             self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
             self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
             reset()
@@ -1282,7 +1282,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             # Public launch perms were not added
             self.assertTrue(not self.addPublicLaunchPermissionCalled)
             # Launch perms for all 3 users were added.
-            self.assertEquals(3, len(self.launchPermissions))
+            self.assertEquals(len(self.launchPermissions), 3)
             reset()
 
             # Unpublish the release of a private product on rBA

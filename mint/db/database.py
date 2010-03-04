@@ -79,6 +79,10 @@ class TableCache(object):
 
 
 class Database(object):
+    # Not the ideal place to put these, but I wanted to easily find them later
+    # --misa
+    EC2TargetType = 'ec2'
+    EC2TargetName = 'aws'
 
     def __init__(self, cfg, db=None):
         self._cfg = cfg
