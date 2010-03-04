@@ -28,10 +28,9 @@ class AWSHandler(manager.Manager):
         self.amiPerms.setMemberLevel(userId, projectId, oldLevel, newLevel)
 
     def notify_UserCancelled(self, event, userId):
-        # yuck.
-        raise RuntimeError("Need to find test for this")
-        awsFound, oldAwsAccountNumber = self.db.userData.getDataValue(
-                                                userId, 'awsAccountNumber')
+        creds = self.db.targetMgr.getTargetCredentialsForUserId(
+            self.db.db.EC2TargetType, self.db.db.EC2TargetName, userId)
+        oldAwsAccountNumber = creds.get('accountId')
         self.amiPerms.setUserKey(userId, oldAwsAccountNumber, None)
 
     def notify_ReleasePublished(self, event, releaseId):
