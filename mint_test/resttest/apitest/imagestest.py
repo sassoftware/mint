@@ -425,12 +425,11 @@ class ImagesTest(restbase.BaseRestTest):
                 blurb = "")
             userId = db.userMgr.createUser(**params)
             db.setMemberLevel(self.productShortName, uname, 'user')
-            userData = [ ('awsAccountNumber', "%010d" % i),
-                         ('awsPublicAccessKeyId', "Public Key Id %d" % i),
-                         ('awsSecretAccessKey', "Secret Key %d" % i), ]
-            dType = 0
-            for k, v in userData:
-                db.db.userData.setDataValue(userId, k, v, dType, commit=False)
+            userData = [ ('accountId', "%010d" % i),
+                         ('publicAccessKeyId', "Public Key Id %d" % i),
+                         ('secretAccessKey', "Secret Key %d" % i), ]
+            db.targetMgr.setTargetCredentialsForUserId(
+                db.db.EC2TargetType, db.db.EC2TargetName, userId, dict(userData))
 
         db.commit()
 
