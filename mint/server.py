@@ -3942,67 +3942,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         rs = self.launchedAMIs.get(launchedAMIId, fields=['ec2InstanceId'])
         return ec2Wrapper.getInstanceStatus(rs['ec2InstanceId'])
 
-    @typeCheck(((list, tuple),), int)
-    @private
-    def launchAMIInstance(self, authToken, blessedAMIId):
-        """
-        Launch the specified AMI instance
-        @param authToken: the EC2 authentication credentials.
-            If passed an empty tuple, it will use the default values
-            as set up in rBuilder's configuration.
-        @type  authToken: C{tuple}
-        @param blessedAMIId: the ID of the blessed AMI to launch
-        @type  blessedAMIId: C{int}
-        @return: the ID of the launched AMI
-        @rtype: C{int}
-        @raises: C{EC2Exception}
-        """
-        # get blessed instance
-        amiData = self._getTargetData('ec2', 'aws', supressException = True)
-        try:
-            bami = self.blessedAMIs.get(blessedAMIId)
-        except mint_error.ItemNotFound:
-            raise mint_error.FailedToLaunchAMIInstance()
-
-        launchedFromIP = self.remoteIp
-        if ((self.launchedAMIs.getCountForIP(launchedFromIP) + 1) > \
-                amiData.get('ec2MaxInstancesPerIP', 10)):
-           raise mint_error.TooManyAMIInstancesPerIP()
-
-        userDataTemplate = bami['userDataTemplate']
-
-        # generate the rAA Password
-        if amiData.get('ec2GenerateTourPassword', False):
-            from mint.users import newPassword
-            raaPassword = newPassword(length=8)
-        else:
-            raaPassword = 'password'
-
-        if userDataTemplate:
-            userData = userDataTemplate.replace('@RAPAPASSWORD@',
-                    raaPassword)
-        else:
-            userData = None
-
-        # attempt to boot it up
-        authToken = self._fillInEmptyEC2Creds(authToken)
-        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        ec2InstanceId = ec2Wrapper.launchInstance(bami['ec2AMIId'],
-                userData=userData,
-                useNATAddressing = amiData.get('ec2UseNATAddressing', False))
-
-        if not ec2InstanceId:
-            raise mint_error.FailedToLaunchAMIInstance()
-
-        # store the instance information in our database
-        return self.launchedAMIs.new(blessedAMIId = bami['blessedAMIId'],
-                ec2InstanceId = ec2InstanceId,
-                launchedFromIP = launchedFromIP,
-                raaPassword = raaPassword,
-                expiresAfter = toDatabaseTimestamp(offset=bami['instanceTTL']),
-                launchedAt = toDatabaseTimestamp(),
-                userData = userData)
-
     @typeCheck(((list, tuple),))
     @requiresAdmin
     @private
