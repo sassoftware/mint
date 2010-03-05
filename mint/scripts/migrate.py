@@ -822,6 +822,8 @@ class MigrateTo_49(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
 
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
