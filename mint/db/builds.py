@@ -176,7 +176,7 @@ class BuildsTable(database.KeyedTable):
             # of the base64 alphabet)
             extraSelect = ''', COALESCE(subq.accountId, '-') AS awsAccountNumber,
                              bd.value AS amiId'''
-            extraJoin += '''LEFT OUTER JOIN
+            extraJoin += ''' LEFT OUTER JOIN
                              (SELECT tuc.userId AS userId,
                                      tuc.value AS accountId
                                 FROM Targets
@@ -184,8 +184,9 @@ class BuildsTable(database.KeyedTable):
                                      ON (Targets.targetId = tuc.targetId)
                                WHERE Targets.targetType = '%s'
                                  AND Targets.targetName = '%s'
-                                 AND tuc.name = 'accountId') AS subq''' % (
-                                   self.EC2TargetType, self.EC2TargetName)
+                                 AND tuc.name = 'accountId') AS subq
+                              ON (b.createdBy = subq.userId)
+                            ''' % (self.EC2TargetType, self.EC2TargetName)
 
             # make sure that this build has an amiId.  Since it doesn't
             # have any files (thus no sha1), we need to know that it
