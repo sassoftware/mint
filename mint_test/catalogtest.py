@@ -87,6 +87,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             ec2PublicKey = 'Public Key',
             ec2PrivateKey = 'Private Key',
             ec2AccountId = '867-5309',))
+        restdb.commit()
 
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
@@ -109,6 +110,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             ec2PublicKey = 'Public Key',
             ec2PrivateKey = 'Private Key',
             ec2AccountId = '867-5309',))
+        restdb.commit()
         page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [401])
 
     def testEnumerateNoImages(self):
