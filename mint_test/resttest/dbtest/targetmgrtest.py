@@ -30,6 +30,7 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
 
         db = self.openMintDatabase(createRepos=False)
         db.targetMgr.addTarget(targetType, targetName, ntargetData)
+        db.commit()
         return targetType, targetName, ntargetData
 
     def _newUserCredentials(self):

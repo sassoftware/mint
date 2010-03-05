@@ -36,7 +36,6 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute("DELETE FROM Targets WHERE targetType=? AND targetName=?",
             targetType, targetName)
-        self.db.commit()
 
     def _addTarget(self, targetType, targetName):
         cu = self.db.cursor()
@@ -46,7 +45,6 @@ class TargetManager(manager.Manager):
                     "Target named '%s' of type '%s' already exists",
                     targetName, targetType)
         cu.execute("INSERT INTO Targets (targetType, targetName) VALUES(?, ?)", targetType, targetName)
-        self.db.commit()
         return cu.lastid()
 
     def _addTargetData(self, targetId, targetData):
@@ -56,7 +54,6 @@ class TargetManager(manager.Manager):
             value = simplejson.dumps(value)
             cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                     targetId, name, value)
-        self.db.commit()
 
     def getTargetData(self, targetType, targetName):
         cu = self.db.cursor()
@@ -137,7 +134,6 @@ class TargetManager(manager.Manager):
         cu.executemany("""
             INSERT INTO TargetUserCredentials (targetId, userId, name, value)
             VALUES (?, ?, ?, ?)""", data)
-        self.db.commit()
 
     def getTargetCredentialsForUser(self, targetType, targetName, userName):
         cu = self.db.cursor()
