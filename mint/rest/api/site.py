@@ -4,7 +4,10 @@
 # All Rights Reserved
 #
 
+import os
+
 from conary import constants as conaryConstants
+from rmake import constants as rmakeConstants
 from restlib.controller import RestController
 from rpath_proddef import api1 as proddef
 
@@ -43,6 +46,9 @@ class RbuilderRestServer(RestController):
         proddefSchemaVersion = proddef.BaseDefinition.version
         return models.RbuilderStatus(version=constants.mintVersion,
                                      conaryVersion=conaryConstants.version,
+                                     rmakeVersion=rmakeConstants.version,
+                                     userName=request.mintAuth.username,
+                                     hostName=os.uname()[1],
                                      isRBO=self.cfg.rBuilderOnline, 
                                      identity=identity,
                                      maintMode=maintMode,
