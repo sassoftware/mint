@@ -8,6 +8,7 @@ import os
 import itertools
 import time
 
+from conary.dbstore import sqlerrors
 from conary.lib import util
 from rpath_proddef import api1 as proddef
 
@@ -21,7 +22,6 @@ from mint.rest.api import models
 from mint.rest.db import manager
 from mint.rest.db import reposmgr
 from mint.templates import groupTemplate
-
 
 class ProductManager(manager.Manager):
     def __init__(self, cfg, db, auth, publisher=None):
@@ -134,31 +134,38 @@ class ProductManager(manager.Manager):
                       projecturl, shortname, prodtype,
                       version, commitEmail, isPrivate):
         if namespace is None:
+            v = helperfuncs.validateNamespace(namespace)
+            if v != True:
+                raise mint_error.InvalidNamespace
             namespace = self.cfg.namespace
         createTime = time.time()
         if self.auth.userId > 0:
             creatorId = self.auth.userId
         else:
             creatorId = None
-        projectId = self.db.db.projects.new(
-            name=name,
-            creatorId=creatorId,
-            description=description, 
-            hostname=hostname,
-            domainname=domainname, 
-            fqdn='%s.%s' % (hostname, domainname),
-            database=self.cfg.defaultDatabase,
-            namespace=namespace,
-            isAppliance=int(prodtype == 'Appliance'), 
-            projecturl=projecturl,
-            timeModified=createTime, 
-            timeCreated=createTime,
-            shortname=shortname, 
-            prodtype=prodtype, 
-            commitEmail=commitEmail, 
-            hidden=int(isPrivate),
-            version=version,
-            commit=False)
+
+        try:
+            projectId = self.db.db.projects.new(
+                name=name,
+                creatorId=creatorId,
+                description=description, 
+                hostname=hostname,
+                domainname=domainname, 
+                fqdn='%s.%s' % (hostname, domainname),
+                database=self.cfg.defaultDatabase,
+                namespace=namespace,
+                isAppliance=int(prodtype == 'Appliance'), 
+                projecturl=projecturl,
+                timeModified=createTime, 
+                timeCreated=createTime,
+                shortname=shortname, 
+                prodtype=prodtype, 
+                commitEmail=commitEmail, 
+                hidden=int(isPrivate),
+                version=version,
+                commit=False)
+        except sqlerrors.CursorError, e:
+            raise mint_error.InvalidError(e.msg)
 
         authInfo = models.AuthInfo('userpass',
                 self.cfg.authUser, self.cfg.authPass)
@@ -185,6 +192,9 @@ class ProductManager(manager.Manager):
             params['prodtype'] = prodtype
             params['isAppliance'] = int(prodtype == 'Appliance')
         if namespace is not None:
+            v = helperfuncs.validateNamespace(namespace)
+            if v != True:
+                raise mint_error.InvalidNamespace
             params['namespace'] = namespace
 
         if hidden:
@@ -197,9 +207,12 @@ class ProductManager(manager.Manager):
         keys = '=?, '.join(params) + '=?'
         values = params.values()
         values.append(hostname)
-        cu.execute('''UPDATE Projects SET %s
+        try:
+            cu.execute('''UPDATE Projects SET %s
                       WHERE hostname=?''' % keys,
                    *values)
+        except sqlerrors.CursorError, e:
+            raise mint_error.InvalidError(e.msg)
 
         if bool(oldproduct.hidden) == True and hidden == False:
             self.reposMgr.addUser('.'.join((oldproduct.hostname,
