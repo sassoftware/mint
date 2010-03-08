@@ -119,6 +119,11 @@ def getRepositoryMap(cfg):
 def getRepository(projectName, repName, cfg,
         req, dbTuple, localMirror, requireSigs, commitEmail):
 
+    # FIXME: Until there is a per-project signature requirement flag, this will
+    # have to do.
+    if repName.startswith('rmake-repository.'):
+        requireSigs = False
+
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
