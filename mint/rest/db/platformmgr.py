@@ -466,9 +466,10 @@ class Platforms(object):
         return 
 
     def _filterChangeSet(self, cs, label):
+        fqdn = label.split('@')[0]
         removedTroves = []
         for trove in cs.iterNewTroveList():
-            if trove.getNewVersion().branch().label().asString() != label:
+            if trove.getNewVersion().getHost() != fqdn:
                 removedTroves.append(trove.getNewNameVersionFlavor())
 
         for tup in removedTroves:
