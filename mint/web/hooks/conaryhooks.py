@@ -101,6 +101,11 @@ def getRepository(projectName, repName, context,
 
     cfg, req = context.cfg, context.req
 
+    # FIXME: Until there is a per-project signature requirement flag, this will
+    # have to do.
+    if repName.startswith('rmake-repository.'):
+        requireSigs = False
+
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
