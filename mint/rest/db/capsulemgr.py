@@ -63,7 +63,8 @@ class CapsuleManager(manager.Manager):
                 cfg.configLine("source %s %s" % (dsn, sourceHost))
         # List configured platforms
         for platform in self.db.platformMgr.platforms.list().platforms:
-            label = platform.label
+            if not platform.enabled:
+                continue
             platDef = self.db.platformMgr.platformCache.get(platform.label)
             if platDef is None:
                 continue
