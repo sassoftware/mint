@@ -64,7 +64,10 @@ class CapsuleManager(manager.Manager):
         # List configured platforms
         for platform in self.db.platformMgr.platforms.list().platforms:
             label = platform.label
-            contentProvider = self.db.platformMgr.platformCache.get(label).getContentProvider()
+            platDef = self.db.platformMgr.platformCache.get(platform.label)
+            if platDef is None:
+                continue
+            contentProvider = platDef.getContentProvider()
             if not contentProvider:
                 continue
             for ds in contentProvider.dataSources:
