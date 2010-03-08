@@ -339,12 +339,18 @@ class RepositoryHandle(object):
                 and os.path.join(self._cfg.logPath, 'repository.log') or None)
         cfg.repositoryDB = None # We open databases ourselves
         cfg.readOnlyRepository = self._cfg.readOnlyRepositories
-        # We only want to require signatures when there is a non-local client
-        # committing the changeset, e.g. in the conary entry point case only.
-        # Shim clients should not be required to sign packages. This is
-        # disabled completely for now since the only users of this code are
-        # local shims.
-        #cfg.requireSigs = self._cfg.requireSigs and not self.isLocalMirror
+        # FIXME: Until there is a per-project signature requirement flag, this
+        # will have to do.
+        if self.isLocalMirror or shortName == 'rmake-repository':
+            cfg.requireSigs = False
+        else:
+            # FIXME: Shim clients will eventually need to sign packages, and
+            # all repository traffic will eventually go through this interface
+            # as well. But for now we don't and won't sign shim commits, and
+            # the primary consumer of this interface is shim clients, so
+            # disable signature requirements.
+            cfg.requireSigs = False
+            #cfg.requireSigs = self._cfg.requireSigs
         cfg.serializeCommits = True
 
         cfg.serverName = [fqdn]
