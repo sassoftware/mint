@@ -10,7 +10,7 @@ apphome.text = "rBuilder"
 
 # Wizard plugins to run in this order. 
 # -- Terms of service should always be first!
-wizard.plugins = ["/tos/TermsOfService", "/configure/Proxy", "/rbasetup/rBASetup"]
+wizard.plugins = ["/tos/TermsOfService", "/configure/SetTimeZone", "/configure/Proxy", "/rbasetup/rBASetup"]
 
 [/logs]
 logs.files = {'Conary': '/var/log/conary', 'Inbound Mirroring': '/var/log/rbuilder/mirror-inbound.log', 'Outbound Mirroring': '/var/log/rbuilder/mirror-outbound.log', 'Jobmaster': '/var/log/rbuilder/jobmaster.log', 'MCP': '/var/log/rbuilder/mcp.log', 'Mirror Preloading': '/var/log/rbuilder/load-mirror.log', 'Package Indexer': '/var/log/rbuilder/package-index.log', 'External Package Indexer': '/var/log/rbuilder/package-index-external.log', 'Apache Access': '/var/log/httpd/access_log', 'Apache Errors': '/var/log/httpd/error_log', 'Conary Migration Log': '/var/log/rbuilder/conary-db-migration.log', 'rMake Server Log': '/var/log/rmake/rmake-server.log', 'rMake Node Log': '/var/log/rmake/rmake-node.log', 'Capsule Indexer': '/var/log/rbuilder/capsule-indexer.log'}
