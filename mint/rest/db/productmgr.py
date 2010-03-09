@@ -134,10 +134,11 @@ class ProductManager(manager.Manager):
                       projecturl, shortname, prodtype,
                       version, commitEmail, isPrivate):
         if namespace is None:
+            namespace = self.cfg.namespace
+        else:
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
                 raise mint_error.InvalidNamespace
-            namespace = self.cfg.namespace
         createTime = time.time()
         if self.auth.userId > 0:
             creatorId = self.auth.userId
