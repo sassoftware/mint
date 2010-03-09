@@ -28,6 +28,9 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         db = self.openRestDatabase()
         self._addPlatformSources(db)
         self.capsulecfg = db.capsuleMgr.getIndexerConfig()
+        platformCacheFile = os.path.join(self.mintCfg.dataPath, "data",
+            "platformName.cache")
+        os.unlink(platformCacheFile)
 
     def mockPlatformLoadFromRepository(self):
         def mockLoadFromRepository(slf, client, label):
