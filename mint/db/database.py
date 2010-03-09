@@ -75,7 +75,8 @@ class TableCache(object):
         self.projects.reposDB.cfg = cfg
         # make sure we commit after creating all of this, as
         # instantiating some of these tables may perform inserts...
-        db.commit()
+        if db.inTransaction(True):
+            db.commit()
 
 
 class Database(object):

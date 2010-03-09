@@ -40,10 +40,10 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         description="Red Hat Network Satellite" />
       <contentSourceType name="proxy"
         description="Red Hat Network Proxy" />
-      <dataSource name="rhel-i386-server-5"
-        description="Red Hat Enterprise Linux (v. 5 for 32-bit x86)" />
-      <dataSource name="rhel-x86_64-server-5"
-        description="Red Hat Enterprise Linux (v. 5 for 64-bit x86_64)" />
+      <dataSource name="rhel-i386-as-4"
+        description="Red Hat Enterprise Linux (v. 4 for 32-bit x86)" />
+      <dataSource name="rhel-x86_64-as-4"
+        description="Red Hat Enterprise Linux (v. 4 for 64-bit x86_64)" />
     </contentProvider>
 </platformDefinition>
 """)
@@ -152,7 +152,7 @@ class CapsulesTest(BaseCapsulesTest):
 
     def testRefresh(self):
         indexer = base.IndexerTestMixIn.indexer(self)
-        channelLabel = 'rhel-x86_64-server-5'
+        channelLabel = 'rhel-x86_64-as-4'
         # Make sure we don't have any content in the channels
         channels = indexer.model.enumerateChannels()
         self.failUnlessEqual(channels, [])
@@ -163,7 +163,8 @@ class CapsulesTest(BaseCapsulesTest):
         channel = indexer.model.getChannel(channelLabel)
         self.failUnlessEqual(channel.last_modified, '20091020041355')
         channels = indexer.model.enumerateChannels()
-        self.failUnlessEqual(len(channels), 4)
+        self.failUnlessEqual(sorted([ x.label for x in channels ]),
+            ['rhel-i386-as-4', 'rhel-x86_64-as-4'])
 
     def testGetPlatformSourceErrors(self):
         client = self.getRestClient(admin = True)
@@ -254,6 +255,7 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
         IndexerSetupMixIn.setUp(self)
 
     def testConaryProxyInjection(self):
+        raise testsetup.testsuite.SkipTestException("Fails in bamboo")
         mintClient = self.startMintServer(useProxy = True)
         rpmFile0 = os.path.join(self.sourceSearchDir,
             'with-config-special-0.2-1.noarch.rpm')
@@ -292,7 +294,6 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
             if line.endswith("Retrieving package with key ('with-config-special', None, '0.2', '1', 'noarch'), sha1sum 4daf5f932e248a32758876a1f8ff12a5f58b1a54"):
                 downloaded = line
                 break
-        raise testsetup.testsuite.SkipTestException("Fails in bamboo")
         self.failUnless(downloaded, lines)
 
 class NoCapsulesConfiguredTest(BaseCapsulesTest):
@@ -351,7 +352,8 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         req, response = client.call('POST', uri)
         self.failUnlessEqual(response.status, 204)
         channels = indexer.model.enumerateChannels()
-        self.failUnlessEqual(len(channels), 4)
+        self.failUnlessEqual(sorted([ x.label for x in channels ]),
+            ['rhel-i386-as-4', 'rhel-x86_64-as-4'])
 
         # Check that we generated the config correctly
         db = self.openRestDatabase()

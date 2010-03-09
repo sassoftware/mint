@@ -61,11 +61,18 @@ class CapsuleManager(manager.Manager):
                 dataSource.password))
             if sourceHost:
                 cfg.configLine("source %s %s" % (dsn, sourceHost))
-        # XXX channels are hardcoded for now
-        cfg.configLine("channels rhel-i386-as-4")
-        cfg.configLine("channels rhel-x86_64-as-4")
-        cfg.configLine("channels rhel-i386-server-5")
-        cfg.configLine("channels rhel-x86_64-server-5")
+        # List configured platforms
+        for platform in self.db.platformMgr.platforms.list().platforms:
+            if not platform.enabled:
+                continue
+            platDef = self.db.platformMgr.platformCache.get(platform.label)
+            if platDef is None:
+                continue
+            contentProvider = platDef.getContentProvider()
+            if not contentProvider:
+                continue
+            for ds in contentProvider.dataSources:
+                cfg.configLine("channels %s" % ds.name)
 
         # Copy proxy information
         cfg.proxy = self.db.cfg.proxy.copy()

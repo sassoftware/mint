@@ -16,6 +16,7 @@ from conary import constants as conaryConstants
 from conary.lib import util
 from mint import buildtypes
 from mint import constants
+from rmake import constants as rmakeConstants
 
 from rpath_proddef import api1 as proddef
 
@@ -34,6 +35,8 @@ class SiteTest(restbase.BaseRestTest):
 <rbuilderStatus id="http://%(server)s:%(port)s/api">
   <version>%(version)s</version>
   <conaryVersion>%(conaryversion)s</conaryVersion>
+  <rmakeVersion>%(rmakeversion)s</rmakeVersion>
+  <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
   <identity>
     <rbuilderId></rbuilderId>
@@ -54,6 +57,8 @@ class SiteTest(restbase.BaseRestTest):
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
                          conaryversion=conaryConstants.version,
+                         rmakeversion=rmakeConstants.version,
+                         hostname=os.uname()[1],
                          proddefVer=proddef.BaseDefinition.version))
 
 if __name__ == "__main__":
