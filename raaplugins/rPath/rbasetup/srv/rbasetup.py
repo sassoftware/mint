@@ -337,15 +337,16 @@ class rBASetup(rAASrvPlugin):
         self.message += result.get('message', '')
         self.reportMessage(execId, self.message)
 
-        # Generate an entitlement
-        step = lib.FTS_STEP_ENTITLE
-        self.message += "Generating an entitlement...  "
-        self.reportMessage(execId, self.message)
-        ret = self._generateEntitlement(newCfg)
-        if ret.has_key('errors'):
-            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
-        self.message += ret.get('message', '\n')
-        self.reportMessage(execId, self.message)
+        if not options.get('entitlementKey'):
+            # Generate an entitlement
+            step = lib.FTS_STEP_ENTITLE
+            self.message += "Generating an entitlement...  "
+            self.reportMessage(execId, self.message)
+            ret = self._generateEntitlement(newCfg)
+            if ret.has_key('errors'):
+                return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+            self.message += ret.get('message', '\n')
+            self.reportMessage(execId, self.message)
 
         # Setup the initial external projects
         step = lib.FTS_STEP_INITEXTERNAL
