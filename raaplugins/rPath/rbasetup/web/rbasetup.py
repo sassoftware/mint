@@ -144,6 +144,15 @@ class rBASetup(rAAWebPlugin):
                 errorList.append("Passwords must match")
             elif options['new_password'].find('#') != -1:
                 errorList.append("Passwords must not contain a #")
+                
+            # validate the entitlement key
+            if options.get('entitlementKey'):
+                res = self.validateNewEntitlement(options.get('entitlementKey'))
+                if res.has_key('errors'):
+                    errorString = "Entitlement is invalid"
+                    if len(res['errors']) > 0:
+                        errorString = res['errors'][0]
+                    errorList.append(errorString)
 
         if options.get('externalPasswordURL'):
             # XXX Removing the validation for this for now;
@@ -251,6 +260,12 @@ class rBASetup(rAAWebPlugin):
             hostname = normalizedOptions['hostName'].split('.')
             normalizedOptions['hostName'] = hostname[0]
             normalizedOptions['siteDomainName'] = '.'.join(hostname[1:])
+           
+        # try to save entitlement if we have one
+        if normalizedOptions.get('entitlementKey'):
+            result = self.setNewEntitlement(normalizedOptions.get('entitlementKey'))
+            if result['errors']:
+                return dict(errors=result['errors'])
 
         # Call backend to save generated file
         try:
@@ -390,10 +405,12 @@ class rBASetup(rAAWebPlugin):
         return dict(message='successfully set wizard done')
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
-    @raa.web.require(raa.authorization.LocalhostOnly())
+    def validateNewEntitlement(self, key):
+        return self.plugins['/configure/Entitlements'].validateEntitlement(key)
+
+    @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def setNewEntitlement(self, key):
-        self.plugins['/configure/Entitlements'].doSaveKey(key)
-        return True
+        return self.plugins['/configure/Entitlements'].doSaveKey(key)
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
     def finalize(self):
