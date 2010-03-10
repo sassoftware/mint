@@ -174,6 +174,29 @@ class PlatformManagerTest(restbase.BaseRestTest):
         src = db.platformMgr.contentSourceTypes._getSourceTypeInstanceByName('RHN')
         self.failUnlessEqual(src.proxies, proxies)
 
+    def testPlatformsLinkedToSources(self):
+        # list platforms and sources so they're created
+        plats = self.db.getPlatforms()
+        sources = self.db.getSources('RHN')
+        sources = self.db.getSources('satellite')
+
+        # add a new platform
+        platformId = 3
+        self.mintCfg.availablePlatforms.append('localhost@rpath:plat-3')
+        self.setupPlatform3()
+
+        # get the new platform
+        newPlatforms = self.db.getPlatforms()
+        newPlatform = [x for x in newPlatforms.platforms \
+            if x.label == 'localhost@rpath:plat-3'][0]
+        newPlatSources = self.db.getSourcesByPlatform(newPlatform.platformId)
+        
+        # verify the added platform was linked to sources
+        self.failUnlessEqual(len(newPlatSources.instance), 2)
+        self.failUnlessEqual([x.contentSourceType \
+            for x in newPlatSources.instance], ['RHN', 'RHN'])
+
+
 if __name__ == "__main__":
         testsetup.main()
 

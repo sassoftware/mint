@@ -298,10 +298,22 @@ class Platforms(object):
 
         return changed                
 
+    def _linkToSource(self, platformId, contentSourceId):
+        platformId = int(platformId)
+
+        # Do nothing if the source is already there.
+        sources = self.db.db.platformsPlatformSources.getAllByPlatformId(platformId)
+        sources = [s for s in sources if s[1] == contentSourceId]
+        if sources:
+            return
+
+        self.db.db.platformsPlatformSources.new(platformId=platformId,
+            platformSourceId=contentSourceId)
+
     def _linkToSourceType(self, platformId, contentSourceType):
         platformId = int(platformId)
 
-        # If the link is already there, do nothing
+        # Do nothing if the source is already there.
         types = self.db.db.platformsContentSourceTypes.getAllByPlatformId(platformId)
         for t in types:
             if t[1] == contentSourceType:
@@ -329,17 +341,21 @@ class Platforms(object):
                             getattr(cfgPlatforms[i], f, None))
                 platforms.append(dbPlatforms[dIndex])                            
 
-        # Link the platforms to all of it's source types.
-        for p in platforms:
-            for sourceType, isSingleton in p._sourceTypes:
-                contentSourceType = self.mgr.contentSourceTypes.getIdByName(sourceType)
-                self._linkToSourceType(p.platformId, contentSourceType)
-
         # Append any other platforms not found in the cfg onto our new list.
         for i, d in enumerate(dbLabels):
             if d not in cfgLabels:
                 platforms.append(dbPlatforms[i])
-        
+
+        # Link the platforms to all of it's source types and sources.
+        for p in platforms:
+            for sourceType, isSingleton in p._sourceTypes:
+                contentSourceType = self.mgr.contentSourceTypes.getIdByName(sourceType)
+                self._linkToSourceType(p.platformId, contentSourceType)
+                contentSources = self.mgr.contentSources.listByType(
+                                    contentSourceType, createPlatforms=False)
+                for s in contentSources.instance:
+                    self._linkToSource(p.platformId, s.contentSourceId)
+
         # Also check for mirroring permissions for configurable platforms.
         # This is the best place to do this, since this method always gets
         # called when fetching a platform.
@@ -852,11 +868,11 @@ class ContentSources(object):
 
         return sourceId      
 
-    def _syncDb(self, dbSources, cfgSources):
+    def _syncDb(self, dbSources, cfgSources, createPlatforms):
         changed = False
         dbNames = [s.shortName for s in dbSources]
 
-        createdPlatforms = False
+        createdPlatforms = False or not createPlatforms
         for cfgSource in cfgSources:
             if cfgSource.shortName not in dbNames:
 
@@ -895,10 +911,10 @@ class ContentSources(object):
 
         return sources
 
-    def list(self):
+    def list(self, createPlatforms=True):
         dbSources = self._listFromDb()
         cfgSources = self._listFromCfg()
-        changed = self._syncDb(dbSources, cfgSources)
+        changed = self._syncDb(dbSources, cfgSources, createPlatforms)
         if changed:
             dbSources = self._listFromDb()
 
@@ -976,8 +992,8 @@ class ContentSources(object):
                    if s.shortName == shortName]
         return sources[0]
 
-    def listByType(self, sourceType):
-        sources = self.list()
+    def listByType(self, sourceType, createPlatforms=True):
+        sources = self.list(createPlatforms)
         sources = [s for s in sources.instance \
                    if s.contentSourceType == sourceType]
         return models.SourceInstances(sources)                   

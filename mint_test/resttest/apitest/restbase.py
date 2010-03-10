@@ -197,6 +197,22 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl2.setPlatformUsageTerms('Terms of Use 2')
         pl2.saveToRepository(self.cclient, platformLabel2)
 
+    def setupPlatform3(self):
+        repos = self.openRepository()
+        self.cclient = self.getConaryClient()
+        self.cclient.repos = repos
+        # platformLabel1 = self.mintCfg.availablePlatforms[0]
+        platformLabel1 = 'localhost@rpath:plat-3'
+        pl1 = self.productDefinition.toPlatformDefinition()
+        cst = pl1.newContentSourceType('RHN', 'RHN', isSingleton = True)
+        ds = pl1.newDataSource('Channel 1', 'Channel 1')
+        pl1.setContentProvider('Crowbar', 'Crowbar', [cst], [ds])
+        pl1.setPlatformName('Crowbar Linux 3')
+        pl1.setPlatformUsageTerms('Terms of Use 1')
+        pl1.addArchitecture('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
+        pl1.addFlavorSet('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware')
+        pl1.saveToRepository(self.cclient, platformLabel1)
+
     def getConaryClient(self):
         return conaryclient.ConaryClient(self.cfg)
 

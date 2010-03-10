@@ -163,3 +163,16 @@ class PlatformsPlatformSourcesTable(database.DatabaseTable):
     name = 'platformsPlatformSources'
     fields = [ 'platformId',
                'platformSourceId' ]
+
+    @dbReader
+    def getAllByPlatformId(self, cu, platformId):
+        sql = """
+            SELECT platformId, platformSourceId
+            FROM platformsPlatformSources
+            WHERE platformId = ?
+        """
+        cu.execute(sql, platformId)
+
+        return cu.fetchall()
+
+
