@@ -24,6 +24,7 @@ from mint.rest.api.models.platforms import *
 from mint.rest.api.models.products import *
 from mint.rest.api.models.productversions import *
 from mint.rest.api.models.images import *
+from mint.rest.api.models.modulehooks import *
 
 class RbuilderStatus(Model):
     id                      = fields.AbsoluteUrlField(isAttribute=True)
@@ -40,6 +41,7 @@ class RbuilderStatus(Model):
     platforms               = fields.UrlField('platforms', None)
     registration            = fields.UrlField('registration', None)
     reports                 = fields.UrlField('reports/', None)
+    moduleHooks             = fields.UrlField('moduleHooks', None)
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
 
