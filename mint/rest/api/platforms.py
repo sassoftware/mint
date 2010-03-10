@@ -118,6 +118,12 @@ class PlatformSourceTypeController(base.BaseController):
     def index(self, request, platformId):
         return self.db.getSourceTypesByPlatform(platformId)
 
+class PlatformImageTypeController(base.BaseController):
+    
+    @auth.public
+    def index(self, request, platformId):
+        return self.db.getPlatformImageTypeDefs(request, platformId)
+
 class PlatformLoadController(base.BaseController):
     modelName = 'jobId'
     
@@ -136,6 +142,7 @@ class PlatformController(base.BaseController):
     urls = { 'status' : PlatformStatusController,
              'contentSources' : PlatformSourceController,
              'contentSourceTypes' : PlatformSourceTypeController,
+             'imageTypeDefinitions' : PlatformImageTypeController,
              'load' : PlatformLoadController,
            }
 

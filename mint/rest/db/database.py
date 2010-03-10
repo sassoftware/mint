@@ -722,6 +722,10 @@ class Database(DBInterface):
         return self.platformMgr.getPlatform(platformId)
 
     @readonly
+    def getPlatformImageTypeDefs(self, request, platformId):
+        return self.platformMgr.getPlatformImageTypeDefs(request, platformId)
+
+    @readonly
     def getSourceTypes(self):
         return self.platformMgr.getSourceTypes()
 

@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 13)
+RBUILDER_DB_VERSION = sqllib.DBversion(48, 14)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -937,22 +937,20 @@ def _createCapsuleIndexerSchema(db):
     changed |= db.createIndex('ci_rhn_errata_channel',
         'ci_rhn_errata_channel_cid_eid_idx', 'channel_id, errata_id')
 
-    tableName = 'ci_rhn_errata_package'
+    tableName = 'ci_rhn_errata_nevra_channel'
     if tableName not in db.tables:
         cu.execute("""
-            CREATE TABLE ci_rhn_errata_package (
+            CREATE TABLE ci_rhn_errata_nevra_channel (
                 errata_id INTEGER NOT NULL
                     REFERENCES ci_rhn_errata ON DELETE CASCADE,
-                package_id  INTEGER NOT NULL
-                    REFERENCES ci_rhn_packages ON DELETE CASCADE
+                nevra_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_nevra ON DELETE CASCADE,
+                channel_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_channels ON DELETE CASCADE,
+                PRIMARY KEY (errata_id, nevra_id, channel_id)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
-    changed |= db.createIndex('ci_rhn_errata_package',
-        'ci_rhn_errata_package_eid_pid_idx_uq', 'errata_id, package_id',
-        unique = True)
-    changed |= db.createIndex('ci_rhn_errata_package',
-        'ci_rhn_errata_package_pid_eid_idx', 'package_id, errata_id')
 
     return changed
 

@@ -15,22 +15,22 @@ class ReportTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client()
 
-    def testGetTypes(self):
+    def notestGetTypes(self):
         response = self.client.get('/api/reports/')
         self.assertEquals(response.status_code, 200)
         
         response = self.client.post('/api/reports/?_method=GET')
         self.assertEquals(response.status_code, 200)
         
-    def testPostTypes(self):
+    def notestPostTypes(self):
         response = self.client.post('/api/reports/')
         self.assertEquals(response.status_code, 405)
         
-    def testPutTypes(self):
+    def notestPutTypes(self):
         response = self.client.put('/api/reports/')
         self.assertEquals(response.status_code, 405)
         
-    def testDeleteTypes(self):
+    def notestDeleteTypes(self):
         response = self.client.delete('/api/reports/')
         self.assertEquals(response.status_code, 405)
        
@@ -39,22 +39,22 @@ class ReportTypeDescriptorTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client()
 
-    def testGetTypesDescriptor(self):
+    def notestGetTypesDescriptor(self):
         response = self.client.get('/api/reports/imagesReport/descriptor/')
         self.assertEquals(response.status_code, 200)
         
         response = self.client.post('/api/reports/imagesReport/descriptor/?_method=GET')
         self.assertEquals(response.status_code, 200)
         
-    def testPostTypesDescriptor(self):
+    def notestPostTypesDescriptor(self):
         response = self.client.post('/api/reports/imagesReport/descriptor/')
         self.assertEquals(response.status_code, 405)
     
-    def testPutTypesDescriptor(self):
+    def notestPutTypesDescriptor(self):
         response = self.client.put('/api/reports/imagesReport/descriptor/')
         self.assertEquals(response.status_code, 405)
         
-    def testDeleteTypesDescriptor(self):
+    def notestDeleteTypesDescriptor(self):
         response = self.client.delete('/api/reports/imagesReport/descriptor/')
         self.assertEquals(response.status_code, 405)
         
@@ -89,19 +89,19 @@ class ImagesPerProductTestCase(unittest.TestCase):
         for image in Images.objects.all():
             image.delete()
         
-    def testGetImagePerProductReport(self):
+    def notestGetImagePerProductReport(self):
         response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname)
         self.assertEquals(response.status_code, 200)
         
         response = self.client.post('/api/reports/imagesReport/data/'+self.product.shortname+'?_method=GET')
         self.assertEquals(response.status_code, 200)    
     
-    def testGetEmptySet(self):
+    def notestGetEmptySet(self):
         """Test to make sure that an empty report is generated for the give query"""
         response = self.client.post('/api/reports/imagesReport/data/'+self.product.shortname+'?_method=GET&timeunits=day&starttime=100&endtime=200')
         self.assertEquals(response.content, expectedResult)
     
-    def testBadRequestGet(self):
+    def notestBadRequestGet(self):
         response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname+'?timeunits=bob')
         self.assertEquals(response.status_code, 400)
         
@@ -111,7 +111,7 @@ class ImagesPerProductTestCase(unittest.TestCase):
         response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname+'?endtime=bob')
         self.assertEquals(response.status_code, 400)
             
-    def testNotFoundGet(self):
+    def notestNotFoundGet(self):
         response = self.client.get('/api/reports/imagesReport/data/'+self.product.shortname+'1')
         self.assertEquals(response.status_code, 404)   
         

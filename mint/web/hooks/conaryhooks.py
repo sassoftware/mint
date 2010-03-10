@@ -101,6 +101,11 @@ def getRepository(projectName, repName, context,
 
     cfg, req = context.cfg, context.req
 
+    # FIXME: Until there is a per-project signature requirement flag, this will
+    # have to do.
+    if repName.startswith('rmake-repository.'):
+        requireSigs = False
+
     nscfg = netserver.ServerConfig()
     nscfg.externalPasswordURL = cfg.externalPasswordURL
     nscfg.authCacheTimeout = cfg.authCacheTimeout
@@ -387,10 +392,12 @@ def conaryHandler(context):
 
     # By now we must know the FQDN, either from the request itself or from
     # the project looked up in the database.
-    if not fqdn and not actualRepName:
-        log.warning("Unknown project %s in request for %s", hostName,
-                req.uri)
-        return apache.HTTP_NOT_FOUND
+    if not fqdn:
+        if not actualRepName:
+            log.warning("Unknown project %s in request for %s", hostName,
+                    req.uri)
+            return apache.HTTP_NOT_FOUND
+        fqdn = actualRepName
 
     # do not require signatures when committing to a local mirror
     if localMirror:
@@ -500,8 +507,7 @@ def conaryHandler(context):
     try:
         if proxyRestRequest:
             # use proxyServer config for http proxy and auth data
-            return proxyExternalRestRequest(context, actualRepName,
-                    proxyServer)
+            return proxyExternalRestRequest(context, fqdn, proxyServer)
         if disallowInternalProxy:
             proxyServer = None
         if method == "POST":
