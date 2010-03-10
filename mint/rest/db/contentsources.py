@@ -128,8 +128,12 @@ class Rhn(ContentSourceType):
             log.error("Error validating content source %s" \
                         % (self.name, ))
             return (False, False, msg)
-
-        remaining = ds.getAvailableEntitlements(self.cfg.channels[0])
+        
+        try:
+            remaining = ds.getAvailableEntitlements(self.cfg.channels[0])
+        except rpath_capsule_indexer.RPCError, e:
+            log.error("Error getting available entitlements: %s" % e)
+            return(False, False, msg)
 
         if remaining <= 0:
             return (False, False, "Insufficient Channel Entitlements.")
