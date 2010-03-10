@@ -21,6 +21,10 @@ logs.num_lines = 20
 # A list of interfaces that should be excluded from display.
 configure.network.ifsExclude = ["vif", "lo", "sit", "tun", "vmnet", "ird", "veth[0-9]*", "vif[0-9]*" ]
 
+[/configure/Proxy]
+configure.proxy.prescript = "/usr/share/rbuilder/scripts/validate-proxy-settings"
+configure.proxy.postscript = "/usr/share/rbuilder/scripts/apply-proxy-settings"
+
 [/collectiontool]
 collectiontool.vendorInformationPath = "/usr/share/raa/content/collectiontool.html"
 

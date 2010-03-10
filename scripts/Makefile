@@ -6,6 +6,7 @@
 
 static_files =				\
 	amazon-s3-processor		\
+	apply-proxy-settings		\
 	auth-generate			\
 	check-repository		\
 	deleteproject			\
@@ -30,6 +31,7 @@ static_files =				\
 	update-package-index		\
 	update-package-index-external	\
 	update-top-projects		\
+	validate-proxy-settings		\
 	set-password                    \
 	repository-log-scrape
 

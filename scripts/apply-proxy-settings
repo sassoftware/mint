@@ -1,0 +1,4 @@
+#!/bin/sh
+
+service httpd restart
+exit 0
