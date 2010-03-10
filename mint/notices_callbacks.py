@@ -3,6 +3,7 @@
 # All Rights Reserved
 #
 
+import logging
 import os
 import time
 
@@ -11,6 +12,8 @@ from lxml import etree as ET
 
 from mint import notices_store
 from mint import packagecreator
+
+log = logging.getLogger(__name__)
 
 class NoticesCallback(packagecreator.callbacks.Callback):
     context = "builder"
@@ -27,12 +30,14 @@ class NoticesCallback(packagecreator.callbacks.Callback):
 
     def _storeNotice(self, title, description, category, noticeDate):
         # Create the dummy notice so we can secure a guid
-        notice = self.store.storeUser(self.context, "")
-        guid = self.getNoticesUrl(notice.id)
-        item = self.makeItem(title, description, category, noticeDate, guid)
-        notice.content = item
-        self.store.storeUser(None, notice)
-
+        try:
+            notice = self.store.storeUser(self.context, "")
+            guid = self.getNoticesUrl(notice.id)
+            item = self.makeItem(title, description, category, noticeDate, guid)
+            notice.content = item
+            self.store.storeUser(None, notice)
+        except Exception, e:
+            log.exception('Exception creating notice: %s' % e)
 
 
     def getNoticesUrl(self, noticeId):
