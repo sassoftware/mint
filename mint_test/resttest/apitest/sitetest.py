@@ -36,6 +36,7 @@ class SiteTest(restbase.BaseRestTest):
   <version>%(version)s</version>
   <conaryVersion>%(conaryversion)s</conaryVersion>
   <rmakeVersion>%(rmakeversion)s</rmakeVersion>
+  <userName>anonymous</userName>
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
   <identity>
