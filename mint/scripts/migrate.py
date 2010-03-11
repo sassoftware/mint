@@ -793,6 +793,49 @@ class MigrateTo_48(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
 
+class MigrateTo_49(SchemaMigration):
+    Version = (49, 1)
+
+    # 49.0
+    # - Added TargetUserCredentials
+    # - Dropped platformLoadJobs table
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            CREATE TABLE TargetUserCredentials (
+                targetId        integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                userId          integer             NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                name            varchar(255)        NOT NULL,
+                value           text,
+                PRIMARY KEY ( targetId, userId, name )
+            ) %(TABLEOPTS)s """ % self.db.keywords)
+
+        drop_tables(self.db, 'platformLoadJobs')
+
+        return True
+
+    # 49.1
+    # - create ci_rhn_errata_nevra_channel, drop ci_rhn_errata_package
+    def migrate1(self):
+        schema._createCapsuleIndexerSchema(self.db)
+        drop_tables(self.db, 'ci_rhn_errata_package')
+
+        from mint import config
+        from mint.scripts import migrate_catalog_data
+        cfg = config.getConfig()
+        conv = migrate_catalog_data.TargetConversion(cfg, self.db)
+        conv.run()
+
+        # Drop uniq constraint on targetName
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Targets DROP CONSTRAINT targets_targetname_key")
+
+        db.createIndex('Targets',
+            'Targets_Type_Name_Uq', 'targetType, targetName', unique = True)
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
