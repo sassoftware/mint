@@ -662,6 +662,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>Development</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0-devel</label>
+    <isPromotable>true</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-devel"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development/images"/>
   </stage>
@@ -670,6 +671,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>QA</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0-qa</label>
+    <isPromotable>true</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-qa"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA/images"/>
   </stage>
@@ -678,6 +680,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>Release</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0</label>
+    <isPromotable>false</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release/images"/>
   </stage>

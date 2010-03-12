@@ -475,12 +475,15 @@ class Database(DBInterface):
     def getProductVersionStage(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
-        for stage in pd.getStages():
+        stages = pd.getStages()
+        for stage in stages:
             if str(stage.name) == stageName:
+                promotable = ((stage.name != stages[-1].name and True) or False) 
                 return models.Stage(name=str(stage.name),
                                     label=str(pd.getLabelForStage(stage.name)),
                                     hostname=hostname,
-                                    version=version)
+                                    version=version,
+                                    isPromotable=promotable)
         raise errors.StageNotFound(stageName)
 
     @readonly    
@@ -488,11 +491,14 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
         stageList = models.Stages()
-        for stage in pd.getStages():
+        stages = pd.getStages()
+        for stage in stages:
+            promotable = ((stage.name != stages[-1].name and True) or False)
             stageList.stages.append(models.Stage(name=str(stage.name),
                                  label=str(pd.getLabelForStage(stage.name)),
                                  hostname=hostname,
-                                 version=version))
+                                 version=version,
+                                 isPromotable=promotable))
         return stageList
 
     def listImagesForProductVersion(self, hostname, version):

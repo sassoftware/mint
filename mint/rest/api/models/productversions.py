@@ -55,6 +55,7 @@ class Stage(Model):
     version = fields.CharField()
     name  = fields.CharField()
     label = fields.CharField()
+    isPromotable = fields.BooleanField()
     groups = fields.UrlField('products.repos.search', 
                              ['hostname'], query='type=group&label=%(label)s')
     images = fields.UrlField('products.versions.stages.images',
