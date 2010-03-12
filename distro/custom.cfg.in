@@ -7,6 +7,7 @@ product.companyCopyYears="2006-2010"
 services.Services.hidden = True
 apphome.visible = True
 apphome.text = "rBuilder"
+configure.entitlements.postscript = "/usr/share/rbuilder/scripts/refresh-auth"
 
 # Wizard plugins to run in this order. 
 # -- Terms of service should always be first!
@@ -24,9 +25,6 @@ configure.network.ifsExclude = ["vif", "lo", "sit", "tun", "vmnet", "ird", "veth
 [/configure/Proxy]
 configure.proxy.prescript = "/usr/share/rbuilder/scripts/validate-proxy-settings"
 configure.proxy.postscript = "/usr/share/rbuilder/scripts/apply-proxy-settings"
-
-[/configure/Entitlements]
-configure.entitlements.postscript = "/usr/share/rbuilder/scripts/refresh-auth"
 
 [/collectiontool]
 collectiontool.vendorInformationPath = "/usr/share/raa/content/collectiontool.html"
