@@ -69,7 +69,7 @@ availablePlatforms      conary.rpath.com@rpl:2
 # Available platform names. Should match the order of availablePlatforms
 availablePlatformNames  Red Hat Enterprise Linux 4
 availablePlatformNames  Red Hat Enterprise Linux 5
-availablePlatformNames  Red Hat Enterprise Linux 5 Client Workstation
+availablePlatformNames  Red Hat Enterprise Linux Desktop Workstation 5
 availablePlatformNames  SLES 11 Delivered by rPath
 availablePlatformNames  SLES 10 Delivered by rPath
 availablePlatformNames  CentOS 5 Delivered by rPath
