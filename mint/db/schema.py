@@ -709,7 +709,7 @@ def _createTargets(db):
             CREATE TABLE Targets (
                 targetId        %(PRIMARYKEY)s,
                 targetType      varchar(255)        NOT NULL,
-                targetName      varchar(255)        NOT NULL,
+                targetName      varchar(255)        NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Targets'] = []
         db.createIndex('Targets',
