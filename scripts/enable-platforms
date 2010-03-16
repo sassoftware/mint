@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.4
 #
 # Copyright (c) 2009 rPath, Inc.
 #
@@ -13,14 +13,11 @@ import traceback
 from mint import config
 from mint import users
 from mint.db import database
+from mint.lib import scriptlibrary
 from mint.rest.db import authmgr
 from mint.rest.db import database as restDb
 
-log = logging.getLogger(__name__)
-
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
+logFileName = 'enable-platform.log'
 
 def _chown(root, uid, gid):
     os.chown(root, uid, gid)
@@ -33,6 +30,10 @@ def _chown(root, uid, gid):
 def enablePlatforms():
     cfg = config.MintConfig()
     cfg.read(config.RBUILDER_CONFIG)
+    
+    logPath = os.path.join(cfg.logPath, logFileName)
+    scriptlibrary.setupScriptLogger(logPath, consoleLevel = logging.exception)
+    log = scriptlibrary.getScriptLogger()
 
     db = database.Database(cfg)
     authToken = (cfg.authUser, cfg.authPass)
@@ -61,6 +62,8 @@ def enablePlatforms():
         if not platform.enabled:
             try:
                 platform.enabled = True
+		if platform.label == 'rhel.rpath.com@rpath:rhel-4-as':
+			raise Exception('its game over, man')
                 rdb.updatePlatform(platform.platformId, platform)
                 enabledPlatforms.append(platform.label)
 
@@ -74,8 +77,7 @@ def enablePlatforms():
     return enabledPlatforms            
 
 if __name__ == '__main__':
-    print "Enabling platforms...", 
-    log.addHandler(NullHandler())
+    print "Enabling platforms..." 
     try:
         enabledPlatforms = enablePlatforms()
         if enabledPlatforms:
@@ -85,6 +87,5 @@ if __name__ == '__main__':
     except Exception, e:
         tb = sys.exc_info()[2]
         traceback.print_tb(tb)
-        log.exception(tb)
         sys.exit("Failed enabling platforms: %s" % e)
 
