@@ -409,6 +409,7 @@ class rBASetup(rAAWebPlugin):
         return self.plugins['/configure/Entitlements'].validateEntitlement(key)
 
     @raa.web.expose(allow_xmlrpc=True, allow_json=True)
+    @raa.web.require(raa.authorization.LocalhostOK())
     def setNewEntitlement(self, key):
         return self.plugins['/configure/Entitlements'].doSaveKey(key)
 
