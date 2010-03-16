@@ -62,8 +62,6 @@ def enablePlatforms():
         if not platform.enabled:
             try:
                 platform.enabled = True
-		if platform.label == 'rhel.rpath.com@rpath:rhel-4-as':
-			raise Exception('its game over, man')
                 rdb.updatePlatform(platform.platformId, platform)
                 enabledPlatforms.append(platform.label)
 
