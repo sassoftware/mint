@@ -46,7 +46,7 @@ class RbuilderRestServer(RestController):
         proddefSchemaVersion = proddef.BaseDefinition.version
         username=((request.mintAuth and request.mintAuth.username) or 'anonymous')
         return models.RbuilderStatus(version=constants.mintVersion,
-                                     conaryVersion=conaryConstants.checksum,
+                                     conaryVersion=conaryConstants.changeset,
                                      rmakeVersion=rmakeConstants.version,
                                      userName=username,
                                      hostName=os.uname()[1],

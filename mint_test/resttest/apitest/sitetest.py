@@ -56,7 +56,7 @@ class SiteTest(restbase.BaseRestTest):
         self.assertBlobEquals(response,
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
-                         conaryversion=conaryConstants.checksum,
+                         conaryversion=conaryConstants.changeset,
                          rmakeversion=rmakeConstants.version,
                          hostname=os.uname()[1],
                          proddefVer=proddef.BaseDefinition.version))
