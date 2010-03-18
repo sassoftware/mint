@@ -194,10 +194,11 @@ class ReposTest(restbase.BaseRestTest):
         <title>Image File 1</title>
         <size>1024</size>
         <sha1>356a192b7913b04c54574d18c28d46e6395428ab</sha1>
-        <baseFileName>imagefile_1.iso</baseFileName>
+        <fileName>imagefile_1.iso</fileName>
         <url urlType="0">http://localhost:8000/downloadImage?fileId=1&amp;urlType=0</url>
       </file>
     </files>
+    <baseFileName>testproject-1-</baseFileName>
   </image>
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
@@ -229,10 +230,11 @@ class ReposTest(restbase.BaseRestTest):
         <title>Image File 2</title>
         <size>2048</size>
         <sha1>da4b9237bacccdf19c0760cab7aec4a8359010b0</sha1>
-        <baseFileName>imagefile_2.iso</baseFileName>
+        <fileName>imagefile_2.iso</fileName>
         <url urlType="0">http://localhost:8000/downloadImage?fileId=2&amp;urlType=0</url>
       </file>
     </files>
+    <baseFileName>testproject-1-</baseFileName>
   </image>
 </images>
 """

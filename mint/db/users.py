@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import base64
 import os
 import random
 import time
@@ -43,6 +44,11 @@ class UsersTable(database.KeyedTable):
     fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'blurb']
+
+    # Not the ideal place to put these, but I wanted to easily find them later
+    # --misa
+    EC2TargetType = 'ec2'
+    EC2TargetName = 'aws'
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -331,15 +337,17 @@ class UsersTable(database.KeyedTable):
         """
         cu = self.db.cursor()
         SQL = """
-            SELECT u.userId, ud.value
-            FROM Users u
-                JOIN UserData ud on u.userId = ud.userId
-            WHERE ud.name = 'awsAccountNumber'
-              AND ud.value is not NULL
+            SELECT u.userId, tuc.value
+              FROM Users u
+              JOIN TargetUserCredentials AS tuc USING (userId)
+              JOIN Targets AS t USING (targetId)
+             WHERE t.targetType = ?
+               AND t.targetName = ?
+               AND tuc.name = ?
             """
-        cu.execute(SQL)
+        cu.execute(SQL, self.EC2TargetType, self.EC2TargetName, 'accountId')
         results = cu.fetchall()
-        return results
+        return [ (x[0], base64.b64decode(x[1])) for x in results ]
 
     def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """

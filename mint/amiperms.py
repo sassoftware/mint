@@ -137,10 +137,11 @@ class AMIPermissionsManager(object):
         return bool(self._getAWSAccountNumber(userId))
 
     def _getAWSAccountNumber(self, userId):
-        awsFound, awsAccountNumber = self.db.userData.getDataValue(userId,
-                                         'awsAccountNumber')
-        if awsFound:
-            return awsAccountNumber
+        from mint.rest.db import database
+        restDb = database.Database(self.cfg, self.db)
+        creds = restDb.targetMgr.getTargetCredentialsForUserId(
+            self.db.EC2TargetType, self.db.EC2TargetName, userId)
+        return creds.get('accountId')
 
     def _addAMIPermissionsForUser(self, userId, amiIds):
         self._addAMIPermissionsForUsers([userId], amiIds)
