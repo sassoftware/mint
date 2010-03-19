@@ -153,7 +153,9 @@ class PlatformManagerTest(restbase.BaseRestTest):
         plat = self.db.db.platforms.get(p.platformId)
 
         platformLoad = mock.MockObject()
-        platformLoad._mock.set(uri = 'http://no.such.host/1234')
+        uri = mock.MockObject()
+        uri.encode._mock.setDefaultReturn(u'http://no.such.host/1234')
+        platformLoad._mock.set(uri = uri)
 
         from conary.build import lookaside
         lookasideClass = mock.MockObject()
@@ -173,6 +175,12 @@ class PlatformManagerTest(restbase.BaseRestTest):
         called = lookasideClass._mock.popCall()
         self.failUnlessEqual(called,
             ((None, None), (('cfg', self.db.platformMgr.cfg), )))
+
+        called = lookasideObj._fetchUrl._mock.popCall()
+        self.failUnlessEqual(called,
+            (('http://no.such.host/1234', {}), ()))
+        # And make sure it's unicode
+        self.failUnless(isinstance(called[0][0], unicode))
 
     def testCreateDuplicatePlatform(self):
         p = self._getPlatform()

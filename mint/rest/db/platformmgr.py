@@ -425,7 +425,7 @@ class Platforms(object):
         platform = self.getById(platformId)
         host = platform.label.split('@')[:1][0]
         repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
-        uri = platformLoad.uri
+        uri = platformLoad.uri.encode('utf-8')
         headers = {}
         fd, outFilePath = tempfile.mkstemp('.ccs', 'platform-load-')
 
