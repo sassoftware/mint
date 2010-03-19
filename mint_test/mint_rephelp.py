@@ -218,6 +218,7 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     cfg.reposContentsDir = " ".join([reposDir + "/contents1/%s/", reposDir + "/contents2/%s/"])
 
     cfg.dataPath = reposDir
+    cfg.storagePath = reposDir + '/jobs'
     cfg.logPath = reposDir + '/logs'
     cfg.imagesPath = reposDir + '/images/'
     cfg.siteAuthCfgPath = reposDir + '/authorization.cfg'
@@ -612,12 +613,12 @@ class RestDBMixIn(object):
                 title='Image File %s' % imageId,
                 size=1024 * imageId,
                 sha1=digest,
-                baseFileName='imagefile_%s.iso' % imageId,
+                fileName='imagefile_%s.iso' % imageId,
                 )])
 
         for item in imageFiles.files:
             path = '%s/%s/%s/%s' % (self.mintCfg.imagesPath, hostname, imageId,
-                    item.baseFileName)
+                    item.fileName)
             util.mkdirChain(os.path.dirname(path))
             open(path, 'w').write('image data')
         db.imageMgr.setFilesForImage(hostname, imageId, imageFiles)

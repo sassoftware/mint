@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import base64
 import os
 import string
 import sys
@@ -730,19 +731,21 @@ class ProjectUsersTable(database.DatabaseTable):
         cu = self.db.cursor()
         cu.execute("""
             SELECT CASE WHEN MIN(pu.level) <= 1 THEN 1 ELSE 0 END AS isWriter,
-                ud.value AS awsAccountNumber
-            FROM projectUsers AS pu
-                JOIN userData AS ud
-                    ON ud.name = 'awsAccountNumber'
-                       AND pu.userId = ud.userId
-                       AND length(ud.value) > 0
-            WHERE pu.projectId = ?
-            GROUP BY ud.value""", projectId)
+                tuc.value AS awsAccountNumber
+              FROM projectUsers AS pu
+              JOIN TargetUserCredentials AS tuc USING (userId)
+              JOIN Targets USING (targetId)
+             WHERE pu.projectId = ?
+               AND Targets.targetType = ?
+               AND Targets.targetName = ?
+               AND tuc.name = ?
+             GROUP BY tuc.value""", projectId, 'ec2', 'aws', 'accountId')
         for res in cu.fetchall():
+            val = base64.b64decode(res[1])
             if res[0]:
-                writers.append(res[1])
+                writers.append(val)
             else:
-                readers.append(res[1])
+                readers.append(val)
         return writers, readers
 
     def new(self, projectId, userId, level, commit=True):

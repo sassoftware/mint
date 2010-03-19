@@ -113,6 +113,27 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.assertEqual(file.urls[0].fileId, 1)
         self.assertEqual(file.urls[0].urlType, 0)
 
+    def testListImagesByType(self):
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createProduct('foo', owners=['admin'], db=db)
+        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
+                                   name='Image1')
+        self.setImageFiles(db, 'foo', imageId)
+        images = db.imageMgr.getAllImagesByType('INSTALLABLE_ISO')
+        self.failUnlessEqual(
+            [ [ x['sha1'] for x in img['files'] ] for img in images],
+            [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ] ])
+        self.failUnlessEqual(
+            [ img['baseFileName'] for img in images ],
+            [ 'foo-0.1-' ])
+        self.failUnlessEqual(
+            [ [ x['fileName'] for x in img['files'] ] for img in images],
+            [ [ 'imagefile_1.iso' ] ])
+        self.failUnlessEqual(
+            [ [ x['downloadUrl'] for x in img['files'] ] for img in images],
+            [ [ 'https://test.rpath.local:0/downloadImage?fileId=1' ] ])
+
     def testAddImageStatus(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
@@ -166,7 +187,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
                 buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
 
         imageFiles = models.ImageFileList(files=[models.ImageFile(
-            baseFileName='filename2', title='title2', size=1024, sha1='sha')])
+            fileName='filename2', title='title2', size=1024, sha1='sha')])
         db.setFilesForImage('foo', imageId, 'abcdef', imageFiles)
 
         file, = db.getImageForProduct('foo', imageId).files.files

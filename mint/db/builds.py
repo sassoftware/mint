@@ -1,3 +1,4 @@
+import base64
 import time
 
 from mint import buildtypes
@@ -30,6 +31,11 @@ class BuildsTable(database.KeyedTable):
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
               'buildCount', 'productVersionId', 'stageName',
               'status', 'statusMessage']
+
+    # Not the ideal place to put these, but I wanted to easily find them later
+    # --misa
+    EC2TargetType = 'ec2'
+    EC2TargetName = 'aws'
 
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given
@@ -166,11 +172,21 @@ class BuildsTable(database.KeyedTable):
 
             # Extra selects:
             # add in awsAccount if it exists.
-            extraSelect = ''', COALESCE(ud.value,'Unknown') AS awsAccountNumber,
+            # accountId is base64 encoded; use - for NULL (since it's not part
+            # of the base64 alphabet)
+            extraSelect = ''', COALESCE(subq.accountId, '-') AS awsAccountNumber,
                              bd.value AS amiId'''
-            extraJoin += '''LEFT OUTER JOIN userData ud
-                            ON (b.createdBy = ud.userId
-                                AND ud.name = 'awsAccountNumber')'''
+            extraJoin += ''' LEFT OUTER JOIN
+                             (SELECT tuc.userId AS userId,
+                                     tuc.value AS accountId
+                                FROM Targets
+                                JOIN TargetUserCredentials AS tuc
+                                     ON (Targets.targetId = tuc.targetId)
+                               WHERE Targets.targetType = '%s'
+                                 AND Targets.targetName = '%s'
+                                 AND tuc.name = 'accountId') AS subq
+                              ON (b.createdBy = subq.userId)
+                            ''' % (self.EC2TargetType, self.EC2TargetName)
 
             # make sure that this build has an amiId.  Since it doesn't
             # have any files (thus no sha1), we need to know that it
@@ -244,6 +260,11 @@ class BuildsTable(database.KeyedTable):
             outRow = {}
             for key in keys:
                 value = row.pop(key, None)
+                if key == 'awsAccountNumber':
+                    if value == '-':
+                        value = 'Unknown'
+                    elif value:
+                        value = base64.b64decode(value)
                 if value is not None:
                     outRow[key] = value
             assert not row.fields
