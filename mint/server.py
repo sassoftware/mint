@@ -176,6 +176,9 @@ def checkParam(param, paramType):
                     if p_type in (int, long):
                         # allow ints and longs to be interchangeable
                         match = match or type(param) in (int, long)
+                    elif type(param) is util.ProtectedString:
+                        # allow protected passwords through
+                        return True
                     else:
                         match = match or (type(param) == p_type)
             return match
