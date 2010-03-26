@@ -71,6 +71,9 @@ class ProductManager(manager.Manager):
             role = row.pop('role')
             if role is not None:
                 row['role'] = userlevels.names[role]
+            row['name'] = cu.decode(row['name'])
+            if row['description'] is not None:
+                row['description'] = cu.decode(row['description'])
 
             results.append(models.Product(row))
         return results

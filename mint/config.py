@@ -296,6 +296,11 @@ class MintConfig(ConfigFile):
 
         self.postCfg()
 
+    def __setstate__(self, state):
+        # Needed to reset calculated fields after copy or unpickle
+        ConfigFile.__setstate__(self, state)
+        self.postCfg()
+
     def postCfg(self):
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
