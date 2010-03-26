@@ -2180,7 +2180,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
                             buildType, buildSettings, start=False):
         self._filterProjectAccess(projectId)
 
-        groupVersion = helperfuncs.parseVersion(groupVersion).freeze()
+        version = helperfuncs.parseVersion(groupVersion)
+        
+        groupVersion = version.freeze()
         groupFlavor = helperfuncs.parseFlavor(groupFlavor).freeze()
 
         # Make sure we convert from Unicode to UTF-8
@@ -2197,6 +2199,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
         buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
+
+        label = version.trailingLabel().asString()
+        versionId, stage = self._getProductVersionForLabel(projectId, label)
+        if versionId and stage:
+            pd = self._getProductDefinitionForVersionObj(versionId)
+            platName = pd.getPlatformName()
+            newBuild.setDataValue('platformName', str(platName))
 
         template = newBuild.getDataTemplate()
 
