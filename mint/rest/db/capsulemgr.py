@@ -43,6 +43,8 @@ class CapsuleManager(manager.Manager):
         cfg.configLine("store %s://%s" % (dbDriver, dbConnectString))
         cfg.configLine("indexDir %s/packages" % capsuleDataDir)
         cfg.configLine("systemsPath %s/systems" % capsuleDataDir)
+        cfg.configLine("registeredSystemPrefix rbuilder %s" %
+            self.cfg.siteHost)
 
         dataSources = self.db.platformMgr.getSources().instance or []
         for idx, dataSource in enumerate(dataSources):
