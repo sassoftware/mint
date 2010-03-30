@@ -995,13 +995,20 @@ def _createInventorySchema(db):
     changed = False
 
     if 'systems' not in db.tables:
+        # ownerUserId is the user that launched the system. However, if that
+        # user goes away, the owner _should_ be set to an admin, which is the
+        # reason 'owner' makes more sense than 'launcher'
+        # targetSystemId is the ID of the system on that specific target
+        # (uuid for VMware and Citrix Xen Server, etc)
         cu.execute("""
             CREATE TABLE systems 
             (
                 systemId %(PRIMARYKEY)s,
                 targetSystemId varchar(128),
-                targetId integer
-                    REFERENCES Targets,
+                targetId integer NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                ownerUserId integer
+                    REFERENCES Users ON DELETE SET NULL,
                 versionTimeStamp numeric(14,3)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['systems'] = []
