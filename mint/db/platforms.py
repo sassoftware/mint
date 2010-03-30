@@ -92,14 +92,6 @@ class PlatformsTable(database.KeyedTable):
             cu.execute(sql % k, v, platformId)
         return []
 
-class PlatformLoadJobsTable(database.KeyedTable):
-    name = 'platformLoadJobs'
-    key = 'jobId'
-    fields = [ 'jobId',
-               'platformId',
-               'message',
-               'done',
-               'error' ]
 
 class PlatformSourcesTable(database.KeyedTable):
     name = 'platformSources'
