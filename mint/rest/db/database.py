@@ -28,6 +28,7 @@ from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
 from mint.rest.db import releasemgr
+from mint.rest.db import systemmgr
 from mint.rest.db import targetmgr
 from mint.rest.db import usermgr
 
@@ -133,6 +134,7 @@ class Database(DBInterface):
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
         self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
         self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
+        self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(cfg, self,

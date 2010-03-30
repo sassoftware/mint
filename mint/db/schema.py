@@ -990,7 +990,7 @@ def _createRepositoryLogSchema(db):
 
     return changed
 
-def _createInventorySchema(db):
+def _createInventory(db):
     cu = db.cursor()
     changed = False
 
@@ -1011,6 +1011,16 @@ def _createInventorySchema(db):
     changed |= db.createIndex('systems', 'systemstargetid_idx',
             'targetId', unique=False)
 
+    if 'versions' not in db.tables:
+        cu.execute("""
+            CREATE TABLE versions 
+            (
+                versionId %(PRIMARYKEY)s,
+                version varchar(255) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['versions'] = []
+        changed = True
+
     if 'systemversions' not in db.tables:
         cu.execute("""
             CREATE TABLE systemversions 
@@ -1024,16 +1034,6 @@ def _createInventorySchema(db):
         changed = True
     changed |= db.createIndex('systemversions', 'systemversions_uq',
             'systemId,versionId', unique=True)
-        
-    if 'versions' not in db.tables:
-        cu.execute("""
-            CREATE TABLE versions 
-            (
-                versionId %(PRIMARYKEY)s,
-                version varchar(255) NOT NULL
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['versions'] = []
-        changed = True
 
     if 'systemdata' not in db.tables:
         cu.execute("""

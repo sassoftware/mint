@@ -20,6 +20,7 @@ dbWriter = database.dbWriter
 
 class SystemsTable(database.KeyedTable):
     name = 'systems'
+    key = 'systemId'
     fields = [ 'systemId',
                'targetSystemId',
                'targetId',
