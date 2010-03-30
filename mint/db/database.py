@@ -21,6 +21,7 @@ from mint.db import requests
 from mint.db import sessiondb
 from mint.db import selections
 from mint.db import stats
+from mint.db import systems
 from mint.db import targets
 from mint.db import users
 
@@ -68,6 +69,8 @@ class TableCache(object):
         self.platformSourceData = platforms.PlatformSourceDataTable(db)
         self.platformsPlatformSources = platforms.PlatformsPlatformSourcesTable(db)
         self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
+
+        self.systems = systems.SystemsTable(db)
 
         self.users.confirm_table.db = db
         self.newsCache.ageTable.db = db
@@ -129,6 +132,7 @@ class Database(object):
         self.platformSourceData = tables.platformSourceData
         self.platformsPlatformSources = tables.platformsPlatformSources
         self.platformsContentSourceTypes = tables.platformsContentSourceTypes
+        self.systems = tables.systems
 
         self.targets = tables.targets
         self.targetData = tables.targetData
