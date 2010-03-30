@@ -77,7 +77,7 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None):
 
     tmpTable = None
     if table in db.tables:
-        for index in db.tables[table]:
+        for index in list(db.tables[table]):
             db.dropIndex(table, index)
 
         tmpTable = table + '_tmp'
