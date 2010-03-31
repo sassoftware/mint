@@ -5,6 +5,7 @@
 #
 
 import logging
+import time
 
 from mint import mint_error
 from mint.rest.db import manager
@@ -15,5 +16,6 @@ class SystemManager(manager.Manager):
 
     def addSystem(self, targetSystemId, cloudName, cloudType):
         targetId = self.db.targetMgr.getTargetId(cloudType, cloudName)
-        return self.db.db.managedSystems.new(targetSystemId=targetSystemId, 
-                targetId=targetId)
+        managedSystemId = self.db.db.managedSystems.new(created=time.time())
+        return self.db.db.systemsTargets.new(managedSystemId=managedSystemId,
+                targetId=targetId, targetSystemId=targetSystemId)

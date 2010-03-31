@@ -23,3 +23,8 @@ class ManagedSystemsTable(database.KeyedTable):
     key = 'managedSystemId'
     fields = [ 'managedSystemId',
                'versionTimeStamp' ]
+
+class SystemsTargetsTable(database.DatabaseTable):
+    name = 'systemsTargets'
+    fields = [ 'managedSystemId', 
+               'targetId' ]

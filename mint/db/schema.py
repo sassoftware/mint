@@ -999,7 +999,8 @@ def _createInventory(db):
             CREATE TABLE ManagedSystems 
             (
                 managedSystemId %(PRIMARYKEY)s,
-                versionTimeStamp numeric(14,3)
+                versionTimeStamp numeric(14,3),
+                created numeric(14,3)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['ManagedSystems'] = []
         changed = True
