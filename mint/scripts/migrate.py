@@ -77,7 +77,7 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None):
 
     tmpTable = None
     if table in db.tables:
-        for index in db.tables[table]:
+        for index in list(db.tables[table]):
             db.dropIndex(table, index)
 
         tmpTable = table + '_tmp'
@@ -790,6 +790,10 @@ class MigrateTo_48(SchemaMigration):
     # 48.14
     # - create ci_rhn_errata_nevra_channel, drop ci_rhn_errata_package
     def migrate14(self):
+        # Work around bug in createIndex being called twice with no
+        # intermediate loadSchema. This can be removed after consuming conary
+        # 2.1.12. See CNY-3380, RBL-6012
+        self.db.loadSchema()
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
         return True

@@ -59,7 +59,6 @@ useInternalConaryProxy  True
 availablePlatforms      rhel.rpath.com@rpath:rhel-4-as
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-server
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-client-workstation
-availablePlatforms      sle.rpath.com@rpath:sles-11
 availablePlatforms      sle.rpath.com@rpath:sles-10
 availablePlatforms      centos.rpath.com@rpath:centos-5
 availablePlatforms      ubuntu.rpath.com@rpath:ubuntu-hardy
@@ -70,7 +69,6 @@ availablePlatforms      conary.rpath.com@rpl:2
 availablePlatformNames  Red Hat Enterprise Linux 4
 availablePlatformNames  Red Hat Enterprise Linux 5
 availablePlatformNames  Red Hat Enterprise Linux Desktop Workstation 5
-availablePlatformNames  SLES 11 Delivered by rPath
 availablePlatformNames  SLES 10 Delivered by rPath
 availablePlatformNames  CentOS 5 Delivered by rPath
 availablePlatformNames  Ubuntu Hardy Delivered by rPath

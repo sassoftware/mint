@@ -154,6 +154,15 @@ class rMakeManagement(services.Services):
                                 conf, ' ')
         return True
 
+    def resetServer(self, schedId, execId):
+        """Reset the rMake server."""
+        stdout, stderr, rv = command.executeCommand([
+                rmakemanagement.COMMAND_RESET])
+        if rv:
+            return dict(errors=['Failed to reset rMake server:\n%s'
+                % (stdout + stderr)])
+        return dict(message='The rMake server has been reset')
+
     def _writeConfigToFile(self, filename, conf, delimiter):
         content = ""
         try:

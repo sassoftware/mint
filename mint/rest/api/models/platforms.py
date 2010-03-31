@@ -66,7 +66,7 @@ class RhnSource(Source):
     class Meta(object):
         name = 'contentSource'
     username = fields.CharField()
-    password = fields.CharField()
+    password = fields.ProtectedField()
 
 class SatelliteSource(RhnSource):
     class Meta(object):

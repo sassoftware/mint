@@ -5,6 +5,7 @@
 #
 
 import base64
+from conary.lib import util
 
 from mod_python import Cookie
 
@@ -68,6 +69,7 @@ class AuthenticationCallback(object):
         type, user_pass = arr
         try:
             user_name, password = base64.decodestring(user_pass).split(':', 1)
+            password = util.ProtectedString(password)
             return (user_name, password)
         except:
             raise errors.AuthHeaderError

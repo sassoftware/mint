@@ -73,5 +73,5 @@ class ProductSearchResultList(Model):
 class AuthInfo(Model):
     authType = fields.CharField()
     username = fields.CharField()
-    password = fields.CharField()
+    password = fields.ProtectedField()
     entitlement = fields.CharField()

@@ -8,6 +8,8 @@ import re
 import sys
 import time
 
+from conary.lib import util
+
 from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
@@ -106,12 +108,13 @@ class MintApp(WebHandler):
 
         # default to anonToken if the current session has no authToken
         self.authToken = self.session.get('authToken', anonToken)
+        self.authToken = (self.authToken[0], util.ProtectedString(self.authToken[1]))
 
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken,
                 self.db)
         self.auth = self.client.checkAuth()
-
+        
         if not self.auth.admin and pathInfo not in (
                 '/maintenance/', '/processLogin/', '/logout/',
                 '/validateSession/', '/continueLogin/', '/continueLogout/'):

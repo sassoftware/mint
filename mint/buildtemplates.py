@@ -205,6 +205,10 @@ class amiHugeDiskMountpoint(StringOption):
     default = ''
     prompt  = 'Mountpoint for scratch space (/dev/sda2) on AMI'
 
+class platformName(StringOption):
+    default = ''
+    prompt = 'platform-name'
+
 ###
 # Templates
 # classes must end with 'Template' to be properly processed.
@@ -227,13 +231,13 @@ class RawFsTemplate(Template):
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking',
-                 'diskAdapter', 'vmSnapshots', 'buildOVF10']
+                 'diskAdapter', 'vmSnapshots', 'buildOVF10', 'platformName']
     id = buildtypes.VMWARE_IMAGE
 
 class VmwareESXImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
                  'installLabelPath', 'swapSize', 'natNetworking',
-                 'vmSnapshots', 'buildOVF10']
+                 'vmSnapshots', 'buildOVF10', 'platformName']
     id = buildtypes.VMWARE_ESX_IMAGE
 
 class VmwareOvfImageTemplate(Template):

@@ -431,11 +431,11 @@ class Platforms(object):
         platform = self.getById(platformId)
         host = platform.label.split('@')[:1][0]
         repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
-        uri = platformLoad.uri
+        uri = platformLoad.uri.encode('utf-8')
         headers = {}
         fd, outFilePath = tempfile.mkstemp('.ccs', 'platform-load-')
 
-        finder = lookaside.FileFinder(None, None)
+        finder = lookaside.FileFinder(None, None, cfg = self.cfg)
         inFile = finder._fetchUrl(uri, headers)
 
         if not inFile:

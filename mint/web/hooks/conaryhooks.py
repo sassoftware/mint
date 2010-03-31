@@ -29,6 +29,7 @@ from conary import errors as cerrors
 from conary.web import webauth
 from conary import dbstore, conarycfg
 from conary.dbstore import sqlerrors
+from conary.lib import util
 from conary.repository import shimclient, transport
 from conary.repository.netrepos import proxy
 from conary.repository.netrepos import netserver
@@ -367,6 +368,8 @@ def conaryHandler(context):
         # don't require signatures for the internal user (this would break
         # group builder)
         requireSigs = False
+    if auth[1]:
+        auth[1] = util.ProtectedString(auth[1])
 
     paths = normPath(req.uri).split("/")
     fqdn = hostName = None

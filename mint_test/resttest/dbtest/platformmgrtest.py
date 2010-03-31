@@ -134,6 +134,54 @@ class PlatformManagerTest(restbase.BaseRestTest):
         # assert productId matches the product we created
         self.assertEquals(plat['projectId'], productId)
 
+    def testLoadPlatformProxy(self):
+        # CNY-6002: make sure the whole config is passed to lookaside.FileFinder
+        p = self._getPlatform()
+        productId = self._getProductId()
+
+        mirrorId = self.db.db.inboundMirrors.new(
+                targetProjectId=productId,
+                sourceLabels = 'label',
+                sourceUrl = 'url', 
+                sourceAuthType='entitlement',
+                sourceUsername = 'username',
+                sourcePassword = 'password',
+                sourceEntitlement = 'entitlement',
+                mirrorOrder = 0, allLabels = 1)
+
+        p2 = self.db.updatePlatform(p.platformId, p)
+        plat = self.db.db.platforms.get(p.platformId)
+
+        platformLoad = mock.MockObject()
+        uri = mock.MockObject()
+        uri.encode._mock.setDefaultReturn(u'http://no.such.host/1234')
+        platformLoad._mock.set(uri = uri)
+
+        from conary.build import lookaside
+        lookasideClass = mock.MockObject()
+        lookasideObj = mock.MockObject()
+        lookasideClass._mock.setDefaultReturn(lookasideObj)
+        self.mock(lookaside, 'FileFinder', lookasideClass)
+
+        # We could work harder and return a real changeset here, but for the
+        # purposes of this test, an exception is fine
+        lookasideObj._fetchUrl._mock.setDefaultReturn(None)
+
+        # Set a proxy
+        self.db.platformMgr.cfg.proxy = dict(http = "httpProxy",
+            https = "httpsProxy")
+        err = self.failUnlessRaises(errors.PlatformLoadFileNotFound,
+            self.db.platformMgr.platforms.load, p.platformId, platformLoad)
+        called = lookasideClass._mock.popCall()
+        self.failUnlessEqual(called,
+            ((None, None), (('cfg', self.db.platformMgr.cfg), )))
+
+        called = lookasideObj._fetchUrl._mock.popCall()
+        self.failUnlessEqual(called,
+            (('http://no.such.host/1234', {}), ()))
+        # And make sure it's unicode
+        self.failUnless(isinstance(called[0][0], unicode))
+
     def testCreateDuplicatePlatform(self):
         p = self._getPlatform()
         p.platformId = 1
