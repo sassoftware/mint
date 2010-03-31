@@ -6,6 +6,8 @@
 import cPickle
 import time
 
+from conary.lib import util
+
 from mint.lib.database import DatabaseTable
 
 class SessionsTable(DatabaseTable):
@@ -18,11 +20,20 @@ class SessionsTable(DatabaseTable):
         cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
         r = cu.fetchone()
         if r:
-            return cPickle.loads(r[0])
+            data = cPickle.loads(r[0])
+            if '_data' in data:
+                if 'authToken' in data['_data']:
+                    data['_data']['authToken'] = (data['_data']['authToken'][0],
+                            util.ProtectedString(data['_data']['authToken'][1]))
+            return data
         else:
             return False
 
     def save(self, sid, data):
+        if '_data' in data:
+            if 'authToken' in data['_data']:
+                data['_data']['authToken'] = (data['_data']['authToken'][0],
+                        util.ProtectedString(data['_data']['authToken'][1]))
         cu = self.db.cursor()
         cu.execute("SELECT sessIdx FROM Sessions WHERE sid=?", sid)
         r = cu.fetchone()
