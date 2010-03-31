@@ -25,6 +25,7 @@ static_files =				\
 	mirror-outbound			\
 	rbuilder-database		\
 	refresh-auth			\
+	rmake-reset			\
 	rmake-setup			\
 	rss-update			\
 	update-bulletin			\
