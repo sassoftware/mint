@@ -994,60 +994,68 @@ def _createInventory(db):
     cu = db.cursor()
     changed = False
 
-    if 'systems' not in db.tables:
+    if 'ManagedSystems' not in db.tables:
         cu.execute("""
-            CREATE TABLE systems 
+            CREATE TABLE ManagedSystems 
             (
-                systemId %(PRIMARYKEY)s,
-                targetSystemId varchar(128),
-                targetId integer
-                    REFERENCES Targets,
+                managedSystemId %(PRIMARYKEY)s,
                 versionTimeStamp numeric(14,3)
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['systems'] = []
+        db.tables['ManagedSystems'] = []
         changed = True
-    changed |= db.createIndex('systems', 'systemstargetsystemid_idx',
-            'targetSystemId', unique=False)
-    changed |= db.createIndex('systems', 'systemstargetid_idx',
-            'targetId', unique=False)
 
-    if 'versions' not in db.tables:
+    if 'SystemsTargets' not in db.tables:
         cu.execute("""
-            CREATE TABLE versions 
+            CREATE TABLE SystemsTargets 
+            (
+                managedSystemId integer NOT NULL
+                    REFERENCES ManagedSystems,
+                targetId integer NOT NULL
+                    REFERENCES Targets,
+                targetSystemId varchar(128)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['SystemsTargets'] = []
+        changed = True
+    changed |= db.createIndex('SystemsTargets', 'systemstargets_uq',
+            'managedSystemId,targetId', unique=True)
+
+    if 'Versions' not in db.tables:
+        cu.execute("""
+            CREATE TABLE Versions 
             (
                 versionId %(PRIMARYKEY)s,
                 version varchar(255) NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['versions'] = []
+        db.tables['Versions'] = []
         changed = True
 
-    if 'systemversions' not in db.tables:
+    if 'SystemVersions' not in db.tables:
         cu.execute("""
-            CREATE TABLE systemversions 
+            CREATE TABLE SystemVersions 
             (
-                systemId integer NOT NULL
-                    REFERENCES systems,
+                managedSystemId integer NOT NULL
+                    REFERENCES ManagedSystems,
                 versionId integer NOT NULL
-                    REFERENCES versions
+                    REFERENCES Versions
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['systemversions'] = []
+        db.tables['SystemVersions'] = []
         changed = True
-    changed |= db.createIndex('systemversions', 'systemversions_uq',
-            'systemId,versionId', unique=True)
+    changed |= db.createIndex('SystemVersions', 'systemversions_uq',
+            'managedSystemId,versionId', unique=True)
 
-    if 'systemdata' not in db.tables:
+    if 'SystemData' not in db.tables:
         cu.execute("""
-            CREATE TABLE systemdata 
+            CREATE TABLE SystemData 
             (
-                systemId integer                    NOT NULL
-                    REFERENCES systems ON DELETE CASCADE, 
+                managedSystemId integer                    NOT NULL
+                    REFERENCES ManagedSystems ON DELETE CASCADE, 
                 name                varchar(32)     NOT NULL, 
                 value               text            NOT NULL,
                 dataType            smallint        NOT NULL,
 
-                PRIMARY KEY (systemId, name)
+                PRIMARY KEY (managedSystemId, name)
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['systemdata'] = []
+        db.tables['SystemData'] = []
         changed = True
 
     return changed

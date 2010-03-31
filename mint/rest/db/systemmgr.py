@@ -15,5 +15,5 @@ class SystemManager(manager.Manager):
 
     def addSystem(self, targetSystemId, cloudName, cloudType):
         targetId = self.db.targetMgr.getTargetId(cloudType, cloudName)
-        return self.db.db.systems.new(targetSystemId=targetSystemId, 
+        return self.db.db.managedSystems.new(targetSystemId=targetSystemId, 
                 targetId=targetId)

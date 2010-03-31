@@ -18,10 +18,8 @@ from mint.lib import database
 dbReader = database.dbReader
 dbWriter = database.dbWriter
 
-class SystemsTable(database.KeyedTable):
-    name = 'systems'
-    key = 'systemId'
-    fields = [ 'systemId',
-               'targetSystemId',
-               'targetId',
+class ManagedSystemsTable(database.KeyedTable):
+    name = 'managedSystems'
+    key = 'managedSystemId'
+    fields = [ 'managedSystemId',
                'versionTimeStamp' ]
