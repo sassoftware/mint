@@ -1,10 +1,23 @@
-from mint.django_rest import logger
-from mint.django_rest.rbuilder import auth
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# All Rights Reserved
+#
 
 from django.contrib.auth import authenticate
 from django.http import HttpResponseBadRequest
 
-class MethodRequestMiddleware:
+from mint import config
+from mint.django_rest import logger
+from mint.django_rest.rbuilder import auth
+
+class ExceptionLoggerMiddleware(object):
+
+    def process_exception(self, request, exception):
+        logger.exception(exception)
+        return None
+
+class MethodRequestMiddleware(object):
     
     def process_request(self, request):
         # Was a '_method' directive in the query request
@@ -22,14 +35,25 @@ class MethodRequestMiddleware:
                     HttpResponseBadRequest('INVALID METHOD TYPE: %s' \
                     % request_method)
                 return response
-        # Mark the request as from an admin
+
+        return None
+
+class IsAdminMiddleware(object):
+
+    def process_request(self, request):
+         # Mark the request as from an admin
         request._is_admin = False        
         username, password = auth.getAuth(request)
         if username:
             user = authenticate(username = username, password = password)
             request._is_admin = auth.isAdmin(user)
         return None
+       
+class MintConfigMiddleware(object):
 
-    def process_exception(self, request, exception):
-        logger.exception(exception)
+    def process_request(self, request):
+        cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
+        cfg = config.getConfig(cfgPath)
+        request.cfg = cfg
+
         return None

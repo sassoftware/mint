@@ -61,6 +61,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'mint.django_rest.middleware.MethodRequestMiddleware',
+    'mint.django_rest.middleware.IsAdminMiddleware',
+    'mint.django_rest.middleware.MintConfigMiddleware',
+    'mint.django_rest.middleware.ExceptionLoggerMiddleware',
 )
 
 USE_ETAGS=True
@@ -80,6 +83,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'mint.django_rest.rbuilder',
     'mint.django_rest.rbuilder.reporting',
+    'mint.django_rest.rbuilder.inventory'
 )
 
 AUTHENTICATION_BACKENDS = (
