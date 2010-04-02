@@ -13,9 +13,10 @@ from mint.django_rest.rbuilder.inventory import systemmgr
 class InventoryService(resource.Resource):
 
     def read(self, request):
+        raise Exception('blah')
         sysMgr = systemmgr.SystemManager(request.cfg)
     
-    @requires('system', models.System)
+    @requires('system', models.Systems)
     def create(self, request):
         sysMgr = systemmgr.SystemManager(request.cfg)
         # return systemmgr.SystemManager.addSystem()

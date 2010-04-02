@@ -17,7 +17,7 @@ class ExceptionLoggerMiddleware(object):
         logger.exception(exception)
         return None
 
-class MethodRequestMiddleware(object):
+class SetMethodRequestMiddleware(object):
     
     def process_request(self, request):
         # Was a '_method' directive in the query request
@@ -38,7 +38,7 @@ class MethodRequestMiddleware(object):
 
         return None
 
-class IsAdminMiddleware(object):
+class SetMintAdminMiddleware(object):
 
     def process_request(self, request):
          # Mark the request as from an admin
@@ -49,7 +49,7 @@ class IsAdminMiddleware(object):
             request._is_admin = auth.isAdmin(user)
         return None
        
-class MintConfigMiddleware(object):
+class SetMintConfigMiddleware(object):
 
     def process_request(self, request):
         cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)

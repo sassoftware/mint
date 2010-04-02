@@ -19,7 +19,6 @@ class RbuilderDjangoManager(object):
 class SystemManager(RbuilderDjangoManager):
 
     def addSystem(self, targetSystemId, cloudName, cloudType):
-        import epdb; epdb.serve()  
         targetId = self.db.targetMgr.getTargetId(cloudType, cloudName)
         managedSystemId = self.db.db.managedSystems.new(created=time.time())
         return self.db.db.systemsTargets.new(managedSystemId=managedSystemId,

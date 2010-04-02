@@ -8,11 +8,8 @@ import sys
 import datetime
 from xml.dom import minidom
 
-
 from django import http
 from django_restapi import resource
-
-from rreg.registration import models
 
 def requires(modelName, modelClass):
     """
