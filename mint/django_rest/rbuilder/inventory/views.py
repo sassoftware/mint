@@ -9,15 +9,15 @@ from django_restapi import resource
 
 from mint.django_rest.deco import requires
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.inventory import systemmgr
+from mint.django_rest.rbuilder.inventory import systemdbmgr
 
 MANAGER_CLASS = systemdbmgr.SystemDBManager
 
-class InventoryService(resouce.Resource):
+class InventoryService(resource.Resource):
 
     def __init__(self):
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
-        return resource.Resource(self, permitted_methods=permitted_methods)
+        resource.Resource.__init__(self, permitted_methods=permitted_methods)
 
     def __call__(self, request, *args, **kw):
         self.sysMgr = MANAGER_CLASS(request.cfg)
@@ -26,10 +26,11 @@ class InventoryService(resouce.Resource):
 class InventorySystemsService(InventoryService):
 
     def read(self, request):
-        self.sysMgr.getSystem()
-        return HttpResponse()
+        systems = self.sysMgr.getSystems()
+        resp = [str((s.id, s.registrationDate)) for s in systems]
+        return HttpResponse(str(resp))
     
-    @requires('system', models.Systems)
+    @requires('system', models.ManagedSystems)
     def create(self, request, system):
         return self.sysMgr.registerSystem(system)
 
