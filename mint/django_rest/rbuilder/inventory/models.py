@@ -6,40 +6,55 @@
 
 from django.db import models
 
-from xml_1_0 import system
+from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.inventory.xml_1_0 import system
 
-class Systems(models.Model):
+class ManagedSystems(models.Model):
     parser = system.systemTypeSub
+    managedSystemId = models.IntegerField(primary_key=True)
     registrationDate = models.DateTimeField('Registration Date')
-    generatedUUID = models.CharField(max_length=64)
-    localUUID = models.CharField(max_length=64)
+    generatedUUID = models.CharField(max_length=64, null=True)
+    localUUID = models.CharField(max_length=64, null=True)
+    sslClientCertificate = models.CharField(max_length=8092, null=True)
+    sslClientKey = models.CharField(max_length=8092, null=True)
+    sslServerCertificate = models.CharField(max_length=8092, null=True)
+
+class SystemsTargets(models.Model):
+    managedSystemId = models.ForeignKey(ManagedSystems)
+    targetId = models.ForeignKey(rbuildermodels.Targets)
+
+class SoftwareVersions(models.Model):
+    softwareVersionId = models.IntegerField(primary_key=True)
+    softwareVersion = models.CharField(max_length=256, null=True)
+
+class SystemsSoftwareVersions(models.Model):
+    managedSystemId = models.ForeignKey(ManagedSystems)
+    softwareVersionId = models.ForeignKey(SoftwareVersions)
+
+class SystemInformation(models.Model):
+    managedSystemId = models.ForeignKey(ManagedSystems)
     systemName = models.CharField(max_length=64, null=True)
     memory = models.IntegerField(null=True)
     osType = models.CharField(max_length=64, null=True)
     osMajorVersion = models.CharField(max_length=32, null=True)
-    topLevelGroup = models.CharField(max_length=64, null=True)
     osMinorVersion = models.CharField(max_length=32, null=True)
-    flavor = models.CharField(max_length=32, null=True)
     systemType = models.CharField(max_length=32, null=True)
-    sslClientCertificate = models.CharField(max_length=8092)
-    sslClientKey = models.CharField(max_length=8092)
-    sslServerCertificate = models.CharField(max_length=8092)
 
 class NetworkInformation(models.Model):
-    systemsId = models.ForeignKey(Systems)
+    managedSystemId = models.ForeignKey(ManagedSystems)
     interfaceName = models.CharField(max_length=32, null=True)
     ipAddress = models.CharField(max_length=15, null=True)
     netmask = models.CharField(max_length=20, null=True)
     portType = models.CharField(max_length=32, null=True)
 
 class StorageVolumes(models.Model):
-    systemsId = models.ForeignKey(Systems)
+    managedSystemId = models.ForeignKey(ManagedSystems)
     size = models.IntegerField(null=True)
     storageType = models.CharField(max_length=32, null=True)
     storageName = models.CharField(max_length=32, null=True)
 
 class CPUs(models.Model):
-    systemsId = models.ForeignKey(Systems)
+    managedSystemId = models.ForeignKey(ManagedSystems)
     cpuType = models.CharField(max_length=64, null=True)
     cpuCount = models.IntegerField(null=True)
     cores = models.IntegerField(null=True)

@@ -28,5 +28,5 @@ urlpatterns = patterns('',
 
     url(r'^api/reports/(.*?)/?$', views.ReportView()),
 
-    url(r'^api/inventory/$', inventoryviews.InventoryService()),
+    url(r'^api/inventory/systems/$', inventoryviews.InventorySystemsService()),
 )

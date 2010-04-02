@@ -61,17 +61,11 @@ class TableCache(object):
         self.communityIds = communityids.CommunityIdsTable(db)
         self.productVersions = projects.ProductVersionsTable(db, cfg)
 
-        self.targets = targets.TargetsTable(db)
-        self.targetData = targets.TargetDataTable(db)
-
         self.platforms = platforms.PlatformsTable(db, cfg)
         self.platformSources = platforms.PlatformSourcesTable(db, cfg)
         self.platformSourceData = platforms.PlatformSourceDataTable(db)
         self.platformsPlatformSources = platforms.PlatformsPlatformSourcesTable(db)
         self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
-
-        self.managedSystems = systems.ManagedSystemsTable(db)
-        self.systemsTargets = systems.SystemsTargetsTable(db)
 
         self.users.confirm_table.db = db
         self.newsCache.ageTable.db = db
@@ -133,11 +127,6 @@ class Database(object):
         self.platformSourceData = tables.platformSourceData
         self.platformsPlatformSources = tables.platformsPlatformSources
         self.platformsContentSourceTypes = tables.platformsContentSourceTypes
-        self.managedSystems = tables.managedSystems
-        self.systemsTargets = tables.systemsTargets
-
-        self.targets = tables.targets
-        self.targetData = tables.targetData
 
     @property
     def db(self):

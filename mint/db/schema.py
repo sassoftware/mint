@@ -990,76 +990,6 @@ def _createRepositoryLogSchema(db):
 
     return changed
 
-def _createInventory(db):
-    cu = db.cursor()
-    changed = False
-
-    if 'ManagedSystems' not in db.tables:
-        cu.execute("""
-            CREATE TABLE ManagedSystems 
-            (
-                managedSystemId %(PRIMARYKEY)s,
-                versionTimeStamp numeric(14,3),
-                created numeric(14,3)
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['ManagedSystems'] = []
-        changed = True
-
-    if 'SystemsTargets' not in db.tables:
-        cu.execute("""
-            CREATE TABLE SystemsTargets 
-            (
-                managedSystemId integer NOT NULL
-                    REFERENCES ManagedSystems,
-                targetId integer NOT NULL
-                    REFERENCES Targets,
-                targetSystemId varchar(128)
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['SystemsTargets'] = []
-        changed = True
-    changed |= db.createIndex('SystemsTargets', 'systemstargets_uq',
-            'managedSystemId,targetId', unique=True)
-
-    if 'Versions' not in db.tables:
-        cu.execute("""
-            CREATE TABLE Versions 
-            (
-                versionId %(PRIMARYKEY)s,
-                version varchar(255) NOT NULL
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['Versions'] = []
-        changed = True
-
-    if 'SystemVersions' not in db.tables:
-        cu.execute("""
-            CREATE TABLE SystemVersions 
-            (
-                managedSystemId integer NOT NULL
-                    REFERENCES ManagedSystems,
-                versionId integer NOT NULL
-                    REFERENCES Versions
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['SystemVersions'] = []
-        changed = True
-    changed |= db.createIndex('SystemVersions', 'systemversions_uq',
-            'managedSystemId,versionId', unique=True)
-
-    if 'SystemData' not in db.tables:
-        cu.execute("""
-            CREATE TABLE SystemData 
-            (
-                managedSystemId integer                    NOT NULL
-                    REFERENCES ManagedSystems ON DELETE CASCADE, 
-                name                varchar(32)     NOT NULL, 
-                value               text            NOT NULL,
-                dataType            smallint        NOT NULL,
-
-                PRIMARY KEY (managedSystemId, name)
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['SystemData'] = []
-        changed = True
-
-    return changed
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
@@ -1088,7 +1018,6 @@ def createSchema(db, doCommit=True):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
-    changed |= _createInventorySchema(db)
 
     if doCommit:
         db.commit()
