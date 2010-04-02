@@ -32,4 +32,7 @@ class InventorySystemsService(InventoryService):
     @requires('system', models.Systems)
     def create(self, request, system):
         return self.sysMgr.registerSystem(system)
+
+    def register(self, instanceId, targetType, targetName):
+        return self.sysMgr.registerSystem(instanceId, targetType, targetName)
         
