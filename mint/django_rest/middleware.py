@@ -52,8 +52,9 @@ class SetMintAdminMiddleware(object):
 class SetMintConfigMiddleware(object):
 
     def process_request(self, request):
-        cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
-        cfg = config.getConfig(cfgPath)
-        request.cfg = cfg
+        if hasattr(request, '_req'):
+            cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
+            cfg = config.getConfig(cfgPath)
+            request.cfg = cfg
 
         return None
