@@ -170,8 +170,10 @@ class BuildsTable(database.KeyedTable):
             extraWhere = ''
 
             # Extra selects:
-            # add in awsAccount if it exists.
-            extraSelect = ''', subq.creds AS awsCredentials,
+            # awsCredentials cannot be a single -
+            # We use it to mark that we did not have credentials set for this
+            # EC2 target (as opposed to None for non-ec2 targets)
+            extraSelect = ''', COALESCE(subq.creds, '-') AS awsCredentials,
                              bd.value AS amiId'''
             extraJoin += ''' LEFT OUTER JOIN
                              (SELECT tuc.userId AS userId,
@@ -257,11 +259,13 @@ class BuildsTable(database.KeyedTable):
             for key in keys:
                 value = row.pop(key, None)
                 if key == 'awsCredentials':
-                    if value is None:
+                    if value == '-':
                         value = 'Unknown'
-                    else:
+                    elif value:
                         value = data.unmarshalTargetUserCredentials(value)
                         value = value.get('accountId')
+                    # Keep the old interface for getAllBuildsByType
+                    key = 'awsAccountNumber'
                 if value is not None:
                     outRow[key] = value
             assert not row.fields
