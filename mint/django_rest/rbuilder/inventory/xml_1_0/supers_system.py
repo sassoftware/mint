@@ -195,45 +195,29 @@ def _cast(typ, value):
 # Data representation classes.
 #
 
-class systemType(GeneratedsSuper):
+class managedSystemType(GeneratedsSuper):
     member_data_items_ = [
         MemberSpec_('generatedUUID', ['string64', 'xsd:token'], 0),
         MemberSpec_('localUUID', ['string64', 'xsd:token'], 0),
-        MemberSpec_('registrationDate', 'xsd:dateTime', 0),
-        MemberSpec_('systemName', ['string64', 'xsd:token'], 0),
-        MemberSpec_('memory', 'xsd:positiveInteger', 0),
-        MemberSpec_('osType', ['string64', 'xsd:token'], 0),
-        MemberSpec_('osMajorVersion', ['string64', 'xsd:token'], 0),
-        MemberSpec_('osMinorVersion', ['string32', 'xsd:token'], 0),
-        MemberSpec_('topLevelGroup', ['string64', 'xsd:token'], 0),
-        MemberSpec_('flavor', ['string32', 'xsd:token'], 0),
-        MemberSpec_('systemType', ['string32', 'xsd:token'], 0),
+        MemberSpec_('registrationDate', 'xsd:string', 0),
         MemberSpec_('sslClientCertificate', ['string8092', 'xsd:token'], 0),
         MemberSpec_('sslClientKey', ['string8092', 'xsd:token'], 0),
         MemberSpec_('sslServerCertificate', ['string8092', 'xsd:token'], 0),
         ]
     subclass = None
     superclass = None
-    def __init__(self, generatedUUID=None, localUUID=None, registrationDate=None, systemName=None, memory=None, osType=None, osMajorVersion=None, osMinorVersion=None, topLevelGroup=None, flavor=None, systemType=None, sslClientCertificate=None, sslClientKey=None, sslServerCertificate=None):
+    def __init__(self, generatedUUID=None, localUUID=None, registrationDate=None, sslClientCertificate=None, sslClientKey=None, sslServerCertificate=None):
         self.generatedUUID = generatedUUID
         self.localUUID = localUUID
         self.registrationDate = registrationDate
-        self.systemName = systemName
-        self.memory = memory
-        self.osType = osType
-        self.osMajorVersion = osMajorVersion
-        self.osMinorVersion = osMinorVersion
-        self.topLevelGroup = topLevelGroup
-        self.flavor = flavor
-        self.systemType = systemType
         self.sslClientCertificate = sslClientCertificate
         self.sslClientKey = sslClientKey
         self.sslServerCertificate = sslServerCertificate
     def factory(*args_, **kwargs_):
-        if systemType.subclass:
-            return systemType.subclass(*args_, **kwargs_)
+        if managedSystemType.subclass:
+            return managedSystemType.subclass(*args_, **kwargs_)
         else:
-            return systemType(*args_, **kwargs_)
+            return managedSystemType(*args_, **kwargs_)
     factory = staticmethod(factory)
     def get_generatedUUID(self): return self.generatedUUID
     def set_generatedUUID(self, generatedUUID): self.generatedUUID = generatedUUID
@@ -247,43 +231,6 @@ class systemType(GeneratedsSuper):
         pass
     def get_registrationDate(self): return self.registrationDate
     def set_registrationDate(self, registrationDate): self.registrationDate = registrationDate
-    def get_systemName(self): return self.systemName
-    def set_systemName(self, systemName): self.systemName = systemName
-    def validate_systemName(self, value):
-        # validate type systemName
-        pass
-    def get_memory(self): return self.memory
-    def set_memory(self, memory): self.memory = memory
-    def get_osType(self): return self.osType
-    def set_osType(self, osType): self.osType = osType
-    def validate_osType(self, value):
-        # validate type osType
-        pass
-    def get_osMajorVersion(self): return self.osMajorVersion
-    def set_osMajorVersion(self, osMajorVersion): self.osMajorVersion = osMajorVersion
-    def validate_osMajorVersion(self, value):
-        # validate type osMajorVersion
-        pass
-    def get_osMinorVersion(self): return self.osMinorVersion
-    def set_osMinorVersion(self, osMinorVersion): self.osMinorVersion = osMinorVersion
-    def validate_osMinorVersion(self, value):
-        # validate type osMinorVersion
-        pass
-    def get_topLevelGroup(self): return self.topLevelGroup
-    def set_topLevelGroup(self, topLevelGroup): self.topLevelGroup = topLevelGroup
-    def validate_topLevelGroup(self, value):
-        # validate type topLevelGroup
-        pass
-    def get_flavor(self): return self.flavor
-    def set_flavor(self, flavor): self.flavor = flavor
-    def validate_flavor(self, value):
-        # validate type flavor
-        pass
-    def get_systemType(self): return self.systemType
-    def set_systemType(self, systemType): self.systemType = systemType
-    def validate_systemType(self, value):
-        # validate type systemType
-        pass
     def get_sslClientCertificate(self): return self.sslClientCertificate
     def set_sslClientCertificate(self, sslClientCertificate): self.sslClientCertificate = sslClientCertificate
     def validate_sslClientCertificate(self, value):
@@ -299,10 +246,10 @@ class systemType(GeneratedsSuper):
     def validate_sslServerCertificate(self, value):
         # validate type sslServerCertificate
         pass
-    def export(self, outfile, level, namespace_='inv:', name_='systemType', namespacedef_=''):
+    def export(self, outfile, level, namespace_='inv:', name_='managedSystemType', namespacedef_=''):
         showIndent(outfile, level)
         outfile.write('<%s%s%s' % (namespace_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
-        self.exportAttributes(outfile, level, namespace_, name_='systemType')
+        self.exportAttributes(outfile, level, namespace_, name_='managedSystemType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -310,9 +257,9 @@ class systemType(GeneratedsSuper):
             outfile.write('</%s%s>\n' % (namespace_, name_))
         else:
             outfile.write('/>\n')
-    def exportAttributes(self, outfile, level, namespace_='inv:', name_='systemType'):
+    def exportAttributes(self, outfile, level, namespace_='inv:', name_='managedSystemType'):
         pass
-    def exportChildren(self, outfile, level, namespace_='inv:', name_='systemType'):
+    def exportChildren(self, outfile, level, namespace_='inv:', name_='managedSystemType'):
         if self.generatedUUID is not None:
             showIndent(outfile, level)
             outfile.write('<%sgeneratedUUID>%s</%sgeneratedUUID>\n' % (namespace_, self.format_string(quote_xml(self.generatedUUID).encode(ExternalEncoding), input_name='generatedUUID'), namespace_))
@@ -322,30 +269,6 @@ class systemType(GeneratedsSuper):
         if self.registrationDate is not None:
             showIndent(outfile, level)
             outfile.write('<%sregistrationDate>%s</%sregistrationDate>\n' % (namespace_, self.format_string(quote_xml(self.registrationDate).encode(ExternalEncoding), input_name='registrationDate'), namespace_))
-        if self.systemName is not None:
-            showIndent(outfile, level)
-            outfile.write('<%ssystemName>%s</%ssystemName>\n' % (namespace_, self.format_string(quote_xml(self.systemName).encode(ExternalEncoding), input_name='systemName'), namespace_))
-        if self.memory is not None:
-            showIndent(outfile, level)
-            outfile.write('<%smemory>%s</%smemory>\n' % (namespace_, self.format_integer(self.memory, input_name='memory'), namespace_))
-        if self.osType is not None:
-            showIndent(outfile, level)
-            outfile.write('<%sosType>%s</%sosType>\n' % (namespace_, self.format_string(quote_xml(self.osType).encode(ExternalEncoding), input_name='osType'), namespace_))
-        if self.osMajorVersion is not None:
-            showIndent(outfile, level)
-            outfile.write('<%sosMajorVersion>%s</%sosMajorVersion>\n' % (namespace_, self.format_string(quote_xml(self.osMajorVersion).encode(ExternalEncoding), input_name='osMajorVersion'), namespace_))
-        if self.osMinorVersion is not None:
-            showIndent(outfile, level)
-            outfile.write('<%sosMinorVersion>%s</%sosMinorVersion>\n' % (namespace_, self.format_string(quote_xml(self.osMinorVersion).encode(ExternalEncoding), input_name='osMinorVersion'), namespace_))
-        if self.topLevelGroup is not None:
-            showIndent(outfile, level)
-            outfile.write('<%stopLevelGroup>%s</%stopLevelGroup>\n' % (namespace_, self.format_string(quote_xml(self.topLevelGroup).encode(ExternalEncoding), input_name='topLevelGroup'), namespace_))
-        if self.flavor is not None:
-            showIndent(outfile, level)
-            outfile.write('<%sflavor>%s</%sflavor>\n' % (namespace_, self.format_string(quote_xml(self.flavor).encode(ExternalEncoding), input_name='flavor'), namespace_))
-        if self.systemType is not None:
-            showIndent(outfile, level)
-            outfile.write('<%ssystemType>%s</%ssystemType>\n' % (namespace_, self.format_string(quote_xml(self.systemType).encode(ExternalEncoding), input_name='systemType'), namespace_))
         if self.sslClientCertificate is not None:
             showIndent(outfile, level)
             outfile.write('<%ssslClientCertificate>%s</%ssslClientCertificate>\n' % (namespace_, self.format_string(quote_xml(self.sslClientCertificate).encode(ExternalEncoding), input_name='sslClientCertificate'), namespace_))
@@ -360,14 +283,6 @@ class systemType(GeneratedsSuper):
             self.generatedUUID is not None or
             self.localUUID is not None or
             self.registrationDate is not None or
-            self.systemName is not None or
-            self.memory is not None or
-            self.osType is not None or
-            self.osMajorVersion is not None or
-            self.osMinorVersion is not None or
-            self.topLevelGroup is not None or
-            self.flavor is not None or
-            self.systemType is not None or
             self.sslClientCertificate is not None or
             self.sslClientKey is not None or
             self.sslServerCertificate is not None
@@ -375,7 +290,7 @@ class systemType(GeneratedsSuper):
             return True
         else:
             return False
-    def exportLiteral(self, outfile, level, name_='systemType'):
+    def exportLiteral(self, outfile, level, name_='managedSystemType'):
         level += 1
         self.exportLiteralAttributes(outfile, level, name_)
         if self.hasContent_():
@@ -392,30 +307,6 @@ class systemType(GeneratedsSuper):
         if self.registrationDate is not None:
             showIndent(outfile, level)
             outfile.write('registrationDate=%s,\n' % quote_python(self.registrationDate).encode(ExternalEncoding))
-        if self.systemName is not None:
-            showIndent(outfile, level)
-            outfile.write('systemName=%s,\n' % quote_python(self.systemName).encode(ExternalEncoding))
-        if self.memory is not None:
-            showIndent(outfile, level)
-            outfile.write('memory=%d,\n' % self.memory)
-        if self.osType is not None:
-            showIndent(outfile, level)
-            outfile.write('osType=%s,\n' % quote_python(self.osType).encode(ExternalEncoding))
-        if self.osMajorVersion is not None:
-            showIndent(outfile, level)
-            outfile.write('osMajorVersion=%s,\n' % quote_python(self.osMajorVersion).encode(ExternalEncoding))
-        if self.osMinorVersion is not None:
-            showIndent(outfile, level)
-            outfile.write('osMinorVersion=%s,\n' % quote_python(self.osMinorVersion).encode(ExternalEncoding))
-        if self.topLevelGroup is not None:
-            showIndent(outfile, level)
-            outfile.write('topLevelGroup=%s,\n' % quote_python(self.topLevelGroup).encode(ExternalEncoding))
-        if self.flavor is not None:
-            showIndent(outfile, level)
-            outfile.write('flavor=%s,\n' % quote_python(self.flavor).encode(ExternalEncoding))
-        if self.systemType is not None:
-            showIndent(outfile, level)
-            outfile.write('systemType=%s,\n' % quote_python(self.systemType).encode(ExternalEncoding))
         if self.sslClientCertificate is not None:
             showIndent(outfile, level)
             outfile.write('sslClientCertificate=%s,\n' % quote_python(self.sslClientCertificate).encode(ExternalEncoding))
@@ -455,6 +346,160 @@ class systemType(GeneratedsSuper):
                 registrationDate_ += text__content_.nodeValue
             self.registrationDate = registrationDate_
         elif child_.nodeType == Node.ELEMENT_NODE and \
+            nodeName_ == 'sslClientCertificate':
+            sslClientCertificate_ = ''
+            for text__content_ in child_.childNodes:
+                sslClientCertificate_ += text__content_.nodeValue
+            self.sslClientCertificate = sslClientCertificate_
+            self.validate_sslClientCertificate(self.sslClientCertificate)    # validate type sslClientCertificate
+        elif child_.nodeType == Node.ELEMENT_NODE and \
+            nodeName_ == 'sslClientKey':
+            sslClientKey_ = ''
+            for text__content_ in child_.childNodes:
+                sslClientKey_ += text__content_.nodeValue
+            self.sslClientKey = sslClientKey_
+            self.validate_sslClientKey(self.sslClientKey)    # validate type sslClientKey
+        elif child_.nodeType == Node.ELEMENT_NODE and \
+            nodeName_ == 'sslServerCertificate':
+            sslServerCertificate_ = ''
+            for text__content_ in child_.childNodes:
+                sslServerCertificate_ += text__content_.nodeValue
+            self.sslServerCertificate = sslServerCertificate_
+            self.validate_sslServerCertificate(self.sslServerCertificate)    # validate type sslServerCertificate
+# end class managedSystemType
+
+
+class systemInformationType(GeneratedsSuper):
+    member_data_items_ = [
+        MemberSpec_('systemName', ['string64', 'xsd:token'], 0),
+        MemberSpec_('memory', 'xsd:string', 0),
+        MemberSpec_('osType', ['string64', 'xsd:token'], 0),
+        MemberSpec_('osMajorVersion', ['string64', 'xsd:token'], 0),
+        MemberSpec_('osMinorVersion', ['string32', 'xsd:token'], 0),
+        MemberSpec_('systemType', ['string32', 'xsd:token'], 0),
+        ]
+    subclass = None
+    superclass = None
+    def __init__(self, systemName=None, memory=None, osType=None, osMajorVersion=None, osMinorVersion=None, systemType=None):
+        self.systemName = systemName
+        self.memory = memory
+        self.osType = osType
+        self.osMajorVersion = osMajorVersion
+        self.osMinorVersion = osMinorVersion
+        self.systemType = systemType
+    def factory(*args_, **kwargs_):
+        if systemInformationType.subclass:
+            return systemInformationType.subclass(*args_, **kwargs_)
+        else:
+            return systemInformationType(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_systemName(self): return self.systemName
+    def set_systemName(self, systemName): self.systemName = systemName
+    def validate_systemName(self, value):
+        # validate type systemName
+        pass
+    def get_memory(self): return self.memory
+    def set_memory(self, memory): self.memory = memory
+    def get_osType(self): return self.osType
+    def set_osType(self, osType): self.osType = osType
+    def validate_osType(self, value):
+        # validate type osType
+        pass
+    def get_osMajorVersion(self): return self.osMajorVersion
+    def set_osMajorVersion(self, osMajorVersion): self.osMajorVersion = osMajorVersion
+    def validate_osMajorVersion(self, value):
+        # validate type osMajorVersion
+        pass
+    def get_osMinorVersion(self): return self.osMinorVersion
+    def set_osMinorVersion(self, osMinorVersion): self.osMinorVersion = osMinorVersion
+    def validate_osMinorVersion(self, value):
+        # validate type osMinorVersion
+        pass
+    def get_systemType(self): return self.systemType
+    def set_systemType(self, systemType): self.systemType = systemType
+    def validate_systemType(self, value):
+        # validate type systemType
+        pass
+    def export(self, outfile, level, namespace_='inv:', name_='systemInformationType', namespacedef_=''):
+        showIndent(outfile, level)
+        outfile.write('<%s%s%s' % (namespace_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        self.exportAttributes(outfile, level, namespace_, name_='systemInformationType')
+        if self.hasContent_():
+            outfile.write('>\n')
+            self.exportChildren(outfile, level + 1, namespace_, name_)
+            showIndent(outfile, level)
+            outfile.write('</%s%s>\n' % (namespace_, name_))
+        else:
+            outfile.write('/>\n')
+    def exportAttributes(self, outfile, level, namespace_='inv:', name_='systemInformationType'):
+        pass
+    def exportChildren(self, outfile, level, namespace_='inv:', name_='systemInformationType'):
+        if self.systemName is not None:
+            showIndent(outfile, level)
+            outfile.write('<%ssystemName>%s</%ssystemName>\n' % (namespace_, self.format_string(quote_xml(self.systemName).encode(ExternalEncoding), input_name='systemName'), namespace_))
+        if self.memory is not None:
+            showIndent(outfile, level)
+            outfile.write('<%smemory>%s</%smemory>\n' % (namespace_, self.format_string(quote_xml(self.memory).encode(ExternalEncoding), input_name='memory'), namespace_))
+        if self.osType is not None:
+            showIndent(outfile, level)
+            outfile.write('<%sosType>%s</%sosType>\n' % (namespace_, self.format_string(quote_xml(self.osType).encode(ExternalEncoding), input_name='osType'), namespace_))
+        if self.osMajorVersion is not None:
+            showIndent(outfile, level)
+            outfile.write('<%sosMajorVersion>%s</%sosMajorVersion>\n' % (namespace_, self.format_string(quote_xml(self.osMajorVersion).encode(ExternalEncoding), input_name='osMajorVersion'), namespace_))
+        if self.osMinorVersion is not None:
+            showIndent(outfile, level)
+            outfile.write('<%sosMinorVersion>%s</%sosMinorVersion>\n' % (namespace_, self.format_string(quote_xml(self.osMinorVersion).encode(ExternalEncoding), input_name='osMinorVersion'), namespace_))
+        if self.systemType is not None:
+            showIndent(outfile, level)
+            outfile.write('<%ssystemType>%s</%ssystemType>\n' % (namespace_, self.format_string(quote_xml(self.systemType).encode(ExternalEncoding), input_name='systemType'), namespace_))
+    def hasContent_(self):
+        if (
+            self.systemName is not None or
+            self.memory is not None or
+            self.osType is not None or
+            self.osMajorVersion is not None or
+            self.osMinorVersion is not None or
+            self.systemType is not None
+            ):
+            return True
+        else:
+            return False
+    def exportLiteral(self, outfile, level, name_='systemInformationType'):
+        level += 1
+        self.exportLiteralAttributes(outfile, level, name_)
+        if self.hasContent_():
+            self.exportLiteralChildren(outfile, level, name_)
+    def exportLiteralAttributes(self, outfile, level, name_):
+        pass
+    def exportLiteralChildren(self, outfile, level, name_):
+        if self.systemName is not None:
+            showIndent(outfile, level)
+            outfile.write('systemName=%s,\n' % quote_python(self.systemName).encode(ExternalEncoding))
+        if self.memory is not None:
+            showIndent(outfile, level)
+            outfile.write('memory=%s,\n' % quote_python(self.memory).encode(ExternalEncoding))
+        if self.osType is not None:
+            showIndent(outfile, level)
+            outfile.write('osType=%s,\n' % quote_python(self.osType).encode(ExternalEncoding))
+        if self.osMajorVersion is not None:
+            showIndent(outfile, level)
+            outfile.write('osMajorVersion=%s,\n' % quote_python(self.osMajorVersion).encode(ExternalEncoding))
+        if self.osMinorVersion is not None:
+            showIndent(outfile, level)
+            outfile.write('osMinorVersion=%s,\n' % quote_python(self.osMinorVersion).encode(ExternalEncoding))
+        if self.systemType is not None:
+            showIndent(outfile, level)
+            outfile.write('systemType=%s,\n' % quote_python(self.systemType).encode(ExternalEncoding))
+    def build(self, node_):
+        attrs = node_.attributes
+        self.buildAttributes(attrs)
+        for child_ in node_.childNodes:
+            nodeName_ = child_.nodeName.split(':')[-1]
+            self.buildChildren(child_, nodeName_)
+    def buildAttributes(self, attrs):
+        pass
+    def buildChildren(self, child_, nodeName_):
+        if child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'systemName':
             systemName_ = ''
             for text__content_ in child_.childNodes:
@@ -463,15 +508,10 @@ class systemType(GeneratedsSuper):
             self.validate_systemName(self.systemName)    # validate type systemName
         elif child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'memory':
-            if child_.firstChild:
-                sval_ = child_.firstChild.nodeValue
-                try:
-                    ival_ = int(sval_)
-                except ValueError, exp:
-                    raise ValueError('requires integer (memory): %s' % exp)
-                if ival_ <= 0:
-                    raise ValueError('requires positiveInteger -- %s' % child_.toxml())
-                self.memory = ival_
+            memory_ = ''
+            for text__content_ in child_.childNodes:
+                memory_ += text__content_.nodeValue
+            self.memory = memory_
         elif child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'osType':
             osType_ = ''
@@ -494,48 +534,13 @@ class systemType(GeneratedsSuper):
             self.osMinorVersion = osMinorVersion_
             self.validate_osMinorVersion(self.osMinorVersion)    # validate type osMinorVersion
         elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'topLevelGroup':
-            topLevelGroup_ = ''
-            for text__content_ in child_.childNodes:
-                topLevelGroup_ += text__content_.nodeValue
-            self.topLevelGroup = topLevelGroup_
-            self.validate_topLevelGroup(self.topLevelGroup)    # validate type topLevelGroup
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'flavor':
-            flavor_ = ''
-            for text__content_ in child_.childNodes:
-                flavor_ += text__content_.nodeValue
-            self.flavor = flavor_
-            self.validate_flavor(self.flavor)    # validate type flavor
-        elif child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'systemType':
             systemType_ = ''
             for text__content_ in child_.childNodes:
                 systemType_ += text__content_.nodeValue
             self.systemType = systemType_
             self.validate_systemType(self.systemType)    # validate type systemType
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'sslClientCertificate':
-            sslClientCertificate_ = ''
-            for text__content_ in child_.childNodes:
-                sslClientCertificate_ += text__content_.nodeValue
-            self.sslClientCertificate = sslClientCertificate_
-            self.validate_sslClientCertificate(self.sslClientCertificate)    # validate type sslClientCertificate
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'sslClientKey':
-            sslClientKey_ = ''
-            for text__content_ in child_.childNodes:
-                sslClientKey_ += text__content_.nodeValue
-            self.sslClientKey = sslClientKey_
-            self.validate_sslClientKey(self.sslClientKey)    # validate type sslClientKey
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'sslServerCertificate':
-            sslServerCertificate_ = ''
-            for text__content_ in child_.childNodes:
-                sslServerCertificate_ += text__content_.nodeValue
-            self.sslServerCertificate = sslServerCertificate_
-            self.validate_sslServerCertificate(self.sslServerCertificate)    # validate type sslServerCertificate
-# end class systemType
+# end class systemInformationType
 
 
 USAGE_TEXT = """
@@ -550,12 +555,12 @@ def usage():
 def parse(inFileName):
     doc = minidom.parse(inFileName)
     rootNode = doc.documentElement
-    rootObj = systemType.factory()
+    rootObj = managedSystemType.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('<?xml version="1.0" ?>\n')
-##     rootObj.export(sys.stdout, 0, name_="system", 
+##     rootObj.export(sys.stdout, 0, name_="managedSystem", 
 ##         namespacedef_='')
     return rootObj
 
@@ -563,12 +568,12 @@ def parse(inFileName):
 def parseString(inString):
     doc = minidom.parseString(inString)
     rootNode = doc.documentElement
-    rootObj = systemType.factory()
+    rootObj = managedSystemType.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('<?xml version="1.0" ?>\n')
-##     rootObj.export(sys.stdout, 0, name_="system",
+##     rootObj.export(sys.stdout, 0, name_="managedSystem",
 ##         namespacedef_='')
     return rootObj
 
@@ -576,14 +581,14 @@ def parseString(inString):
 def parseLiteral(inFileName):
     doc = minidom.parse(inFileName)
     rootNode = doc.documentElement
-    rootObj = systemType.factory()
+    rootObj = managedSystemType.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('#from supers_system import *\n\n')
 ##     sys.stdout.write('import supers_system as model_\n\n')
-##     sys.stdout.write('rootObj = model_.system(\n')
-##     rootObj.exportLiteral(sys.stdout, 0, name_="system")
+##     sys.stdout.write('rootObj = model_.managedSystem(\n')
+##     rootObj.exportLiteral(sys.stdout, 0, name_="managedSystem")
 ##     sys.stdout.write(')\n')
     return rootObj
 

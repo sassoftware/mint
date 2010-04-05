@@ -6,9 +6,9 @@
         xmlns:inv="http://www.rpath.com/permanent/inventory/system-1.0.xsd"
         xmlns="http://www.rpath.com/permanent/inventory/system-1.0.xsd">
 
-    <xsd:element name="system" type="inv:systemType" />
+    <xsd:element name="managedSystem" type="inv:managedSystemType" />
 
-    <xsd:complexType name="systemType">
+    <xsd:complexType name="managedSystemType">
       <xsd:sequence>
         <xsd:element name="generatedUUID" type="inv:string64"
             minOccurs="1" maxOccurs="1" />
@@ -16,6 +16,18 @@
             minOccurs="1" maxOccurs="1" />
         <xsd:element name="registrationDate" type="xsd:dateTime"
             minOccurs="0" maxOccurs="1" />
+        <xsd:element name="sslClientCertificate" type="inv:string8092"
+            minOccurs="0" maxOccurs="1" />
+        <xsd:element name="sslClientKey" type="inv:string8092"
+            minOccurs="0" maxOccurs="1" />
+        <xsd:element name="sslServerCertificate" type="inv:string8092"
+            minOccurs="0" maxOccurs="1" />
+      </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:element name="systemInformation" type="inv:systemInformationType"/>
+
+    <xsd:complexType name="systemInformationType">
         <xsd:element name="systemName" type="inv:string64"
             minOccurs="0" maxOccurs="1" />
         <xsd:element name="memory" type="xsd:positiveInteger"
@@ -26,19 +38,8 @@
             minOccurs="0" maxOccurs="1" />
         <xsd:element name="osMinorVersion" type="inv:string32"
             minOccurs="0" maxOccurs="1" />
-        <xsd:element name="topLevelGroup" type="inv:string64"
-            minOccurs="0" maxOccurs="1" />
-        <xsd:element name="flavor" type="inv:string32"
-            minOccurs="0" maxOccurs="1" />
         <xsd:element name="systemType" type="inv:string32"
             minOccurs="0" maxOccurs="1" />
-        <xsd:element name="sslClientCertificate" type="inv:string8092"
-            minOccurs="0" maxOccurs="1" />
-        <xsd:element name="sslClientKey" type="inv:string8092"
-            minOccurs="0" maxOccurs="1" />
-        <xsd:element name="sslServerCertificate" type="inv:string8092"
-            minOccurs="0" maxOccurs="1" />
-      </xsd:sequence>
     </xsd:complexType>
 
     <xsd:simpleType name="string32">

@@ -20,23 +20,30 @@ ExternalEncoding = 'utf-8'
 # Data representation classes
 #
 
-class systemTypeSub(supermod.systemType):
-    def __init__(self, generatedUUID=None, localUUID=None, registrationDate=None, systemName=None, memory=None, osType=None, osMajorVersion=None, osMinorVersion=None, topLevelGroup=None, flavor=None, systemType=None, sslClientCertificate=None, sslClientKey=None, sslServerCertificate=None):
-        supermod.systemType.__init__(self, generatedUUID, localUUID, registrationDate, systemName, memory, osType, osMajorVersion, osMinorVersion, topLevelGroup, flavor, systemType, sslClientCertificate, sslClientKey, sslServerCertificate)
-supermod.systemType.subclass = systemTypeSub
-# end class systemTypeSub
+class managedSystemTypeSub(supermod.managedSystemType):
+    def __init__(self, generatedUUID=None, localUUID=None, registrationDate=None, sslClientCertificate=None, sslClientKey=None, sslServerCertificate=None):
+        supermod.managedSystemType.__init__(self, generatedUUID, localUUID, registrationDate, sslClientCertificate, sslClientKey, sslServerCertificate)
+supermod.managedSystemType.subclass = managedSystemTypeSub
+# end class managedSystemTypeSub
+
+
+class systemInformationTypeSub(supermod.systemInformationType):
+    def __init__(self, systemName=None, memory=None, osType=None, osMajorVersion=None, osMinorVersion=None, systemType=None):
+        supermod.systemInformationType.__init__(self, systemName, memory, osType, osMajorVersion, osMinorVersion, systemType)
+supermod.systemInformationType.subclass = systemInformationTypeSub
+# end class systemInformationTypeSub
 
 
 
 def parse(inFilename):
     doc = minidom.parse(inFilename)
     rootNode = doc.documentElement
-    rootObj = supermod.systemType.factory()
+    rootObj = supermod.managedSystemType.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('<?xml version="1.0" ?>\n')
-##     rootObj.export(sys.stdout, 0, name_="system",
+##     rootObj.export(sys.stdout, 0, name_="managedSystem",
 ##         namespacedef_='')
     doc = None
     return rootObj
@@ -45,12 +52,12 @@ def parse(inFilename):
 def parseString(inString):
     doc = minidom.parseString(inString)
     rootNode = doc.documentElement
-    rootObj = supermod.systemType.factory()
+    rootObj = supermod.managedSystemType.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('<?xml version="1.0" ?>\n')
-##     rootObj.export(sys.stdout, 0, name_="system",
+##     rootObj.export(sys.stdout, 0, name_="managedSystem",
 ##         namespacedef_='')
     return rootObj
 
@@ -58,14 +65,14 @@ def parseString(inString):
 def parseLiteral(inFilename):
     doc = minidom.parse(inFilename)
     rootNode = doc.documentElement
-    rootObj = supermod.systemType.factory()
+    rootObj = supermod.managedSystemType.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('#from supers_system import *\n\n')
 ##     sys.stdout.write('import supers_system as model_\n\n')
-##     sys.stdout.write('rootObj = model_.system(\n')
-##     rootObj.exportLiteral(sys.stdout, 0, name_="system")
+##     sys.stdout.write('rootObj = model_.managedSystem(\n')
+##     rootObj.exportLiteral(sys.stdout, 0, name_="managedSystem")
 ##     sys.stdout.write(')\n')
     return rootObj
 
