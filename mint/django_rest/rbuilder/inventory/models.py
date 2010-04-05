@@ -21,6 +21,7 @@ class ManagedSystems(models.Model):
 class SystemsTargets(models.Model):
     managedSystemId = models.ForeignKey(ManagedSystems)
     targetId = models.ForeignKey(rbuildermodels.Targets)
+    targetSystemId = models.CharField(max_length=256, null=True)
 
 class SoftwareVersions(models.Model):
     softwareVersion = models.CharField(max_length=256, null=True)
