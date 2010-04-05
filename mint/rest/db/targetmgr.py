@@ -8,6 +8,7 @@ import simplejson
 import logging
 
 from mint import mint_error
+from mint.lib import data as mintdata
 from mint.rest.db import manager
 
 log = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute("""
             SELECT Targets.targetName,
-                   TargetUserCredentials.name, TargetUserCredentials.value
+                   TargetUserCredentials.credentials
               FROM Targets
          LEFT JOIN TargetUserCredentials USING (targetId)
               JOIN Users USING (userId)
@@ -99,10 +100,8 @@ class TargetManager(manager.Manager):
                AND Users.username = ?
         """, targetType, userName)
         userCreds = {}
-        for targetName, key, value in cu:
-            d = userCreds.setdefault(targetName, {})
-            if key is not None:
-                d[key] = base64.b64decode(value)
+        for targetName, creds in cu:
+            userCreds[targetName] = mintdata.unmarshalTargetUserCredentials(creds)
         targetConfig = self.getConfiguredTargetsByType(targetType)
         ret = []
         for targetName, cfg in sorted(targetConfig.items()):
@@ -129,16 +128,16 @@ class TargetManager(manager.Manager):
     def _setTargetCredentialsForUser(self, targetId, userId, credentials):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
-        data = [ (targetId, userId, k, base64.b64encode(v))
-            for (k, v) in credentials.items() ]
-        cu.executemany("""
-            INSERT INTO TargetUserCredentials (targetId, userId, name, value)
-            VALUES (?, ?, ?, ?)""", data)
+        # Newline-separated credential fields
+        data = mintdata.marshalTargetUserCredentials(credentials)
+        cu.execute("""
+            INSERT INTO TargetUserCredentials (targetId, userId, credentials)
+            VALUES (?, ?, ?)""", targetId, userId, data)
 
     def getTargetCredentialsForUser(self, targetType, targetName, userName):
         cu = self.db.cursor()
         cu.execute("""
-            SELECT creds.name, creds.value
+            SELECT creds.credentials
               FROM Users
               JOIN TargetUserCredentials AS creds USING (userId)
               JOIN Targets USING (targetId)
@@ -146,25 +145,25 @@ class TargetManager(manager.Manager):
                AND Targets.targetName = ?
                AND Users.username = ?
         """, targetType, targetName, userName)
-        return self._extractUserCredentials(cu)
+        return self._extractUserCredentialsFromCursor(cu)
 
     def getTargetCredentialsForUserId(self, targetType, targetName, userId):
         cu = self.db.cursor()
         cu.execute("""
-            SELECT creds.name, creds.value
+            SELECT creds.credentials
               FROM TargetUserCredentials AS creds
               JOIN Targets USING (targetId)
              WHERE Targets.targetType = ?
                AND Targets.targetName = ?
                AND creds.userId = ?
         """, targetType, targetName, userId)
-        return self._extractUserCredentials(cu)
+        return self._extractUserCredentialsFromCursor(cu)
 
-    def _extractUserCredentials(self, cu):
-        ret = {}
-        for name, value in cu:
-            ret[name] = base64.b64decode(value)
-        return ret
+    def _extractUserCredentialsFromCursor(self, cu):
+        row = cu.fetchone()
+        if not row:
+            return {}
+        return mintdata.unmarshalTargetUserCredentials(row[0])
 
     def _deleteTargetCredentials(self, targetId, userId):
         cu = self.db.cursor()

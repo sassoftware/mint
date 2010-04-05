@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-import base64
 import os
 import random
 import time
@@ -337,17 +336,17 @@ class UsersTable(database.KeyedTable):
         """
         cu = self.db.cursor()
         SQL = """
-            SELECT u.userId, tuc.value
+            SELECT u.userId, tuc.credentials AS creds
               FROM Users u
               JOIN TargetUserCredentials AS tuc USING (userId)
               JOIN Targets AS t USING (targetId)
              WHERE t.targetType = ?
                AND t.targetName = ?
-               AND tuc.name = ?
             """
-        cu.execute(SQL, self.EC2TargetType, self.EC2TargetName, 'accountId')
+        cu.execute(SQL, self.EC2TargetType, self.EC2TargetName)
         results = cu.fetchall()
-        return [ (x[0], base64.b64decode(x[1])) for x in results ]
+        return [ (x[0], data.unmarshalTargetUserCredentials(x[1]).get('accountId'))
+            for x in results ]
 
     def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """

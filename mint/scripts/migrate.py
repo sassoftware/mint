@@ -812,9 +812,8 @@ class MigrateTo_49(SchemaMigration):
                     REFERENCES Targets ON DELETE CASCADE,
                 userId          integer             NOT NULL
                     REFERENCES Users ON DELETE CASCADE,
-                name            varchar(255)        NOT NULL,
-                value           text,
-                PRIMARY KEY ( targetId, userId, name )
+                credentials     text,
+                PRIMARY KEY ( targetId, userId )
             ) %(TABLEOPTS)s """ % self.db.keywords)
 
         drop_tables(self.db, 'platformLoadJobs')

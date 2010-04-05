@@ -2,13 +2,13 @@
 # Copyright (c) 2010 rPath, Inc.
 #
 
-import base64
 import os
 import simplejson
 import time
 
 from conary.lib import util
 from mint import mint_error
+from mint.lib import data as mintdata
 from catalogService import storage
 
 class TargetConversion(object):
@@ -155,11 +155,10 @@ class TargetConversion(object):
     def _setTargetCredentialsForUser(self, targetId, userId, credentials):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
-        data = [ (targetId, userId, k, base64.b64encode(v))
-            for (k, v) in credentials.items() ]
+        data = mintdata.marshalTargetUserCredentials(credentials)
         cu.executemany("""
-            INSERT INTO TargetUserCredentials (targetId, userId, name, value)
-            VALUES (?, ?, ?, ?)""", data)
+            INSERT INTO TargetUserCredentials (targetId, userId, credentials)
+            VALUES (?, ?, ?)""", targetId, userId, credentials)
 
     def _addTarget(self, targetType, targetName):
         cu = self.db.cursor()
