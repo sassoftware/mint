@@ -24,55 +24,58 @@ class SystemDBManager(RbuilderDjangoManager):
         return models.ManagedSystems.objects.all()
 
     def launchSystem(self, instanceId, targetType, targetName):
-        managedSystem = models.ManagedSystems(
+        managedSystem = models.ManagedSystem(
             registrationDate=datetime.datetime.now())
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(targettype=targetType,
             targetname=targetName)
-        systemTarget = models.SystemsTargets(managedSystemId=managedSystem,
-            targetId=target, targetSystemId=instanceId)
+        systemTarget = models.SystemTarget(managedSystem=managedSystem,
+            target=target, targetSystemId=instanceId)
         systemTarget.save()
         return systemTarget
         
     def setSystemSSLInfo(self, instanceId, sslCert, sslKey):
-        systemTarget = models.SystemsTargets.objects.get(targetSystemId=instanceId)
-        systemTarget.managedSystemId.sslClientCertificate = sslCert
-        systemTarget.managedSystemId.sslClientKey = sslKey
-        systemTarget.managedSystemId.save()
-        return systemTarget.managedSystemId
+        systemTarget = models.SystemTarget.objects.get(targetSystemId=instanceId)
+        systemTarget.managedSystem.sslClientCertificate = sslCert
+        systemTarget.managedSystem.sslClientKey = sslKey
+        systemTarget.managedSystem.save()
+        return systemTarget.managedSystem
 
     def getSystemSSLInfo(self, instanceId):
-        sId = self.getSystemIdForInstanceId(instanceId)
-        if not sId:
+        managedSystem = self.getManagedSystemForInstanceId(instanceId)
+        if not managedSystem:
             return '', ''
-        return sId.sslClientCertificate, sId.sslClientKey
+        return managedSystem.sslClientCertificate, managedSystem.sslClientKey
 
     def addSoftwareVersion(self, softwareVersion):
-        sv = models.SoftwareVersions(softwareVersion=softwareVersion)
-        sv.save()
-        return sv
+        softwareVersion = models.SoftwareVersion(softwareVersion=softwareVersion)
+        softwareVersion.save()
+        return softwareVersion
 
-    def getSystemIdForInstanceId(self, instanceId):
-        systemTarget = models.SystemsTargets.objects.filter(targetSystemId=instanceId)
+    def getManagedSystemForInstanceId(self, instanceId):
+        systemTarget = models.SystemTarget.objects.filter(targetSystemId=instanceId)
         if len(systemTarget) == 1:
-            return systemTarget[0].managedSystemId
+            return systemTarget[0].managedSystem
         else:
             return None
 
-    def setSoftwareVersionsForInstanceId(self, instanceId, softwareVersions):
-        sId = self.getSystemIdForInstanceId(instanceId)
-        if not sId:
+    def setSoftwareVersionsForInstanceId(self, instanceId, softwareVersion):
+        managedSystem = self.getManagedSystemForInstanceId(instanceId)
+        if not managedSystem:
             return 
-        svId = self.addSoftwareVersion(softwareVersions)
-        systemSoftwareVersion = models.SystemsSoftwareVersions(
-                                    managedSystemId=sId,
-                                    softwareVersionId=svId)
+        softwareVersion = self.addSoftwareVersion(softwareVersion)
+        systemSoftwareVersion = models.SystemSoftwareVersion(
+                                    managedSystem=managedSystem,
+                                    softwareVersion=softwareVersion)
         systemSoftwareVersion.save()
 
     def getSoftwareVersionsForInstanceId(self, instanceId):
-        sId = self.getSystemIdForInstanceId(instanceId)
-        if not sId:
+        managedSystem = self.getManagedSystemForInstanceId(instanceId)
+        if not managedSystem:
             return 
-        systemsSoftwareVersions = \
-            models.SystemsSoftwareVersions.objects.filter(managedSystemId=sId)
-        return systemsSoftwareVersions[0].softwareVersionId.softwareVersion
+        systemSoftwareVersion = \
+            models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem)
+        if systemSoftwareVersion:
+            return systemSoftwareVersion[0].softwareVersion.softwareVersion
+        else:
+            return None
