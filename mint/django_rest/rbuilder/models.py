@@ -158,3 +158,11 @@ class Sessions(models.Model):
     
     class Meta:
         db_table = u'sessions'
+
+class Targets(models.Model):
+    targetid = models.IntegerField(primary_key=True)
+    targettype = models.CharField(max_length=255)
+    targetname = models.CharField(unique=True, max_length=255)
+    class Meta:
+        db_table = u'targets'
+        

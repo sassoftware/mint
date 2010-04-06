@@ -989,75 +989,6 @@ def _createRepositoryLogSchema(db):
 
     return changed
 
-def _createInventorySchema(db):
-    cu = db.cursor()
-    changed = False
-
-    if 'systems' not in db.tables:
-        # ownerUserId is the user that launched the system. However, if that
-        # user goes away, the owner _should_ be set to an admin, which is the
-        # reason 'owner' makes more sense than 'launcher'
-        # targetSystemId is the ID of the system on that specific target
-        # (uuid for VMware and Citrix Xen Server, etc)
-        cu.execute("""
-            CREATE TABLE systems 
-            (
-                systemId %(PRIMARYKEY)s,
-                targetSystemId varchar(128),
-                targetId integer NOT NULL
-                    REFERENCES Targets ON DELETE CASCADE,
-                ownerUserId integer
-                    REFERENCES Users ON DELETE SET NULL,
-                versionTimeStamp numeric(14,3)
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['systems'] = []
-        changed = True
-    changed |= db.createIndex('systems', 'systemstargetsystemid_idx',
-            'targetSystemId', unique=False)
-    changed |= db.createIndex('systems', 'systemstargetid_idx',
-            'targetId', unique=False)
-
-    if 'systemversions' not in db.tables:
-        cu.execute("""
-            CREATE TABLE systemversions 
-            (
-                systemId integer NOT NULL
-                    REFERENCES systems,
-                versionId integer NOT NULL
-                    REFERENCES versions
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['systemversions'] = []
-        changed = True
-    changed |= db.createIndex('systemversions', 'systemversions_uq',
-            'systemId,versionId', unique=True)
-        
-    if 'versions' not in db.tables:
-        cu.execute("""
-            CREATE TABLE versions 
-            (
-                versionId %(PRIMARYKEY)s,
-                version varchar(255) NOT NULL
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['versions'] = []
-        changed = True
-
-    if 'systemdata' not in db.tables:
-        cu.execute("""
-            CREATE TABLE systemdata 
-            (
-                systemId integer                    NOT NULL
-                    REFERENCES systems ON DELETE CASCADE, 
-                name                varchar(32)     NOT NULL, 
-                value               text            NOT NULL,
-                dataType            smallint        NOT NULL,
-
-                PRIMARY KEY (systemId, name)
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['systemdata'] = []
-        changed = True
-
-    return changed
-
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -1085,7 +1016,6 @@ def createSchema(db, doCommit=True):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
-    changed |= _createInventorySchema(db)
 
     if doCommit:
         db.commit()

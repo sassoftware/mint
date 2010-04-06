@@ -70,8 +70,6 @@ class TableCache(object):
         self.platformsPlatformSources = platforms.PlatformsPlatformSourcesTable(db)
         self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
 
-        self.systems = systems.SystemsTable(db)
-
         self.users.confirm_table.db = db
         self.newsCache.ageTable.db = db
         self.projects.reposDB.cfg = cfg
@@ -132,7 +130,6 @@ class Database(object):
         self.platformSourceData = tables.platformSourceData
         self.platformsPlatformSources = tables.platformsPlatformSources
         self.platformsContentSourceTypes = tables.platformsContentSourceTypes
-        self.systems = tables.systems
 
         self.targets = tables.targets
         self.targetData = tables.targetData
