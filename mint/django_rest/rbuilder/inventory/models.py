@@ -10,7 +10,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory.xml_1_0 import system
 
 class ManagedSystems(models.Model):
-    parser = system.systemTypeSub
+    parser = system.managedSystemTypeSub
     registrationDate = models.DateTimeField('Registration Date')
     generatedUUID = models.CharField(max_length=64, null=True)
     localUUID = models.CharField(max_length=64, null=True)
@@ -24,7 +24,7 @@ class SystemsTargets(models.Model):
     targetSystemId = models.CharField(max_length=256, null=True)
 
 class SoftwareVersions(models.Model):
-    softwareVersion = models.CharField(max_length=256, null=True)
+    softwareVersion = models.TextField(unique=True)
 
 class SystemsSoftwareVersions(models.Model):
     managedSystemId = models.ForeignKey(ManagedSystems)
