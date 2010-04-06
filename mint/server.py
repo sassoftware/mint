@@ -2205,7 +2205,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if versionId and stage:
             pd = self._getProductDefinitionForVersionObj(versionId)
             platName = pd.getPlatformName()
-            newBuild.setDataValue('platformName', str(platName))
+            if 'platformName' in newBuild.getDataTemplate():
+                newBuild.setDataValue('platformName', str(platName))
 
         template = newBuild.getDataTemplate()
 
