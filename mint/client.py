@@ -415,7 +415,7 @@ class MintClient:
         #Factories comes across as an xml file, need to parse that to something useable
         return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
 
-    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle='', upload_url=''):
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle='', upload_url='', label=''):
         """
         Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
         @param projectId: Project ID
@@ -428,10 +428,12 @@ class MintClient:
         @type sessionHandle: string
         @param upload_url: URL of a package or ''.  Not currently used
         @type upload_url: str
+        @param label: Stage label
+        @type label: str
         @returns: L{sessionHandle} plus a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
         @rtype: tuple(tuple, str, dict)
         """
-        sesH, factories, data = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url)
+        sesH, factories, data = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url, label)
 
         #Parse the factory data xml
         prevChoices = packagecreator.getFactoryDataFromXML(data)
@@ -487,9 +489,9 @@ class MintClient:
         return self.server.buildSourcePackage(projectId, versionId, troveName, troveVersion)
 
     def startApplianceCreatorSession(self, projectId, versionId,
-            rebuild):
+            rebuild, stageLabel = None):
         """See L{mint.server.startApplianceCreatorSession}"""
-        return self.server.startApplianceCreatorSession(projectId, versionId, rebuild)
+        return self.server.startApplianceCreatorSession(projectId, versionId, rebuild, stageLabel)
 
     def makeApplianceTrove(self, sessionHandle):
         return self.server.makeApplianceTrove(sessionHandle)
