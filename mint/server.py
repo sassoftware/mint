@@ -4219,9 +4219,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         mincfg = packagecreator.MinimalConaryConfiguration( cfg)
         return mincfg
 
-    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),))
+    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),), ((str,unicode),))
     @requiresAuth
-    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url):
+    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url, label):
         '''
             Given a file represented by L{uploadDirectoryHandle}, query the PC Service for
             possible factories to handle it.
@@ -4237,6 +4237,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             @type sessionHandle: string
             @param upload_url: Not used (yet)
             @type upload_url: string
+            @param label: stage label
+            @type label: str
 
             @return: L{sessionHandle} and A list of the candidate build factories and the data scanned
             from the uploaded file
@@ -4271,7 +4273,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             #Start the PC Session
             sesH = pc.startSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg)
+                version=version['name']), mincfg, label)
         else:
             sesH = sessionHandle
 
@@ -4293,7 +4295,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             @return: The available packages: outer dict uses the version string
             as the key, inner uses the namespace, third uses the trove name as
             keys.  Data is a dict containing the c{productDefinition} dict and
-            the C{develStageLabel}.
+            the C{stageLabel}.
         """
         # Get the conary repository client
         project = projects.Project(self, projectId)
@@ -4308,12 +4310,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # First version
             # We expect data to look like {'productDefinition':
             # dict(hostname='repo.example.com', shortname='repo',
-            # namespace='rbo', version='2.0'), 'develStageLabel':
+            # namespace='rbo', version='2.0'), 'stageLabel':
             # 'repo.example.com@rbo:repo-2.0-devel'}
 
-            #Filter out labels that don't match the develStageLabel
+            #Filter out labels that don't match the stageLabel
             label = str(v.trailingLabel())
-            if label == str(data['develStageLabel']):
+            if label == str(data['stageLabel']):
                 pDefDict = data['productDefinition']
                 manip = ret.setdefault(pDefDict['version'], dict())
                 manipns = manip.setdefault(pDefDict['namespace'], dict())
@@ -4537,7 +4539,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return False
 
     @requiresAuth
-    def startApplianceCreatorSession(self, projectId, versionId, rebuild):
+    def startApplianceCreatorSession(self, projectId, versionId, rebuild, stageLabel = None):
         project = projects.Project(self, projectId)
         version = self.getProductVersion(versionId)
         pc = self.getApplianceCreatorClient()
@@ -4545,7 +4547,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         try:
             sesH, otherInfo = pc.startApplianceSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, rebuild)
+                version=version['name']), mincfg, rebuild, stageLabel)
         except packagecreator.errors.NoFlavorsToCook, err:
             raise mint_error.NoImagesDefined( \
                     "Error starting the appliance creator service session: %s",
