@@ -4,7 +4,9 @@
 # All Rights Reserved
 #
 
+from django.db import IntegrityError
 from django.db import models
+from django.db import transaction
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory.xml_1_0 import system
@@ -24,7 +26,12 @@ class SystemTarget(models.Model):
     targetSystemId = models.CharField(max_length=256, null=True)
 
 class SoftwareVersion(models.Model):
-    softwareVersion = models.TextField(unique=True)
+    name = models.TextField()
+    version = models.TextField()
+    flavor = models.TextField()
+
+    class Meta:
+        unique_together = (('name', 'version', 'flavor'),)
 
 class SystemSoftwareVersion(models.Model):
     managedSystem = models.ForeignKey(ManagedSystem)

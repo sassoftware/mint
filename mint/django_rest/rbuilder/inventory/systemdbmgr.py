@@ -8,6 +8,8 @@ import datetime
 import logging
 import time
 
+from django.db import transaction
+
 from mint import mint_error
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
@@ -48,8 +50,11 @@ class SystemDBManager(RbuilderDjangoManager):
         return managedSystem.sslClientCertificate, managedSystem.sslClientKey
 
     def addSoftwareVersion(self, softwareVersion):
-        softwareVersion = models.SoftwareVersion(softwareVersion=softwareVersion)
-        softwareVersion.save()
+        name, version, flavor = softwareVersion
+        version = version.freeze()
+        flavor = str(flavor)
+        softwareVersion, created = models.SoftwareVersion.objects.get_or_create(name=name,
+                                        version=version, flavor=flavor)
         return softwareVersion
 
     def getManagedSystemForInstanceId(self, instanceId):
@@ -59,15 +64,20 @@ class SystemDBManager(RbuilderDjangoManager):
         else:
             return None
 
-    def setSoftwareVersionsForInstanceId(self, instanceId, softwareVersion):
+    def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
             return 
-        softwareVersion = self.addSoftwareVersion(softwareVersion)
-        systemSoftwareVersion = models.SystemSoftwareVersion(
-                                    managedSystem=managedSystem,
-                                    softwareVersion=softwareVersion)
-        systemSoftwareVersion.save()
+
+        models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem).delete()
+
+        for version in softwareVersion:
+            softwareVersion = self.addSoftwareVersion(version)
+
+            systemSoftwareVersion = models.SystemSoftwareVersion(
+                                        managedSystem=managedSystem,
+                                        softwareVersion=softwareVersion)
+            systemSoftwareVersion.save()
 
     def getSoftwareVersionsForInstanceId(self, instanceId):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
@@ -75,7 +85,20 @@ class SystemDBManager(RbuilderDjangoManager):
             return 
         systemSoftwareVersion = \
             models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem)
-        if systemSoftwareVersion:
-            return systemSoftwareVersion[0].softwareVersion.softwareVersion
+
+        versions = []
+        for version in systemSoftwareVersion:
+            versions.append('%s=%s[%s]' % (
+                version.softwareVersion.name, version.softwareVersion.version,
+                version.softwareVersion.flavor))
+
+        if versions:
+            return '\n'.join(versions)
         else:
-            return None
+            return versions
+
+    def deleteSoftwareVersionsForInstanceId(self, instanceId):
+        managedSystem = self.getManagedSystemForInstanceId(instanceId)
+        if not managedSystem:
+            return 
+        models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem).delete()

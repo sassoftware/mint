@@ -22,10 +22,8 @@ urlpatterns = patterns('',
     # (r'^admin/', include(admin.site.urls)),
     url(r'^api/reports/(.*?)/descriptor/?$', 
         reportdispatcher.ReportDescriptor()),
-
     url(r'^api/reports/(.*?)/data/(.*?)/?$', 
         reportdispatcher.ReportDispatcher()),
-
     url(r'^api/reports/(.*?)/?$', views.ReportView()),
 
     url(r'^api/inventory/systems/$', inventoryviews.InventorySystemsService()),
