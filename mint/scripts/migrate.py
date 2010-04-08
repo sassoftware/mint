@@ -840,6 +840,13 @@ class MigrateTo_49(SchemaMigration):
             'Targets_Type_Name_Uq', 'targetType, targetName', unique = True)
         return True
 
+class MigrateTo_50(SchemaMigration):
+    Version = (50, 0)
+
+    def migrate(self):
+        schema._createInventorySchema(self.db)
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
