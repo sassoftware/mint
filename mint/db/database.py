@@ -21,7 +21,6 @@ from mint.db import requests
 from mint.db import sessiondb
 from mint.db import selections
 from mint.db import stats
-from mint.db import systems
 from mint.db import targets
 from mint.db import users
 
