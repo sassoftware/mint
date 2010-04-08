@@ -15,40 +15,28 @@
 python_files =	$(wildcard *.py)
 
 dist_files = Makefile $(python_files)
+GENERATE_DS=generateDS.py
+XSD_DIR=xsd
 
-all: default-all 
+.PHONY: clean install $(generated_files)
 
-constants.py: ../Makefile ../Make.defs Makefile
-	sed -e s,@version@,$(VERSION),g \
-	$< > $@
+all: $(generated_files) default-all
 
-install: all pyfiles-install default-install install-generate
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(pydir)', ddir='$(pydir)', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(pydir)', ddir='$(pydir)', quiet=1)"
-
-dist: default-dist
+install: pyfiles-install default-install
 
 clean: default-clean
 
-GENERATE_DS=/home/jslagle/rpath-hg/generateDS/generateDS.py
-xmlDir = $(subst .,_,$(patsubst rule-%,xml_%,$(1)))
-xmlVer = $(patsubst rule-%,%,$(1))
-
-generate: $(patsubst ../xsd/system-%.xsd,rule-%,$(wildcard ../xsd/system-*.xsd))
+generate: $(patsubst $(XSD_DIR)/%.xsd,rule-%,$(wildcard $(XSD_DIR)/*.xsd))
 
 rule-%:
-	mkdir -p $(call xmlDir,$@)
-	touch $(call xmlDir,$@)/__init__.py
 	$(GENERATE_DS) -f --silence \
                 --no-dates \
                 --no-versions \
                 --member-specs=list \
-                --super=supers_system \
                 --external-encoding=utf-8 \
-                -o $(call xmlDir,$@)/supers_system.py \
-                -s $(call xmlDir,$@)/system.py \
-                --user-methods=gends_user_methods \
-                ./xsd/system-$(call xmlVer,$@).xsd
+                --search-path=$(XSD_DIR) \
+                -o generateds_$(subst -,_,$(patsubst rule-%,%,$@)).py \
+                $(XSD_DIR)/$(patsubst rule-%,%,$@).xsd
 
 install-generate: $(addprefix install-rule-,$(wildcard xml_*))
 

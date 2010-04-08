@@ -585,8 +585,8 @@ def parseLiteral(inFileName):
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
-##     sys.stdout.write('#from supers_system import *\n\n')
-##     sys.stdout.write('import supers_system as model_\n\n')
+##     sys.stdout.write('#from generateds_system import *\n\n')
+##     sys.stdout.write('import generateds_system as model_\n\n')
 ##     sys.stdout.write('rootObj = model_.managedSystem(\n')
 ##     rootObj.exportLiteral(sys.stdout, 0, name_="managedSystem")
 ##     sys.stdout.write(')\n')

@@ -9,10 +9,10 @@ from django.db import models
 from django.db import transaction
 
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.inventory.xml_1_0 import system
+from mint.django_rest.rbuilder.inventory import generateds_system
 
 class ManagedSystem(models.Model):
-    parser = system.managedSystemTypeSub
+    parser = generateds_system.managedSystemType
     registrationDate = models.DateTimeField('Registration Date')
     generatedUUID = models.CharField(max_length=64, null=True)
     localUUID = models.CharField(max_length=64, null=True)
