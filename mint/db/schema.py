@@ -994,14 +994,14 @@ def _createInventorySchema(db):
     changed = False
     if 'inventory_managedsystem' not in db.tables:
         cu.execute("""
-            CREATE TABLE inventory_managedsystem (
-                id %(PRIMARYKEY)s,
-                registrationDate timestamp with time zone NOT NULL,
-                generatedUUID varchar(64),
-                localUUID varchar(64),
-                sslClientCertificate varchar(8092),
-                sslClientKey varchar(8092),
-                sslServerCertificate varchar(8092)
+            CREATE TABLE "inventory_managedsystem" (
+                "id" %(PRIMARYKEY)s,
+                "registrationDate" timestamp with time zone NOT NULL,
+                "generatedUUID" varchar(64),
+                "localUUID" varchar(64),
+                "sslClientCertificate" varchar(8092),
+                "sslClientKey" varchar(8092),
+                "sslServerCertificate" varchar(8092)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_managedsystem'] = []
         changed = True
