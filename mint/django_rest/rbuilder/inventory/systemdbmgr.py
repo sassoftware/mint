@@ -27,27 +27,27 @@ class SystemDBManager(RbuilderDjangoManager):
 
     def launchSystem(self, instanceId, targetType, targetName):
         managedSystem = models.ManagedSystem(
-            registrationDate=datetime.datetime.now())
+            registration_date=datetime.datetime.now())
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(targettype=targetType,
             targetname=targetName)
-        systemTarget = models.SystemTarget(managedSystem=managedSystem,
-            target=target, targetSystemId=instanceId)
+        systemTarget = models.SystemTarget(managed_system=managedSystem,
+            target=target, target_system_id=instanceId)
         systemTarget.save()
         return systemTarget
         
     def setSystemSSLInfo(self, instanceId, sslCert, sslKey):
-        systemTarget = models.SystemTarget.objects.get(targetSystemId=instanceId)
-        systemTarget.managedSystem.sslClientCertificate = sslCert
-        systemTarget.managedSystem.sslClientKey = sslKey
-        systemTarget.managedSystem.save()
-        return systemTarget.managedSystem
+        systemTarget = models.SystemTarget.objects.get(target_system_id=instanceId)
+        systemTarget.managed_system.ssl_client_certificate = sslCert
+        systemTarget.managed_system.ssl_client_key = sslKey
+        systemTarget.managed_system.save()
+        return systemTarget.managed_system
 
     def getSystemSSLInfo(self, instanceId):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
             return '', ''
-        return managedSystem.sslClientCertificate, managedSystem.sslClientKey
+        return managedSystem.ssl_client_certificate, managedSystem.ssl_client_key
 
     def addSoftwareVersion(self, softwareVersion):
         name, version, flavor = softwareVersion
@@ -58,9 +58,9 @@ class SystemDBManager(RbuilderDjangoManager):
         return softwareVersion
 
     def getManagedSystemForInstanceId(self, instanceId):
-        systemTarget = models.SystemTarget.objects.filter(targetSystemId=instanceId)
+        systemTarget = models.SystemTarget.objects.filter(target_system_id=instanceId)
         if len(systemTarget) == 1:
-            return systemTarget[0].managedSystem
+            return systemTarget[0].managed_system
         else:
             return None
 
@@ -69,14 +69,14 @@ class SystemDBManager(RbuilderDjangoManager):
         if not managedSystem:
             return 
 
-        models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem).delete()
+        models.SystemSoftwareVersion.objects.filter(managed_system=managedSystem).delete()
 
         for version in softwareVersion:
             softwareVersion = self.addSoftwareVersion(version)
 
             systemSoftwareVersion = models.SystemSoftwareVersion(
-                                        managedSystem=managedSystem,
-                                        softwareVersion=softwareVersion)
+                                        managed_system=managedSystem,
+                                        software_version=softwareVersion)
             systemSoftwareVersion.save()
 
     def getSoftwareVersionsForInstanceId(self, instanceId):
@@ -84,13 +84,13 @@ class SystemDBManager(RbuilderDjangoManager):
         if not managedSystem:
             return 
         systemSoftwareVersion = \
-            models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem)
+            models.SystemSoftwareVersion.objects.filter(managed_system=managedSystem)
 
         versions = []
         for version in systemSoftwareVersion:
             versions.append('%s=%s[%s]' % (
-                version.softwareVersion.name, version.softwareVersion.version,
-                version.softwareVersion.flavor))
+                version.software_version.name, version.software_version.version,
+                version.software_version.flavor))
 
         if versions:
             return '\n'.join(versions)
@@ -101,4 +101,4 @@ class SystemDBManager(RbuilderDjangoManager):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
             return 
-        models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem).delete()
+        models.SystemSoftwareVersion.objects.filter(managed_system=managedSystem).delete()

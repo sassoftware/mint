@@ -1016,7 +1016,7 @@ def _createInventorySchema(db):
                 "target_id" integer NOT NULL 
                     REFERENCES "targets" ("targetid") 
                     DEFERRABLE INITIALLY DEFERRED,
-                "target_system_Id" varchar(256)
+                "target_system_id" varchar(256)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
         CREATE INDEX "inventory_systemtarget_managed_system_id" 
