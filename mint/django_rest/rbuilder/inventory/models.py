@@ -13,17 +13,17 @@ from mint.django_rest.rbuilder.inventory import generateds_system
 
 class ManagedSystem(models.Model):
     parser = generateds_system.managedSystemType
-    registrationDate = models.DateTimeField('Registration Date')
-    generatedUUID = models.CharField(max_length=64, null=True)
-    localUUID = models.CharField(max_length=64, null=True)
-    sslClientCertificate = models.CharField(max_length=8092, null=True)
-    sslClientKey = models.CharField(max_length=8092, null=True)
-    sslServerCertificate = models.CharField(max_length=8092, null=True)
+    registration_date = models.DateTimeField('Registration Date')
+    generated_uuid = models.CharField(max_length=64, null=True)
+    local_uuid = models.CharField(max_length=64, null=True)
+    ssl_client_certificate = models.CharField(max_length=8092, null=True)
+    ssl_client_key = models.CharField(max_length=8092, null=True)
+    ssl_server_certificate = models.CharField(max_length=8092, null=True)
 
 class SystemTarget(models.Model):
-    managedSystem = models.ForeignKey(ManagedSystem, null=True)
+    managed_system = models.ForeignKey(ManagedSystem, null=True)
     target = models.ForeignKey(rbuildermodels.Targets)
-    targetSystemId = models.CharField(max_length=256, null=True)
+    target_system_id = models.CharField(max_length=256, null=True)
 
 class SoftwareVersion(models.Model):
     name = models.TextField()
@@ -34,35 +34,35 @@ class SoftwareVersion(models.Model):
         unique_together = (('name', 'version', 'flavor'),)
 
 class SystemSoftwareVersion(models.Model):
-    managedSystem = models.ForeignKey(ManagedSystem)
-    softwareVersion = models.ForeignKey(SoftwareVersion)
+    managed_system = models.ForeignKey(ManagedSystem)
+    software_version = models.ForeignKey(SoftwareVersion)
 
 class SystemInformation(models.Model):
-    managedSystem = models.ForeignKey(ManagedSystem)
-    systemName = models.CharField(max_length=64, null=True)
+    managed_system = models.ForeignKey(ManagedSystem)
+    system_name = models.CharField(max_length=64, null=True)
     memory = models.IntegerField(null=True)
-    osType = models.CharField(max_length=64, null=True)
-    osMajorVersion = models.CharField(max_length=32, null=True)
-    osMinorVersion = models.CharField(max_length=32, null=True)
-    systemType = models.CharField(max_length=32, null=True)
+    os_type = models.CharField(max_length=64, null=True)
+    os_major_version = models.CharField(max_length=32, null=True)
+    os_minor_version = models.CharField(max_length=32, null=True)
+    system_type = models.CharField(max_length=32, null=True)
 
 class NetworkInformation(models.Model):
-    managedSystem = models.ForeignKey(ManagedSystem)
-    interfaceName = models.CharField(max_length=32, null=True)
-    ipAddress = models.CharField(max_length=15, null=True)
+    managed_system = models.ForeignKey(ManagedSystem)
+    interface_name = models.CharField(max_length=32, null=True)
+    ip_address = models.CharField(max_length=15, null=True)
     netmask = models.CharField(max_length=20, null=True)
-    portType = models.CharField(max_length=32, null=True)
+    port_type = models.CharField(max_length=32, null=True)
 
 class StorageVolume(models.Model):
-    managedSystem = models.ForeignKey(ManagedSystem)
+    managed_system = models.ForeignKey(ManagedSystem)
     size = models.IntegerField(null=True)
-    storageType = models.CharField(max_length=32, null=True)
-    storageName = models.CharField(max_length=32, null=True)
+    storage_type = models.CharField(max_length=32, null=True)
+    storage_name = models.CharField(max_length=32, null=True)
 
 class CPU(models.Model):
-    managedSystem = models.ForeignKey(ManagedSystem)
-    cpuType = models.CharField(max_length=64, null=True)
-    cpuCount = models.IntegerField(null=True)
+    managed_system = models.ForeignKey(ManagedSystem)
+    cpu_type = models.CharField(max_length=64, null=True)
+    cpu_count = models.IntegerField(null=True)
     cores = models.IntegerField(null=True)
     speed = models.IntegerField(null=True)
     enabled = models.NullBooleanField()
