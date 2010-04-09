@@ -996,12 +996,12 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE inventory_managedsystem (
                 id %(PRIMARYKEY)s,
-                registration_date timestamp with time zone NOT NULL,
-                generated_uuid varchar(64),
-                local_uuid varchar(64),
-                ssl_client_certificate varchar(8092),
-                ssl_client_key varchar(8092),
-                ssl_server_certificate varchar(8092)
+                registrationDate timestamp with time zone NOT NULL,
+                generatedUUID varchar(64),
+                localUUID varchar(64),
+                sslClientCertificate varchar(8092),
+                sslClientKey varchar(8092),
+                sslServerCertificate varchar(8092)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_managedsystem'] = []
         changed = True
@@ -1010,17 +1010,17 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_systemtarget" (
                 "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer 
+                "managedSystem_id" integer 
                     REFERENCES "inventory_managedsystem" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_id" integer NOT NULL 
                     REFERENCES "targets" ("targetid") 
                     DEFERRABLE INITIALLY DEFERRED,
-                "target_system_id" varchar(256)
+                "targetSystemId" varchar(256)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_systemtarget_managed_system_id" 
-            ON "inventory_systemtarget" ("managed_system_id");
+        CREATE INDEX "inventory_systemtarget_managedSystem_id" 
+            ON "inventory_systemtarget" ("managedSystem_id");
         """)
         cu.execute("""
         CREATE INDEX "inventory_systemtarget_target_id" 
@@ -1045,20 +1045,20 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_systemsoftwareversion" (
                 "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
+                "managedSystem_id" integer NOT NULL 
                     REFERENCES "inventory_managedsystem" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
-                "software_version_id" integer NOT NULL 
+                "softwareVersion_id" integer NOT NULL 
                     REFERENCES "inventory_softwareversion" ("id") 
                     DEFERRABLE INITIALLY DEFERRED
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_systemsoftwareversion_managed_system_id" 
-            ON "inventory_systemsoftwareversion" ("managed_system_id");
+        CREATE INDEX "inventory_systemsoftwareversion_managedSystem_id" 
+            ON "inventory_systemsoftwareversion" ("managedSystem_id");
         """)
         cu.execute("""
-        CREATE INDEX "inventory_systemsoftwareversion_software_version_id" 
-            ON "inventory_systemsoftwareversion" ("software_version_id");
+        CREATE INDEX "inventory_systemsoftwareversion_softwareVersion_id" 
+            ON "inventory_systemsoftwareversion" ("softwareVersion_id");
         """)
         db.tables['inventory_systemsoftwareversion'] = []
         changed = True
@@ -1067,19 +1067,19 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_systeminformation" (
                 "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
+                "managedSystem_id" integer NOT NULL 
                     REFERENCES "inventory_managedsystem" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
-                "system_name" varchar(64),
+                "systemName" varchar(64),
                 "memory" integer,
-                "os_type" varchar(64),
-                "os_major_version" varchar(32),
-                "os_minor_version" varchar(32),
-                "system_type" varchar(32)
+                "osType" varchar(64),
+                "osMajorVersion" varchar(32),
+                "osMinorVersion" varchar(32),
+                "systemType" varchar(32)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_systeminformation_managed_system_id" 
-            ON "inventory_systeminformation" ("managed_system_id");
+        CREATE INDEX "inventory_systeminformation_managedSystem_id" 
+            ON "inventory_systeminformation" ("managedSystem_id");
         """)
         db.tables['inventory_systeminformation'] = []
         changed = True
@@ -1088,17 +1088,17 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_networkinformation" (
                 "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
+                "managedSystem_id" integer NOT NULL 
                     REFERENCES "inventory_managedsystem" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
-                "interface_name" varchar(32),
-                "ip_address" varchar(15),
+                "interfaceName" varchar(32),
+                "ipAddress" varchar(15),
                 "netmask" varchar(20),
-                "port_type" varchar(32)
+                "portType" varchar(32)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_networkinformation_managed_system_id" 
-            ON "inventory_networkinformation" ("managed_system_id");
+        CREATE INDEX "inventory_networkinformation_managedSystem_id" 
+            ON "inventory_networkinformation" ("managedSystem_id");
         """)
         db.tables['inventory_networkinformation'] = []
         changed = True
@@ -1107,16 +1107,16 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_storagevolume" (
                 "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
+                "managedSystem_id" integer NOT NULL 
                     REFERENCES "inventory_managedsystem" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
                 "size" integer,
-                "storage_type" varchar(32),
-                "storage_name" varchar(32)
+                "storageType" varchar(32),
+                "storageName" varchar(32)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_storagevolume_managed_system_id" 
-            ON "inventory_storagevolume" ("managed_system_id");
+        CREATE INDEX "inventory_storagevolume_managedSystem_id" 
+            ON "inventory_storagevolume" ("managedSystem_id");
         """)
         db.tables['inventory_storagevolume'] = []
         changed = True
@@ -1125,18 +1125,18 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_cpu" (
                 "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
+                "managedSystem_id" integer NOT NULL 
                     REFERENCES "inventory_managedsystem" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
-                "cpu_type" varchar(64),
-                "cpu_count" integer,
+                "cpuType" varchar(64),
+                "cpuCount" integer,
                 "cores" integer,
                 "speed" integer,
                 "enabled" boolean
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_cpu_managed_system_id" 
-            ON "inventory_cpu" ("managed_system_id");
+        CREATE INDEX "inventory_cpu_managedSystem_id" 
+            ON "inventory_cpu" ("managedSystem_id");
         """)
         db.tables['inventory_cpu'] = []
         changed = True
