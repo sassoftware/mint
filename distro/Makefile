@@ -15,7 +15,7 @@ generated_files = schema custom.cfg rbuilder.conf
 
 all: default-all $(generated_files)
 
-install: default-install
+install: default-install httpd-sysconfig
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
@@ -63,6 +63,9 @@ install: default-install
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/
 	install -D -m0644 welcome_text.py $(DESTDIR)/usr/share/anaconda/
 
+httpd-sysconfig:
+	install -d -m0755 $(DESTDIR)/etc/sysconfig
+	echo "ulimit -n 65536" > $(DESTDIR)/etc/sysconfig/httpd
 
 clean: default-clean
 
