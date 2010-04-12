@@ -199,7 +199,7 @@ class managedSystemType(GeneratedsSuper):
     member_data_items_ = [
         MemberSpec_('generatedUUID', ['string64', 'xsd:token'], 0),
         MemberSpec_('localUUID', ['string64', 'xsd:token'], 0),
-        MemberSpec_('registrationDate', 'xsd:string', 0),
+        MemberSpec_('registrationDate', 'xsd:dateTime', 0),
         MemberSpec_('sslClientCertificate', ['string8092', 'xsd:token'], 0),
         MemberSpec_('sslClientKey', ['string8092', 'xsd:token'], 0),
         MemberSpec_('sslServerCertificate', ['string8092', 'xsd:token'], 0),
@@ -372,7 +372,7 @@ class managedSystemType(GeneratedsSuper):
 class systemInformationType(GeneratedsSuper):
     member_data_items_ = [
         MemberSpec_('systemName', ['string64', 'xsd:token'], 0),
-        MemberSpec_('memory', 'xsd:string', 0),
+        MemberSpec_('memory', 'xsd:positiveInteger', 0),
         MemberSpec_('osType', ['string64', 'xsd:token'], 0),
         MemberSpec_('osMajorVersion', ['string64', 'xsd:token'], 0),
         MemberSpec_('osMinorVersion', ['string32', 'xsd:token'], 0),
@@ -439,7 +439,7 @@ class systemInformationType(GeneratedsSuper):
             outfile.write('<%ssystemName>%s</%ssystemName>\n' % (namespace_, self.format_string(quote_xml(self.systemName).encode(ExternalEncoding), input_name='systemName'), namespace_))
         if self.memory is not None:
             showIndent(outfile, level)
-            outfile.write('<%smemory>%s</%smemory>\n' % (namespace_, self.format_string(quote_xml(self.memory).encode(ExternalEncoding), input_name='memory'), namespace_))
+            outfile.write('<%smemory>%s</%smemory>\n' % (namespace_, self.format_integer(self.memory, input_name='memory'), namespace_))
         if self.osType is not None:
             showIndent(outfile, level)
             outfile.write('<%sosType>%s</%sosType>\n' % (namespace_, self.format_string(quote_xml(self.osType).encode(ExternalEncoding), input_name='osType'), namespace_))
@@ -477,7 +477,7 @@ class systemInformationType(GeneratedsSuper):
             outfile.write('systemName=%s,\n' % quote_python(self.systemName).encode(ExternalEncoding))
         if self.memory is not None:
             showIndent(outfile, level)
-            outfile.write('memory=%s,\n' % quote_python(self.memory).encode(ExternalEncoding))
+            outfile.write('memory=%d,\n' % self.memory)
         if self.osType is not None:
             showIndent(outfile, level)
             outfile.write('osType=%s,\n' % quote_python(self.osType).encode(ExternalEncoding))
@@ -508,10 +508,15 @@ class systemInformationType(GeneratedsSuper):
             self.validate_systemName(self.systemName)    # validate type systemName
         elif child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'memory':
-            memory_ = ''
-            for text__content_ in child_.childNodes:
-                memory_ += text__content_.nodeValue
-            self.memory = memory_
+            if child_.firstChild:
+                sval_ = child_.firstChild.nodeValue
+                try:
+                    ival_ = int(sval_)
+                except ValueError, exp:
+                    raise ValueError('requires integer (memory): %s' % exp)
+                if ival_ <= 0:
+                    raise ValueError('requires positiveInteger -- %s' % child_.toxml())
+                self.memory = ival_
         elif child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'osType':
             osType_ = ''
