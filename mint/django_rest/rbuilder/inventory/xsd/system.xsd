@@ -28,6 +28,7 @@
     <xsd:element name="systemInformation" type="inv:systemInformationType"/>
 
     <xsd:complexType name="systemInformationType">
+      <xsd:sequence>
         <xsd:element name="systemName" type="inv:string64"
             minOccurs="0" maxOccurs="1" />
         <xsd:element name="memory" type="xsd:positiveInteger"
@@ -40,6 +41,7 @@
             minOccurs="0" maxOccurs="1" />
         <xsd:element name="systemType" type="inv:string32"
             minOccurs="0" maxOccurs="1" />
+      </xsd:sequence>
     </xsd:complexType>
 
     <xsd:simpleType name="string32">
