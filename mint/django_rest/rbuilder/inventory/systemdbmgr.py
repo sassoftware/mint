@@ -8,7 +8,7 @@ import datetime
 import logging
 import time
 
-from django.db import transaction
+from django.db import connection, transaction
 
 from mint import mint_error
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -17,8 +17,12 @@ from mint.django_rest.rbuilder.inventory import models
 log = logging.getLogger(__name__)
 
 class RbuilderDjangoManager(object):
-    def __init__(self, cfg):
+    def __init__(self, cfg, userName):
         self.cfg = cfg
+        if userName is None:
+            self.user = None
+        else:
+            self.user = rbuildermodels.Users.objects.get(username = userName)
 
 class SystemDBManager(RbuilderDjangoManager):
 
@@ -27,7 +31,8 @@ class SystemDBManager(RbuilderDjangoManager):
 
     def launchSystem(self, instanceId, targetType, targetName):
         managedSystem = models.ManagedSystem(
-            registrationDate=datetime.datetime.now())
+            registrationDate=datetime.datetime.now(),
+            launchingUser = self.user.userid)
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(targettype=targetType,
             targetname=targetName)
@@ -47,7 +52,26 @@ class SystemDBManager(RbuilderDjangoManager):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
             return '', ''
+        if not self.isManageable(managedSystem):
+            return '', ''
         return managedSystem.sslClientCertificate, managedSystem.sslClientKey
+
+    def isManageable(self, managedSystem):
+        if managedSystem.launchingUser.userid == self.user.userid:
+            # If we own the system, we can manage
+            return True
+        # Does the user who launched the system have the same credentials as
+        # our current user?
+        cu = connection.cursor()
+        cu.execute("""
+            SELECT 1
+              FROM TargetUserCredentials tc1
+              JOIN TargetUserCredentials tc2 USING (credentials)
+             WHERE tc1.userId = %s
+               AND tc2.userId = %s
+         """, [ self.user.userid, managedSystem.launchingUser.userid ])
+        row = cu.fetchone()
+        return bool(row)
 
     def addSoftwareVersion(self, softwareVersion):
         name, version, flavor = softwareVersion
@@ -82,7 +106,7 @@ class SystemDBManager(RbuilderDjangoManager):
     def getSoftwareVersionsForInstanceId(self, instanceId):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
-            return 
+            return None
         systemSoftwareVersion = \
             models.SystemSoftwareVersion.objects.filter(managedSystem=managedSystem)
 
@@ -94,8 +118,7 @@ class SystemDBManager(RbuilderDjangoManager):
 
         if versions:
             return '\n'.join(versions)
-        else:
-            return versions
+        return None
 
     def deleteSoftwareVersionsForInstanceId(self, instanceId):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)

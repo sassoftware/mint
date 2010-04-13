@@ -176,4 +176,11 @@ class Targets(models.Model):
     class Meta:
         managed = False
         db_table = u'targets'
-        
+
+class TargetUserCredentials(models.Model):
+    targetid = models.ForeignKey(Targets, db_column="targetid")
+    userid = models.ForeignKey(Users, db_column="userid")
+    credentials = models.TextField()
+    class Meta:
+        managed = False
+        db_table = u'targetusercredentials'

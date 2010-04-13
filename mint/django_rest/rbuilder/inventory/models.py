@@ -19,6 +19,7 @@ class ManagedSystem(models.Model):
     sslClientCertificate = models.CharField(max_length=8092, null=True)
     sslClientKey = models.CharField(max_length=8092, null=True)
     sslServerCertificate = models.CharField(max_length=8092, null=True)
+    launchingUser = models.ForeignKey(rbuildermodels.Users, null=True)
 
 class SystemTarget(models.Model):
     managedSystem = models.ForeignKey(ManagedSystem, null=True)

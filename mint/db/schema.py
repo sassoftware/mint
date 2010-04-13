@@ -1001,7 +1001,8 @@ def _createInventorySchema(db):
                 "localUUID" varchar(64),
                 "sslClientCertificate" varchar(8092),
                 "sslClientKey" varchar(8092),
-                "sslServerCertificate" varchar(8092)
+                "sslServerCertificate" varchar(8092),
+                "launchingUser_id" integer REFERENCES "users" ("userid")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_managedsystem'] = []
         changed = True
