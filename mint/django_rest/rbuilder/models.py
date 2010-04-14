@@ -24,7 +24,9 @@ class Users(models.Model):
     userid = models.AutoField(primary_key=True)
     username = models.CharField(unique=True, max_length=128)
     fullname = models.CharField(max_length=128)
-    salt = models.TextField() # This field type is a guess.
+    # Comment out this field, it's binary data and there is no binary field
+    # type in django.  If it tries to get loaded, a UTF-8 error occurs.
+    # salt = models.TextField() # This field type is a guess.
     passwd = models.CharField(max_length=254)
     email = models.CharField(max_length=128)
     displayemail = models.TextField()
