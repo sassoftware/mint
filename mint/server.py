@@ -4314,9 +4314,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # namespace='rbo', version='2.0'), 'stageLabel':
             # 'repo.example.com@rbo:repo-2.0-devel'}
 
+            # Do a backwards compatability check if it is an older trove
+            stageLabel = str((('stageLabel' in data and data['stageLabel']) or data['develStageLabel']))
+
             #Filter out labels that don't match the stageLabel
             label = str(v.trailingLabel())
-            if label == str(data['stageLabel']):
+            if label == stageLabel:
                 pDefDict = data['productDefinition']
                 manip = ret.setdefault(pDefDict['version'], dict())
                 manipns = manip.setdefault(pDefDict['namespace'], dict())
