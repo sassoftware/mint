@@ -22,7 +22,10 @@ class RbuilderDjangoManager(object):
         if userName is None:
             self.user = None
         else:
-            self.user = rbuildermodels.Users.objects.get(username = userName)
+            # The salt field contains binary data that blows django's little
+            # mind when it tries to decode it as UTF-8. Since we don't need it
+            # here, defer the loading of that column
+            self.user = rbuildermodels.Users.objects.defer("salt").get(username = userName)
 
 class SystemDBManager(RbuilderDjangoManager):
 
