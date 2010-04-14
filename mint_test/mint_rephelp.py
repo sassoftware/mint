@@ -397,7 +397,16 @@ class MintApacheServer(rephelp.ApacheServer):
         open(self.mintCfg.conaryRcFile, 'w').close()
 
     def start(self, resetDir=True):
+        if os.environ.has_key('PYTHONPATH'):
+            os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ':' + self.reposDir
+        else:
+            os.environ['PYTHONPATH'] = self.reposDir
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
         rephelp.ApacheServer.start(self, resetDir)
+        os.system("sed 's|@MINTDBPATH@|%s|' %s > %s" % \
+            (os.path.join(self.reposDir, 'mintdb'),
+             os.path.join(self.getMintServerDir(), 'settings.py.in'),
+             os.path.join(self.reposDir, 'settings.py')))
         if self.reposDB:
             if self.reposDB.driver == 'postgresql':
                 os.system('createlang -U %s -p %s plpgsql template1' % (self.reposDB.user, self.reposDB.port))
