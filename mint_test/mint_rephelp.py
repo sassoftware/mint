@@ -396,6 +396,16 @@ class MintApacheServer(rephelp.ApacheServer):
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'cscache'))
         open(self.mintCfg.conaryRcFile, 'w').close()
 
+    def _setUpDjangoSettingsModule(self):
+        dbDriver = self.mintDb.driver == 'sqlite' and 'sqlite3' or 'postgresql_psycopg2'
+        os.system("sed 's|@MINTDBPATH@|%s|;s|@MINTDBDRIVER@|%s|;"
+                        "s|@MINTDBUSER@|%s|;s|@MINTDBPORT@|%s|' %s > %s" % \
+            (os.path.join(self.reposDir, 'mintdb'), dbDriver,
+             getattr(self.mintDb, 'user', ''),
+             getattr(self.mintDb, 'port', ''),
+             os.path.join(self.getMintServerDir(), 'settings.py.in'),
+             os.path.join(self.reposDir, 'settings.py')))
+
     def start(self, resetDir=True):
         if os.environ.has_key('PYTHONPATH'):
             os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ':' + self.reposDir
@@ -403,10 +413,7 @@ class MintApacheServer(rephelp.ApacheServer):
             os.environ['PYTHONPATH'] = self.reposDir
         os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
         rephelp.ApacheServer.start(self, resetDir)
-        os.system("sed 's|@MINTDBPATH@|%s|' %s > %s" % \
-            (os.path.join(self.reposDir, 'mintdb'),
-             os.path.join(self.getMintServerDir(), 'settings.py.in'),
-             os.path.join(self.reposDir, 'settings.py')))
+        self._setUpDjangoSettingsModule()
         if self.reposDB:
             if self.reposDB.driver == 'postgresql':
                 os.system('createlang -U %s -p %s plpgsql template1' % (self.reposDB.user, self.reposDB.port))
