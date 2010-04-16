@@ -84,17 +84,17 @@ class SystemDbMgrTest(DjangoTest):
 
     def testLaunchSystem(self):
         self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
-        self.assertEquals(1, len(self.systemmodels.ManagedSystem.objects.all()))
-        self.assertEquals(1, len(self.systemmodels.SystemTarget.objects.all()))
-        systemTarget = self.systemmodels.SystemTarget.objects.get(targetSystemId='testinstanceid')
-        self.assertEquals('testinstanceid', systemTarget.targetSystemId)
+        self.assertEquals(1, len(self.systemmodels.managed_system.objects.all()))
+        self.assertEquals(1, len(self.systemmodels.system_target.objects.all()))
+        systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        self.assertEquals('testinstanceid', systemTarget.target_system_id)
 
     def testSetSystemSSLInfo(self):
         self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
         self.sdm.setSystemSSLInfo('testinstanceid', '/sslcert', '/sslkey')
-        system = self.systemmodels.SystemTarget.objects.get(targetSystemId='testinstanceid')
-        self.assertEquals('/sslcert', system.managedSystem.sslClientCertificate)
-        self.assertEquals('/sslkey', system.managedSystem.sslClientKey)
+        system = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        self.assertEquals('/sslcert', system.managed_system.ssl_client_certificate)
+        self.assertEquals('/sslkey', system.managed_system.ssl_client_key)
 
     def testGetSystemSSLInfo(self):
         self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
@@ -105,8 +105,8 @@ class SystemDbMgrTest(DjangoTest):
 
     def testIsManageable(self):
         self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
-        systemTarget = self.systemmodels.SystemTarget.objects.get(targetSystemId='testinstanceid')
-        self.assertTrue(self.sdm.isManageable(systemTarget.managedSystem))
+        systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        self.assertTrue(self.sdm.isManageable(systemTarget.managed_system))
 
     def _getVersion(self): 
         name = 'group-appliance'
@@ -116,7 +116,7 @@ class SystemDbMgrTest(DjangoTest):
 
     def testAddSoftwareVersion(self):
         self.sdm.addSoftwareVersion(self._getVersion())
-        svs = self.systemmodels.SoftwareVersion.objects.all()
+        svs = self.systemmodels.software_version.objects.all()
         self.assertEquals(1, len(svs))
         self.assertEquals('group-appliance', svs[0].name)
         self.assertEquals('/foo@bar:baz/1234567890.000:1-2-3', str(svs[0].version))
@@ -128,14 +128,14 @@ class SystemDbMgrTest(DjangoTest):
 
         self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
         managedSystem = self.sdm.getManagedSystemForInstanceId('testinstanceid')
-        self.assertTrue(isinstance(managedSystem, self.systemmodels.ManagedSystem))
+        self.assertTrue(isinstance(managedSystem, self.systemmodels.managed_system))
         
 
     def _setSoftwareVersion(self):
         systemTarget = self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
         self.sdm.setSoftwareVersionForInstanceId('testinstanceid', [self._getVersion()])
-        ssv = self.systemmodels.SystemSoftwareVersion.objects.filter(
-                managedSystem=systemTarget.managedSystem)
+        ssv = self.systemmodels.system_software_version.objects.filter(
+                managed_system=systemTarget.managed_system)
         return ssv
 
     def testSetSoftwareVersionForInstanceId(self):
@@ -144,17 +144,17 @@ class SystemDbMgrTest(DjangoTest):
 
     def testGetSoftwareVersionForInstanceId(self):
         ssv = self._setSoftwareVersion()
-        managedSystem = ssv[0].managedSystem
-        instanceId = self.systemmodels.SystemTarget.objects.filter(
-                        managedSystem=managedSystem)[0].targetSystemId
+        managedSystem = ssv[0].managed_system
+        instanceId = self.systemmodels.system_target.objects.filter(
+                        managed_system=managedSystem)[0].target_system_id
         vers = self.sdm.getSoftwareVersionsForInstanceId(instanceId)
         self.assertEquals('group-appliance=/foo@bar:baz/1234567890.000:1-2-3[is: x86]',
                 str(vers))
 
     def testDeleteSoftwareVersionsForInstanceId(self):
         ssv = self._setSoftwareVersion()
-        managedSystem = ssv[0].managedSystem
+        managedSystem = ssv[0].managed_system
         self.sdm.deleteSoftwareVersionsForInstanceId('testinstanceid')
-        vers = self.systemmodels.SystemSoftwareVersion.objects.filter(
-                managedSystem=managedSystem)
+        vers = self.systemmodels.system_software_version.objects.filter(
+                managed_system=managedSystem)
         self.assertEquals(0, len(vers))
