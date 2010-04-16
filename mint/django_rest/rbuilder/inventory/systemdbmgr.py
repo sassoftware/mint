@@ -35,7 +35,7 @@ class SystemDBManager(RbuilderDjangoManager):
     def launchSystem(self, instanceId, targetType, targetName):
         managedSystem = models.ManagedSystem(
             registrationDate=datetime.datetime.now(),
-            launchingUser = self.user.userid)
+            launchingUser = self.user)
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(targettype=targetType,
             targetname=targetName)
