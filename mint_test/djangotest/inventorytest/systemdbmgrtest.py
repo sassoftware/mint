@@ -14,6 +14,7 @@ import mint_test
 from mint_test import fixtures
 
 builtins = sys.modules.keys()
+unimported = {}
 
 class DjangoTest(fixtures.FixturedUnitTest):
 
@@ -43,9 +44,11 @@ class DjangoTest(fixtures.FixturedUnitTest):
         # settings.py.
         for k, v in sys.modules.items():
             if k not in builtins or 'django' in k:
+                unimported[k] = v
                 sys.modules.pop(k)
 
     def setUp(self):
+        unimported = {}
         self._unImport()
         fixtures.FixturedUnitTest.setUp(self)
         self.db, self.data = self.loadFixture('Empty')
@@ -53,8 +56,13 @@ class DjangoTest(fixtures.FixturedUnitTest):
         self.setUpDjangoSettingsModule()
         self.importDjango()
 
+    def _import(self):
+        for k, v in unimported.items():
+            sys.modules[k] = v
+
     def tearDown(self):
-        self._unImport()
+        # self._unImport()
+        self._import()
         fixtures.FixturedUnitTest.tearDown(self)
 
 
