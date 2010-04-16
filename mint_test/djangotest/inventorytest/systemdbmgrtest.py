@@ -38,22 +38,23 @@ class DjangoTest(fixtures.FixturedUnitTest):
         self.systemdbmgr = systemdbmgr
         self.systemmodels = systemmodels
 
+    def _unImport(self):
+        # "Unimport" anything that was imported so the next test will have a new
+        # settings.py.
+        for k, v in sys.modules.items():
+            if k not in builtins or 'django' in k:
+                sys.modules.pop(k)
+
     def setUp(self):
+        self._unImport()
         fixtures.FixturedUnitTest.setUp(self)
         self.db, self.data = self.loadFixture('Empty')
-
         # Need to prepare settings.py before importing any django modules.
         self.setUpDjangoSettingsModule()
         self.importDjango()
 
     def tearDown(self):
-        # "Unimport" anything that was imported so the next test will have a new
-        # settings.py.
-        for k, v in sys.modules.items():
-            if k not in builtins:
-                sys.modules.pop(k)
-
-        sys.path.remove(self.cfg.dataPath)
+        self._unImport()
         fixtures.FixturedUnitTest.tearDown(self)
 
 
