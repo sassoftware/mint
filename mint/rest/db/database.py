@@ -32,8 +32,6 @@ from mint.rest.db import systemmgr
 from mint.rest.db import targetmgr
 from mint.rest.db import usermgr
 
-from rpath_job import api1 as rpath_job
-
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 class DBInterface(object):

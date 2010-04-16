@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2010 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -1145,6 +1145,142 @@ def _createInventorySchema(db):
     return changed
 
 
+def _addTableRows(db, table, uniqueKey, rows):
+    """
+    Adds rows to the table, if they do not exist already
+    The rows argument is a list of dictionaries
+    """
+    if not rows:
+        return
+    cu = db.cursor()
+    inserts = []
+    sql = "SELECT 1 FROM %s WHERE %s = ?" % (table, uniqueKey)
+    tableCols = rows[0].keys()
+    for row in rows:
+        cu.execute(sql, row[uniqueKey])
+        if cu.fetchall():
+            continue
+        inserts.append(tuple(row[c] for c in tableCols))
+    if not inserts:
+        return False
+    sql = "INSERT INTO %s (%s) VALUES (%s)" % (table,
+        ','.join(tableCols), ','.join('?' for c in tableCols))
+    cu.executemany(sql, inserts)
+    return True
+
+def _createJobsSchema(db):
+    cu = db.cursor()
+    changed = False
+
+    if 'job_types' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_types
+            (
+                job_type_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE,
+                description VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+    changed |= _addTableRows(db, 'job_types', 'name',
+        [ dict(name="instance-launch", description='Instance Launch'),
+          dict(name="platform-load", description='Platform Load'),
+          dict(name="software-version-refresh", description='Software Version Refresh'), ])
+
+    if 'job_states' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_states
+            (
+                job_state_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+    changed |= _addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
+        dict(name='Running'), dict(name='Completed'), dict(name='Failed') ])
+
+    if 'rest_methods' not in db.tables:
+        cu.execute("""
+            CREATE TABLE rest_methods
+            (
+                rest_method_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+    changed |= _addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
+        dict(name='PUT'), dict(name='DELETE') ])
+
+    if 'jobs' not in db.tables:
+        cu.execute("""
+            CREATE TABLE jobs
+            (
+                job_id      %(PRIMARYKEY)s,
+                job_type_id INTEGER NOT NULL
+                    REFERENCES job_types ON DELETE CASCADE,
+                job_state_id INTEGER NOT NULL
+                    REFERENCES job_states ON DELETE CASCADE,
+                created_by   INTEGER NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                created     NUMERIC(14,4) NOT NULL,
+                modified    NUMERIC(14,4) NOT NULL,
+                expiration  NUMERIC(14,4),
+                ttl         INTEGER,
+                pid         INTEGER,
+                message     VARCHAR,
+                error_response VARCHAR,
+                rest_uri    VARCHAR,
+                rest_method_id INTEGER
+                    REFERENCES rest_methods ON DELETE CASCADE,
+                rest_args   VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+
+    if 'job_history' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_history
+            (
+                job_history_id  %(PRIMARYKEY)s,
+                -- job_history_type needed
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                timestamp   NUMERIC(14,3) NOT NULL,
+                content     VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+
+    if 'job_results' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_results
+            (
+                job_result_id   %(PRIMARYKEY)s,
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                data    VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+
+    if 'job_target' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_target
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                targetId    INTEGER NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+
+    if 'job_managedSystem' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_managedSystem
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                managedSystemId  INTEGER NOT NULL
+                    REFERENCES ManagedSystems ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        changed = True
+
+    return changed
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -1173,6 +1309,7 @@ def createSchema(db, doCommit=True):
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
     changed |= _createInventorySchema(db)
+    changed |= _createJobsSchema(db)
 
     if doCommit:
         db.commit()
