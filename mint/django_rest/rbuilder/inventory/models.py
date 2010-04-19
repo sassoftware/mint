@@ -14,8 +14,8 @@ from mint.django_rest.rbuilder.inventory import generateds_system
 class managed_system(models.Model):
     parser = generateds_system.managedSystemType
     registration_date = models.DateTimeField('Registration Date')
-    generated_UUID = models.CharField(max_length=64, null=True)
-    local_UUID = models.CharField(max_length=64, null=True)
+    generated_uuid = models.CharField(max_length=64, null=True)
+    local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
     ssl_client_key = models.CharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)

@@ -997,8 +997,8 @@ def _createInventorySchema(db):
             CREATE TABLE "inventory_managed_system" (
                 "id" %(PRIMARYKEY)s,
                 "registration_date" timestamp with time zone NOT NULL,
-                "generated_UUID" varchar(64),
-                "local_UUID" varchar(64),
+                "generated_uuid" varchar(64),
+                "local_uuid" varchar(64),
                 "ssl_client_certificate" varchar(8092),
                 "ssl_client_key" varchar(8092),
                 "ssl_server_certificate" varchar(8092),
