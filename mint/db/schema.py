@@ -1127,7 +1127,7 @@ def _createInventorySchema(db):
             CREATE TABLE "inventory_cpu" (
                 "id" %(PRIMARYKEY)s,
                 "managed_system_id" integer NOT NULL 
-                    REFERENCES "inventory_managedsystem" ("id") 
+                    REFERENCES "inventory_managed_system" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
                 "cpu_type" varchar(64),
                 "cpu_count" integer,
