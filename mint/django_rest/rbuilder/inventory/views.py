@@ -30,7 +30,7 @@ class InventorySystemsService(InventoryService):
         resp = [str((s.id, s.registrationDate)) for s in systems]
         return HttpResponse(str(resp))
     
-    @requires('system', models.ManagedSystem)
+    @requires('system', models.managed_system)
     def create(self, request, system):
         return self.sysMgr.registerSystem(system)
 
