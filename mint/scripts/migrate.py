@@ -845,6 +845,7 @@ class MigrateTo_50(SchemaMigration):
 
     def migrate(self):
         schema._createInventorySchema(self.db)
+        schema._createJobsSchema(self.db)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
