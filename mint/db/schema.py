@@ -1180,6 +1180,7 @@ def _createJobsSchema(db):
                 name VARCHAR NOT NULL UNIQUE,
                 description VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_types'] = []
         changed = True
     changed |= _addTableRows(db, 'job_types', 'name',
         [ dict(name="instance-launch", description='Instance Launch'),
@@ -1193,6 +1194,7 @@ def _createJobsSchema(db):
                 job_state_id %(PRIMARYKEY)s,
                 name VARCHAR NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_states'] = []
         changed = True
     changed |= _addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
         dict(name='Running'), dict(name='Completed'), dict(name='Failed') ])
@@ -1204,6 +1206,7 @@ def _createJobsSchema(db):
                 rest_method_id %(PRIMARYKEY)s,
                 name VARCHAR NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['rest_methods'] = []
         changed = True
     changed |= _addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
         dict(name='PUT'), dict(name='DELETE') ])
@@ -1231,6 +1234,7 @@ def _createJobsSchema(db):
                     REFERENCES rest_methods ON DELETE CASCADE,
                 rest_args   VARCHAR
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['jobs'] = []
         changed = True
 
     if 'job_history' not in db.tables:
@@ -1244,6 +1248,7 @@ def _createJobsSchema(db):
                 timestamp   NUMERIC(14,3) NOT NULL,
                 content     VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_history'] = []
         changed = True
 
     if 'job_results' not in db.tables:
@@ -1255,6 +1260,7 @@ def _createJobsSchema(db):
                     REFERENCES jobs ON DELETE CASCADE,
                 data    VARCHAR NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_results'] = []
         changed = True
 
     if 'job_target' not in db.tables:
@@ -1266,6 +1272,7 @@ def _createJobsSchema(db):
                 targetId    INTEGER NOT NULL
                     REFERENCES Targets ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_target'] = []
         changed = True
 
     if 'job_managed_system' not in db.tables:
@@ -1275,8 +1282,9 @@ def _createJobsSchema(db):
                 job_id      INTEGER NOT NULL
                     REFERENCES jobs ON DELETE CASCADE,
                 managed_system_id  INTEGER NOT NULL
-                    REFERENCES ManagedSystems ON DELETE CASCADE
+                    REFERENCES inventory_managed_system ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_managed_system'] = []
         changed = True
 
     return changed
