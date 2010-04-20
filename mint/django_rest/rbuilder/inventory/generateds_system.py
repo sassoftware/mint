@@ -195,61 +195,89 @@ def _cast(typ, value):
 # Data representation classes.
 #
 
-class managedSystemType(GeneratedsSuper):
+class managed_system_type(GeneratedsSuper):
     member_data_items_ = [
-        MemberSpec_('generatedUUID', ['string64', 'xsd:token'], 0),
-        MemberSpec_('localUUID', ['string64', 'xsd:token'], 0),
-        MemberSpec_('registrationDate', 'xsd:dateTime', 0),
-        MemberSpec_('sslClientCertificate', ['string8092', 'xsd:token'], 0),
-        MemberSpec_('sslClientKey', ['string8092', 'xsd:token'], 0),
-        MemberSpec_('sslServerCertificate', ['string8092', 'xsd:token'], 0),
+        MemberSpec_('generated_uuid', ['string64', 'xsd:token'], 0),
+        MemberSpec_('local_uuid', ['string64', 'xsd:token'], 0),
+        MemberSpec_('registration_date', 'xsd:string', 0),
+        MemberSpec_('ssl_client_certificate', ['string8092', 'xsd:token'], 0),
+        MemberSpec_('ssl_client_key', ['string8092', 'xsd:token'], 0),
+        MemberSpec_('ssl_server_certificate', ['string8092', 'xsd:token'], 0),
+        MemberSpec_('launching_user', ['string8092', 'xsd:token'], 0),
+        MemberSpec_('target_type', ['string8092', 'xsd:token'], 0),
+        MemberSpec_('target_name', ['string8092', 'xsd:token'], 0),
+        MemberSpec_('target_system_id', ['string8092', 'xsd:token'], 0),
         ]
     subclass = None
     superclass = None
-    def __init__(self, generatedUUID=None, localUUID=None, registrationDate=None, sslClientCertificate=None, sslClientKey=None, sslServerCertificate=None):
-        self.generatedUUID = generatedUUID
-        self.localUUID = localUUID
-        self.registrationDate = registrationDate
-        self.sslClientCertificate = sslClientCertificate
-        self.sslClientKey = sslClientKey
-        self.sslServerCertificate = sslServerCertificate
+    def __init__(self, generated_uuid=None, local_uuid=None, registration_date=None, ssl_client_certificate=None, ssl_client_key=None, ssl_server_certificate=None, launching_user=None, target_type=None, target_name=None, target_system_id=None):
+        self.generated_uuid = generated_uuid
+        self.local_uuid = local_uuid
+        self.registration_date = registration_date
+        self.ssl_client_certificate = ssl_client_certificate
+        self.ssl_client_key = ssl_client_key
+        self.ssl_server_certificate = ssl_server_certificate
+        self.launching_user = launching_user
+        self.target_type = target_type
+        self.target_name = target_name
+        self.target_system_id = target_system_id
     def factory(*args_, **kwargs_):
-        if managedSystemType.subclass:
-            return managedSystemType.subclass(*args_, **kwargs_)
+        if managed_system_type.subclass:
+            return managed_system_type.subclass(*args_, **kwargs_)
         else:
-            return managedSystemType(*args_, **kwargs_)
+            return managed_system_type(*args_, **kwargs_)
     factory = staticmethod(factory)
-    def get_generatedUUID(self): return self.generatedUUID
-    def set_generatedUUID(self, generatedUUID): self.generatedUUID = generatedUUID
-    def validate_generatedUUID(self, value):
-        # validate type generatedUUID
+    def get_generated_uuid(self): return self.generated_uuid
+    def set_generated_uuid(self, generated_uuid): self.generated_uuid = generated_uuid
+    def validate_generated_uuid(self, value):
+        # validate type generated_uuid
         pass
-    def get_localUUID(self): return self.localUUID
-    def set_localUUID(self, localUUID): self.localUUID = localUUID
-    def validate_localUUID(self, value):
-        # validate type localUUID
+    def get_local_uuid(self): return self.local_uuid
+    def set_local_uuid(self, local_uuid): self.local_uuid = local_uuid
+    def validate_local_uuid(self, value):
+        # validate type local_uuid
         pass
-    def get_registrationDate(self): return self.registrationDate
-    def set_registrationDate(self, registrationDate): self.registrationDate = registrationDate
-    def get_sslClientCertificate(self): return self.sslClientCertificate
-    def set_sslClientCertificate(self, sslClientCertificate): self.sslClientCertificate = sslClientCertificate
-    def validate_sslClientCertificate(self, value):
-        # validate type sslClientCertificate
+    def get_registration_date(self): return self.registration_date
+    def set_registration_date(self, registration_date): self.registration_date = registration_date
+    def get_ssl_client_certificate(self): return self.ssl_client_certificate
+    def set_ssl_client_certificate(self, ssl_client_certificate): self.ssl_client_certificate = ssl_client_certificate
+    def validate_ssl_client_certificate(self, value):
+        # validate type ssl_client_certificate
         pass
-    def get_sslClientKey(self): return self.sslClientKey
-    def set_sslClientKey(self, sslClientKey): self.sslClientKey = sslClientKey
-    def validate_sslClientKey(self, value):
-        # validate type sslClientKey
+    def get_ssl_client_key(self): return self.ssl_client_key
+    def set_ssl_client_key(self, ssl_client_key): self.ssl_client_key = ssl_client_key
+    def validate_ssl_client_key(self, value):
+        # validate type ssl_client_key
         pass
-    def get_sslServerCertificate(self): return self.sslServerCertificate
-    def set_sslServerCertificate(self, sslServerCertificate): self.sslServerCertificate = sslServerCertificate
-    def validate_sslServerCertificate(self, value):
-        # validate type sslServerCertificate
+    def get_ssl_server_certificate(self): return self.ssl_server_certificate
+    def set_ssl_server_certificate(self, ssl_server_certificate): self.ssl_server_certificate = ssl_server_certificate
+    def validate_ssl_server_certificate(self, value):
+        # validate type ssl_server_certificate
         pass
-    def export(self, outfile, level, namespace_='inv:', name_='managedSystemType', namespacedef_=''):
+    def get_launching_user(self): return self.launching_user
+    def set_launching_user(self, launching_user): self.launching_user = launching_user
+    def validate_launching_user(self, value):
+        # validate type launching_user
+        pass
+    def get_target_type(self): return self.target_type
+    def set_target_type(self, target_type): self.target_type = target_type
+    def validate_target_type(self, value):
+        # validate type target_type
+        pass
+    def get_target_name(self): return self.target_name
+    def set_target_name(self, target_name): self.target_name = target_name
+    def validate_target_name(self, value):
+        # validate type target_name
+        pass
+    def get_target_system_id(self): return self.target_system_id
+    def set_target_system_id(self, target_system_id): self.target_system_id = target_system_id
+    def validate_target_system_id(self, value):
+        # validate type target_system_id
+        pass
+    def export(self, outfile, level, namespace_='inv:', name_='managed_system_type', namespacedef_=''):
         showIndent(outfile, level)
         outfile.write('<%s%s%s' % (namespace_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
-        self.exportAttributes(outfile, level, namespace_, name_='managedSystemType')
+        self.exportAttributes(outfile, level, namespace_, name_='managed_system_type')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -257,40 +285,56 @@ class managedSystemType(GeneratedsSuper):
             outfile.write('</%s%s>\n' % (namespace_, name_))
         else:
             outfile.write('/>\n')
-    def exportAttributes(self, outfile, level, namespace_='inv:', name_='managedSystemType'):
+    def exportAttributes(self, outfile, level, namespace_='inv:', name_='managed_system_type'):
         pass
-    def exportChildren(self, outfile, level, namespace_='inv:', name_='managedSystemType'):
-        if self.generatedUUID is not None:
+    def exportChildren(self, outfile, level, namespace_='inv:', name_='managed_system_type'):
+        if self.generated_uuid is not None:
             showIndent(outfile, level)
-            outfile.write('<%sgeneratedUUID>%s</%sgeneratedUUID>\n' % (namespace_, self.format_string(quote_xml(self.generatedUUID).encode(ExternalEncoding), input_name='generatedUUID'), namespace_))
-        if self.localUUID is not None:
+            outfile.write('<%sgenerated_uuid>%s</%sgenerated_uuid>\n' % (namespace_, self.format_string(quote_xml(self.generated_uuid).encode(ExternalEncoding), input_name='generated_uuid'), namespace_))
+        if self.local_uuid is not None:
             showIndent(outfile, level)
-            outfile.write('<%slocalUUID>%s</%slocalUUID>\n' % (namespace_, self.format_string(quote_xml(self.localUUID).encode(ExternalEncoding), input_name='localUUID'), namespace_))
-        if self.registrationDate is not None:
+            outfile.write('<%slocal_uuid>%s</%slocal_uuid>\n' % (namespace_, self.format_string(quote_xml(self.local_uuid).encode(ExternalEncoding), input_name='local_uuid'), namespace_))
+        if self.registration_date is not None:
             showIndent(outfile, level)
-            outfile.write('<%sregistrationDate>%s</%sregistrationDate>\n' % (namespace_, self.format_string(quote_xml(self.registrationDate).encode(ExternalEncoding), input_name='registrationDate'), namespace_))
-        if self.sslClientCertificate is not None:
+            outfile.write('<%sregistration_date>%s</%sregistration_date>\n' % (namespace_, self.format_string(quote_xml(self.registration_date).encode(ExternalEncoding), input_name='registration_date'), namespace_))
+        if self.ssl_client_certificate is not None:
             showIndent(outfile, level)
-            outfile.write('<%ssslClientCertificate>%s</%ssslClientCertificate>\n' % (namespace_, self.format_string(quote_xml(self.sslClientCertificate).encode(ExternalEncoding), input_name='sslClientCertificate'), namespace_))
-        if self.sslClientKey is not None:
+            outfile.write('<%sssl_client_certificate>%s</%sssl_client_certificate>\n' % (namespace_, self.format_string(quote_xml(self.ssl_client_certificate).encode(ExternalEncoding), input_name='ssl_client_certificate'), namespace_))
+        if self.ssl_client_key is not None:
             showIndent(outfile, level)
-            outfile.write('<%ssslClientKey>%s</%ssslClientKey>\n' % (namespace_, self.format_string(quote_xml(self.sslClientKey).encode(ExternalEncoding), input_name='sslClientKey'), namespace_))
-        if self.sslServerCertificate is not None:
+            outfile.write('<%sssl_client_key>%s</%sssl_client_key>\n' % (namespace_, self.format_string(quote_xml(self.ssl_client_key).encode(ExternalEncoding), input_name='ssl_client_key'), namespace_))
+        if self.ssl_server_certificate is not None:
             showIndent(outfile, level)
-            outfile.write('<%ssslServerCertificate>%s</%ssslServerCertificate>\n' % (namespace_, self.format_string(quote_xml(self.sslServerCertificate).encode(ExternalEncoding), input_name='sslServerCertificate'), namespace_))
+            outfile.write('<%sssl_server_certificate>%s</%sssl_server_certificate>\n' % (namespace_, self.format_string(quote_xml(self.ssl_server_certificate).encode(ExternalEncoding), input_name='ssl_server_certificate'), namespace_))
+        if self.launching_user is not None:
+            showIndent(outfile, level)
+            outfile.write('<%slaunching_user>%s</%slaunching_user>\n' % (namespace_, self.format_string(quote_xml(self.launching_user).encode(ExternalEncoding), input_name='launching_user'), namespace_))
+        if self.target_type is not None:
+            showIndent(outfile, level)
+            outfile.write('<%starget_type>%s</%starget_type>\n' % (namespace_, self.format_string(quote_xml(self.target_type).encode(ExternalEncoding), input_name='target_type'), namespace_))
+        if self.target_name is not None:
+            showIndent(outfile, level)
+            outfile.write('<%starget_name>%s</%starget_name>\n' % (namespace_, self.format_string(quote_xml(self.target_name).encode(ExternalEncoding), input_name='target_name'), namespace_))
+        if self.target_system_id is not None:
+            showIndent(outfile, level)
+            outfile.write('<%starget_system_id>%s</%starget_system_id>\n' % (namespace_, self.format_string(quote_xml(self.target_system_id).encode(ExternalEncoding), input_name='target_system_id'), namespace_))
     def hasContent_(self):
         if (
-            self.generatedUUID is not None or
-            self.localUUID is not None or
-            self.registrationDate is not None or
-            self.sslClientCertificate is not None or
-            self.sslClientKey is not None or
-            self.sslServerCertificate is not None
+            self.generated_uuid is not None or
+            self.local_uuid is not None or
+            self.registration_date is not None or
+            self.ssl_client_certificate is not None or
+            self.ssl_client_key is not None or
+            self.ssl_server_certificate is not None or
+            self.launching_user is not None or
+            self.target_type is not None or
+            self.target_name is not None or
+            self.target_system_id is not None
             ):
             return True
         else:
             return False
-    def exportLiteral(self, outfile, level, name_='managedSystemType'):
+    def exportLiteral(self, outfile, level, name_='managed_system_type'):
         level += 1
         self.exportLiteralAttributes(outfile, level, name_)
         if self.hasContent_():
@@ -298,24 +342,36 @@ class managedSystemType(GeneratedsSuper):
     def exportLiteralAttributes(self, outfile, level, name_):
         pass
     def exportLiteralChildren(self, outfile, level, name_):
-        if self.generatedUUID is not None:
+        if self.generated_uuid is not None:
             showIndent(outfile, level)
-            outfile.write('generatedUUID=%s,\n' % quote_python(self.generatedUUID).encode(ExternalEncoding))
-        if self.localUUID is not None:
+            outfile.write('generated_uuid=%s,\n' % quote_python(self.generated_uuid).encode(ExternalEncoding))
+        if self.local_uuid is not None:
             showIndent(outfile, level)
-            outfile.write('localUUID=%s,\n' % quote_python(self.localUUID).encode(ExternalEncoding))
-        if self.registrationDate is not None:
+            outfile.write('local_uuid=%s,\n' % quote_python(self.local_uuid).encode(ExternalEncoding))
+        if self.registration_date is not None:
             showIndent(outfile, level)
-            outfile.write('registrationDate=%s,\n' % quote_python(self.registrationDate).encode(ExternalEncoding))
-        if self.sslClientCertificate is not None:
+            outfile.write('registration_date=%s,\n' % quote_python(self.registration_date).encode(ExternalEncoding))
+        if self.ssl_client_certificate is not None:
             showIndent(outfile, level)
-            outfile.write('sslClientCertificate=%s,\n' % quote_python(self.sslClientCertificate).encode(ExternalEncoding))
-        if self.sslClientKey is not None:
+            outfile.write('ssl_client_certificate=%s,\n' % quote_python(self.ssl_client_certificate).encode(ExternalEncoding))
+        if self.ssl_client_key is not None:
             showIndent(outfile, level)
-            outfile.write('sslClientKey=%s,\n' % quote_python(self.sslClientKey).encode(ExternalEncoding))
-        if self.sslServerCertificate is not None:
+            outfile.write('ssl_client_key=%s,\n' % quote_python(self.ssl_client_key).encode(ExternalEncoding))
+        if self.ssl_server_certificate is not None:
             showIndent(outfile, level)
-            outfile.write('sslServerCertificate=%s,\n' % quote_python(self.sslServerCertificate).encode(ExternalEncoding))
+            outfile.write('ssl_server_certificate=%s,\n' % quote_python(self.ssl_server_certificate).encode(ExternalEncoding))
+        if self.launching_user is not None:
+            showIndent(outfile, level)
+            outfile.write('launching_user=%s,\n' % quote_python(self.launching_user).encode(ExternalEncoding))
+        if self.target_type is not None:
+            showIndent(outfile, level)
+            outfile.write('target_type=%s,\n' % quote_python(self.target_type).encode(ExternalEncoding))
+        if self.target_name is not None:
+            showIndent(outfile, level)
+            outfile.write('target_name=%s,\n' % quote_python(self.target_name).encode(ExternalEncoding))
+        if self.target_system_id is not None:
+            showIndent(outfile, level)
+            outfile.write('target_system_id=%s,\n' % quote_python(self.target_system_id).encode(ExternalEncoding))
     def build(self, node_):
         attrs = node_.attributes
         self.buildAttributes(attrs)
@@ -326,53 +382,81 @@ class managedSystemType(GeneratedsSuper):
         pass
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'generatedUUID':
-            generatedUUID_ = ''
+            nodeName_ == 'generated_uuid':
+            generated_uuid_ = ''
             for text__content_ in child_.childNodes:
-                generatedUUID_ += text__content_.nodeValue
-            self.generatedUUID = generatedUUID_
-            self.validate_generatedUUID(self.generatedUUID)    # validate type generatedUUID
+                generated_uuid_ += text__content_.nodeValue
+            self.generated_uuid = generated_uuid_
+            self.validate_generated_uuid(self.generated_uuid)    # validate type generated_uuid
         elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'localUUID':
-            localUUID_ = ''
+            nodeName_ == 'local_uuid':
+            local_uuid_ = ''
             for text__content_ in child_.childNodes:
-                localUUID_ += text__content_.nodeValue
-            self.localUUID = localUUID_
-            self.validate_localUUID(self.localUUID)    # validate type localUUID
+                local_uuid_ += text__content_.nodeValue
+            self.local_uuid = local_uuid_
+            self.validate_local_uuid(self.local_uuid)    # validate type local_uuid
         elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'registrationDate':
-            registrationDate_ = ''
+            nodeName_ == 'registration_date':
+            registration_date_ = ''
             for text__content_ in child_.childNodes:
-                registrationDate_ += text__content_.nodeValue
-            self.registrationDate = registrationDate_
+                registration_date_ += text__content_.nodeValue
+            self.registration_date = registration_date_
         elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'sslClientCertificate':
-            sslClientCertificate_ = ''
+            nodeName_ == 'ssl_client_certificate':
+            ssl_client_certificate_ = ''
             for text__content_ in child_.childNodes:
-                sslClientCertificate_ += text__content_.nodeValue
-            self.sslClientCertificate = sslClientCertificate_
-            self.validate_sslClientCertificate(self.sslClientCertificate)    # validate type sslClientCertificate
+                ssl_client_certificate_ += text__content_.nodeValue
+            self.ssl_client_certificate = ssl_client_certificate_
+            self.validate_ssl_client_certificate(self.ssl_client_certificate)    # validate type ssl_client_certificate
         elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'sslClientKey':
-            sslClientKey_ = ''
+            nodeName_ == 'ssl_client_key':
+            ssl_client_key_ = ''
             for text__content_ in child_.childNodes:
-                sslClientKey_ += text__content_.nodeValue
-            self.sslClientKey = sslClientKey_
-            self.validate_sslClientKey(self.sslClientKey)    # validate type sslClientKey
+                ssl_client_key_ += text__content_.nodeValue
+            self.ssl_client_key = ssl_client_key_
+            self.validate_ssl_client_key(self.ssl_client_key)    # validate type ssl_client_key
         elif child_.nodeType == Node.ELEMENT_NODE and \
-            nodeName_ == 'sslServerCertificate':
-            sslServerCertificate_ = ''
+            nodeName_ == 'ssl_server_certificate':
+            ssl_server_certificate_ = ''
             for text__content_ in child_.childNodes:
-                sslServerCertificate_ += text__content_.nodeValue
-            self.sslServerCertificate = sslServerCertificate_
-            self.validate_sslServerCertificate(self.sslServerCertificate)    # validate type sslServerCertificate
-# end class managedSystemType
+                ssl_server_certificate_ += text__content_.nodeValue
+            self.ssl_server_certificate = ssl_server_certificate_
+            self.validate_ssl_server_certificate(self.ssl_server_certificate)    # validate type ssl_server_certificate
+        elif child_.nodeType == Node.ELEMENT_NODE and \
+            nodeName_ == 'launching_user':
+            launching_user_ = ''
+            for text__content_ in child_.childNodes:
+                launching_user_ += text__content_.nodeValue
+            self.launching_user = launching_user_
+            self.validate_launching_user(self.launching_user)    # validate type launching_user
+        elif child_.nodeType == Node.ELEMENT_NODE and \
+            nodeName_ == 'target_type':
+            target_type_ = ''
+            for text__content_ in child_.childNodes:
+                target_type_ += text__content_.nodeValue
+            self.target_type = target_type_
+            self.validate_target_type(self.target_type)    # validate type target_type
+        elif child_.nodeType == Node.ELEMENT_NODE and \
+            nodeName_ == 'target_name':
+            target_name_ = ''
+            for text__content_ in child_.childNodes:
+                target_name_ += text__content_.nodeValue
+            self.target_name = target_name_
+            self.validate_target_name(self.target_name)    # validate type target_name
+        elif child_.nodeType == Node.ELEMENT_NODE and \
+            nodeName_ == 'target_system_id':
+            target_system_id_ = ''
+            for text__content_ in child_.childNodes:
+                target_system_id_ += text__content_.nodeValue
+            self.target_system_id = target_system_id_
+            self.validate_target_system_id(self.target_system_id)    # validate type target_system_id
+# end class managed_system_type
 
 
 class systemInformationType(GeneratedsSuper):
     member_data_items_ = [
         MemberSpec_('systemName', ['string64', 'xsd:token'], 0),
-        MemberSpec_('memory', 'xsd:positiveInteger', 0),
+        MemberSpec_('memory', 'xsd:string', 0),
         MemberSpec_('osType', ['string64', 'xsd:token'], 0),
         MemberSpec_('osMajorVersion', ['string64', 'xsd:token'], 0),
         MemberSpec_('osMinorVersion', ['string32', 'xsd:token'], 0),
@@ -439,7 +523,7 @@ class systemInformationType(GeneratedsSuper):
             outfile.write('<%ssystemName>%s</%ssystemName>\n' % (namespace_, self.format_string(quote_xml(self.systemName).encode(ExternalEncoding), input_name='systemName'), namespace_))
         if self.memory is not None:
             showIndent(outfile, level)
-            outfile.write('<%smemory>%s</%smemory>\n' % (namespace_, self.format_integer(self.memory, input_name='memory'), namespace_))
+            outfile.write('<%smemory>%s</%smemory>\n' % (namespace_, self.format_string(quote_xml(self.memory).encode(ExternalEncoding), input_name='memory'), namespace_))
         if self.osType is not None:
             showIndent(outfile, level)
             outfile.write('<%sosType>%s</%sosType>\n' % (namespace_, self.format_string(quote_xml(self.osType).encode(ExternalEncoding), input_name='osType'), namespace_))
@@ -477,7 +561,7 @@ class systemInformationType(GeneratedsSuper):
             outfile.write('systemName=%s,\n' % quote_python(self.systemName).encode(ExternalEncoding))
         if self.memory is not None:
             showIndent(outfile, level)
-            outfile.write('memory=%d,\n' % self.memory)
+            outfile.write('memory=%s,\n' % quote_python(self.memory).encode(ExternalEncoding))
         if self.osType is not None:
             showIndent(outfile, level)
             outfile.write('osType=%s,\n' % quote_python(self.osType).encode(ExternalEncoding))
@@ -508,15 +592,10 @@ class systemInformationType(GeneratedsSuper):
             self.validate_systemName(self.systemName)    # validate type systemName
         elif child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'memory':
-            if child_.firstChild:
-                sval_ = child_.firstChild.nodeValue
-                try:
-                    ival_ = int(sval_)
-                except ValueError, exp:
-                    raise ValueError('requires integer (memory): %s' % exp)
-                if ival_ <= 0:
-                    raise ValueError('requires positiveInteger -- %s' % child_.toxml())
-                self.memory = ival_
+            memory_ = ''
+            for text__content_ in child_.childNodes:
+                memory_ += text__content_.nodeValue
+            self.memory = memory_
         elif child_.nodeType == Node.ELEMENT_NODE and \
             nodeName_ == 'osType':
             osType_ = ''
@@ -560,12 +639,12 @@ def usage():
 def parse(inFileName):
     doc = minidom.parse(inFileName)
     rootNode = doc.documentElement
-    rootObj = managedSystemType.factory()
+    rootObj = managed_system_type.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('<?xml version="1.0" ?>\n')
-##     rootObj.export(sys.stdout, 0, name_="managedSystem", 
+##     rootObj.export(sys.stdout, 0, name_="managed_system", 
 ##         namespacedef_='')
     return rootObj
 
@@ -573,12 +652,12 @@ def parse(inFileName):
 def parseString(inString):
     doc = minidom.parseString(inString)
     rootNode = doc.documentElement
-    rootObj = managedSystemType.factory()
+    rootObj = managed_system_type.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('<?xml version="1.0" ?>\n')
-##     rootObj.export(sys.stdout, 0, name_="managedSystem",
+##     rootObj.export(sys.stdout, 0, name_="managed_system",
 ##         namespacedef_='')
     return rootObj
 
@@ -586,14 +665,14 @@ def parseString(inString):
 def parseLiteral(inFileName):
     doc = minidom.parse(inFileName)
     rootNode = doc.documentElement
-    rootObj = managedSystemType.factory()
+    rootObj = managed_system_type.factory()
     rootObj.build(rootNode)
     # Enable Python to collect the space used by the DOM.
     doc = None
 ##     sys.stdout.write('#from generateds_system import *\n\n')
 ##     sys.stdout.write('import generateds_system as model_\n\n')
-##     sys.stdout.write('rootObj = model_.managedSystem(\n')
-##     rootObj.exportLiteral(sys.stdout, 0, name_="managedSystem")
+##     sys.stdout.write('rootObj = model_.managed_system(\n')
+##     rootObj.exportLiteral(sys.stdout, 0, name_="managed_system")
 ##     sys.stdout.write(')\n')
     return rootObj
 

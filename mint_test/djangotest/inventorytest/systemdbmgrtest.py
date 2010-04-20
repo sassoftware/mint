@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import datetime
 import os
 import sys
 import tempfile
@@ -33,8 +34,10 @@ class DjangoTest(fixtures.FixturedUnitTest):
 
     def importDjango(self):
         from mint.django_rest.rbuilder import models as rbuildermodels
+        from mint.django_rest.rbuilder import inventory
         from mint.django_rest.rbuilder.inventory import systemdbmgr
         from mint.django_rest.rbuilder.inventory import models as systemmodels
+        self.inventory = inventory
         self.rbuildermodels = rbuildermodels
         self.systemdbmgr = systemdbmgr
         self.systemmodels = systemmodels
@@ -61,7 +64,6 @@ class DjangoTest(fixtures.FixturedUnitTest):
             sys.modules[k] = v
 
     def tearDown(self):
-        # self._unImport()
         self._import()
         fixtures.FixturedUnitTest.tearDown(self)
 
@@ -86,33 +88,45 @@ class SystemDbMgrTest(DjangoTest):
 
         self.sdm = self.systemdbmgr.SystemDBManager(None, 'testuser')
 
+    def _createSystem(self):
+        system = self.inventory.System(target_system_id='testinstanceid',
+                    target_type='aws', target_name='ec2',
+                    registration_date=datetime.datetime.now())
+        systemTarget = self.sdm.createSystem(system)
+        return system, systemTarget
+
     def setUp(self):
         DjangoTest.setUp(self)
         self._data()
 
-    def testLaunchSystem(self):
-        self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
+    def testCreateSystem(self):
+        self._createSystem()
         self.assertEquals(1, len(self.systemmodels.managed_system.objects.all()))
         self.assertEquals(1, len(self.systemmodels.system_target.objects.all()))
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         self.assertEquals('testinstanceid', systemTarget.target_system_id)
 
-    def testSetSystemSSLInfo(self):
-        self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
-        self.sdm.setSystemSSLInfo('testinstanceid', '/sslcert', '/sslkey')
+    def testUpdateSystem(self):
+        system, systemTarget = self._createSystem()
+        system.ssl_client_certificate = '/sslcert'
+        system.ssl_client_key = '/sslkey'
+        self.sdm.updateSystem(system)
         system = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         self.assertEquals('/sslcert', system.managed_system.ssl_client_certificate)
         self.assertEquals('/sslkey', system.managed_system.ssl_client_key)
 
     def testGetSystemSSLInfo(self):
-        self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
-        self.sdm.setSystemSSLInfo('testinstanceid', '/sslcert', '/sslkey')
+        system, systemTarget = self._createSystem()
+        system.launching_user = self.sdm.user
+        system.ssl_client_certificate = '/sslcert'
+        system.ssl_client_key = '/sslkey'
+        self.sdm.updateSystem(system)
         cert, key = self.sdm.getSystemSSLInfo('testinstanceid')
         self.assertEquals('/sslcert', cert)
         self.assertEquals('/sslkey', key)
 
     def testIsManageable(self):
-        self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
+        self._createSystem()
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         self.assertTrue(self.sdm.isManageable(systemTarget.managed_system))
 
@@ -134,13 +148,13 @@ class SystemDbMgrTest(DjangoTest):
         managedSystem = self.sdm.getManagedSystemForInstanceId('testinstanceid')
         self.assertTrue(managedSystem is None)
 
-        self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
+        self._createSystem()
         managedSystem = self.sdm.getManagedSystemForInstanceId('testinstanceid')
         self.assertTrue(isinstance(managedSystem, self.systemmodels.managed_system))
         
 
     def _setSoftwareVersion(self):
-        systemTarget = self.sdm.launchSystem('testinstanceid', 'aws', 'ec2')
+        system, systemTarget = self._createSystem()
         self.sdm.setSoftwareVersionForInstanceId('testinstanceid', [self._getVersion()])
         ssv = self.systemmodels.system_software_version.objects.filter(
                 managed_system=systemTarget.managed_system)

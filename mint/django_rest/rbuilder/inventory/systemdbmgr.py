@@ -3,15 +3,15 @@
 #
 # All Rights Reserved
 #
-
 import datetime
 import logging
 import time
 
-from django.db import connection, transaction
+from django.db import connection
 
 from mint import mint_error
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.inventory import generateds_system
 from mint.django_rest.rbuilder.inventory import models
 
 log = logging.getLogger(__name__)
@@ -32,22 +32,22 @@ class SystemDBManager(RbuilderDjangoManager):
     def getSystems(self):
         return models.managed_systems.objects.all()
 
-    def launchSystem(self, instanceId, targetType, targetName):
-        managedSystem = models.managed_system(
-            registration_date=datetime.datetime.now(),
-            launching_user = self.user)
+    def createSystem(self, system):
+        managedSystem = models.managed_system.factoryParser(system)
+        managedSystem.launching_user = self.user
         managedSystem.save()
-        target = rbuildermodels.Targets.objects.get(targettype=targetType,
-            targetname=targetName)
+        target = rbuildermodels.Targets.objects.get(
+                    targettype=system.target_type,
+                    targetname=system.target_name)
         systemTarget = models.system_target(managed_system=managedSystem,
-            target=target, target_system_id=instanceId)
+            target=target, target_system_id=system.target_system_id)
         systemTarget.save()
         return systemTarget
         
-    def setSystemSSLInfo(self, instanceId, sslCert, sslKey):
-        systemTarget = models.system_target.objects.get(target_system_id=instanceId)
-        systemTarget.managed_system.ssl_client_certificate = sslCert
-        systemTarget.managed_system.ssl_client_key = sslKey
+    def updateSystem(self, system):
+        systemTarget = models.system_target.objects.get(
+                        target_system_id=system.target_system_id)
+        systemTarget.managed_system.updateFromParser(system)
         systemTarget.managed_system.save()
         return systemTarget.managed_system
 
