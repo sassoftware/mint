@@ -4216,7 +4216,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             #Start the PC Session
             sesH = pc.startSession(dict(hostname=project.getFQDN(),
                 shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, label)
+                version=version['name']), mincfg, label=label)
         else:
             sesH = sessionHandle
 

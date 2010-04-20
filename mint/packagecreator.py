@@ -6,6 +6,8 @@
 import os
 from StringIO import StringIO
 
+from conary.lib import util
+
 from pcreator.backend import errors
 from pcreator import callbacks
 import pcreator.factorydata
@@ -166,7 +168,11 @@ class MinimalConaryConfiguration(pcreator.backend.MinimalConaryConfiguration):
                         continue
                 strio = StringIO()
                 conarycfg.displayKey(key, out = strio)
-                self.lines.extend(strio.getvalue().splitlines())
+                lines = strio.getvalue().splitlines()
+                newLines = []
+                for line in lines:
+                    newLines.append(util.ProtectedString(line))
+                self.lines.extend(((len(newLines) and newLines) or lines))
         finally:
             conarycfg.setDisplayOptions(hidePasswords = hidePasswords)
 
