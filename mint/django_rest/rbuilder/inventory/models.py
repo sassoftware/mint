@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import datetime
+
 from django.db import IntegrityError
 from django.db import models
 from django.db import transaction
@@ -11,9 +13,61 @@ from django.db import transaction
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import generateds_system
 
-class managed_system(models.Model):
-    parser = generateds_system.managedSystemType
-    registration_date = models.DateTimeField('Registration Date')
+class ModelParser(models.Model):
+    """
+    Common base class for models that exposes 2 class factories that are
+    useful.
+
+    factoryParser creates a model instance based on an instance of the parser
+    class (as generated from generateDS).
+
+    factoryDict creates a model instance based on a dictionary of name/value
+    pairs of the models fields.
+    """
+
+    class Meta:
+        """Tells django not create schema for this model class."""
+        abstract = True
+
+    def __init__(self, *args, **kw):
+        models.Model.__init__(self, *args, **kw)
+        if not hasattr(self, 'parserInstance'):
+            self.parserInstance = None
+
+    @classmethod
+    def factoryParser(cls, parserInstance):
+        """Create a model instance based on a parser instance."""
+
+        # Create a dictionary based on the attributes of parserInstance that
+        # are known data items, as long as those data items are defined as
+        # fields on the model.
+        modelDict = dict((x.name, getattr(parserInstance, x.name)) \
+                          for x in cls.parser.member_data_items_ \
+                          if x in [n.name for n in cls._meta.fields])
+
+        inst = cls(**modelDict)
+        inst.parserInstance = parserInstance
+        return inst
+
+    @classmethod
+    def factoryDict(cls, **kw):
+        """Create a model instance based on a dictionary."""
+        return cls(**kw)
+
+    def updateFromParser(self, parserInstance):
+        """
+        Updates the model's fields values based on the values from
+        parserInstance, ignoring updating the primary key field as we don't
+        want to overwrite this value with None.
+        """
+        fields = [n.name for n in self._meta.fields if n.primary_key is False]
+        for fieldName in fields:
+           setattr(self, fieldName, getattr(parserInstance, fieldName, None))
+
+class managed_system(ModelParser):
+    parser = generateds_system.managed_system_type
+    registration_date = models.DateTimeField('Registration Date',
+                            default=datetime.datetime.now())
     generated_uuid = models.CharField(max_length=64, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)

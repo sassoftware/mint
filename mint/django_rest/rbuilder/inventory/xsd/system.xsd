@@ -6,21 +6,29 @@
         xmlns:inv="http://www.rpath.com/permanent/inventory/system-1.0.xsd"
         xmlns="http://www.rpath.com/permanent/inventory/system-1.0.xsd">
 
-    <xsd:element name="managedSystem" type="inv:managedSystemType" />
+    <xsd:element name="managed_system" type="inv:managed_system_type" />
 
-    <xsd:complexType name="managedSystemType">
+    <xsd:complexType name="managed_system_type">
       <xsd:sequence>
-        <xsd:element name="generatedUUID" type="inv:string64"
+        <xsd:element name="generated_uuid" type="inv:string64"
             minOccurs="1" maxOccurs="1" />
-        <xsd:element name="localUUID" type="inv:string64"
+        <xsd:element name="local_uuid" type="inv:string64"
             minOccurs="1" maxOccurs="1" />
-        <xsd:element name="registrationDate" type="xsd:dateTime"
+        <xsd:element name="registration_date" type="xsd:dateTime"
             minOccurs="0" maxOccurs="1" />
-        <xsd:element name="sslClientCertificate" type="inv:string8092"
+        <xsd:element name="ssl_client_certificate" type="inv:string8092"
             minOccurs="0" maxOccurs="1" />
-        <xsd:element name="sslClientKey" type="inv:string8092"
+        <xsd:element name="ssl_client_key" type="inv:string8092"
             minOccurs="0" maxOccurs="1" />
-        <xsd:element name="sslServerCertificate" type="inv:string8092"
+        <xsd:element name="ssl_server_certificate" type="inv:string8092"
+            minOccurs="0" maxOccurs="1" />
+        <xsd:element name="launching_user" type="inv:string8092"
+            minOccurs="0" maxOccurs="1" />
+        <xsd:element name="target_type" type="inv:string8092"
+            minOccurs="0" maxOccurs="1" />
+        <xsd:element name="target_name" type="inv:string8092"
+            minOccurs="0" maxOccurs="1" />
+        <xsd:element name="target_system_id" type="inv:string8092"
             minOccurs="0" maxOccurs="1" />
       </xsd:sequence>
     </xsd:complexType>
