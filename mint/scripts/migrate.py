@@ -837,7 +837,7 @@ class MigrateTo_49(SchemaMigration):
         try:
 	    cu.execute("ALTER TABLE Targets DROP CONSTRAINT targets_targetname_key")
         except sqlerrors.CursorError, e:
-            if not str(e.args[0].startswith('ERROR:  constraint "targets_targetname_key" does not exist'):
+            if not str(e.args[0]).startswith('ERROR:  constraint "targets_targetname_key" does not exist'):
                 raise
 
         self.db.createIndex('Targets',
