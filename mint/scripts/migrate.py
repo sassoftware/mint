@@ -834,7 +834,11 @@ class MigrateTo_49(SchemaMigration):
 
         # Drop uniq constraint on targetName
         cu = self.db.cursor()
-        cu.execute("ALTER TABLE Targets DROP CONSTRAINT targets_targetname_key")
+        try:
+	    cu.execute("ALTER TABLE Targets DROP CONSTRAINT targets_targetname_key")
+        except sqlerrors.CursorError, e:
+            if not str(e.args[0].startswith('ERROR:  constraint "targets_targetname_key" does not exist'):
+                raise
 
         self.db.createIndex('Targets',
             'Targets_Type_Name_Uq', 'targetType, targetName', unique = True)
