@@ -836,14 +836,11 @@ class MigrateTo_49(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Targets DROP CONSTRAINT targets_targetname_key")
 
-        db.createIndex('Targets',
+        self.db.createIndex('Targets',
             'Targets_Type_Name_Uq', 'targetType, targetName', unique = True)
         return True
 
-class MigrateTo_50(SchemaMigration):
-    Version = (50, 0)
-
-    def migrate(self):
+    def migrate2(self):
         schema._createInventorySchema(self.db)
         schema._createJobsSchema(self.db)
         return True
