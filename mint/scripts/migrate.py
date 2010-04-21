@@ -799,7 +799,7 @@ class MigrateTo_48(SchemaMigration):
         return True
 
 class MigrateTo_49(SchemaMigration):
-    Version = (49, 1)
+    Version = (49, 2)
 
     # 49.0
     # - Added TargetUserCredentials
