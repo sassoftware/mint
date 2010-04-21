@@ -115,15 +115,15 @@ class SystemDbMgrTest(DjangoTest):
         self.assertEquals('/sslcert', system.managed_system.ssl_client_certificate)
         self.assertEquals('/sslkey', system.managed_system.ssl_client_key)
 
-    def testGetSystemSSLInfo(self):
+    def testGetSystemByInstanceId(self):
         system, systemTarget = self._createSystem()
         system.launching_user = self.sdm.user
         system.ssl_client_certificate = '/sslcert'
         system.ssl_client_key = '/sslkey'
         self.sdm.updateSystem(system)
-        cert, key = self.sdm.getSystemSSLInfo('testinstanceid')
-        self.assertEquals('/sslcert', cert)
-        self.assertEquals('/sslkey', key)
+        system = self.sdm.getSystemByInstanceId('testinstanceid')
+        self.assertEquals('/sslcert', system.ssl_client_certificate)
+        self.assertEquals('/sslkey', system.ssl_client_key)
 
     def testIsManageable(self):
         self._createSystem()
