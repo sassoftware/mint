@@ -16,13 +16,8 @@ from mint.django_rest.rbuilder.inventory import generateds_system
 class ModelParser(models.Model):
     """
     Common base class for models that exposes 2 class factories that are
-    useful.
-
-    factoryParser creates a model instance based on an instance of the parser
-    class (as generated from generateDS).
-
-    factoryDict creates a model instance based on a dictionary of name/value
-    pairs of the models fields.
+    useful, and other methods to interact with the generic parser object for
+    the model.
     """
 
     class Meta:
@@ -36,7 +31,7 @@ class ModelParser(models.Model):
 
     @classmethod
     def factoryParser(cls, parserInstance):
-        """Create a model instance based on a parser instance."""
+        """Create an instance of this model from a parser instance."""
 
         # Create a dictionary based on the attributes of parserInstance that
         # are known data items, as long as those data items are defined as
@@ -51,7 +46,7 @@ class ModelParser(models.Model):
 
     @classmethod
     def factoryDict(cls, **kw):
-        """Create a model instance based on a dictionary."""
+        """Create an instance of this model from a dictionary."""
         return cls(**kw)
 
     def updateFromParser(self, parserInstance):
@@ -63,6 +58,22 @@ class ModelParser(models.Model):
         fields = [n.name for n in self._meta.fields if n.primary_key is False]
         for fieldName in fields:
            setattr(self, fieldName, getattr(parserInstance, fieldName, None))
+
+    def getParser(self):
+        """
+        Return an instance of the parser class that represents this model.
+        
+        Override this method to customize behavior for more complex models
+        with relationships.
+        """
+        fieldNames = [n.name for n in self._meta.fields if n.primary_key is False]
+        parserAttrNames = [n.name for n in self.parser.member_data_items_]
+        parserDict = {}
+        for f in fieldNames:
+            if f in parserAttrNames:
+                parserDict[f] = getattr(self, f, None)
+
+        return self.parser(**parserDict)
 
 class managed_system(ModelParser):
     parser = generateds_system.managed_system_type

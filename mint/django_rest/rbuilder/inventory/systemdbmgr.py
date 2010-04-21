@@ -10,6 +10,7 @@ import time
 from django.db import connection
 
 from mint import mint_error
+from mint.django_rest.rbuilder import inventory
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import generateds_system
 from mint.django_rest.rbuilder.inventory import models
@@ -51,13 +52,15 @@ class SystemDBManager(RbuilderDjangoManager):
         systemTarget.managed_system.save()
         return systemTarget.managed_system
 
-    def getSystemSSLInfo(self, instanceId):
+    def getSystemByInstanceId(self, instanceId):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
-            return '', ''
+            return inventory.System()
         if not self.isManageable(managedSystem):
-            return '', ''
-        return managedSystem.ssl_client_certificate, managedSystem.ssl_client_key
+            managedSystem.ssl_client_certificate = None
+            managedSystem.ssl_client_key = None
+        
+        return managedSystem
 
     def isManageable(self, managedSystem):
         if managedSystem.launching_user.userid == self.user.userid:
