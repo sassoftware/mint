@@ -6,7 +6,7 @@ import sys
 import tempfile
 import time
 
-from testrunner import testhelp
+import testsetup
 
 from conary import versions
 from conary.deps import deps
@@ -116,18 +116,62 @@ class SystemDbMgrTest(DjangoTest):
         self.assertEquals('/sslkey', system.managed_system.ssl_client_key)
 
     def testGetSystemByInstanceId(self):
+        tmpDir = self.cfg.dataPath
+        # Create ssl cert and ssl key
+        sslCertFilePath = os.path.join(tmpDir, "sslcert")
+        sslKeyFilePath = os.path.join(tmpDir, "sslkey")
+        file(sslCertFilePath, "w")
+        file(sslKeyFilePath, "w")
         system, systemTarget = self._createSystem()
         system.launching_user = self.sdm.user
-        system.ssl_client_certificate = '/sslcert'
-        system.ssl_client_key = '/sslkey'
+        system.ssl_client_certificate = sslCertFilePath
+        system.ssl_client_key = sslKeyFilePath
         self.sdm.updateSystem(system)
+
         system = self.sdm.getSystemByInstanceId('testinstanceid')
-        self.assertEquals('/sslcert', system.ssl_client_certificate)
-        self.assertEquals('/sslkey', system.ssl_client_key)
+        self.assertEquals(system.ssl_client_certificate, sslCertFilePath)
+        self.assertEquals(system.ssl_client_key, sslKeyFilePath)
+        self.assertTrue(system.is_manageable)
+
+        # Get rid of one of the files, should make the system unmanageable
+        os.unlink(sslCertFilePath)
+        system = self.sdm.getSystemByInstanceId('testinstanceid')
+        self.assertEquals(system.ssl_client_certificate, sslCertFilePath)
+        self.assertEquals(system.ssl_client_key, sslKeyFilePath)
+        self.assertFalse(system.is_manageable)
 
     def testIsManageable(self):
         self._createSystem()
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        self.assertTrue(self.sdm.isManageable(systemTarget.managed_system))
+
+        # Create new user
+        newUser = self.rbuildermodels.Users.objects.create(username='testuser2',
+            timecreated=str(time.time()), timeaccessed=str(time.time()),
+            active=1)
+        # Now make the system owned by newUser
+        systemTarget.managed_system.launching_user_id = newUser.userid
+        systemTarget.managed_system.save()
+        systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        # No longer manageable, since testuser2 has no credentials
+        self.assertFalse(self.sdm.isManageable(systemTarget.managed_system))
+
+        target = self.rbuildermodels.Targets.objects.get(
+            targettype='aws', targetname='ec2')
+        self.rbuildermodels.TargetUserCredentials(targetid=target,
+            userid=newUser, credentials='testusercredentials newUser2').save()
+
+        systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        # No longer manageable, since testuser2 has no credentials
+        self.assertFalse(self.sdm.isManageable(systemTarget.managed_system))
+
+        # Update credentials
+        cu = self.systemdbmgr.connection.cursor()
+        cu.execute("""UPDATE TargetUserCredentials SET credentials = %s
+            WHERE targetId = %s AND userId = %s""",
+            [ "testusercredentials", target.targetid, newUser.userid ])
+        systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        # Back to being manageable, same credentials as the current user
         self.assertTrue(self.sdm.isManageable(systemTarget.managed_system))
 
     def _getVersion(self): 
@@ -180,3 +224,6 @@ class SystemDbMgrTest(DjangoTest):
         vers = self.systemmodels.system_software_version.objects.filter(
                 managed_system=managedSystem)
         self.assertEquals(0, len(vers))
+
+if __name__ == "__main__":
+        testsetup.main()

@@ -5,6 +5,7 @@
 #
 import datetime
 import logging
+import os
 import time
 
 from django.db import connection
@@ -56,11 +57,19 @@ class SystemDBManager(RbuilderDjangoManager):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
             return inventory.System()
+        managedSystemObj = managedSystem.getParser()
         if not self.isManageable(managedSystem):
-            managedSystem.ssl_client_certificate = None
-            managedSystem.ssl_client_key = None
+            managedSystemObj.ssl_client_certificate = None
+            managedSystemObj.ssl_client_key = None
+            managedSystemObj.set_is_manageable(False)
+        else:
+            isManageable = (managedSystem.ssl_client_certificate is not None
+                and managedSystem.ssl_client_key is not None
+                and os.path.exists(managedSystem.ssl_client_certificate)
+                and os.path.exists(managedSystem.ssl_client_key))
+            managedSystemObj.set_is_manageable(isManageable)
         
-        return managedSystem
+        return managedSystemObj
 
     def isManageable(self, managedSystem):
         if managedSystem.launching_user.userid == self.user.userid:
@@ -72,7 +81,7 @@ class SystemDBManager(RbuilderDjangoManager):
         cu.execute("""
             SELECT 1
               FROM TargetUserCredentials tc1
-              JOIN TargetUserCredentials tc2 USING (credentials)
+              JOIN TargetUserCredentials tc2 USING (targetId, credentials)
              WHERE tc1.userId = %s
                AND tc2.userId = %s
          """, [ self.user.userid, managedSystem.launching_user.userid ])
