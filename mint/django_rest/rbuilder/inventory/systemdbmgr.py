@@ -57,8 +57,8 @@ class SystemDBManager(RbuilderDjangoManager):
         if not managedSystem:
             return inventory.System()
         if not self.isManageable(managedSystem):
-            managedSystem.ssl_client_certificate = ''
-            managedSystem.ssl_client_key = ''
+            managedSystem.ssl_client_certificate = None
+            managedSystem.ssl_client_key = None
         
         return managedSystem
 
