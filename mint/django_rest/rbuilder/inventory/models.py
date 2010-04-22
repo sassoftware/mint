@@ -38,7 +38,7 @@ class ModelParser(models.Model):
         # fields on the model.
         modelDict = dict((x.name, getattr(parserInstance, x.name)) \
                           for x in cls.parser.member_data_items_ \
-                          if x in [n.name for n in cls._meta.fields])
+                          if x.name in [n.name for n in cls._meta.fields])
 
         inst = cls(**modelDict)
         inst.parserInstance = parserInstance

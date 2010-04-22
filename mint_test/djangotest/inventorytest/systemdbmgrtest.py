@@ -106,6 +106,18 @@ class SystemDbMgrTest(DjangoTest):
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         self.assertEquals('testinstanceid', systemTarget.target_system_id)
 
+    def testCreateSystemWithSSLInfo(self):
+        system = self.inventory.System(target_system_id='testinstanceid',
+                    target_type='aws', target_name='ec2',
+                    registration_date=datetime.datetime.now(),
+                    ssl_client_certificate='/tmp/client',
+                    ssl_client_key='/tmp/key')
+        systemTarget = self.sdm.createSystem(system)
+        managedSystem = \
+            self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').managed_system
+        self.assertEquals('/tmp/client', managedSystem.ssl_client_certificate)
+        self.assertEquals('/tmp/key', managedSystem.ssl_client_key)
+
     def testUpdateSystem(self):
         system, systemTarget = self._createSystem()
         system.ssl_client_certificate = '/sslcert'
