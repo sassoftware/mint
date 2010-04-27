@@ -1185,7 +1185,8 @@ def _createJobsSchema(db):
     changed |= _addTableRows(db, 'job_types', 'name',
         [ dict(name="instance-launch", description='Instance Launch'),
           dict(name="platform-load", description='Platform Load'),
-          dict(name="software-version-refresh", description='Software Version Refresh'), ])
+          dict(name="software-version-refresh", description='Software Version Refresh'),
+          dict(name="update-instance", description='Update Instance'), ])
 
     if 'job_states' not in db.tables:
         cu.execute("""
