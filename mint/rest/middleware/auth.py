@@ -63,7 +63,10 @@ class AuthenticationCallback(object):
     def getAuth(self, request):
         if not 'Authorization' in request.headers:
             return None
-        type, user_pass = request.headers['Authorization'].split(' ', 1)
+        arr = request.headers['Authorization'].split(' ', 1)
+        if len(arr) != 2:
+            return None
+        type, user_pass = arr
         try:
             user_name, password = base64.decodestring(user_pass).split(':', 1)
             password = util.ProtectedString(password)

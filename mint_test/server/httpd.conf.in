@@ -61,6 +61,7 @@ LoadModule mime_module modules/mod_mime.so
 LoadModule python_module modules/mod_python.so
 LoadModule alias_module modules/mod_alias.so
 LoadModule setenvif_module modules/mod_setenvif.so
+LoadModule env_module modules/mod_env.so
 LoadModule cgi_module modules/mod_cgi.so
 
 DocumentRoot "@DOCROOT@"
@@ -77,7 +78,9 @@ Alias /images/                      "@IMAGESPATH@/"
 Alias /cgi-bin/                     "@SCRIPTSPATH@/"
 Alias /                             "@DOCROOT@/rbuilder.conf/"
 
+
 <Location />
+    PassEnv DJANGO_SETTINGS_MODULE
     AddHandler python-program .conf
     PythonHandler mint.web.hooks
     PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"

@@ -450,6 +450,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
     @fixtures.fixture("EC2")
     def testLaunchAMIInstance(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
@@ -464,6 +465,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
     @fixtures.fixture("EC2")
     def testTerminateInstances(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
@@ -498,6 +500,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
     @fixtures.fixture("EC2")
     def testLaunchLimitPerIP(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
         amiIds = data['amiIds']
         for i in range(0, self.cfg.ec2MaxInstancesPerIP):
@@ -526,6 +529,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
     @fixtures.fixture("EC2")
     def testGetAMIInstanceStatus(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
@@ -539,6 +543,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
     @fixtures.fixture("Empty")
     def testLaunchNonexistentAMIInstance(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
 
         self.assertRaises(mint_error.TargetMissing,
@@ -549,6 +554,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
     @fixtures.fixture("EC2")
     def testExtendInstanceTTL(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
@@ -567,6 +573,7 @@ Please log in via raa using the following password. %(raaPassword)s"""
 
     @fixtures.fixture("EC2")
     def testUserDataTemplate(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
         amiIds = data['amiIds']
 
@@ -603,6 +610,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
         
     @fixtures.fixture("EC2")
     def testGetEC2KeyPairs(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
 
         # test getting all
@@ -1272,7 +1280,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             # Launch perms were reset
             self.assertTrue(self.resetLaunchPermissionsCalled)
             # launch perms were added to the owner and developer in the product
-            self.assertEquals(2, len(self.launchPermissions))
+            self.assertEquals(len(self.launchPermissions), 2)
             self.assertTrue(('ami-00000003', 'devid') in self.launchPermissions)
             self.assertTrue(('ami-00000003', 'sodevid') in self.launchPermissions)
             reset()
@@ -1282,7 +1290,7 @@ conaryproxy = http://proxy.hostname.com/proxy/
             # Public launch perms were not added
             self.assertTrue(not self.addPublicLaunchPermissionCalled)
             # Launch perms for all 3 users were added.
-            self.assertEquals(3, len(self.launchPermissions))
+            self.assertEquals(len(self.launchPermissions), 3)
             reset()
 
             # Unpublish the release of a private product on rBA
@@ -1473,6 +1481,7 @@ class EC2DefaultCredentialsTest(BaseEC2Test):
     @testsuite.tests('RBL-3342')
     @fixtures.fixture('EC2')
     def testTypicalGuidedTourPath(self, db, data):
+        raise testsuite.SkipTestException("launchAMIInstance is gone")
         client = self.getClient("admin")
         amiData = client.getTargetData('ec2', 'aws')
         client._cfg.proxy['https'] = "https://user:pass@localhost:1234"
