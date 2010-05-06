@@ -1589,6 +1589,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         images = client.getAllBuildsByType('VMWARE_ESX_IMAGE')
         assert(len(images) == 1)
 
+        images = client.getAllBuildsByType('VMWARE_OVF_IMAGE')
+        assert(len(images) == 0)
+        self.addBuild(client, projectId, buildtypes.VMWARE_OVF_IMAGE,
+                      userId=userId)
+        images = client.getAllBuildsByType('VMWARE_OVF_IMAGE')
+        assert(len(images) == 1)
+
         images = client.getAllBuildsByType('AMI')
         assert(len(images) == 0)
         self.addBuild(client, projectId, buildtypes.AMI,
@@ -1611,15 +1618,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failUnlessEqual(len(images), 1)
         image = images[0]
         expected = {
-            'productDescription': '', 'buildId': 7, 'projectId': 1,
+            'productDescription': '', 'buildId': 8, 'projectId': 1,
             'isPublished': 0, 'buildDescription': 'Build Description',
             'productName': 'Test Project',
             'isPrivate': 0,
-            'sha1': '902ba3cda1883801594b6e1b452790cc53948fda',
+            'sha1': 'fe5dbbcea5ce7e2988b8c69bcfdfde8904aabc1f',
             'role': 'Product Owner', 'createdBy': 'foouser',
             'buildName': 'Build', 'baseFileName': 'testproject-0.1-',
-            'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=7',
-            'buildPageUrl': 'http://SOMEHOST/project/testproject/build?id=7',
+            'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=8',
+            'buildPageUrl': 'http://SOMEHOST/project/testproject/build?id=8',
         }
         image['downloadUrl'] = self._whiteOutHostPort(image['downloadUrl'])
         image['buildPageUrl'] = self._whiteOutHostPort(image['buildPageUrl'])
