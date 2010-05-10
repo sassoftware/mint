@@ -26,7 +26,7 @@ class ImageFile(Model):
     title    = fields.CharField()
     size     = fields.IntegerField()
     sha1     = fields.CharField()
-    baseFileName = fields.CharField()
+    fileName = fields.CharField()
     urls     = fields.ListField(FileUrl, displayName='url')
 
     def __repr__(self):
@@ -149,6 +149,7 @@ class Image(Model):
             ['hostname', 'imageId'])
     imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
+    baseFileName = fields.CharField()
     
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.
