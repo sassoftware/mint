@@ -161,7 +161,7 @@ class Proxy(Satellite):
         self.name = 'Red Hat Proxy'
 
 class Nu(ContentSourceType):
-    fields = [Name()]
+    fields = [Name(), Username(), Password()]
     model = models.Source
 
     def status(self):
