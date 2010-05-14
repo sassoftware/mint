@@ -48,6 +48,11 @@ class VwsTest(fixtures.FixturedUnitTest):
                     'role': '',
                     'createdBy': 'owner',
                     'buildName': 'Test Build',
+                    'files': [
+                         {'downloadUrl': 'http://test.rpath.local/downloadImage?fileId=1',
+                          'sha1': 'da39a3ee5e6b4b0d3255bfef95601890afd80709',
+                          'filename': 'file', 'idx': 0, 'size': '0'}
+                        ],
                     'buildPageUrl':
                             'http://test.rpath.local/project/foo/build?id=1',
                     'downloadUrl':
