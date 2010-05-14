@@ -16,8 +16,6 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import generateds_system
 from mint.django_rest.rbuilder.inventory import models
 
-log = logging.getLogger(__name__)
-
 class RbuilderDjangoManager(object):
     def __init__(self, cfg, userName):
         self.cfg = cfg
