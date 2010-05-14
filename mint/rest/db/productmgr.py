@@ -7,9 +7,11 @@
 import os
 import itertools
 import time
+import types
 
 from conary import versions
 from conary.conaryclient import callbacks
+from conary.conaryclient import cmdline
 from conary.deps import deps
 from conary.dbstore import sqlerrors
 from conary.lib import util
@@ -601,10 +603,151 @@ class ProductManager(manager.Manager):
         status.set_status(code, message)
         return status
 
+
+    def getSourceGroupMatch(self, buildDefinition):
+        """
+        Find a source group defined on a different build definition that has a
+        matching build flavor and image group as the given build definition.
+
+        @param buildDefinition: build definition defining what flavor and
+        image group to match.
+        @type buildDefinition: L{proddef.Build}
+        @rtype: string
+        @return: source group name to build for this build definition. If none
+        is found, return None.
+        """
+        # If there is no image group defined on buildDefinition, there's no
+        # point in testing anything.
+        if not buildDefinition.imageGroup:
+            return None
+
+        for bd in self._handle.product.getBuildDefinitions():
+            # Test for flavor equality.
+            if bd.getBuildBaseFlavor() == buildDefinition.getBuildBaseFlavor():
+
+                # Test for image group equality.
+                if bd.imageGroup and \
+                   bd.imageGroup == buildDefinition.imageGroup:
+
+                    # If defined, return the source group for this definition.
+                    sourceGroup = bd.getBuildSourceGroup()
+                    if sourceGroup:
+                        return sourceGroup
+
+        return None
+
+    def getBuildDefinitionGroupToBuild(self, buildDefinition):
+        """
+        Find the source group to build for this build definition.
+        @param buildDefinition: build definition defining the group to build.
+        @type buildDefinition: L{proddef.Build}
+        @rtype: string
+        @return: Look for and return the first group that is found out of:
+            - build definition source group
+            - top level source group
+            - build definition image group
+            - top level image group
+        """
+        # getBuildSourceGroup takes care of looking at sourceGroup definied
+        # on the build definition or at the top level.
+        buildSourceGroup = buildDefinition.getBuildSourceGroup()
+
+        if buildSourceGroup:
+            return buildSourceGroup
+        else:
+            sourceGroupMatch = self.getSourceGroupMatch(buildDefinition)
+            if sourceGroupMatch:
+                return sourceGroupMatch
+
+        # No sourceGroup defined anywhere that we can use, use an imageGroup.
+        # getBuildImageGroup actually takes care of returning the top
+        # level image group if there's not one set for the build
+        # definition itself.
+        return buildDefinition.getBuildImageGroup()
+
+    @staticmethod
+    def _getLabel(label):
+        """
+        Converts a label string into an B{opaque} Conary label object,
+        or returns the B{opaque} label object.
+        @param label: a representation of a conary label
+        @type label: string or B{opaque} conary.versions.Label
+        @return: B{opaque} Conary label object
+        @rtype: conary.versions.Label
+        """
+        if isinstance(label, types.StringTypes):
+            return versions.Label(str(label))
+        return label
+
+    @staticmethod
+    def _getFlavor(flavor=None, keepNone=False):
+        """
+        Converts a version string into an B{opaque} Conary flavor object
+        or returns the B{opaque} flavor object.
+        @param flavor: conary flavor
+        @type flavor: string or B{opaque} conary.deps.deps.Flavor
+        @param keepNone: if True, leave None objects as None instead
+        of converting to empty flavor
+        @type keepNone: boolean
+        @return: B{opaque} Conary flavor object
+        @rtype: conary.deps.deps.Flavor
+        """
+        if flavor is None:
+            if keepNone:
+                return None
+            else:
+                return(deps.Flavor())
+        if isinstance(flavor, types.StringTypes):
+            return deps.parseFlavor(str(flavor), raiseError=True)
+        return flavor
+
+    def _overrideFlavors(self, baseFlavor, flavorList):
+        baseFlavor = self._getFlavor(baseFlavor)
+        return [ str(deps.overrideFlavor(baseFlavor, self._getFlavor(x)))
+                 for x in flavorList ] 
+
+    def getGroupFlavors(self, pd):
+        buildDefs = pd.getBuildDefinitions()
+        groupFlavors = [ (str(self.getBuildDefinitionGroupToBuild(x)),
+                          str(x.getBuildBaseFlavor()))
+                         for x in buildDefs ]
+        fullFlavors = self._overrideFlavors(str(pd.getBaseFlavor()),
+                                             [x[1] for x in groupFlavors])
+        return [(x[0][0], x[1]) for x in zip(groupFlavors, fullFlavors)]
+
+    def _findTrovesFlattened(self, client, specList, labelPath=None,
+                             defaultFlavor=None, allowMissing=False):
+        results = self._findTroves(client, specList, labelPath=labelPath,
+                                   defaultFlavor=defaultFlavor,
+                                   allowMissing=allowMissing)
+        return list(itertools.chain(*results.values()))
+
+    def _findTroves(self, client, specList, labelPath=None,
+                    defaultFlavor=None, allowMissing=False):
+        newSpecList = []
+        specMap = {}
+        for spec in specList:
+            if not isinstance(spec, tuple):
+                newSpec = cmdline.parseTroveSpec(spec)
+            else:
+                newSpec = spec
+            newSpecList.append(newSpec)
+            specMap[newSpec] = spec
+        repos = client.getRepos()
+        if isinstance(labelPath, (tuple, list)):
+            labelPath = [ self._getLabel(x) for x in labelPath ]
+        elif labelPath:
+            labelPath = self._getLabel(labelPath)
+
+        defaultFlavor = self._getFlavor(defaultFlavor, keepNone=True)
+        results = repos.findTroves(labelPath, newSpecList,
+                                   defaultFlavor = defaultFlavor,
+                                   allowMissing=allowMissing)
+        return dict((specMap[x[0]], x[1]) for x in results.items())
+
     def _promoteGroup(self, client, pd, job, hostname, version, stageName, trove): 
        
         callback = ProductVersionCallback(hostname, version, job) 
-        
         nextStage = str(stageName)
         nextLabel = pd.getLabelForStage(nextStage)
         activeStage = None
@@ -617,9 +760,10 @@ class ProductManager(manager.Manager):
         
         callback._message('Getting all trove information for the promotion')
 
-        allTroves = [(str(trove.name),
-                     versions.VersionFromString(str(trove.version)),
-                     deps.parseFlavor(str(trove.flavor)))]
+	# Collect a list of groups to promote.
+        groupSpecs = [ '%s[%s]' % x for x in self.getGroupFlavors(pd) ]
+        allTroves = self._findTrovesFlattened(client, groupSpecs, activeLabel)
+
         fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)
 
         promoteMap = dict((versions.Label(str(fromLabel)),
