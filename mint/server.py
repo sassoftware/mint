@@ -4883,8 +4883,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 first = buildFilenames[0]
                 buildData['downloadUrl'] = first['downloadUrl']
                 buildData['sha1'] = first['sha1']
+            fileFields = [ 'idx', 'sha1', 'downloadUrl', 'size' ]
+            buildData['files'] = [ self._buildFileRepr(x)
+                    for x in buildFilenames or [] ]
 
         return res
+
+    @classmethod
+    def _buildFileRepr(cls, buildFile):
+        fileFields = [ 'idx', 'sha1', 'downloadUrl', 'size' ]
+        ret = dict((x, buildFile[x]) for x in fileFields)
+
+        fileUrls = buildFile['fileUrls']
+        fileNames = [ x[2] for x in fileUrls if x[1] == urltypes.LOCAL ]
+        if fileNames:
+            ret['filename'] = os.path.basename(fileNames[0])
+        return ret
 
     @typeCheck(int)
     @requiresAuth
