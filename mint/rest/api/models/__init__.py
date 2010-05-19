@@ -34,6 +34,7 @@ class RbuilderStatus(Model):
     userName                = fields.CharField()
     hostName                = fields.CharField()
     isRBO                   = fields.BooleanField()
+    isExternalRba           = fields.BooleanField()
     identity                = fields.ModelField(Identity)
     rmcService              = RMCUrlField()
     products                = fields.UrlField('products', None)
