@@ -512,14 +512,24 @@ class ImageManager(manager.Manager):
             self.db.auth.userId)
         hostname = None
         imageIds = []
+        hostnameToImageIdsMap = {}
+        if not images:
+            return []
         for imageData in images:
             hostname = imageData.pop('hostname')
-            imageIds.append(imageData['buildId'])
-        if not imageIds:
-            return []
-        imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
-        imageFilesList = self._getFilesForImages(hostname, imageIds)
-        for imageData, imageFileList in zip(images, imageFilesList):
+            hostnameToImageIdsMap.setdefault(hostname, []).append(
+                imageData['buildId'])
+        imagesBaseFileNameMap = {}
+        imageFileListMap = {}
+        for hostname, imageIds in hostnameToImageIdsMap.items():
+            imagesBaseFileNameMap.update(
+                self.getImagesBaseFileName(hostname, imageIds))
+            imageFilesList = self._getFilesForImages(hostname, imageIds)
+            imageFileListMap.update(dict((x, y)
+                for (x, y) in zip(imageIds, imageFilesList)))
+
+        for imageData in images:
+            imageFileList = imageFileListMap[imageData['buildId']]
             imageFileData = [
                 dict(fileId = x.fileId, sha1 = x.sha1,
                      fileName = x.fileName,

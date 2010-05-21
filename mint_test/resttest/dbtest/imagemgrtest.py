@@ -120,19 +120,28 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
                                    name='Image1')
         self.setImageFiles(db, 'foo', imageId)
+
+        self.createProduct('bar', owners=['admin'], db=db)
+        imageId = self.createImage(db, 'bar', buildtypes.INSTALLABLE_ISO,
+                                   name='Image1')
+        self.setImageFiles(db, 'bar', imageId)
+
         images = db.imageMgr.getAllImagesByType('INSTALLABLE_ISO')
         self.failUnlessEqual(
             [ [ x['sha1'] for x in img['files'] ] for img in images],
-            [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ] ])
+            [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
+              [ 'da4b9237bacccdf19c0760cab7aec4a8359010b0' ] ])
+        # RBL-6290: make sure we don't have cross-polination of hostnames
         self.failUnlessEqual(
             [ img['baseFileName'] for img in images ],
-            [ 'foo-0.1-' ])
+            [ 'foo-0.1-', 'bar-0.1-', ])
         self.failUnlessEqual(
             [ [ x['fileName'] for x in img['files'] ] for img in images],
-            [ [ 'imagefile_1.iso' ] ])
+            [ [ 'imagefile_1.iso' ], [ 'imagefile_2.iso' ] ])
         self.failUnlessEqual(
             [ [ x['downloadUrl'] for x in img['files'] ] for img in images],
-            [ [ 'https://test.rpath.local:0/downloadImage?fileId=1' ] ])
+            [ [ 'https://test.rpath.local:0/downloadImage?fileId=1', ],
+              [ 'https://test.rpath.local:0/downloadImage?fileId=2', ] ])
 
     def testAddImageStatus(self):
         db = self.openMintDatabase(createRepos=False)

@@ -39,6 +39,7 @@ class SiteTest(restbase.BaseRestTest):
   <userName>anonymous</userName>
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
+  <isExternalRba>false</isExternalRba>
   <identity>
     <rbuilderId></rbuilderId>
     <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>

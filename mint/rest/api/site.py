@@ -53,6 +53,7 @@ class RbuilderRestServer(RestController):
                                      userName=username,
                                      hostName=os.uname()[1],
                                      isRBO=self.cfg.rBuilderOnline, 
+                                     isExternalRba=self.cfg.rBuilderExternal, 
                                      identity=identity,
                                      maintMode=maintMode,
                                      proddefSchemaVersion=proddefSchemaVersion)

@@ -40,6 +40,7 @@ groupApplianceLabel     rap.rpath.com@rpath:linux-1
 configured              False
 companyName             Your Company Name Here
 corpSite                http://www.example.com/
+rBuilderExternal        False
 
 # Miscellany
 authUser                mintauth
