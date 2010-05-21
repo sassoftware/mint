@@ -31,7 +31,7 @@ class InventorySystemsService(InventoryService):
 
     def read(self, request):
         systems = self.sysMgr.getSystems()
-        resp = [str((s.id, s.registrationDate)) for s in systems]
+        resp = [str((s.generated_uuid, s.registration_date)) for s in systems]
         return HttpResponse(str(resp))
     
     @requires('system', System)

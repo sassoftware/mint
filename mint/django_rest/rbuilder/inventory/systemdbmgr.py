@@ -30,7 +30,7 @@ class RbuilderDjangoManager(object):
 class SystemDBManager(RbuilderDjangoManager):
 
     def getSystems(self):
-        return models.managed_systems.objects.all()
+        return models.managed_system.objects.all()
 
     def activateSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
