@@ -29,6 +29,8 @@
 ^distro/rbuilder.conf$
 ^distro/schema$
 
+^mint/django_rest/mint-local.db$
+
 ^.*project$
 ^.*pydevproject$
 
