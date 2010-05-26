@@ -1150,7 +1150,7 @@ def _createInventorySchema(db):
                     REFERENCES "inventory_software_version" ("id"),
                 "available_update_id" integer NOT NULL 
                     REFERENCES "inventory_software_version" ("id"),
-                "last_refreshed" datetime NOT NULL,
+                "last_refreshed" timestamp with time zone NOT NULL,
                 UNIQUE ("software_version_id", "available_update_id")
         ) %(TABLEOPTS)s """ % db.keywords)
         cu.execute("""
