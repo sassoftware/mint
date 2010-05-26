@@ -89,3 +89,6 @@ INSTALLED_APPS = (
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
 )
+
+# Custom setting for if we should manage/create the tables in rbuilder.models
+MANAGE_RBUILDER_MODELS = False
