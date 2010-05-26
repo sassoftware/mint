@@ -3,7 +3,7 @@
 # First, import everything from the production settings.py
 from settings import *
 
-ROOT_URLCONF = 'mint.django_rest.urls-local'
+ROOT_URLCONF = 'mint.django_rest.urls_local'
 
 # Override individual options
 DEBUG = True
