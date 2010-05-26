@@ -138,3 +138,49 @@ class SystemDBManager(RbuilderDjangoManager):
         if not managedSystem:
             return 
         models.system_software_version.objects.filter(managed_system=managedSystem).delete()
+
+    def getCachedUpdates(self, nvf):
+        softwareVersion, created = models.software_version.objects.get_or_create(
+            name=nvf[0], version=nvf[1], flavor=nvf[2])
+
+        # If it was just created, obviously there's nothing cached.
+        if created:
+            return []
+
+        updates = models.software_version_update.objects.filter(
+                    software_version=softwareVersion)
+
+        now = datetime.datetime.now()
+        oneDay = datetime.timedelta(1)
+        cachedUpdates = [u for u in updates if now - u.last_refreshed < oneDay]
+        cachedUpdates = [(str(s.software_version.name),
+                          str(s.software_version.version),
+                          str(s.software_version.flavor)) for s in cachedUpdates]
+        return cachedUpdates
+                
+    def clearCachedUpdates(self, nvfs):
+        for nvf in nvfs:
+            name, version, flavor = nvf
+            version = version.freeze()
+            flavor = str(flavor)
+            softwareVersion, created = models.software_version.objects.get_or_create(
+                name=name, version=version, flavor=flavor)
+            if not created:
+                updates = models.software_version_update.objects.filter(
+                                software_version=softwareVersion)
+                updates.delete()
+
+    def cacheUpdate(self, nvf, updateNvf):
+        softwareVersion, created = models.software_version.objects.get_or_create(
+            name=nvf[0], version=nvf[1], flavor=nvf[2])
+                
+        updateSoftwareVersion, created = models.software_version.objects.get_or_create(
+            name=updateNvf[0], version=updateNvf[1], flavor=updateNvf[2])
+
+        cachedUpdate, created = models.software_version_update.objects.get_or_create(
+                                    software_version=softwareVersion,
+                                    available_update=updateSoftwareVersion)
+        if not created:
+            cachedUpdate.last_refreshed = datetime.datetime.now()
+            cachedUpdate.save()
+            

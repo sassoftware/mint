@@ -99,6 +99,18 @@ class software_version(models.Model):
     class Meta:
         unique_together = (('name', 'version', 'flavor'),)
 
+class software_version_update(ModelParser):
+    # Need to specify the model name for the ForeignKey field here in quotes,
+    # since we're redefining software_version.
+    software_version = models.ForeignKey('software_version',
+                        related_name='software_version_update_software_version_set')
+    available_update = models.ForeignKey('software_version',
+                        related_name='software_version_update_available_update_set')
+    last_refreshed = models.DateTimeField(default=datetime.datetime.now())
+
+    class Meta:
+        unique_together = (('software_version', 'available_update'),)
+
 class system_software_version(models.Model):
     managed_system = models.ForeignKey(managed_system)
     software_version = models.ForeignKey(software_version)
