@@ -8,13 +8,14 @@
 # into your database.
 
 from django.db import models
+from django.conf import settings
 
 class UserGroups(models.Model):
     usergroupid = models.AutoField(primary_key=True)
     usergroup = models.CharField(unique=True, max_length=128)
     
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroups'
         
     def __unicode__(self):
@@ -36,7 +37,7 @@ class Users(models.Model):
     groups = models.ManyToManyField(UserGroups, through="UserGroupMembers", related_name='groups')
     
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
         
     def __unicode__(self):
@@ -47,7 +48,7 @@ class UserGroupMembers(models.Model):
     userid = models.ForeignKey(Users, db_column='userid', related_name='usermember')
     
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroupmembers'
     
 class Products(models.Model):
@@ -71,7 +72,7 @@ class Products(models.Model):
     
     
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'projects'
         
     def __unicode__(self):
@@ -85,7 +86,7 @@ class Members(models.Model):
     userid = models.ForeignKey(Users, db_column='userid', related_name='user')
     level = models.SmallIntegerField()
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'projectusers'
         
 class Versions(models.Model):
@@ -96,7 +97,7 @@ class Versions(models.Model):
     description = models.TextField()
     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'productversions'
         
     def __unicode__(self):
@@ -118,7 +119,7 @@ class Releases(models.Model):
     shouldmirror = models.SmallIntegerField()
     timemirrored = models.DecimalField(max_digits=14, decimal_places=3)
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'publishedreleases'
      
     def __unicode__(self):
@@ -146,7 +147,7 @@ class Images(models.Model):
     status = models.IntegerField()
     statusmessage = models.TextField()
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'builds'
         
     def __unicode__(self):
@@ -158,7 +159,7 @@ class Downloads(models.Model):
     ip = models.CharField(max_length=64)
     
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'urldownloads'
 
 class Sessions(models.Model):
@@ -167,7 +168,7 @@ class Sessions(models.Model):
     data = models.TextField()
     
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'sessions'
 
 class Targets(models.Model):
@@ -175,7 +176,7 @@ class Targets(models.Model):
     targettype = models.CharField(max_length=255)
     targetname = models.CharField(unique=True, max_length=255)
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targets'
 
 class TargetUserCredentials(models.Model):
@@ -183,5 +184,5 @@ class TargetUserCredentials(models.Model):
     userid = models.ForeignKey(Users, db_column="userid")
     credentials = models.TextField()
     class Meta:
-        managed = False
+        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetusercredentials'
