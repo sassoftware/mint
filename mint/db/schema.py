@@ -1145,7 +1145,7 @@ def _createInventorySchema(db):
     if 'inventory_software_version_update' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_software_version_update" (
-                "id" integer %(PRIMARYKEY)s,
+                "id" %(PRIMARYKEY)s,
                 "software_version_id" integer NOT NULL 
                     REFERENCES "inventory_software_version" ("id"),
                 "available_update_id" integer NOT NULL 
