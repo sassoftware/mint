@@ -1152,7 +1152,7 @@ def _createInventorySchema(db):
                     REFERENCES "inventory_software_version" ("id"),
                 "last_refreshed" datetime NOT NULL,
                 UNIQUE ("software_version_id", "available_update_id")
-        ) %(TABELOPTS)s """ % db.keywords)
+        ) %(TABLEOPTS)s """ % db.keywords)
         cu.execute("""
             CREATE INDEX "inventory_software_version_update_software_version_id" 
                 ON "inventory_software_version_update" ("software_version_id")
