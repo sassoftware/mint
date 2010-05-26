@@ -1142,6 +1142,24 @@ def _createInventorySchema(db):
         db.tables['inventory_cpu'] = []
         changed = True
 
+    if 'inventory_software_version_update' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_software_version_update" (
+                "id" integer %(PRIMARYKEY)s,
+                "software_version_id" integer NOT NULL 
+                    REFERENCES "inventory_software_version" ("id"),
+                "available_update_id" integer NOT NULL 
+                    REFERENCES "inventory_software_version" ("id"),
+                "last_refreshed" datetime NOT NULL,
+                UNIQUE ("software_version_id", "available_update_id")
+        )""" % db.keywords)
+        cu.execute("""
+            CREATE INDEX "inventory_software_version_update_software_version_id" 
+                ON "inventory_software_version_update" ("software_version_id")
+        """)
+        db.tables['inventory_software_version_update'] = []
+        changed = True
+
     return changed
 
 
