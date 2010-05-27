@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(49, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(49, 3)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1142,6 +1142,11 @@ def _createInventorySchema(db):
         db.tables['inventory_cpu'] = []
         changed = True
 
+    return changed
+
+def _createInventoryUpdateSchema(db):
+    cu = db.cursor()
+    changed = False
     if 'inventory_software_version_update' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_software_version_update" (
@@ -1336,6 +1341,7 @@ def createSchema(db, doCommit=True):
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
     changed |= _createInventorySchema(db)
+    changed |= _createInventoryUpdateSchema(db)
     changed |= _createJobsSchema(db)
 
     if doCommit:

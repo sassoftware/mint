@@ -799,7 +799,7 @@ class MigrateTo_48(SchemaMigration):
         return True
 
 class MigrateTo_49(SchemaMigration):
-    Version = (49, 2)
+    Version = (49, 3)
 
     # 49.0
     # - Added TargetUserCredentials
@@ -843,6 +843,10 @@ class MigrateTo_49(SchemaMigration):
     def migrate2(self):
         schema._createInventorySchema(self.db)
         schema._createJobsSchema(self.db)
+        return True
+
+    def migrate3(self):
+        schema._createInventoryUpdateSchema(self.db)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
