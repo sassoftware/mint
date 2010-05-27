@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(49, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(49, 3)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1144,6 +1144,29 @@ def _createInventorySchema(db):
 
     return changed
 
+def _createInventoryUpdateSchema(db):
+    cu = db.cursor()
+    changed = False
+    if 'inventory_software_version_update' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_software_version_update" (
+                "id" %(PRIMARYKEY)s,
+                "software_version_id" integer NOT NULL 
+                    REFERENCES "inventory_software_version" ("id"),
+                "available_update_id" integer NOT NULL 
+                    REFERENCES "inventory_software_version" ("id"),
+                "last_refreshed" timestamp with time zone NOT NULL,
+                UNIQUE ("software_version_id", "available_update_id")
+        ) %(TABLEOPTS)s """ % db.keywords)
+        cu.execute("""
+            CREATE INDEX "inventory_software_version_update_software_version_id" 
+                ON "inventory_software_version_update" ("software_version_id")
+        """)
+        db.tables['inventory_software_version_update'] = []
+        changed = True
+
+    return changed
+
 
 def _addTableRows(db, table, uniqueKey, rows):
     """
@@ -1318,6 +1341,7 @@ def createSchema(db, doCommit=True):
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
     changed |= _createInventorySchema(db)
+    changed |= _createInventoryUpdateSchema(db)
     changed |= _createJobsSchema(db)
 
     if doCommit:
