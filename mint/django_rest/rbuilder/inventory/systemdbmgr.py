@@ -10,6 +10,9 @@ import time
 
 from django.db import connection
 
+from conary import versions
+from conary.deps import deps
+
 from mint import mint_error
 from mint.django_rest.rbuilder import inventory
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -154,8 +157,8 @@ class SystemDBManager(RbuilderDjangoManager):
         oneDay = datetime.timedelta(1)
         cachedUpdates = [u for u in updates if now - u.last_refreshed < oneDay]
         cachedUpdates = [(str(s.software_version.name),
-                          str(s.software_version.version),
-                          str(s.software_version.flavor)) for s in cachedUpdates]
+                          versions.ThawVersion(s.software_version.version),
+                          deps.parseFlavor(s.software_version.flavor)) for s in cachedUpdates]
         return cachedUpdates
                 
     def clearCachedUpdates(self, nvfs):
