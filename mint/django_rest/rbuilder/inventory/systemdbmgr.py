@@ -13,7 +13,6 @@ from django.db import connection
 from conary import versions
 from conary.deps import deps
 
-from mint import mint_error
 from mint.django_rest.rbuilder import inventory
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import generateds_system
