@@ -104,8 +104,11 @@ class software_version_update(ModelParser):
     # since we're redefining software_version.
     software_version = models.ForeignKey('software_version',
                         related_name='software_version_update_software_version_set')
+    # This column is nullable, which basically means that the last time an
+    # update was checked for, none was found.
     available_update = models.ForeignKey('software_version',
-                        related_name='software_version_update_available_update_set')
+                        related_name='software_version_update_available_update_set',
+                        null=True)
     last_refreshed = models.DateTimeField(default=datetime.datetime.now())
 
     class Meta:

@@ -799,7 +799,7 @@ class MigrateTo_48(SchemaMigration):
         return True
 
 class MigrateTo_49(SchemaMigration):
-    Version = (49, 4)
+    Version = (49, 5)
 
     # 49.0
     # - Added TargetUserCredentials
@@ -1012,9 +1012,17 @@ class MigrateTo_49(SchemaMigration):
         cu.execute("""
             ALTER TABLE inventory_system_software_version 
             ADD CONSTRAINT inventory_system_software_version_sys_sv_uq 
-                UNIQUE (managed_system_id, software_version_id)""")
+                UNIQUE (managed_system_id, software_version_id)
+        """)
         return True
         
+    def migrate5(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_software_version_update 
+            ALTER COLUMN available_update_id DROP NOT NULL
+        """)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
