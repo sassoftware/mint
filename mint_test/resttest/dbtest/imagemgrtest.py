@@ -215,7 +215,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
                 buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
 
         imageFiles = models.ImageFileList(files=[models.ImageFile(
-            baseFileName='filename2', title='title2', size=(2 ** 32),
+            fileName='filename2', title='title2', size=(2 ** 32),
             sha1='sha')])
         db.setFilesForImage('foo', imageId, 'abcdef', imageFiles)
 
