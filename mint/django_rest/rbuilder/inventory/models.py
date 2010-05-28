@@ -115,6 +115,9 @@ class system_software_version(models.Model):
     managed_system = models.ForeignKey(managed_system)
     software_version = models.ForeignKey(software_version)
 
+    class Meta:
+        unique_together = (('managed_system', 'software_version'),)
+
 class system_information(models.Model):
     managed_system = models.ForeignKey(managed_system)
     system_name = models.CharField(max_length=64, null=True)
