@@ -841,6 +841,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
     def migrate2(self):
+        cu = self.db.cursor()
         if 'inventory_managed_system' not in self.db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_managed_system" (
