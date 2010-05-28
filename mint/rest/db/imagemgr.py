@@ -486,10 +486,13 @@ class ImageManager(manager.Manager):
 
         for idx, file in enumerate(files.files):
             # First insert the file ...
+            # NOTE: cast file size to long to work around broken python-pgsql
+            # behavior with integers too big for a postgres int but small
+            # enough to fit in a python int, esp. on 64 bit systems.
             cu.execute("""
                 INSERT INTO BuildFiles ( buildId, idx, title, size, sha1 )
                     VALUES ( ?, ?, ?, ?, ? )""",
-                imageId, idx, file.title, file.size, file.sha1)
+                imageId, idx, file.title, long(file.size), file.sha1)
             fileId = cu.lastrowid
 
             # ... then the URL ...
