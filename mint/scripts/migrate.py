@@ -799,7 +799,7 @@ class MigrateTo_48(SchemaMigration):
         return True
 
 class MigrateTo_49(SchemaMigration):
-    Version = (49, 3)
+    Version = (49, 4)
 
     # 49.0
     # - Added TargetUserCredentials
@@ -841,13 +841,178 @@ class MigrateTo_49(SchemaMigration):
         return True
 
     def migrate2(self):
-        schema._createInventorySchema(self.db)
+        if 'inventory_managed_system' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_managed_system" (
+                    "id" %(PRIMARYKEY)s,
+                    "registration_date" timestamp with time zone NOT NULL,
+                    "generated_uuid" varchar(64),
+                    "local_uuid" varchar(64),
+                    "ssl_client_certificate" varchar(8092),
+                    "ssl_client_key" varchar(8092),
+                    "ssl_server_certificate" varchar(8092),
+                    "launching_user_id" integer REFERENCES "users" ("userid")
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['inventory_managed_system'] = []
+
+        if 'inventory_system_target' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_target" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "target_id" integer NOT NULL 
+                        REFERENCES "targets" ("targetid") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "target_system_id" varchar(256)
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_system_target_managed_system_id" 
+                ON "inventory_system_target" ("managed_system_id");
+            """)
+            cu.execute("""
+            CREATE INDEX "inventory_system_target_target_id" 
+                ON "inventory_system_target" ("target_id");
+            """)
+            self.db.tables['inventory_system_target'] = []
+
+        if 'inventory_software_version' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_software_version" (
+                    "id" %(PRIMARYKEY)s,
+                    "name" text NOT NULL,
+                    "version" text NOT NULL,
+                    "flavor" text NOT NULL,
+                    UNIQUE ("name", "version", "flavor")
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['inventory_software_version'] = []
+
+        if 'inventory_system_software_version' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_software_version" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "software_version_id" integer NOT NULL 
+                        REFERENCES "inventory_software_version" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_system_software_version_managed_system_id" 
+                ON "inventory_system_software_version" ("managed_system_id");
+            """)
+            cu.execute("""
+            CREATE INDEX "inventory_system_software_version_software_version_id" 
+                ON "inventory_system_software_version" ("software_version_id");
+            """)
+            self.db.tables['inventory_system_software_version'] = []
+
+        if 'inventory_system_information' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_information" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "system_name" varchar(64),
+                    "memory" integer,
+                    "os_type" varchar(64),
+                    "os_major_version" varchar(32),
+                    "os_minor_version" varchar(32),
+                    "system_type" varchar(32)
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_system_information_managed_system_id" 
+                ON "inventory_system_information" ("managed_system_id");
+            """)
+            self.db.tables['inventory_system_information'] = []
+
+        if 'inventory_network_information' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_network_information" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "interface_name" varchar(32),
+                    "ip_address" varchar(15),
+                    "netmask" varchar(20),
+                    "port_type" varchar(32)
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_network_information_managed_system_id" 
+                ON "inventory_network_information" ("managed_system_id");
+            """)
+            self.db.tables['inventory_network_information'] = []
+
+        if 'inventory_storage_volume' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_storage_volume" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "size" integer,
+                    "storage_type" varchar(32),
+                    "storage_name" varchar(32)
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_storage_volume_managed_system_id" 
+                ON "inventory_storage_volume" ("managed_system_id");
+            """)
+            self.db.tables['inventory_storage_volume'] = []
+
+        if 'inventory_cpu' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_cpu" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "cpu_type" varchar(64),
+                    "cpu_count" integer,
+                    "cores" integer,
+                    "speed" integer,
+                    "enabled" boolean
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_cpu_managed_system_id" 
+                ON "inventory_cpu" ("managed_system_id");
+            """)
+            self.db.tables['inventory_cpu'] = []
+
         schema._createJobsSchema(self.db)
         return True
 
     def migrate3(self):
-        schema._createInventoryUpdateSchema(self.db)
+        if 'inventory_software_version_update' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_software_version_update" (
+                    "id" %(PRIMARYKEY)s,
+                    "software_version_id" integer NOT NULL 
+                        REFERENCES "inventory_software_version" ("id"),
+                    "available_update_id" integer NOT NULL 
+                        REFERENCES "inventory_software_version" ("id"),
+                    "last_refreshed" timestamp with time zone NOT NULL,
+                    UNIQUE ("software_version_id", "available_update_id")
+            ) %(TABLEOPTS)s """ % self.db.keywords)
+            cu.execute("""
+                CREATE INDEX "inventory_software_version_update_software_version_id" 
+                    ON "inventory_software_version_update" ("software_version_id")
+            """)
+            self.db.tables['inventory_software_version_update'] = []
         return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_system_software_version 
+            ADD CONSTRAINT inventory_system_software_version_sys_sv_uq 
+                UNIQUE (managed_system_id, software_version_id)""")
+        return True
+        
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

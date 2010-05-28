@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(49, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(49, 4)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1051,7 +1051,8 @@ def _createInventorySchema(db):
                     DEFERRABLE INITIALLY DEFERRED,
                 "software_version_id" integer NOT NULL 
                     REFERENCES "inventory_software_version" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED
+                    DEFERRABLE INITIALLY DEFERRED,
+                UNIQUE ("managed_system_id", "software_version_id")
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
         CREATE INDEX "inventory_system_software_version_managed_system_id" 
