@@ -66,6 +66,7 @@ def setup():
     pathManager.addExecPath('RAA_PATH')
     pathManager.addExecPath('RAA_TEST_PATH')
     
+    pathManager.addExecPath('REPODATA_PATH')
     pathManager.addExecPath('RESTLIB_PATH')
     pathManager.addExecPath('CREST_PATH')
     pathManager.addExecPath('XOBJ_PATH')

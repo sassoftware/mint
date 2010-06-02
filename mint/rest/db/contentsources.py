@@ -163,6 +163,7 @@ class Proxy(Satellite):
 class Nu(ContentSourceType):
     fields = [Name(), Username(), Password()]
     model = models.NuSource
+    sourceUrl = 'https://nu.novell.com/repo/$RCE'
 
     def status(self):
         # TODO fix this once support for these types have been added to the
@@ -171,8 +172,8 @@ class Nu(ContentSourceType):
 
 
 class Smt(Nu):
+    fields = [Name(), Username(), Password(), SourceUrl()]
     model = models.SmtSource
-    pass
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,

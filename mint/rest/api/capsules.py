@@ -51,7 +51,7 @@ class ContentController(base.BaseController):
         indexer = self.db.capsuleMgr.getIndexer()
         try:
             indexer.refresh()
-        except rpath_capsule_indexer.RPCError, e:
+        except rpath_capsule_indexer.errors.RPCError, e:
             return response.response.Response(status = 500)
         return response.response.Response(content_type = "text/plain",
             status = 204)

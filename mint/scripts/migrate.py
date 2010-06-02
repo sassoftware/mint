@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 14)
+    Version = (48, 15)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -796,6 +796,12 @@ class MigrateTo_48(SchemaMigration):
         self.db.loadSchema()
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
+        return True
+
+    # 48.15
+    # - yum indexer
+    def migrate14(self):
+        schema._createCapsuleIndexerSchema(self.db)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
