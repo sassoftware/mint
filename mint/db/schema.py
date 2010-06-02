@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2005-2010 rPath, Inc.
 #
 # This program is distributed under the terms of the Common Public License,
 # version 1.0. A copy of this license should have been distributed with this
@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(48, 14)
+RBUILDER_DB_VERSION = sqllib.DBversion(49, 5)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -709,9 +709,11 @@ def _createTargets(db):
             CREATE TABLE Targets (
                 targetId        %(PRIMARYKEY)s,
                 targetType      varchar(255)        NOT NULL,
-                targetName      varchar(255)        NOT NULL    UNIQUE
+                targetName      varchar(255)        NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Targets'] = []
+        db.createIndex('Targets',
+            'Targets_Type_Name_Uq', 'targetType, targetName', unique = True)
         changed = True
 
     if 'TargetData' not in db.tables:
@@ -725,6 +727,19 @@ def _createTargets(db):
                 PRIMARY KEY ( targetId, name )
             ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TargetData'] = []
+        changed = True
+
+    if 'TargetUserCredentials' not in db.tables:
+        cu.execute("""
+            CREATE TABLE TargetUserCredentials (
+                targetId        integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                userId          integer             NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                credentials     text,
+                PRIMARY KEY ( targetId, userId )
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['TargetUserCredentials'] = []
         changed = True
 
     return changed
@@ -800,19 +815,6 @@ def _createPlatforms(db):
                     REFERENCES platformSources ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['PlatformsPlatformSources'] = []
-        changed = True
-
-    if 'PlatformLoadJobs' not in db.tables:
-        cu.execute("""
-            CREATE TABLE PlatformLoadJobs (
-                jobId %(PRIMARYKEY)s,
-                platformId          integer         NOT NULL
-                    REFERENCES platforms ON DELETE CASCADE,
-                message             varchar(255) NOT NULL,
-                done                smallint NOT NULL DEFAULT 0,
-                error               smallint NOT NULL DEFAULT 0
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['PlatformLoadJobs'] = []
         changed = True
 
     return changed
@@ -987,6 +989,330 @@ def _createRepositoryLogSchema(db):
 
     return changed
 
+def _createInventorySchema(db):
+    cu = db.cursor()
+    changed = False
+    if 'inventory_managed_system' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_managed_system" (
+                "id" %(PRIMARYKEY)s,
+                "registration_date" timestamp with time zone NOT NULL,
+                "generated_uuid" varchar(64),
+                "local_uuid" varchar(64),
+                "ssl_client_certificate" varchar(8092),
+                "ssl_client_key" varchar(8092),
+                "ssl_server_certificate" varchar(8092),
+                "launching_user_id" integer REFERENCES "users" ("userid")
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_managed_system'] = []
+        changed = True
+
+    if 'inventory_system_target' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_target" (
+                "id" %(PRIMARYKEY)s,
+                "managed_system_id" integer 
+                    REFERENCES "inventory_managed_system" ("id") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                "target_id" integer NOT NULL 
+                    REFERENCES "targets" ("targetid") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                "target_system_id" varchar(256)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_system_target_managed_system_id" 
+            ON "inventory_system_target" ("managed_system_id");
+        """)
+        cu.execute("""
+        CREATE INDEX "inventory_system_target_target_id" 
+            ON "inventory_system_target" ("target_id");
+        """)
+        db.tables['inventory_system_target'] = []
+        changed = True
+
+    if 'inventory_software_version' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_software_version" (
+                "id" %(PRIMARYKEY)s,
+                "name" text NOT NULL,
+                "version" text NOT NULL,
+                "flavor" text NOT NULL,
+                UNIQUE ("name", "version", "flavor")
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_software_version'] = []
+        changed = True
+
+    if 'inventory_system_software_version' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_software_version" (
+                "id" %(PRIMARYKEY)s,
+                "managed_system_id" integer NOT NULL 
+                    REFERENCES "inventory_managed_system" ("id") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                "software_version_id" integer NOT NULL 
+                    REFERENCES "inventory_software_version" ("id") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                UNIQUE ("managed_system_id", "software_version_id")
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_system_software_version_managed_system_id" 
+            ON "inventory_system_software_version" ("managed_system_id");
+        """)
+        cu.execute("""
+        CREATE INDEX "inventory_system_software_version_software_version_id" 
+            ON "inventory_system_software_version" ("software_version_id");
+        """)
+        db.tables['inventory_system_software_version'] = []
+        changed = True
+
+    if 'inventory_system_information' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_information" (
+                "id" %(PRIMARYKEY)s,
+                "managed_system_id" integer NOT NULL 
+                    REFERENCES "inventory_managed_system" ("id") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                "system_name" varchar(64),
+                "memory" integer,
+                "os_type" varchar(64),
+                "os_major_version" varchar(32),
+                "os_minor_version" varchar(32),
+                "system_type" varchar(32)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_system_information_managed_system_id" 
+            ON "inventory_system_information" ("managed_system_id");
+        """)
+        db.tables['inventory_system_information'] = []
+        changed = True
+
+    if 'inventory_network_information' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_network_information" (
+                "id" %(PRIMARYKEY)s,
+                "managed_system_id" integer NOT NULL 
+                    REFERENCES "inventory_managed_system" ("id") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                "interface_name" varchar(32),
+                "ip_address" varchar(15),
+                "netmask" varchar(20),
+                "port_type" varchar(32)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_network_information_managed_system_id" 
+            ON "inventory_network_information" ("managed_system_id");
+        """)
+        db.tables['inventory_network_information'] = []
+        changed = True
+
+    if 'inventory_storage_volume' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_storage_volume" (
+                "id" %(PRIMARYKEY)s,
+                "managed_system_id" integer NOT NULL 
+                    REFERENCES "inventory_managed_system" ("id") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                "size" integer,
+                "storage_type" varchar(32),
+                "storage_name" varchar(32)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_storage_volume_managed_system_id" 
+            ON "inventory_storage_volume" ("managed_system_id");
+        """)
+        db.tables['inventory_storage_volume'] = []
+        changed = True
+
+    if 'inventory_cpu' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_cpu" (
+                "id" %(PRIMARYKEY)s,
+                "managed_system_id" integer NOT NULL 
+                    REFERENCES "inventory_managed_system" ("id") 
+                    DEFERRABLE INITIALLY DEFERRED,
+                "cpu_type" varchar(64),
+                "cpu_count" integer,
+                "cores" integer,
+                "speed" integer,
+                "enabled" boolean
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_cpu_managed_system_id" 
+            ON "inventory_cpu" ("managed_system_id");
+        """)
+        db.tables['inventory_cpu'] = []
+        changed = True
+
+    return changed
+
+def _createInventoryUpdateSchema(db):
+    cu = db.cursor()
+    changed = False
+    if 'inventory_software_version_update' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_software_version_update" (
+                "id" %(PRIMARYKEY)s,
+                "software_version_id" integer NOT NULL 
+                    REFERENCES "inventory_software_version" ("id"),
+                "available_update_id" integer 
+                    REFERENCES "inventory_software_version" ("id"),
+                "last_refreshed" timestamp with time zone NOT NULL,
+                UNIQUE ("software_version_id", "available_update_id")
+        ) %(TABLEOPTS)s """ % db.keywords)
+        cu.execute("""
+            CREATE INDEX "inventory_software_version_update_software_version_id" 
+                ON "inventory_software_version_update" ("software_version_id")
+        """)
+        db.tables['inventory_software_version_update'] = []
+        changed = True
+
+    return changed
+
+
+def _addTableRows(db, table, uniqueKey, rows):
+    """
+    Adds rows to the table, if they do not exist already
+    The rows argument is a list of dictionaries
+    """
+    if not rows:
+        return
+    cu = db.cursor()
+    inserts = []
+    sql = "SELECT 1 FROM %s WHERE %s = ?" % (table, uniqueKey)
+    tableCols = rows[0].keys()
+    for row in rows:
+        cu.execute(sql, row[uniqueKey])
+        if cu.fetchall():
+            continue
+        inserts.append(tuple(row[c] for c in tableCols))
+    if not inserts:
+        return False
+    sql = "INSERT INTO %s (%s) VALUES (%s)" % (table,
+        ','.join(tableCols), ','.join('?' for c in tableCols))
+    cu.executemany(sql, inserts)
+    return True
+
+def _createJobsSchema(db):
+    cu = db.cursor()
+    changed = False
+
+    if 'job_types' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_types
+            (
+                job_type_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE,
+                description VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_types'] = []
+        changed = True
+    changed |= _addTableRows(db, 'job_types', 'name',
+        [ dict(name="instance-launch", description='Instance Launch'),
+          dict(name="platform-load", description='Platform Load'),
+          dict(name="software-version-refresh", description='Software Version Refresh'),
+          dict(name="instance-update", description='Update Instance'), ])
+
+    if 'job_states' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_states
+            (
+                job_state_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_states'] = []
+        changed = True
+    changed |= _addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
+        dict(name='Running'), dict(name='Completed'), dict(name='Failed') ])
+
+    if 'rest_methods' not in db.tables:
+        cu.execute("""
+            CREATE TABLE rest_methods
+            (
+                rest_method_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['rest_methods'] = []
+        changed = True
+    changed |= _addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
+        dict(name='PUT'), dict(name='DELETE') ])
+
+    if 'jobs' not in db.tables:
+        cu.execute("""
+            CREATE TABLE jobs
+            (
+                job_id      %(PRIMARYKEY)s,
+                job_type_id INTEGER NOT NULL
+                    REFERENCES job_types ON DELETE CASCADE,
+                job_state_id INTEGER NOT NULL
+                    REFERENCES job_states ON DELETE CASCADE,
+                created_by   INTEGER NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                created     NUMERIC(14,4) NOT NULL,
+                modified    NUMERIC(14,4) NOT NULL,
+                expiration  NUMERIC(14,4),
+                ttl         INTEGER,
+                pid         INTEGER,
+                message     VARCHAR,
+                error_response VARCHAR,
+                rest_uri    VARCHAR,
+                rest_method_id INTEGER
+                    REFERENCES rest_methods ON DELETE CASCADE,
+                rest_args   VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['jobs'] = []
+        changed = True
+
+    if 'job_history' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_history
+            (
+                job_history_id  %(PRIMARYKEY)s,
+                -- job_history_type needed
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                timestamp   NUMERIC(14,3) NOT NULL,
+                content     VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_history'] = []
+        changed = True
+
+    if 'job_results' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_results
+            (
+                job_result_id   %(PRIMARYKEY)s,
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                data    VARCHAR NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_results'] = []
+        changed = True
+
+    if 'job_target' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_target
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                targetId    INTEGER NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_target'] = []
+        changed = True
+
+    if 'job_managed_system' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_managed_system
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                managed_system_id  INTEGER NOT NULL
+                    REFERENCES inventory_managed_system ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_managed_system'] = []
+        changed = True
+
+    return changed
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
@@ -1015,6 +1341,9 @@ def createSchema(db, doCommit=True):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
+    changed |= _createInventorySchema(db)
+    changed |= _createInventoryUpdateSchema(db)
+    changed |= _createJobsSchema(db)
 
     if doCommit:
         db.commit()
