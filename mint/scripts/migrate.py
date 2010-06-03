@@ -800,7 +800,7 @@ class MigrateTo_48(SchemaMigration):
 
     # 48.15
     # - yum indexer
-    def migrate14(self):
+    def migrate15(self):
         schema._createCapsuleIndexerSchema(self.db)
         return True
 
