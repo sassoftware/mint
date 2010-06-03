@@ -59,13 +59,17 @@ class PlatformsTest(restbase.BaseRestTest):
     def _toXml(self, model, client, req):
         return converter.toText('xml', model, client.controller, req)
 
-    def _getPlatforms(self):
+    def _getPlatformModels(self):
         uri = 'platforms'
         kw = {}
         kw['username'] = 'username'
         kw['password'] = 'password'
         client = self.getRestClient(**kw)
         req, platforms = client.call('GET', uri)
+        return req, platforms
+
+    def _getPlatforms(self):
+        req, platforms = self._getPlatformModels()
         return self._toXml(platforms, client, req)
 
     def _testGetPlatforms(self):
@@ -322,6 +326,36 @@ class PlatformsTest(restbase.BaseRestTest):
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformStatus2Xml, xml)
+
+    def testLoadPlatform(self):
+        req, platforms = self._getPlatformModels()
+        
+        platformLoad = models.PlatformLoad()
+        platformLoad.uri = "http://no.such.host/1234"
+        platformLoad.jobId = "abcd1234"
+        platformLoad.platformId = platforms.platforms[0].platformId
+
+        from rpath_job import api1 as rpath_job
+        def bRun(self, *args, **kw):
+            self.function(*args, **kw)
+        oldBackgroundRunner = rpath_job.BackgroundRunner.backgroundRun
+        rpath_job.BackgroundRunner.backgroundRun = bRun
+        mock.mock(reposmgr, 'RepositoryManager')
+        mock.mock(platformmgr.Platforms, '_load')
+        from conary.build import lookaside
+        lookasideClass = mock.MockObject()
+        lookasideObj = mock.MockObject()
+        lookasideClass._mock.setDefaultReturn(lookasideObj)
+        mock.mock(lookaside, 'FileFinder', lookasideClass)
+
+        client = self.getRestClient(admin=True)
+        platformLoadXml = self._toXml(platformLoad, client, req)
+        uri = '/platforms/1/load'
+        req, platformLoadJob = client.call('POST', uri, body=platformLoadXml)
+        self.assertEquals(len(platformmgr.Platforms._load._mock.calls), 1)
+
+        rpath_job.BackgroundRunner.backgroundRun = oldBackgroundRunner
+        
 
 if __name__ == "__main__":
         testsetup.main()
