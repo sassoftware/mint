@@ -50,7 +50,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
                 pass
             ServerProxy.Transport = Transport
 
-        self.mock(rpath_capsule_indexer.Indexer.BaseSource.RPC,
+        self.mock(rpath_capsule_indexer.sourcerhn.BaseSource.RPC,
             'ServerProxy', Mock.ServerProxy)
         name1 = "name1"
         url1 = "http://url1/adfadf"
