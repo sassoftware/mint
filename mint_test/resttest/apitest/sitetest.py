@@ -39,6 +39,7 @@ class SiteTest(restbase.BaseRestTest):
   <userName>anonymous</userName>
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
+  <isExternalRba>false</isExternalRba>
   <identity>
     <rbuilderId></rbuilderId>
     <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>
@@ -49,6 +50,7 @@ class SiteTest(restbase.BaseRestTest):
   <platforms href="http://%(server)s:%(port)s/api/platforms/"/>
   <registration href="http://%(server)s:%(port)s/api/registration"/>
   <reports href="http://%(server)s:%(port)s/api/reports/"/>
+  <moduleHooks href="http://%(server)s:%(port)s/api/moduleHooks/"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
 </rbuilderStatus>

@@ -846,9 +846,6 @@ class MintClient:
         return self.server.getLaunchedAMIInstanceStatus(authToken,
                                                         launchedAMIId)
 
-    def launchAMIInstance(self, authToken, blessedAMIId):
-        return self.server.launchAMIInstance(authToken, blessedAMIId)
-
     def terminateExpiredAMIInstances(self, authToken):
         return self.server.terminateExpiredAMIInstances(authToken)
 

@@ -29,9 +29,12 @@
 ^distro/rbuilder.conf$
 ^distro/schema$
 
+mint/django_rest/mint-local.db
+
 ^.*project$
 ^.*pydevproject$
 
+^\.coverage$
 ^mint_test/(raa-tests/)?\.(times|coverage)$
 ^mint_test/archive/macrosc$
 ^mint_test/logfile\.test\.*
@@ -40,6 +43,7 @@
 ^scripts/rbuilder_database.py$
 ^scripts/httpd-graceful$
 
+^failed$
 ^(.*/)?\.failed$
 ^(.*/)?\.times$
 .*,cover

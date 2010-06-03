@@ -218,6 +218,7 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     cfg.reposContentsDir = " ".join([reposDir + "/contents1/%s/", reposDir + "/contents2/%s/"])
 
     cfg.dataPath = reposDir
+    cfg.storagePath = reposDir + '/jobs'
     cfg.logPath = reposDir + '/logs'
     cfg.imagesPath = reposDir + '/images/'
     cfg.siteAuthCfgPath = reposDir + '/authorization.cfg'
@@ -395,8 +396,24 @@ class MintApacheServer(rephelp.ApacheServer):
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'cscache'))
         open(self.mintCfg.conaryRcFile, 'w').close()
 
+    def _setUpDjangoSettingsModule(self):
+        dbDriver = self.mintDb.driver == 'sqlite' and 'sqlite3' or 'postgresql_psycopg2'
+        os.system("sed 's|@MINTDBPATH@|%s|;s|@MINTDBDRIVER@|%s|;"
+                        "s|@MINTDBUSER@|%s|;s|@MINTDBPORT@|%s|' %s > %s" % \
+            (os.path.join(self.reposDir, 'mintdb'), dbDriver,
+             getattr(self.mintDb, 'user', ''),
+             getattr(self.mintDb, 'port', ''),
+             os.path.join(self.getMintServerDir(), 'settings.py.in'),
+             os.path.join(self.reposDir, 'settings.py')))
+
     def start(self, resetDir=True):
+        if os.environ.has_key('PYTHONPATH'):
+            os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ':' + self.reposDir
+        else:
+            os.environ['PYTHONPATH'] = self.reposDir
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
         rephelp.ApacheServer.start(self, resetDir)
+        self._setUpDjangoSettingsModule()
         if self.reposDB:
             if self.reposDB.driver == 'postgresql':
                 os.system('createlang -U %s -p %s plpgsql template1' % (self.reposDB.user, self.reposDB.port))
@@ -446,7 +463,7 @@ rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 rephelpCleanup = rephelp._cleanUp
 def _cleanUp():
-    _servers.stopAllServers(clean=True)
+    _servers.stopAllServers(clean=not rephelp._isIndividual())
     rephelpCleanup()
 
 rephelp._cleanUp = _cleanUp
@@ -612,12 +629,12 @@ class RestDBMixIn(object):
                 title='Image File %s' % imageId,
                 size=1024 * imageId,
                 sha1=digest,
-                baseFileName='imagefile_%s.iso' % imageId,
+                fileName='imagefile_%s.iso' % imageId,
                 )])
 
         for item in imageFiles.files:
             path = '%s/%s/%s/%s' % (self.mintCfg.imagesPath, hostname, imageId,
-                    item.baseFileName)
+                    item.fileName)
             util.mkdirChain(os.path.dirname(path))
             open(path, 'w').write('image data')
         db.imageMgr.setFilesForImage(hostname, imageId, imageFiles)
