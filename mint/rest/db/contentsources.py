@@ -120,7 +120,7 @@ class Rhn(ContentSourceType):
         msg = "Cannot connect to this resource. Verify you have provided correct information."
         try:
             ds = self.getDataSource(self.__dict__['proxies'])
-        except rpath_capsule_indexer.RPCError, e:
+        except rpath_capsule_indexer.errors.RPCError, e:
             log.error("Error validating content source %s: %s" \
                         % (self.name, e))
             return (True, False, msg)
@@ -131,7 +131,7 @@ class Rhn(ContentSourceType):
         
         try:
             remaining = ds.getAvailableEntitlements(self.cfg.channels[0])
-        except rpath_capsule_indexer.RPCError, e:
+        except rpath_capsule_indexer.errors.RPCError, e:
             log.error("Error getting available entitlements: %s" % e)
             return(False, False, msg)
 
@@ -151,8 +151,8 @@ class Satellite(Rhn):
     def getDataSource(self, proxies):
         # We only need the server name
         serverName = util.urlSplit(self.sourceUrl)[3]
-        srcChannels = rpath_capsule_indexer.SourceChannels(self.cfg)
-        return rpath_capsule_indexer.Indexer.Source(srcChannels, self.name,
+        srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
+        return rpath_capsule_indexer.sourcerhn.Source(srcChannels, self.name,
             self.username, self.password, serverName, proxies = proxies)
 
 class Proxy(Satellite):
