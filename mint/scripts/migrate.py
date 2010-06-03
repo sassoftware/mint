@@ -627,7 +627,7 @@ class MigrateTo_47(SchemaMigration):
 
 
 class MigrateTo_48(SchemaMigration):
-    Version = (48, 14)
+    Version = (48, 15)
 
     # 48.0
     # - Dropped tables: Jobs, JobsData, GroupTroves, GroupTroveItems,
@@ -798,8 +798,14 @@ class MigrateTo_48(SchemaMigration):
         drop_tables(self.db, 'ci_rhn_errata_package')
         return True
 
+    # 48.15
+    # - yum indexer
+    def migrate15(self):
+        schema._createCapsuleIndexerSchema(self.db)
+        return True
+
 class MigrateTo_49(SchemaMigration):
-    Version = (49, 5)
+    Version = (49, 6)
 
     # 49.0
     # - Added TargetUserCredentials
@@ -1022,6 +1028,10 @@ class MigrateTo_49(SchemaMigration):
             ALTER TABLE inventory_software_version_update 
             ALTER COLUMN available_update_id DROP NOT NULL
         """)
+        return True
+
+    def migrate6(self):
+        schema._createCapsuleIndexerSchema(self.db)
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

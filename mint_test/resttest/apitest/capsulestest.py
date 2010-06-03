@@ -23,18 +23,8 @@ from capsule_indexertest import base
 from testutils import mock
 
 class IndexerSetupMixIn(base.IndexerTestMixIn):
-    def setUpIndexerCfg(self):
-        self.mockPlatformLoadFromRepository()
-        db = self.openRestDatabase()
-        self._addPlatformSources(db)
-        self.capsulecfg = db.capsuleMgr.getIndexerConfig()
-        platformCacheFile = os.path.join(self.mintCfg.dataPath, "data",
-            "platformName.cache")
-        os.unlink(platformCacheFile)
-
-    def mockPlatformLoadFromRepository(self):
-        def mockLoadFromRepository(slf, client, label):
-            slf.parseStream("""\
+    LabelToPlatDefMap = {
+    'localhost@rpl:plat' : """\
 <platformDefinition>
     <contentProvider name="rhn" description="Red Hat Network">
       <contentSourceType name="RHN"
@@ -49,7 +39,47 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         description="Red Hat Enterprise Linux (v. 4 for 64-bit x86_64)" />
     </contentProvider>
 </platformDefinition>
-""")
+""",
+    'localhost@sles:plat' : """\
+<platformDefinition>
+    <contentProvider name="novell" description="Novell Update Server">
+      <contentSourceType name="nu"
+        description="Novell Update Server Hosted" isSingleton="true" />
+      <contentSourceType name="SMT"
+        description="Subscription Management Tool" />
+      <dataSource name="SLES10-SP3-Online/sles-10-i586" description="SuSE Linux Enterprise Server 10 SP3 Online (32-bit x86)"/>
+      <dataSource name="SLES10-SP3-Online/sles-10-x86_64" description="SuSE Linux Enterprise Server 10 SP3 Online (64-bit x86_64)"/>
+      <dataSource name="SLES10-SP3-Pool/sles-10-i586" description="SuSE Linux Enterprise Server 10 SP3 Pool (32-bit x86)"/>
+      <dataSource name="SLES10-SP3-Pool/sles-10-x86_64" description="SuSE Linux Enterprise Server 10 SP3 Pool (64-bit x86_64)"/>
+      <dataSource name="SLES10-SP3-Updates/sles-10-i586" description="SuSE Linux Enterprise Server 10 SP3 Updates (32-bit x86)"/>
+      <dataSource name="SLES10-SP3-Updates/sles-10-x86_64" description="SuSE Linux Enterprise Server 10 SP3 Updates (64-bit x86_64)"/>
+      <dataSource name="SLE10-SDK-SP3-Online/sles-10-i586" description="SuSE Linux Enterprise Server 10 SP3 SDK Online (32-bit x86)"/>
+      <dataSource name="SLE10-SDK-SP3-Online/sles-10-x86_64" description="SuSE Linux Enterprise Server 10 SP3 SDK Online (64-bit x86_64)"/>
+      <dataSource name="SLE10-SDK-SP3-Pool/sles-10-i586" description="SuSE Linux Enterprise Server 10 SP3 SDK Pool (32-bit x86)"/>
+      <dataSource name="SLE10-SDK-SP3-Pool/sles-10-x86_64" description="SuSE Linux Enterprise Server 10 SP3 SDK Pool (64-bit x86_64)"/>
+      <dataSource name="SLE10-SDK-SP3-Updates/sles-10-i586" description="SuSE Linux Enterprise Server 10 SP3 SDK Updates (32-bit x86)"/>
+      <dataSource name="SLE10-SDK-SP3-Updates/sles-10-x86_64" description="SuSE Linux Enterprise Server 10 SP3 SDK Updates (64-bit x86_64)"/>
+    </contentProvider>
+</platformDefinition>
+""",
+}
+    LabelToContentSourcesMap = {
+        'localhost@rpl:plat' : [ 'RHN', 'proxy', 'satellite' ],
+        'localhost@sles:plat' : [ 'nu', 'SMT' ],
+    }
+    def setUpIndexerCfg(self):
+        self.mockPlatformLoadFromRepository()
+        db = self.openRestDatabase()
+        self.mintCfg.availablePlatforms.append('localhost@sles:plat')
+        self._addPlatformSources(db)
+        self.capsulecfg = db.capsuleMgr.getIndexerConfig()
+        platformCacheFile = os.path.join(self.mintCfg.dataPath, "data",
+            "platformName.cache")
+        os.unlink(platformCacheFile)
+
+    def mockPlatformLoadFromRepository(self):
+        def mockLoadFromRepository(slf, client, label):
+            slf.parseStream(self.LabelToPlatDefMap[label])
             slf._sourceTrove = "%s=%s" % (slf._troveName, label)
         from rpath_proddef import api1 as proddef
         self.mock(proddef.PlatformDefinition, 'loadFromRepository',
@@ -64,33 +94,35 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         username = 'JeanValjean'
         password = 'SuperSikrit'
         sourceUrl = 'ignoremereally'
+        platformLabel = 'localhost@rpl:plat'
 
     def _getSources(self):
         return [ self.Source() ]
 
-    def _addPlatformSources(self, db, platformLabel = 'localhost1'):
+    def _addPlatformSources(self, db):
         # XXX nasty hacks to produce some data in the hopefully proper format
-        sql = """
+        psql = """
             INSERT INTO Platforms (label, mode)
             VALUES (?, ?)
         """
-        platformLabel = platformLabel
-        mode = 'manual'
-        cu = db.cursor()
-        cu.execute(sql, platformLabel, mode)
-
-        platformId = cu.execute("SELECT platformId FROM Platforms "
-            "WHERE label = ?", platformLabel).fetchone()[0]
-
-        sql = """
+        cstsql = """
             INSERT INTO platformsContentSourceTypes
             (platformId, contentSourceType)
             VALUES (?, ?)
         """
-        cu.execute(sql, platformId, 'RHN')
+        mode = 'manual'
+        cu = db.cursor()
+        for platformLabel in self.mintCfg.availablePlatforms:
+            cu.execute(psql, platformLabel, mode)
+            platformId = cu.lastid()
 
-        for source in self._getSources():
-            db.platformMgr.createSource(source)
+            for contentSourceType in self.LabelToContentSourcesMap[platformLabel]:
+                cu.execute(cstsql, platformId, contentSourceType)
+
+            for source in self._getSources():
+                if source.platformLabel != platformLabel:
+                    continue
+                db.platformMgr.createSource(source)
         db.commit()
 
     def indexer(self):
@@ -106,6 +138,15 @@ class BaseCapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
             def _setProperties(self):
                 restbase.MockRequest._setProperties(self)
                 self.remote = ('127.0.0.1', 12345)
+
+    class Mock(IndexerSetupMixIn.Mock):
+        class Response(IndexerSetupMixIn.Mock.Response):
+            def __init__(self, url):
+                if 'repodata' not in url:
+                    return IndexerSetupMixIn.Mock.Response.__init__(self, url)
+                f = file(os.path.join(os.getenv('TEST_PATH'),
+                    'mint_test/archive/suse-1/repodata', os.path.basename(url)))
+                self.read = f.read
 
     def setUp(self):
         try:
@@ -344,7 +385,32 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         proxy2.shortName = 'proxy2'
         proxy2.sourceUrl = 'https://proxy2/foo'
         proxy2.password = None
-        return [ proxy1, proxy2, src, sat ]
+
+        nu = self.Source()
+        nu.contentSourceType = 'nu'
+        nu.name = 'Novell Update Server'
+        nu.shortName = 'nu'
+        nu.username = 'username_nu'
+        nu.password = 'password_nu'
+        nu.platformLabel = 'localhost@sles:plat'
+
+        smt1 = self.Source()
+        smt1.contentSourceType = 'SMT'
+        smt1.name = 'Subscription Management Tool'
+        smt1.shortName = 'smt1'
+        smt1.sourceUrl = 'https://smt1/'
+        smt1.username = None # No auth required here
+        smt1.platformLabel = 'localhost@sles:plat'
+
+        smt2 = self.Source()
+        smt2.contentSourceType = 'SMT'
+        smt2.name = 'Subscription Management Tool'
+        smt2.shortName = 'smt2'
+        smt2.sourceUrl = 'https://smt2/'
+        smt2.username = 'username_smt2'
+        smt2.password = 'password_smt2'
+        smt2.platformLabel = 'localhost@sles:plat'
+        return [ proxy1, proxy2, src, sat, nu, smt1, smt2 ]
 
     def testRefreshMultipleSources(self):
         indexer = base.IndexerTestMixIn.indexer(self)
