@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(49, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(49, 6)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1016,6 +1016,7 @@ def _createInventorySchema(db):
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_id" integer NOT NULL 
                     REFERENCES "targets" ("targetid") 
+                    ON DELETE SET NULL
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_system_id" varchar(256)
             ) %(TABLEOPTS)s""" % db.keywords)

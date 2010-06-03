@@ -88,7 +88,7 @@ class managed_system(ModelParser):
 
 class system_target(models.Model):
     managed_system = models.ForeignKey(managed_system, null=True)
-    target = models.ForeignKey(rbuildermodels.Targets)
+    target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=256, null=True)
 
 class software_version(models.Model):
