@@ -62,6 +62,18 @@ class Source(Model):
     def get_absolute_url(self):
         return ('contentSources.instances', self.contentSourceType, self.shortName)
 
+class NuSource(Source):
+    class Meta(object):
+        name = 'contentSource'
+    username = fields.CharField()
+    password = fields.ProtectedField()
+
+class SmtSource(Source):
+    class Meta(object):
+        name = 'contentSource'
+    username = fields.CharField()
+    password = fields.ProtectedField()
+
 class RhnSource(Source):    
     class Meta(object):
         name = 'contentSource'

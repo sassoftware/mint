@@ -1588,6 +1588,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                       userId=userId)
         images = client.getAllBuildsByType('VMWARE_ESX_IMAGE')
         assert(len(images) == 1)
+        self.failUnlessEqual(len(images[0]['files']), 1)
 
         images = client.getAllBuildsByType('VMWARE_OVF_IMAGE')
         assert(len(images) == 0)
@@ -1627,9 +1628,19 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             'buildName': 'Build', 'baseFileName': 'testproject-0.1-',
             'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=8',
             'buildPageUrl': 'http://SOMEHOST/project/testproject/build?id=8',
+            'files' : [
+                {'downloadUrl': 'http://SOMEHOST/downloadImage?fileId=8',
+                 'sha1': 'fe5dbbcea5ce7e2988b8c69bcfdfde8904aabc1f',
+                 'idx': 0,
+                 'size': '8192',
+                 'filename' : 'imageFile 8',
+                 },
+            ],
         }
         image['downloadUrl'] = self._whiteOutHostPort(image['downloadUrl'])
         image['buildPageUrl'] = self._whiteOutHostPort(image['buildPageUrl'])
+        for f in image['files']:
+            f['downloadUrl'] = self._whiteOutHostPort(f['downloadUrl'])
         self.failUnlessEqual(images[0], expected)
 
     @classmethod

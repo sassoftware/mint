@@ -160,6 +160,23 @@ class Proxy(Satellite):
         Satellite.__init__(self, proxies=proxies)
         self.name = 'Red Hat Proxy'
 
+class Nu(ContentSourceType):
+    fields = [Name(), Username(), Password()]
+    model = models.NuSource
+    sourceUrl = 'https://nu.novell.com/repo/$RCE'
+
+    def status(self):
+        # TODO fix this once support for these types have been added to the
+        # rpath-capsule-indexer
+        return (True, True, 'Validated Successfully.')
+
+
+class Smt(Nu):
+    fields = [Name(), Username(), Password(), SourceUrl()]
+    model = models.SmtSource
+
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,
-                      'proxy' : Proxy}
+                      'proxy' : Proxy,
+                      'nu' : Nu,
+                      'SMT' : Smt}
