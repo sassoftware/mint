@@ -111,8 +111,8 @@ class Rhn(ContentSourceType):
         ContentSourceType.__init__(self)
 
     def getDataSource(self, proxies):
-        srcChannels = rpath_capsule_indexer.SourceChannels(self.cfg)
-        return rpath_capsule_indexer.Indexer.Source_RHN(srcChannels,
+        srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
+        return rpath_capsule_indexer.sourcerhn.Source_RHN(srcChannels,
             self.username, self.password, proxies = proxies)
 
     def status(self):
