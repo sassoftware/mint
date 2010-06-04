@@ -66,11 +66,12 @@ class PlatformsTest(restbase.BaseRestTest):
         kw['password'] = 'password'
         client = self.getRestClient(**kw)
         req, platforms = client.call('GET', uri)
+        self.client = client
         return req, platforms
 
     def _getPlatforms(self):
         req, platforms = self._getPlatformModels()
-        return self._toXml(platforms, client, req)
+        return self._toXml(platforms, self.client, req)
 
     def _testGetPlatforms(self):
         xml = self._getPlatforms()
