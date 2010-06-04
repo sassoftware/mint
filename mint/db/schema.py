@@ -997,9 +997,9 @@ def _createCapsuleIndexerYumSchema(db):
     if tableName not in db.tables:
         cu.execute("""
             CREATE TABLE ci_yum_repository_package (
-                yum_repository_id NOT NULL
+                yum_repository_id INTEGER NOT NULL
                     REFERENCES ci_yum_repositories ON DELETE CASCADE,
-                package_id NOT NULL
+                package_id INTEGER NOT NULL
                     REFERENCES ci_yum_packages ON DELETE CASCADE,
                 location VARCHAR NOT NULL,
                 PRIMARY KEY (yum_repository_id, package_id)

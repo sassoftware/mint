@@ -3,6 +3,7 @@
 #
 # All rights reserved
 #
+import base64
 import kid
 import re
 import sys
@@ -106,8 +107,18 @@ class MintApp(WebHandler):
         if 'pysid' in cookies:
             self._session_start()
 
-        # default to anonToken if the current session has no authToken
-        self.authToken = self.session.get('authToken', anonToken)
+        # default to anonToken if the header has Authorization or
+        # the current session has no authToken
+        authorization = self.req.headers_in.get('Authorization', None)
+        if authorization: 
+            type, user_pass = authorization.split(' ', 1)
+            try:
+                self.authToken = (base64.decodestring(user_pass).split(':', 1))
+            except:
+                self.authToken = anonToken
+        else:
+            self.authToken = self.session.get('authToken', anonToken)
+        
         self.authToken = (self.authToken[0], util.ProtectedString(self.authToken[1]))
 
         # open up a new client with the retrieved authToken
