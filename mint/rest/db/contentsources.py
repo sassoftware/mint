@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 import logging
-import urllib
 
 import rpath_capsule_indexer
 
