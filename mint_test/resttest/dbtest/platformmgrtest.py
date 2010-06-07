@@ -548,6 +548,65 @@ class PlatformManagerTest(restbase.BaseRestTest):
   </dataFields>
 </configDescriptor>
 """,
+    repomd = """\
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Yum Repository</displayName>
+    <descriptions>
+      <desc>Yum Repository Configuration</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>username</name>
+      <required>false</required>
+      <descriptions>
+        <desc>User Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>User Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <required>false</required>
+      <descriptions/>
+      <prompt/>
+    </field>
+    <field>
+      <name>sourceUrl</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Source URL</desc>
+      </descriptions>
+      <prompt>
+        <desc>Source URL</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+      <constraints>
+        <descriptions>
+          <desc>URL must begin with ftp://, http://, or https://</desc>
+        </descriptions>
+        <regexp>^(http|https|ftp):\/\/.*</regexp>
+      </constraints>
+    </field>
+  </dataFields>
+</configDescriptor>
+""",
 )
 
 if __name__ == "__main__":

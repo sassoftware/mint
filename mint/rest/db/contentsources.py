@@ -36,6 +36,9 @@ class Username(Field):
     password = False
     encrypted = True
 
+class UsernameOptional(Username):
+    required = False
+
 class Password(Field):
     name = 'password'
     required = True
@@ -44,6 +47,9 @@ class Password(Field):
     type = 'str'
     password = True
     encrypted = True
+
+class PasswordOptional(Field):
+    required = False
 
 class SourceUrl(Field):
     name = 'sourceUrl'
@@ -161,25 +167,32 @@ class Satellite(_RhnSourceType):
 class Proxy(Satellite):
     _ContentSourceTypeName =  'Red Hat Proxy'
 
-class Nu(ContentSourceType):
-    fields = [Name, Username, Password]
-    model = models.NuSource
-    sourceUrl = 'https://nu.novell.com/repo/$RCE'
-    _ContentSourceTypeName = 'Novell Update Service'
-
+class _RepositoryMetadataSourceType(ContentSourceType):
     def status(self):
         # TODO fix this once support for these types have been added to the
         # rpath-capsule-indexer
         return (True, True, 'Validated Successfully.')
 
-
-class Smt(Nu):
+class Smt(_RepositoryMetadataSourceType):
     fields = [Name, Username, Password, SourceUrl]
     model = models.SmtSource
     _ContentSourceTypeName = 'Subscription Management Tool'
+
+class Nu(Smt):
+    fields = [Name, Username, Password]
+    model = models.NuSource
+    sourceUrl = 'https://nu.novell.com/repo/$RCE'
+    _ContentSourceTypeName = 'Novell Update Service'
+
+class Repomd(_RepositoryMetadataSourceType):
+    fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]
+    model = models.SmtSource
+    _ContentSourceTypeName = 'Yum Repository'
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,
                       'proxy' : Proxy,
                       'nu' : Nu,
-                      'SMT' : Smt}
+                      'SMT' : Smt,
+                      'repomd' : Repomd,
+                      }
