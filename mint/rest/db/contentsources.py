@@ -64,8 +64,8 @@ class ContentSourceType(object):
     fields = []
     model = None
 
-    def __init__(self):
-        pass
+    def __init__(self, proxies = None):
+        self.__dict__['proxies'] = proxies or {}
 
     def __setattr__(self, attr, value):
         fieldNames = self.getFieldNames()
@@ -107,18 +107,17 @@ class Rhn(ContentSourceType):
 
     def __init__(self, proxies = None):
         self.name = 'Red Hat Network'
-        self.__dict__['proxies'] = proxies or {}
-        ContentSourceType.__init__(self)
+        ContentSourceType.__init__(self, proxies)
 
-    def getDataSource(self, proxies):
+    def getDataSource(self):
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source_RHN(srcChannels,
-            self.username, self.password, proxies = proxies)
+            self.username, self.password, proxies = self.__dict__['proxies'])
 
     def status(self):
         msg = "Cannot connect to this resource. Verify you have provided correct information."
         try:
-            ds = self.getDataSource(self.__dict__['proxies'])
+            ds = self.getDataSource()
         except rpath_capsule_indexer.errors.RPCError, e:
             log.error("Error validating content source %s: %s" \
                         % (self.name, e))
@@ -147,12 +146,13 @@ class Satellite(Rhn):
         Rhn.__init__(self, proxies=proxies)
         self.name = 'Red Hat Satellite'
 
-    def getDataSource(self, proxies):
+    def getDataSource(self):
         # We only need the server name
         serverName = util.urlSplit(self.sourceUrl)[3]
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source(srcChannels, self.name,
-            self.username, self.password, serverName, proxies = proxies)
+            self.username, self.password, serverName,
+            proxies = self.__dict__['proxies'])
 
 class Proxy(Satellite):
     def __init__(self, proxies = None):

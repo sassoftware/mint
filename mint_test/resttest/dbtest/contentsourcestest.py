@@ -15,20 +15,20 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         url2 = "url2"
         proxies = dict(https = 'http://foo')
 
-        srhn = contentsources.contentSourceTypes['RHN']()
-        ds = srhn.getDataSource(proxies = proxies)
+        srhn = contentsources.contentSourceTypes['RHN'](proxies)
+        ds = srhn.getDataSource()
         self.failUnlessEqual(ds.rpc.proxies, proxies)
 
-        s1 = contentsources.contentSourceTypes['satellite']()
+        s1 = contentsources.contentSourceTypes['satellite'](proxies)
         s1.name = name1
         s1.sourceUrl = url1
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
 
-        ds = s1.getDataSource(proxies = proxies)
+        ds = s1.getDataSource()
         self.failUnlessEqual(ds.rpc.proxies, proxies)
 
-        s2 = contentsources.contentSourceTypes['satellite']()
+        s2 = contentsources.contentSourceTypes['satellite'](proxies)
         s2.name = name2
         s2.sourceUrl = url2
         self.failUnlessEqual(s2.name, name2)
