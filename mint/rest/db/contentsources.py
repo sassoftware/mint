@@ -63,9 +63,11 @@ class ContentSourceType(object):
     name = None
     fields = []
     model = None
+    DefaultName = None
 
     def __init__(self, proxies = None):
         self.__dict__['proxies'] = proxies or {}
+        self.name = self.DefaultName
 
     def __setattr__(self, attr, value):
         fieldNames = self.getFieldNames()
@@ -104,10 +106,7 @@ class Rhn(ContentSourceType):
     cfg.channels.append('rhel-i386-as-4')
     # Just use the rhel 4 channel label here, both rhel 4 and rhel 5 pull
     # from the same entitlement pool.
-
-    def __init__(self, proxies = None):
-        self.name = 'Red Hat Network'
-        ContentSourceType.__init__(self, proxies)
+    DefaultName = 'Red Hat Network'
 
     def getDataSource(self):
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
@@ -141,10 +140,7 @@ class Rhn(ContentSourceType):
 class Satellite(Rhn):
     fields = [Name(), Username(), Password(), SourceUrl()]
     model = models.SatelliteSource
-
-    def __init__(self, proxies = None):
-        Rhn.__init__(self, proxies=proxies)
-        self.name = 'Red Hat Satellite'
+    DefaultName = 'Red Hat Satellite'
 
     def getDataSource(self):
         # We only need the server name
@@ -155,14 +151,13 @@ class Satellite(Rhn):
             proxies = self.__dict__['proxies'])
 
 class Proxy(Satellite):
-    def __init__(self, proxies = None):
-        Satellite.__init__(self, proxies=proxies)
-        self.name = 'Red Hat Proxy'
+    DefaultName =  'Red Hat Proxy'
 
 class Nu(ContentSourceType):
     fields = [Name(), Username(), Password()]
     model = models.NuSource
     sourceUrl = 'https://nu.novell.com/repo/$RCE'
+    DefaultName = 'Novell Update Service'
 
     def status(self):
         # TODO fix this once support for these types have been added to the
@@ -173,6 +168,7 @@ class Nu(ContentSourceType):
 class Smt(Nu):
     fields = [Name(), Username(), Password(), SourceUrl()]
     model = models.SmtSource
+    DefaultName = 'Subscription Management Tool'
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,
