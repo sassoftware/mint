@@ -39,7 +39,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         self.failUnlessEqual(s3.getProxies(), proxies)
 
         s4 = contentsources.contentSourceTypes['SMT'](proxies)
-        self.failUnlessEqual(s3.getProxies(), proxies)
+        self.failUnlessEqual(s4.getProxies(), proxies)
 
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
