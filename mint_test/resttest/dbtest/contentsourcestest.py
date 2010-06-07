@@ -34,6 +34,12 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         self.failUnlessEqual(s2.name, name2)
         self.failUnlessEqual(s2.sourceUrl, url2)
 
+        s3 = contentsources.contentSourceTypes['nu'](proxies)
+        self.failUnlessEqual(s3.proxies, proxies)
+
+        s4 = contentsources.contentSourceTypes['SMT'](proxies)
+        self.failUnlessEqual(s3.proxies, proxies)
+
         raise testsetup.testsuite.SkipTestException("RBL-5694: the next lines fail")
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
