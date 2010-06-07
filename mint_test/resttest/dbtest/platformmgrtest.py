@@ -244,6 +244,311 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.failUnlessEqual([x.contentSourceType \
             for x in newPlatSources.instance], ['RHN', 'RHN'])
 
+    def testGetDescriptor(self):
+        rc = self.getRestClient()
+        for cst in platformmgr.contentsources.contentSourceTypes:
+            if cst not in self.Descriptors:
+                self.fail("Missing descriptor test for %s" % cst)
+            descr = self.db.getSourceTypeDescriptor(cst)
+            xml = rc.convert('xml', None, descr)
+            self.assertXMLEquals(xml, self.Descriptors[cst])
+
+    Descriptors = dict(
+        RHN = """\
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Red Hat Network</displayName>
+    <descriptions>
+      <desc>Red Hat Network Configuration</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>username</name>
+      <required>true</required>
+      <descriptions>
+        <desc>User Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>User Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>password</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
+    </field>
+  </dataFields>
+</configDescriptor>
+""",
+        satellite = """\
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Red Hat Satellite</displayName>
+    <descriptions>
+      <desc>Red Hat Satellite Configuration</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>username</name>
+      <required>true</required>
+      <descriptions>
+        <desc>User Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>User Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>password</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
+    </field>
+    <field>
+      <name>sourceUrl</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Source URL</desc>
+      </descriptions>
+      <prompt>
+        <desc>Source URL</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+      <constraints>
+        <descriptions>
+          <desc>URL must begin with ftp://, http://, or https://</desc>
+        </descriptions>
+        <regexp>^(http|https|ftp):\/\/.*</regexp>
+      </constraints>
+    </field>
+  </dataFields>
+</configDescriptor>
+""",
+        proxy = """\
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Red Hat Proxy</displayName>
+    <descriptions>
+      <desc>Red Hat Proxy Configuration</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>username</name>
+      <required>true</required>
+      <descriptions>
+        <desc>User Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>User Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>password</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
+    </field>
+    <field>
+      <name>sourceUrl</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Source URL</desc>
+      </descriptions>
+      <prompt>
+        <desc>Source URL</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+      <constraints>
+        <descriptions>
+          <desc>URL must begin with ftp://, http://, or https://</desc>
+        </descriptions>
+        <regexp>^(http|https|ftp):\/\/.*</regexp>
+      </constraints>
+    </field>
+  </dataFields>
+</configDescriptor>
+""",
+        nu = """\
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Novell Update Service</displayName>
+    <descriptions>
+      <desc>Novell Update Service Configuration</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>username</name>
+      <required>true</required>
+      <descriptions>
+        <desc>User Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>User Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>password</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
+    </field>
+  </dataFields>
+</configDescriptor>
+""",
+        SMT = """\
+<configDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd factorydef-1.0.xsd">
+  <metadata>
+    <displayName>Subscription Management Tool</displayName>
+    <descriptions>
+      <desc>Subscription Management Tool Configuration</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>name</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>username</name>
+      <required>true</required>
+      <descriptions>
+        <desc>User Name</desc>
+      </descriptions>
+      <prompt>
+        <desc>User Name</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+    </field>
+    <field>
+      <name>password</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
+    </field>
+    <field>
+      <name>sourceUrl</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Source URL</desc>
+      </descriptions>
+      <prompt>
+        <desc>Source URL</desc>
+      </prompt>
+      <type>str</type>
+      <password>false</password>
+      <constraints>
+        <descriptions>
+          <desc>URL must begin with ftp://, http://, or https://</desc>
+        </descriptions>
+        <regexp>^(http|https|ftp):\/\/.*</regexp>
+      </constraints>
+    </field>
+  </dataFields>
+</configDescriptor>
+""",
+)
 
 if __name__ == "__main__":
         testsetup.main()
