@@ -14,14 +14,18 @@ from mint.rest.api import models
 log = logging.getLogger(__name__)
 
 class Field(object):
+    __slots__ = [ 'name', 'value', 'required', 'description', 'prompt',
+        'type', 'password', 'encrypted' ]
     name = None
     required = True
     description = None
     prompt = None
     type = None
-    value = None
     password = None
     encrypted = False
+
+    def __init__(self):
+        self.value = None
 
 class Username(Field):
     name = 'username'
@@ -60,58 +64,57 @@ class Name(Field):
     password = False
 
 class ContentSourceType(object):
-    name = None
+    __slots__ = [ 'proxies', '_fieldValues', ]
     fields = []
     model = None
-    DefaultName = None
+    _ContentSourceTypeName = None
 
     def __init__(self, proxies = None):
-        self.__dict__['proxies'] = proxies or {}
-        self.name = self.DefaultName
+        self.proxies = proxies or {}
+        self._fieldValues = dict((x.name, x())
+            for x in self.__class__.fields)
 
     def __setattr__(self, attr, value):
-        fieldNames = self.getFieldNames()
-        if attr not in fieldNames:
-            raise AttributeError
+        if attr in self.__slots__:
+            return object.__setattr__(self, attr, value)
+        if attr not in self._fieldValues:
+            raise AttributeError(attr)
 
-        field = fieldNames.index(attr)
-        f = self.fields[field] 
+        f = self._fieldValues[attr]
         f.value = value
 
-    def __getattribute__(self, attr):
-        fieldNames = object.__getattribute__(self, 'getFieldNames')()
-        if attr not in fieldNames:
-            return object.__getattribute__(self, attr)
-
-        field = fieldNames.index(attr)
-        f = self.fields[field] 
+    def __getattr__(self, attr):
+        if attr not in self._fieldValues:
+            raise AttributeError(attr)
+        f = self._fieldValues[attr]
         return f.value
 
     def getFieldNames(self):
-        return [f.name for f in object.__getattribute__(self, 'fields')]
+        return [f.name for f in self.__class__.fields]
 
     def getEncryptedFieldNames(self):
-        return [f.name for f in object.__getattribute__(self, 'fields') \
-                if f.encrypted]
+        return [f.name for f in self.__class__.fields if f.encrypted]
+
+    def getContentSourceTypeName(self):
+        return self.__class__._ContentSourceTypeName
+
+    def getProxies(self):
+        return self.proxies
 
     def status(self, *args, **kw):
         raise NotImplementedError
 
-class Rhn(ContentSourceType):
+class _RhnSourceType(ContentSourceType):
     xmlrpcUrl = 'XMLRPC'
-    fields = [Name(), Username(), Password()]
-    model = models.RhnSource
-    sourceUrl = 'https://rhn.redhat.com'
     cfg = rpath_capsule_indexer.IndexerConfig()
     cfg.channels.append('rhel-i386-as-4')
     # Just use the rhel 4 channel label here, both rhel 4 and rhel 5 pull
     # from the same entitlement pool.
-    DefaultName = 'Red Hat Network'
 
     def getDataSource(self):
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source_RHN(srcChannels,
-            self.username, self.password, proxies = self.__dict__['proxies'])
+            self.username, self.password, proxies = self.proxies)
 
     def status(self):
         msg = "Cannot connect to this resource. Verify you have provided correct information."
@@ -137,27 +140,32 @@ class Rhn(ContentSourceType):
 
         return (True, True, 'Validated Successfully.')
 
-class Satellite(Rhn):
-    fields = [Name(), Username(), Password(), SourceUrl()]
+class Rhn(_RhnSourceType):
+    fields = [Name, Username, Password]
+    model = models.RhnSource
+    sourceUrl = 'https://rhn.redhat.com'
+    _ContentSourceTypeName = 'Red Hat Network'
+
+class Satellite(_RhnSourceType):
+    fields = [Name, Username, Password, SourceUrl]
     model = models.SatelliteSource
-    DefaultName = 'Red Hat Satellite'
+    _ContentSourceTypeName = 'Red Hat Satellite'
 
     def getDataSource(self):
         # We only need the server name
         serverName = util.urlSplit(self.sourceUrl)[3]
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source(srcChannels, self.name,
-            self.username, self.password, serverName,
-            proxies = self.__dict__['proxies'])
+            self.username, self.password, serverName, proxies = self.proxies)
 
 class Proxy(Satellite):
-    DefaultName =  'Red Hat Proxy'
+    _ContentSourceTypeName =  'Red Hat Proxy'
 
 class Nu(ContentSourceType):
-    fields = [Name(), Username(), Password()]
+    fields = [Name, Username, Password]
     model = models.NuSource
     sourceUrl = 'https://nu.novell.com/repo/$RCE'
-    DefaultName = 'Novell Update Service'
+    _ContentSourceTypeName = 'Novell Update Service'
 
     def status(self):
         # TODO fix this once support for these types have been added to the
@@ -166,9 +174,9 @@ class Nu(ContentSourceType):
 
 
 class Smt(Nu):
-    fields = [Name(), Username(), Password(), SourceUrl()]
+    fields = [Name, Username, Password, SourceUrl]
     model = models.SmtSource
-    DefaultName = 'Subscription Management Tool'
+    _ContentSourceTypeName = 'Subscription Management Tool'
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,

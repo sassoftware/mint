@@ -18,6 +18,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         srhn = contentsources.contentSourceTypes['RHN'](proxies)
         ds = srhn.getDataSource()
         self.failUnlessEqual(ds.rpc.proxies, proxies)
+        self.failUnlessEqual(srhn.sourceUrl, 'https://rhn.redhat.com')
 
         s1 = contentsources.contentSourceTypes['satellite'](proxies)
         s1.name = name1
@@ -35,12 +36,11 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         self.failUnlessEqual(s2.sourceUrl, url2)
 
         s3 = contentsources.contentSourceTypes['nu'](proxies)
-        self.failUnlessEqual(s3.proxies, proxies)
+        self.failUnlessEqual(s3.getProxies(), proxies)
 
         s4 = contentsources.contentSourceTypes['SMT'](proxies)
-        self.failUnlessEqual(s3.proxies, proxies)
+        self.failUnlessEqual(s3.getProxies(), proxies)
 
-        raise testsetup.testsuite.SkipTestException("RBL-5694: the next lines fail")
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
 
