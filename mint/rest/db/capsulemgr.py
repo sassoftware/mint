@@ -25,6 +25,9 @@ class Indexer(rpath_capsule_indexer.Indexer):
             return logger
 
 class CapsuleManager(manager.Manager):
+    SourcesRHN = set(['RHN', 'satellite', 'proxy'])
+    SourcesYum = set(['nu', 'SMT'])
+
     def getIndexerConfig(self):
         capsuleDataDir = util.joinPaths(self.cfg.dataPath, 'capsules')
         cfg = rpath_capsule_indexer.IndexerConfig()
@@ -47,22 +50,38 @@ class CapsuleManager(manager.Manager):
             self.cfg.siteHost)
 
         dataSources = self.db.platformMgr.getSources().instance or []
+        yumSources = []
         for idx, dataSource in enumerate(dataSources):
             if None in (dataSource.username, dataSource.password):
-                # Not fully configured yet
-                continue
+                if dataSource.contentSourceType in self.SourcesRHN:
+                    # Not fully configured yet
+                    continue
             if dataSource.contentSourceType == 'RHN':
                 dsn = 'RHN'
                 sourceHost = None
-            else:
+            elif dataSource.contentSourceType in self.SourcesRHN:
+                sourceType = 'source'
                 dsn = 'source_%d' % idx
                 sourceHost = dataSource.sourceUrl
                 if '/' in sourceHost:
                     sourceHost = util.urlSplit(sourceHost)[3]
+            elif dataSource.contentSourceType in self.SourcesYum:
+                if dataSource.contentSourceType == 'nu':
+                    url = 'https://nu.novell.com/repo/$RCE'
+                else:
+                    url = dataSource.sourceUrl
+                arr = list(util.urlSplit(url))
+                if dataSource.username is not None:
+                    arr[1] = dataSource.username
+                if dataSource.password is not None:
+                    arr[2] = dataSource.password
+                yumSources.append(util.urlUnsplit(arr))
+                # We configure yum sources further down
+                continue
             cfg.configLine("user %s %s %s" % (dsn, dataSource.username,
                 dataSource.password))
             if sourceHost:
-                cfg.configLine("source %s %s" % (dsn, sourceHost))
+                cfg.configLine("%s %s %s" % (sourceType, dsn, sourceHost))
         # List configured platforms
         for platform in self.db.platformMgr.platforms.list().platforms:
             if not platform.enabled:
@@ -73,8 +92,13 @@ class CapsuleManager(manager.Manager):
             contentProvider = platDef.getContentProvider()
             if not contentProvider:
                 continue
+            if contentProvider.name == 'rhn':
+                for ds in contentProvider.dataSources:
+                    cfg.configLine("channels %s" % ds.name)
+                continue
             for ds in contentProvider.dataSources:
-                cfg.configLine("channels %s" % ds.name)
+                for ys in yumSources:
+                    cfg.configLine("sourceYum %s %s/%s"% (ds.name, ys, ds.name))
 
         # Copy proxy information
         cfg.proxy = self.db.cfg.proxy.copy()

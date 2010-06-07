@@ -13,12 +13,20 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         url1 = "url1"
         name2 = "name2"
         url2 = "url2"
+        proxies = dict(https = 'http://foo')
+
+        srhn = contentsources.contentSourceTypes['RHN']()
+        ds = srhn.getDataSource(proxies = proxies)
+        self.failUnlessEqual(ds.rpc.proxies, proxies)
 
         s1 = contentsources.contentSourceTypes['satellite']()
         s1.name = name1
         s1.sourceUrl = url1
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
+
+        ds = s1.getDataSource(proxies = proxies)
+        self.failUnlessEqual(ds.rpc.proxies, proxies)
 
         s2 = contentsources.contentSourceTypes['satellite']()
         s2.name = name2
@@ -50,7 +58,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
                 pass
             ServerProxy.Transport = Transport
 
-        self.mock(rpath_capsule_indexer.Indexer.BaseSource.RPC,
+        self.mock(rpath_capsule_indexer.sourcerhn.BaseSource.RPC,
             'ServerProxy', Mock.ServerProxy)
         name1 = "name1"
         url1 = "http://url1/adfadf"

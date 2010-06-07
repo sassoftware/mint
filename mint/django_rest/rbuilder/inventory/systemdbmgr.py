@@ -153,18 +153,27 @@ class SystemDBManager(RbuilderDjangoManager):
 
         # If it was just created, obviously there's nothing cached.
         if created:
-            return []
+            return None
 
         updates = models.software_version_update.objects.filter(
                     software_version=softwareVersion)
 
         now = datetime.datetime.now()
         oneDay = datetime.timedelta(1)
+
         cachedUpdates = [u for u in updates if now - u.last_refreshed < oneDay]
-        cachedUpdates = [(str(s.software_version.name),
-                          versions.ThawVersion(s.software_version.version),
-                          deps.parseFlavor(s.software_version.flavor)) for s in cachedUpdates]
-        return cachedUpdates
+        if not cachedUpdates:
+            return None
+
+        updatesAvailable = [c for c in cachedUpdates if c.available_update is not None]
+        if updatesAvailable:
+           updatesAvailable  = [(str(s.available_update.name),
+                              versions.ThawVersion(s.available_update.version),
+                              deps.parseFlavor(s.available_update.flavor)) for s in updatesAvailable]
+        else:
+            return []
+
+        return updatesAvailable 
                 
     def clearCachedUpdates(self, nvfs):
         for nvf in nvfs:
@@ -182,8 +191,11 @@ class SystemDBManager(RbuilderDjangoManager):
         softwareVersion, created = models.software_version.objects.get_or_create(
             name=nvf[0], version=nvf[1], flavor=nvf[2])
                 
-        updateSoftwareVersion, created = models.software_version.objects.get_or_create(
-            name=updateNvf[0], version=updateNvf[1], flavor=updateNvf[2])
+        if updateNvf:
+            updateSoftwareVersion, created = models.software_version.objects.get_or_create(
+                name=updateNvf[0], version=updateNvf[1], flavor=updateNvf[2])
+        else:
+            updateSoftwareVersion = None
 
         cachedUpdate, created = models.software_version_update.objects.get_or_create(
                                     software_version=softwareVersion,

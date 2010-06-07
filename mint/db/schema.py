@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(49, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(49, 7)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -956,6 +956,58 @@ def _createCapsuleIndexerSchema(db):
 
     return changed
 
+def _createCapsuleIndexerYumSchema(db):
+    cu = db.cursor()
+    changed = False
+
+    tableName = 'ci_yum_repositories'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_yum_repositories (
+                yum_repository_id %(PRIMARYKEY)s,
+                label VARCHAR(256) NOT NULL,
+                timestamp VARCHAR,
+                checksum VARCHAR,
+                checksum_type VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_yum_repositories',
+        'ci_yum_repositories_label_idx_uq', 'label', unique = True)
+
+    tableName = 'ci_yum_packages'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_yum_packages (
+                package_id %(PRIMARYKEY)s,
+                nevra_id INTEGER NOT NULL
+                    REFERENCES ci_rhn_nevra ON DELETE CASCADE,
+                sha1sum VARCHAR,
+                checksum VARCHAR NOT NULL,
+                checksum_type VARCHAR NOT NULL,
+                path VARCHAR
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    changed |= db.createIndex('ci_yum_packages',
+        'ci_yum_packages_nevra_id_checksum_idx_uq',
+        'nevra_id, checksum, checksum_type', unique = True)
+
+    tableName = 'ci_yum_repository_package'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE ci_yum_repository_package (
+                yum_repository_id INTEGER NOT NULL
+                    REFERENCES ci_yum_repositories ON DELETE CASCADE,
+                package_id INTEGER NOT NULL
+                    REFERENCES ci_yum_packages ON DELETE CASCADE,
+                location VARCHAR NOT NULL,
+                PRIMARY KEY (yum_repository_id, package_id)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    return changed
+
 def _createRepositoryLogSchema(db):
     # Repository Log scraping table and the status table for th scraper 
     cu = db.cursor()
@@ -1016,6 +1068,7 @@ def _createInventorySchema(db):
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_id" integer NOT NULL 
                     REFERENCES "targets" ("targetid") 
+                    ON DELETE SET NULL
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_system_id" varchar(256)
             ) %(TABLEOPTS)s""" % db.keywords)
@@ -1051,7 +1104,8 @@ def _createInventorySchema(db):
                     DEFERRABLE INITIALLY DEFERRED,
                 "software_version_id" integer NOT NULL 
                     REFERENCES "inventory_software_version" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED
+                    DEFERRABLE INITIALLY DEFERRED,
+                UNIQUE ("managed_system_id", "software_version_id")
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
         CREATE INDEX "inventory_system_software_version_managed_system_id" 
@@ -1153,7 +1207,7 @@ def _createInventoryUpdateSchema(db):
                 "id" %(PRIMARYKEY)s,
                 "software_version_id" integer NOT NULL 
                     REFERENCES "inventory_software_version" ("id"),
-                "available_update_id" integer NOT NULL 
+                "available_update_id" integer 
                     REFERENCES "inventory_software_version" ("id"),
                 "last_refreshed" timestamp with time zone NOT NULL,
                 UNIQUE ("software_version_id", "available_update_id")
@@ -1343,6 +1397,7 @@ def createSchema(db, doCommit=True):
     changed |= _createInventorySchema(db)
     changed |= _createInventoryUpdateSchema(db)
     changed |= _createJobsSchema(db)
+    changed |= _createCapsuleIndexerYumSchema(db)
 
     if doCommit:
         db.commit()

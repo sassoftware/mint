@@ -443,15 +443,12 @@ class Platforms(object):
 
         job = self.jobStore.create()
 
-        # jobId = self.db.db.platformLoadJobs.new(platformId=platformId, message='')
         platLoad = models.PlatformLoad()
         platLoad.jobId = job.id
         platLoad.platformId = platformId
         platLoad.uri = platformLoad.uri
 
         self.loader(platform, job, inFile, outFilePath, uri, repos)
-        # self.backgroundRun(self._load, platform, jobId, inFile, outFilePath,
-                           # uri, repos)
 
         return platLoad
 

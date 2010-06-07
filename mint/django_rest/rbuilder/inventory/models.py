@@ -88,7 +88,7 @@ class managed_system(ModelParser):
 
 class system_target(models.Model):
     managed_system = models.ForeignKey(managed_system, null=True)
-    target = models.ForeignKey(rbuildermodels.Targets)
+    target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=256, null=True)
 
 class software_version(models.Model):
@@ -104,8 +104,11 @@ class software_version_update(ModelParser):
     # since we're redefining software_version.
     software_version = models.ForeignKey('software_version',
                         related_name='software_version_update_software_version_set')
+    # This column is nullable, which basically means that the last time an
+    # update was checked for, none was found.
     available_update = models.ForeignKey('software_version',
-                        related_name='software_version_update_available_update_set')
+                        related_name='software_version_update_available_update_set',
+                        null=True)
     last_refreshed = models.DateTimeField(default=datetime.datetime.now())
 
     class Meta:
@@ -114,6 +117,9 @@ class software_version_update(ModelParser):
 class system_software_version(models.Model):
     managed_system = models.ForeignKey(managed_system)
     software_version = models.ForeignKey(software_version)
+
+    class Meta:
+        unique_together = (('managed_system', 'software_version'),)
 
 class system_information(models.Model):
     managed_system = models.ForeignKey(managed_system)

@@ -603,7 +603,7 @@ class ProductManager(manager.Manager):
         status.set_status(code, message)
         return status
 
-
+#---------------------CUT HERE WHEN THE REVOLUTION COMES-----------------------
     def getSourceGroupMatch(self, buildDefinition):
         """
         Find a source group defined on a different build definition that has a
@@ -706,9 +706,10 @@ class ProductManager(manager.Manager):
         return [ str(deps.overrideFlavor(baseFlavor, self._getFlavor(x)))
                  for x in flavorList ] 
 
-    def getGroupFlavors(self, pd):
+    def getVersionGroupFlavors(self, pd, version):
         buildDefs = pd.getBuildDefinitions()
-        groupFlavors = [ (str(self.getBuildDefinitionGroupToBuild(x)),
+        groupFlavors = [ (str(self.getBuildDefinitionGroupToBuild(x)) +
+                            "=%s" % str(version),
                           str(x.getBuildBaseFlavor()))
                          for x in buildDefs ]
         fullFlavors = self._overrideFlavors(str(pd.getBaseFlavor()),
@@ -761,7 +762,7 @@ class ProductManager(manager.Manager):
         callback._message('Getting all trove information for the promotion')
 
 	# Collect a list of groups to promote.
-        groupSpecs = [ '%s[%s]' % x for x in self.getGroupFlavors(pd) ]
+        groupSpecs = [ '%s[%s]' % x for x in self.getVersionGroupFlavors(pd, trove.version) ]
         allTroves = self._findTrovesFlattened(client, groupSpecs, activeLabel)
 
         fromTo = pd.getPromoteMapsForStages(activeStage, nextStage)

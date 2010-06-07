@@ -537,6 +537,15 @@ class MintServer(object):
         project = projects.Project(self, version.projectId)
         return self._getProductDefinition(project, version)
 
+    def _getProductVersionLabel(self, project, versionId):
+        version = projects.ProductVersions(self, versionId)
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(project.shortname)
+        pd.setConaryRepositoryHostname(project.getFQDN())
+        pd.setConaryNamespace(version.namespace)
+        pd.setProductVersion(version.name)
+        return pd.getProductDefinitionLabel()
+
     def _fillInEmptyEC2Creds(self, authToken):
         """
         Convenience method that fills in the rBuilder's default
@@ -2527,6 +2536,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         'hostname' : project.hostname,
                         'label' : project.getLabel(),
                         'conaryCfg' : cfgData}
+        if buildDict['productVersionId']:
+            r['proddefLabel'] = self._getProductVersionLabel(project,
+                    buildDict['productVersionId'])
+        else:
+            r['proddefLabel'] = ''
 
         hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.siteDomainName)
 
@@ -2838,7 +2852,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             baseLabel = pd.getProductDefinitionLabel()
             # assumption to speed this up.  
             # Stages are baselabel + '-' + extention (or just baseLabel)
-            if not str(label).startswith(str(baseLabel)):
+            if not str(label).lower().startswith(str(baseLabel).lower()):
                 continue
             try:
                 project = projects.Project(self, projectId)
