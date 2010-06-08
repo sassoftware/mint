@@ -89,6 +89,11 @@ platformSourceUrls       https://rhn.redhat.com
 platformSourceNames      Red Hat Network
 platformSourceTypes      RHN
 
+platformSources         novell-updater
+platformSourceUrls      https://nu.novell.com/repo/$RCE
+platformSourceNames     Novell Update Service
+platformSourceTypes     nu
+
 noticesRssFeed http://www.rpath.com/corp/index.php?option=com_bca-rss-syndicator&feed_id=3
 noticesRssFeed http://blogs.rpath.com/wpmu/rpath-technical-announcements/feed/
 
