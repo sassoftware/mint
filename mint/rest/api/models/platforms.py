@@ -73,6 +73,7 @@ class SmtSource(Source):
         name = 'contentSource'
     username = fields.CharField()
     password = fields.ProtectedField()
+    sourceUrl = fields.CharField()
 
 class RhnSource(Source):    
     class Meta(object):
