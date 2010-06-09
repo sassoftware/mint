@@ -35,8 +35,16 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         self.failUnlessEqual(s2.name, name2)
         self.failUnlessEqual(s2.sourceUrl, url2)
 
+        # Test failure
+        from conary.repository import transport
+        def mockedUrlopen(slf, fullurl, data=None):
+            raise IOError("http error", 401, "Unauthorized", object())
+        self.mock(transport.URLOpener, "open", mockedUrlopen)
+
         s3 = contentsources.contentSourceTypes['nu'](proxies)
         self.failUnlessEqual(s3.getProxies(), proxies)
+        self.failUnlessEqual(s3.status(),
+            (False, False, "Error validating: 401: Unauthorized"))
 
         s4 = contentsources.contentSourceTypes['SMT'](proxies)
         self.failUnlessEqual(s4.getProxies(), proxies)

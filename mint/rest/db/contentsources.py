@@ -168,15 +168,29 @@ class Proxy(Satellite):
     _ContentSourceTypeName =  'Red Hat Proxy'
 
 class _RepositoryMetadataSourceType(ContentSourceType):
+    repomdLabel = None
+
     def status(self):
         # TODO fix this once support for these types have been added to the
         # rpath-capsule-indexer
         return (True, True, 'Validated Successfully.')
+    def status(self):
+        sourceyum = rpath_capsule_indexer.sourceyum
+        url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
+        try:
+            src = sourceyum.YumRepositorySource(self.repomdLabel, url)
+        except sourceyum.repomd.errors.DownloadError, e:
+            return (False, False,
+                'Error validating: %s: %s' % (e.code, e.msg))
+        return (True, True, 'Validated Successfully.')
+
 
 class Smt(_RepositoryMetadataSourceType):
     fields = [Name, Username, Password, SourceUrl]
     model = models.SmtSource
     _ContentSourceTypeName = 'Subscription Management Tool'
+    # Use this channel to verify credentials
+    repomdLabel = 'SLES10-SP3-Online/sles-10-i586'
 
 class Nu(Smt):
     fields = [Name, Username, Password]
