@@ -178,7 +178,7 @@ class _RepositoryMetadataSourceType(ContentSourceType):
         sourceyum = rpath_capsule_indexer.sourceyum
         url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
         try:
-            src = sourceyum.YumRepositorySource(self.repomdLabel, url)
+            sourceyum.YumRepositorySource(self.repomdLabel, url)
         except sourceyum.repomd.errors.DownloadError, e:
             return (False, False,
                 'Error validating: %s: %s' % (e.code, e.msg))
