@@ -42,13 +42,14 @@ class ImageManager(manager.Manager):
             SELECT
                 p.hostname,
                 pv.name AS version,
-                b.buildId AS imageId, b.pubReleaseId AS "release",
+                b.buildId AS imageId, b.pubReleaseId AS "releaseId",
                     b.buildType AS imageType, b.name, b.description,
                     b.troveName, b.troveVersion, b.troveFlavor,
                     b.troveLastChanged, b.timeCreated, b.timeUpdated,
                     b.status AS statusCode, b.statusMessage, b.buildCount,
                     b.stageName AS stage,
                 pr.timePublished,
+                pr.name AS release,
                 cr_user.username AS creator, up_user.username AS updater,
                 ami_data.value AS amiId
 
@@ -82,7 +83,7 @@ class ImageManager(manager.Manager):
         images = []
         for row in rows:
             imageType = row['imageType']
-            row['released'] = bool(row['release'])
+            row['released'] = bool(row['releaseId'])
             row['published'] = bool(row.pop('timePublished', False))
             if row['troveFlavor'] is not None:
                 row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
