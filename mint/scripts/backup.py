@@ -45,7 +45,8 @@ def backup(cfg, out, backupMirrors = False):
     for repoHandle in repoMgr.iterRepositories():
         if not repoHandle.hasDatabase:
             continue
-        if repoHandle.isExternal and not backupMirrors:
+        if (repoHandle.isExternal and not backupMirrors
+                and not repoHandle.hasContentSources):
             continue
 
         dumpPath = os.path.join(backupPath, repoHandle.fqdn + ".dump")
@@ -62,6 +63,9 @@ def backup(cfg, out, backupMirrors = False):
             if config_file != 'rbuilder.conf':
                 path = os.path.join(backup_path, config_file)
                 print >> out, path
+    capsuleDir = os.path.join(cfg.dataPath, 'capsules')
+    if os.path.exists(capsuleDir) and os.listdir(capsuleDir):
+        print >> out, capsuleDir
 
 
 def restore(cfg):
@@ -282,3 +286,5 @@ def run():
     else:
         usage()
 
+if __name__ == '__main__':
+    sys.exit(run())
