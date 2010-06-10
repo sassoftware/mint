@@ -10,6 +10,7 @@ import rpath_capsule_indexer
 from conary.lib import util
 
 from mint.rest.api import models
+from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
 
@@ -173,6 +174,7 @@ class _RepositoryMetadataSourceType(ContentSourceType):
     def status(self):
         sourceyum = rpath_capsule_indexer.sourceyum
         url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
+        url = mintutils.urlAddAuth(url, self.username, self.password)
         try:
             sourceyum.YumRepositorySource(self.repomdLabel, url)
         except sourceyum.repomd.errors.DownloadError, e:

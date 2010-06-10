@@ -37,14 +37,22 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
 
         # Test failure
         from conary.repository import transport
+        urls = []
         def mockedUrlopen(slf, fullurl, data=None):
+            urls.append(fullurl)
             raise IOError("http error", 401, "Unauthorized", object())
         self.mock(transport.URLOpener, "open", mockedUrlopen)
 
         s3 = contentsources.contentSourceTypes['nu'](proxies)
+        s3.username = 'JeanValjean'
+        s3.password = 'Javert:!&#'
         self.failUnlessEqual(s3.getProxies(), proxies)
         self.failUnlessEqual(s3.status(),
             (False, False, "Error validating: 401: Unauthorized"))
+        # Make sure the username and password made it all the way down to
+        # conary's urlopen
+        self.failUnlessEqual(str(urls[0]),
+            "https://JeanValjean:Javert%3A%21%26%23@nu.novell.com/repo/$RCE/SLES10-SP3-Online/sles-10-i586/repodata/repomd.xml")
 
         s4 = contentsources.contentSourceTypes['SMT'](proxies)
         self.failUnlessEqual(s4.getProxies(), proxies)
