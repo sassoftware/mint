@@ -213,7 +213,7 @@ class BackupTest(fixtures.FixturedUnitTest):
     def testIsValid_GoodMetadata(self, db, data):
         metadataIO = StringIO.StringIO(goodMetadata)
         valid = backup.isValid(self.cfg, metadataIO)
-        self.failUnless(valid, "Metadata was valid; check mint.backup.knownGroupVersions")
+        self.failUnless(valid, "Metadata was invalid; check mint.scripts.backup.knownGroupVersions")
 
     @fixtures.fixture("Empty")
     def testIsValid_BadMetadata_OldSchema(self, db, data):
