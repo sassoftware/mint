@@ -171,10 +171,6 @@ class _RepositoryMetadataSourceType(ContentSourceType):
     repomdLabel = None
 
     def status(self):
-        # TODO fix this once support for these types have been added to the
-        # rpath-capsule-indexer
-        return (True, True, 'Validated Successfully.')
-    def status(self):
         sourceyum = rpath_capsule_indexer.sourceyum
         url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
         try:
