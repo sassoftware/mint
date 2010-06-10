@@ -102,7 +102,10 @@ class RepositoryManager(object):
                         WHERE projectId = targetProjectId
                         ) AS localMirror,
                     commitEmail, %s, url, authType, username, password,
-                    entitlement
+                    entitlement, EXISTS (
+                        SELECT * FROM PlatformsContentSourceTypes
+                            JOIN Platforms AS plat USING (platformId)
+                        WHERE plat.projectId = projectId) AS hasContentSources
                 FROM Projects LEFT JOIN Labels USING ( projectId )
                 %s ORDER BY projectId ASC""" % (
                     (self.db.driver == 'mysql' and '`database`' or 'database'),
@@ -245,6 +248,9 @@ class RepositoryHandle(object):
     @property
     def shortName(self):
         return self._projectInfo['shortname']
+    @property
+    def hasContentSources(self):
+        return bool(self._projectInfo['hasContentSources'])
 
 
     # Getters for repository objects
