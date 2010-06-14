@@ -49,7 +49,7 @@ class RbuilderRestServer(RestController):
         username=((request.mintAuth and request.mintAuth.username) or 'anonymous')
         return models.RbuilderStatus(version=constants.mintVersion,
                                      conaryVersion=conaryConstants.changeset,
-                                     rmakeVersion=rmakeConstants.version,
+                                     rmakeVersion=rmakeConstants.changeset,
                                      userName=username,
                                      hostName=os.uname()[1],
                                      isRBO=self.cfg.rBuilderOnline, 
