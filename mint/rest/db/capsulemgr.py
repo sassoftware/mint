@@ -70,12 +70,8 @@ class CapsuleManager(manager.Manager):
                     url = 'https://nu.novell.com/repo/$RCE'
                 else:
                     url = dataSource.sourceUrl
-                arr = list(util.urlSplit(url))
-                if dataSource.username is not None:
-                    arr[1] = dataSource.username
-                if dataSource.password is not None:
-                    arr[2] = dataSource.password
-                yumSources.append(util.urlUnsplit(arr))
+                yumSources.append(mintutils.urlAddAuth(url,
+                    dataSource.username, dataSource.password))
                 # We configure yum sources further down
                 continue
             cfg.configLine("user %s %s %s" % (dsn, dataSource.username,
