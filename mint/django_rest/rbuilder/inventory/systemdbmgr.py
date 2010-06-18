@@ -99,7 +99,12 @@ class SystemDBManager(RbuilderDjangoManager):
     def getManagedSystemForInstanceId(self, instanceId):
         systemTarget = models.system_target.objects.filter(target_system_id=instanceId)
         if len(systemTarget) == 1:
-            return systemTarget[0].managed_system
+            st = systemTarget[0]
+            if st.target_id is None:
+                # System was disassociated from target, probably target got
+                # removed
+                return None
+            return st.managed_system
         else:
             return None
 
