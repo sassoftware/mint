@@ -160,7 +160,12 @@ class SystemDBManager(RbuilderDjangoManager):
         now = datetime.datetime.now()
         oneDay = datetime.timedelta(1)
 
-        cachedUpdates = [u for u in updates if now - u.last_refreshed < oneDay]
+        # RBL-6007 last_refresh should not be None here as there's a not null
+        # constraint, but still check just in case.
+        cachedUpdates = [u for u in updates \
+                         if (u.last_refreshed is not None) and \
+                            (now - u.last_refreshed < oneDay)]
+
         if not cachedUpdates:
             return None
 
