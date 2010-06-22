@@ -312,7 +312,7 @@ class CapsuleFilterMixIn(object):
                 "Upstream error message: (fault code: %s) %s")
             try:
                 pkg = indexer.getPackage(capsuleKey, sha1sum)
-            except rpath_capsule_indexer.RPCError, e:
+            except rpath_capsule_indexer.errors.RPCError, e:
                 raise cerrors.RepositoryError(msgTmpl %
                     (e.faultCode, e.faultString))
             if pkg is None:
@@ -328,7 +328,7 @@ class CapsuleFilterMixIn(object):
             try:
                 fobj = indexer.getFileFromPackage(capsuleKey, capsuleSha1sum,
                     fileName, fileSha1sum)
-            except rpath_capsule_indexer.RPCError, e:
+            except rpath_capsule_indexer.errors.RPCError, e:
                 raise cerrors.RepositoryError(msgTmpl %
                     (e.faultCode, e.faultString))
             return self.fromFile(fobj)

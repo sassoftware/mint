@@ -10,18 +10,23 @@ import rpath_capsule_indexer
 from conary.lib import util
 
 from mint.rest.api import models
+from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
 
 class Field(object):
+    __slots__ = [ 'name', 'value', 'required', 'description', 'prompt',
+        'type', 'password', 'encrypted' ]
     name = None
     required = True
     description = None
     prompt = None
     type = None
-    value = None
     password = None
     encrypted = False
+
+    def __init__(self):
+        self.value = None
 
 class Username(Field):
     name = 'username'
@@ -32,6 +37,9 @@ class Username(Field):
     password = False
     encrypted = True
 
+class UsernameOptional(Username):
+    required = False
+
 class Password(Field):
     name = 'password'
     required = True
@@ -40,6 +48,9 @@ class Password(Field):
     type = 'str'
     password = True
     encrypted = True
+
+class PasswordOptional(Field):
+    required = False
 
 class SourceUrl(Field):
     name = 'sourceUrl'
@@ -60,65 +71,62 @@ class Name(Field):
     password = False
 
 class ContentSourceType(object):
-    name = None
+    __slots__ = [ 'proxies', '_fieldValues', ]
     fields = []
     model = None
+    _ContentSourceTypeName = None
 
-    def __init__(self):
-        pass
+    def __init__(self, proxies = None):
+        self.proxies = proxies or {}
+        self._fieldValues = dict((x.name, x())
+            for x in self.__class__.fields)
 
     def __setattr__(self, attr, value):
-        fieldNames = self.getFieldNames()
-        if attr not in fieldNames:
-            raise AttributeError
+        if attr in self.__slots__:
+            return object.__setattr__(self, attr, value)
+        if attr not in self._fieldValues:
+            raise AttributeError(attr)
 
-        field = fieldNames.index(attr)
-        f = self.fields[field] 
+        f = self._fieldValues[attr]
         f.value = value
 
-    def __getattribute__(self, attr):
-        fieldNames = object.__getattribute__(self, 'getFieldNames')()
-        if attr not in fieldNames:
-            return object.__getattribute__(self, attr)
-
-        field = fieldNames.index(attr)
-        f = self.fields[field] 
+    def __getattr__(self, attr):
+        if attr not in self._fieldValues:
+            raise AttributeError(attr)
+        f = self._fieldValues[attr]
         return f.value
 
     def getFieldNames(self):
-        return [f.name for f in object.__getattribute__(self, 'fields')]
+        return [f.name for f in self.__class__.fields]
 
     def getEncryptedFieldNames(self):
-        return [f.name for f in object.__getattribute__(self, 'fields') \
-                if f.encrypted]
+        return [f.name for f in self.__class__.fields if f.encrypted]
+
+    def getContentSourceTypeName(self):
+        return self.__class__._ContentSourceTypeName
+
+    def getProxies(self):
+        return self.proxies
 
     def status(self, *args, **kw):
         raise NotImplementedError
 
-class Rhn(ContentSourceType):
+class _RhnSourceType(ContentSourceType):
     xmlrpcUrl = 'XMLRPC'
-    fields = [Name(), Username(), Password()]
-    model = models.RhnSource
-    sourceUrl = 'https://rhn.redhat.com'
     cfg = rpath_capsule_indexer.IndexerConfig()
     cfg.channels.append('rhel-i386-as-4')
     # Just use the rhel 4 channel label here, both rhel 4 and rhel 5 pull
     # from the same entitlement pool.
 
-    def __init__(self, proxies = None):
-        self.name = 'Red Hat Network'
-        self.__dict__['proxies'] = proxies or {}
-        ContentSourceType.__init__(self)
-
-    def getDataSource(self, proxies):
+    def getDataSource(self):
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source_RHN(srcChannels,
-            self.username, self.password, proxies = proxies)
+            self.username, self.password, proxies = self.proxies)
 
     def status(self):
         msg = "Cannot connect to this resource. Verify you have provided correct information."
         try:
-            ds = self.getDataSource(self.__dict__['proxies'])
+            ds = self.getDataSource()
         except rpath_capsule_indexer.errors.RPCError, e:
             log.error("Error validating content source %s: %s" \
                         % (self.name, e))
@@ -139,43 +147,64 @@ class Rhn(ContentSourceType):
 
         return (True, True, 'Validated Successfully.')
 
-class Satellite(Rhn):
-    fields = [Name(), Username(), Password(), SourceUrl()]
+class Rhn(_RhnSourceType):
+    fields = [Name, Username, Password]
+    model = models.RhnSource
+    sourceUrl = 'https://rhn.redhat.com'
+    _ContentSourceTypeName = 'Red Hat Network'
+
+class Satellite(_RhnSourceType):
+    fields = [Name, Username, Password, SourceUrl]
     model = models.SatelliteSource
+    _ContentSourceTypeName = 'Red Hat Satellite'
 
-    def __init__(self, proxies = None):
-        Rhn.__init__(self, proxies=proxies)
-        self.name = 'Red Hat Satellite'
-
-    def getDataSource(self, proxies):
+    def getDataSource(self):
         # We only need the server name
         serverName = util.urlSplit(self.sourceUrl)[3]
         srcChannels = rpath_capsule_indexer.sourcerhn.SourceChannels(self.cfg)
         return rpath_capsule_indexer.sourcerhn.Source(srcChannels, self.name,
-            self.username, self.password, serverName, proxies = proxies)
+            self.username, self.password, serverName, proxies = self.proxies)
 
 class Proxy(Satellite):
-    def __init__(self, proxies = None):
-        Satellite.__init__(self, proxies=proxies)
-        self.name = 'Red Hat Proxy'
+    _ContentSourceTypeName =  'Red Hat Proxy'
 
-class Nu(ContentSourceType):
-    fields = [Name(), Username(), Password()]
-    model = models.NuSource
-    sourceUrl = 'https://nu.novell.com/repo/$RCE'
+class _RepositoryMetadataSourceType(ContentSourceType):
+    repomdLabel = None
 
     def status(self):
-        # TODO fix this once support for these types have been added to the
-        # rpath-capsule-indexer
+        sourceyum = rpath_capsule_indexer.sourceyum
+        url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
+        url = mintutils.urlAddAuth(url, self.username, self.password)
+        try:
+            sourceyum.YumRepositorySource(self.repomdLabel, url)
+        except sourceyum.repomd.errors.DownloadError, e:
+            return (False, False,
+                'Error validating: %s: %s' % (e.code, e.msg))
         return (True, True, 'Validated Successfully.')
 
 
-class Smt(Nu):
-    fields = [Name(), Username(), Password(), SourceUrl()]
+class Smt(_RepositoryMetadataSourceType):
+    fields = [Name, Username, Password, SourceUrl]
     model = models.SmtSource
+    _ContentSourceTypeName = 'Subscription Management Tool'
+    # Use this channel to verify credentials
+    repomdLabel = 'SLES10-SP3-Online/sles-10-i586'
+
+class Nu(Smt):
+    fields = [Name, Username, Password]
+    model = models.NuSource
+    sourceUrl = 'https://nu.novell.com/repo/$RCE'
+    _ContentSourceTypeName = 'Novell Update Service'
+
+class Repomd(_RepositoryMetadataSourceType):
+    fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]
+    model = models.SmtSource
+    _ContentSourceTypeName = 'Yum Repository'
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,
                       'proxy' : Proxy,
                       'nu' : Nu,
-                      'SMT' : Smt}
+                      'SMT' : Smt,
+                      'repomd' : Repomd,
+                      }

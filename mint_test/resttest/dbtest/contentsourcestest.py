@@ -15,26 +15,48 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         url2 = "url2"
         proxies = dict(https = 'http://foo')
 
-        srhn = contentsources.contentSourceTypes['RHN']()
-        ds = srhn.getDataSource(proxies = proxies)
+        srhn = contentsources.contentSourceTypes['RHN'](proxies)
+        ds = srhn.getDataSource()
         self.failUnlessEqual(ds.rpc.proxies, proxies)
+        self.failUnlessEqual(srhn.sourceUrl, 'https://rhn.redhat.com')
 
-        s1 = contentsources.contentSourceTypes['satellite']()
+        s1 = contentsources.contentSourceTypes['satellite'](proxies)
         s1.name = name1
         s1.sourceUrl = url1
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
 
-        ds = s1.getDataSource(proxies = proxies)
+        ds = s1.getDataSource()
         self.failUnlessEqual(ds.rpc.proxies, proxies)
 
-        s2 = contentsources.contentSourceTypes['satellite']()
+        s2 = contentsources.contentSourceTypes['satellite'](proxies)
         s2.name = name2
         s2.sourceUrl = url2
         self.failUnlessEqual(s2.name, name2)
         self.failUnlessEqual(s2.sourceUrl, url2)
 
-        raise testsetup.testsuite.SkipTestException("RBL-5694: the next lines fail")
+        # Test failure
+        from conary.repository import transport
+        urls = []
+        def mockedUrlopen(slf, fullurl, data=None):
+            urls.append(fullurl)
+            raise IOError("http error", 401, "Unauthorized", object())
+        self.mock(transport.URLOpener, "open", mockedUrlopen)
+
+        s3 = contentsources.contentSourceTypes['nu'](proxies)
+        s3.username = 'JeanValjean'
+        s3.password = 'Javert:!&#'
+        self.failUnlessEqual(s3.getProxies(), proxies)
+        self.failUnlessEqual(s3.status(),
+            (False, False, "Error validating: 401: Unauthorized"))
+        # Make sure the username and password made it all the way down to
+        # conary's urlopen
+        self.failUnlessEqual(str(urls[0]),
+            "https://JeanValjean:Javert%3A%21%26%23@nu.novell.com/repo/$RCE/SLES10-SP3-Online/sles-10-i586/repodata/repomd.xml")
+
+        s4 = contentsources.contentSourceTypes['SMT'](proxies)
+        self.failUnlessEqual(s4.getProxies(), proxies)
+
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
 
