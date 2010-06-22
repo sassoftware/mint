@@ -70,16 +70,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         # should be 2, i guess this could change if fixture data changes much
         self.assertEquals(plat['projectId'], 2)
 
-    def testEnablePlatformProjectNotExternal(self):
-        p = self._getPlatform()
-        productId = self._getProductId()
-
-        mock.mockFunctionOnce(self.db.db.projects, 'getProjectIdByFQDN',
-            productId)
-
-        self.assertRaises(errors.InvalidProjectForPlatform, 
-            self.db.updatePlatform, p.platformId, p)
-
     def testEnablePlatformProjectNoMirror(self):
         p = self._getPlatform()
         productId = self._getProductId()
