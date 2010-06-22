@@ -535,12 +535,8 @@ class Platforms(object):
                         self.db.productMgr.reposMgr.addIncomingMirror(
                             projectId, hostname, domainname, url, authInfo, True)
 
-                # Add the project to our platform
-                self.db.db.platforms.update(platformId, projectId=projectId)
-
-            else:
-                # Not an external Project, fail.
-                raise errors.InvalidProjectForPlatform()
+            # Add the project to our platform
+            self.db.db.platforms.update(platformId, projectId=projectId)
 
         return projectId
 
