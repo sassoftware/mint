@@ -137,7 +137,7 @@ class ImagesTest(restbase.BaseRestTest):
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/1">
     <imageId>1</imageId>
     <hostname>testproject</hostname>
-    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">1</release>
+    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">Release Name</release>
     <imageType>installableIsoImage</imageType>
     <imageTypeName>Installable CD/DVD</imageTypeName>
     <name>Image 1</name>
@@ -174,7 +174,7 @@ class ImagesTest(restbase.BaseRestTest):
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
     <hostname>testproject</hostname>
-    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">1</release>
+    <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">Release Name</release>
     <imageType>tarballImage</imageType>
     <imageTypeName>TAR File</imageTypeName>
     <name>Image 2</name>

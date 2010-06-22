@@ -105,7 +105,12 @@ class SystemDBManager(RbuilderDjangoManager):
     def getManagedSystemForInstanceId(self, instanceId):
         systemTarget = models.system_target.objects.filter(target_system_id=instanceId)
         if len(systemTarget) == 1:
-            return systemTarget[0].managed_system
+            st = systemTarget[0]
+            if st.target_id is None:
+                # System was disassociated from target, probably target got
+                # removed
+                return None
+            return st.managed_system
         else:
             return None
 
@@ -161,7 +166,12 @@ class SystemDBManager(RbuilderDjangoManager):
         now = datetime.datetime.now()
         oneDay = datetime.timedelta(1)
 
-        cachedUpdates = [u for u in updates if now - u.last_refreshed < oneDay]
+        # RBL-6007 last_refresh should not be None here as there's a not null
+        # constraint, but still check just in case.
+        cachedUpdates = [u for u in updates \
+                         if (u.last_refreshed is not None) and \
+                            (now - u.last_refreshed < oneDay)]
+
         if not cachedUpdates:
             return None
 

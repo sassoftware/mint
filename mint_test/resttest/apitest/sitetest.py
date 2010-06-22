@@ -59,7 +59,7 @@ class SiteTest(restbase.BaseRestTest):
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
                          conaryversion=conaryConstants.changeset,
-                         rmakeversion=rmakeConstants.version,
+                         rmakeversion=rmakeConstants.changeset,
                          hostname=os.uname()[1],
                          proddefVer=proddef.BaseDefinition.version))
 

@@ -1066,7 +1066,7 @@ def _createInventorySchema(db):
                 "managed_system_id" integer 
                     REFERENCES "inventory_managed_system" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
-                "target_id" integer NOT NULL 
+                "target_id" integer 
                     REFERENCES "targets" ("targetid") 
                     ON DELETE SET NULL
                     DEFERRABLE INITIALLY DEFERRED,
