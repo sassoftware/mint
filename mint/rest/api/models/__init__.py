@@ -12,7 +12,6 @@ class RMCUrlField(fields.CalculatedField):
     def getValue(self, controller, request, class_, parent, value):
         return request.getHostWithProtocol() + '/catalog' 
 
-
 from mint.rest.api.models.builddefinitions import *
 from mint.rest.api.models.capsules import *
 from mint.rest.api.models.members import *
@@ -35,6 +34,7 @@ class RbuilderStatus(Model):
     hostName                = fields.CharField()
     isRBO                   = fields.BooleanField()
     isExternalRba           = fields.BooleanField()
+    displayRepositories     = fields.BooleanField()
     identity                = fields.ModelField(Identity)
     rmcService              = RMCUrlField()
     products                = fields.UrlField('products', None)

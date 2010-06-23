@@ -25,7 +25,9 @@ from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
 class SiteTest(restbase.BaseRestTest):
+
     def testGetInfo(self):
+
         uriTemplate = ''
         uri = uriTemplate
         client = self.getRestClient()
@@ -40,6 +42,7 @@ class SiteTest(restbase.BaseRestTest):
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
   <isExternalRba>false</isExternalRba>
+  <displayRepositories>false</displayRepositories>
   <identity>
     <rbuilderId></rbuilderId>
     <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>

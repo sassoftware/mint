@@ -54,6 +54,7 @@ class RbuilderRestServer(RestController):
                                      hostName=os.uname()[1],
                                      isRBO=self.cfg.rBuilderOnline, 
                                      isExternalRba=self.cfg.rBuilderExternal, 
+                                     displayRepositories=self.hasRepositories(),
                                      identity=identity,
                                      maintMode=maintMode,
                                      proddefSchemaVersion=proddefSchemaVersion)
@@ -65,6 +66,10 @@ class RbuilderRestServer(RestController):
         if result[-1] == '/':
             return result[:-1] + request.extension  + '/'
         return result + request.extension
+
+    # See if there are any repositories that the current user can browse
+    def hasRepositories(self):
+        return len(self.db.listProducts(prodtype = 'Repository').products)
 
     # This is a handoff to the django URIs
     def getReportsList(self, request):
