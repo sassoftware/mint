@@ -13,10 +13,6 @@ from mint.django_rest.rbuilder.reporting import imagereports, \
 
 from mint.django_rest.rbuilder.inventory import views as inventoryviews
 
-# Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
-
 urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     # (r'^admin/', include(admin.site.urls)),
