@@ -429,9 +429,26 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         # Check that we generated the config correctly
         db = self.openRestDatabase()
         indexer = db.capsuleMgr.getIndexer()
-        sources = list(indexer.iterSources())
+        sources = list(indexer.iterRhnSources())
         self.failUnlessEqual([x.rpc.username for x in sources],
             ['JeanValjeanProxy1', 'JeanValjeanSatellite', 'JeanValjean'])
+        sources = list(indexer.iterYumRepositories())
+        self.failUnlessEqual([x.label for x in sources], [
+            'SLE10-SDK-SP3-Online/sles-10-i586',
+            'SLES10-SP3-Updates/sles-10-i586',
+            'SLE10-SDK-SP3-Online/sles-10-x86_64',
+            'SLES10-SP3-Online/sles-10-x86_64',
+            'SLE10-SDK-SP3-Updates/sles-10-x86_64',
+            'SLE10-SDK-SP3-Pool/sles-10-x86_64',
+            'SLES10-SP3-Updates/sles-10-x86_64',
+            'SLES10-SP3-Pool/sles-10-x86_64',
+            'SLES10-SP3-Pool/sles-10-i586',
+            'SLE10-SDK-SP3-Pool/sles-10-i586',
+            'SLES10-SP3-Online/sles-10-i586',
+            'SLE10-SDK-SP3-Updates/sles-10-i586',
+        ])
+
+        self.failUnless(indexer.hasSources())
 
     def testSetProxies(self):
         db = self.openRestDatabase()
