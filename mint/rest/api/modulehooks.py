@@ -21,10 +21,8 @@ class ModuleController(base.BaseController):
         moduleHooksList = models.ModuleHooks()
         for path, dirs, files in os.walk(self.cfg.moduleHooksDir):
             for file in [filename for filename in files 
-                    if fnmatch.fnmatch (filename, self.cfg.moduleHooksExt)]:
-
-                moduleHooksList.moduleHooks.append(
-                    models.ModuleHook( os.path.join('hooks',file)))
+                         if fnmatch.fnmatch(filename, self.cfg.moduleHooksExt)]:
+                moduleHooksList.moduleHooks.append( models.ModuleHook( os.path.join('hooks',file)))
         moduleHooksList.moduleHooks.sort()
         return moduleHooksList
 

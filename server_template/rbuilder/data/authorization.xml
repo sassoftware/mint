@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<entitlement id="https://entitlements.rpath.com/key/wlAGag1uFf3joltHgYqW7KQ0ZIH3Jaax">
+  <credentials>
+    <key>wlAGag1uFf3joltHgYqW7KQ0ZIH3Jaax</key>
+  </credentials>
+  <identity>
+    <rbuilderId>43a75051</rbuilderId>
+    <registered>false</registered>
+    <serviceLevel status="Trial" limited="true" daysRemaining="89" expired="false"/>
+  </identity>
+</entitlement>

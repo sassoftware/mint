@@ -8,7 +8,7 @@ ROOT_URLCONF = 'mint.django_rest.urls_local'
 # Override individual options
 DEBUG = True
 DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'mint-local.db'             # Or path to database file if using sqlite3.
+DATABASE_NAME = '@SERVER_PATH@/rbuilder/data/db'             # Or path to database file if using sqlite3.
 
 appsList = list(INSTALLED_APPS)
 appsList.append('django.contrib.admin')
