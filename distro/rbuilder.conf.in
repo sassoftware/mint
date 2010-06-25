@@ -59,7 +59,7 @@ useInternalConaryProxy  True
 availablePlatforms      rhel.rpath.com@rpath:rhel-4-as
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-server
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-client-workstation
-availablePlatforms      sle-test.eng.rpath.com@rpath:sles-10sp3e-pool-3-devel
+availablePlatforms      sles.rpath.com@rpath:sles-10sp3
 availablePlatforms      centos.rpath.com@rpath:centos-5
 availablePlatforms      conary.rpath.com@rpl:2
 
@@ -76,6 +76,7 @@ acceptablePlatforms     rap.rpath.com@rpath:linux-2-devel
 acceptablePlatforms     sle.rpath.com@rpath:sles-11-devel
 acceptablePlatforms     sle.rpath.com@rpath:sles-10-devel
 acceptablePlatforms     sle.rpath.com@rpath:sles-10
+acceptablePlatforms     sle.rpath.com@rpath:sles-10sp3
 acceptablePlatforms     centos.rpath.com@rpath:centos-5-devel
 acceptablePlatforms     rap.rpath.com@rpath:linux-1-devel
 acceptablePlatforms     ubuntu.rpath.com@rpath:ubuntu-hardy
@@ -84,6 +85,7 @@ acceptablePlatforms     scientific.rpath.com@rpath:sl-5
 configurablePlatforms   rhel.rpath.com@rpath:rhel-4-as
 configurablePlatforms   rhel.rpath.com@rpath:rhel-5-server
 configurablePlatforms   rhel.rpath.com@rpath:rhel-5-client-workstation
+configurablePlatforms   sles.rpath.com@rpath:sles-10sp3
 
 platformSources          redhatnetwork
 platformSourceUrls       https://rhn.redhat.com
