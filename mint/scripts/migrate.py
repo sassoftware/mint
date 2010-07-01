@@ -1052,6 +1052,22 @@ class MigrateTo_49(SchemaMigration):
         """)
         return True
 
+class MigrateTo_50(SchemaMigration):
+    Version = (50, 0)
+
+    # 49.0
+    # - Added TargetUserCredentials
+    # - Dropped platformLoadJobs table
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_managed_system
+            ADD COLUMN available BOOLEAN NOT NULL DEFAULT TRUE
+        """)
+
+        return True
+
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

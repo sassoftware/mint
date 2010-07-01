@@ -10,8 +10,9 @@ from django.db import IntegrityError
 from django.db import models
 from django.db import transaction
 
+from rpath_models import System
+
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.inventory import generateds_system
 
 class ModelParser(models.Model):
     """
@@ -76,7 +77,7 @@ class ModelParser(models.Model):
         return self.parser(**parserDict)
 
 class managed_system(ModelParser):
-    parser = generateds_system.managed_system_type
+    parser = System
     registration_date = models.DateTimeField('Registration Date',
                             default=datetime.datetime.now())
     generated_uuid = models.CharField(max_length=64, null=True)
@@ -85,6 +86,7 @@ class managed_system(ModelParser):
     ssl_client_key = models.CharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
+    available = models.BooleanField(null=False)
 
 class system_target(models.Model):
     managed_system = models.ForeignKey(managed_system, null=True)
