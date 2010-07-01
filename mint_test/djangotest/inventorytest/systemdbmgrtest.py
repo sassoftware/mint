@@ -116,7 +116,7 @@ class SystemDbMgrTest(DjangoTest):
                     ssl_client_certificate='/tmp/client',
                     ssl_client_key='/tmp/key',
                     available=True)
-        systemTarget = self.sdm.createSystem(system)
+        self.sdm.createSystem(system)
         managedSystem = \
             self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').managed_system
         self.assertEquals('/tmp/client', managedSystem.ssl_client_certificate)
