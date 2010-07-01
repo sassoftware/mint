@@ -8,7 +8,6 @@ import datetime
 
 from django.db import IntegrityError
 from django.db import models
-from django.db import transaction
 
 from rpath_models import System
 
