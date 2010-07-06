@@ -1,7 +1,7 @@
 # Settings to run the django rbuilder project locally.
 
 # First, import everything from the production settings.py
-from settings import *
+from mint.django_rest.settings import *  # pyflakes=ignore
 
 ROOT_URLCONF = 'mint.django_rest.urls_local'
 

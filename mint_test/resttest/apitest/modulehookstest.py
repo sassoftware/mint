@@ -27,8 +27,8 @@ class ModuleHooksTest(restbase.BaseRestTest):
 
     def setUp(self):
         restbase.BaseRestTest.setUp(self)
-        self.f1 = open('/tmp/test1.swf','w')
-        self.f2 = open('/tmp/test2.swf','w')
+        self.f1 = open('/%s/test1.swf' % self.tmpDir,'w')
+        self.f2 = open('/%s/test2.swf' % self.tmpDir,'w')
         
     def tearDown(self):
         os.remove(self.f1.name)
@@ -38,7 +38,7 @@ class ModuleHooksTest(restbase.BaseRestTest):
         uriTemplate = '/moduleHooks'
         uri = uriTemplate
         client = self.getRestClient()
-        self.mintCfg.moduleHooksDir = '/tmp'
+        self.mintCfg.moduleHooksDir = self.tmpDir
         response = client.call('GET', uri, convert=False)[1]
         self.failUnlessEqual(len(response.moduleHooks), 2)
 

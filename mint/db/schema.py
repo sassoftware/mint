@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(49, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 0)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1054,7 +1054,8 @@ def _createInventorySchema(db):
                 "ssl_client_certificate" varchar(8092),
                 "ssl_client_key" varchar(8092),
                 "ssl_server_certificate" varchar(8092),
-                "launching_user_id" integer REFERENCES "users" ("userid")
+                "launching_user_id" integer REFERENCES "users" ("userid"),
+                "available" boolean NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_managed_system'] = []
         changed = True

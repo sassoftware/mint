@@ -15,11 +15,10 @@ from conary.deps import deps
 
 from mint.django_rest.rbuilder import inventory
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.inventory import generateds_system
 from mint.django_rest.rbuilder.inventory import models
 
 class RbuilderDjangoManager(object):
-    def __init__(self, cfg, userName):
+    def __init__(self, cfg=None, userName=None):
         self.cfg = cfg
         if userName is None:
             self.user = None
@@ -32,7 +31,13 @@ class RbuilderDjangoManager(object):
 class SystemDBManager(RbuilderDjangoManager):
 
     def getSystems(self):
-        return models.managed_systems.objects.all()
+        return models.managed_system.objects.all()
+
+    def activateSystem(self, system):
+        managedSystem = models.managed_system.factoryParser(system)
+        managedSystem.launching_user = self.user
+        managedSystem.save()
+        return managedSystem
 
     def createSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
