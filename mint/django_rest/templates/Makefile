@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-template_files = $(wildcard *.html)
+template_files = $(wildcard *.html *.xsl)
 
 all: default-all
 

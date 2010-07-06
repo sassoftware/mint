@@ -7,6 +7,9 @@
 from django.contrib.auth import authenticate
 from django.http import HttpResponseBadRequest
 
+import libxml2
+import libxslt
+
 from mint import config
 from mint.django_rest import logger
 from mint.django_rest.rbuilder import auth
@@ -58,3 +61,17 @@ class SetMintConfigMiddleware(object):
             request.cfg = cfg
 
         return None
+
+class AddCommentsMiddleware(object):
+    
+    styledoc = libxml2.parseFile(__file__.replace('middleware.py','templates/comments.xsl'))
+    style = libxslt.parseStylesheetDoc(styledoc)
+    
+    def process_response(self, request, response):
+        xmldoc = libxml2.parseDoc(response.content)
+        result = self.style.applyStylesheet(xmldoc, None)
+        response.content = result.serialize()
+        xmldoc.freeDoc()
+        result.freeDoc()
+
+        return response 
