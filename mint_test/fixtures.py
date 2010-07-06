@@ -90,6 +90,8 @@ class FixtureCache(object):
         cfg.reposContentsDir = "%s %s" % (os.path.join(cfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
         cfg.imagesPath = os.path.join(cfg.dataPath, 'images')
         util.mkdirChain(cfg.imagesPath)
+        cfg.storagePath = os.path.join(cfg.dataPath, 'jobs')
+        util.mkdirChain(cfg.storagePath)
         cfg.sendNotificationEmails = False
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))

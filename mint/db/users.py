@@ -44,6 +44,11 @@ class UsersTable(database.KeyedTable):
               'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'blurb']
 
+    # Not the ideal place to put these, but I wanted to easily find them later
+    # --misa
+    EC2TargetType = 'ec2'
+    EC2TargetName = 'aws'
+
     def __init__(self, db, cfg):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
@@ -331,15 +336,17 @@ class UsersTable(database.KeyedTable):
         """
         cu = self.db.cursor()
         SQL = """
-            SELECT u.userId, ud.value
-            FROM Users u
-                JOIN UserData ud on u.userId = ud.userId
-            WHERE ud.name = 'awsAccountNumber'
-              AND ud.value is not NULL
+            SELECT u.userId, tuc.credentials AS creds
+              FROM Users u
+              JOIN TargetUserCredentials AS tuc USING (userId)
+              JOIN Targets AS t USING (targetId)
+             WHERE t.targetType = ?
+               AND t.targetName = ?
             """
-        cu.execute(SQL)
+        cu.execute(SQL, self.EC2TargetType, self.EC2TargetName)
         results = cu.fetchall()
-        return results
+        return [ (x[0], data.unmarshalTargetUserCredentials(x[1]).get('accountId'))
+            for x in results ]
 
     def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """

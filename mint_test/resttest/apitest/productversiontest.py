@@ -662,6 +662,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>Development</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0-devel</label>
+    <isPromotable>true</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-devel"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development/images"/>
   </stage>
@@ -670,6 +671,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>QA</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0-qa</label>
+    <isPromotable>true</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-qa"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA/images"/>
   </stage>
@@ -678,6 +680,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>Release</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0</label>
+    <isPromotable>false</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Release/images"/>
   </stage>
@@ -685,6 +688,25 @@ class ProductVersionTest(restbase.BaseRestTest):
 """
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
+
+    def testPutProductVersionStages(self):
+        uriTemplate = 'products/%s/versions/%s/stages/QA'
+        uri = uriTemplate % (self.productShortName, self.productVersion)
+        self.createUser('foouser')
+        client = self.getRestClient(username='foouser')
+        req, response = client.call('PUT', uri, body=promoteGroup % dict(
+                name = self.productShortName,
+                ),
+                convert=False)
+        exp = """\
+"""
+        #self.failUnlessEqual(response,
+        #    exp % dict(server = client.server, port = client.port))
+
+        uriTemplate = 'products/%s/versions/%s/stages/QA/jobs/%s'
+        uri = uriTemplate % (self.productShortName, self.productVersion
+                             ,response.jobId)
+        req, response = client.call('GET', uri, convert=True)
 
     def testSetProductVersionPlatform(self):
         self.setupPlatforms()
@@ -1085,6 +1107,19 @@ newProductVersion1 = """
   <name>%(version)s</name>
   <nameSpace />
 </productVersion>
+"""
+
+promoteGroup = """
+<trove>
+  <hostname />
+  <name>group-%(name)s-appliance</name>
+  <version>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-2-1</version>
+  <label>testproject.rpath.local2@yournamespace:testproject-1.0-devel</label>
+  <trailingVersion />
+  <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+  <timestamp />
+  <images />
+</trove>
 """
 
 

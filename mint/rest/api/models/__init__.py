@@ -12,7 +12,6 @@ class RMCUrlField(fields.CalculatedField):
     def getValue(self, controller, request, class_, parent, value):
         return request.getHostWithProtocol() + '/catalog' 
 
-
 from mint.rest.api.models.builddefinitions import *
 from mint.rest.api.models.capsules import *
 from mint.rest.api.models.members import *
@@ -24,6 +23,7 @@ from mint.rest.api.models.platforms import *
 from mint.rest.api.models.products import *
 from mint.rest.api.models.productversions import *
 from mint.rest.api.models.images import *
+from mint.rest.api.models.modulehooks import *
 
 class RbuilderStatus(Model):
     id                      = fields.AbsoluteUrlField(isAttribute=True)
@@ -33,6 +33,7 @@ class RbuilderStatus(Model):
     userName                = fields.CharField()
     hostName                = fields.CharField()
     isRBO                   = fields.BooleanField()
+    isExternalRba           = fields.BooleanField()
     identity                = fields.ModelField(Identity)
     rmcService              = RMCUrlField()
     products                = fields.UrlField('products', None)
@@ -40,6 +41,7 @@ class RbuilderStatus(Model):
     platforms               = fields.UrlField('platforms', None)
     registration            = fields.UrlField('registration', None)
     reports                 = fields.UrlField('reports/', None)
+    moduleHooks             = fields.UrlField('moduleHooks', None)
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
 

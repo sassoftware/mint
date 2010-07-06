@@ -26,7 +26,7 @@ class ImageFile(Model):
     title    = fields.CharField()
     size     = fields.IntegerField()
     sha1     = fields.CharField()
-    baseFileName = fields.CharField()
+    fileName = fields.CharField()
     urls     = fields.ListField(FileUrl, displayName='url')
 
     def __repr__(self):
@@ -123,7 +123,7 @@ class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
     hostname = fields.CharField()
-    release = fields.UrlField('products.releases', ['hostname', 'release']) 
+    release = fields.UrlField('products.releases', ['hostname', 'releaseId']) 
     imageType = fields.CharField()
     imageTypeName = fields.CharField()
     name = fields.CharField()
@@ -149,10 +149,14 @@ class Image(Model):
             ['hostname', 'imageId'])
     imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
+    baseFileName = fields.CharField()
     
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.
     amiId    = fields.CharField()
+
+    # This is needed for construction of a URI only
+    releaseId = fields.CharField(display=False)
 
     def get_absolute_url(self):
         return ('products.images', self.hostname, str(self.imageId))

@@ -1,12 +1,14 @@
 #
-# Copyright (c) 2008 rPath, Inc.
+# Copyright (c) 2008-2010 rPath, Inc.
 #
 # All Rights Reserved
 #
 
+import base64
+import simplejson
+
 from mint import mint_error
 from mint.lib import database
-import simplejson
 
 class TargetsTable(database.KeyedTable):
     name = 'Targets'

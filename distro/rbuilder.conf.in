@@ -40,6 +40,7 @@ groupApplianceLabel     rap.rpath.com@rpath:linux-1
 configured              False
 companyName             Your Company Name Here
 corpSite                http://www.example.com/
+rBuilderExternal        False
 
 # Miscellany
 authUser                mintauth
@@ -59,17 +60,17 @@ useInternalConaryProxy  True
 availablePlatforms      rhel.rpath.com@rpath:rhel-4-as
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-server
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-client-workstation
+availablePlatforms      platform-demo.rpath.com@rpath:centos-5.4
 #availablePlatforms      sles.rpath.com@rpath:sles-10sp3
 availablePlatforms      sle-test.eng.rpath.com@rpath:sles-10sp3e-pool-3-devel
-availablePlatforms      centos.rpath.com@rpath:centos-5
 availablePlatforms      conary.rpath.com@rpl:2
 
 # Available platform names. Should match the order of availablePlatforms
 availablePlatformNames  Red Hat Enterprise Linux 4
 availablePlatformNames  Red Hat Enterprise Linux 5
 availablePlatformNames  Red Hat Enterprise Linux Desktop Workstation 5
+availablePlatformNames  CentOS 5 Encapsulation Beta
 availablePlatformNames  Encapsulated SLES 10 Delivered by rPath
-availablePlatformNames  CentOS 5 Delivered by rPath
 availablePlatformNames  rPath Linux 2
 
 # Acceptable platforms (these are *allowed* but cannot be normally chosen)
