@@ -49,7 +49,7 @@ class Password(Field):
     password = True
     encrypted = True
 
-class PasswordOptional(Field):
+class PasswordOptional(Password):
     required = False
 
 class SourceUrl(Field):
