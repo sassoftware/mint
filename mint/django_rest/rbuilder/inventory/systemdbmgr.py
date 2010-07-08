@@ -61,7 +61,7 @@ class SystemDBManager(RbuilderDjangoManager):
     def getSystemByInstanceId(self, instanceId):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
-            return inventory.System()
+            return models.System()
         managedSystemObj = managedSystem.getParser()
         if not self.isManageable(managedSystem):
             managedSystemObj.ssl_client_certificate = None
