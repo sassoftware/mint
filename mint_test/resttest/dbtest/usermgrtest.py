@@ -70,4 +70,38 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         self.setDbUser(db, 'admin')
         adminId = db.getUser('admin').userId
 
+    def testCancelUserAccount(self):
+        userName = 'JeanValjean'
+        db = self.openMintDatabase(createRepos=False)
+        self.createUser('admin', admin=True)
+        self.createUser(userName, admin=False)
+        self.createProduct('foo', owners=['admin', userName], db=db)
+
+        targetType = 'tType'
+        targetName = 'tName'
+        targetData = dict(data = "abc")
+        db.targetMgr.addTarget(targetType, targetName, targetData)
+
+        db.targetMgr.setTargetCredentialsForUser(targetType, targetName,
+                userName, dict(userData = "cde"))
+
+        userId = db.userMgr.getUserId(userName)
+
+        userKeys = []
+        def setUserKey(*args):
+            userKeys.append(args)
+        db.awsMgr.amiPerms.setUserKey = setUserKey
+
+        # Grr. mint_rephelp's openMintDatabase will convert the subscribers
+        # arg (by default None) to an empty list, which won't subscribe awsMgr
+        # to the publisher
+        db.publisher.subscribe(db.awsMgr)
+        db.userMgr.cancelUserAccount(userName)
+
+        self.failUnlessEqual(userKeys, [(userId, None, None)])
+        # User no longer exists
+        self.failUnlessRaises(errors.UserNotFound,
+            db.userMgr.getUserId, userName)
+
+
 testsetup.main()

@@ -1,9 +1,16 @@
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 import logging
+import sys
 from django.conf import settings
 
 def getlogger():
     logger = logging.getLogger()
-    hdlr = logging.FileHandler(settings.LOG_FILE)
+    hdlr = logging.StreamHandler(sys.stderr)
     formatter = logging.Formatter('[%(asctime)s]%(levelname)-8s"%(message)s"','%Y-%m-%d %a %H:%M:%S') 
     
     hdlr.setFormatter(formatter)
