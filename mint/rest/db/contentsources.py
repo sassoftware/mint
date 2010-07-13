@@ -49,7 +49,7 @@ class Password(Field):
     password = True
     encrypted = True
 
-class PasswordOptional(Field):
+class PasswordOptional(Password):
     required = False
 
 class SourceUrl(Field):
@@ -184,7 +184,7 @@ class _RepositoryMetadataSourceType(ContentSourceType):
 
 
 class Smt(_RepositoryMetadataSourceType):
-    fields = [Name, Username, Password, SourceUrl]
+    fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]
     model = models.SmtSource
     _ContentSourceTypeName = 'Subscription Management Tool'
     # Use this channel to verify credentials

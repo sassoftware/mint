@@ -495,7 +495,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
     </field>
     <field>
       <name>username</name>
-      <required>true</required>
+      <required>false</required>
       <descriptions>
         <desc>User Name</desc>
       </descriptions>
@@ -507,7 +507,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
     </field>
     <field>
       <name>password</name>
-      <required>true</required>
+      <required>false</required>
       <descriptions>
         <desc>Password</desc>
       </descriptions>
@@ -572,9 +572,16 @@ class PlatformManagerTest(restbase.BaseRestTest):
       <password>false</password>
     </field>
     <field>
+      <name>password</name>
       <required>false</required>
-      <descriptions/>
-      <prompt/>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <prompt>
+        <desc>Password</desc>
+      </prompt>
+      <type>str</type>
+      <password>true</password>
     </field>
     <field>
       <name>sourceUrl</name>
