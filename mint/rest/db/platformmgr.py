@@ -841,8 +841,6 @@ class ContentSources(object):
                     contentSourceType=typeName,
                     orderIndex=source.orderIndex)
         except mint_error.DuplicateItem, e:
-            log.error("Error creating content source %s, it must already "
-                      "exist: %s" % (source.shortName, e))
             return self.db.db.platformSources.getIdFromShortName(source.shortName)
 
         cu = self.db.cursor()

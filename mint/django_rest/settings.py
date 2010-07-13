@@ -64,6 +64,7 @@ MIDDLEWARE_CLASSES = (
     'mint.django_rest.middleware.SetMintAdminMiddleware',
     'mint.django_rest.middleware.SetMintConfigMiddleware',
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
+    'mint.django_rest.middleware.AddCommentsMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
 )
 

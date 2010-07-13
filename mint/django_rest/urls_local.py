@@ -6,7 +6,7 @@
 
 # urls files for running the rbuilder django development app locally.
 
-from urls import *
+from urls import *  # pyflakes=ignore
 
 from django.contrib import admin
 admin.autodiscover()
