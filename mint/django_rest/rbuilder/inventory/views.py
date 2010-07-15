@@ -10,7 +10,6 @@ from django.http import HttpResponse
 from django_restapi import resource
 
 from mint.django_rest.deco import requires, returns
-from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import systemdbmgr
 
 from rpath_models import Systems, System

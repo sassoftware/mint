@@ -6,12 +6,9 @@
 
 import StringIO
 import re
-import sys
-import datetime
 from xml.dom import minidom
 
 from django import http
-from django_restapi import resource
 
 def unConvert(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)

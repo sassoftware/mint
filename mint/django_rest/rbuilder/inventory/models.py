@@ -146,7 +146,7 @@ class ModelParser(models.Model):
         modelDict = cls._modelDict(parserInstance, loadFields=True)
         try:
             inst = cls.objects.get(**modelDict)
-        except cls.DoesNotExist, e:
+        except cls.DoesNotExist:
             return None
 
         return inst
