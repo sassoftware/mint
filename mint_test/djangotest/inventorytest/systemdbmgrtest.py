@@ -112,7 +112,7 @@ class SystemDbMgrTest(DjangoTest):
     def testLaunchSystemWithSSLInfo(self):
         system = System(target_system_id='testinstanceid',
                     target_type='aws', target_name='ec2',
-                    registration_date=datetime.datetime.now(),
+                    launch_date=datetime.datetime.now(),
                     ssl_client_certificate='/tmp/client',
                     ssl_client_key='/tmp/key',
                     available=True)
