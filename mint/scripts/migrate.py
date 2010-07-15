@@ -1055,16 +1055,26 @@ class MigrateTo_49(SchemaMigration):
 class MigrateTo_50(SchemaMigration):
     Version = (50, 0)
 
-    # 49.0
-    # - Added TargetUserCredentials
-    # - Dropped platformLoadJobs table
+    # 50.0
+    # - Add available and launch_date columns to inventory_managed_system
     def migrate(self):
         cu = self.db.cursor()
         cu.execute("""
             ALTER TABLE inventory_managed_system
             ADD COLUMN available BOOLEAN NOT NULL DEFAULT TRUE
         """)
-
+        cu.execute("""
+            ALTER TABLE inventory_managed_system
+            ADD COLUMN launch_date timestamp with time zone
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_managed_system
+            RENAME registration_date to activation_date
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_managed_system
+            ALTER activation_date drop not null
+        """)
         return True
 
 
