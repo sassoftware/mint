@@ -93,7 +93,7 @@ class SystemDbMgrTest(DjangoTest):
     def _launchSystem(self):
         system = System(target_system_id='testinstanceid',
                     target_type='aws', target_name='ec2',
-                    registration_date=datetime.datetime.now(),
+                    launch_date=datetime.datetime.now(),
                     available=True)
         systemTarget = self.sdm.launchSystem(system)
         return system, systemTarget
