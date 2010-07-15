@@ -63,7 +63,8 @@ class SetMintConfigMiddleware(object):
         return None
 
 class AddCommentsMiddleware(object):
-    styledoc = libxml2.parseFile('templates/comments.xsl')
+    styledoc = libxml2.parseFile(__file__[0:__file__.index('.py')].replace(
+                    'middleware', 'templates/comments.xsl'))
     style = libxslt.parseStylesheetDoc(styledoc)
     
     def process_response(self, request, response):
@@ -76,3 +77,11 @@ class AddCommentsMiddleware(object):
             result.freeDoc()
 
         return response 
+
+class CamelCaseMiddleware(object):
+
+    def process_request(self, request):
+        pass 
+
+    def process_response(self, response):
+        pass

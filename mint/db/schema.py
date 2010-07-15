@@ -1048,7 +1048,8 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_managed_system" (
                 "id" %(PRIMARYKEY)s,
-                "registration_date" timestamp with time zone NOT NULL,
+                "activation_date" timestamp with time zone,
+                "launch_date" timestamp with time zone,
                 "generated_uuid" varchar(64),
                 "local_uuid" varchar(64),
                 "ssl_client_certificate" varchar(8092),

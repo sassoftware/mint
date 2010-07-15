@@ -90,40 +90,40 @@ class SystemDbMgrTest(DjangoTest):
 
         self.sdm = self.systemdbmgr.SystemDBManager(None, 'testuser')
 
-    def _createSystem(self):
+    def _launchSystem(self):
         system = System(target_system_id='testinstanceid',
                     target_type='aws', target_name='ec2',
                     registration_date=datetime.datetime.now(),
                     available=True)
-        systemTarget = self.sdm.createSystem(system)
+        systemTarget = self.sdm.launchSystem(system)
         return system, systemTarget
 
     def setUp(self):
         DjangoTest.setUp(self)
         self._data()
 
-    def testCreateSystem(self):
-        self._createSystem()
+    def testLaunchSystem(self):
+        self._launchSystem()
         self.assertEquals(1, len(self.systemmodels.managed_system.objects.all()))
         self.assertEquals(1, len(self.systemmodels.system_target.objects.all()))
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         self.assertEquals('testinstanceid', systemTarget.target_system_id)
 
-    def testCreateSystemWithSSLInfo(self):
+    def testLaunchSystemWithSSLInfo(self):
         system = System(target_system_id='testinstanceid',
                     target_type='aws', target_name='ec2',
                     registration_date=datetime.datetime.now(),
                     ssl_client_certificate='/tmp/client',
                     ssl_client_key='/tmp/key',
                     available=True)
-        self.sdm.createSystem(system)
+        self.sdm.launchSystem(system)
         managedSystem = \
             self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').managed_system
         self.assertEquals('/tmp/client', managedSystem.ssl_client_certificate)
         self.assertEquals('/tmp/key', managedSystem.ssl_client_key)
 
     def testUpdateSystem(self):
-        system, systemTarget = self._createSystem()
+        system, systemTarget = self._launchSystem()
         system.ssl_client_certificate = '/sslcert'
         system.ssl_client_key = '/sslkey'
         self.sdm.updateSystem(system)
@@ -138,7 +138,7 @@ class SystemDbMgrTest(DjangoTest):
         sslKeyFilePath = os.path.join(tmpDir, "sslkey")
         file(sslCertFilePath, "w")
         file(sslKeyFilePath, "w")
-        system, systemTarget = self._createSystem()
+        system, systemTarget = self._launchSystem()
         system.launching_user = self.sdm.user
         system.ssl_client_certificate = sslCertFilePath
         system.ssl_client_key = sslKeyFilePath
@@ -157,7 +157,7 @@ class SystemDbMgrTest(DjangoTest):
         self.assertFalse(system.is_manageable)
 
     def testIsManageable(self):
-        self._createSystem()
+        self._launchSystem()
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         self.assertTrue(self.sdm.isManageable(systemTarget.managed_system))
 
@@ -208,13 +208,13 @@ class SystemDbMgrTest(DjangoTest):
         managedSystem = self.sdm.getManagedSystemForInstanceId('testinstanceid')
         self.assertTrue(managedSystem is None)
 
-        self._createSystem()
+        self._launchSystem()
         managedSystem = self.sdm.getManagedSystemForInstanceId('testinstanceid')
         self.assertTrue(isinstance(managedSystem, self.systemmodels.managed_system))
         
 
     def _setSoftwareVersion(self):
-        system, systemTarget = self._createSystem()
+        system, systemTarget = self._launchSystem()
         self.sdm.setSoftwareVersionForInstanceId('testinstanceid', [self._getVersion()])
         ssv = self.systemmodels.system_software_version.objects.filter(
                 managed_system=systemTarget.managed_system)

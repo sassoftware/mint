@@ -3,6 +3,8 @@
 #
 # All Rights Reserved
 #
+
+import copy
 import datetime
 import logging
 import os
@@ -17,6 +19,8 @@ from mint.django_rest.rbuilder import inventory
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 
+from rpath_storage import api1 as storage
+
 class RbuilderDjangoManager(object):
     def __init__(self, cfg=None, userName=None):
         self.cfg = cfg
@@ -30,18 +34,65 @@ class RbuilderDjangoManager(object):
 
 class SystemDBManager(RbuilderDjangoManager):
 
+    def __init__(self, *args, **kw):
+        RbuilderDjangoManager.__init__(self, *args, **kw)
+        self.systemStore = self.getSystemStore()
+
+    def getSystemStore(self):
+        if self.cfg is None:
+            storagePath = '/tmp/storage'
+        else:
+            storagePath = self.cfg.storagePath
+        path = os.path.join(os.path.join(storagePath, 'catalog'), 'systems')
+        cfg = storage.StorageConfig(storagePath=path)
+        dstore = storage.DiskStorage(cfg)
+        return dstore
+
     def getSystems(self):
-        return models.managed_system.objects.all()
+        systems = models.managed_system.objects.all()
+        for system in systems:
+            system.populateRelatedModelsFromDb()
+        return  systems
+
+    def _sanitizeSystem(self, system):
+        systemCopy = copy.deepcopy(system)
+        key = os.path.join(systemCopy.generated_uuid, 'x509key')
+        keyPath = self.systemStore.set(key, systemCopy.ssl_client_key)
+        systemCopy.ssl_client_key = keyPath
+        cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
+        certPath = self.systemStore.set(cert, systemCopy.ssl_client_certificate)
+        systemCopy.ssl_client_certificate = certPath
+
+        return systemCopy
 
     def activateSystem(self, system):
-        managedSystem = models.managed_system.factoryParser(system)
-        managedSystem.launching_user = self.user
+        sanitizedSystem = self._sanitizeSystem(system)
+        managedSystem = models.managed_system.loadFromDb(sanitizedSystem)
+
+        matchedIps = []
+        if managedSystem:
+            matchedIps = [n.ip_address for n in \
+                          managedSystem.network_information_set.all() \
+                          if n.ip_address == sanitizedSystem.ip_address]
+
+        if matchedIps:
+            # TODO: update, log activation
+            pass
+        else:
+            # New activation, need to create a new managedSystem
+            managedSystem = models.managed_system.factoryParser(sanitizedSystem)
+            
+        managedSystem.activation_date = datetime.datetime.now()
         managedSystem.save()
+        managedSystem.populateRelatedModelsFromParser(sanitizedSystem)
+        managedSystem.saveAll()
+
         return managedSystem
 
-    def createSystem(self, system):
+    def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
+        managedSystem.launch_date = datetime.datetime.now()
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(
                     targettype=system.target_type,
@@ -57,6 +108,16 @@ class SystemDBManager(RbuilderDjangoManager):
         systemTarget.managed_system.updateFromParser(system)
         systemTarget.managed_system.save()
         return systemTarget.managed_system
+
+    def matchSystem(self, system):
+        matchingIPs = models.network_information.objects.filter(
+                        ip_address=system.ip_address)
+        for matchingIP in matchingIPs:
+            sslCert = open(matchingIP.managed_system.ssl_client_certificate).read()
+            if sslCert == system.ssl_client_certificate:
+                return matchingIP.managed_system
+
+        return None
 
     def getSystemByInstanceId(self, instanceId):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
