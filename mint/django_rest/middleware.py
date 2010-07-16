@@ -80,11 +80,3 @@ class AddCommentsMiddleware(object):
                 pass
 
         return response 
-
-class CamelCaseMiddleware(object):
-
-    def process_request(self, request):
-        pass 
-
-    def process_response(self, response):
-        pass

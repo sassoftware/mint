@@ -14,13 +14,14 @@ from mint.django_rest.rbuilder.reporting import imagereports, \
 from mint.django_rest.rbuilder.inventory import views as inventoryviews
 
 urlpatterns = patterns('',
-    # Uncomment the next line to enable the admin:
-    # (r'^admin/', include(admin.site.urls)),
+    # Reporting urls
     url(r'^api/reports/(.*?)/descriptor/?$', 
         reportdispatcher.ReportDescriptor()),
     url(r'^api/reports/(.*?)/data/(.*?)/?$', 
         reportdispatcher.ReportDispatcher()),
     url(r'^api/reports/(.*?)/?$', views.ReportView()),
 
+    # Inventory urls
+    url(r'^api/inventory/$', inventoryviews.InventoryService()),
     url(r'^api/inventory/systems/$', inventoryviews.InventorySystemsService()),
 )
