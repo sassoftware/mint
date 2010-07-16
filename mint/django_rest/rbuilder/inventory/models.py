@@ -9,7 +9,7 @@ import datetime
 from django.db import IntegrityError
 from django.db import models
 
-from rpath_models import System
+from rpath_models import Inventory, System
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -33,7 +33,7 @@ class ModelParser(models.Model):
 
     # related models are all django models that can be created based on the
     # parser
-    relatedModels = {}
+    related_models = {}
 
     class Meta:
         """Tells django not create schema for this model class."""
@@ -151,6 +151,12 @@ class ModelParser(models.Model):
 
         return inst
         
+class UnmanagedModelParser(ModelParser):
+    class Meta:
+        managed = False
+
+class inventory(UnmanagedModelParser):
+    parser = Inventory
 
 class managed_system(ModelParser):
     parser = System

@@ -39,7 +39,7 @@ def parserToString(parser, modelName):
     doc = minidom.parseString(xmlResp)
     rootNode = doc.documentElement
     camelCase(rootNode)
-    return doc.toprettyxml(encoding='UTF-8')
+    return doc.toxml(encoding='UTF-8')
 
 def requires(modelName, parserClass):
     """
