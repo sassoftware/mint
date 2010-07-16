@@ -68,13 +68,16 @@ class AddCommentsMiddleware(object):
     style = libxslt.parseStylesheetDoc(styledoc)
     
     def process_response(self, request, response):
-        
+         
         if response.content:
-            xmldoc = libxml2.parseDoc(response.content)
-            result = self.style.applyStylesheet(xmldoc, None)
-            response.content = result.serialize()
-            xmldoc.freeDoc()
-            result.freeDoc()
+            try: 
+                xmldoc = libxml2.parseDoc(response.content)
+                result = self.style.applyStylesheet(xmldoc, None)
+                response.content = result.serialize()
+                xmldoc.freeDoc()
+                result.freeDoc()
+            except:
+                pass
 
         return response 
 
