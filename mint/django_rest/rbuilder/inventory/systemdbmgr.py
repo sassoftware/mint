@@ -48,13 +48,16 @@ class SystemDBManager(RbuilderDjangoManager):
         return dstore
 
     def getSystem(self, system):
-        return models.managed_system.objects.get(pk=system)
+        managedSystem = models.managed_system.objects.get(pk=system)
+        return self._unSanitizeSystem(managedSystem)
 
     def getSystems(self):
         systems = models.managed_system.objects.all()
+        retSystems = []
         for system in systems:
             system.populateRelatedModelsFromDb()
-        return systems
+            retSystems.append(self._unSanitizeSystem(system))
+        return retSystems
 
     def _sanitizeSystem(self, system):
         systemCopy = copy.deepcopy(system)
@@ -64,6 +67,17 @@ class SystemDBManager(RbuilderDjangoManager):
         cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
         certPath = self.systemStore.set(cert, systemCopy.ssl_client_certificate)
         systemCopy.ssl_client_certificate = certPath
+
+        return systemCopy
+
+    def _unSanitizeSystem(self, system):
+        systemCopy = copy.deepcopy(system)
+        key = os.path.join(systemCopy.generated_uuid, 'x509key')
+        key = self.systemStore.get(key, systemCopy.ssl_client_key)
+        systemCopy.ssl_client_key = key
+        cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
+        cert = self.systemStore.get(cert, systemCopy.ssl_client_certificate)
+        systemCopy.ssl_client_certificate = cert
 
         return systemCopy
 
