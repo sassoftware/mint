@@ -34,7 +34,7 @@ def camelCase(node):
 
 def parserToString(parser, modelName):
     sio = StringIO.StringIO()
-    parser.export(sio, 0, namespace_='', name_=modelName)
+    parser.export(sio, 0, namespace_='')
     xmlResp = sio.getvalue()
     doc = minidom.parseString(xmlResp)
     rootNode = doc.documentElement
