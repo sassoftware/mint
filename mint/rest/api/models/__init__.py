@@ -41,6 +41,7 @@ class RbuilderStatus(Model):
     platforms               = fields.UrlField('platforms', None)
     registration            = fields.UrlField('registration', None)
     reports                 = fields.UrlField('reports/', None)
+    inventory               = fields.UrlField('inventory/', None)
     moduleHooks             = fields.UrlField('moduleHooks', None)
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
