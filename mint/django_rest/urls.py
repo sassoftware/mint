@@ -24,4 +24,5 @@ urlpatterns = patterns('',
     # Inventory urls
     url(r'^api/inventory/$', inventoryviews.InventoryService()),
     url(r'^api/inventory/systems/$', inventoryviews.InventorySystemsService()),
+    url(r'^api/inventory/systems/(.*?)/$', inventoryviews.InventorySystemsService()),
 )

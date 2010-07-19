@@ -39,12 +39,16 @@ class InventoryService(_InventoryService):
 class InventorySystemsService(_InventoryService):
 
     @returns('systems')
-    def read(self, request):
-        systems = self.sysMgr.getSystems()
-        systemsParser = Systems.factory()
-        systemParsers = [s.getParser() for s in systems]
-        [systemsParser.add_system(sp) for sp in systemParsers]
-        return systemsParser
+    def read(self, request, system=None):
+        if not system:
+            systems = self.sysMgr.getSystems()
+            systemsParser = Systems.factory()
+            systemParsers = [s.getParser() for s in systems]
+            [systemsParser.add_system(sp) for sp in systemParsers]
+            return systemsParser
+        else:
+            system = self.sysMgr.getSystem(system)
+            return system.getParser()
     
     @requires('system', System)
     @returns('system')
