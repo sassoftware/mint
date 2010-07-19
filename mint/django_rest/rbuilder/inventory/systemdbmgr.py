@@ -40,9 +40,11 @@ class SystemDBManager(RbuilderDjangoManager):
     def getSystemStore(self):
         if self.cfg is None:
             storagePath = '/tmp/storage'
+        elif hasattr(self.cfg, 'storagePath'):
+            storagePath = self.cfg.storagePath
         else:
-            storagePath = self.cfg.dataPath
-        path = os.path.join(os.path.join(storagePath, 'catalog'), 'systems')
+            storagePath = os.path.join(self.cfg.dataPath, 'catalog')
+        path = os.path.join(storagePath, 'systems')
         cfg = storage.StorageConfig(storagePath=path)
         dstore = storage.DiskStorage(cfg)
         return dstore
