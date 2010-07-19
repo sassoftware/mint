@@ -49,6 +49,7 @@ class rBuilderTest(TestPackageRecipe):
         'testutils:python',
         'XenAPI:python',
         'xobj:python',
+        'rpath-models:python',
 
         # testsuites
         'conary-factory-test:lib',
