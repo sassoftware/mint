@@ -72,8 +72,12 @@ class ModelParser(models.Model):
     def populateRelatedModelsFromDb(self):
         for relMod in self.related_models.keys():
             kwargs = {self._meta.object_name:self}
+            relObjs = relMod.objects.filter(**kwargs)
             # TODO only support one related model returned for now
-            mods = relMod.objects.filter(**kwargs)[0]
+            if relObjs:
+                mods = relObjs[0]
+            else:
+                mods = None
             self.related_models[relMod] = mods
 
     def saveRelatedModels(self):    
