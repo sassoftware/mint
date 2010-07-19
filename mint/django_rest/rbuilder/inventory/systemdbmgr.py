@@ -41,17 +41,20 @@ class SystemDBManager(RbuilderDjangoManager):
         if self.cfg is None:
             storagePath = '/tmp/storage'
         else:
-            storagePath = self.cfg.storagePath
+            storagePath = self.cfg.dataPath
         path = os.path.join(os.path.join(storagePath, 'catalog'), 'systems')
         cfg = storage.StorageConfig(storagePath=path)
         dstore = storage.DiskStorage(cfg)
         return dstore
 
+    def getSystem(self, system):
+        return models.managed_system.objects.get(pk=system)
+
     def getSystems(self):
         systems = models.managed_system.objects.all()
         for system in systems:
             system.populateRelatedModelsFromDb()
-        return  systems
+        return systems
 
     def _sanitizeSystem(self, system):
         systemCopy = copy.deepcopy(system)
