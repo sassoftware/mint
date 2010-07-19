@@ -29,7 +29,7 @@ class _InventoryService(resource.Resource):
 
 class InventoryService(_InventoryService):
 
-    @returns('inventory')
+    @returns()
     def read(self, request):
         inventoryParser = models.inventory().getParser()
         systemsHref = SystemsHref(href=request.build_absolute_uri('systems'))
@@ -38,7 +38,7 @@ class InventoryService(_InventoryService):
 
 class InventorySystemsService(_InventoryService):
 
-    @returns('systems')
+    @returns()
     def read(self, request, system=None):
         if not system:
             systems = self.sysMgr.getSystems()
@@ -51,7 +51,7 @@ class InventorySystemsService(_InventoryService):
             return system.getParser()
     
     @requires('system', System)
-    @returns('system')
+    @returns()
     def create(self, request, system):
         managedSystem = self.sysMgr.activateSystem(system)
         systemParser = managedSystem.getParser()

@@ -32,7 +32,7 @@ def camelCase(node):
             child.tagName = convert(child.tagName)
             camelCase(child)
 
-def parserToString(parser, modelName):
+def parserToString(parser):
     sio = StringIO.StringIO()
     parser.export(sio, 0, namespace_='')
     xmlResp = sio.getvalue()
@@ -60,7 +60,7 @@ def requires(modelName, parserClass):
         return inner
     return decorate
 
-def returns(modelName):
+def returns():
     """
     Decorator that serializes a returned parser object into xml with a root
     node of modelName.
@@ -71,7 +71,7 @@ def returns(modelName):
             response = http.HttpResponse()
             response['Content-Type'] = 'text/xml'
             retVal = function(*args, **kw)
-            response.write(parserToString(retVal, modelName))
+            response.write(parserToString(retVal))
             return response
 
         return inner
