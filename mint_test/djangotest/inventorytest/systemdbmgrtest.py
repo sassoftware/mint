@@ -149,14 +149,14 @@ class SystemDbMgrTest(DjangoTest):
         system = self.sdm.getSystemByInstanceId('testinstanceid')
         self.assertEquals(system.ssl_client_certificate, sslCertFilePath)
         self.assertEquals(system.ssl_client_key, sslKeyFilePath)
-        self.assertEquals(system.managed_status, "activated")
+        self.assertTrue(system.is_manageable)
 
         # Get rid of one of the files, should make the system unmanageable
         os.unlink(sslCertFilePath)
         system = self.sdm.getSystemByInstanceId('testinstanceid')
         self.assertEquals(system.ssl_client_certificate, sslCertFilePath)
         self.assertEquals(system.ssl_client_key, sslKeyFilePath)
-        self.assertEquals(system.managed_status, "unmanaged")
+        self.assertFalse(system.is_manageable)
 
     def testIsManageable(self):
         self._launchSystem()
