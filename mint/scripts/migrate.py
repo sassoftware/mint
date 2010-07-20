@@ -1117,6 +1117,23 @@ class MigrateTo_50(SchemaMigration):
         """)
 
         cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            RENAME "managed_system_id" to "system_id"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            DROP CONSTRAINT "inventory_system_target_managed_system_id_fkey"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD CONSTRAINT "inventory_system_target_system_id_fkey"
+            FOREIGN KEY ("system_id")
+            REFERENCES "inventory_system" ("id")
+        """)
+
+        cu.execute("""
             ALTER TABLE "inventory_system_network_information"
             ADD COLUMN "public_dns_name" VARCHAR(255)
         """)

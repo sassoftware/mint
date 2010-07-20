@@ -110,14 +110,17 @@ class SystemDBManager(RbuilderDjangoManager):
         return managedSystem
 
     def launchSystem(self, system):
+        unManagedSystem = models.system.factoryParser(system)
+        unManagedSystem.save()
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
         managedSystem.launch_date = datetime.datetime.now()
+        managedSystem.pk = unManagedSystem.pk
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(
                     targettype=system.target_type,
                     targetname=system.target_name)
-        systemTarget = models.system_target(managed_system=managedSystem,
+        systemTarget = models.system_target(system=unManagedSystem,
             target=target, target_system_id=system.target_system_id)
         systemTarget.save()
         return systemTarget

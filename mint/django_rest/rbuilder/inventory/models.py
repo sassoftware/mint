@@ -202,7 +202,7 @@ class system_state(ModelParser):
     state = models.ForeignKey(state)
 
 class system_target(ModelParser):
-    system = models.ForeignKey(managed_system, null=True)
+    system = models.ForeignKey(system, null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=256, null=True)
     reservation_id = models.CharField(max_length=256, null=True)
