@@ -1116,6 +1116,11 @@ class MigrateTo_50(SchemaMigration):
             ADD COLUMN "reservation_id" VARCHAR(256)
         """)
 
+        cu.execute("""
+            ALTER TABLE "inventory_system_network_information"
+            ADD COLUMN "public_dns_name" VARCHAR(255)
+        """)
+
         if 'inventory_system' not in self.db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system" (
