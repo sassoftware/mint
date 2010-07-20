@@ -151,7 +151,7 @@ class SystemDBManager(RbuilderDjangoManager):
         if not self.isManageable(managedSystem):
             managedSystemObj.ssl_client_certificate = None
             managedSystemObj.ssl_client_key = None
-            managedSystemObj.set_is_manageable(isManageable)
+            managedSystemObj.set_is_manageable(False)
         else:
             isManageable = (managedSystem.ssl_client_certificate is not None
                 and managedSystem.ssl_client_key is not None
