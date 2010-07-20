@@ -117,8 +117,9 @@ class SystemDbMgrTest(DjangoTest):
                     ssl_client_key='/tmp/key',
                     available=True)
         self.sdm.launchSystem(system)
-        managedSystem = \
-            self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').managed_system
+        system = \
+            self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').system
+        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=system)
         self.assertEquals('/tmp/client', managedSystem.ssl_client_certificate)
         self.assertEquals('/tmp/key', managedSystem.ssl_client_key)
 
@@ -127,9 +128,10 @@ class SystemDbMgrTest(DjangoTest):
         system.ssl_client_certificate = '/sslcert'
         system.ssl_client_key = '/sslkey'
         self.sdm.updateSystem(system)
-        system = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
-        self.assertEquals('/sslcert', system.managed_system.ssl_client_certificate)
-        self.assertEquals('/sslkey', system.managed_system.ssl_client_key)
+        systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        self.assertEquals('/sslcert', managedSystem.ssl_client_certificate)
+        self.assertEquals('/sslkey', managedSystem.ssl_client_key)
 
     def testGetSystemByInstanceId(self):
         tmpDir = self.cfg.dataPath
@@ -147,30 +149,33 @@ class SystemDbMgrTest(DjangoTest):
         system = self.sdm.getSystemByInstanceId('testinstanceid')
         self.assertEquals(system.ssl_client_certificate, sslCertFilePath)
         self.assertEquals(system.ssl_client_key, sslKeyFilePath)
-        self.assertTrue(system.is_manageable)
+        self.assertEquals(system.managed_status, "activated")
 
         # Get rid of one of the files, should make the system unmanageable
         os.unlink(sslCertFilePath)
         system = self.sdm.getSystemByInstanceId('testinstanceid')
         self.assertEquals(system.ssl_client_certificate, sslCertFilePath)
         self.assertEquals(system.ssl_client_key, sslKeyFilePath)
-        self.assertFalse(system.is_manageable)
+        self.assertEquals(system.managed_status, "unmanaged")
 
     def testIsManageable(self):
         self._launchSystem()
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
-        self.assertTrue(self.sdm.isManageable(systemTarget.managed_system))
+        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        self.assertTrue(self.sdm.isManageable(managedSystem))
 
         # Create new user
         newUser = self.rbuildermodels.Users.objects.create(username='testuser2',
             timecreated=str(time.time()), timeaccessed=str(time.time()),
             active=1)
         # Now make the system owned by newUser
-        systemTarget.managed_system.launching_user_id = newUser.userid
-        systemTarget.managed_system.save()
+        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem.launching_user_id = newUser.userid
+        managedSystem.save()
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
+        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
         # No longer manageable, since testuser2 has no credentials
-        self.assertFalse(self.sdm.isManageable(systemTarget.managed_system))
+        self.assertFalse(self.sdm.isManageable(managedSystem))
 
         target = self.rbuildermodels.Targets.objects.get(
             targettype='aws', targetname='ec2')
@@ -179,7 +184,8 @@ class SystemDbMgrTest(DjangoTest):
 
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         # No longer manageable, since testuser2 has no credentials
-        self.assertFalse(self.sdm.isManageable(systemTarget.managed_system))
+        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        self.assertFalse(self.sdm.isManageable(managedSystem))
 
         # Update credentials
         cu = self.systemdbmgr.connection.cursor()
@@ -188,7 +194,8 @@ class SystemDbMgrTest(DjangoTest):
             [ "testusercredentials", target.targetid, newUser.userid ])
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         # Back to being manageable, same credentials as the current user
-        self.assertTrue(self.sdm.isManageable(systemTarget.managed_system))
+        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        self.assertTrue(self.sdm.isManageable(managedSystem))
 
     def _getVersion(self): 
         name = 'group-appliance'
@@ -216,8 +223,10 @@ class SystemDbMgrTest(DjangoTest):
     def _setSoftwareVersion(self):
         system, systemTarget = self._launchSystem()
         self.sdm.setSoftwareVersionForInstanceId('testinstanceid', [self._getVersion()])
+        managedSystem = self.systemmodels.managed_system.objects.get(
+                            managed_system=systemTarget.system)
         ssv = self.systemmodels.system_software_version.objects.filter(
-                managed_system=systemTarget.managed_system)
+                managed_system=managedSystem)
         return ssv
 
     def testSetSoftwareVersionForInstanceId(self):
@@ -228,7 +237,7 @@ class SystemDbMgrTest(DjangoTest):
         ssv = self._setSoftwareVersion()
         managedSystem = ssv[0].managed_system
         instanceId = self.systemmodels.system_target.objects.filter(
-                        managed_system=managedSystem)[0].target_system_id
+                        system=managedSystem)[0].target_system_id
         vers = self.sdm.getSoftwareVersionsForInstanceId(instanceId)
         self.assertEquals('group-appliance=/foo@bar:baz/1234567890.000:1-2-3[is: x86]',
                 str(vers))
