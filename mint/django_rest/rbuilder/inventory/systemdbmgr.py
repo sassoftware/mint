@@ -128,9 +128,10 @@ class SystemDBManager(RbuilderDjangoManager):
     def updateSystem(self, system):
         systemTarget = models.system_target.objects.get(
                         target_system_id=system.target_system_id)
-        systemTarget.managed_system.updateFromParser(system)
-        systemTarget.managed_system.save()
-        return systemTarget.managed_system
+        managedSystem = models.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem.updateFromParser(system)
+        managedSystem.save()
+        return managedSystem
 
     def matchSystem(self, system):
         matchingIPs = models.network_information.objects.filter(
@@ -193,7 +194,7 @@ class SystemDBManager(RbuilderDjangoManager):
                 # System was disassociated from target, probably target got
                 # removed
                 return None
-            return st.managed_system
+            return models.managed_system.objects.get(managed_system=st.system)
         else:
             return None
 

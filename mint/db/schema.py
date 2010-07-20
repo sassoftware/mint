@@ -1133,7 +1133,8 @@ def _createInventorySchema(db):
                     REFERENCES "targets" ("targetid") 
                     ON DELETE SET NULL
                     DEFERRABLE INITIALLY DEFERRED,
-                "target_system_id" varchar(256)
+                "target_system_id" varchar(256),
+                "reservation_id" varchar(256)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
         CREATE INDEX "inventory_system_target_system_id" 
