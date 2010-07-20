@@ -156,15 +156,28 @@ class ModelParser(models.Model):
         return inst
         
 class UnmanagedModelParser(ModelParser):
+    """
+    This base class doesn't seem to be working, i.e., django still seems to
+    want to create db tables for the models that inherit from the class.
+
+    Don't use it for now.
+    """
     class Meta:
         managed = False
 
-class inventory(UnmanagedModelParser):
+class inventory(ModelParser):
+    class Meta:
+        managed = False
     parser = Inventory
+
+class system(ModelParser):
+    parser = System
+    ip_address = models.CharField(max_length=15, null=True)
+    public_dns_name = models.CharField(max_length=255, null=True)
 
 class managed_system(ModelParser):
     parser = System
-    related_models = {}
+    managed_system = models.ForeignKey(system, primary_key=True)
     activation_date = models.DateTimeField('Activation Date', null=True)
     launch_date = models.DateTimeField('Launch Date', null=True)
     generated_uuid = models.CharField(max_length=64, null=True)
@@ -174,13 +187,25 @@ class managed_system(ModelParser):
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.BooleanField(null=False)
+    description = models.CharField(max_length=8092, null=True)
+    name = models.CharField(max_length=8092, null=True)
+
     loadFields = ['generated_uuid', 'local_uuid', 'ssl_client_certificate',
                   'ssl_client_key', 'ssl_server_certificate']
 
-class system_target(models.Model):
-    managed_system = models.ForeignKey(managed_system, null=True)
+class state(ModelParser):
+    state = models.CharField(max_length=8092)
+
+class system_state(ModelParser):
+    parser = System
+    system = models.ForeignKey(system)
+    state = models.ForeignKey(state)
+
+class system_target(ModelParser):
+    system = models.ForeignKey(managed_system, null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=256, null=True)
+    reservation_id = models.CharField(max_length=256, null=True)
 
 class system_management_node(ModelParser):
     managed_system = models.ForeignKey('managed_system',
@@ -227,13 +252,14 @@ class system_information(ModelParser):
     os_minor_version = models.CharField(max_length=32, null=True)
     system_type = models.CharField(max_length=32, null=True)
 
-class network_information(ModelParser):
+class system_network_information(ModelParser):
     parser = System
     managed_system = models.ForeignKey(managed_system)
     interface_name = models.CharField(max_length=32, null=True)
     ip_address = models.CharField(max_length=15, null=True)
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
+    public_dns_name = models.CharField(max_length=255, null=True)
 
 class storage_volume(ModelParser):
     managed_system = models.ForeignKey(managed_system)
@@ -251,4 +277,4 @@ class cpu(ModelParser):
 
 # Set related models, easier to just do it in the end then worrying about
 # what's declared first.
-managed_system.related_models[network_information] = None
+system.related_models[system_network_information] = None

@@ -63,23 +63,25 @@ class SystemDBManager(RbuilderDjangoManager):
 
     def _sanitizeSystem(self, system):
         systemCopy = copy.deepcopy(system)
-        key = os.path.join(systemCopy.generated_uuid, 'x509key')
-        keyPath = self.systemStore.set(key, systemCopy.ssl_client_key)
-        systemCopy.ssl_client_key = keyPath
-        cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
-        certPath = self.systemStore.set(cert, systemCopy.ssl_client_certificate)
-        systemCopy.ssl_client_certificate = certPath
+        if systemCopy.generated_uuid:
+            key = os.path.join(systemCopy.generated_uuid, 'x509key')
+            keyPath = self.systemStore.set(key, systemCopy.ssl_client_key)
+            systemCopy.ssl_client_key = keyPath
+            cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
+            certPath = self.systemStore.set(cert, systemCopy.ssl_client_certificate)
+            systemCopy.ssl_client_certificate = certPath
 
         return systemCopy
 
     def _unSanitizeSystem(self, system):
         systemCopy = copy.deepcopy(system)
-        key = os.path.join(systemCopy.generated_uuid, 'x509key')
-        key = self.systemStore.get(key, systemCopy.ssl_client_key)
-        systemCopy.ssl_client_key = key
-        cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
-        cert = self.systemStore.get(cert, systemCopy.ssl_client_certificate)
-        systemCopy.ssl_client_certificate = cert
+        if systemCopy.generated_uuid:
+            key = os.path.join(systemCopy.generated_uuid, 'x509key')
+            key = self.systemStore.get(key, systemCopy.ssl_client_key)
+            systemCopy.ssl_client_key = key
+            cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
+            cert = self.systemStore.get(cert, systemCopy.ssl_client_certificate)
+            systemCopy.ssl_client_certificate = cert
 
         return systemCopy
 

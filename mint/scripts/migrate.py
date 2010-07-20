@@ -1053,30 +1053,141 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 0)
+    Version = (50, 1)
 
     # 50.0
     # - Add available and launch_date columns to inventory_managed_system
     def migrate(self):
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE inventory_managed_system
-            ADD COLUMN available BOOLEAN NOT NULL DEFAULT TRUE
+            ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "available" BOOLEAN NOT NULL DEFAULT TRUE
         """)
         cu.execute("""
-            ALTER TABLE inventory_managed_system
-            ADD COLUMN launch_date timestamp with time zone
+            ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "launch_date" TIMESTAMP WITH TIME ZONE
         """)
         cu.execute("""
-            ALTER TABLE inventory_managed_system
-            RENAME registration_date to activation_date
+            ALTER TABLE "inventory_managed_system"
+            RENAME "registration_date" TO "activation_date"
         """)
         cu.execute("""
-            ALTER TABLE inventory_managed_system
-            ALTER activation_date drop not null
+            ALTER TABLE "inventory_managed_system"
+            ALTER "activation_date" DROP NOT NULL
         """)
         return True
 
+    # 50.1 
+    # - Add schema for storing unmanaged systems.
+    def migrate1(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "description" VARCHAR(8092)
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "name" VARCHAR(8092)
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            DROP "activation_date"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            DROP "launch_date"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "activation_date" INTEGER
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "launch_date" INTEGER
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD COLUMN "reservation_id" VARCHAR(256)
+        """)
+
+        if 'inventory_system' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system" (
+                    "id" %(PRIMARYKEY)s,
+                    "ip_address" VARCHAR(15),
+                    "public_dns_name" VARCHAR(255) 
+                ) %(TABLEOPTS)s """ % self.db.keywords)
+            self.db.tables['inventory_system'] = []
+
+        if 'inventory_state' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_state" (
+                    "id" %(PRIMARYKEY)s,
+                    "state" VARCHAR(32) NOT NULL
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['inventory_state'] = []
+
+        if 'inventory_system_state' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_state" (
+                    "id" %(PRIMARYKEY)s,
+                    "system_id" INTEGER NOT NULL
+                        REFERENCES "inventory_system" ("id") NOT NULL,
+                    "state_id" INTEGER NOT NULL
+                        REFERENCES "inventory_state" ("id") NOT NULL
+                ) %(TABLEOPTS)s""" % self.db.keywords) 
+            self.db.tables['inventory_system_state'] = []
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            RENAME "id" to "managed_system_id"
+        """)
+
+        cu.execute("""
+            INSERT INTO "inventory_system" ("id")
+            SELECT "managed_system_id" FROM "inventory_managed_system"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            ADD CONSTRAINT "inventory_managed_system_managed_system_id_fkey"
+            FOREIGN KEY ("managed_system_id")
+            REFERENCES "inventory_system" ("id")
+        """)
+
+        if 'inventory_system_management_node' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_management_node" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" INTEGER
+                        REFERENCES "inventory_managed_system"
+                            ("managed_system_id"),
+                    "managed_node_id" INTEGER
+                        REFERENCES "inventory_managed_system"
+                            ("managed_system_id")
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+                CREATE INDEX
+                    "inventory_system_management_node_managed_system_id_managed_node_id"
+                ON "inventory_system_management_node" 
+                    ("managed_system_id", "managed_node_id")
+            """)
+            cu.execute("""
+                CREATE INDEX
+                    "inventory_system_management_node_managed_node_id_managed_system_id"
+                ON "inventory_system_management_node"
+                    ("managed_node_id", "managed_system_id")
+            """)
+            self.db.tables['inventory_system_management_node'] = []
+
+
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

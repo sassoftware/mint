@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1044,29 +1044,90 @@ def _createRepositoryLogSchema(db):
 def _createInventorySchema(db):
     cu = db.cursor()
     changed = False
+
+    if 'inventory_system' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system" (
+                "id" %(PRIMARYKEY)s,
+                "ip_address" VARCHAR(15),
+                "public_dns_name" VARCHAR(255) 
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['inventory_system'] = []
+        changed = True
+
     if 'inventory_managed_system' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_managed_system" (
-                "id" %(PRIMARYKEY)s,
-                "activation_date" timestamp with time zone,
-                "launch_date" timestamp with time zone,
-                "generated_uuid" varchar(64),
-                "local_uuid" varchar(64),
-                "ssl_client_certificate" varchar(8092),
-                "ssl_client_key" varchar(8092),
-                "ssl_server_certificate" varchar(8092),
+                "managed_system_id" %(PRIMARYKEY)s
+                    REFERENCES "inventory_system" ("id"),
+                "activation_date" INTEGER,
+                "launch_date" INTEGER,
+                "generated_uuid" VARCHAR(64),
+                "local_uuid" VARCHAR(64),
+                "ssl_client_certificate" VARCHAR(8092),
+                "ssl_client_key" VARCHAR(8092),
+                "ssl_server_certificate" VARCHAR(8092),
                 "launching_user_id" integer REFERENCES "users" ("userid"),
-                "available" boolean NOT NULL
+                "available" boolean NOT NULL,
+                "description" VARCHAR(8092),
+                "name" VARCHAR(8092)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_managed_system'] = []
+        changed = True
+
+    if 'inventory_state' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_state" (
+                "id" %(PRIMARYKEY)s,
+                "state" VARCHAR(32) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_state'] = []
+        changed = True
+
+    if 'inventory_system_state' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_state" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_system" ("id") NOT NULL,
+                "state_id" INTEGER NOT NULL
+                    REFERENCES "inventory_state" ("id") NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords) 
+        db.tables['inventory_system_state'] = []
+        changed = True
+
+    if 'inventory_system_management_node' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_management_node" (
+                "id" %(PRIMARYKEY)s,
+                "managed_system_id" INTEGER
+                    REFERENCES "inventory_managed_system"
+                        ("managed_system_id"),
+                "managed_node_id" INTEGER
+                    REFERENCES "inventory_managed_system"
+                        ("managed_system_id")
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+            CREATE INDEX
+                "inventory_system_management_node_managed_system_id_managed_node_id"
+            ON "inventory_system_management_node" 
+                ("managed_system_id", "managed_node_id")
+        """)
+        cu.execute("""
+            CREATE INDEX
+                "inventory_system_management_node_managed_node_id_managed_system_id"
+            ON "inventory_system_management_node"
+                ("managed_node_id", "managed_system_id")
+        """)
+        db.tables['inventory_system_management_node'] = []
         changed = True
 
     if 'inventory_system_target' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_system_target" (
                 "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer 
-                    REFERENCES "inventory_managed_system" ("id") 
+                "system_id" integer 
+                    REFERENCES "inventory_system" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_id" integer 
                     REFERENCES "targets" ("targetid") 
@@ -1075,8 +1136,8 @@ def _createInventorySchema(db):
                 "target_system_id" varchar(256)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_system_target_managed_system_id" 
-            ON "inventory_system_target" ("managed_system_id");
+        CREATE INDEX "inventory_system_target_system_id" 
+            ON "inventory_system_target" ("system_id");
         """)
         cu.execute("""
         CREATE INDEX "inventory_system_target_target_id" 
@@ -1141,7 +1202,7 @@ def _createInventorySchema(db):
         db.tables['inventory_system_information'] = []
         changed = True
 
-    if 'inventory_network_information' not in db.tables:
+    if 'inventory_system_network_information' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_network_information" (
                 "id" %(PRIMARYKEY)s,
@@ -1151,7 +1212,8 @@ def _createInventorySchema(db):
                 "interface_name" varchar(32),
                 "ip_address" varchar(15),
                 "netmask" varchar(20),
-                "port_type" varchar(32)
+                "port_type" varchar(32),
+                "public_dns_name" varchar(255)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
         CREATE INDEX "inventory_network_information_managed_system_id" 

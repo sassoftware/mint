@@ -85,6 +85,9 @@ def main(argv):
     if options.mintDb == 'sqlite':
         mintDbDriver = 'sqlite'
         mintDbPath = targetDir + '/rbuilder/data/mintdb'
+    elif options.mintDb == 'postgres':
+        mintDbDriver = 'postgresql'
+        mintDbPath = '%s@localhost.localdomain:5439/%%s'  % (pwd.getpwuid(os.getuid())[0])
     else:
         raise RuntimeError('Unknown mint db')
 
