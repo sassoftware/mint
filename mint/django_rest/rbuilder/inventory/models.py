@@ -192,7 +192,7 @@ class state(ModelParser):
 
 class system_state(ModelParser):
     parser = System
-    system = models.ForeignKey(system)
+    managed_system = models.ForeignKey(managed_system)
     state = models.ForeignKey(state)
 
 class system_target(ModelParser):
@@ -273,4 +273,4 @@ class cpu(ModelParser):
 
 # Set related models, easier to just do it in the end then worrying about
 # what's declared first.
-system.related_models[system_network_information] = None
+managed_system.related_models[system_network_information] = None

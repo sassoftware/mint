@@ -110,17 +110,14 @@ class SystemDBManager(RbuilderDjangoManager):
         return managedSystem
 
     def launchSystem(self, system):
-        unManagedSystem = models.system.factoryParser(system)
-        unManagedSystem.save()
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
         managedSystem.launch_date = datetime.datetime.now()
-        managedSystem.pk = unManagedSystem.pk
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(
                     targettype=system.target_type,
                     targetname=system.target_name)
-        systemTarget = models.system_target(system=unManagedSystem,
+        systemTarget = models.system_target(managed_system=managedSystem,
             target=target, target_system_id=system.target_system_id)
         systemTarget.save()
         return systemTarget
@@ -128,7 +125,7 @@ class SystemDBManager(RbuilderDjangoManager):
     def updateSystem(self, system):
         systemTarget = models.system_target.objects.get(
                         target_system_id=system.target_system_id)
-        managedSystem = models.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         managedSystem.updateFromParser(system)
         managedSystem.save()
         return managedSystem
@@ -194,7 +191,7 @@ class SystemDBManager(RbuilderDjangoManager):
                 # System was disassociated from target, probably target got
                 # removed
                 return None
-            return models.managed_system.objects.get(managed_system=st.system)
+            return st.managed_system
         else:
             return None
 

@@ -1128,8 +1128,8 @@ def _createInventorySchema(db):
                 "public_dns_name" VARCHAR(255) 
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_system_target_system_id" 
-            ON "inventory_system_target" ("system_id");
+        CREATE INDEX "inventory_system_target_managed_system_id" 
+            ON "inventory_system_target" ("managed_system_id");
         """)
         cu.execute("""
         CREATE INDEX "inventory_system_target_target_id" 
