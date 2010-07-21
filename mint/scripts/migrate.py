@@ -1294,6 +1294,7 @@ class MigrateTo_50(SchemaMigration):
                     ON "inventory_network_information" ("managed_system_id")
             """)
             self.db.tables['inventory_system_network_information'] = []
+        return True
  
 #### SCHEMA MIGRATIONS END HERE #############################################
 
