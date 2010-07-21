@@ -1165,6 +1165,11 @@ class MigrateTo_50(SchemaMigration):
             self.db.tables['inventory_system_state'] = []
 
         cu.execute("""
+            INSERT INTO "inventory_system" ("id")
+            SELECT "id" FROM "inventory_managed_system"
+        """)
+
+        cu.execute("""
             ALTER TABLE "inventory_system_target"
             ADD CONSTRAINT "inventory_system_target_system_id_fkey"
             FOREIGN KEY ("system_id")
@@ -1174,11 +1179,6 @@ class MigrateTo_50(SchemaMigration):
         cu.execute("""
             ALTER TABLE "inventory_managed_system"
             RENAME "id" to "managed_system_id"
-        """)
-
-        cu.execute("""
-            INSERT INTO "inventory_system" ("id")
-            SELECT "managed_system_id" FROM "inventory_managed_system"
         """)
 
         cu.execute("""
