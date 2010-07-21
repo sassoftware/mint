@@ -1053,7 +1053,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 2)
+    Version = (50, 3)
 
     # 50.0
     # - Add available and launch_date columns to inventory_managed_system
@@ -1269,6 +1269,14 @@ class MigrateTo_50(SchemaMigration):
         """)
 
         return True
+
+    def migrate3(self):
+        cu.execute("""
+            DROP SEQUENCE "inventory_network_information_id_seq"
+        """)
+        cu.execute("""
+            CREATE SEQUENCE "inventory_system_network_information_id_seq"
+        """)
  
 #### SCHEMA MIGRATIONS END HERE #############################################
 
