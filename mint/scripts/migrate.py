@@ -1271,6 +1271,8 @@ class MigrateTo_50(SchemaMigration):
         return True
 
     def migrate3(self):
+        cu = self.db.cursor()
+
         cu.execute("""
             DROP SEQUENCE "inventory_network_information_id_seq"
         """)
