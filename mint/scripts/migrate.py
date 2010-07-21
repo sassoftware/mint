@@ -1127,6 +1127,11 @@ class MigrateTo_50(SchemaMigration):
         """)
 
         cu.execute("""
+            ALTER TABLE "inventory_network_information"
+            RENAME TO "inventory_system_netwowk_information"
+        """)
+
+        cu.execute("""
             ALTER TABLE "inventory_system_network_information"
             ADD COLUMN "public_dns_name" VARCHAR(255)
         """)
