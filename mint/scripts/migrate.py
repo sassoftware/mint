@@ -1274,11 +1274,26 @@ class MigrateTo_50(SchemaMigration):
         cu = self.db.cursor()
 
         cu.execute("""
-            DROP SEQUENCE "inventory_network_information_id_seq"
+            DROP TABLE "inventory_system_network_information"
         """)
-        cu.execute("""
-            CREATE SEQUENCE "inventory_system_network_information_id_seq"
-        """)
+        if 'inventory_system_network_information' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_network_information" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "interface_name" varchar(32),
+                    "ip_address" varchar(15),
+                    "netmask" varchar(20),
+                    "port_type" varchar(32),
+                    "public_dns_name" varchar(255)
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+                CREATE INDEX "inventory_network_information_managed_system_id" 
+                    ON "inventory_network_information" ("managed_system_id")
+            """)
+            self.db.tables['inventory_system_network_information'] = []
  
 #### SCHEMA MIGRATIONS END HERE #############################################
 

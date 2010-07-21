@@ -1196,7 +1196,7 @@ def _createInventorySchema(db):
 
     if 'inventory_system_network_information' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_network_information" (
+            CREATE TABLE "inventory_system_network_information" (
                 "id" %(PRIMARYKEY)s,
                 "managed_system_id" integer NOT NULL 
                     REFERENCES "inventory_managed_system" ("id") 
@@ -1208,10 +1208,11 @@ def _createInventorySchema(db):
                 "public_dns_name" varchar(255)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_network_information_managed_system_id" 
-            ON "inventory_network_information" ("managed_system_id");
+        CREATE INDEX 
+            "inventory_system_network_information_managed_system_id" 
+            ON "inventory_system_network_information" ("managed_system_id")
         """)
-        db.tables['inventory_network_information'] = []
+        db.tables['inventory_system_network_information'] = []
         changed = True
 
     if 'inventory_storage_volume' not in db.tables:
