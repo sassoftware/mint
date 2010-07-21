@@ -70,18 +70,24 @@ class SystemDBManager(RbuilderDjangoManager):
             cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
             certPath = self.systemStore.set(cert, systemCopy.ssl_client_certificate)
             systemCopy.ssl_client_certificate = certPath
+            serverCert = os.path.join(systemCopy.generated_uuid, 'x509servercert')
+            serverCertPath = self.systemStore.set(serverCert, systemCopy.ssl_server_certificate)
+            systemCopy.ssl_server_certificate = serverCertPath
 
         return systemCopy
 
     def _unSanitizeSystem(self, system):
         systemCopy = copy.deepcopy(system)
-        if systemCopy.generated_uuid:
-            key = os.path.join(systemCopy.generated_uuid, 'x509key')
-            key = self.systemStore.get(key, systemCopy.ssl_client_key)
-            systemCopy.ssl_client_key = key
-            cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
-            cert = self.systemStore.get(cert, systemCopy.ssl_client_certificate)
-            systemCopy.ssl_client_certificate = cert
+        keyPath = systemCopy.ssl_client_key
+        key = open(keyPath).read()
+        systemCopy.ssl_client_key = key
+        certPath = systemCopy.ssl_client_certificate
+        cert = open(certPath).read()
+        systemCopy.ssl_client_certificate = cert
+        if systemCopy.ssl_server_certificate:
+            serverCertPath = systemCopy.ssl_server_certificate
+            serverCert = open(serverCertPath).read()
+            systemCopy.ssl_server_certificate = serverCert
 
         return systemCopy
 
@@ -92,7 +98,7 @@ class SystemDBManager(RbuilderDjangoManager):
         matchedIps = []
         if managedSystem:
             matchedIps = [n.ip_address for n in \
-                          managedSystem.network_information_set.all() \
+                          managedSystem.system_network_information_set.all() \
                           if n.ip_address == sanitizedSystem.ip_address]
 
         if matchedIps:
