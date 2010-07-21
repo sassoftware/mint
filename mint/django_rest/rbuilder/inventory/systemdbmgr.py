@@ -108,7 +108,7 @@ class SystemDBManager(RbuilderDjangoManager):
             # New activation, need to create a new managedSystem
             managedSystem = models.managed_system.factoryParser(sanitizedSystem)
             
-        managedSystem.activation_date = datetime.datetime.now()
+        managedSystem.activation_date = int(time.time())
         managedSystem.save()
         managedSystem.populateRelatedModelsFromParser(sanitizedSystem)
         managedSystem.saveAll()
@@ -118,7 +118,7 @@ class SystemDBManager(RbuilderDjangoManager):
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
-        managedSystem.launch_date = datetime.datetime.now()
+        managedSystem.launch_date = int(time.time())
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(
                     targettype=system.target_type,

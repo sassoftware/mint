@@ -172,8 +172,8 @@ class inventory(ModelParser):
 
 class managed_system(ModelParser):
     parser = System
-    activation_date = models.DateTimeField('Activation Date', null=True)
-    launch_date = models.DateTimeField('Launch Date', null=True)
+    activation_date = models.IntegerField('Activation Date', null=True)
+    launch_date = models.IntegerField('Launch Date', null=True)
     generated_uuid = models.CharField(max_length=64, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
