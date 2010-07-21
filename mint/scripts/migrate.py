@@ -1128,7 +1128,7 @@ class MigrateTo_50(SchemaMigration):
 
         cu.execute("""
             ALTER TABLE "inventory_network_information"
-            RENAME TO "inventory_system_netwowk_information"
+            RENAME TO "inventory_system_network_information"
         """)
 
         cu.execute("""
