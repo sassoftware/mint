@@ -1053,7 +1053,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 1)
+    Version = (50, 2)
 
     # 50.0
     # - Add available and launch_date columns to inventory_managed_system
@@ -1211,6 +1211,60 @@ class MigrateTo_50(SchemaMigration):
 
         return True
 
+    def migrate2(self):
+        cu = self.db.cursor()
+        
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            DROP constraint "inventory_managed_system_managed_system_id_fkey"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            RENAME "managed_system_id" to "id"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            DROP CONSTRAINT "inventory_system_target_system_id_fkey"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            RENAME "system_id" to "managed_system_id"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD CONSTRAINT "inventory_system_target_managed_system_id_fkey"
+            FOREIGN KEY ("managed_system_id")
+            REFERENCES "inventory_managed_system" ("id")
+            ON DELETE SET NULL
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD "ip_address" VARCHAR(15)
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD "public_dns_name" VARCHAR(255)
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_state"
+            DROP CONSTRAINT "inventory_system_state_system_id_fkey"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_state"
+            RENAME "system_id" to "managed_system_id"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_state"
+            ADD CONSTRAINT "inventory_system_state_managed_system_id_fkey"
+            FOREIGN KEY ("managed_system_id")
+            REFERENCES "inventory_managed_system" ("id")
+        """)
+        cu.execute("""
+            DROP TABLE "inventory_system"
+        """)
+
+        return True
+ 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

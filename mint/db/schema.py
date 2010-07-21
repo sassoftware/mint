@@ -26,7 +26,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1045,21 +1045,10 @@ def _createInventorySchema(db):
     cu = db.cursor()
     changed = False
 
-    if 'inventory_system' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system" (
-                "id" %(PRIMARYKEY)s,
-                "ip_address" VARCHAR(15),
-                "public_dns_name" VARCHAR(255) 
-            ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['inventory_system'] = []
-        changed = True
-
     if 'inventory_managed_system' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_managed_system" (
-                "managed_system_id" %(PRIMARYKEY)s
-                    REFERENCES "inventory_system" ("id"),
+                "id" %(PRIMARYKEY)s,
                 "activation_date" INTEGER,
                 "launch_date" INTEGER,
                 "generated_uuid" VARCHAR(64),
@@ -1088,8 +1077,8 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_system_state" (
                 "id" %(PRIMARYKEY)s,
-                "system_id" INTEGER NOT NULL
-                    REFERENCES "inventory_system" ("id") NOT NULL,
+                "managed_system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_managed_system" ("id") NOT NULL,
                 "state_id" INTEGER NOT NULL
                     REFERENCES "inventory_state" ("id") NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords) 
@@ -1126,15 +1115,17 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_system_target" (
                 "id" %(PRIMARYKEY)s,
-                "system_id" integer 
-                    REFERENCES "inventory_system" ("id") 
+                "managed_system_id" integer 
+                    REFERENCES "inventory_managed_system" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_id" integer 
                     REFERENCES "targets" ("targetid") 
                     ON DELETE SET NULL
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_system_id" varchar(256),
-                "reservation_id" varchar(256)
+                "reservation_id" varchar(256),
+                "ip_address" VARCHAR(15),
+                "public_dns_name" VARCHAR(255) 
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
         CREATE INDEX "inventory_system_target_system_id" 

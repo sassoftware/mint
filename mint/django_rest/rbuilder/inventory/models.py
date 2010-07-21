@@ -170,14 +170,8 @@ class inventory(ModelParser):
         managed = False
     parser = Inventory
 
-class system(ModelParser):
-    parser = System
-    ip_address = models.CharField(max_length=15, null=True)
-    public_dns_name = models.CharField(max_length=255, null=True)
-
 class managed_system(ModelParser):
     parser = System
-    managed_system = models.ForeignKey(system, primary_key=True)
     activation_date = models.DateTimeField('Activation Date', null=True)
     launch_date = models.DateTimeField('Launch Date', null=True)
     generated_uuid = models.CharField(max_length=64, null=True)
@@ -202,10 +196,12 @@ class system_state(ModelParser):
     state = models.ForeignKey(state)
 
 class system_target(ModelParser):
-    system = models.ForeignKey(system, null=True)
+    managed_system = models.ForeignKey(managed_system, null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=256, null=True)
     reservation_id = models.CharField(max_length=256, null=True)
+    ip_address = models.CharField(max_length=15, null=True)
+    public_dns_name = models.CharField(max_length=255, null=True)
 
 class system_management_node(ModelParser):
     managed_system = models.ForeignKey('managed_system',
