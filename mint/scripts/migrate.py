@@ -1127,13 +1127,6 @@ class MigrateTo_50(SchemaMigration):
         """)
 
         cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            ADD CONSTRAINT "inventory_system_target_system_id_fkey"
-            FOREIGN KEY ("system_id")
-            REFERENCES "inventory_system" ("id")
-        """)
-
-        cu.execute("""
             ALTER TABLE "inventory_system_network_information"
             ADD COLUMN "public_dns_name" VARCHAR(255)
         """)
@@ -1165,6 +1158,13 @@ class MigrateTo_50(SchemaMigration):
                         REFERENCES "inventory_state" ("id") NOT NULL
                 ) %(TABLEOPTS)s""" % self.db.keywords) 
             self.db.tables['inventory_system_state'] = []
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD CONSTRAINT "inventory_system_target_system_id_fkey"
+            FOREIGN KEY ("system_id")
+            REFERENCES "inventory_system" ("id")
+        """)
 
         cu.execute("""
             ALTER TABLE "inventory_managed_system"
