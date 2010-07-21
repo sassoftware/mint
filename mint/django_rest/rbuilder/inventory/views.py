@@ -33,8 +33,8 @@ class InventoryService(_InventoryService):
     @returns()
     def read(self, request):
         inventoryParser = models.inventory().getParser()
-        systemsHref = SystemsHref(href=request.build_absolute_uri('systems'))
-        logHref = LogHref(href=request.build_absolute_uri('log'))
+        systemsHref = SystemsHref(href=request.build_absolute_uri('systems/'))
+        logHref = LogHref(href=request.build_absolute_uri('log/'))
         inventoryParser.set_systems(systemsHref)
         inventoryParser.set_log(logHref)
         return inventoryParser
