@@ -1346,6 +1346,9 @@ END:VCALENDAR""",
         changed |= add_columns(db, 'inventory_managed_system',
             'scheduled_event_start_date NUMERIC')
         cu.execute("UPDATE inventory_managed_system SET scheduled_event_start_date = activation_date")
+        cu.execute("""
+            ALTER TABLE inventory_managed_system
+                ALTER scheduled_event_start_date SET NOT NULL""")
 
         return changed
  
