@@ -1344,7 +1344,9 @@ END:VCALENDAR""",
             changed = True
 
         changed |= add_columns(db, 'inventory_managed_system',
-            'scheduled_event_start_date NUMERIC NOT NULL')
+            'scheduled_event_start_date NUMERIC')
+        cu.execute("UPDATE inventory_managed_system SET scheduled_event_start_date = activation_date")
+
         return changed
  
 #### SCHEMA MIGRATIONS END HERE #############################################
