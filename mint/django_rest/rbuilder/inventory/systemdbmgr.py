@@ -400,5 +400,5 @@ class SystemDBManager(RbuilderDjangoManager):
         schedules = models.schedule.objects.filter(enabled=True)
         if not schedules:
             return None
-        sch = max(schedules, key = lambda x: x.created)
+        sch = max((x.created, x) for x in schedules)[1]
         return sch
