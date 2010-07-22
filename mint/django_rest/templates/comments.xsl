@@ -1,4 +1,18 @@
-﻿<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+	<xsl:template match="/rbuilderStatus">
+	<xsl:comment>
+	Methods: GET
+
+	Attributes:
+	  The root level resource that provides links to all available resources
+	exposed by this rBuilder. This resource is thus the key to discoverability
+	of the rBuilder API.
+	</xsl:comment>
+	<xsl:copy-of select="/"/>    
+	</xsl:template>
+
+	<xsl:template match="/report">
+		
 <xsl:template match="/reports">
 <xsl:comment>
 Methods: GET
