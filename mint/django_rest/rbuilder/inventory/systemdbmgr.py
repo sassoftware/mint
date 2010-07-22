@@ -9,7 +9,6 @@ import datetime
 import os
 import time
 import vobject
-from dateutil import rrule
 
 from django.db import connection
 
@@ -345,8 +344,8 @@ class SystemDBManager(RbuilderDjangoManager):
         for msid, schedEventStartDate in managedSystemIdsEventStartDates:
             dtstart = datetime.datetime.fromtimestamp(schedEventStartDate)
             nevent = event.duplicate(event)
-            event.add('dtstart').value = dtstart
-            for eventTime in event.rruleset.between(now, dtend):
+            nevent.add('dtstart').value = dtstart
+            for eventTime in nevent.rruleset.between(now, dtend):
                 ts = self._totimestamp(eventTime)
                 obj = models.managed_system_scheduled_event(
                     managed_system_id = msid,
