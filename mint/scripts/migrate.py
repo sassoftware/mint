@@ -5,6 +5,7 @@
 import logging
 import os
 import sys
+import time
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
@@ -43,12 +44,15 @@ def add_columns(db, table, *columns):
     ...     'somethingelse STRING')
     '''
     cu = db.cursor()
+    changed = False
 
     for column in columns:
         try:
             cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
+            changed = True
         except sqlerrors.DuplicateColumnName:
             pass
+    return changed
 
 
 def drop_tables(db, *tables):
@@ -1053,7 +1057,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 3)
+    Version = (50, 4)
 
     # 50.0
     # - Add available and launch_date columns to inventory_managed_system
@@ -1213,9 +1217,6 @@ class MigrateTo_50(SchemaMigration):
             """)
             self.db.tables['inventory_system_management_node'] = []
 
-
-        return True
-
     def migrate2(self):
         cu = self.db.cursor()
         
@@ -1295,6 +1296,55 @@ class MigrateTo_50(SchemaMigration):
             """)
             self.db.tables['inventory_system_network_information'] = []
         return True
+
+    def migrate4(self):
+        db = self.db
+        cu = db.cursor()
+        changed = False
+
+        tableName = 'inventory_schedule'
+        if tableName not in db.tables:
+            cu.execute("""
+                CREATE TABLE TABLE_NAME
+                (
+                    schedule_id     %(PRIMARYKEY)s,
+                    schedule        text NOT NULL,
+                    enabled         smallint NOT NULL DEFAULT 1,
+                    created         NUMERIC NOT NULL
+                ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+            db.tables[tableName] = []
+            changed = True
+
+        changed |= schema._addTableRows(db, tableName, 'schedule',
+            [ dict(
+                schedule = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+RRULE:FREQ=DAILY
+END:VEVENT
+END:VCALENDAR""",
+                created = int(time.time())) ])
+
+        tableName = 'inventory_managed_system_scheduled_event'
+        if tableName not in db.tables:
+            cu.execute("""
+                CREATE TABLE TABLE_NAME
+                (
+                    scheduled_event_id      %(PRIMARYKEY)s,
+                    managed_system_id       INTEGER NOT NULL
+                        REFERENCES inventory_managed_system ON DELETE CASCADE,
+                    schedule_id             INTEGER NOT NULL
+                        REFERENCES inventory_schedule ON DELETE CASCADE,
+                    state_id                INTEGER NOT NULL
+                        REFERENCES job_states ON DELETE CASCADE,
+                    scheduled_time          NUMERIC NOT NULL
+                ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+            db.tables[tableName] = []
+            changed = True
+
+        changed |= add_columns(db, 'inventory_managed_system',
+            'scheduled_event_start_date NUMERIC NOT NULL')
+        return changed
  
 #### SCHEMA MIGRATIONS END HERE #############################################
 

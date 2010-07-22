@@ -13,7 +13,7 @@ from conary.deps import deps
 import mint_test
 from mint_test import fixtures
 
-from rpath_models import System
+from rpath_models import Schedule, System
 
 builtins = sys.modules.keys()
 unimported = {}
@@ -89,13 +89,35 @@ class SystemDbMgrTest(DjangoTest):
 
         self.sdm = self.systemdbmgr.SystemDBManager(None, 'testuser')
 
-    def _launchSystem(self):
-        system = System(target_system_id='testinstanceid',
+    @staticmethod
+    def _newSystem(**kw):
+        kwargs = dict(
+                    target_system_id='testinstanceid',
                     target_type='aws', target_name='ec2',
                     launch_date=int(time.time()),
-                    available=True)
+                    scheduled_event_start_date=int(time.time()),
+                    available=True,
+        )
+        kwargs.update(kw)
+        return System(**kwargs)
+
+    def _launchSystem(self, **kwargs):
+        system = self._newSystem(**kwargs)
         systemTarget = self.sdm.launchSystem(system)
         return system, systemTarget
+
+    def _addSchedule(self, schedule=None, created=None):
+        if schedule is None:
+            schedule = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+RRULE:FREQ=DAILY
+END:VEVENT
+END:VCALENDAR"""
+        if created is None:
+            created = int(time.time())
+        return self.sdm.addSchedule(Schedule(schedule=schedule, enabled=True,
+            created=created))
 
     def setUp(self):
         DjangoTest.setUp(self)
@@ -109,13 +131,9 @@ class SystemDbMgrTest(DjangoTest):
         self.assertEquals('testinstanceid', systemTarget.target_system_id)
 
     def testLaunchSystemWithSSLInfo(self):
-        system = System(target_system_id='testinstanceid',
-                    target_type='aws', target_name='ec2',
-                    launch_date=int(time.time()),
+        system, systemTarget = self._launchSystem(
                     ssl_client_certificate='/tmp/client',
-                    ssl_client_key='/tmp/key',
-                    available=True)
-        self.sdm.launchSystem(system)
+                    ssl_client_key='/tmp/key')
         managedSystem = \
             self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').managed_system
         self.assertEquals('/tmp/client', managedSystem.ssl_client_certificate)
@@ -246,6 +264,30 @@ class SystemDbMgrTest(DjangoTest):
         vers = self.systemmodels.system_software_version.objects.filter(
                 managed_system=managedSystem)
         self.assertEquals(0, len(vers))
+
+    def testAddSchedule(self):
+        created1 = int(time.time() + 10)
+        created2 = created1 - 5
+        schedule = self._addSchedule(created=created1)
+        schedule = self._addSchedule(created=created2)
+        sch = self.sdm.getSchedule()
+        self.failUnlessEqual(sch.created, created1)
+
+    def testSetScheduledEvents(self):
+        schedule = self._addSchedule()
+        system1, targetSystem1 = self._launchSystem(target_system_id='targetInstanceId1')
+        evts = self.sdm.getScheduledEvents([system1])
+        # We normally get 2 events here, but depending on timing we may only
+        # get one (we're creating events 2 days in advance starting with the
+        # activation time)
+        self.failUnless(len(evts) >= 1)
+
+        system2, targetSystem2 = self._launchSystem(target_system_id='targetInstanceId2')
+        self.sdm.computeScheduledEvents([system1, system2])
+        evts = self.sdm.getScheduledEvents([system1, system2])
+        self.failUnlessEqual(set(x.managed_system.id for x in evts),
+            set([targetSystem1.managed_system.id,
+            targetSystem2.managed_system.id]))
 
 if __name__ == "__main__":
         testsetup.main()

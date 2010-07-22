@@ -21,12 +21,13 @@ L{migrate<mint.migrate>} module.
 '''
 
 import logging
+import time
 from conary.dbstore import sqlerrors, sqllib
 
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 4)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1057,6 +1058,7 @@ def _createInventorySchema(db):
                 "ssl_client_key" VARCHAR(8092),
                 "ssl_server_certificate" VARCHAR(8092),
                 "launching_user_id" integer REFERENCES "users" ("userid"),
+                scheduled_event_start_date NUMERIC NOT NULL,
                 "available" boolean NOT NULL,
                 "description" VARCHAR(8092),
                 "name" VARCHAR(8092)
@@ -1424,6 +1426,51 @@ def _createJobsSchema(db):
 
     return changed
 
+def _createSchedulerSchema(db):
+    cu = db.cursor()
+    changed = False
+
+    tableName = 'inventory_schedule'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE TABLE_NAME
+            (
+                schedule_id     %(PRIMARYKEY)s,
+                schedule        text NOT NULL,
+                enabled         smallint NOT NULL DEFAULT 1,
+                created         NUMERIC NOT NULL
+            ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+        db.tables[tableName] = []
+        _addTableRows(db, tableName, 'schedule',
+            [ dict(
+                schedule = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+RRULE:FREQ=DAILY
+END:VEVENT
+END:VCALENDAR""",
+                created = int(time.time())) ])
+        changed = True
+
+    tableName = 'inventory_managed_system_scheduled_event'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE TABLE_NAME
+            (
+                scheduled_event_id      %(PRIMARYKEY)s,
+                managed_system_id       INTEGER NOT NULL
+                    REFERENCES inventory_managed_system ON DELETE CASCADE,
+                schedule_id             INTEGER NOT NULL
+                    REFERENCES inventory_schedule ON DELETE CASCADE,
+                state_id                INTEGER NOT NULL
+                    REFERENCES job_states ON DELETE CASCADE,
+                scheduled_time          NUMERIC NOT NULL
+            ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    return changed
+
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -1455,6 +1502,7 @@ def createSchema(db, doCommit=True):
     changed |= _createInventoryUpdateSchema(db)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
+    changed |= _createSchedulerSchema(db)
 
     if doCommit:
         db.commit()

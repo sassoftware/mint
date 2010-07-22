@@ -9,7 +9,7 @@ import datetime
 from django.db import IntegrityError
 from django.db import models
 
-from rpath_models import Inventory, System
+from rpath_models import Inventory, Schedule, System
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -179,13 +179,15 @@ class managed_system(ModelParser):
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
     ssl_client_key = models.CharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
+    scheduled_event_start_date = models.IntegerField(null=False)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.BooleanField(null=False)
     description = models.CharField(max_length=8092, null=True)
     name = models.CharField(max_length=8092, null=True)
 
     loadFields = ['generated_uuid', 'local_uuid', 'ssl_client_certificate',
-                  'ssl_client_key', 'ssl_server_certificate']
+                  'ssl_client_key', 'ssl_server_certificate',
+                  'scheduled_event_start_date', ]
 
 class state(ModelParser):
     state = models.CharField(max_length=8092)
@@ -270,6 +272,27 @@ class cpu(ModelParser):
     cores = models.IntegerField(null=True)
     speed = models.IntegerField(null=True)
     enabled = models.NullBooleanField()
+
+class schedule(ModelParser):
+    parser = Schedule
+    schedule_id = models.AutoField(primary_key=True)
+    schedule = models.CharField(max_length=4096, null=False)
+    enabled = models.BooleanField(null=False)
+    created = models.IntegerField(null=False)
+
+class job_states(ModelParser):
+    class Meta:
+        managed = False
+        db_table = 'job_states'
+    job_state_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=1024, null=False)
+
+class managed_system_scheduled_event(ModelParser):
+    scheduled_event_id = models.AutoField(primary_key=True)
+    state = models.ForeignKey(job_states, null=False)
+    managed_system = models.ForeignKey(managed_system)
+    schedule = models.ForeignKey(schedule)
+    scheduled_time = models.IntegerField(null=True)
 
 # Set related models, easier to just do it in the end then worrying about
 # what's declared first.
