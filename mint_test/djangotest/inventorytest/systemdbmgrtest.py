@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import datetime
 import os
 import sys
 import tempfile
@@ -14,7 +13,7 @@ from conary.deps import deps
 import mint_test
 from mint_test import fixtures
 
-from rpath_models import System
+from rpath_models import Schedule, System
 
 builtins = sys.modules.keys()
 unimported = {}
@@ -90,13 +89,35 @@ class SystemDbMgrTest(DjangoTest):
 
         self.sdm = self.systemdbmgr.SystemDBManager(None, 'testuser')
 
-    def _launchSystem(self):
-        system = System(target_system_id='testinstanceid',
+    @staticmethod
+    def _newSystem(**kw):
+        kwargs = dict(
+                    target_system_id='testinstanceid',
                     target_type='aws', target_name='ec2',
-                    launch_date=datetime.datetime.now(),
-                    available=True)
+                    launch_date=int(time.time()),
+                    scheduled_event_start_date=int(time.time()),
+                    available=True,
+        )
+        kwargs.update(kw)
+        return System(**kwargs)
+
+    def _launchSystem(self, **kwargs):
+        system = self._newSystem(**kwargs)
         systemTarget = self.sdm.launchSystem(system)
         return system, systemTarget
+
+    def _addSchedule(self, schedule=None, created=None):
+        if schedule is None:
+            schedule = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+RRULE:FREQ=DAILY
+END:VEVENT
+END:VCALENDAR"""
+        if created is None:
+            created = int(time.time())
+        return self.sdm.addSchedule(Schedule(schedule=schedule, enabled=True,
+            created=created))
 
     def setUp(self):
         DjangoTest.setUp(self)
@@ -110,16 +131,11 @@ class SystemDbMgrTest(DjangoTest):
         self.assertEquals('testinstanceid', systemTarget.target_system_id)
 
     def testLaunchSystemWithSSLInfo(self):
-        system = System(target_system_id='testinstanceid',
-                    target_type='aws', target_name='ec2',
-                    launch_date=datetime.datetime.now(),
+        system, systemTarget = self._launchSystem(
                     ssl_client_certificate='/tmp/client',
-                    ssl_client_key='/tmp/key',
-                    available=True)
-        self.sdm.launchSystem(system)
-        system = \
-            self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').system
-        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=system)
+                    ssl_client_key='/tmp/key')
+        managedSystem = \
+            self.systemmodels.system_target.objects.get(target_system_id='testinstanceid').managed_system
         self.assertEquals('/tmp/client', managedSystem.ssl_client_certificate)
         self.assertEquals('/tmp/key', managedSystem.ssl_client_key)
 
@@ -129,7 +145,7 @@ class SystemDbMgrTest(DjangoTest):
         system.ssl_client_key = '/sslkey'
         self.sdm.updateSystem(system)
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
-        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         self.assertEquals('/sslcert', managedSystem.ssl_client_certificate)
         self.assertEquals('/sslkey', managedSystem.ssl_client_key)
 
@@ -161,7 +177,7 @@ class SystemDbMgrTest(DjangoTest):
     def testIsManageable(self):
         self._launchSystem()
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
-        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         self.assertTrue(self.sdm.isManageable(managedSystem))
 
         # Create new user
@@ -169,11 +185,11 @@ class SystemDbMgrTest(DjangoTest):
             timecreated=str(time.time()), timeaccessed=str(time.time()),
             active=1)
         # Now make the system owned by newUser
-        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         managedSystem.launching_user_id = newUser.userid
         managedSystem.save()
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
-        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         # No longer manageable, since testuser2 has no credentials
         self.assertFalse(self.sdm.isManageable(managedSystem))
 
@@ -184,7 +200,7 @@ class SystemDbMgrTest(DjangoTest):
 
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         # No longer manageable, since testuser2 has no credentials
-        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         self.assertFalse(self.sdm.isManageable(managedSystem))
 
         # Update credentials
@@ -194,7 +210,7 @@ class SystemDbMgrTest(DjangoTest):
             [ "testusercredentials", target.targetid, newUser.userid ])
         systemTarget = self.systemmodels.system_target.objects.get(target_system_id='testinstanceid')
         # Back to being manageable, same credentials as the current user
-        managedSystem = self.systemmodels.managed_system.objects.get(managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         self.assertTrue(self.sdm.isManageable(managedSystem))
 
     def _getVersion(self): 
@@ -223,8 +239,7 @@ class SystemDbMgrTest(DjangoTest):
     def _setSoftwareVersion(self):
         system, systemTarget = self._launchSystem()
         self.sdm.setSoftwareVersionForInstanceId('testinstanceid', [self._getVersion()])
-        managedSystem = self.systemmodels.managed_system.objects.get(
-                            managed_system=systemTarget.system)
+        managedSystem = systemTarget.managed_system
         ssv = self.systemmodels.system_software_version.objects.filter(
                 managed_system=managedSystem)
         return ssv
@@ -237,7 +252,7 @@ class SystemDbMgrTest(DjangoTest):
         ssv = self._setSoftwareVersion()
         managedSystem = ssv[0].managed_system
         instanceId = self.systemmodels.system_target.objects.filter(
-                        system=managedSystem)[0].target_system_id
+                        managed_system=managedSystem)[0].target_system_id
         vers = self.sdm.getSoftwareVersionsForInstanceId(instanceId)
         self.assertEquals('group-appliance=/foo@bar:baz/1234567890.000:1-2-3[is: x86]',
                 str(vers))
@@ -249,6 +264,30 @@ class SystemDbMgrTest(DjangoTest):
         vers = self.systemmodels.system_software_version.objects.filter(
                 managed_system=managedSystem)
         self.assertEquals(0, len(vers))
+
+    def testAddSchedule(self):
+        created1 = int(time.time() + 10)
+        created2 = created1 - 5
+        self._addSchedule(created=created1)
+        self._addSchedule(created=created2)
+        sch = self.sdm.getSchedule()
+        self.failUnlessEqual(sch.created, created1)
+
+    def testSetScheduledEvents(self):
+        self._addSchedule()
+        system1, targetSystem1 = self._launchSystem(target_system_id='targetInstanceId1')
+        evts = self.sdm.getScheduledEvents([system1])
+        # We normally get 2 events here, but depending on timing we may only
+        # get one (we're creating events 2 days in advance starting with the
+        # activation time)
+        self.failUnless(len(evts) >= 1)
+
+        system2, targetSystem2 = self._launchSystem(target_system_id='targetInstanceId2')
+        self.sdm.computeScheduledEvents([system1, system2])
+        evts = self.sdm.getScheduledEvents([system1, system2])
+        self.failUnlessEqual(set(x.managed_system.id for x in evts),
+            set([targetSystem1.managed_system.id,
+            targetSystem2.managed_system.id]))
 
 if __name__ == "__main__":
         testsetup.main()

@@ -5,6 +5,7 @@
 import logging
 import os
 import sys
+import time
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
@@ -43,12 +44,15 @@ def add_columns(db, table, *columns):
     ...     'somethingelse STRING')
     '''
     cu = db.cursor()
+    changed = False
 
     for column in columns:
         try:
             cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
+            changed = True
         except sqlerrors.DuplicateColumnName:
             pass
+    return changed
 
 
 def drop_tables(db, *tables):
@@ -1053,7 +1057,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 1)
+    Version = (50, 4)
 
     # 50.0
     # - Add available and launch_date columns to inventory_managed_system
@@ -1127,10 +1131,8 @@ class MigrateTo_50(SchemaMigration):
         """)
 
         cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            ADD CONSTRAINT "inventory_system_target_system_id_fkey"
-            FOREIGN KEY ("system_id")
-            REFERENCES "inventory_system" ("id")
+            ALTER TABLE "inventory_network_information"
+            RENAME TO "inventory_system_network_information"
         """)
 
         cu.execute("""
@@ -1167,13 +1169,20 @@ class MigrateTo_50(SchemaMigration):
             self.db.tables['inventory_system_state'] = []
 
         cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            RENAME "id" to "managed_system_id"
+            INSERT INTO "inventory_system" ("id")
+            SELECT "id" FROM "inventory_managed_system"
         """)
 
         cu.execute("""
-            INSERT INTO "inventory_system" ("id")
-            SELECT "managed_system_id" FROM "inventory_managed_system"
+            ALTER TABLE "inventory_system_target"
+            ADD CONSTRAINT "inventory_system_target_system_id_fkey"
+            FOREIGN KEY ("system_id")
+            REFERENCES "inventory_system" ("id")
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            RENAME "id" to "managed_system_id"
         """)
 
         cu.execute("""
@@ -1207,10 +1216,142 @@ class MigrateTo_50(SchemaMigration):
                     ("managed_node_id", "managed_system_id")
             """)
             self.db.tables['inventory_system_management_node'] = []
+        return True
 
+    def migrate2(self):
+        cu = self.db.cursor()
+        
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            DROP constraint "inventory_managed_system_managed_system_id_fkey"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            RENAME "managed_system_id" to "id"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            DROP CONSTRAINT "inventory_system_target_system_id_fkey"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            RENAME "system_id" to "managed_system_id"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD CONSTRAINT "inventory_system_target_managed_system_id_fkey"
+            FOREIGN KEY ("managed_system_id")
+            REFERENCES "inventory_managed_system" ("id")
+            ON DELETE SET NULL
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD "ip_address" VARCHAR(15)
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_target"
+            ADD "public_dns_name" VARCHAR(255)
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_state"
+            DROP CONSTRAINT "inventory_system_state_system_id_fkey"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_state"
+            RENAME "system_id" to "managed_system_id"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_system_state"
+            ADD CONSTRAINT "inventory_system_state_managed_system_id_fkey"
+            FOREIGN KEY ("managed_system_id")
+            REFERENCES "inventory_managed_system" ("id")
+        """)
+        cu.execute("""
+            DROP TABLE "inventory_system"
+        """)
 
         return True
 
+    def migrate3(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            DROP TABLE "inventory_system_network_information"
+        """)
+        if 'inventory_system_network_information' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_network_information" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "interface_name" varchar(32),
+                    "ip_address" varchar(15),
+                    "netmask" varchar(20),
+                    "port_type" varchar(32),
+                    "public_dns_name" varchar(255)
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            cu.execute("""
+                CREATE INDEX "inventory_network_information_managed_system_id" 
+                    ON "inventory_system_network_information" ("managed_system_id")
+            """)
+            self.db.tables['inventory_system_network_information'] = []
+        return True
+
+    def migrate4(self):
+        db = self.db
+        cu = db.cursor()
+        changed = False
+
+        tableName = 'inventory_schedule'
+        if tableName not in db.tables:
+            cu.execute("""
+                CREATE TABLE TABLE_NAME
+                (
+                    schedule_id     %(PRIMARYKEY)s,
+                    schedule        text NOT NULL,
+                    enabled         smallint NOT NULL DEFAULT 1,
+                    created         NUMERIC NOT NULL
+                ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+            db.tables[tableName] = []
+            changed = True
+
+        changed |= schema._addTableRows(db, tableName, 'schedule',
+            [ dict(
+                schedule = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+RRULE:FREQ=DAILY
+END:VEVENT
+END:VCALENDAR""",
+                created = int(time.time())) ])
+
+        tableName = 'inventory_managed_system_scheduled_event'
+        if tableName not in db.tables:
+            cu.execute("""
+                CREATE TABLE TABLE_NAME
+                (
+                    scheduled_event_id      %(PRIMARYKEY)s,
+                    managed_system_id       INTEGER NOT NULL
+                        REFERENCES inventory_managed_system ON DELETE CASCADE,
+                    schedule_id             INTEGER NOT NULL
+                        REFERENCES inventory_schedule ON DELETE CASCADE,
+                    state_id                INTEGER NOT NULL
+                        REFERENCES job_states ON DELETE CASCADE,
+                    scheduled_time          NUMERIC NOT NULL
+                ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+            db.tables[tableName] = []
+            changed = True
+
+        changed |= add_columns(db, 'inventory_managed_system',
+            'scheduled_event_start_date NUMERIC')
+        cu.execute("UPDATE inventory_managed_system SET scheduled_event_start_date = activation_date")
+        cu.execute("""
+            ALTER TABLE inventory_managed_system
+                ALTER scheduled_event_start_date SET NOT NULL""")
+
+        return changed
+ 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

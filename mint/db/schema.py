@@ -21,12 +21,13 @@ L{migrate<mint.migrate>} module.
 '''
 
 import logging
+import time
 from conary.dbstore import sqlerrors, sqllib
 
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 4)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1045,21 +1046,10 @@ def _createInventorySchema(db):
     cu = db.cursor()
     changed = False
 
-    if 'inventory_system' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system" (
-                "id" %(PRIMARYKEY)s,
-                "ip_address" VARCHAR(15),
-                "public_dns_name" VARCHAR(255) 
-            ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['inventory_system'] = []
-        changed = True
-
     if 'inventory_managed_system' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_managed_system" (
-                "managed_system_id" %(PRIMARYKEY)s
-                    REFERENCES "inventory_system" ("id"),
+                "id" %(PRIMARYKEY)s,
                 "activation_date" INTEGER,
                 "launch_date" INTEGER,
                 "generated_uuid" VARCHAR(64),
@@ -1068,6 +1058,7 @@ def _createInventorySchema(db):
                 "ssl_client_key" VARCHAR(8092),
                 "ssl_server_certificate" VARCHAR(8092),
                 "launching_user_id" integer REFERENCES "users" ("userid"),
+                scheduled_event_start_date NUMERIC NOT NULL,
                 "available" boolean NOT NULL,
                 "description" VARCHAR(8092),
                 "name" VARCHAR(8092)
@@ -1088,8 +1079,8 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_system_state" (
                 "id" %(PRIMARYKEY)s,
-                "system_id" INTEGER NOT NULL
-                    REFERENCES "inventory_system" ("id") NOT NULL,
+                "managed_system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_managed_system" ("id") NOT NULL,
                 "state_id" INTEGER NOT NULL
                     REFERENCES "inventory_state" ("id") NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords) 
@@ -1126,19 +1117,21 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_system_target" (
                 "id" %(PRIMARYKEY)s,
-                "system_id" integer 
-                    REFERENCES "inventory_system" ("id") 
+                "managed_system_id" integer 
+                    REFERENCES "inventory_managed_system" ("id") 
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_id" integer 
                     REFERENCES "targets" ("targetid") 
                     ON DELETE SET NULL
                     DEFERRABLE INITIALLY DEFERRED,
                 "target_system_id" varchar(256),
-                "reservation_id" varchar(256)
+                "reservation_id" varchar(256),
+                "ip_address" VARCHAR(15),
+                "public_dns_name" VARCHAR(255) 
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_system_target_system_id" 
-            ON "inventory_system_target" ("system_id");
+        CREATE INDEX "inventory_system_target_managed_system_id" 
+            ON "inventory_system_target" ("managed_system_id");
         """)
         cu.execute("""
         CREATE INDEX "inventory_system_target_target_id" 
@@ -1205,7 +1198,7 @@ def _createInventorySchema(db):
 
     if 'inventory_system_network_information' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_network_information" (
+            CREATE TABLE "inventory_system_network_information" (
                 "id" %(PRIMARYKEY)s,
                 "managed_system_id" integer NOT NULL 
                     REFERENCES "inventory_managed_system" ("id") 
@@ -1217,10 +1210,11 @@ def _createInventorySchema(db):
                 "public_dns_name" varchar(255)
             ) %(TABLEOPTS)s""" % db.keywords)
         cu.execute("""
-        CREATE INDEX "inventory_network_information_managed_system_id" 
-            ON "inventory_network_information" ("managed_system_id");
+        CREATE INDEX 
+            "inventory_system_network_information_managed_system_id" 
+            ON "inventory_system_network_information" ("managed_system_id")
         """)
-        db.tables['inventory_network_information'] = []
+        db.tables['inventory_system_network_information'] = []
         changed = True
 
     if 'inventory_storage_volume' not in db.tables:
@@ -1432,6 +1426,51 @@ def _createJobsSchema(db):
 
     return changed
 
+def _createSchedulerSchema(db):
+    cu = db.cursor()
+    changed = False
+
+    tableName = 'inventory_schedule'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE TABLE_NAME
+            (
+                schedule_id     %(PRIMARYKEY)s,
+                schedule        text NOT NULL,
+                enabled         smallint NOT NULL DEFAULT 1,
+                created         NUMERIC NOT NULL
+            ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+        db.tables[tableName] = []
+        _addTableRows(db, tableName, 'schedule',
+            [ dict(
+                schedule = """BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+RRULE:FREQ=DAILY
+END:VEVENT
+END:VCALENDAR""",
+                created = int(time.time())) ])
+        changed = True
+
+    tableName = 'inventory_managed_system_scheduled_event'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE TABLE_NAME
+            (
+                scheduled_event_id      %(PRIMARYKEY)s,
+                managed_system_id       INTEGER NOT NULL
+                    REFERENCES inventory_managed_system ON DELETE CASCADE,
+                schedule_id             INTEGER NOT NULL
+                    REFERENCES inventory_schedule ON DELETE CASCADE,
+                state_id                INTEGER NOT NULL
+                    REFERENCES job_states ON DELETE CASCADE,
+                scheduled_time          NUMERIC NOT NULL
+            ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+    return changed
+
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -1463,6 +1502,7 @@ def createSchema(db, doCommit=True):
     changed |= _createInventoryUpdateSchema(db)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
+    changed |= _createSchedulerSchema(db)
 
     if doCommit:
         db.commit()

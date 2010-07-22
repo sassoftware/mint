@@ -9,7 +9,7 @@ import datetime
 from django.db import IntegrityError
 from django.db import models
 
-from rpath_models import Inventory, System
+from rpath_models import Inventory, Schedule, System
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -170,42 +170,40 @@ class inventory(ModelParser):
         managed = False
     parser = Inventory
 
-class system(ModelParser):
-    parser = System
-    ip_address = models.CharField(max_length=15, null=True)
-    public_dns_name = models.CharField(max_length=255, null=True)
-
 class managed_system(ModelParser):
     parser = System
-    managed_system = models.ForeignKey(system, primary_key=True)
-    activation_date = models.DateTimeField('Activation Date', null=True)
-    launch_date = models.DateTimeField('Launch Date', null=True)
+    activation_date = models.IntegerField('Activation Date', null=True)
+    launch_date = models.IntegerField('Launch Date', null=True)
     generated_uuid = models.CharField(max_length=64, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
     ssl_client_key = models.CharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
+    scheduled_event_start_date = models.IntegerField(null=False)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.BooleanField(null=False)
     description = models.CharField(max_length=8092, null=True)
     name = models.CharField(max_length=8092, null=True)
 
     loadFields = ['generated_uuid', 'local_uuid', 'ssl_client_certificate',
-                  'ssl_client_key', 'ssl_server_certificate']
+                  'ssl_client_key', 'ssl_server_certificate',
+                  'scheduled_event_start_date', ]
 
 class state(ModelParser):
     state = models.CharField(max_length=8092)
 
 class system_state(ModelParser):
     parser = System
-    system = models.ForeignKey(system)
+    managed_system = models.ForeignKey(managed_system)
     state = models.ForeignKey(state)
 
 class system_target(ModelParser):
-    system = models.ForeignKey(system, null=True)
+    managed_system = models.ForeignKey(managed_system, null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=256, null=True)
     reservation_id = models.CharField(max_length=256, null=True)
+    ip_address = models.CharField(max_length=15, null=True)
+    public_dns_name = models.CharField(max_length=255, null=True)
 
 class system_management_node(ModelParser):
     managed_system = models.ForeignKey('managed_system',
@@ -275,6 +273,27 @@ class cpu(ModelParser):
     speed = models.IntegerField(null=True)
     enabled = models.NullBooleanField()
 
+class schedule(ModelParser):
+    parser = Schedule
+    schedule_id = models.AutoField(primary_key=True)
+    schedule = models.CharField(max_length=4096, null=False)
+    enabled = models.IntegerField(null=False)
+    created = models.IntegerField(null=False)
+
+class job_states(ModelParser):
+    class Meta:
+        managed = False
+        db_table = 'job_states'
+    job_state_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=1024, null=False)
+
+class managed_system_scheduled_event(ModelParser):
+    scheduled_event_id = models.AutoField(primary_key=True)
+    state = models.ForeignKey(job_states, null=False)
+    managed_system = models.ForeignKey(managed_system)
+    schedule = models.ForeignKey(schedule)
+    scheduled_time = models.IntegerField(null=True)
+
 # Set related models, easier to just do it in the end then worrying about
 # what's declared first.
-system.related_models[system_network_information] = None
+managed_system.related_models[system_network_information] = None

@@ -13,7 +13,7 @@ from mint.django_rest.deco import requires, returns
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import systemdbmgr
 
-from rpath_models import SystemsHref, Systems, System
+from rpath_models import Log, LogHref, SystemsHref, Systems, System
 
 MANAGER_CLASS = systemdbmgr.SystemDBManager
 
@@ -27,14 +27,24 @@ class _InventoryService(resource.Resource):
         self.sysMgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
         return resource.Resource.__call__(self, request, *args, **kw)
 
+
 class InventoryService(_InventoryService):
 
     @returns()
     def read(self, request):
         inventoryParser = models.inventory().getParser()
-        systemsHref = SystemsHref(href=request.build_absolute_uri('systems'))
+        systemsHref = SystemsHref(href=request.build_absolute_uri('systems/'))
+        logHref = LogHref(href=request.build_absolute_uri('log/'))
         inventoryParser.set_systems(systemsHref)
+        inventoryParser.set_log(logHref)
         return inventoryParser
+
+class InventoryLogsService(_InventoryService):
+    
+    @returns()
+    def read(self, request):
+        logParser = Log()
+        return logParser
 
 class InventorySystemsService(_InventoryService):
 
