@@ -1216,6 +1216,7 @@ class MigrateTo_50(SchemaMigration):
                     ("managed_node_id", "managed_system_id")
             """)
             self.db.tables['inventory_system_management_node'] = []
+        return True
 
     def migrate2(self):
         cu = self.db.cursor()
@@ -1292,7 +1293,7 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
                 CREATE INDEX "inventory_network_information_managed_system_id" 
-                    ON "inventory_network_information" ("managed_system_id")
+                    ON "inventory_system_network_information" ("managed_system_id")
             """)
             self.db.tables['inventory_system_network_information'] = []
         return True
