@@ -268,13 +268,13 @@ END:VCALENDAR"""
     def testAddSchedule(self):
         created1 = int(time.time() + 10)
         created2 = created1 - 5
-        schedule = self._addSchedule(created=created1)
-        schedule = self._addSchedule(created=created2)
+        self._addSchedule(created=created1)
+        self._addSchedule(created=created2)
         sch = self.sdm.getSchedule()
         self.failUnlessEqual(sch.created, created1)
 
     def testSetScheduledEvents(self):
-        schedule = self._addSchedule()
+        self._addSchedule()
         system1, targetSystem1 = self._launchSystem(target_system_id='targetInstanceId1')
         evts = self.sdm.getScheduledEvents([system1])
         # We normally get 2 events here, but depending on timing we may only
