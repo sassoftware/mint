@@ -16,9 +16,10 @@ def unConvert(name):
 
 def unCamelCase(node):
     for child in node.childNodes:
-        if hasattr(child, 'tagName'):
-            child.tagName = unConvert(child.tagName)
-            unCamelCase(child)
+        for name in ['tagName', 'nodeName']:
+            if hasattr(child, name):
+                setattr(child, name, unConvert(getattr(child, name)))
+                unCamelCase(child)
 
 def convert(name):
     def repl(m):
@@ -28,9 +29,10 @@ def convert(name):
 
 def camelCase(node):
     for child in node.childNodes:
-        if hasattr(child, 'tagName'):
-            child.tagName = convert(child.tagName)
-            camelCase(child)
+        for name in ['tagName', 'nodeName']:
+            if hasattr(child, name):
+                setattr(child, name, convert(getattr(child, name)))
+                camelCase(child)
 
 def parserToString(parser):
     sio = StringIO.StringIO()
