@@ -277,7 +277,7 @@ class schedule(ModelParser):
     parser = Schedule
     schedule_id = models.AutoField(primary_key=True)
     schedule = models.CharField(max_length=4096, null=False)
-    enabled = models.BooleanField(null=False)
+    enabled = models.IntegerField(null=False)
     created = models.IntegerField(null=False)
 
 class job_states(ModelParser):

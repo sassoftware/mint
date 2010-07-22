@@ -368,16 +368,11 @@ class SystemDBManager(RbuilderDjangoManager):
         if systems is None:
             return [ (x.id, x.scheduled_event_start_date)
                 for x in models.managed_system_id.objects.all() ]
-        targetKeys = set([ (x.target_type, x.target_name)
-            for x in systems ])
-        targetMap = dict((x, rbuildermodels.Targets.objects.get(
-                    targettype=x[0], targetname=x[1]))
-                    for x in targetKeys)
-        managedSystems = [ models.system_target.objects.get(
-            target_system_id=x.target_system_id,
-            target=targetMap[(x.target_type, x.target_name)]
-            ).managed_system
-                for x in systems ]
+        managedSystems = []
+        for system in systems:
+            managedSystems.extend(models.managed_system.objects.filter(
+                local_uuid = system.local_uuid,
+                generated_uuid = system.generated_uuid))
         return [ (x.id, x.scheduled_event_start_date)
             for x in managedSystems ]
 
@@ -397,7 +392,7 @@ class SystemDBManager(RbuilderDjangoManager):
         return sch
 
     def getSchedule(self):
-        schedules = models.schedule.objects.filter(enabled=True)
+        schedules = models.schedule.objects.filter(enabled=1)
         if not schedules:
             return None
         sch = max((x.created, x) for x in schedules)[1]
