@@ -63,13 +63,22 @@ class SetMintConfigMiddleware(object):
         return None
 
 class AddCommentsMiddleware(object):
-    styledoc = libxml2.parseFile(__file__[0:__file__.index('.py')].replace(
-                    'middleware', 'templates/comments.xsl'))
-    style = libxslt.parseStylesheetDoc(styledoc)
+   
+    useXForm = True
     
+    def __init__(self):
+        try:
+            styledoc = libxml2.parseFile(__file__[0:__file__.index('.py')].replace(
+                    'middleware', 'templates/comments.xsl'))
+            self.style = libxslt.parseStylesheetDoc(styledoc)
+        except libxml2.parserError:
+            self.useXForm = False 
+
     def process_response(self, request, response):
-         
-        if response.content:
+
+        if self.useXForm and response.content and  \
+            response.status_code in (200, 201, 206, 207):
+
             try: 
                 xmldoc = libxml2.parseDoc(response.content)
                 result = self.style.applyStylesheet(xmldoc, None)
