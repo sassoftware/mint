@@ -904,7 +904,7 @@ class MigrateTo_49(SchemaMigration):
                         DEFERRABLE INITIALLY DEFERRED,
                     "software_version_id" integer NOT NULL 
                         REFERENCES "inventory_software_version" ("id") 
-                        DEFERRABLE INITIALLY DEFERRED,
+                        DEFERRABLE INITIALLY DEFERRED
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             cu.execute("""
             CREATE INDEX "inventory_system_software_version_managed_system_id" 
