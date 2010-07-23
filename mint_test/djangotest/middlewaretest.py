@@ -1,6 +1,4 @@
-import testsetup
 
-import mint_test
 from mint_test import fixtures
 
 from mint.django_rest import middleware
