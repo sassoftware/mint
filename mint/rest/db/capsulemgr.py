@@ -26,7 +26,7 @@ class Indexer(rpath_capsule_indexer.Indexer):
 
 class CapsuleManager(manager.Manager):
     SourcesRHN = set(['RHN', 'satellite', 'proxy'])
-    SourcesYum = set(['nu', 'SMT'])
+    SourcesYum = set(['nu', 'SMT', 'repomd'])
 
     def getIndexerConfig(self):
         capsuleDataDir = util.joinPaths(self.cfg.dataPath, 'capsules')
@@ -53,7 +53,8 @@ class CapsuleManager(manager.Manager):
         yumSources = []
         for idx, dataSource in enumerate(dataSources):
             if None in (dataSource.username, dataSource.password):
-                if dataSource.contentSourceType in self.SourcesRHN:
+                if (dataSource.contentSourceType == 'nu' or
+                   dataSource.contentSourceType in self.SourcesRHN):
                     # Not fully configured yet
                     continue
             if dataSource.contentSourceType == 'RHN':
@@ -66,10 +67,7 @@ class CapsuleManager(manager.Manager):
                 if '/' in sourceHost:
                     sourceHost = util.urlSplit(sourceHost)[3]
             elif dataSource.contentSourceType in self.SourcesYum:
-                if dataSource.contentSourceType == 'nu':
-                    url = 'https://nu.novell.com/repo/$RCE'
-                else:
-                    url = dataSource.sourceUrl
+                url = dataSource.sourceUrl
                 yumSources.append(mintutils.urlAddAuth(url,
                     dataSource.username, dataSource.password))
                 # We configure yum sources further down

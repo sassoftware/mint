@@ -200,6 +200,7 @@ class Repomd(_RepositoryMetadataSourceType):
     fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]
     model = models.SmtSource
     _ContentSourceTypeName = 'Yum Repository'
+    repomdLabel = '5.4/os/i386'
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,
