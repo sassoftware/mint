@@ -158,7 +158,7 @@ class TargetConversion(object):
         data = mintdata.marshalTargetUserCredentials(credentials)
         cu.execute("""
             INSERT INTO TargetUserCredentials (targetId, userId, credentials)
-            VALUES (?, ?, ?)""", targetId, userId, credentials)
+            VALUES (?, ?, ?)""", targetId, userId, data)
 
     def _addTarget(self, targetType, targetName):
         cu = self.db.cursor()
