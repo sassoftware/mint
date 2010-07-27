@@ -13,6 +13,8 @@ from django import http
 
 SCHEMA_FILE_1_0 = "/usr/share/rpath_models/system-1.0.xsd"
 SCHEMA_FILE = SCHEMA_FILE_1_0
+SCHEMA_URL_1_0 = "http://www.rpath.com/permanent/inventory/system-1.0.xsd"
+SCHEMA_URL = SCHEMA_URL_1_0
 
 def unConvert(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
@@ -49,6 +51,12 @@ def parserToString(parser):
 
 def validateXml(xmlContents, schemaFilePath=SCHEMA_FILE):
     schema = etree.XMLSchema(file=schemaFilePath)
+    # Verify a default namespace is set in the input, if not, add it.
+    # Otherwise, lxml will fail to validate against the schema.
+    if 'xmlns=' not in xmlContents[0:xmlContents.index('>')]:
+        xmlContents = xmlContents[:xmlContents.index('>')] + \
+                        ' xmlns="%s"' % SCHEMA_URL + \
+                        xmlContents[xmlContents.index('>'):]
     sio = StringIO.StringIO(xmlContents)
     xmlTree = etree.parse(sio)
     schema.assertValid(xmlTree)
