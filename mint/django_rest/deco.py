@@ -5,10 +5,14 @@
 #
 
 import StringIO
+from lxml import etree
 import re
 from xml.dom import minidom
 
 from django import http
+
+SCHEMA_FILE_1_0 = "/usr/share/rpath_models/system-1.0.xsd"
+SCHEMA_FILE = SCHEMA_FILE_1_0
 
 def unConvert(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
@@ -43,6 +47,12 @@ def parserToString(parser):
     camelCase(rootNode)
     return doc.toxml(encoding='UTF-8')
 
+def validateXml(xmlContents, schemaFilePath=SCHEMA_FILE):
+    schema = etree.XMLSchema(file=schemaFilePath)
+    sio = StringIO.StringIO(xmlContents)
+    xmlTree = etree.parse(sio)
+    schema.assertValid(xmlTree)
+
 def requires(modelName, parserClass):
     """
     Decorator that parses the post data on a request into the class
@@ -51,7 +61,9 @@ def requires(modelName, parserClass):
     def decorate(function):
 
         def inner(*args, **kw):
-            doc = minidom.parseString(args[1].raw_post_data)
+            postData = args[1].raw_post_data
+            validateXml(postData)
+            doc = minidom.parseString(postData)
             rootNode = doc.documentElement
             unCamelCase(rootNode)
             parser = parserClass.factory()

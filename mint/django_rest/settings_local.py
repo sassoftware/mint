@@ -6,7 +6,7 @@ from mint.django_rest.settings import *  # pyflakes=ignore
 ROOT_URLCONF = 'mint.django_rest.urls_local'
 
 # Override individual options
-DEBUG = True
+# DEBUG = True
 DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 DATABASE_NAME = 'mint-local.db'             # Or path to database file if using sqlite3.
 
