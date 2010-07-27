@@ -61,6 +61,10 @@ class SystemDBManager(RbuilderDjangoManager):
         managedSystem = models.managed_system.objects.get(pk=system)
         return self._unSanitizeSystem(managedSystem)
 
+    def deleteSystem(self, system):
+        managedSystem = models.managed_system.objects.get(pk=system)
+        managedSystem.delete()
+
     def getSystems(self):
         systems = models.managed_system.objects.all()
         retSystems = []

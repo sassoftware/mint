@@ -67,5 +67,10 @@ class InventorySystemsService(_InventoryService):
         systemParser = managedSystem.getParser()
         return systemParser
 
+    def delete(self, request, system):
+        system = self.sysMgr.deleteSystem(system)
+        response = HttpResponse(status=204)
+        return response
+
     def launch(self, instanceId, targetType, targetName):
         return self.sysMgr.launchSystem(instanceId, targetType, targetName)
