@@ -1097,6 +1097,26 @@ class MigrateTo_50(SchemaMigration):
 
         cu.execute("""
             ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "activation_date_int" INTEGER
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
+            ADD COLUMN "launch_date_int" INTEGER
+        """)
+
+        cu.execute("""
+            UPDATE "inventory_managed_system"
+            SET "launch_date_int" = date_part('epoch' "launch_date")
+        """)
+
+        cu.execute("""
+            UPDATE "inventory_managed_system"
+            SET "activation_date_int" = date_part('epoch' "activation_date")
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_managed_system"
             DROP "activation_date"
         """)
 
@@ -1107,12 +1127,12 @@ class MigrateTo_50(SchemaMigration):
 
         cu.execute("""
             ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "activation_date" INTEGER
+            RENAME "activation_date_int" TO "activation_date"
         """)
 
         cu.execute("""
             ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "launch_date" INTEGER
+            RENAME "launch_date_int" TO "launch_date"
         """)
 
         cu.execute("""
