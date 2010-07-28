@@ -152,6 +152,11 @@ class ModelParser(models.Model):
             inst = cls.objects.get(**modelDict)
         except cls.DoesNotExist:
             return None
+        except cls.MultipleObjectsReturned:
+            # This should not happen. Somehow bad data got in the db.
+            # Log the error and re-raise the exception.
+            # TODO
+            pass
 
         return inst
         
@@ -186,8 +191,7 @@ class managed_system(ModelParser):
     name = models.CharField(max_length=8092, null=True)
 
     loadFields = ['generated_uuid', 'local_uuid', 'ssl_client_certificate',
-                  'ssl_client_key', 'ssl_server_certificate',
-                  'scheduled_event_start_date', ]
+                  'ssl_client_key', 'ssl_server_certificate']
 
 class state(ModelParser):
     state = models.CharField(max_length=8092)
