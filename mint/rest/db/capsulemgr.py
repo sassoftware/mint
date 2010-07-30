@@ -50,6 +50,7 @@ class CapsuleManager(manager.Manager):
             self.cfg.siteHost)
 
         # List configured platforms
+        idx = 0
         for platform in self.db.platformMgr.platforms.list().platforms:
             if not platform.enabled:
                 continue
@@ -71,10 +72,11 @@ class CapsuleManager(manager.Manager):
                 elif contentSource.contentSourceType in self.SourcesRHN:
                     sourceType = 'source'
                     dsn = 'source_%d' % idx
+                    idx += 1
                     sourceHost = contentSource.sourceUrl
                     if '/' in sourceHost:
                         sourceHost = util.urlSplit(sourceHost)[3]
-                    cfg.configLine("%s %s %s" % (contentType, dsn, sourceHost))
+                    cfg.configLine("%s %s %s" % (sourceType, dsn, sourceHost))
                 elif contentSource.contentSourceType in self.SourcesYum:
                     url = contentSource.sourceUrl
                     ys = (mintutils.urlAddAuth(url,
