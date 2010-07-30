@@ -14,7 +14,7 @@ from mint.django_rest.deco import requires, returns
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import systemdbmgr
 
-from rpath_models import Log, LogHref, SystemsHref, Systems, System
+from rpath_models import Log, LogHref, SystemsHref, Systems, System, SystemLogHref
 
 MANAGER_CLASS = systemdbmgr.SystemDBManager
 
@@ -57,6 +57,9 @@ class InventorySystemsService(AbstractInventoryService):
             for s in systems:
                 parser = s.getParser(request)
                 parser.id = request.build_absolute_uri('%s/' % s.id)
+                systemLogHref = SystemLogHref(
+                                    href=request.build_absolute_uri('%s/systemLog/' % s.id))
+                parser.set_system_log(systemLogHref)
                 systemParsers.append(parser)
             systemsParser = Systems.factory()
             [systemsParser.add_system(sp) for sp in systemParsers]
@@ -65,6 +68,9 @@ class InventorySystemsService(AbstractInventoryService):
             system = self.sysMgr.getSystem(system)
             parser = system.getParser(request)
             parser.id = request.build_absolute_uri()
+            systemLogHref = SystemLogHref(
+                                href=request.build_absolute_uri('systemLog/'))
+            parser.set_system_log(systemLogHref)
             return parser
     
     @requires('system', System)

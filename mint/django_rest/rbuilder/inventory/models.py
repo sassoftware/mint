@@ -10,7 +10,7 @@ from django.db import IntegrityError
 from django.db import models
 
 from rpath_models import Inventory, Schedule, System, SystemLogEntry, \
-                         SystemLog, SystemLogHref
+                         SystemLog
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -218,10 +218,6 @@ class managed_system(ModelParser):
 
     def getParser(self, request=None):
         parser = ModelParser.getParser(self)
-        if request:
-            systemLogHref = SystemLogHref(
-                                href=request.build_absolute_uri('systemLog/'))
-            parser.set_system_log(systemLogHref)
         return parser
 
 class state(ModelParser):
