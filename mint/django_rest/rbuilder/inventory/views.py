@@ -53,13 +53,19 @@ class InventorySystemsService(AbstractInventoryService):
     def read(self, request, system=None):
         if not system:
             systems = self.sysMgr.getSystems()
+            systemParsers = []
+            for s in systems:
+                parser = s.getParser(request)
+                parser.id = request.build_absolute_uri('%s/' % s.id)
+                systemParsers.append(parser)
             systemsParser = Systems.factory()
-            systemParsers = [s.getParser(request) for s in systems]
             [systemsParser.add_system(sp) for sp in systemParsers]
             return systemsParser
         else:
             system = self.sysMgr.getSystem(system)
-            return system.getParser(request)
+            parser = system.getParser(request)
+            parser.id = request.build_absolute_uri()
+            return parser
     
     @requires('system', System)
     @returns()
