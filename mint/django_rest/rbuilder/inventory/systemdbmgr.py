@@ -103,6 +103,14 @@ class SystemDBManager(RbuilderDjangoManager):
 
         return systemCopy
 
+    def logSystem(self, managedSystem, logMsg):
+        entry, created = models.entry.objects.get_or_create(entry=logMsg) 
+        entry.save()
+        systemLog = models.system_log_entry(entry=entry,
+                        managed_system=managedSystem,
+                        entry_date=time.time())
+        systemLog.save()
+
     def activateSystem(self, system):
         sanitizedSystem = self._sanitizeSystem(system)
         managedSystem = models.managed_system.loadFromDb(sanitizedSystem)
@@ -125,6 +133,7 @@ class SystemDBManager(RbuilderDjangoManager):
         managedSystem.save()
         managedSystem.populateRelatedModelsFromParser(sanitizedSystem)
         managedSystem.saveAll()
+        self.logSystem(managedSystem, models.SYSTEM_ACTIVATED_LOG)
         self.computeScheduledEvents([ sanitizedSystem ])
 
         return managedSystem
@@ -217,6 +226,11 @@ class SystemDBManager(RbuilderDjangoManager):
             return st.managed_system
         else:
             return None
+
+    def getSystemLog(self, system):
+        systemLog = models.system_log(managed_system=system)
+        systemLog.populateRelatedModelsFromDb(system)
+        return systemLog
 
     def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)

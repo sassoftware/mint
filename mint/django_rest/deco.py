@@ -21,6 +21,10 @@ def unConvert(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 def unCamelCase(node):
+    for name in ['tagName', 'nodeName']:
+        if hasattr(node, name):
+            setattr(node, name, unConvert(getattr(node, name)))
+
     for child in node.childNodes:
         for name in ['tagName', 'nodeName']:
             if hasattr(child, name):
@@ -34,6 +38,10 @@ def convert(name):
     return s1
 
 def camelCase(node):
+    for name in ['tagName', 'nodeName']:
+        if hasattr(node, name):
+            setattr(node, name, convert(getattr(node, name)))
+ 
     for child in node.childNodes:
         for name in ['tagName', 'nodeName']:
             if hasattr(child, name):

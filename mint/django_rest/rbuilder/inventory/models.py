@@ -9,7 +9,7 @@ import datetime
 from django.db import IntegrityError
 from django.db import models
 
-from rpath_models import Inventory, Schedule, System
+from rpath_models import Inventory, Schedule, System, SystemLogEntry, SystemLog
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -31,9 +31,6 @@ class ModelParser(models.Model):
     # parser class that is associated with this model.
     parser = None
 
-    # related models are all django models that can be created based on the
-    # parser
-    related_models = {}
 
     class Meta:
         """Tells django not create schema for this model class."""
@@ -43,6 +40,9 @@ class ModelParser(models.Model):
         models.Model.__init__(self, *args, **kw)
         if not hasattr(self, 'parserInstance'):
             self.parserInstance = None
+        # related models are all django models that can be created based on
+        # the parser
+        self.related_models = {}
 
     @classmethod
     def factoryParser(cls, parserInstance):
@@ -69,20 +69,23 @@ class ModelParser(models.Model):
             setattr(inst, self._meta.object_name, self)
             self.related_models[relMod] = inst
 
-    def populateRelatedModelsFromDb(self):
+    def populateRelatedModelsFromDb(self, source=None):
         for relMod in self.related_models.keys():
-            kwargs = {self._meta.object_name:self}
-            relObjs = relMod.objects.filter(**kwargs)
-            # TODO only support one related model returned for now
-            if relObjs:
-                mods = relObjs[0]
+            kwargs = {}
+            if source:
+                kwargs = {source._meta.object_name:source}
             else:
-                mods = None
-            self.related_models[relMod] = mods
+                kwargs = {self._meta.object_name:self}
+            relObjs = relMod.objects.filter(**kwargs)
+            self.related_models[relMod] = relObjs
 
     def saveRelatedModels(self):    
         for relModInst in self.related_models.values():
-            relModInst.save()
+            if hasattr(relModInst, '__iter__'):
+                for inst in relModInst:
+                    inst.save()
+            else:
+                relModInst.save()
 
     def saveAll(self):
         """Saves this model instance itself and all related models."""
@@ -108,18 +111,30 @@ class ModelParser(models.Model):
         """
         allModels = [self] + [v for v in self.related_models.values() \
                               if v is not None]
+                                 
+        listFields = {}
         fields = {}
         for mod in allModels:
-            for field in mod._meta.fields:
-                if not field.primary_key:
-                    fields[field.name] = getattr(mod, field.name)
+            if hasattr(mod, '__iter__'):
+                for m in mod:
+                    listFields.setdefault(m.__class__.__name__, [])
+                    listFields[m.__class__.__name__].append(m.getParser()) 
+            else:
+                for field in mod._meta.fields:
+                    if not field.primary_key:
+                        fields[field.name] = getattr(mod, field.name)
         parserAttrNames = [n.name for n in self.parser.member_data_items_]
         parserDict = {}
         for f, v in fields.items():
             if f in parserAttrNames:
                 parserDict[f] = v
 
-        return self.parser(**parserDict)
+        parser = self.parser(**parserDict)
+        for field, value in listFields.items():
+            for v in value:
+                getattr(parser, field).append(v)
+
+        return parser
 
     @classmethod
     def _modelDict(cls, parserInstance, loadFields=False):
@@ -193,6 +208,10 @@ class managed_system(ModelParser):
     loadFields = ['generated_uuid', 'local_uuid', 'ssl_client_certificate',
                   'ssl_client_key', 'ssl_server_certificate']
 
+    def __init__(self, *args, **kw):
+        ModelParser.__init__(self, *args, **kw)
+        self.related_models[system_network_information] = None
+
 class state(ModelParser):
     state = models.CharField(max_length=8092)
 
@@ -200,6 +219,35 @@ class system_state(ModelParser):
     parser = System
     managed_system = models.ForeignKey(managed_system)
     state = models.ForeignKey(state)
+
+class entry(ModelParser):
+    entry = models.CharField(max_length=8092)
+
+class system_log(ModelParser):
+    parser = SystemLog
+    managed_system = models.ForeignKey(managed_system)
+    class Meta:
+        managed = False
+
+    def __init__(self, *args, **kw):
+        ModelParser.__init__(self, *args, **kw)
+        self.related_models[system_log_entry] = None
+
+class system_log_entry(ModelParser):
+    parser = SystemLogEntry 
+    managed_system = models.ForeignKey(managed_system)
+    entry = models.ForeignKey(entry)
+    entry_date = models.IntegerField()
+
+    def __init__(self, *args, **kw):
+        ModelParser.__init__(self, *args, **kw)
+        self.related_models[entry] = self.entry
+
+    def xxxgetParser(self):
+        parser = self.parser()
+        parser.set_entry_date(self.entry_date)
+        parser.set_entry(self.entry.entry)
+        return parser
 
 class system_target(ModelParser):
     managed_system = models.ForeignKey(managed_system, null=True)
@@ -298,6 +346,6 @@ class managed_system_scheduled_event(ModelParser):
     schedule = models.ForeignKey(schedule)
     scheduled_time = models.IntegerField(null=True)
 
-# Set related models, easier to just do it in the end then worrying about
-# what's declared first.
-managed_system.related_models[system_network_information] = None
+SYSTEM_ACTIVATED_LOG = "System activated via ractivate"
+SYSTEM_MANUALLY_ACTIVATED_LOG = "System manually activated via rBuilder"
+SYSTEM_POLLED_LOG = "System polled."

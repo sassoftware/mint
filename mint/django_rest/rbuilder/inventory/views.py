@@ -17,7 +17,7 @@ from rpath_models import Log, LogHref, SystemsHref, Systems, System
 
 MANAGER_CLASS = systemdbmgr.SystemDBManager
 
-class _InventoryService(resource.Resource):
+class AbstractInventoryService(resource.Resource):
 
     def __init__(self):
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
@@ -28,7 +28,7 @@ class _InventoryService(resource.Resource):
         return resource.Resource.__call__(self, request, *args, **kw)
 
 
-class InventoryService(_InventoryService):
+class InventoryService(AbstractInventoryService):
 
     @returns()
     def read(self, request):
@@ -39,14 +39,14 @@ class InventoryService(_InventoryService):
         inventoryParser.set_log(logHref)
         return inventoryParser
 
-class InventoryLogsService(_InventoryService):
+class InventoryLogsService(AbstractInventoryService):
     
     @returns()
     def read(self, request):
         logParser = Log()
         return logParser
 
-class InventorySystemsService(_InventoryService):
+class InventorySystemsService(AbstractInventoryService):
 
     @returns()
     def read(self, request, system=None):
@@ -74,3 +74,12 @@ class InventorySystemsService(_InventoryService):
 
     def launch(self, instanceId, targetType, targetName):
         return self.sysMgr.launchSystem(instanceId, targetType, targetName)
+
+
+class InventorySystemsSystemLogService(AbstractInventoryService):
+
+    @returns()
+    def read(self, request, system):
+        managedSystem = self.sysMgr.getSystem(system)
+        systemLog = self.sysMgr.getSystemLog(managedSystem)
+        return systemLog.getParser()
