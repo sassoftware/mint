@@ -1371,7 +1371,47 @@ END:VCALENDAR""",
                 ALTER scheduled_event_start_date SET NOT NULL""")
 
         return changed
- 
+
+    def migrate5(self):
+        db = self.db
+        cu = db.cursor()
+        changed = False
+
+        if 'inventory_entry' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_entry" (
+                    "id" %(PRIMARYKEY)s,
+                    "entry" varchar(8092)
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_entry'] = []
+            changed = True
+
+        if 'inventory_system_log_entry' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_log_entry" (
+                    "id" %(PRIMARYKEY)s,
+                    "managed_system_id" integer NOT NULL 
+                        REFERENCES "inventory_managed_system" ("id") 
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "entry_id" integer NOT NULL
+                        REFERENCES "inventory_entry" ("id")
+                        DEFERRABLE INITIALLY DEFERRED,
+                    "entry_date" integer
+                ) %(TABLEOPTS)s""" % db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_system_log_entry_managed_system_id" 
+                ON "inventory_system_log_entry" ("managed_system_id");
+            """)
+            cu.execute("""
+            CREATE INDEX "inventory_system_log_entry_entry_id"
+                ON "inventory_system_log_entry" ("entry_id");
+            """)
+            db.tables['inventory_system_log_entry'] = []
+            changed = True
+
+        return changed
+
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

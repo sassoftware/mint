@@ -243,12 +243,6 @@ class system_log_entry(ModelParser):
         ModelParser.__init__(self, *args, **kw)
         self.related_models[entry] = self.entry
 
-    def xxxgetParser(self):
-        parser = self.parser()
-        parser.set_entry_date(self.entry_date)
-        parser.set_entry(self.entry.entry)
-        return parser
-
 class system_target(ModelParser):
     managed_system = models.ForeignKey(managed_system, null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
