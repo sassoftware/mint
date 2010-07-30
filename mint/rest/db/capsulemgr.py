@@ -49,33 +49,6 @@ class CapsuleManager(manager.Manager):
         cfg.configLine("registeredSystemPrefix rbuilder %s" %
             self.cfg.siteHost)
 
-        dataSources = self.db.platformMgr.getSources().instance or []
-        yumSources = []
-        for idx, dataSource in enumerate(dataSources):
-            if None in (dataSource.username, dataSource.password):
-                if (dataSource.contentSourceType == 'nu' or
-                   dataSource.contentSourceType in self.SourcesRHN):
-                    # Not fully configured yet
-                    continue
-            if dataSource.contentSourceType == 'RHN':
-                dsn = 'RHN'
-                sourceHost = None
-            elif dataSource.contentSourceType in self.SourcesRHN:
-                sourceType = 'source'
-                dsn = 'source_%d' % idx
-                sourceHost = dataSource.sourceUrl
-                if '/' in sourceHost:
-                    sourceHost = util.urlSplit(sourceHost)[3]
-            elif dataSource.contentSourceType in self.SourcesYum:
-                url = dataSource.sourceUrl
-                yumSources.append(mintutils.urlAddAuth(url,
-                    dataSource.username, dataSource.password))
-                # We configure yum sources further down
-                continue
-            cfg.configLine("user %s %s %s" % (dsn, dataSource.username,
-                dataSource.password))
-            if sourceHost:
-                cfg.configLine("%s %s %s" % (sourceType, dsn, sourceHost))
         # List configured platforms
         for platform in self.db.platformMgr.platforms.list().platforms:
             if not platform.enabled:
@@ -86,13 +59,40 @@ class CapsuleManager(manager.Manager):
             contentProvider = platDef.getContentProvider()
             if not contentProvider:
                 continue
+
+            # Parse content source on a per-platform basis.
+            # Note that this means we should filter out duplicate
+            # configuration lines.
+            contentSources = self.db.platformMgr.getSourcesByPlatform(platform.platformId).instance
+            for contentSource in contentSources:
+                if contentSource.contentSourceType == 'RHN':
+                    dsn = 'RHN'
+                    sourceHost = None
+                elif contentSource.contentSourceType in self.SourcesRHN:
+                    sourceType = 'source'
+                    dsn = 'source_%d' % idx
+                    sourceHost = contentSource.sourceUrl
+                    if '/' in sourceHost:
+                        sourceHost = util.urlSplit(sourceHost)[3]
+                    cfg.configLine("%s %s %s" % (contentType, dsn, sourceHost))
+                elif contentSource.contentSourceType in self.SourcesYum:
+                    url = contentSource.sourceUrl
+                    ys = (mintutils.urlAddAuth(url,
+                        contentSource.username, contentSource.password))
+                    if contentProvider.name != 'rhn':
+                        for ds in contentProvider.dataSources:
+                            cfg.configLine("sourceYum %s %s/%s"% (ds.name, ys, ds.name))
+                    continue
+                else:
+                    # Unknown content source type?
+                    pass
+                cfg.configLine("user %s %s %s" % (dsn, contentSource.username,
+                    contentSource.password))
+
             if contentProvider.name == 'rhn':
                 for ds in contentProvider.dataSources:
                     cfg.configLine("channels %s" % ds.name)
                 continue
-            for ds in contentProvider.dataSources:
-                for ys in yumSources:
-                    cfg.configLine("sourceYum %s %s/%s"% (ds.name, ys, ds.name))
 
         # Copy proxy information
         cfg.proxy = self.db.cfg.proxy.copy()
