@@ -218,9 +218,10 @@ class managed_system(ModelParser):
 
     def getParser(self, request=None):
         parser = ModelParser.getParser(self)
-        systemLogHref = SystemLogHref(
-                            href=request.build_absolute_uri('systemLog/'))
-        parser.set_system_log(systemLogHref)
+        if request:
+            systemLogHref = SystemLogHref(
+                                href=request.build_absolute_uri('systemLog/'))
+            parser.set_system_log(systemLogHref)
         return parser
 
 class state(ModelParser):
