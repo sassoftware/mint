@@ -53,12 +53,12 @@ class InventorySystemsService(AbstractInventoryService):
         if not system:
             systems = self.sysMgr.getSystems()
             systemsParser = Systems.factory()
-            systemParsers = [s.getParser() for s in systems]
+            systemParsers = [s.getParser(request) for s in systems]
             [systemsParser.add_system(sp) for sp in systemParsers]
             return systemsParser
         else:
             system = self.sysMgr.getSystem(system)
-            return system.getParser()
+            return system.getParser(request)
     
     @requires('system', System)
     @returns()

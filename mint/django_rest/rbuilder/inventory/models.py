@@ -9,7 +9,8 @@ import datetime
 from django.db import IntegrityError
 from django.db import models
 
-from rpath_models import Inventory, Schedule, System, SystemLogEntry, SystemLog
+from rpath_models import Inventory, Schedule, System, SystemLogEntry, \
+                         SystemLog, SystemLogHref
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -77,7 +78,10 @@ class ModelParser(models.Model):
             else:
                 kwargs = {self._meta.object_name:self}
             relObjs = relMod.objects.filter(**kwargs)
-            self.related_models[relMod] = relObjs
+            if self.related_models[relMod] == []:
+                self.related_models[relMod] = relObjs
+            else:
+                self.related_models[relMod] = relObjs[0]
 
     def saveRelatedModels(self):    
         for relModInst in self.related_models.values():
@@ -212,6 +216,13 @@ class managed_system(ModelParser):
         ModelParser.__init__(self, *args, **kw)
         self.related_models[system_network_information] = None
 
+    def getParser(self, request=None):
+        parser = ModelParser.getParser(self)
+        systemLogHref = SystemLogHref(
+                            href=request.build_absolute_uri('systemLog/'))
+        parser.set_system_log(systemLogHref)
+        return parser
+
 class state(ModelParser):
     state = models.CharField(max_length=8092)
 
@@ -231,7 +242,7 @@ class system_log(ModelParser):
 
     def __init__(self, *args, **kw):
         ModelParser.__init__(self, *args, **kw)
-        self.related_models[system_log_entry] = None
+        self.related_models[system_log_entry] = []
 
 class system_log_entry(ModelParser):
     parser = SystemLogEntry 

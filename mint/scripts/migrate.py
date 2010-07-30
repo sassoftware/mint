@@ -1057,7 +1057,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 4)
+    Version = (50, 5)
 
     # 50.0
     # - Add available and launch_date columns to inventory_managed_system
