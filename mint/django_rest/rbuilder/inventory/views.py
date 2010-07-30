@@ -5,6 +5,8 @@
 #
 
 import datetime
+import os
+import time
 
 from django.http import HttpResponse
 from django_restapi import resource
@@ -78,8 +80,28 @@ class InventorySystemsService(AbstractInventoryService):
 
 class InventorySystemsSystemLogService(AbstractInventoryService):
 
-    @returns()
-    def read(self, request, system):
+    def read(self, request, system, format='xml'):
         managedSystem = self.sysMgr.getSystem(system)
         systemLog = self.sysMgr.getSystemLog(managedSystem)
-        return systemLog.getParser()
+
+        if format == 'xml':
+            parserDecorator = returns()
+            func = parserDecorator(systemLog.getParser)
+            return func()
+        elif format == 'raw':
+            tzSave = os.environ['TZ']
+            os.environ['TZ'] = request.environ['TZ']
+            time.tzset()
+            os.environ['TZ'] = tzSave
+            entries = [(time.strftime('%m-%d-%Y %H:%M:%S -- ', time.localtime(log.entry_date)), 
+                        log.entry.entry) for \
+                       log in systemLog.related_models[models.system_log_entry]]
+            strEntries = [' '.join(e) for e in entries]
+            strEntries.sort()
+            response = HttpResponse(mimetype='text/plain')
+            response.write('\n'.join(strEntries))
+            return response
+        else:
+            pass
+
+
