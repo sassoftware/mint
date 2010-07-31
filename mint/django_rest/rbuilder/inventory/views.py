@@ -56,10 +56,6 @@ class InventorySystemsService(AbstractInventoryService):
             systemParsers = []
             for s in systems:
                 parser = s.getParser(request)
-                parser.id = request.build_absolute_uri('%s/' % s.id)
-                systemLogHref = SystemLogHref(
-                                    href=request.build_absolute_uri('%s/systemLog/' % s.id))
-                parser.set_system_log(systemLogHref)
                 systemParsers.append(parser)
             systemsParser = Systems.factory()
             [systemsParser.add_system(sp) for sp in systemParsers]
@@ -67,10 +63,6 @@ class InventorySystemsService(AbstractInventoryService):
         else:
             system = self.sysMgr.getSystem(system)
             parser = system.getParser(request)
-            parser.id = request.build_absolute_uri()
-            systemLogHref = SystemLogHref(
-                                href=request.build_absolute_uri('systemLog/'))
-            parser.set_system_log(systemLogHref)
             return parser
     
     @requires('system', System)

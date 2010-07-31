@@ -25,7 +25,7 @@ urlpatterns = patterns('',
     url(r'^api/inventory/$', inventoryviews.InventoryService()),
     url(r'^api/inventory/log/$', inventoryviews.InventoryLogsService()),
     url(r'^api/inventory/systems/$', inventoryviews.InventorySystemsService()),
-    url(r'^api/inventory/systems/(\d+)/$', inventoryviews.InventorySystemsService()),
+    url(r'^api/inventory/systems/(\d+)/$', inventoryviews.InventorySystemsService(), name='systems_view'),
     url(r'^api/inventory/systems/(\d+)/systemLog/$', inventoryviews.InventorySystemsSystemLogService()),
     url(r'^api/inventory/systems/(\d+)/systemLog/([a-zA-Z]+)/$', inventoryviews.InventorySystemsSystemLogService()),
 )

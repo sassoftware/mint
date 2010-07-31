@@ -5,12 +5,14 @@
 #
 
 import datetime
+import urlparse
 
 from django.db import IntegrityError
 from django.db import models
+from django.core.urlresolvers import reverse
 
 from rpath_models import Inventory, Schedule, System, SystemLogEntry, \
-                         SystemLog
+                         SystemLog, SystemLogHref
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -178,7 +180,19 @@ class ModelParser(models.Model):
             pass
 
         return inst
-        
+     
+    def get_absolute_uri(self, request=None):
+        bits = (self.viewName, [str(self.pk)])
+        relativeUrl = reverse(bits[0], None, *bits[1:3])
+        if request:
+            return request.build_absolute_uri(relativeUrl)
+        else:
+            return relativeUrl
+
+    def getSpecificHref(self, href, request=None):
+        url = self.get_absolute_uri(request)
+        return urlparse.urljoin(url, href)       
+
 class UnmanagedModelParser(ModelParser):
     """
     This base class doesn't seem to be working, i.e., django still seems to
@@ -212,12 +226,18 @@ class managed_system(ModelParser):
     loadFields = ['generated_uuid', 'local_uuid', 'ssl_client_certificate',
                   'ssl_client_key', 'ssl_server_certificate']
 
+    viewName = 'systems_view'
+
     def __init__(self, *args, **kw):
         ModelParser.__init__(self, *args, **kw)
         self.related_models[system_network_information] = None
 
     def getParser(self, request=None):
         parser = ModelParser.getParser(self)
+        parser.id = self.get_absolute_uri(request)
+        systemLogHref = SystemLogHref(href=self.getSpecificHref(
+                            'systemLog', request))
+        parser.set_system_log(systemLogHref)
         return parser
 
 class state(ModelParser):
@@ -351,3 +371,4 @@ class managed_system_scheduled_event(ModelParser):
 SYSTEM_ACTIVATED_LOG = "System activated via ractivate"
 SYSTEM_MANUALLY_ACTIVATED_LOG = "System manually activated via rBuilder"
 SYSTEM_POLLED_LOG = "System polled."
+SYSTEM_FETCHED_LOG = "System data fetched."

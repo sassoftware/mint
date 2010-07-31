@@ -59,6 +59,7 @@ class SystemDBManager(RbuilderDjangoManager):
 
     def getSystem(self, system):
         managedSystem = models.managed_system.objects.get(pk=system)
+        self.logSystem(managedSystem, "System data fetched.")
         managedSystem.populateRelatedModelsFromDb()
         return self._unSanitizeSystem(managedSystem)
 
@@ -70,6 +71,7 @@ class SystemDBManager(RbuilderDjangoManager):
         systems = models.managed_system.objects.all()
         retSystems = []
         for system in systems:
+            self.logSystem(system, "System data fetched.")
             system.populateRelatedModelsFromDb()
             retSystems.append(self._unSanitizeSystem(system))
         return retSystems
