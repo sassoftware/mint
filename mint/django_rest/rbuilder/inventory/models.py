@@ -7,7 +7,6 @@
 import datetime
 import urlparse
 
-from django.db import IntegrityError
 from django.db import models
 from django.core.urlresolvers import reverse
 
