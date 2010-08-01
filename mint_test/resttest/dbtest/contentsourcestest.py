@@ -73,7 +73,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
             class Transport(base.Mock.Transport):
                 def _setProxyInfo(slf):
                     # Save the proxy objects from the original transport
-                    _transportProxies.append(slf._transport.proxies)
+                    _transportProxies.append(slf._transport.proxyMap)
                     return base.Mock.Transport._setProxyInfo(slf)
             Transport.TransportDefaults = TransportDefaults
             class ServerProxy(base.Mock.ServerProxy):
@@ -96,7 +96,12 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
             s1.password = 'sikritPass'
 
             s1.status()
-            self.failUnlessEqual(_transportProxies, [proxies] * 2)
+            tProxies = []
+            for tProxy in [y[0][0] for y in [x.values() for x in _transportProxies]]:
+                d = {}
+                d[tProxy.protocol] = tProxy.url
+                tProxies.append(d)
+            self.failUnlessEqual(tProxies, [proxies] * 2)
 
 
 testsetup.main()
