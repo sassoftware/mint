@@ -154,7 +154,7 @@ class ApplianceDownloads(Resource):
             where_stmt += " and timedownloaded < %s" % endpoint     
         
 #FIXME: This needs to be more djangoized and the table relationships can use another look               
-        sql_query = """select DISTINCT (SUBSTRING(timedownloaded,1,%(length)d)) AS "time", COUNT(dl."ip") AS "downloads" 
+        sql_query = """select DISTINCT (SUBSTRING(TEXT(timedownloaded),1,%(length)d)) AS "time", COUNT(dl."ip") AS "downloads" 
             FROM urldownloads dl, projects p, builds b, buildfilesurlsmap bfu, buildfiles bf
             where %(where_stmt)s
             GROUP BY SUBSTRING(timedownloaded,1,%(length)d)"""
