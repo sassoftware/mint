@@ -563,6 +563,9 @@ class Platforms(object):
 
     def _getUrl(self, platform):
         hostname = self._getHostname(platform)
+        # XXX Don't leave this hard-coded forever
+        if hostname == 'centos.rpath.com':
+            return 'https://centos.rpath.com/nocapsules/'
         return 'https://%s/conary/' % (hostname)
 
     def _getAuthInfo(self):
