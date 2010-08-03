@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import testsetup
+import itertools
 
 from mint.rest.db import contentsources
 
@@ -71,10 +72,9 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
                     },
                 }
             class Transport(base.Mock.Transport):
-                def _setProxyInfo(slf):
-                    # Save the proxy objects from the original transport
-                    _transportProxies.append(slf._transport.proxies)
-                    return base.Mock.Transport._setProxyInfo(slf)
+                def __init__(slf, transport):
+                    _transportProxies.append(transport.proxyMap)
+                    base.Mock.Transport.__init__(slf,transport)
             Transport.TransportDefaults = TransportDefaults
             class ServerProxy(base.Mock.ServerProxy):
                 pass
@@ -85,7 +85,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         name1 = "name1"
         url1 = "http://url1/adfadf"
 
-        proxies = dict(https = "https://blah")
+        proxies = {'http:https':"https://blah"}
 
         for ctype in [ 'satellite', 'proxy']:
             del _transportProxies[:]
@@ -96,7 +96,16 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
             s1.password = 'sikritPass'
 
             s1.status()
-            self.failUnlessEqual(_transportProxies, [proxies] * 2)
+            tp = []
+            for pm in _transportProxies:
+                k = [x[2] for x in itertools.chain(pm.keys())]
+                v = [ x.asString() for x in\
+                      reduce(pm.values()[0].__class__.__add__, pm.values())]
+                tpe = dict(zip(k, v))
+
+                tp.append(tpe)
+
+            self.failUnlessEqual(tp, [proxies] * 2)
 
 
 testsetup.main()
