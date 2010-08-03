@@ -85,9 +85,9 @@ DELETE - not supported
 </xsl:template>
 
 <!-- Catchall if the content does not match any of the above -->
-<xsl:template match="*">
+<xsl:template match="/*">
 
-    <xsl:copy-of select="*"/>
+    <xsl:copy-of select="/"/>
 
 </xsl:template>
 </xsl:stylesheet>
