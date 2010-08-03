@@ -11,6 +11,9 @@ except ImportError, e:
     sys.stderr.write(str(e))
     sys.stderr.write('\n')
     sys.exit(1)
+    
+def run():
+    execute_manager(settings_local)
 
 if __name__ == "__main__":
-    execute_manager(settings_local)
+    run()

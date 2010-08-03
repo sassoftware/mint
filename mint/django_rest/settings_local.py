@@ -1,7 +1,7 @@
 # Settings to run the django rbuilder project locally.
 
 # First, import everything from the production settings.py
-from mint.django_rest.settings import *  # pyflakes=ignore
+from mint.django_rest.settings_common import *  # pyflakes=ignore
 
 ROOT_URLCONF = 'mint.django_rest.urls_local'
 
@@ -18,13 +18,6 @@ AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
     'django.contrib.auth.backends.ModelBackend'
 )
-
-commentsIndex = \
-MIDDLEWARE_CLASSES.index('mint.django_rest.middleware.AddCommentsMiddleware')
-
-MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES[0:commentsIndex] + \
-                     MIDDLEWARE_CLASSES[commentsIndex+1:]
-
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True
