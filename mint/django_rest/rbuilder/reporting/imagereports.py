@@ -144,7 +144,7 @@ class ApplianceDownloads(Resource):
         
         qargs = dict(product=product, length=length)
         where_stmt = """ WHERE p.projectid=b.projectid and dl.urlid =  bfu.urlid 
-            and bf.fileid = bfu.urlid and bf.buildid = b.buildid
+            and bf.fileid = bfu.fileid and bf.buildid = b.buildid
             and p.shortname = %(product)s""" 
         
         if starttime:
