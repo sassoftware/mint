@@ -97,7 +97,7 @@ class Systems(XObjModel):
     system = []
 
     def save(self):
-        return [s.save() for s in system()]
+        return [s.save() for s in self.system]
 
 class System(XObjIdModel):
     class Meta:
