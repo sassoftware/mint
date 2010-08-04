@@ -22,7 +22,7 @@ class XObjModel(models.Model):
     class Meta:
         abstract = True
 
-    listFields = []
+    list_fields = []
 
     def to_xml(self, request=None):
         self.serialize(request)
@@ -49,14 +49,15 @@ class XObjModel(models.Model):
         hrefFields = [(f, v) for f, v in self.__class__.__dict__.items() \
                         if isinstance(v, XObjHrefModel)]
         for href in hrefFields:
-            setattr(self, href[0], self.get_specific_href(href[1].href, request))
+            setattr(self, href[0], 
+                    self.get_specific_href(href[1].href, request))
 
         for field in self._meta.fields:
             if isinstance(field, related.RelatedField):
                 self.__dict__[field.verbose_name] = \
                     XObjHrefModel(getattr(self, field.name).get_absolute_uri())
 
-        for listField in self.listFields:
+        for listField in self.list_fields:
             for field in getattr(self, listField):
                 field.serialize(request)
 
@@ -94,7 +95,7 @@ class Inventory(XObjModel):
 class Systems(XObjModel):
     class Meta:
         abstract = True
-    listFields = ['system']
+    list_fields = ['system']
     system = []
 
     def save(self):
