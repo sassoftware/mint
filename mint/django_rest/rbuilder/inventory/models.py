@@ -6,6 +6,7 @@
 import urlparse
 
 from django.db import models
+from django.db.models.fields import related
 from django.core.urlresolvers import reverse
 
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -42,7 +43,7 @@ class XObjModel(models.Model):
 
     def serialize(self, request=None):
         for field in self._meta.fields:
-            if isinstance(field, RelatedField):
+            if isinstance(field, related.RelatedField):
                 self.__dict__[field.verbose_name] = \
                     XObjHrefModel(getattr(self, field.name).get_absolute_uri())
         for listField in self.listFields:
@@ -59,6 +60,13 @@ class XObjIdModel(XObjModel):
     def serialize(self, request=None):
         XObjModel.serialize(self, request)
         self.id = self.get_absolute_uri(request)
+
+class XObjHrefModel(object):
+    _xobj = xobj.XObjMetadata(
+                attributes = {'href':str})
+
+    def __init__(self, href):
+        self.href = href
 
 class Inventory(XObjModel):
     class Meta:
