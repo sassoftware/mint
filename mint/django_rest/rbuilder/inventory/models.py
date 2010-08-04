@@ -159,6 +159,7 @@ class SystemEvent(XObjIdModel):
     system = models.ForeignKey(System, db_index=True)
     event_type = models.ForeignKey(SystemEventType)
     time_created = models.DateTimeField(auto_now_add=True)
+    time_activation = models.DateTimeField()
     priority = models.SmallIntegerField(db_index=True)
 
 # TODO: is this needed, or should we just use a recursive fk on ManagedSystem?
