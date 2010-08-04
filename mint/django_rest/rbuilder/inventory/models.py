@@ -30,7 +30,10 @@ class XObjModel(models.Model):
 
     def get_absolute_uri(self, request=None):
         viewName = getattr(self, 'viewName', self.__class__.__name__)
-        bits = (viewName, [str(self.pk)])
+        urlKey = getattr(self, 'pk', None)
+        if urlKey:
+            urlKey = str(urlKey)
+        bits = (viewName, [urlKey])
         relativeUrl = reverse(bits[0], None, *bits[1:3])
         if request:
             return request.build_absolute_uri(relativeUrl)
@@ -42,10 +45,17 @@ class XObjModel(models.Model):
         return urlparse.urljoin(url, href)       
 
     def serialize(self, request=None):
+
+        hrefFields = [f for f, v in self.__class__.__dict__.items() \
+                        if isinstance(v, XObjHrefModel)]
+        for href in hrefFields:
+            setattr(self, href, self.get_absolute_uri())
+
         for field in self._meta.fields:
             if isinstance(field, related.RelatedField):
                 self.__dict__[field.verbose_name] = \
                     XObjHrefModel(getattr(self, field.name).get_absolute_uri())
+
         for listField in self.listFields:
             for field in getattr(self, listField):
                 field.serialize(request)
@@ -61,16 +71,33 @@ class XObjIdModel(XObjModel):
         XObjModel.serialize(self, request)
         self.id = self.get_absolute_uri(request)
 
-class XObjHrefModel(object):
+class XObjHrefModel(XObjModel):
     _xobj = xobj.XObjMetadata(
                 attributes = {'href':str})
 
     def __init__(self, href):
         self.href = href
 
+    def serialize(self, request=None):
+        XObjModel.serialize(self, request)
+        self.href = self.get_specific_href(self.href, request)
+
 class Inventory(XObjModel):
     class Meta:
         abstract = True
+    _xobj = xobj.XObjMetadata(
+                elements = ['systems', 'log'])
+    systems = XObjHrefModel('systems')
+    log = XObjHrefModel('log')
+
+class Systems(XObjModel):
+    class Meta:
+        abstract = True
+    listFields = ['system']
+    system = []
+
+    def save(self):
+        return [s.save() for s in system()]
 
 class System(XObjIdModel):
     class Meta:
@@ -202,7 +229,6 @@ class AvailableUpdate(XObjModel):
     class Meta:
         db_table = 'inventory_available_update'
         unique_together = (('software_version', 'available_update'),)
-    available_update_id = models.AutoField(primary_key=True)
     software_version = models.ForeignKey(Version,
         related_name='softwareVersion_set')
     # This column is nullable, which basically means that the last time an

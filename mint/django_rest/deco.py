@@ -90,19 +90,17 @@ def requires(modelName, parserClass):
         return inner
     return decorate
 
-def returns():
+def returnXml(function):
     """
     Decorator that serializes a returned parser object into xml with a root
     node of modelName.
     """
-    def decorate(function):
+    def inner(*args, **kw):
+        response = http.HttpResponse()
+        response['Content-Type'] = 'text/xml'
+        retVal = function(*args, **kw)
+        request = args[1]
+        response.write(retVal.to_xml(request))
+        return response
 
-        def inner(*args, **kw):
-            response = http.HttpResponse()
-            response['Content-Type'] = 'text/xml'
-            retVal = function(*args, **kw)
-            response.write(parserToString(retVal))
-            return response
-
-        return inner
-    return decorate
+    return inner
