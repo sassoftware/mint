@@ -8,7 +8,6 @@ import copy
 import datetime
 import os
 import time
-import vobject
 
 from django.db import connection
 
@@ -37,13 +36,6 @@ class SystemDBManager(RbuilderDjangoManager):
     def __init__(self, *args, **kw):
         RbuilderDjangoManager.__init__(self, *args, **kw)
         self.systemStore = self.getSystemStore()
-        self._jobStates = None
-
-    @property
-    def jobStates(self):
-        if self._jobStates is not None:
-            return self._jobStates
-        return dict((x.name, x) for x in models.job_states.objects.all())
 
     def getSystemStore(self):
         if self.cfg is None:
@@ -132,12 +124,10 @@ class SystemDBManager(RbuilderDjangoManager):
             managedSystem = models.managed_system.factoryParser(sanitizedSystem)
             
         managedSystem.activation_date = int(time.time())
-        managedSystem.scheduled_event_start_date = managedSystem.activation_date
         managedSystem.save()
         managedSystem.populateRelatedModelsFromParser(sanitizedSystem)
         managedSystem.saveAll()
         self.logSystem(managedSystem, models.SYSTEM_ACTIVATED_LOG)
-        self.computeScheduledEvents([ sanitizedSystem ])
 
         return managedSystem
 
@@ -145,8 +135,6 @@ class SystemDBManager(RbuilderDjangoManager):
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
         managedSystem.launch_date = int(time.time())
-        if managedSystem.scheduled_event_start_date is None:
-            managedSystem.scheduled_event_start_date = managedSystem.launch_date
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(
                     targettype=system.target_type,
@@ -154,7 +142,6 @@ class SystemDBManager(RbuilderDjangoManager):
         systemTarget = models.system_target(managed_system=managedSystem,
             target=target, target_system_id=system.target_system_id)
         systemTarget.save()
-        self.computeScheduledEvents([ system ])
         return systemTarget
         
     def updateSystem(self, system):
@@ -334,90 +321,6 @@ class SystemDBManager(RbuilderDjangoManager):
         if not created:
             cachedUpdate.last_refreshed = datetime.datetime.now()
             cachedUpdate.save()
-
-    def computeScheduledEvents(self, systems, daysInAdvance=2):
-        # Use the latest schedule to compute scheduled events for these
-        # systems, these many days in advance
-
-        schedule = self.getSchedule()
-        if not schedule:
-            return
-        managedSystemIdsEventStartDates = self._getManagedSystemEventStartDate(
-            systems)
-        if not managedSystemIdsEventStartDates:
-            return
-        # Compute end time
-        dtend = datetime.datetime.now() + datetime.timedelta(days=daysInAdvance)
-        cal = vobject.readOne(schedule.schedule)
-
-        event = cal.vevent
-
-        queuedStateId = self.jobStates['Queued'].job_state_id
-        # XXX This is quite primitive for now
-        cu = connection.cursor()
-        cu.executemany("""
-            DELETE FROM inventory_managed_system_scheduled_event
-             WHERE managed_system_id = %s AND state_id = %s
-         """, [ [ x[0], queuedStateId ] for x in managedSystemIdsEventStartDates ])
-
-        now = datetime.datetime.now()
-        initialState = self.jobStates['Queued']
-        for msid, schedEventStartDate in managedSystemIdsEventStartDates:
-            dtstart = datetime.datetime.fromtimestamp(schedEventStartDate)
-            nevent = event.duplicate(event)
-            nevent.add('dtstart').value = dtstart
-            for eventTime in nevent.rruleset.between(now, dtend):
-                ts = self._totimestamp(eventTime)
-                obj = models.managed_system_scheduled_event(
-                    managed_system_id = msid,
-                    scheduled_time = ts,
-                    schedule = schedule,
-                    state = initialState)
-                obj.save()
-
-    def getScheduledEvents(self, systems):
-        managedSystemIdsEventStartDates = self._getManagedSystemEventStartDate(
-                    systems)
-        ret = []
-        for msid, _ in managedSystemIdsEventStartDates:
-            ret.extend(models.managed_system_scheduled_event.objects.filter(
-                managed_system__id = msid))
-        return ret
-
-
-    def _getManagedSystemEventStartDate(self, systems):
-        if systems is None:
-            return [ (x.id, x.scheduled_event_start_date)
-                for x in models.managed_system_id.objects.all() ]
-        managedSystems = []
-        for system in systems:
-            managedSystems.extend(models.managed_system.objects.filter(
-                local_uuid = system.local_uuid,
-                generated_uuid = system.generated_uuid))
-        return [ (x.id, x.scheduled_event_start_date)
-            for x in managedSystems ]
-
-    @staticmethod
-    def _totimestamp(dt):
-        # Compute number of seconds since Jan 1 1970
-        dtclass = datetime.datetime
-        utcdt = dt + (dtclass.utcnow() - dtclass.now())
-        delta = utcdt - dtclass.utcfromtimestamp(0)
-        return delta.days * 86400 + delta.seconds
-
-    def addSchedule(self, schedule):
-        sch = models.schedule.factoryParser(schedule)
-        if not sch.created:
-            sch.created = datetime.datetime.now()
-        sch.save()
-        return sch
-
-    def getSchedule(self):
-        schedules = models.schedule.objects.filter(enabled=1)
-        if not schedules:
-            return None
-        sch = max((x.created, x) for x in schedules)[1]
-        return sch
     
     def processSystemEvents(self):
         print "processing system events..."
