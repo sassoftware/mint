@@ -418,3 +418,6 @@ class SystemDBManager(RbuilderDjangoManager):
             return None
         sch = max((x.created, x) for x in schedules)[1]
         return sch
+    
+    def processSystemEvents(self):
+        print "processing system events..."

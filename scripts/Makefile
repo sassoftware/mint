@@ -23,6 +23,7 @@ static_files =				\
 	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
+	process_system_events \
 	rbuilder-database		\
 	refresh-auth			\
 	rmake-reset			\
