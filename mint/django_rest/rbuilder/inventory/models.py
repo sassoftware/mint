@@ -3,371 +3,217 @@
 #
 # All Rights Reserved
 #
-
-import datetime
 import urlparse
 
 from django.db import models
+from django.db.models.fields import related
 from django.core.urlresolvers import reverse
-
-from rpath_models import Inventory, Schedule, System, SystemLogEntry, \
-                         SystemLog, SystemLogHref
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
-class ModelParser(models.Model):
-    """
-    Common base class for models that exposes 2 class factories that are
-    useful, and other methods to interact with the generic parser object for
-    the model.
+from xobj import xobj
 
-    The parser is generally a higher level, more abstract object, such as a
-    system with all it's associated metadata such as software information and
-    network information.
+class TransientManager(models.Manager):
+    _transient = True
 
-    Models are the individual django objects that represent the parser in the
-    database in terms of individual tables. Such as a system table, with
-    seperate tables for software information and network information.
-    """
-
-    # parser class that is associated with this model.
-    parser = None
-
+class XObjModel(models.Model):
+    objects = TransientManager()
 
     class Meta:
-        """Tells django not create schema for this model class."""
         abstract = True
 
-    def __init__(self, *args, **kw):
-        models.Model.__init__(self, *args, **kw)
-        if not hasattr(self, 'parserInstance'):
-            self.parserInstance = None
-        # related models are all django models that can be created based on
-        # the parser
-        self.related_models = {}
+    listFields = []
 
-    @classmethod
-    def factoryParser(cls, parserInstance):
-        """Create an instance of this model from a parser instance."""
-        modelDict = cls._modelDict(parserInstance)
-        inst = cls(**modelDict)
-        inst.parserInstance = parserInstance
-        return inst
+    def to_xml(self, request=None):
+        self.serialize(request)
+        return xobj.toxml(self, self.__class__.__name__)
 
-    @classmethod
-    def factoryDict(cls, **kw):
-        """Create an instance of this model from a dictionary."""
-        return cls(**kw)
-
-    def populateRelatedModelsFromParser(self, parserInstance):
-        """
-        Populate all related models based on the values from  
-        parserInstance.  
-        """
-        for relMod in self.related_models:
-            modelDict = relMod._modelDict(parserInstance)
-            inst = relMod(**modelDict)
-            inst.parserInstance = parserInstance
-            setattr(inst, self._meta.object_name, self)
-            self.related_models[relMod] = inst
-
-    def populateRelatedModelsFromDb(self, source=None):
-        for relMod in self.related_models.keys():
-            kwargs = {}
-            if source:
-                kwargs = {source._meta.object_name:source}
-            else:
-                kwargs = {self._meta.object_name:self}
-            relObjs = relMod.objects.filter(**kwargs)
-            if self.related_models[relMod] == []:
-                self.related_models[relMod] = relObjs
-            else:
-                self.related_models[relMod] = relObjs[0]
-
-    def saveRelatedModels(self):    
-        for relModInst in self.related_models.values():
-            if hasattr(relModInst, '__iter__'):
-                for inst in relModInst:
-                    inst.save()
-            else:
-                relModInst.save()
-
-    def saveAll(self):
-        """Saves this model instance itself and all related models."""
-        ret = self.save()
-        self.saveRelatedModels()
-        return ret
-
-    def updateFromParser(self, parserInstance):
-        """
-        Updates the model's fields values based on the values from
-        parserInstance, ignoring updating the primary key field as we don't
-        want to overwrite this value with None.
-        """
-        fields = [n.name for n in self._meta.fields if n.primary_key is False]
-        for fieldName in fields:
-           setattr(self, fieldName, getattr(parserInstance, fieldName, None))
-
-    def getParser(self):
-        """
-        Return an instance of the parser class that represents this model.
-        Override this method to customize behavior for more complex models
-        with relationships.
-        """
-        allModels = [self] + [v for v in self.related_models.values() \
-                              if v is not None]
-                                 
-        listFields = {}
-        fields = {}
-        for mod in allModels:
-            if hasattr(mod, '__iter__'):
-                for m in mod:
-                    listFields.setdefault(m.__class__.__name__, [])
-                    listFields[m.__class__.__name__].append(m.getParser()) 
-            else:
-                for field in mod._meta.fields:
-                    if not field.primary_key:
-                        fields[field.name] = getattr(mod, field.name)
-        parserAttrNames = [n.name for n in self.parser.member_data_items_]
-        parserDict = {}
-        for f, v in fields.items():
-            if f in parserAttrNames:
-                parserDict[f] = v
-
-        parser = self.parser(**parserDict)
-        for field, value in listFields.items():
-            for v in value:
-                getattr(parser, field).append(v)
-
-        return parser
-
-    @classmethod
-    def _modelDict(cls, parserInstance, loadFields=False):
-        """
-        Return a dict of field names/values corrosponding to the values on
-        parserInstance.  If loadFields is True, remove from the returned dict
-        and fields not in cls.loadFields.  This allows for building a dict
-        based on a known set of fields that we want to use to load a model
-        from the db to check if that "instance" already exists in the db.
-        """
-        modelDict = dict((x.name, getattr(parserInstance, x.name)) \
-                          for x in cls.parser.member_data_items_ \
-                          if x.name in [n.name for n in cls._meta.fields])
-        if loadFields:
-            for key in modelDict.keys():
-                if key not in cls.loadFields:
-                    modelDict.pop(key)
-        return modelDict
-
-    @classmethod
-    def loadFromDb(cls, parserInstance):
-        """
-        Return an instance of the model loaded from the database that
-        corrosponds to parserInstance.  loadFields=True is passed to modelDict
-        so that we only check those fields that we care about for seeing if an
-        instance that matches the values on parserInstance already exists.
-        """
-        modelDict = cls._modelDict(parserInstance, loadFields=True)
-        try:
-            inst = cls.objects.get(**modelDict)
-        except cls.DoesNotExist:
-            return None
-        except cls.MultipleObjectsReturned:
-            # This should not happen. Somehow bad data got in the db.
-            # Log the error and re-raise the exception.
-            # TODO
-            pass
-
-        return inst
-     
     def get_absolute_uri(self, request=None):
-        bits = (self.viewName, [str(self.pk)])
+        viewName = getattr(self, 'viewName', self.__class__.__name__)
+        bits = (viewName, [str(self.pk)])
         relativeUrl = reverse(bits[0], None, *bits[1:3])
         if request:
             return request.build_absolute_uri(relativeUrl)
         else:
             return relativeUrl
 
-    def getSpecificHref(self, href, request=None):
+    def get_specific_href(self, href, request):
         url = self.get_absolute_uri(request)
         return urlparse.urljoin(url, href)       
 
-class UnmanagedModelParser(ModelParser):
-    """
-    This base class doesn't seem to be working, i.e., django still seems to
-    want to create db tables for the models that inherit from the class.
+    def serialize(self, request=None):
+        for field in self._meta.fields:
+            if isinstance(field, related.RelatedField):
+                self.__dict__[field.verbose_name] = \
+                    XObjHrefModel(getattr(self, field.name).get_absolute_uri())
+        for listField in self.listFields:
+            for field in getattr(self, listField):
+                field.serialize(request)
 
-    Don't use it for now.
-    """
+class XObjIdModel(XObjModel):
     class Meta:
-        managed = False
+        abstract = True
 
-class inventory(ModelParser):
+    _xobj = xobj.XObjMetadata(
+                attributes = ['id'])
+
+    def serialize(self, request=None):
+        XObjModel.serialize(self, request)
+        self.id = self.get_absolute_uri(request)
+
+class XObjHrefModel(object):
+    _xobj = xobj.XObjMetadata(
+                attributes = {'href':str})
+
+    def __init__(self, href):
+        self.href = href
+
+class Inventory(XObjModel):
     class Meta:
-        managed = False
-    parser = Inventory
+        abstract = True
 
-class managed_system(ModelParser):
-    parser = System
-    activation_date = models.IntegerField('Activation Date', null=True)
-    launch_date = models.IntegerField('Launch Date', null=True)
-    generated_uuid = models.CharField(max_length=64, null=True)
-    local_uuid = models.CharField(max_length=64, null=True)
-    ssl_client_certificate = models.CharField(max_length=8092, null=True)
-    ssl_client_key = models.CharField(max_length=8092, null=True)
-    ssl_server_certificate = models.CharField(max_length=8092, null=True)
-    scheduled_event_start_date = models.IntegerField(null=False)
-    launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
-    available = models.BooleanField(null=False)
-    description = models.CharField(max_length=8092, null=True)
-    name = models.CharField(max_length=8092, null=True)
-
-    loadFields = ['generated_uuid', 'local_uuid', 'ssl_client_certificate',
-                  'ssl_client_key', 'ssl_server_certificate']
-
-    viewName = 'systems_view'
-
-    def __init__(self, *args, **kw):
-        ModelParser.__init__(self, *args, **kw)
-        self.related_models[system_network_information] = None
-
-    def getParser(self, request=None):
-        parser = ModelParser.getParser(self)
-        parser.id = self.get_absolute_uri(request)
-        systemLogHref = SystemLogHref(href=self.getSpecificHref(
-                            'systemLog', request))
-        parser.set_system_log(systemLogHref)
-        return parser
-
-class state(ModelParser):
-    state = models.CharField(max_length=8092)
-
-class system_state(ModelParser):
-    parser = System
-    managed_system = models.ForeignKey(managed_system)
-    state = models.ForeignKey(state)
-
-class entry(ModelParser):
-    entry = models.CharField(max_length=8092)
-
-class system_log(ModelParser):
-    parser = SystemLog
-    managed_system = models.ForeignKey(managed_system)
+class System(XObjIdModel):
     class Meta:
-        managed = False
-
-    def __init__(self, *args, **kw):
-        ModelParser.__init__(self, *args, **kw)
-        self.related_models[system_log_entry] = []
-
-class system_log_entry(ModelParser):
-    parser = SystemLogEntry 
-    managed_system = models.ForeignKey(managed_system)
-    entry = models.ForeignKey(entry)
-    entry_date = models.IntegerField()
-
-    def __init__(self, *args, **kw):
-        ModelParser.__init__(self, *args, **kw)
-        self.related_models[entry] = self.entry
-
-class system_target(ModelParser):
-    managed_system = models.ForeignKey(managed_system, null=True)
+        db_table = 'inventory_system'
+    system_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=8092)
+    created_date = models.DateTimeField(auto_now_add=True)
+    # Launch date is nullable, we maay get it reported from the hypervisor or
+    # physical target, we may not.
+    launch_date = models.DateTimeField()
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
-    target_system_id = models.CharField(max_length=256, null=True)
-    reservation_id = models.CharField(max_length=256, null=True)
-    ip_address = models.CharField(max_length=15, null=True)
-    public_dns_name = models.CharField(max_length=255, null=True)
-
-class system_management_node(ModelParser):
-    managed_system = models.ForeignKey('managed_system',
-                        related_name='system_management_node_system_set')
-    managed_node = models.ForeignKey('managed_system',
-                        related_name='system_management_node_node_set')
-
-class software_version(ModelParser):
-    name = models.TextField()
-    version = models.TextField()
-    flavor = models.TextField()
-
-    class Meta:
-        unique_together = (('name', 'version', 'flavor'),)
-
-class software_version_update(ModelParser):
-    # Need to specify the model name for the ForeignKey field here in quotes,
-    # since we're redefining software_version.
-    software_version = models.ForeignKey('software_version',
-        related_name='software_version_update_software_version_set')
-    # This column is nullable, which basically means that the last time an
-    # update was checked for, none was found.
-    available_update = models.ForeignKey('software_version',
-        related_name='software_version_update_available_update_set',
-        null=True)
-    last_refreshed = models.DateTimeField(default=datetime.datetime.now())
-
-    class Meta:
-        unique_together = (('software_version', 'available_update'),)
-
-class system_software_version(ModelParser):
-    managed_system = models.ForeignKey(managed_system)
-    software_version = models.ForeignKey(software_version)
-
-    class Meta:
-        unique_together = (('managed_system', 'software_version'),)
-
-class system_information(ModelParser):
-    managed_system = models.ForeignKey(managed_system)
-    system_name = models.CharField(max_length=64, null=True)
-    memory = models.IntegerField(null=True)
+    target_system_id = models.CharField(max_length=255, null=True)
+    reservation_id = models.CharField(max_length=255, null=True)
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)
     os_minor_version = models.CharField(max_length=32, null=True)
-    system_type = models.CharField(max_length=32, null=True)
 
-class system_network_information(ModelParser):
-    parser = System
-    managed_system = models.ForeignKey(managed_system)
-    interface_name = models.CharField(max_length=32, null=True)
-    ip_address = models.CharField(max_length=15, null=True)
+class ManagedSystem(XObjIdModel):
+    class Meta:
+        db_table = 'inventory_managed_system'
+    managed_system_id = models.AutoField(primary_key=True)
+    system = models.OneToOneField(System)
+    activation_date = models.DateTimeField(auto_now_add=True)
+    generated_uuid = models.CharField(max_length=64)
+    local_uuid = models.CharField(max_length=64)
+    ssl_client_certificate = models.CharField(max_length=8092)
+    ssl_client_key = models.CharField(max_length=8092)
+    ssl_server_certificate = models.CharField(max_length=8092)
+    scheduled_event_start_date = models.DateTimeField()
+    launching_user = models.ForeignKey(rbuildermodels.Users)
+    available = models.BooleanField()
+    description = models.CharField(max_length=8092)
+    name = models.CharField(max_length=8092)
+    STATE_CHOICES = (
+        ('activated', 'Activated'),
+        ('responsive', 'Responsive'),
+        ('shut_down', 'Shut Down'),
+        ('non-responsive', 'Non-Responsive'),
+        ('dead', 'Dead'),
+        ('mothballed', 'Mothballed'),
+    )
+    state = models.CharField(max_length=32, choices=STATE_CHOICES)
+    versions = models.ManyToManyField('Version')
+    management_node = models.ForeignKey('ManagementNode', null=True)
+
+# TODO: is this needed, or should we just use a recursive fk on ManagedSystem?
+class ManagementNode(XObjModel):
+    managed_system = models.OneToOneField(ManagedSystem)
+    # TODO: what extra columns might we want to store about a management node,
+    # if any?
+
+class Network(XObjModel):
+    class Meta:
+        db_table = 'inventory_network'
+    network_id = models.AutoField(primary_key=True)
+    system = models.ForeignKey(System)
+    ip_address = models.IPAddressField()
+    # TODO: how long should this be?
+    ipv6_address = models.CharField(max_length=32, null=True)
+    device_name = models.CharField(max_length=255) 
+    public_dns_name = models.CharField(max_length=255)
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
-    public_dns_name = models.CharField(max_length=255, null=True)
+    # TODO: add all the other fields we need about a network
 
-class storage_volume(ModelParser):
-    managed_system = models.ForeignKey(managed_system)
-    size = models.IntegerField(null=True)
-    storage_type = models.CharField(max_length=32, null=True)
-    storage_name = models.CharField(max_length=32, null=True)
-
-class cpu(ModelParser):
-    managed_system = models.ForeignKey(managed_system)
-    cpu_type = models.CharField(max_length=64, null=True)
-    cpu_count = models.IntegerField(null=True)
-    cores = models.IntegerField(null=True)
-    speed = models.IntegerField(null=True)
-    enabled = models.NullBooleanField()
-
-class schedule(ModelParser):
-    parser = Schedule
-    schedule_id = models.AutoField(primary_key=True)
-    schedule = models.CharField(max_length=4096, null=False)
-    enabled = models.IntegerField(null=False)
-    created = models.IntegerField(null=False)
-
-class job_states(ModelParser):
+class SystemLog(XObjModel):
     class Meta:
-        managed = False
-        db_table = 'job_states'
-    job_state_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=1024, null=False)
+        db_table = 'inventory_system_log'
+    system_log_id = models.AutoField(primary_key=True)
+    system = models.ForeignKey(System)
+    entries = models.ManyToManyField('LogEntry', through='SystemLogEntry',
+        symmetrical=False)
 
-class managed_system_scheduled_event(ModelParser):
-    scheduled_event_id = models.AutoField(primary_key=True)
-    state = models.ForeignKey(job_states, null=False)
-    managed_system = models.ForeignKey(managed_system)
-    schedule = models.ForeignKey(schedule)
-    scheduled_time = models.IntegerField(null=True)
+class SystemLogEntry(XObjModel):
+    class Meta:
+        db_table = 'inventory_system_log_entry'
+    system = models.ForeignKey(SystemLog)
+    log_entry = models.ForeignKey('LogEntry')
+    entry_date = models.DateTimeField(auto_now_add=True)
 
 SYSTEM_ACTIVATED_LOG = "System activated via ractivate"
 SYSTEM_MANUALLY_ACTIVATED_LOG = "System manually activated via rBuilder"
 SYSTEM_POLLED_LOG = "System polled."
 SYSTEM_FETCHED_LOG = "System data fetched."
+
+class LogEntry(XObjModel):
+    class Meta:
+        db_table = 'inventory_log_entry'
+    # TODO fill these out
+    ENTRY_CHOICES = (
+        (SYSTEM_ACTIVATED_LOG, SYSTEM_ACTIVATED_LOG),
+        (SYSTEM_MANUALLY_ACTIVATED_LOG, SYSTEM_MANUALLY_ACTIVATED_LOG),
+        (SYSTEM_POLLED_LOG, SYSTEM_POLLED_LOG),
+        (SYSTEM_FETCHED_LOG, SYSTEM_FETCHED_LOG),
+    )
+    entry_id = models.AutoField(primary_key=True)
+    entry = models.CharField(max_length=8092, choices=ENTRY_CHOICES)
+
+class Version(XObjModel):
+    class Meta:
+        db_table = 'inventory_version'
+        unique_together = (('name', 'version', 'flavor'),)
+    version_id = models.AutoField(primary_key=True)
+    name = models.TextField()
+    version = models.TextField()
+    flavor = models.TextField()
+    available_updates = models.ManyToManyField('self',
+        through='AvailableUpdate', symmetrical=False,
+        related_name = 'availableUpdates_set')
+
+
+class AvailableUpdate(XObjModel):
+    class Meta:
+        db_table = 'inventory_available_update'
+        unique_together = (('software_version', 'available_update'),)
+    available_update_id = models.AutoField(primary_key=True)
+    software_version = models.ForeignKey(Version,
+        related_name='softwareVersion_set')
+    # This column is nullable, which basically means that the last time an
+    # update was checked for, none was found.
+    available_update = models.ForeignKey(Version,
+        related_name = 'availableUpdate_set')
+    last_refreshed = models.DateTimeField(auto_now_add=True)
+
+#
+# Ignore these for now
+#
+#class schedule(XObjModel):
+#    schedule_id = models.AutoField(primary_key=True)
+#    schedule = models.CharField(max_length=4096, null=False)
+#    enabled = models.IntegerField(null=False)
+#    created = models.IntegerField(null=False)
+#
+#class job_states(XObjModel):
+#    class Meta:
+#        managed = False
+#        db_table = 'job_states'
+#    job_state_id = models.AutoField(primary_key=True)
+#    name = models.CharField(max_length=1024, null=False)
+#
+#class managed_system_scheduled_event(XObjModel):
+#    scheduled_event_id = models.AutoField(primary_key=True)
+#    state = models.ForeignKey(job_states, null=False)
+#    managed_system = models.ForeignKey(managed_system)
+#    schedule = models.ForeignKey(schedule)
+#    scheduled_time = models.IntegerField(null=True)
