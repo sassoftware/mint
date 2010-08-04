@@ -2,7 +2,7 @@
 
 import os
 
-# First, import everything from the production settings.py
+# First, import everything from the production settings_common.py
 from mint.django_rest.settings_common import *  # pyflakes=ignore
 
 ROOT_URLCONF = 'mint.django_rest.urls_local'
