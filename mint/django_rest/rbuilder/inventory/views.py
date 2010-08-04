@@ -10,7 +10,7 @@ import time
 from django.http import HttpResponse
 from django_restapi import resource
 
-from mint.django_rest.deco import requires, returns
+from mint.django_rest.deco import requires, returnXml
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import systemdbmgr
 
@@ -31,25 +31,21 @@ class AbstractInventoryService(resource.Resource):
 
 class InventoryService(AbstractInventoryService):
 
-    @returns()
+    @returnXml
     def read(self, request):
-        inventoryParser = models.inventory().getParser()
-        systemsHref = SystemsHref(href=request.build_absolute_uri('systems/'))
-        logHref = LogHref(href=request.build_absolute_uri('log/'))
-        inventoryParser.set_systems(systemsHref)
-        inventoryParser.set_log(logHref)
-        return inventoryParser
+        inventory = models.Inventory()
+        return inventory
 
 class InventoryLogsService(AbstractInventoryService):
     
-    @returns()
+    @returnXml
     def read(self, request):
         logParser = Log()
         return logParser
 
 class InventorySystemsService(AbstractInventoryService):
 
-    @returns()
+    @returnXml
     def read(self, request, system=None):
         if not system:
             systems = self.sysMgr.getSystems()
@@ -66,7 +62,7 @@ class InventorySystemsService(AbstractInventoryService):
             return parser
     
     @requires('system', System)
-    @returns()
+    @returnXml
     def create(self, request, system):
         managedSystem = self.sysMgr.activateSystem(system)
         systemParser = managedSystem.getParser()
@@ -88,7 +84,7 @@ class InventorySystemsSystemLogService(AbstractInventoryService):
         systemLog = self.sysMgr.getSystemLog(managedSystem)
 
         if format == 'xml':
-            parserDecorator = returns()
+            parserDecorator = returnXml
             func = parserDecorator(systemLog.getParser)
             return func()
         elif format == 'raw':
