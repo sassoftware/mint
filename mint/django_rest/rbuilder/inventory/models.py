@@ -29,16 +29,16 @@ class XObjModel(models.Model):
         return xobj.toxml(self, self.__class__.__name__)
 
     def get_absolute_uri(self, request=None):
-        viewName = getattr(self, 'viewName', self.__class__.__name__)
-        urlKey = getattr(self, 'pk', [])
-        if urlKey:
-            urlKey = [str(urlKey[0])]
-        bits = (viewName, urlKey)
-        relativeUrl = reverse(bits[0], None, *bits[1:3])
+        view_name = getattr(self, 'view_name', self.__class__.__name__)
+        url_key = getattr(self, 'pk', [])
+        if url_key:
+            url_key = [str(url_key[0])]
+        bits = (view_name, url_key)
+        relative_url = reverse(bits[0], None, *bits[1:3])
         if request:
-            return request.build_absolute_uri(relativeUrl)
+            return request.build_absolute_uri(relative_url)
         else:
-            return relativeUrl
+            return relative_url
 
     def get_specific_href(self, href, request=None):
         url = self.get_absolute_uri(request)
@@ -46,9 +46,9 @@ class XObjModel(models.Model):
 
     def serialize(self, request=None):
 
-        hrefFields = [(f, v) for f, v in self.__class__.__dict__.items() \
+        href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
                         if isinstance(v, XObjHrefModel)]
-        for href in hrefFields:
+        for href in href_fields:
             setattr(self, href[0], 
                     self.get_specific_href(href[1].href, request))
 
@@ -57,8 +57,8 @@ class XObjModel(models.Model):
                 self.__dict__[field.verbose_name] = \
                     XObjHrefModel(getattr(self, field.name).get_absolute_uri())
 
-        for listField in self.list_fields:
-            for field in getattr(self, listField):
+        for list_field in self.list_fields:
+            for field in getattr(self, list_field):
                 field.serialize(request)
 
 class XObjIdModel(XObjModel):
@@ -104,6 +104,8 @@ class Systems(XObjModel):
 class System(XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
+    _xobj = xobj.XObjMetadata(
+                tag = 'system')
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -239,6 +241,13 @@ class AvailableUpdate(XObjModel):
         related_name = 'availableUpdate_set')
     last_refreshed = models.DateTimeField(auto_now_add=True)
 
+type_map = {}
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            type_map[mod_obj._xobj.tag] = mod_obj
+            
+    
 #
 # Ignore these for now
 #
