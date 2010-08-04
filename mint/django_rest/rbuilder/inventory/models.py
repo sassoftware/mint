@@ -120,17 +120,17 @@ class SystemEventType(XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event_type'
     system_event_type_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=8092)
+    name = models.CharField(max_length=8092, db_index=True)
     description = models.CharField(max_length=8092)
     
 class SystemEvent(XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event'
     system_event_id = models.AutoField(primary_key=True)
-    system = models.ForeignKey(System)
+    system = models.ForeignKey(System, db_index=True)
     event_type = models.ForeignKey(SystemEventType)
     time_created = models.DateTimeField(auto_now_add=True)
-    priority = models.SmallIntegerField()
+    priority = models.SmallIntegerField(db_index=True)
 
 # TODO: is this needed, or should we just use a recursive fk on ManagedSystem?
 class ManagementNode(XObjModel):
