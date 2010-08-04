@@ -20,8 +20,6 @@ import sys
 from mint import config
 from mint.lib import scriptlibrary
 
-from django.core.management import execute_manager
-
 class ProcessSystemEvents(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = 'scripts.log'
