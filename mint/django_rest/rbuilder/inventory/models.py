@@ -119,14 +119,16 @@ class ManagedSystem(XObjIdModel):
 class SystemEventType(XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event_type'
+    system_event_type_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092)
     
 class SystemEvent(XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event'
-    system = models.ForeignKey(System, primary_key=True)
-    event_type = models.ForeignKey(SystemEventType, primary_key=True)
+    system_event_id = models.AutoField(primary_key=True)
+    system = models.ForeignKey(System)
+    event_type = models.ForeignKey(SystemEventType)
     time_created = models.DateTimeField(auto_now_add=True)
     priority = models.SmallIntegerField()
 
