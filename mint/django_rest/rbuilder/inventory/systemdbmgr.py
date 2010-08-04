@@ -325,14 +325,11 @@ class SystemDBManager(RbuilderDjangoManager):
     def processSystemEvents(self):
         # TODO: these need to be config options, hardcoded for testing
         numToProcess = 1
-        activationDelay = 4
+        #activationDelay = 4
         
         try:
             currentTime = datetime.datetime.utcnow()
-            #rs = models.SystemEvent.objects.all()
-            #len(rs)
-            rs = models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('priority')[0:numToProcess].get()
-            #print "plucked off event " + event.system_event_id
+            models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('priority')[0:numToProcess].get()
         except models.SystemEvent.DoesNotExist:
             print "no event to process"
             pass;
