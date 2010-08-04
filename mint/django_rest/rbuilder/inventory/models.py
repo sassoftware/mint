@@ -30,26 +30,26 @@ class XObjModel(models.Model):
 
     def get_absolute_uri(self, request=None):
         viewName = getattr(self, 'viewName', self.__class__.__name__)
-        urlKey = getattr(self, 'pk', None)
+        urlKey = getattr(self, 'pk', [])
         if urlKey:
-            urlKey = str(urlKey)
-        bits = (viewName, [urlKey])
+            urlKey = [str(urlKey[0])]
+        bits = (viewName, urlKey)
         relativeUrl = reverse(bits[0], None, *bits[1:3])
         if request:
             return request.build_absolute_uri(relativeUrl)
         else:
             return relativeUrl
 
-    def get_specific_href(self, href, request):
+    def get_specific_href(self, href, request=None):
         url = self.get_absolute_uri(request)
         return urlparse.urljoin(url, href)       
 
     def serialize(self, request=None):
 
-        hrefFields = [f for f, v in self.__class__.__dict__.items() \
+        hrefFields = [(f, v) for f, v in self.__class__.__dict__.items() \
                         if isinstance(v, XObjHrefModel)]
         for href in hrefFields:
-            setattr(self, href, self.get_absolute_uri())
+            setattr(self, href[0], self.get_specific_href(href[1].href, request))
 
         for field in self._meta.fields:
             if isinstance(field, related.RelatedField):
@@ -86,9 +86,10 @@ class Inventory(XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
+                tag = 'inventory',
                 elements = ['systems', 'log'])
-    systems = XObjHrefModel('systems')
-    log = XObjHrefModel('log')
+    systems = XObjHrefModel('systems/')
+    log = XObjHrefModel('log/')
 
 class Systems(XObjModel):
     class Meta:
