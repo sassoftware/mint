@@ -349,6 +349,3 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             next_event.save()
         else:
             log.debug("%s events do not trigger a new event creation" % triggerEvent.event_type.name)
-        
-        return
-        
