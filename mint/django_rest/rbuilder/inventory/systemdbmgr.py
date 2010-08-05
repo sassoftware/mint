@@ -322,18 +322,27 @@ class SystemDBManager(RbuilderDjangoManager):
             cachedUpdate.last_refreshed = datetime.datetime.now()
             cachedUpdate.save()
     
-    def processSystemEvents(self):
+    def getSystemEventsForProcessing(self):
         # TODO: these need to be config options, hardcoded for testing
         numToProcess = 1
         #activationDelay = 4
         
+        events = None
         try:
             # get events in order based on whether or not they are activate and what their priority is
             currentTime = datetime.datetime.utcnow()
-            result_set = models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('priority')[0:numToProcess].get()
-            for event in result_set:
-                print "processing event " + event.system_event_id
+            events = models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('priority')[0:numToProcess].all()
         except models.SystemEvent.DoesNotExist:
+            pass
+        
+        return events
+    
+    def processSystemEvents(self):
+        events = self.getSystemEventsForProcessing()
+        if not events:
             print "no events to process"
-            pass;
+            return
+        
+        for event in events:
+            print "processing event " + event.system_event_id
         
