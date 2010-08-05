@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from mint.django_rest.rbuilder.inventory import systemdbmgr
-from mint.django_rest.rbuilder.inventory.models import System, SystemEvent, SystemEventType
+from mint.django_rest.rbuilder.inventory.models import SystemEvent, SystemEventType
 
 class InventoryTestCase(TestCase):
           
