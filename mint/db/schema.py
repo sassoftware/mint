@@ -27,7 +27,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 6)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1286,6 +1286,53 @@ def _createInventorySchema(db):
         """)
         db.tables['inventory_system_log_entry'] = []
         changed = True
+        
+    if 'inventory_system_event_type' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_event_type" (
+                "system_event_type_id" integer NOT NULL PRIMARY KEY,
+                "name" varchar(8092) NOT NULL,
+                "description" varchar(8092) NOT NULL,
+                "priority" smallint NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_system_event_type_name" ON "inventory_system_event_type" ("name");
+        """)
+        cu.execute("""
+        CREATE INDEX "inventory_system_event_type_priority" ON "inventory_system_event_type" ("priority");
+        """)
+        db.tables['inventory_system_event_type'] = []
+        changed = True
+        
+        changed |= _addTableRows(db, 'inventory_system_event_type', 'name',
+        [ dict(name="activation", description='on-demand activation event', priority=100),
+          dict(name="poll", description='standard polling event', priority=50),
+          dict(name="poll_now", description='on-demand polling event', priority=90)])
+        
+    if 'inventory_system_event' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_event" (
+                "system_event_id" integer NOT NULL PRIMARY KEY,
+                "system_id" integer NOT NULL REFERENCES "inventory_system" ("system_id"),
+                "event_type_id" integer NOT NULL REFERENCES "inventory_system_event_type" ("system_event_type_id"),
+                "time_created" datetime NOT NULL,
+                "time_enabled" datetime NOT NULL,
+                "priority" smallint NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        cu.execute("""
+        CREATE INDEX "inventory_system_event_system_id" ON "inventory_system_event" ("system_id");
+        """)
+        cu.execute("""
+        CREATE INDEX "inventory_system_event_event_type_id" ON "inventory_system_event" ("event_type_id");
+        """)
+        cu.execute("""
+        CREATE INDEX "inventory_system_event_time_enabled" ON "inventory_system_event" ("time_enabled");
+        """)
+        cu.execute("""
+        CREATE INDEX "inventory_system_event_priority" ON "inventory_system_event" ("priority");
+        """)
+        db.tables['inventory_system_event'] = []
+        changed = True
 
     return changed
 
@@ -1458,51 +1505,6 @@ def _createJobsSchema(db):
 
     return changed
 
-def _createSchedulerSchema(db):
-    cu = db.cursor()
-    changed = False
-
-    tableName = 'inventory_schedule'
-    if tableName not in db.tables:
-        cu.execute("""
-            CREATE TABLE TABLE_NAME
-            (
-                schedule_id     %(PRIMARYKEY)s,
-                schedule        text NOT NULL,
-                enabled         smallint NOT NULL DEFAULT 1,
-                created         NUMERIC NOT NULL
-            ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
-        db.tables[tableName] = []
-        _addTableRows(db, tableName, 'schedule',
-            [ dict(
-                schedule = """BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-RRULE:FREQ=DAILY
-END:VEVENT
-END:VCALENDAR""",
-                created = int(time.time())) ])
-        changed = True
-
-    tableName = 'inventory_managed_system_scheduled_event'
-    if tableName not in db.tables:
-        cu.execute("""
-            CREATE TABLE TABLE_NAME
-            (
-                scheduled_event_id      %(PRIMARYKEY)s,
-                managed_system_id       INTEGER NOT NULL
-                    REFERENCES inventory_managed_system ON DELETE CASCADE,
-                schedule_id             INTEGER NOT NULL
-                    REFERENCES inventory_schedule ON DELETE CASCADE,
-                state_id                INTEGER NOT NULL
-                    REFERENCES job_states ON DELETE CASCADE,
-                scheduled_time          NUMERIC NOT NULL
-            ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
-        db.tables[tableName] = []
-        changed = True
-    return changed
-
-
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True):
     if not hasattr(db, "tables"):
@@ -1534,7 +1536,6 @@ def createSchema(db, doCommit=True):
     changed |= _createInventoryUpdateSchema(db)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
-    changed |= _createSchedulerSchema(db)
 
     if doCommit:
         db.commit()

@@ -1410,6 +1410,62 @@ END:VCALENDAR""",
             changed = True
 
         return changed
+    
+    def migrate6(self):
+        db = self.db
+        cu = db.cursor()
+        changed = False
+
+        drop_tables(self.db, 'inventory_schedule')
+
+        if 'inventory_system_event_type' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_event_type" (
+                    "system_event_type_id" integer NOT NULL PRIMARY KEY,
+                    "name" varchar(8092) NOT NULL,
+                    "description" varchar(8092) NOT NULL,
+                    "priority" smallint NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_system_event_type_name" ON "inventory_system_event_type" ("name");
+            """)
+            cu.execute("""
+            CREATE INDEX "inventory_system_event_type_priority" ON "inventory_system_event_type" ("priority");
+            """)
+            db.tables['inventory_system_event_type'] = []
+            changed = True
+            
+            changed |= schema._addTableRows(db, 'inventory_system_event_type', 'name',
+            [ dict(name="activation", description='on-demand activation event', priority=100),
+              dict(name="poll", description='standard polling event', priority=50),
+              dict(name="poll_now", description='on-demand polling event', priority=90)])
+            
+        if 'inventory_system_event' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_event" (
+                    "system_event_id" integer NOT NULL PRIMARY KEY,
+                    "system_id" integer NOT NULL REFERENCES "inventory_system" ("system_id"),
+                    "event_type_id" integer NOT NULL REFERENCES "inventory_system_event_type" ("system_event_type_id"),
+                    "time_created" datetime NOT NULL,
+                    "time_enabled" datetime NOT NULL,
+                    "priority" smallint NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            cu.execute("""
+            CREATE INDEX "inventory_system_event_system_id" ON "inventory_system_event" ("system_id");
+            """)
+            cu.execute("""
+            CREATE INDEX "inventory_system_event_event_type_id" ON "inventory_system_event" ("event_type_id");
+            """)
+            cu.execute("""
+            CREATE INDEX "inventory_system_event_time_enabled" ON "inventory_system_event" ("time_enabled");
+            """)
+            cu.execute("""
+            CREATE INDEX "inventory_system_event_priority" ON "inventory_system_event" ("priority");
+            """)
+            db.tables['inventory_system_event'] = []
+            changed = True
+
+        return changed
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
