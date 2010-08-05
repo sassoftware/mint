@@ -23,6 +23,10 @@ def debug(msg):
     logger = getlogger()
     logger.debug(msg)
     
+def info(msg):
+    logger = getlogger()
+    logger.info(msg)
+    
 def error(msg):
     logger = getlogger()
     logger.error(msg)
