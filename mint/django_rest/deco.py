@@ -9,6 +9,8 @@ from xml.dom import minidom
 
 from django import http
 
+from xobj import xobj
+
 from rbuilder.inventory import models 
 
 def str_to_underscore(name):
@@ -43,6 +45,10 @@ def to_camel_case(node):
                 setattr(child, name, str_to_camel_case(getattr(child, name)))
                 to_camel_case(child)
 
+class DjangoDocument(xobj.Document):
+    def fillFromClass(self, xobj):
+        pass
+
 def requires(model_name):
     """
     Decorator that parses the post data on a request into the class
@@ -56,7 +62,10 @@ def requires(model_name):
             root_node = doc.documentElement
             to_underscore(root_node)
             underscore_xml = doc.toxml(encoding='UTF-8')
-            built_model = xobj.parse(xml, typeMap=models.type_map)
+            built_model = xobj.parse(xml, documentClass=DjangoDocument, typeMap=models.type_map)
+            built_model = getattr(built_model, model_name)
+            built_model = models.type_map[model_name].objects.load(built_model)
+            built_model.set_related()
             kw[model_name] = built_model
             return function(*args, **kw)
 
@@ -74,9 +83,9 @@ def return_xml(function):
         ret_val = function(*args, **kw)
         request = args[1]
         xml = ret_val.to_xml(request)
-        doc = minidom.parseString(xm)
+        doc = minidom.parseString(xml)
         to_camel_case(doc.documentElement)
-        request.write(doc.toxml(encoding='UTF-8'))
-        return request
+        response.write(doc.toxml(encoding='UTF-8'))
+        return response
 
     return inner

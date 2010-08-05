@@ -39,7 +39,7 @@ class InventoryLogService(AbstractInventoryService):
     @return_xml
     def read(self, request):
         log = models.Log()
-        return return log
+        return log
 
 class InventorySystemsService(AbstractInventoryService):
 
@@ -62,9 +62,8 @@ class InventorySystemsService(AbstractInventoryService):
     @requires('system')
     @return_xml
     def create(self, request, system):
-        managedSystem = self.sysMgr.activateSystem(system)
-        systemParser = managedSystem.getParser()
-        return systemParser
+        system = self.sysMgr.activateSystem(system)
+        return system
 
     def delete(self, request, system):
         system = self.sysMgr.deleteSystem(system)

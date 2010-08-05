@@ -68,7 +68,7 @@ class SystemDBManager(RbuilderDjangoManager):
             retSystems.append(self._unSanitizeSystem(system))
         return retSystems
 
-    def _sanitizeSystem(self, system):
+    def _sanitize_system(self, system):
         systemCopy = copy.deepcopy(system)
         if systemCopy.generated_uuid:
             key = os.path.join(systemCopy.generated_uuid, 'x509key')
@@ -98,38 +98,43 @@ class SystemDBManager(RbuilderDjangoManager):
 
         return systemCopy
 
-    def logSystem(self, managedSystem, logMsg):
-        entry, created = models.entry.objects.get_or_create(entry=logMsg) 
-        entry.save()
-        systemLog = models.system_log_entry(entry=entry,
-                        managed_system=managedSystem,
-                        entry_date=time.time())
-        systemLog.save()
+    def log_system(self, system, log_msg):
+        log_entry, created = models.LogEntry.objects.get_or_create(
+                                entry=log_msg) 
+        log_entry.save()
+        system_log, created = models.SystemLog.objects.get_or_create(
+                                system=system)
+        system_log.save()
+        system_log_entry = models.SystemLogEntry(system_log=system_log,
+                                log_entry=log_entry)
+        system_log_entry.save()
 
     def activateSystem(self, system):
-        sanitizedSystem = self._sanitizeSystem(system)
-        managedSystem = models.managed_system.loadFromDb(sanitizedSystem)
+        # sanitized_system = self._sanitize_system(system)
+        try:
+            db_system = models.System.objects.get_by_natural_key(
+                            generated_uuid=system.generated_uuid)
+        except models.System.DoesNotExist:
+            db_system = None
 
-        matchedIps = []
-        if managedSystem:
-            matchedIps = [n.ip_address for n in \
-                          managedSystem.system_network_information_set.all() \
-                          if n.ip_address == sanitizedSystem.ip_address]
+        matched_ips = []
+        if db_system:
+            matched_ips = [n.ip_address for n in \
+                           db_system.network_set.all() \
+                           if n.ip_address in \
+                           [m.ip_address for m in system.network_set.all()]]
 
-        if matchedIps:
+        if matched_ips:
             # TODO: update, log activation
             pass
         else:
             # New activation, need to create a new managedSystem
-            managedSystem = models.managed_system.factoryParser(sanitizedSystem)
+            db_system = system
             
-        managedSystem.activation_date = int(time.time())
-        managedSystem.save()
-        managedSystem.populateRelatedModelsFromParser(sanitizedSystem)
-        managedSystem.saveAll()
-        self.logSystem(managedSystem, models.SYSTEM_ACTIVATED_LOG)
+        db_system.save()
+        self.log_system(db_system, models.SYSTEM_ACTIVATED_LOG)
 
-        return managedSystem
+        return db_system
 
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
