@@ -328,9 +328,12 @@ class SystemDBManager(RbuilderDjangoManager):
         #activationDelay = 4
         
         try:
+            # get events in order based on whether or not they are activate and what their priority is
             currentTime = datetime.datetime.utcnow()
-            models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('priority')[0:numToProcess].get()
+            result_set = models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('priority')[0:numToProcess].get()
+            for event in result_set:
+                print "processing event " + event.system_event_id
         except models.SystemEvent.DoesNotExist:
-            print "no event to process"
+            print "no events to process"
             pass;
         
