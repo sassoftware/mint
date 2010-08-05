@@ -316,8 +316,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         events = None
         try:
             # get events in order based on whether or not they are enabled and what their priority is (descending)
-            currentTime = datetime.datetime.utcnow()
-            events = models.SystemEvent.objects.filter(time_enabled__lte=currentTime).order_by('-priority')[0:self.cfg.systemPollCount].all()
+            current_time = datetime.datetime.utcnow()
+            events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemPollCount].all()
         except models.SystemEvent.DoesNotExist:
             pass
         
@@ -330,5 +330,23 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             return
         
         for event in events:
-            log.debug("processing event " + event.system_event_id)
+            self.dispatchSystemEvent(event)
+
+    def dispatchSystemEvent(self, event):
+        log.debug("processing %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id, event.system.name))
+        
+        # TODO:  dispatch it here, whatever that means
+        
+        self.createNextSystemPollEvent(event)
+            
+    def createNextSystemPollEvent(self, triggerEvent):
+        if triggerEvent.event_type.name == models.SystemEventType.POLL or triggerEvent.event_type.name == models.SystemEventType.POLL_NOW:
+            enable_time = datetime.datetime.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            log.debug("creating next poll event for system %s to be enabled at %s" % (triggerEvent.system.name, enable_time))
+            poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+            next_event = models.SystemEvent(system=triggerEvent.system, event_type=poll_event, 
+                priority=poll_event.priority, time_enabled=enable_time)
+            next_event.save()
+        else:
+            log.debug("%s events do not trigger a new event creation" % triggerEvent.event_type.name)
         
