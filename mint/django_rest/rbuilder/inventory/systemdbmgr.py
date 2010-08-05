@@ -337,7 +337,16 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         
         # TODO:  dispatch it here, whatever that means
         
+        # cleanup now that the event has been processed
+        self.cleanupSystemEvent(event)
+        
+        # create the next event if needed
         self.createNextSystemPollEvent(event)
+        
+    def cleanupSystemEvent(self, event):
+        # remove the event since it has been handled
+        log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
+        event.delete()
             
     def createNextSystemPollEvent(self, triggerEvent):
         if triggerEvent.event_type.name == models.SystemEventType.POLL or triggerEvent.event_type.name == models.SystemEventType.POLL_NOW:

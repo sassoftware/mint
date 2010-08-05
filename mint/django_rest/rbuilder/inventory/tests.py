@@ -131,7 +131,12 @@ class SystemEventProcessingTestCase(TestCase):
         assert(event.event_type.name == SystemEventType.POLL_NOW)
         self.system_manager.processSystemEvents()
         
-        # make sure we have the next poll event for this system now
+        # make sure the event was removed and that we have the next poll event 
+        # for this system now
+        try:
+            SystemEvent.objects.get(system_event_id=event.system_event_id)
+        except SystemEvent.DoesNotExist:
+            pass
         poll_event = SystemEventType.objects.get(name=SystemEventType.POLL)
         event = SystemEvent.objects.get(system=event.system, event_type=poll_event)
         assert(event is not None)
