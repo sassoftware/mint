@@ -14,7 +14,7 @@ from django.db import connection
 from conary import versions
 from conary.deps import deps
 
-from mint.django_rest.rbuilder import inventory
+from mint.django_rest import logger as log
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 
@@ -329,9 +329,9 @@ class SystemDBManager(RbuilderDjangoManager):
         
         events = None
         try:
-            # get events in order based on whether or not they are activate and what their priority is
+            # get events in order based on whether or not they are activated and what their priority is (descending)
             currentTime = datetime.datetime.utcnow()
-            events = models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('priority')[0:numToProcess].all()
+            events = models.SystemEvent.objects.filter(time_activation__lte=currentTime).order_by('-priority')[0:numToProcess].all()
         except models.SystemEvent.DoesNotExist:
             pass
         
@@ -340,9 +340,9 @@ class SystemDBManager(RbuilderDjangoManager):
     def processSystemEvents(self):
         events = self.getSystemEventsForProcessing()
         if not events:
-            print "no events to process"
+            log.debug("no events to process")
             return
         
         for event in events:
-            print "processing event " + event.system_event_id
+            log.debug("processing event " + event.system_event_id)
         
