@@ -100,10 +100,10 @@ class SystemEventProcessingTestCase(TestCase):
         # add another poll event with a higher priority but a future time 
         # and make sure we don't get it (because of the future activation time)
         orgPollEvent = event
-        activationTime = datetime.datetime.now() + datetime.timedelta(1) # now + 1 day
+        enabledTime = datetime.datetime.now() + datetime.timedelta(1) # now + 1 day
         newPollEvent = SystemEvent(system=orgPollEvent.system, 
             event_type=orgPollEvent.event_type, priority=orgPollEvent.priority + 1,
-            time_activation=activationTime)
+            time_enabled=enabledTime)
         newPollEvent.save()
         events = self.system_manager.getSystemEventsForProcessing()
         assert(len(events) == 1)
