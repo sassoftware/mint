@@ -64,9 +64,12 @@ def requires(model_name):
             underscore_xml = doc.toxml(encoding='UTF-8')
             built_model = xobj.parse(xml, documentClass=DjangoDocument, typeMap=models.type_map)
             built_model = getattr(built_model, model_name)
-            built_model = models.type_map[model_name].objects.load(built_model)
-            built_model.set_related()
-            kw[model_name] = built_model
+            loaded_model = models.type_map[model_name].objects.load(built_model)
+            if not loaded_model:
+                built_model.save()
+                loaded_model = built_model
+            loaded_model.set_related()
+            kw[model_name] = loaded_model
             return function(*args, **kw)
 
         return inner

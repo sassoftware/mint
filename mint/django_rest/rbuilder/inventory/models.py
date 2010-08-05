@@ -26,8 +26,7 @@ class BaseManager(models.Manager):
         try:
             return self.get(**kwargs)
         except exceptions.ObjectDoesNotExist, e:
-            self.model_inst.save()
-            return self.model_inst
+            return None
 
 class XObjModel(models.Model):
     objects = BaseManager()
@@ -99,7 +98,10 @@ class XObjModel(models.Model):
             for k, v in getattr(val, '__dict__', {}).items():
                 for rel_obj in rel_objs:
                     if k == rel_obj.var_name:
-                        getattr(self, rel_obj.get_accessor_name()).add(v)
+                        loaded_v = v.__class__.objects.load(v)
+                        if not loaded_v:
+                            loaded_v = v
+                        getattr(self, rel_obj.get_accessor_name()).add(loaded_v)
 
             # for rel_obj, rel_mod in rel_objs:
                 # if attr in rel_obj.opts.get_all_field_names():
@@ -167,7 +169,9 @@ class SystemManager(BaseManager):
                         generated_uuid=model_inst.generated_uuid)
         if loaded_model:
             model_inst.pk = loaded_model.pk
-        return model_inst
+            return model_inst
+        else:
+            return None
 
 class System(XObjIdModel):
     objects = SystemManager()
@@ -263,7 +267,14 @@ class Networks(XObjModel):
     def save(self):
         return [n.save() for n in network]
 
+class NetworkManager(BaseManager):
+    def load(self, model_inst):
+        super(NetworkManager, self).load(model_inst)
+        return self.get_by_natural_key(ip_address=model_inst.ip_address,
+                    public_dns_name=model_inst.public_dns_name)
+
 class Network(XObjModel):
+    objects = NetworkManager()
     class Meta:
         db_table = 'inventory_network'
     _xobj = xobj.XObjMetadata(
@@ -278,6 +289,9 @@ class Network(XObjModel):
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
     # TODO: add all the other fields we need about a network
+
+    def natural_key(self):
+        return self.ip_address, self.public_dns_name
 
 class SystemLog(XObjModel):
     class Meta:
