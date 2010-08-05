@@ -70,6 +70,7 @@ class SystemEventProcessingTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
+        self.mintConfig = self.system_manager.cfg
             
     def tearDown(self):
         pass
@@ -109,5 +110,14 @@ class SystemEventProcessingTestCase(TestCase):
         assert(len(events) == 1)
         event = events[0]
         assert(event.system_event_id != newPollEvent.system_event_id)
+        
+    def testGetSystemEventsForProcessingPollCount(self):
+        
+        self.mintConfig.systemPollCount = 3
+        
+        events = self.system_manager.getSystemEventsForProcessing()
+        assert(len(events) == 3)
+        
+        
         
         
