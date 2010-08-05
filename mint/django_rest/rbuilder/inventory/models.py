@@ -9,6 +9,7 @@ import urlparse
 
 from django.db import models
 from django.db.models.fields import related
+from django.core import exceptions
 from django.core.urlresolvers import reverse
 
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -19,10 +20,14 @@ class BaseManager(models.Manager):
     _transient = True
 
     def load(self, model_inst):
-        raise NotImplementedError
+        self.model_inst = model_inst
     
     def get_by_natural_key(self, **kwargs):
-        return self.get(**kwargs)
+        try:
+            return self.get(**kwargs)
+        except exceptions.ObjectDoesNotExist, e:
+            self.model_inst.save()
+            return self.model_inst
 
 class XObjModel(models.Model):
     objects = BaseManager()
@@ -157,6 +162,7 @@ class Systems(XObjModel):
 class SystemManager(BaseManager):
 
     def load(self, model_inst):
+        super(SystemManager, self).load(model_inst)
         loaded_model = self.get_by_natural_key(
                         generated_uuid=model_inst.generated_uuid)
         if loaded_model:
