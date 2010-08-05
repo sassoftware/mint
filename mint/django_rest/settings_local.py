@@ -1,14 +1,20 @@
 # Settings to run the django rbuilder project locally.
 
-# First, import everything from the production settings.py
+import os
+
+# First, import everything from the production settings_common.py
 from mint.django_rest.settings_common import *  # pyflakes=ignore
 
 ROOT_URLCONF = 'mint.django_rest.urls_local'
 
 # Override individual options
-DEBUG = False
-DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'mint-local.db'             # Or path to database file if using sqlite3.
+DEBUG = True
+DATABASE_ENGINE = 'sqlite3'                  # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+
+try:
+    DATABASE_NAME = os.environ['MINT_LOCAL_DB']  # Or path to database file if using sqlite3.
+except:
+    DATABASE_NAME = os.path.realpath('../mint-local.db')
 
 appsList = list(INSTALLED_APPS)
 appsList.append('django.contrib.admin')

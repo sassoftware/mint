@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import sys
+import datetime
 import urlparse
 
 from django.db import models
@@ -172,6 +173,8 @@ class System(XObjIdModel):
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
+    # Launch date is nullable, we maay get it reported from the hypervisor or
+    # physical target, we may not.
     launch_date = models.DateTimeField(null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=255, null=True)
@@ -204,9 +207,28 @@ class System(XObjIdModel):
 class SystemEventType(XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event_type'
+        
+    POLL = "poll"
+    POLL_PRIORITY = 50
+    POLL_DESC = "standard polling event"
+    
+    POLL_NOW = "poll_now"
+    POLL_NOW_PRIORITY = 90
+    POLL_NOW_DESC = "on-demand polling event"
+    
+    ACTIVATION = "activation"
+    ACTIVATION_PRIORITY = 100
+    ACTIVATION_DESC = "on-demand activation event"
+        
     system_event_type_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=8092, db_index=True)
+    EVENT_TYPES = (
+        (ACTIVATION, ACTIVATION_DESC),
+        (POLL_NOW, POLL_NOW_DESC),
+        (POLL, POLL_DESC),
+    )
+    name = models.CharField(max_length=8092, db_index=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)
+    priority = models.SmallIntegerField(db_index=True)
     
 class SystemEvent(XObjIdModel):
     class Meta:
@@ -215,6 +237,7 @@ class SystemEvent(XObjIdModel):
     system = models.ForeignKey(System, db_index=True)
     event_type = models.ForeignKey(SystemEventType)
     time_created = models.DateTimeField(auto_now_add=True)
+    time_enabled = models.DateTimeField(default=datetime.datetime.utcnow())
     priority = models.SmallIntegerField(db_index=True)
 
 # TODO: is this needed, or should we just use a recursive fk on ManagedSystem?

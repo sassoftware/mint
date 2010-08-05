@@ -14,27 +14,17 @@ from django.db import connection
 from conary import versions
 from conary.deps import deps
 
-from mint.django_rest.rbuilder import inventory
+from mint.django_rest import logger as log
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder import rbuilder_manager
 
 from rpath_storage import api1 as storage
 
-class RbuilderDjangoManager(object):
-    def __init__(self, cfg=None, userName=None):
-        self.cfg = cfg
-        if userName is None:
-            self.user = None
-        else:
-            # The salt field contains binary data that blows django's little
-            # mind when it tries to decode it as UTF-8. Since we don't need it
-            # here, defer the loading of that column
-            self.user = rbuildermodels.Users.objects.defer("salt").get(username = userName)
-
-class SystemDBManager(RbuilderDjangoManager):
+class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
     def __init__(self, *args, **kw):
-        RbuilderDjangoManager.__init__(self, *args, **kw)
+        rbuilder_manager.RbuilderDjangoManager.__init__(self, *args, **kw)
         self.systemStore = self.getSystemStore()
 
     def getSystemStore(self):
@@ -327,5 +317,23 @@ class SystemDBManager(RbuilderDjangoManager):
             cachedUpdate.last_refreshed = datetime.datetime.now()
             cachedUpdate.save()
     
+    def getSystemEventsForProcessing(self):        
+        events = None
+        try:
+            # get events in order based on whether or not they are enabled and what their priority is (descending)
+            currentTime = datetime.datetime.utcnow()
+            events = models.SystemEvent.objects.filter(time_enabled__lte=currentTime).order_by('-priority')[0:self.cfg.systemPollCount].all()
+        except models.SystemEvent.DoesNotExist:
+            pass
+        
+        return events
+    
     def processSystemEvents(self):
-        print "processing system events..."
+        events = self.getSystemEventsForProcessing()
+        if not events:
+            log.debug("no events to process")
+            return
+        
+        for event in events:
+            log.debug("processing event " + event.system_event_id)
+        

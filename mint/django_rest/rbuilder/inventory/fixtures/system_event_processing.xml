@@ -1,0 +1,770 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <object pk="100" model="auth.permission">
+        <field type="CharField" name="name">Can add log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">34</field>
+        <field type="CharField" name="codename">add_logentry</field>
+    </object>
+    <object pk="101" model="auth.permission">
+        <field type="CharField" name="name">Can change log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">34</field>
+        <field type="CharField" name="codename">change_logentry</field>
+    </object>
+    <object pk="102" model="auth.permission">
+        <field type="CharField" name="name">Can delete log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">34</field>
+        <field type="CharField" name="codename">delete_logentry</field>
+    </object>
+    <object pk="4" model="auth.permission">
+        <field type="CharField" name="name">Can add group</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="codename">add_group</field>
+    </object>
+    <object pk="10" model="auth.permission">
+        <field type="CharField" name="name">Can add message</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">4</field>
+        <field type="CharField" name="codename">add_message</field>
+    </object>
+    <object pk="1" model="auth.permission">
+        <field type="CharField" name="name">Can add permission</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="codename">add_permission</field>
+    </object>
+    <object pk="7" model="auth.permission">
+        <field type="CharField" name="name">Can add user</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">3</field>
+        <field type="CharField" name="codename">add_user</field>
+    </object>
+    <object pk="5" model="auth.permission">
+        <field type="CharField" name="name">Can change group</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="codename">change_group</field>
+    </object>
+    <object pk="11" model="auth.permission">
+        <field type="CharField" name="name">Can change message</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">4</field>
+        <field type="CharField" name="codename">change_message</field>
+    </object>
+    <object pk="2" model="auth.permission">
+        <field type="CharField" name="name">Can change permission</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="codename">change_permission</field>
+    </object>
+    <object pk="8" model="auth.permission">
+        <field type="CharField" name="name">Can change user</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">3</field>
+        <field type="CharField" name="codename">change_user</field>
+    </object>
+    <object pk="6" model="auth.permission">
+        <field type="CharField" name="name">Can delete group</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="codename">delete_group</field>
+    </object>
+    <object pk="12" model="auth.permission">
+        <field type="CharField" name="name">Can delete message</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">4</field>
+        <field type="CharField" name="codename">delete_message</field>
+    </object>
+    <object pk="3" model="auth.permission">
+        <field type="CharField" name="name">Can delete permission</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="codename">delete_permission</field>
+    </object>
+    <object pk="9" model="auth.permission">
+        <field type="CharField" name="name">Can delete user</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">3</field>
+        <field type="CharField" name="codename">delete_user</field>
+    </object>
+    <object pk="13" model="auth.permission">
+        <field type="CharField" name="name">Can add content type</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">5</field>
+        <field type="CharField" name="codename">add_contenttype</field>
+    </object>
+    <object pk="14" model="auth.permission">
+        <field type="CharField" name="name">Can change content type</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">5</field>
+        <field type="CharField" name="codename">change_contenttype</field>
+    </object>
+    <object pk="15" model="auth.permission">
+        <field type="CharField" name="name">Can delete content type</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">5</field>
+        <field type="CharField" name="codename">delete_contenttype</field>
+    </object>
+    <object pk="97" model="auth.permission">
+        <field type="CharField" name="name">Can add available update</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">33</field>
+        <field type="CharField" name="codename">add_availableupdate</field>
+    </object>
+    <object pk="91" model="auth.permission">
+        <field type="CharField" name="name">Can add log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
+        <field type="CharField" name="codename">add_logentry</field>
+    </object>
+    <object pk="70" model="auth.permission">
+        <field type="CharField" name="name">Can add managed system</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
+        <field type="CharField" name="codename">add_managedsystem</field>
+    </object>
+    <object pk="79" model="auth.permission">
+        <field type="CharField" name="name">Can add management node</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
+        <field type="CharField" name="codename">add_managementnode</field>
+    </object>
+    <object pk="82" model="auth.permission">
+        <field type="CharField" name="name">Can add network</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
+        <field type="CharField" name="codename">add_network</field>
+    </object>
+    <object pk="67" model="auth.permission">
+        <field type="CharField" name="name">Can add system</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">23</field>
+        <field type="CharField" name="codename">add_system</field>
+    </object>
+    <object pk="76" model="auth.permission">
+        <field type="CharField" name="name">Can add system event</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
+        <field type="CharField" name="codename">add_systemevent</field>
+    </object>
+    <object pk="73" model="auth.permission">
+        <field type="CharField" name="name">Can add system event type</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
+        <field type="CharField" name="codename">add_systemeventtype</field>
+    </object>
+    <object pk="85" model="auth.permission">
+        <field type="CharField" name="name">Can add system log</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
+        <field type="CharField" name="codename">add_systemlog</field>
+    </object>
+    <object pk="88" model="auth.permission">
+        <field type="CharField" name="name">Can add system log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
+        <field type="CharField" name="codename">add_systemlogentry</field>
+    </object>
+    <object pk="94" model="auth.permission">
+        <field type="CharField" name="name">Can add version</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
+        <field type="CharField" name="codename">add_version</field>
+    </object>
+    <object pk="64" model="auth.permission">
+        <field type="CharField" name="name">Can add x obj href model</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
+        <field type="CharField" name="codename">add_xobjhrefmodel</field>
+    </object>
+    <object pk="98" model="auth.permission">
+        <field type="CharField" name="name">Can change available update</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">33</field>
+        <field type="CharField" name="codename">change_availableupdate</field>
+    </object>
+    <object pk="92" model="auth.permission">
+        <field type="CharField" name="name">Can change log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
+        <field type="CharField" name="codename">change_logentry</field>
+    </object>
+    <object pk="71" model="auth.permission">
+        <field type="CharField" name="name">Can change managed system</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
+        <field type="CharField" name="codename">change_managedsystem</field>
+    </object>
+    <object pk="80" model="auth.permission">
+        <field type="CharField" name="name">Can change management node</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
+        <field type="CharField" name="codename">change_managementnode</field>
+    </object>
+    <object pk="83" model="auth.permission">
+        <field type="CharField" name="name">Can change network</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
+        <field type="CharField" name="codename">change_network</field>
+    </object>
+    <object pk="68" model="auth.permission">
+        <field type="CharField" name="name">Can change system</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">23</field>
+        <field type="CharField" name="codename">change_system</field>
+    </object>
+    <object pk="77" model="auth.permission">
+        <field type="CharField" name="name">Can change system event</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
+        <field type="CharField" name="codename">change_systemevent</field>
+    </object>
+    <object pk="74" model="auth.permission">
+        <field type="CharField" name="name">Can change system event type</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
+        <field type="CharField" name="codename">change_systemeventtype</field>
+    </object>
+    <object pk="86" model="auth.permission">
+        <field type="CharField" name="name">Can change system log</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
+        <field type="CharField" name="codename">change_systemlog</field>
+    </object>
+    <object pk="89" model="auth.permission">
+        <field type="CharField" name="name">Can change system log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
+        <field type="CharField" name="codename">change_systemlogentry</field>
+    </object>
+    <object pk="95" model="auth.permission">
+        <field type="CharField" name="name">Can change version</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
+        <field type="CharField" name="codename">change_version</field>
+    </object>
+    <object pk="65" model="auth.permission">
+        <field type="CharField" name="name">Can change x obj href model</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
+        <field type="CharField" name="codename">change_xobjhrefmodel</field>
+    </object>
+    <object pk="99" model="auth.permission">
+        <field type="CharField" name="name">Can delete available update</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">33</field>
+        <field type="CharField" name="codename">delete_availableupdate</field>
+    </object>
+    <object pk="93" model="auth.permission">
+        <field type="CharField" name="name">Can delete log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
+        <field type="CharField" name="codename">delete_logentry</field>
+    </object>
+    <object pk="72" model="auth.permission">
+        <field type="CharField" name="name">Can delete managed system</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
+        <field type="CharField" name="codename">delete_managedsystem</field>
+    </object>
+    <object pk="81" model="auth.permission">
+        <field type="CharField" name="name">Can delete management node</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
+        <field type="CharField" name="codename">delete_managementnode</field>
+    </object>
+    <object pk="84" model="auth.permission">
+        <field type="CharField" name="name">Can delete network</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
+        <field type="CharField" name="codename">delete_network</field>
+    </object>
+    <object pk="69" model="auth.permission">
+        <field type="CharField" name="name">Can delete system</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">23</field>
+        <field type="CharField" name="codename">delete_system</field>
+    </object>
+    <object pk="78" model="auth.permission">
+        <field type="CharField" name="name">Can delete system event</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
+        <field type="CharField" name="codename">delete_systemevent</field>
+    </object>
+    <object pk="75" model="auth.permission">
+        <field type="CharField" name="name">Can delete system event type</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
+        <field type="CharField" name="codename">delete_systemeventtype</field>
+    </object>
+    <object pk="87" model="auth.permission">
+        <field type="CharField" name="name">Can delete system log</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
+        <field type="CharField" name="codename">delete_systemlog</field>
+    </object>
+    <object pk="90" model="auth.permission">
+        <field type="CharField" name="name">Can delete system log entry</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
+        <field type="CharField" name="codename">delete_systemlogentry</field>
+    </object>
+    <object pk="96" model="auth.permission">
+        <field type="CharField" name="name">Can delete version</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
+        <field type="CharField" name="codename">delete_version</field>
+    </object>
+    <object pk="66" model="auth.permission">
+        <field type="CharField" name="name">Can delete x obj href model</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
+        <field type="CharField" name="codename">delete_xobjhrefmodel</field>
+    </object>
+    <object pk="46" model="auth.permission">
+        <field type="CharField" name="name">Can add downloads</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">16</field>
+        <field type="CharField" name="codename">add_downloads</field>
+    </object>
+    <object pk="43" model="auth.permission">
+        <field type="CharField" name="name">Can add images</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">15</field>
+        <field type="CharField" name="codename">add_images</field>
+    </object>
+    <object pk="34" model="auth.permission">
+        <field type="CharField" name="name">Can add members</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">12</field>
+        <field type="CharField" name="codename">add_members</field>
+    </object>
+    <object pk="31" model="auth.permission">
+        <field type="CharField" name="name">Can add products</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">11</field>
+        <field type="CharField" name="codename">add_products</field>
+    </object>
+    <object pk="40" model="auth.permission">
+        <field type="CharField" name="name">Can add releases</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">14</field>
+        <field type="CharField" name="codename">add_releases</field>
+    </object>
+    <object pk="49" model="auth.permission">
+        <field type="CharField" name="name">Can add sessions</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">17</field>
+        <field type="CharField" name="codename">add_sessions</field>
+    </object>
+    <object pk="52" model="auth.permission">
+        <field type="CharField" name="name">Can add targets</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">18</field>
+        <field type="CharField" name="codename">add_targets</field>
+    </object>
+    <object pk="55" model="auth.permission">
+        <field type="CharField" name="name">Can add target user credentials</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">19</field>
+        <field type="CharField" name="codename">add_targetusercredentials</field>
+    </object>
+    <object pk="28" model="auth.permission">
+        <field type="CharField" name="name">Can add user group members</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">10</field>
+        <field type="CharField" name="codename">add_usergroupmembers</field>
+    </object>
+    <object pk="22" model="auth.permission">
+        <field type="CharField" name="name">Can add user groups</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">8</field>
+        <field type="CharField" name="codename">add_usergroups</field>
+    </object>
+    <object pk="25" model="auth.permission">
+        <field type="CharField" name="name">Can add users</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">9</field>
+        <field type="CharField" name="codename">add_users</field>
+    </object>
+    <object pk="37" model="auth.permission">
+        <field type="CharField" name="name">Can add versions</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">13</field>
+        <field type="CharField" name="codename">add_versions</field>
+    </object>
+    <object pk="47" model="auth.permission">
+        <field type="CharField" name="name">Can change downloads</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">16</field>
+        <field type="CharField" name="codename">change_downloads</field>
+    </object>
+    <object pk="44" model="auth.permission">
+        <field type="CharField" name="name">Can change images</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">15</field>
+        <field type="CharField" name="codename">change_images</field>
+    </object>
+    <object pk="35" model="auth.permission">
+        <field type="CharField" name="name">Can change members</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">12</field>
+        <field type="CharField" name="codename">change_members</field>
+    </object>
+    <object pk="32" model="auth.permission">
+        <field type="CharField" name="name">Can change products</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">11</field>
+        <field type="CharField" name="codename">change_products</field>
+    </object>
+    <object pk="41" model="auth.permission">
+        <field type="CharField" name="name">Can change releases</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">14</field>
+        <field type="CharField" name="codename">change_releases</field>
+    </object>
+    <object pk="50" model="auth.permission">
+        <field type="CharField" name="name">Can change sessions</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">17</field>
+        <field type="CharField" name="codename">change_sessions</field>
+    </object>
+    <object pk="53" model="auth.permission">
+        <field type="CharField" name="name">Can change targets</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">18</field>
+        <field type="CharField" name="codename">change_targets</field>
+    </object>
+    <object pk="56" model="auth.permission">
+        <field type="CharField" name="name">Can change target user credentials</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">19</field>
+        <field type="CharField" name="codename">change_targetusercredentials</field>
+    </object>
+    <object pk="29" model="auth.permission">
+        <field type="CharField" name="name">Can change user group members</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">10</field>
+        <field type="CharField" name="codename">change_usergroupmembers</field>
+    </object>
+    <object pk="23" model="auth.permission">
+        <field type="CharField" name="name">Can change user groups</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">8</field>
+        <field type="CharField" name="codename">change_usergroups</field>
+    </object>
+    <object pk="26" model="auth.permission">
+        <field type="CharField" name="name">Can change users</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">9</field>
+        <field type="CharField" name="codename">change_users</field>
+    </object>
+    <object pk="38" model="auth.permission">
+        <field type="CharField" name="name">Can change versions</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">13</field>
+        <field type="CharField" name="codename">change_versions</field>
+    </object>
+    <object pk="48" model="auth.permission">
+        <field type="CharField" name="name">Can delete downloads</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">16</field>
+        <field type="CharField" name="codename">delete_downloads</field>
+    </object>
+    <object pk="45" model="auth.permission">
+        <field type="CharField" name="name">Can delete images</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">15</field>
+        <field type="CharField" name="codename">delete_images</field>
+    </object>
+    <object pk="36" model="auth.permission">
+        <field type="CharField" name="name">Can delete members</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">12</field>
+        <field type="CharField" name="codename">delete_members</field>
+    </object>
+    <object pk="33" model="auth.permission">
+        <field type="CharField" name="name">Can delete products</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">11</field>
+        <field type="CharField" name="codename">delete_products</field>
+    </object>
+    <object pk="42" model="auth.permission">
+        <field type="CharField" name="name">Can delete releases</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">14</field>
+        <field type="CharField" name="codename">delete_releases</field>
+    </object>
+    <object pk="51" model="auth.permission">
+        <field type="CharField" name="name">Can delete sessions</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">17</field>
+        <field type="CharField" name="codename">delete_sessions</field>
+    </object>
+    <object pk="54" model="auth.permission">
+        <field type="CharField" name="name">Can delete targets</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">18</field>
+        <field type="CharField" name="codename">delete_targets</field>
+    </object>
+    <object pk="57" model="auth.permission">
+        <field type="CharField" name="name">Can delete target user credentials</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">19</field>
+        <field type="CharField" name="codename">delete_targetusercredentials</field>
+    </object>
+    <object pk="30" model="auth.permission">
+        <field type="CharField" name="name">Can delete user group members</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">10</field>
+        <field type="CharField" name="codename">delete_usergroupmembers</field>
+    </object>
+    <object pk="24" model="auth.permission">
+        <field type="CharField" name="name">Can delete user groups</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">8</field>
+        <field type="CharField" name="codename">delete_usergroups</field>
+    </object>
+    <object pk="27" model="auth.permission">
+        <field type="CharField" name="name">Can delete users</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">9</field>
+        <field type="CharField" name="codename">delete_users</field>
+    </object>
+    <object pk="39" model="auth.permission">
+        <field type="CharField" name="name">Can delete versions</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">13</field>
+        <field type="CharField" name="codename">delete_versions</field>
+    </object>
+    <object pk="61" model="auth.permission">
+        <field type="CharField" name="name">Can add repository log status</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">21</field>
+        <field type="CharField" name="codename">add_repositorylogstatus</field>
+    </object>
+    <object pk="58" model="auth.permission">
+        <field type="CharField" name="name">Can add system update</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">20</field>
+        <field type="CharField" name="codename">add_systemupdate</field>
+    </object>
+    <object pk="62" model="auth.permission">
+        <field type="CharField" name="name">Can change repository log status</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">21</field>
+        <field type="CharField" name="codename">change_repositorylogstatus</field>
+    </object>
+    <object pk="59" model="auth.permission">
+        <field type="CharField" name="name">Can change system update</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">20</field>
+        <field type="CharField" name="codename">change_systemupdate</field>
+    </object>
+    <object pk="63" model="auth.permission">
+        <field type="CharField" name="name">Can delete repository log status</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">21</field>
+        <field type="CharField" name="codename">delete_repositorylogstatus</field>
+    </object>
+    <object pk="60" model="auth.permission">
+        <field type="CharField" name="name">Can delete system update</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">20</field>
+        <field type="CharField" name="codename">delete_systemupdate</field>
+    </object>
+    <object pk="16" model="auth.permission">
+        <field type="CharField" name="name">Can add session</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">6</field>
+        <field type="CharField" name="codename">add_session</field>
+    </object>
+    <object pk="17" model="auth.permission">
+        <field type="CharField" name="name">Can change session</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">6</field>
+        <field type="CharField" name="codename">change_session</field>
+    </object>
+    <object pk="18" model="auth.permission">
+        <field type="CharField" name="name">Can delete session</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">6</field>
+        <field type="CharField" name="codename">delete_session</field>
+    </object>
+    <object pk="19" model="auth.permission">
+        <field type="CharField" name="name">Can add site</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">7</field>
+        <field type="CharField" name="codename">add_site</field>
+    </object>
+    <object pk="20" model="auth.permission">
+        <field type="CharField" name="name">Can change site</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">7</field>
+        <field type="CharField" name="codename">change_site</field>
+    </object>
+    <object pk="21" model="auth.permission">
+        <field type="CharField" name="name">Can delete site</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">7</field>
+        <field type="CharField" name="codename">delete_site</field>
+    </object>
+    <object pk="1" model="auth.user">
+        <field type="CharField" name="username">bmurphy</field>
+        <field type="CharField" name="first_name"></field>
+        <field type="CharField" name="last_name"></field>
+        <field type="CharField" name="email">murf@rpath.com</field>
+        <field type="CharField" name="password">sha1$f8e2d$de29d8d0d07d14e3d459fe093acfa64445f1a1d8</field>
+        <field type="BooleanField" name="is_staff">True</field>
+        <field type="BooleanField" name="is_active">True</field>
+        <field type="BooleanField" name="is_superuser">True</field>
+        <field type="DateTimeField" name="last_login">2010-08-04 23:43:19</field>
+        <field type="DateTimeField" name="date_joined">2010-08-04 23:43:19</field>
+        <field to="auth.group" name="groups" rel="ManyToManyRel"></field>
+        <field to="auth.permission" name="user_permissions" rel="ManyToManyRel"></field>
+    </object>
+    <object pk="33" model="contenttypes.contenttype">
+        <field type="CharField" name="name">available update</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">availableupdate</field>
+    </object>
+    <object pk="5" model="contenttypes.contenttype">
+        <field type="CharField" name="name">content type</field>
+        <field type="CharField" name="app_label">contenttypes</field>
+        <field type="CharField" name="model">contenttype</field>
+    </object>
+    <object pk="16" model="contenttypes.contenttype">
+        <field type="CharField" name="name">downloads</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">downloads</field>
+    </object>
+    <object pk="2" model="contenttypes.contenttype">
+        <field type="CharField" name="name">group</field>
+        <field type="CharField" name="app_label">auth</field>
+        <field type="CharField" name="model">group</field>
+    </object>
+    <object pk="15" model="contenttypes.contenttype">
+        <field type="CharField" name="name">images</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">images</field>
+    </object>
+    <object pk="31" model="contenttypes.contenttype">
+        <field type="CharField" name="name">log entry</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">logentry</field>
+    </object>
+    <object pk="34" model="contenttypes.contenttype">
+        <field type="CharField" name="name">log entry</field>
+        <field type="CharField" name="app_label">admin</field>
+        <field type="CharField" name="model">logentry</field>
+    </object>
+    <object pk="24" model="contenttypes.contenttype">
+        <field type="CharField" name="name">managed system</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">managedsystem</field>
+    </object>
+    <object pk="27" model="contenttypes.contenttype">
+        <field type="CharField" name="name">management node</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">managementnode</field>
+    </object>
+    <object pk="12" model="contenttypes.contenttype">
+        <field type="CharField" name="name">members</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">members</field>
+    </object>
+    <object pk="4" model="contenttypes.contenttype">
+        <field type="CharField" name="name">message</field>
+        <field type="CharField" name="app_label">auth</field>
+        <field type="CharField" name="model">message</field>
+    </object>
+    <object pk="28" model="contenttypes.contenttype">
+        <field type="CharField" name="name">network</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">network</field>
+    </object>
+    <object pk="1" model="contenttypes.contenttype">
+        <field type="CharField" name="name">permission</field>
+        <field type="CharField" name="app_label">auth</field>
+        <field type="CharField" name="model">permission</field>
+    </object>
+    <object pk="11" model="contenttypes.contenttype">
+        <field type="CharField" name="name">products</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">products</field>
+    </object>
+    <object pk="14" model="contenttypes.contenttype">
+        <field type="CharField" name="name">releases</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">releases</field>
+    </object>
+    <object pk="21" model="contenttypes.contenttype">
+        <field type="CharField" name="name">repository log status</field>
+        <field type="CharField" name="app_label">reporting</field>
+        <field type="CharField" name="model">repositorylogstatus</field>
+    </object>
+    <object pk="6" model="contenttypes.contenttype">
+        <field type="CharField" name="name">session</field>
+        <field type="CharField" name="app_label">sessions</field>
+        <field type="CharField" name="model">session</field>
+    </object>
+    <object pk="17" model="contenttypes.contenttype">
+        <field type="CharField" name="name">sessions</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">sessions</field>
+    </object>
+    <object pk="7" model="contenttypes.contenttype">
+        <field type="CharField" name="name">site</field>
+        <field type="CharField" name="app_label">sites</field>
+        <field type="CharField" name="model">site</field>
+    </object>
+    <object pk="23" model="contenttypes.contenttype">
+        <field type="CharField" name="name">system</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">system</field>
+    </object>
+    <object pk="26" model="contenttypes.contenttype">
+        <field type="CharField" name="name">system event</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">systemevent</field>
+    </object>
+    <object pk="25" model="contenttypes.contenttype">
+        <field type="CharField" name="name">system event type</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">systemeventtype</field>
+    </object>
+    <object pk="29" model="contenttypes.contenttype">
+        <field type="CharField" name="name">system log</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">systemlog</field>
+    </object>
+    <object pk="30" model="contenttypes.contenttype">
+        <field type="CharField" name="name">system log entry</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">systemlogentry</field>
+    </object>
+    <object pk="20" model="contenttypes.contenttype">
+        <field type="CharField" name="name">system update</field>
+        <field type="CharField" name="app_label">reporting</field>
+        <field type="CharField" name="model">systemupdate</field>
+    </object>
+    <object pk="19" model="contenttypes.contenttype">
+        <field type="CharField" name="name">target user credentials</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">targetusercredentials</field>
+    </object>
+    <object pk="18" model="contenttypes.contenttype">
+        <field type="CharField" name="name">targets</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">targets</field>
+    </object>
+    <object pk="3" model="contenttypes.contenttype">
+        <field type="CharField" name="name">user</field>
+        <field type="CharField" name="app_label">auth</field>
+        <field type="CharField" name="model">user</field>
+    </object>
+    <object pk="10" model="contenttypes.contenttype">
+        <field type="CharField" name="name">user group members</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">usergroupmembers</field>
+    </object>
+    <object pk="8" model="contenttypes.contenttype">
+        <field type="CharField" name="name">user groups</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">usergroups</field>
+    </object>
+    <object pk="9" model="contenttypes.contenttype">
+        <field type="CharField" name="name">users</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">users</field>
+    </object>
+    <object pk="32" model="contenttypes.contenttype">
+        <field type="CharField" name="name">version</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">version</field>
+    </object>
+    <object pk="13" model="contenttypes.contenttype">
+        <field type="CharField" name="name">versions</field>
+        <field type="CharField" name="app_label">rbuilder</field>
+        <field type="CharField" name="model">versions</field>
+    </object>
+    <object pk="22" model="contenttypes.contenttype">
+        <field type="CharField" name="name">x obj href model</field>
+        <field type="CharField" name="app_label">inventory</field>
+        <field type="CharField" name="model">xobjhrefmodel</field>
+    </object>
+    <object pk="1" model="sites.site">
+        <field type="CharField" name="domain">example.com</field>
+        <field type="CharField" name="name">example.com</field>
+    </object>
+    <object pk="1" model="inventory.system">
+        <field type="CharField" name="name">mgoblue</field>
+        <field type="DateTimeField" name="created_date">2010-08-04 23:44:01</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="CharField" name="reservation_id"><None></None></field>
+        <field type="CharField" name="os_type"><None></None></field>
+        <field type="CharField" name="os_major_version"><None></None></field>
+        <field type="CharField" name="os_minor_version"><None></None></field>
+    </object>
+    <object pk="2" model="inventory.system">
+        <field type="CharField" name="name">mgoblue2</field>
+        <field type="DateTimeField" name="created_date">2010-08-04 23:44:09</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="CharField" name="reservation_id"><None></None></field>
+        <field type="CharField" name="os_type"><None></None></field>
+        <field type="CharField" name="os_major_version"><None></None></field>
+        <field type="CharField" name="os_minor_version"><None></None></field>
+    </object>
+    <object pk="3" model="inventory.system">
+        <field type="CharField" name="name">mgoblue3</field>
+        <field type="DateTimeField" name="created_date">2010-08-04 23:44:16</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="CharField" name="reservation_id"><None></None></field>
+        <field type="CharField" name="os_type"><None></None></field>
+        <field type="CharField" name="os_major_version"><None></None></field>
+        <field type="CharField" name="os_minor_version"><None></None></field>
+    </object>
+    <object pk="1" model="inventory.systemeventtype">
+        <field type="CharField" name="name">poll</field>
+        <field type="CharField" name="description">standard polling event</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="2" model="inventory.systemeventtype">
+        <field type="CharField" name="name">activation</field>
+        <field type="CharField" name="description">on-demand activation event</field>
+        <field type="SmallIntegerField" name="priority">100</field>
+    </object>
+    <object pk="3" model="inventory.systemeventtype">
+        <field type="CharField" name="name">poll_now</field>
+        <field type="CharField" name="description">on-demand polling event</field>
+        <field type="SmallIntegerField" name="priority">90</field>
+    </object>
+    <object pk="1" model="inventory.systemevent">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
+        <field to="inventory.systemeventtype" name="event_type" rel="ManyToOneRel">1</field>
+        <field type="DateTimeField" name="time_created">2010-08-04 23:45:44</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-05 03:43:25</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="2" model="inventory.systemevent">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field to="inventory.systemeventtype" name="event_type" rel="ManyToOneRel">2</field>
+        <field type="DateTimeField" name="time_created">2010-08-04 23:45:51</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-05 03:43:25</field>
+        <field type="SmallIntegerField" name="priority">100</field>
+    </object>
+    <object pk="3" model="inventory.systemevent">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">3</field>
+        <field to="inventory.systemeventtype" name="event_type" rel="ManyToOneRel">3</field>
+        <field type="DateTimeField" name="time_created">2010-08-04 23:46:01</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-05 03:43:25</field>
+        <field type="SmallIntegerField" name="priority">90</field>
+    </object>
+</django-objects>
