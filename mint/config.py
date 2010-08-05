@@ -256,8 +256,8 @@ class MintConfig(ConfigFile):
     # inventory
     systemPollCount = (CfgInt, 1,
                           "The number of systems to poll at a time")
-    systemEventDelay = (CfgInt, 60,
-                          "The number of minutes to wait before activating a systems next polling task")
+    systemEventDelay = (CfgInt, 5,
+                          "The number of minutes to wait before enabling a systems next polling task")
 
 
     # *** BEGIN DEPRECATED VALUES ***
