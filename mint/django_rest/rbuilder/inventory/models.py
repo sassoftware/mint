@@ -130,6 +130,9 @@ class XObjIdModel(XObjModel):
         self.id = self.get_absolute_url(request)
 
 class XObjHrefModel(XObjModel):
+    class Meta:
+        abstract = True
+
     _xobj = xobj.XObjMetadata(
                 attributes = {'href':str})
 
@@ -335,12 +338,13 @@ class AvailableUpdate(XObjModel):
     class Meta:
         db_table = 'inventory_available_update'
         unique_together = (('software_version', 'available_update'),)
+    available_update_id = models.AutoField(primary_key=True)
     software_version = models.ForeignKey(Version,
-        related_name='softwareVersion_set')
+        related_name='software_version_set')
     # This column is nullable, which basically means that the last time an
     # update was checked for, none was found.
-    available_update = models.ForeignKey(Version,
-        related_name = 'availableUpdate_set')
+    software_version_available_update = models.ForeignKey(Version,
+        related_name = 'software_version_available_update_set')
     last_refreshed = models.DateTimeField(auto_now_add=True)
 
 type_map = {}

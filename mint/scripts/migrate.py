@@ -1057,415 +1057,205 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 5)
+    Version = (50, 0)
 
-    # 50.0
-    # - Add available and launch_date columns to inventory_managed_system
     def migrate(self):
         cu = self.db.cursor()
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "available" BOOLEAN NOT NULL DEFAULT TRUE
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "launch_date" TIMESTAMP WITH TIME ZONE
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            RENAME "registration_date" TO "activation_date"
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ALTER "activation_date" DROP NOT NULL
-        """)
-        return True
+        db = self.db
 
-    # 50.1 
-    # - Add schema for storing unmanaged systems.
-    def migrate1(self):
-        cu = self.db.cursor()
+        changed = drop_tables(db,
+            "inventory_system_target",
+            "inventory_system_software_version",
+            "inventory_system_information",
+            "inventory_network_information",
+            "inventory_storage_volume",
+            "inventory_cpu",
+            "inventory_software_version_update",
+            "inventory_software_version",
+            "inventory_managed_system")
 
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "description" VARCHAR(8092)
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "name" VARCHAR(8092)
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "activation_date_int" INTEGER
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ADD COLUMN "launch_date_int" INTEGER
-        """)
-
-        cu.execute("""
-            UPDATE "inventory_managed_system"
-            SET "launch_date_int" = date_part('epoch' "launch_date")
-        """)
-
-        cu.execute("""
-            UPDATE "inventory_managed_system"
-            SET "activation_date_int" = date_part('epoch' "activation_date")
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            DROP "activation_date"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            DROP "launch_date"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            RENAME "activation_date_int" TO "activation_date"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            RENAME "launch_date_int" TO "launch_date"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            ADD COLUMN "reservation_id" VARCHAR(256)
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            RENAME "managed_system_id" to "system_id"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            DROP CONSTRAINT "inventory_system_target_managed_system_id_fkey"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_network_information"
-            RENAME TO "inventory_system_network_information"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_system_network_information"
-            ADD COLUMN "public_dns_name" VARCHAR(255)
-        """)
-
-        if 'inventory_system' not in self.db.tables:
+        if 'inventory_system' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system" (
+                    "system_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL,
+                    "description" varchar(8092),
+                    "created_date" datetime NOT NULL,
+                    "launch_date" datetime,
+                    "target_id" integer REFERENCES "targets" ("targetid"),
+                    "target_system_id" varchar(255),
+                    "reservation_id" varchar(255),
+                    "os_type" varchar(64),
+                    "os_major_version" varchar(32),
+                    "os_minor_version" varchar(32),
+                    "activation_date" datetime NOT NULL,
+                    "generated_uuid" varchar(64) UNIQUE,
+                    "local_uuid" varchar(64),
+                    "ssl_client_certificate" varchar(8092),
+                    "ssl_client_key" varchar(8092),
+                    "ssl_server_certificate" varchar(8092),
+                    "scheduled_event_start_date" datetime,
+                    "launching_user_id" integer REFERENCES "users" ("userid"),
+                    "available" bool,
+                    "state" varchar(32),
+                    "management_node_id" integer
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system",
+                "inventory_system_target_id_idx", "target_id")
+
+        if 'inventory_managementnode' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_managementnode" (
                     "id" %(PRIMARYKEY)s,
-                    "ip_address" VARCHAR(15),
-                    "public_dns_name" VARCHAR(255) 
-                ) %(TABLEOPTS)s """ % self.db.keywords)
-            self.db.tables['inventory_system'] = []
+                    "system_id" integer NOT NULL UNIQUE 
+                        REFERENCES "inventory_system" ("system_id")
+                ) %(TABLEOPTS)s""" db.keywords)
+            db.tables['inventory_managementnode'] = []
+            changed = True
+            changed |= db.createIndex("inventory_managementnode",
+                "inventory_managementnode_system_id_idx_uq",
+                "system_id", unique=True)
+                        
 
-        if 'inventory_state' not in self.db.tables:
+        if 'inventory_network' not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_state" (
-                    "id" %(PRIMARYKEY)s,
-                    "state" VARCHAR(32) NOT NULL
-                ) %(TABLEOPTS)s""" % self.db.keywords)
-            self.db.tables['inventory_state'] = []
-
-        if 'inventory_system_state' not in self.db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_state" (
-                    "id" %(PRIMARYKEY)s,
-                    "system_id" INTEGER NOT NULL
-                        REFERENCES "inventory_system" ("id") NOT NULL,
-                    "state_id" INTEGER NOT NULL
-                        REFERENCES "inventory_state" ("id") NOT NULL
-                ) %(TABLEOPTS)s""" % self.db.keywords) 
-            self.db.tables['inventory_system_state'] = []
-
-        cu.execute("""
-            INSERT INTO "inventory_system" ("id")
-            SELECT "id" FROM "inventory_managed_system"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            ADD CONSTRAINT "inventory_system_target_system_id_fkey"
-            FOREIGN KEY ("system_id")
-            REFERENCES "inventory_system" ("id")
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            RENAME "id" to "managed_system_id"
-        """)
-
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            ADD CONSTRAINT "inventory_managed_system_managed_system_id_fkey"
-            FOREIGN KEY ("managed_system_id")
-            REFERENCES "inventory_system" ("id")
-        """)
-
-        if 'inventory_system_management_node' not in self.db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_management_node" (
-                    "id" %(PRIMARYKEY)s,
-                    "managed_system_id" INTEGER
-                        REFERENCES "inventory_managed_system"
-                            ("managed_system_id"),
-                    "managed_node_id" INTEGER
-                        REFERENCES "inventory_managed_system"
-                            ("managed_system_id")
-                ) %(TABLEOPTS)s""" % self.db.keywords)
-            cu.execute("""
-                CREATE INDEX
-                    "inventory_system_management_node_managed_system_id_managed_node_id"
-                ON "inventory_system_management_node" 
-                    ("managed_system_id", "managed_node_id")
-            """)
-            cu.execute("""
-                CREATE INDEX
-                    "inventory_system_management_node_managed_node_id_managed_system_id"
-                ON "inventory_system_management_node"
-                    ("managed_node_id", "managed_system_id")
-            """)
-            self.db.tables['inventory_system_management_node'] = []
-        return True
-
-    def migrate2(self):
-        cu = self.db.cursor()
-        
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            DROP constraint "inventory_managed_system_managed_system_id_fkey"
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_managed_system"
-            RENAME "managed_system_id" to "id"
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            DROP CONSTRAINT "inventory_system_target_system_id_fkey"
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            RENAME "system_id" to "managed_system_id"
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            ADD CONSTRAINT "inventory_system_target_managed_system_id_fkey"
-            FOREIGN KEY ("managed_system_id")
-            REFERENCES "inventory_managed_system" ("id")
-            ON DELETE SET NULL
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            ADD "ip_address" VARCHAR(15)
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_target"
-            ADD "public_dns_name" VARCHAR(255)
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_state"
-            DROP CONSTRAINT "inventory_system_state_system_id_fkey"
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_state"
-            RENAME "system_id" to "managed_system_id"
-        """)
-        cu.execute("""
-            ALTER TABLE "inventory_system_state"
-            ADD CONSTRAINT "inventory_system_state_managed_system_id_fkey"
-            FOREIGN KEY ("managed_system_id")
-            REFERENCES "inventory_managed_system" ("id")
-        """)
-        cu.execute("""
-            DROP TABLE "inventory_system"
-        """)
-
-        return True
-
-    def migrate3(self):
-        cu = self.db.cursor()
-
-        cu.execute("""
-            DROP TABLE "inventory_system_network_information"
-        """)
-        if 'inventory_system_network_information' not in self.db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_network_information" (
-                    "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer NOT NULL 
-                        REFERENCES "inventory_managed_system" ("id") 
-                        DEFERRABLE INITIALLY DEFERRED,
-                    "interface_name" varchar(32),
-                    "ip_address" varchar(15),
+                CREATE TABLE "inventory_network" (
+                    "network_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "ip_address" char(15) NOT NULL,
+                    "ipv6_address" varchar(32),
+                    "device_name" varchar(255) NOT NULL,
+                    "public_dns_name" varchar(255) NOT NULL,
                     "netmask" varchar(20),
-                    "port_type" varchar(32),
-                    "public_dns_name" varchar(255)
-                ) %(TABLEOPTS)s""" % self.db.keywords)
-            cu.execute("""
-                CREATE INDEX "inventory_network_information_managed_system_id" 
-                    ON "inventory_system_network_information" ("managed_system_id")
-            """)
-            self.db.tables['inventory_system_network_information'] = []
-        return True
+                    "port_type" varchar(32)
+                ) %(TABLEOPTS)s""" db.keywords)
+            db.tables['inventory_network'] = []
+            changed = True
+            changed |= db.createIndex("inventory_network",
+                "inventory_network_system_id_idx", "system_id")
 
-    def migrate4(self):
-        db = self.db
-        cu = db.cursor()
-        changed = False
-
-        tableName = 'inventory_schedule'
-        if tableName not in db.tables:
+        if 'inventory_system_log' not in db.tables:
             cu.execute("""
-                CREATE TABLE TABLE_NAME
-                (
-                    schedule_id     %(PRIMARYKEY)s,
-                    schedule        text NOT NULL,
-                    enabled         smallint NOT NULL DEFAULT 1,
-                    created         NUMERIC NOT NULL
-                ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
-            db.tables[tableName] = []
+                CREATE TABLE "inventory_system_log" (
+                    "system_log_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE
+                ) %(TABLEOPTS)s""" db.keywords)
+            db.tables['inventory_system_log'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system_log",
+                "inventory_system_log_system_id_idx", "system_id")
+
+        if 'inventory_log_entry' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_log_entry" (
+                    "entry_id" %(PRIMARYKEY)s,
+                    "entry" varchar(8092) NOT NULL
+                ) %(TABLEOPTS)s""" db.keywords)
+            db.tables['inventory_log_entry'] = []
             changed = True
 
-        changed |= schema._addTableRows(db, tableName, 'schedule',
-            [ dict(
-                schedule = """BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-RRULE:FREQ=DAILY
-END:VEVENT
-END:VCALENDAR""",
-                created = int(time.time())) ])
-
-        tableName = 'inventory_managed_system_scheduled_event'
-        if tableName not in db.tables:
+        if 'inventory_version' not in db.tables:
             cu.execute("""
-                CREATE TABLE TABLE_NAME
-                (
-                    scheduled_event_id      %(PRIMARYKEY)s,
-                    managed_system_id       INTEGER NOT NULL
-                        REFERENCES inventory_managed_system ON DELETE CASCADE,
-                    schedule_id             INTEGER NOT NULL
-                        REFERENCES inventory_schedule ON DELETE CASCADE,
-                    state_id                INTEGER NOT NULL
-                        REFERENCES job_states ON DELETE CASCADE,
-                    scheduled_time          NUMERIC NOT NULL
-                ) %(TABLEOPTS)s""".replace("TABLE_NAME", tableName) % db.keywords)
-            db.tables[tableName] = []
+                CREATE TABLE "inventory_version" (
+                    "version_id" %(PRIMARYKEY)s,
+                    "name" text NOT NULL,
+                    "version" text NOT NULL,
+                    "flavor" text NOT NULL,
+                    UNIQUE ("name", "version", "flavor")
+                ) %(TABLEOPTS)s""" db.keywords)
+            db.tables['inventory_version'] = []
             changed = True
 
-        changed |= add_columns(db, 'inventory_managed_system',
-            'scheduled_event_start_date NUMERIC')
-        cu.execute("UPDATE inventory_managed_system SET scheduled_event_start_date = activation_date")
-        cu.execute("""
-            ALTER TABLE inventory_managed_system
-                ALTER scheduled_event_start_date SET NOT NULL""")
-
-        return changed
-
-    def migrate5(self):
-        db = self.db
-        cu = db.cursor()
-        changed = False
-
-        if 'inventory_entry' not in db.tables:
+        if 'inventory_available_update' not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_entry" (
+                CREATE TABLE "inventory_available_update" (
+                    "available_update_id" %(PRIMARYKEY)s,
+                    "software_version_id" integer NOT NULL 
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
+                    "software_version_available_update_id" integer NOT NULL 
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
+                    "last_refreshed" datetime NOT NULL,
+                    UNIQUE ("software_version_id", "available_update_id")
+                ) %(TABLEOPTS)s""" db.keywords)
+            db.tables['inventory_available_update'] = []
+            changed = True
+            changed |= db.createIndex("inventory_available_update",
+                "inventory_available_update_software_version_id_idx",
+                "software_version_id")
+            changed |= db.createIndex("inventory_available_update",
+                "inventory_available_update_software_version_available_update_id_idx",
+                "software_version_available_update_id")
+
+        if 'inventory_system_versions' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_versions" (
                     "id" %(PRIMARYKEY)s,
-                    "entry" varchar(8092)
-                ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_entry'] = []
+                    "system_id" integer NOT NULL
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "version_id" integer NOT NULL
+                        REFERENCES "inventory_version" ("version_id"
+                        ON DELETE CASCADE
+                    UNIQUE ("system_id", "version_id")
+                ) %(TABLEOPTS)s""" db.keywords)
+            db.tables['inventory_system_versions'] = []
             changed = True
-
-        if 'inventory_system_log_entry' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_log_entry" (
-                    "id" %(PRIMARYKEY)s,
-                    "managed_system_id" integer NOT NULL 
-                        REFERENCES "inventory_managed_system" ("id") 
-                        DEFERRABLE INITIALLY DEFERRED,
-                    "entry_id" integer NOT NULL
-                        REFERENCES "inventory_entry" ("id")
-                        DEFERRABLE INITIALLY DEFERRED,
-                    "entry_date" integer
-                ) %(TABLEOPTS)s""" % db.keywords)
-            cu.execute("""
-            CREATE INDEX "inventory_system_log_entry_managed_system_id" 
-                ON "inventory_system_log_entry" ("managed_system_id");
-            """)
-            cu.execute("""
-            CREATE INDEX "inventory_system_log_entry_entry_id"
-                ON "inventory_system_log_entry" ("entry_id");
-            """)
-            db.tables['inventory_system_log_entry'] = []
-            changed = True
-
-        return changed
-    
-    def migrate6(self):
-        db = self.db
-        cu = db.cursor()
-        changed = False
-
-        drop_tables(self.db, 'inventory_schedule')
+            changed |= db.createIndex("inventory_system_versions",
+                "inventory_system_versions_system_id_idx", "system_id")
+            changed |= db.createIndex("inventory_system_versions",
+                "inventory_system_versions_version_id", "version_id")
 
         if 'inventory_system_event_type' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system_event_type" (
-                    "system_event_type_id" integer NOT NULL PRIMARY KEY,
+                    "system_event_type_id" %(PRIMARYKEY)s,
                     "name" varchar(8092) NOT NULL,
                     "description" varchar(8092) NOT NULL,
                     "priority" smallint NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
-            cu.execute("""
-            CREATE INDEX "inventory_system_event_type_name" ON "inventory_system_event_type" ("name");
-            """)
-            cu.execute("""
-            CREATE INDEX "inventory_system_event_type_priority" ON "inventory_system_event_type" ("priority");
-            """)
             db.tables['inventory_system_event_type'] = []
             changed = True
-            
-            changed |= schema._addTableRows(db, 'inventory_system_event_type', 'name',
-            [ dict(name="activation", description='on-demand activation event', priority=100),
-              dict(name="poll", description='standard polling event', priority=50),
-              dict(name="poll_now", description='on-demand polling event', priority=90)])
+            changed |= _addTableRows(db, 'inventory_system_event_type', 'name',
+                [ dict(name="activation", 
+                       description='on-demand activation event', priority=100),
+                  dict(name="poll", 
+                       description='standard polling event', priority=50),
+                  dict(name="poll_now", 
+                       description='on-demand polling event', priority=90)])
             
         if 'inventory_system_event' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system_event" (
-                    "system_event_id" integer NOT NULL PRIMARY KEY,
-                    "system_id" integer NOT NULL REFERENCES "inventory_system" ("system_id"),
-                    "event_type_id" integer NOT NULL REFERENCES "inventory_system_event_type" ("system_event_type_id"),
+                    "system_event_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id"),
+                    "event_type_id" integer NOT NULL 
+                        REFERENCES "inventory_system_event_type" 
+                            ("system_event_type_id"),
                     "time_created" datetime NOT NULL,
                     "time_enabled" datetime NOT NULL,
                     "priority" smallint NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
-            cu.execute("""
-            CREATE INDEX "inventory_system_event_system_id" ON "inventory_system_event" ("system_id");
-            """)
-            cu.execute("""
-            CREATE INDEX "inventory_system_event_event_type_id" ON "inventory_system_event" ("event_type_id");
-            """)
-            cu.execute("""
-            CREATE INDEX "inventory_system_event_time_enabled" ON "inventory_system_event" ("time_enabled");
-            """)
-            cu.execute("""
-            CREATE INDEX "inventory_system_event_priority" ON "inventory_system_event" ("priority");
-            """)
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_system_id", "system_id")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_event_type_id", "type_id")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_time_enabled", "time_enabled")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_priority", "priority")
             db.tables['inventory_system_event'] = []
             changed = True
 
-        return changed
+            return changed
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
