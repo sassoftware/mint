@@ -1111,7 +1111,7 @@ class MigrateTo_50(SchemaMigration):
                     "id" %(PRIMARYKEY)s,
                     "system_id" integer NOT NULL UNIQUE 
                         REFERENCES "inventory_system" ("system_id")
-                ) %(TABLEOPTS)s""" db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_managementnode'] = []
             changed = True
             changed |= db.createIndex("inventory_managementnode",
@@ -1132,7 +1132,7 @@ class MigrateTo_50(SchemaMigration):
                     "public_dns_name" varchar(255) NOT NULL,
                     "netmask" varchar(20),
                     "port_type" varchar(32)
-                ) %(TABLEOPTS)s""" db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_network'] = []
             changed = True
             changed |= db.createIndex("inventory_network",
@@ -1145,7 +1145,7 @@ class MigrateTo_50(SchemaMigration):
                     "system_id" integer NOT NULL 
                         REFERENCES "inventory_system" ("system_id")
                         ON DELETE CASCADE
-                ) %(TABLEOPTS)s""" db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_log'] = []
             changed = True
             changed |= db.createIndex("inventory_system_log",
@@ -1156,7 +1156,7 @@ class MigrateTo_50(SchemaMigration):
                 CREATE TABLE "inventory_log_entry" (
                     "entry_id" %(PRIMARYKEY)s,
                     "entry" varchar(8092) NOT NULL
-                ) %(TABLEOPTS)s""" db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_log_entry'] = []
             changed = True
 
@@ -1168,7 +1168,7 @@ class MigrateTo_50(SchemaMigration):
                     "version" text NOT NULL,
                     "flavor" text NOT NULL,
                     UNIQUE ("name", "version", "flavor")
-                ) %(TABLEOPTS)s""" db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_version'] = []
             changed = True
 
@@ -1184,7 +1184,7 @@ class MigrateTo_50(SchemaMigration):
                         ON DELETE CASCADE,
                     "last_refreshed" datetime NOT NULL,
                     UNIQUE ("software_version_id", "available_update_id")
-                ) %(TABLEOPTS)s""" db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_available_update'] = []
             changed = True
             changed |= db.createIndex("inventory_available_update",
@@ -1202,10 +1202,10 @@ class MigrateTo_50(SchemaMigration):
                         REFERENCES "inventory_system" ("system_id")
                         ON DELETE CASCADE,
                     "version_id" integer NOT NULL
-                        REFERENCES "inventory_version" ("version_id"
-                        ON DELETE CASCADE
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
                     UNIQUE ("system_id", "version_id")
-                ) %(TABLEOPTS)s""" db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_versions'] = []
             changed = True
             changed |= db.createIndex("inventory_system_versions",
@@ -1244,15 +1244,15 @@ class MigrateTo_50(SchemaMigration):
                     "time_enabled" datetime NOT NULL,
                     "priority" smallint NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_event'] = []
             changed |= db.createIndex("inventory_system_event",
                 "inventory_system_event_system_id", "system_id")
             changed |= db.createIndex("inventory_system_event",
-                "inventory_system_event_event_type_id", "type_id")
+                "inventory_system_event_event_type_id", "event_type_id")
             changed |= db.createIndex("inventory_system_event",
                 "inventory_system_event_time_enabled", "time_enabled")
             changed |= db.createIndex("inventory_system_event",
                 "inventory_system_event_priority", "priority")
-            db.tables['inventory_system_event'] = []
             changed = True
 
             return changed
