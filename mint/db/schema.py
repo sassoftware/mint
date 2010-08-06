@@ -1052,21 +1052,21 @@ def _createInventorySchema(db):
                 "system_id" %(PRIMARYKEY)s,
                 "name" varchar(8092) NOT NULL,
                 "description" varchar(8092),
-                "created_date" datetime NOT NULL,
-                "launch_date" datetime,
+                "created_date" timestamp NOT NULL,
+                "launch_date" timestamp,
                 "target_id" integer REFERENCES "targets" ("targetid"),
                 "target_system_id" varchar(255),
                 "reservation_id" varchar(255),
                 "os_type" varchar(64),
                 "os_major_version" varchar(32),
                 "os_minor_version" varchar(32),
-                "activation_date" datetime NOT NULL,
+                "activation_date" timestamp NOT NULL,
                 "generated_uuid" varchar(64) UNIQUE,
                 "local_uuid" varchar(64),
                 "ssl_client_certificate" varchar(8092),
                 "ssl_client_key" varchar(8092),
                 "ssl_server_certificate" varchar(8092),
-                "scheduled_event_start_date" datetime,
+                "scheduled_event_start_date" timestamp,
                 "launching_user_id" integer REFERENCES "users" ("userid"),
                 "available" bool,
                 "state" varchar(32),
@@ -1154,7 +1154,7 @@ def _createInventorySchema(db):
                 "software_version_available_update_id" integer NOT NULL 
                     REFERENCES "inventory_version" ("version_id")
                     ON DELETE CASCADE,
-                "last_refreshed" datetime NOT NULL,
+                "last_refreshed" timestamp NOT NULL,
                 UNIQUE ("software_version_id", "available_update_id")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_available_update'] = []
@@ -1212,8 +1212,8 @@ def _createInventorySchema(db):
                 "event_type_id" integer NOT NULL 
                     REFERENCES "inventory_system_event_type" 
                         ("system_event_type_id"),
-                "time_created" datetime NOT NULL,
-                "time_enabled" datetime NOT NULL,
+                "time_created" timestamp NOT NULL,
+                "time_enabled" timestamp NOT NULL,
                 "priority" smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_event'] = []
@@ -1360,17 +1360,19 @@ def _createJobsSchema(db):
         db.tables['job_target'] = []
         changed = True
 
-    if 'job_managed_system' not in db.tables:
-        cu.execute("""
-            CREATE TABLE job_managed_system
-            (
-                job_id      INTEGER NOT NULL
-                    REFERENCES jobs ON DELETE CASCADE,
-                managed_system_id  INTEGER NOT NULL
-                    REFERENCES inventory_managed_system ON DELETE CASCADE
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['job_managed_system'] = []
-        changed = True
+    # <murf> removed since inventory_managed_system table no longer exists.
+    # do we need to fix this? 
+    #if 'job_managed_system' not in db.tables:
+    #    cu.execute("""
+    #        CREATE TABLE job_managed_system
+    #        (
+    #            job_id      INTEGER NOT NULL
+    #                REFERENCES jobs ON DELETE CASCADE,
+    #            managed_system_id  INTEGER NOT NULL
+    #                REFERENCES inventory_managed_system ON DELETE CASCADE
+    #        ) %(TABLEOPTS)s""" % db.keywords)
+    #    db.tables['job_managed_system'] = []
+    #    changed = True
 
     return changed
 
