@@ -334,17 +334,16 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def processSystemEvents(self):
         events = self.getSystemEventsForProcessing()
         if not events:
-            log.debug("no events to process")
+            log.info("No systems events to process")
             return
         
         for event in events:
             self.dispatchSystemEvent(event)
 
     def dispatchSystemEvent(self, event):
-        log.debug("processing %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id, event.system.name))
+        log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         # TODO:  dispatch it here, whatever that means
-        self.log_system(event.system, "Dispatched %s event" % event.event_type.name)
         
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)
@@ -360,11 +359,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def createNextSystemPollEvent(self, triggerEvent):
         if triggerEvent.event_type.name == models.SystemEventType.POLL or triggerEvent.event_type.name == models.SystemEventType.POLL_NOW:
             enable_time = datetime.datetime.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
-            log.debug("creating next poll event for system %s to be enabled at %s" % (triggerEvent.system.name, enable_time))
             poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
             next_event = models.SystemEvent(system=triggerEvent.system, event_type=poll_event, 
                 priority=poll_event.priority, time_enabled=enable_time)
             next_event.save()
-            self.log_system(next_event.system, "Poll event registered")
+            poll_msg = "Poll event registered and will be enabled on %s" % enable_time
+            self.log_system(next_event.system, poll_msg)
+            log.info(poll_msg)
         else:
             log.debug("%s events do not trigger a new event creation" % triggerEvent.event_type.name)

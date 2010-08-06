@@ -10,6 +10,7 @@ This script can be used to check for and handle current system inventory events
 
 import os
 import sys
+import logging
 
 from mint import config
 from mint.lib import scriptlibrary
@@ -29,7 +30,7 @@ class ProcessSystemEvents(scriptlibrary.SingletonScript):
             quietMode = True
             
         self.loadConfig(cfgPath=self.cfgPath)
-        self.resetLogging(quiet=quietMode)
+        self.resetLogging(quiet=quietMode, fileLevel=logging.INFO)
     
         settingsModule = "mint.django_rest.settings"
         if len(sys.argv) > 1 and sys.argv[1] == 'useLocalSettings':
