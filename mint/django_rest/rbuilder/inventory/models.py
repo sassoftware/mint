@@ -78,10 +78,8 @@ class XObjModel(models.Model):
     def serialize(self, request=None):
         if hasattr(self, '_xobj'):
             for elem in self._xobj.elements:
-                if getattr(self, elem, None):
-                    continue
                 elemVal = type_map.get(elem, None)
-                if not elemVal:
+                if getattr(self, elem, None) or not elemVal:
                     continue
                 else:
                     elemVal = elemVal()
@@ -110,7 +108,8 @@ class XObjModel(models.Model):
                 val = getattr(self, field.name, None)
                 if val:
                     self.__dict__[field.verbose_name] = \
-                        XObjHrefModel(getattr(self, field.name).get_absolute_url())
+                        XObjHrefModel(
+                            getattr(self, field.name).get_absolute_url(request))
 
             if isinstance(field, models.DateTimeField):
                 val = getattr(self, field.name, None)
