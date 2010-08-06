@@ -16,13 +16,16 @@ from mint.lib import scriptlibrary
 
 class ProcessSystemEvents(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
-    logFileName = 'scripts.log'
+    logFileName = 'system_events.log'
     newLogger = True
     
     def run(self):        
         if sys.argv[0].startswith('--xyzzy='):
             self.cfgPath = sys.argv.pop(0).split('=')[1]
             print "Test mode using configuration from %s" % self.cfgPath
+            
+        self.loadConfig(cfgPath=self.cfgPath)
+        self.resetLogging(quiet=True)
     
         settingsModule = "mint.django_rest.settings"
         if len(sys.argv) > 1 and sys.argv[1] == 'useLocalSettings':
