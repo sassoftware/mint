@@ -118,14 +118,14 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         db_system.save()
         self.log_system(db_system, models.SYSTEM_ACTIVATED_LOG)
         
-        # create an activation event for the system
-        # activation_event_type = models.SystemEventType.objects.get(
-            # name=models.SystemEventType.ACTIVATION)
-        # activation_event = models.SystemEvent(
-            # system=db_system, event_type=activation_event_type, 
-            # priority=activation_event_type.priority)
-        # activation_event.save()
-        # self.logSystem(system, "Activation event registered")
+        create an activation event for the system
+        activation_event_type = models.SystemEventType.objects.get(
+            name=models.SystemEventType.ACTIVATION)
+        activation_event = models.SystemEvent(
+            system=db_system, event_type=activation_event_type, 
+            priority=activation_event_type.priority)
+        activation_event.save()
+        self.logSystem(system, "Activation event registered")
 
         return db_system
 
