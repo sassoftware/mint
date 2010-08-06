@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import testsuite
+
 import os
 import sys
 import testsuite

@@ -76,6 +76,23 @@ class XObjModel(models.Model):
         return urlparse.urljoin(url, href)       
 
     def serialize(self, request=None):
+        if hasattr(self, '_xobj'):
+            for elem in self._xobj.elements:
+                elemVal = getattr(self, elem)()
+                setattr(self, elem, elemVal)
+                for l_field in elemVal.list_fields:
+                    rel_objs = [r \
+                        for r in self._meta.get_all_related_objects() \
+                            if r.var_name == l_field]
+                    for rel_obj in rel_objs:
+                        rel_fields = getattr(self,
+                            rel_obj.get_accessor_name(), [])
+                        if rel_fields:
+                            rel_fields = rel_fields.all()
+                        for rel_field in rel_fields:
+                            l = getattr(elemVal, l_field, [])
+                            l.append(rel_field)
+                            setattr(elemVal, l_field, l)
 
         href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
                         if isinstance(v, XObjHrefModel)]
@@ -163,12 +180,26 @@ class Systems(XObjModel):
     def save(self):
         return [s.save() for s in self.system]
 
+class Networks(XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='networks',
+                elements=['network'])
+    list_fields = ['network']
+    # network = []
+
+    def save(self):
+        return [n.save() for n in network]
+
 class System(XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
-                attributes = {'id':str})
+                attributes = {'id':str},
+                elements = ['networks'])
+    networks = Networks
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
@@ -247,17 +278,6 @@ class ManagementNode(XObjModel):
     system = models.OneToOneField(System)
     # TODO: what extra columns might we want to store about a management node,
     # if any?
-
-class Networks(XObjModel):
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag='networks')
-    list_fields = ['network']
-    network = []
-
-    def save(self):
-        return [n.save() for n in network]
 
 class Network(XObjModel):
     class Meta:
