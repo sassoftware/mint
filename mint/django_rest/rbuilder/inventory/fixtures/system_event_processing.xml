@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
-    <object pk="100" model="auth.permission">
+    <object pk="64" model="auth.permission">
         <field type="CharField" name="name">Can add log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">34</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
         <field type="CharField" name="codename">add_logentry</field>
     </object>
-    <object pk="101" model="auth.permission">
+    <object pk="65" model="auth.permission">
         <field type="CharField" name="name">Can change log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">34</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
         <field type="CharField" name="codename">change_logentry</field>
     </object>
-    <object pk="102" model="auth.permission">
+    <object pk="66" model="auth.permission">
         <field type="CharField" name="name">Can delete log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">34</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
         <field type="CharField" name="codename">delete_logentry</field>
     </object>
     <object pk="4" model="auth.permission">
@@ -90,29 +90,24 @@
         <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">5</field>
         <field type="CharField" name="codename">delete_contenttype</field>
     </object>
-    <object pk="97" model="auth.permission">
+    <object pk="94" model="auth.permission">
         <field type="CharField" name="name">Can add available update</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">33</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
         <field type="CharField" name="codename">add_availableupdate</field>
     </object>
-    <object pk="91" model="auth.permission">
+    <object pk="88" model="auth.permission">
         <field type="CharField" name="name">Can add log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
         <field type="CharField" name="codename">add_logentry</field>
     </object>
-    <object pk="70" model="auth.permission">
-        <field type="CharField" name="name">Can add managed system</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
-        <field type="CharField" name="codename">add_managedsystem</field>
-    </object>
-    <object pk="79" model="auth.permission">
+    <object pk="76" model="auth.permission">
         <field type="CharField" name="name">Can add management node</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
         <field type="CharField" name="codename">add_managementnode</field>
     </object>
-    <object pk="82" model="auth.permission">
+    <object pk="79" model="auth.permission">
         <field type="CharField" name="name">Can add network</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
         <field type="CharField" name="codename">add_network</field>
     </object>
     <object pk="67" model="auth.permission">
@@ -120,59 +115,49 @@
         <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">23</field>
         <field type="CharField" name="codename">add_system</field>
     </object>
-    <object pk="76" model="auth.permission">
+    <object pk="73" model="auth.permission">
         <field type="CharField" name="name">Can add system event</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
         <field type="CharField" name="codename">add_systemevent</field>
     </object>
-    <object pk="73" model="auth.permission">
+    <object pk="70" model="auth.permission">
         <field type="CharField" name="name">Can add system event type</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
         <field type="CharField" name="codename">add_systemeventtype</field>
     </object>
-    <object pk="85" model="auth.permission">
+    <object pk="82" model="auth.permission">
         <field type="CharField" name="name">Can add system log</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
         <field type="CharField" name="codename">add_systemlog</field>
     </object>
-    <object pk="88" model="auth.permission">
+    <object pk="85" model="auth.permission">
         <field type="CharField" name="name">Can add system log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
         <field type="CharField" name="codename">add_systemlogentry</field>
     </object>
-    <object pk="94" model="auth.permission">
+    <object pk="91" model="auth.permission">
         <field type="CharField" name="name">Can add version</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
         <field type="CharField" name="codename">add_version</field>
     </object>
-    <object pk="64" model="auth.permission">
-        <field type="CharField" name="name">Can add x obj href model</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
-        <field type="CharField" name="codename">add_xobjhrefmodel</field>
-    </object>
-    <object pk="98" model="auth.permission">
+    <object pk="95" model="auth.permission">
         <field type="CharField" name="name">Can change available update</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">33</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
         <field type="CharField" name="codename">change_availableupdate</field>
     </object>
-    <object pk="92" model="auth.permission">
+    <object pk="89" model="auth.permission">
         <field type="CharField" name="name">Can change log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
         <field type="CharField" name="codename">change_logentry</field>
     </object>
-    <object pk="71" model="auth.permission">
-        <field type="CharField" name="name">Can change managed system</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
-        <field type="CharField" name="codename">change_managedsystem</field>
-    </object>
-    <object pk="80" model="auth.permission">
+    <object pk="77" model="auth.permission">
         <field type="CharField" name="name">Can change management node</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
         <field type="CharField" name="codename">change_managementnode</field>
     </object>
-    <object pk="83" model="auth.permission">
+    <object pk="80" model="auth.permission">
         <field type="CharField" name="name">Can change network</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
         <field type="CharField" name="codename">change_network</field>
     </object>
     <object pk="68" model="auth.permission">
@@ -180,59 +165,49 @@
         <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">23</field>
         <field type="CharField" name="codename">change_system</field>
     </object>
-    <object pk="77" model="auth.permission">
+    <object pk="74" model="auth.permission">
         <field type="CharField" name="name">Can change system event</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
         <field type="CharField" name="codename">change_systemevent</field>
     </object>
-    <object pk="74" model="auth.permission">
+    <object pk="71" model="auth.permission">
         <field type="CharField" name="name">Can change system event type</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
         <field type="CharField" name="codename">change_systemeventtype</field>
     </object>
-    <object pk="86" model="auth.permission">
+    <object pk="83" model="auth.permission">
         <field type="CharField" name="name">Can change system log</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
         <field type="CharField" name="codename">change_systemlog</field>
     </object>
-    <object pk="89" model="auth.permission">
+    <object pk="86" model="auth.permission">
         <field type="CharField" name="name">Can change system log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
         <field type="CharField" name="codename">change_systemlogentry</field>
     </object>
-    <object pk="95" model="auth.permission">
+    <object pk="92" model="auth.permission">
         <field type="CharField" name="name">Can change version</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
         <field type="CharField" name="codename">change_version</field>
     </object>
-    <object pk="65" model="auth.permission">
-        <field type="CharField" name="name">Can change x obj href model</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
-        <field type="CharField" name="codename">change_xobjhrefmodel</field>
-    </object>
-    <object pk="99" model="auth.permission">
+    <object pk="96" model="auth.permission">
         <field type="CharField" name="name">Can delete available update</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">33</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
         <field type="CharField" name="codename">delete_availableupdate</field>
     </object>
-    <object pk="93" model="auth.permission">
+    <object pk="90" model="auth.permission">
         <field type="CharField" name="name">Can delete log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
         <field type="CharField" name="codename">delete_logentry</field>
     </object>
-    <object pk="72" model="auth.permission">
-        <field type="CharField" name="name">Can delete managed system</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
-        <field type="CharField" name="codename">delete_managedsystem</field>
-    </object>
-    <object pk="81" model="auth.permission">
+    <object pk="78" model="auth.permission">
         <field type="CharField" name="name">Can delete management node</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
         <field type="CharField" name="codename">delete_managementnode</field>
     </object>
-    <object pk="84" model="auth.permission">
+    <object pk="81" model="auth.permission">
         <field type="CharField" name="name">Can delete network</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">27</field>
         <field type="CharField" name="codename">delete_network</field>
     </object>
     <object pk="69" model="auth.permission">
@@ -240,35 +215,30 @@
         <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">23</field>
         <field type="CharField" name="codename">delete_system</field>
     </object>
-    <object pk="78" model="auth.permission">
+    <object pk="75" model="auth.permission">
         <field type="CharField" name="name">Can delete system event</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">26</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
         <field type="CharField" name="codename">delete_systemevent</field>
     </object>
-    <object pk="75" model="auth.permission">
+    <object pk="72" model="auth.permission">
         <field type="CharField" name="name">Can delete system event type</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">25</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">24</field>
         <field type="CharField" name="codename">delete_systemeventtype</field>
     </object>
-    <object pk="87" model="auth.permission">
+    <object pk="84" model="auth.permission">
         <field type="CharField" name="name">Can delete system log</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">28</field>
         <field type="CharField" name="codename">delete_systemlog</field>
     </object>
-    <object pk="90" model="auth.permission">
+    <object pk="87" model="auth.permission">
         <field type="CharField" name="name">Can delete system log entry</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">30</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">29</field>
         <field type="CharField" name="codename">delete_systemlogentry</field>
     </object>
-    <object pk="96" model="auth.permission">
+    <object pk="93" model="auth.permission">
         <field type="CharField" name="name">Can delete version</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">32</field>
+        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">31</field>
         <field type="CharField" name="codename">delete_version</field>
-    </object>
-    <object pk="66" model="auth.permission">
-        <field type="CharField" name="name">Can delete x obj href model</field>
-        <field to="contenttypes.contenttype" name="content_type" rel="ManyToOneRel">22</field>
-        <field type="CharField" name="codename">delete_xobjhrefmodel</field>
     </object>
     <object pk="46" model="auth.permission">
         <field type="CharField" name="name">Can add downloads</field>
@@ -515,16 +485,16 @@
         <field type="CharField" name="first_name"></field>
         <field type="CharField" name="last_name"></field>
         <field type="CharField" name="email">murf@rpath.com</field>
-        <field type="CharField" name="password">sha1$f8e2d$de29d8d0d07d14e3d459fe093acfa64445f1a1d8</field>
+        <field type="CharField" name="password">sha1$df484$20176812389d90b66f5f6d798af61f42c3fb9cad</field>
         <field type="BooleanField" name="is_staff">True</field>
         <field type="BooleanField" name="is_active">True</field>
         <field type="BooleanField" name="is_superuser">True</field>
-        <field type="DateTimeField" name="last_login">2010-08-04 23:43:19</field>
-        <field type="DateTimeField" name="date_joined">2010-08-04 23:43:19</field>
+        <field type="DateTimeField" name="last_login">2010-08-05 22:06:18</field>
+        <field type="DateTimeField" name="date_joined">2010-08-05 22:06:18</field>
         <field to="auth.group" name="groups" rel="ManyToManyRel"></field>
         <field to="auth.permission" name="user_permissions" rel="ManyToManyRel"></field>
     </object>
-    <object pk="33" model="contenttypes.contenttype">
+    <object pk="32" model="contenttypes.contenttype">
         <field type="CharField" name="name">available update</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">availableupdate</field>
@@ -549,22 +519,17 @@
         <field type="CharField" name="app_label">rbuilder</field>
         <field type="CharField" name="model">images</field>
     </object>
-    <object pk="31" model="contenttypes.contenttype">
-        <field type="CharField" name="name">log entry</field>
-        <field type="CharField" name="app_label">inventory</field>
-        <field type="CharField" name="model">logentry</field>
-    </object>
-    <object pk="34" model="contenttypes.contenttype">
+    <object pk="22" model="contenttypes.contenttype">
         <field type="CharField" name="name">log entry</field>
         <field type="CharField" name="app_label">admin</field>
         <field type="CharField" name="model">logentry</field>
     </object>
-    <object pk="24" model="contenttypes.contenttype">
-        <field type="CharField" name="name">managed system</field>
+    <object pk="30" model="contenttypes.contenttype">
+        <field type="CharField" name="name">log entry</field>
         <field type="CharField" name="app_label">inventory</field>
-        <field type="CharField" name="model">managedsystem</field>
+        <field type="CharField" name="model">logentry</field>
     </object>
-    <object pk="27" model="contenttypes.contenttype">
+    <object pk="26" model="contenttypes.contenttype">
         <field type="CharField" name="name">management node</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">managementnode</field>
@@ -579,7 +544,7 @@
         <field type="CharField" name="app_label">auth</field>
         <field type="CharField" name="model">message</field>
     </object>
-    <object pk="28" model="contenttypes.contenttype">
+    <object pk="27" model="contenttypes.contenttype">
         <field type="CharField" name="name">network</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">network</field>
@@ -624,22 +589,22 @@
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">system</field>
     </object>
-    <object pk="26" model="contenttypes.contenttype">
+    <object pk="25" model="contenttypes.contenttype">
         <field type="CharField" name="name">system event</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">systemevent</field>
     </object>
-    <object pk="25" model="contenttypes.contenttype">
+    <object pk="24" model="contenttypes.contenttype">
         <field type="CharField" name="name">system event type</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">systemeventtype</field>
     </object>
-    <object pk="29" model="contenttypes.contenttype">
+    <object pk="28" model="contenttypes.contenttype">
         <field type="CharField" name="name">system log</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">systemlog</field>
     </object>
-    <object pk="30" model="contenttypes.contenttype">
+    <object pk="29" model="contenttypes.contenttype">
         <field type="CharField" name="name">system log entry</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">systemlogentry</field>
@@ -679,7 +644,7 @@
         <field type="CharField" name="app_label">rbuilder</field>
         <field type="CharField" name="model">users</field>
     </object>
-    <object pk="32" model="contenttypes.contenttype">
+    <object pk="31" model="contenttypes.contenttype">
         <field type="CharField" name="name">version</field>
         <field type="CharField" name="app_label">inventory</field>
         <field type="CharField" name="model">version</field>
@@ -689,18 +654,14 @@
         <field type="CharField" name="app_label">rbuilder</field>
         <field type="CharField" name="model">versions</field>
     </object>
-    <object pk="22" model="contenttypes.contenttype">
-        <field type="CharField" name="name">x obj href model</field>
-        <field type="CharField" name="app_label">inventory</field>
-        <field type="CharField" name="model">xobjhrefmodel</field>
-    </object>
     <object pk="1" model="sites.site">
         <field type="CharField" name="domain">example.com</field>
         <field type="CharField" name="name">example.com</field>
     </object>
     <object pk="1" model="inventory.system">
         <field type="CharField" name="name">mgoblue</field>
-        <field type="DateTimeField" name="created_date">2010-08-04 23:44:01</field>
+        <field type="CharField" name="description">mgoblue desc</field>
+        <field type="DateTimeField" name="created_date">2010-08-05 22:17:29</field>
         <field type="DateTimeField" name="launch_date"><None></None></field>
         <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
         <field type="CharField" name="target_system_id"><None></None></field>
@@ -708,10 +669,23 @@
         <field type="CharField" name="os_type"><None></None></field>
         <field type="CharField" name="os_major_version"><None></None></field>
         <field type="CharField" name="os_minor_version"><None></None></field>
+        <field type="DateTimeField" name="activation_date">2010-08-05 22:17:29</field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field type="NullBooleanField" name="available"><None></None></field>
+        <field type="CharField" name="state"><None></None></field>
+        <field to="inventory.managementnode" name="management_node" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.version" name="versions" rel="ManyToManyRel"></field>
     </object>
     <object pk="2" model="inventory.system">
         <field type="CharField" name="name">mgoblue2</field>
-        <field type="DateTimeField" name="created_date">2010-08-04 23:44:09</field>
+        <field type="CharField" name="description">mgoblue2 desc</field>
+        <field type="DateTimeField" name="created_date">2010-08-05 22:17:43</field>
         <field type="DateTimeField" name="launch_date"><None></None></field>
         <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
         <field type="CharField" name="target_system_id"><None></None></field>
@@ -719,10 +693,23 @@
         <field type="CharField" name="os_type"><None></None></field>
         <field type="CharField" name="os_major_version"><None></None></field>
         <field type="CharField" name="os_minor_version"><None></None></field>
+        <field type="DateTimeField" name="activation_date">2010-08-05 22:17:43</field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field type="NullBooleanField" name="available"><None></None></field>
+        <field type="CharField" name="state"><None></None></field>
+        <field to="inventory.managementnode" name="management_node" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.version" name="versions" rel="ManyToManyRel"></field>
     </object>
     <object pk="3" model="inventory.system">
         <field type="CharField" name="name">mgoblue3</field>
-        <field type="DateTimeField" name="created_date">2010-08-04 23:44:16</field>
+        <field type="CharField" name="description">mgoblue3 desc</field>
+        <field type="DateTimeField" name="created_date">2010-08-05 22:17:59</field>
         <field type="DateTimeField" name="launch_date"><None></None></field>
         <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
         <field type="CharField" name="target_system_id"><None></None></field>
@@ -730,41 +717,53 @@
         <field type="CharField" name="os_type"><None></None></field>
         <field type="CharField" name="os_major_version"><None></None></field>
         <field type="CharField" name="os_minor_version"><None></None></field>
+        <field type="DateTimeField" name="activation_date">2010-08-05 22:17:59</field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field type="NullBooleanField" name="available"><None></None></field>
+        <field type="CharField" name="state"><None></None></field>
+        <field to="inventory.managementnode" name="management_node" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.version" name="versions" rel="ManyToManyRel"></field>
     </object>
     <object pk="1" model="inventory.systemeventtype">
-        <field type="CharField" name="name">poll</field>
-        <field type="CharField" name="description">standard polling event</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="2" model="inventory.systemeventtype">
         <field type="CharField" name="name">activation</field>
         <field type="CharField" name="description">on-demand activation event</field>
         <field type="SmallIntegerField" name="priority">100</field>
     </object>
-    <object pk="3" model="inventory.systemeventtype">
+    <object pk="2" model="inventory.systemeventtype">
         <field type="CharField" name="name">poll_now</field>
         <field type="CharField" name="description">on-demand polling event</field>
         <field type="SmallIntegerField" name="priority">90</field>
     </object>
+    <object pk="3" model="inventory.systemeventtype">
+        <field type="CharField" name="name">poll</field>
+        <field type="CharField" name="description">standard polling event</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
     <object pk="1" model="inventory.systemevent">
         <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
         <field to="inventory.systemeventtype" name="event_type" rel="ManyToOneRel">1</field>
-        <field type="DateTimeField" name="time_created">2010-08-04 23:45:44</field>
-        <field type="DateTimeField" name="time_enabled">2010-08-05 03:43:25</field>
-        <field type="SmallIntegerField" name="priority">50</field>
+        <field type="DateTimeField" name="time_created">2010-08-05 22:20:46</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-06 02:09:36</field>
+        <field type="SmallIntegerField" name="priority">100</field>
     </object>
     <object pk="2" model="inventory.systemevent">
         <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
         <field to="inventory.systemeventtype" name="event_type" rel="ManyToOneRel">2</field>
-        <field type="DateTimeField" name="time_created">2010-08-04 23:45:51</field>
-        <field type="DateTimeField" name="time_enabled">2010-08-05 03:43:25</field>
-        <field type="SmallIntegerField" name="priority">100</field>
+        <field type="DateTimeField" name="time_created">2010-08-05 22:21:04</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-06 02:09:36</field>
+        <field type="SmallIntegerField" name="priority">90</field>
     </object>
     <object pk="3" model="inventory.systemevent">
         <field to="inventory.system" name="system" rel="ManyToOneRel">3</field>
         <field to="inventory.systemeventtype" name="event_type" rel="ManyToOneRel">3</field>
-        <field type="DateTimeField" name="time_created">2010-08-04 23:46:01</field>
-        <field type="DateTimeField" name="time_enabled">2010-08-05 03:43:25</field>
-        <field type="SmallIntegerField" name="priority">90</field>
+        <field type="DateTimeField" name="time_created">2010-08-05 22:21:21</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-06 02:09:36</field>
+        <field type="SmallIntegerField" name="priority">50</field>
     </object>
 </django-objects>
