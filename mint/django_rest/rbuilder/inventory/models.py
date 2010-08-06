@@ -187,10 +187,6 @@ class Networks(XObjModel):
                 tag='networks',
                 elements=['network'])
     list_fields = ['network']
-    # network = []
-
-    def save(self):
-        return [n.save() for n in network]
 
 class System(XObjIdModel):
     class Meta:
