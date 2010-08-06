@@ -1223,7 +1223,7 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_event_type'] = []
             changed = True
-            changed |= _addTableRows(db, 'inventory_system_event_type', 'name',
+            changed |= schema._addTableRows(db, 'inventory_system_event_type', 'name',
                 [ dict(name="activation", 
                        description='on-demand activation event', priority=100),
                   dict(name="poll", 
