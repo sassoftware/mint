@@ -50,7 +50,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
     def getSystems(self):
         Systems = models.Systems()
-        Systems.system = models.System.objects.all()
+        Systems.system = list(models.System.objects.all())
         return Systems
 
     def _sanitize_system(self, system):

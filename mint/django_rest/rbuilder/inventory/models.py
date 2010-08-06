@@ -155,6 +155,8 @@ class Inventory(XObjModel):
 class Systems(XObjModel):
     class Meta:
         abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'systems')
     list_fields = ['system']
     system = []
 
