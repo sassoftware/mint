@@ -29,7 +29,7 @@ class BaseManager(models.Manager):
                 try:
                     if getattr(model_inst, field.name) is None:
                         continue
-                except exceptions.ObjectDoesNotExist, e:
+                except exceptions.ObjectDoesNotExist:
                     continue
                 if getattr(model_inst, field.name) != \
                    getattr(loaded_model, field.name):
