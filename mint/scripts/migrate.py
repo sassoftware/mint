@@ -1081,21 +1081,21 @@ class MigrateTo_50(SchemaMigration):
                     "system_id" %(PRIMARYKEY)s,
                     "name" varchar(8092) NOT NULL,
                     "description" varchar(8092),
-                    "created_date" datetime NOT NULL,
-                    "launch_date" datetime,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "launch_date" timestamp with time zone,
                     "target_id" integer REFERENCES "targets" ("targetid"),
                     "target_system_id" varchar(255),
                     "reservation_id" varchar(255),
                     "os_type" varchar(64),
                     "os_major_version" varchar(32),
                     "os_minor_version" varchar(32),
-                    "activation_date" datetime NOT NULL,
+                    "activation_date" timestamp with time zone NOT NULL,
                     "generated_uuid" varchar(64) UNIQUE,
                     "local_uuid" varchar(64),
                     "ssl_client_certificate" varchar(8092),
                     "ssl_client_key" varchar(8092),
                     "ssl_server_certificate" varchar(8092),
-                    "scheduled_event_start_date" datetime,
+                    "scheduled_event_start_date" timestamp with time zone,
                     "launching_user_id" integer REFERENCES "users" ("userid"),
                     "available" bool,
                     "state" varchar(32),
@@ -1183,7 +1183,7 @@ class MigrateTo_50(SchemaMigration):
                     "software_version_available_update_id" integer NOT NULL 
                         REFERENCES "inventory_version" ("version_id")
                         ON DELETE CASCADE,
-                    "last_refreshed" datetime NOT NULL,
+                    "last_refreshed" timestamp with time zone NOT NULL,
                     UNIQUE ("software_version_id", "available_update_id")
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_available_update'] = []
@@ -1241,8 +1241,8 @@ class MigrateTo_50(SchemaMigration):
                     "event_type_id" integer NOT NULL 
                         REFERENCES "inventory_system_event_type" 
                             ("system_event_type_id"),
-                    "time_created" datetime NOT NULL,
-                    "time_enabled" datetime NOT NULL,
+                    "time_created" timestamp with time zone NOT NULL,
+                    "time_enabled" timestamp with time zone NOT NULL,
                     "priority" smallint NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_event'] = []
