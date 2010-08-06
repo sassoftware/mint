@@ -78,7 +78,13 @@ class XObjModel(models.Model):
     def serialize(self, request=None):
         if hasattr(self, '_xobj'):
             for elem in self._xobj.elements:
-                elemVal = getattr(self, elem)
+                if getattr(self, elem, None):
+                    continue
+                elemVal = type_map.get(elem, None)
+                if not elemVal:
+                    continue
+                else:
+                    elemVal = elemVal()
                 setattr(self, elem, elemVal)
                 for l_field in elemVal.list_fields:
                     rel_objs = [r \
@@ -97,8 +103,7 @@ class XObjModel(models.Model):
         href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
                         if isinstance(v, XObjHrefModel)]
         for href in href_fields:
-            setattr(self, href[0], 
-                    self.get_specific_href(href[1].href, request))
+            href[1].serialize(request)
 
         for field in self._meta.fields:
             if isinstance(field, related.RelatedField):
@@ -157,8 +162,7 @@ class XObjHrefModel(XObjModel):
         self.href = href
 
     def serialize(self, request=None):
-        XObjModel.serialize(self, request)
-        self.href = self.get_specific_href(self.href, request)
+        self.href = request.build_absolute_uri(self.href)
 
 class Inventory(XObjModel):
     class Meta:
@@ -231,10 +235,6 @@ class System(XObjIdModel):
                         related_name='system_set')
 
     load_fields = [local_uuid]
-
-    def __init__(self, *args, **kwargs):
-        super(System, self).__init__(*args, **kwargs)
-        self.networks = Networks()
 
 class SystemEventType(XObjIdModel):
     class Meta:

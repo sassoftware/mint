@@ -49,6 +49,13 @@ class DjangoDocument(xobj.Document):
     def fillFromClass(self, xobj):
         pass
 
+    def setItemCurrentValue(self, xobj, key, current, val):
+        field = xobj._meta.get_field_by_name(key)[0]
+        if not field.null and getattr(xobj, key, '') == '':
+            setattr(xobj, key, val)
+        else:
+            super(DjangoDocument, self).setItemCurrentVal(xobj, key, current, val)
+
 def requires(model_name):
     """
     Decorator that parses the post data on a request into the class

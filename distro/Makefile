@@ -30,14 +30,17 @@ install: default-install httpd-sysconfig
 	install -D -m0755 backup.py $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
 	install -D -m0644 console.msg $(DESTDIR)/etc/raa/console.msg
 	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
-	install -D -m0644 chrootcache.conf $(DESTDIR)/etc/rmake/node.d/chrootcache.conf
 	install -D -m0644 collect.flat $(DESTDIR)/etc/raa/collect.d/rBAFiles
 	install -D -m0755 collect.sh $(DESTDIR)/etc/raa/collect.d/rBAScript
 	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
 	install -D -m0644 status.html $(DESTDIR)/usr/share/raa/content/status.html
 	# rMake node configuration
-	install -D -m0644 noderc.main $(DESTDIR)/etc/rmake/node.d/20_rbuilder.conf
-	install -D -m0644 serverrc.main $(DESTDIR)/etc/rmake/server.d/20_rbuilder.conf
+	install -D -m0644 rmake2/noderc.main $(DESTDIR)/etc/rmake/node.d/20_rbuilder.conf
+	install -D -m0644 rmake2/serverrc.main $(DESTDIR)/etc/rmake/server.d/20_rbuilder.conf
+	install -D -m0644 rmake2/chrootcache.conf $(DESTDIR)/etc/rmake/node.d/chrootcache.conf
+	# rmake 3
+	install -D -m0644 rmake3/dispatcher.conf $(DESTDIR)/etc/rmake3/server.d/20_rbuilder.conf
+	install -D -m0644 rmake3/worker.conf $(DESTDIR)/etc/rmake3/node.d/20_rbuilder.conf
 	# system dist (data)
 	install -D -m0644 bootman.conf $(DESTDIR)/etc/bootloader.d/rbuilder.conf
 	install -D -m0644 firewall $(DESTDIR)/etc/firewall
@@ -64,6 +67,11 @@ install: default-install httpd-sysconfig
 	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/
 	install -D -m0644 welcome_text.py $(DESTDIR)/usr/share/anaconda/
+	# jabberd
+	mkdir -p $(DESTDIR)/usr/share/rbuilder/jabberd
+	chmod 0750 $(DESTDIR)/usr/share/rbuilder/jabberd
+	cp jabberd/*.xml $(DESTDIR)/usr/share/rbuilder/jabberd/
+	install -D -m0644 jabberd/sysconfig $(DESTDIR)/etc/sysconfig/jabberd
 
 httpd-sysconfig:
 	install -d -m0755 $(DESTDIR)/etc/sysconfig
