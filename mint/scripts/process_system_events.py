@@ -24,8 +24,12 @@ class ProcessSystemEvents(scriptlibrary.SingletonScript):
             self.cfgPath = sys.argv.pop(0).split('=')[1]
             print "Test mode using configuration from %s" % self.cfgPath
             
+        quitMode = False
+        if "-q" in sys.argv:
+            quitMode = True
+            
         self.loadConfig(cfgPath=self.cfgPath)
-        self.resetLogging(quiet=True)
+        self.resetLogging(quiet=quitMode)
     
         settingsModule = "mint.django_rest.settings"
         if len(sys.argv) > 1 and sys.argv[1] == 'useLocalSettings':
