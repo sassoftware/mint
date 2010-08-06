@@ -127,7 +127,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         activation_event_type = models.SystemEventType.objects.get(
             name=models.SystemEventType.ACTIVATION)
         activation_event = models.SystemEvent(
-            system=system, event_type=activation_event_type, 
+            system=db_system, event_type=activation_event_type, 
             priority=activation_event_type.priority)
         activation_event.save()
 
