@@ -130,6 +130,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             system=db_system, event_type=activation_event_type, 
             priority=activation_event_type.priority)
         activation_event.save()
+        self.logSystem(system, "Activation event registered")
 
         return db_system
 
@@ -348,6 +349,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         log.debug("processing %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id, event.system.name))
         
         # TODO:  dispatch it here, whatever that means
+        self.logSystem(event.system, "Dispatched %s event" % event.event_type.name)
         
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)
@@ -368,5 +370,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             next_event = models.SystemEvent(system=triggerEvent.system, event_type=poll_event, 
                 priority=poll_event.priority, time_enabled=enable_time)
             next_event.save()
+            self.logSystem(next_event.system, "Poll event registered")
         else:
             log.debug("%s events do not trigger a new event creation" % triggerEvent.event_type.name)
