@@ -78,7 +78,7 @@ class XObjModel(models.Model):
     def serialize(self, request=None):
         if hasattr(self, '_xobj'):
             for elem in self._xobj.elements:
-                elemVal = getattr(self, elem)()
+                elemVal = getattr(self, elem)
                 setattr(self, elem, elemVal)
                 for l_field in elemVal.list_fields:
                     rel_objs = [r \
@@ -195,7 +195,6 @@ class System(XObjIdModel):
                 tag = 'system',
                 attributes = {'id':str},
                 elements = ['networks'])
-    networks = Networks
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
@@ -232,6 +231,10 @@ class System(XObjIdModel):
                         related_name='system_set')
 
     load_fields = [local_uuid]
+
+    def __init__(self, *args, **kwargs):
+        super(System, self).__init__(*args, **kwargs)
+        self.networks = Networks()
 
 class SystemEventType(XObjIdModel):
     class Meta:
