@@ -163,6 +163,8 @@ class rBuilderProduct(CPackageRecipe):
 
     def policy(r):
 
+        r.Ownership('root', 'jabber', '/usr/share/rbuilder/jabberd')
+
         # These config files are managed at runtime or by the admin, not
         # by conary.
         r.InitialContents(r'%(servicedir)s/rbuilder/config/'
