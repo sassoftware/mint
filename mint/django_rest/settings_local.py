@@ -25,5 +25,13 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend'
 )
 
+for i in range(len(MIDDLEWARE_CLASSES)):
+    if MIDDLEWARE_CLASSES[i] == \
+        'mint.django_rest.middleware.AddCommentsMiddleware':
+        break
+
+MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES[0:i] + \
+                     MIDDLEWARE_CLASSES[i+1:]
+
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True

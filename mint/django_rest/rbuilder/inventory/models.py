@@ -3,64 +3,120 @@
 #
 # All Rights Reserved
 #
+import sys
 import datetime
 import urlparse
 
 from django.db import models
 from django.db.models.fields import related
+from django.core import exceptions
 from django.core.urlresolvers import reverse
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 
 from xobj import xobj
 
-class TransientManager(models.Manager):
+class BaseManager(models.Manager):
     _transient = True
 
+    def load(self, model_inst):
+        try:
+            loaded_model = self.get(**model_inst.load_fields_dict())
+        except exceptions.ObjectDoesNotExist:
+            loaded_model = None
+        if loaded_model:
+            for field in loaded_model._meta.fields:
+                try:
+                    if getattr(model_inst, field.name) is None:
+                        continue
+                except exceptions.ObjectDoesNotExist, e:
+                    continue
+                if getattr(model_inst, field.name) != \
+                   getattr(loaded_model, field.name):
+                    setattr(loaded_model, field.name, 
+                        getattr(model_inst, field.name))
+            loaded_model._to_set = getattr(model_inst, '_to_set', {})
+            return loaded_model
+        else:
+            return None
+    
 class XObjModel(models.Model):
-    objects = TransientManager()
+    objects = BaseManager()
 
     class Meta:
         abstract = True
 
     list_fields = []
+    load_fields = {}
+
+    def load_fields_dict(self):
+        fields_dict = {}
+        for f in self.load_fields:
+            fields_dict[f.name] = getattr(self, f.name, None)
+        return fields_dict
 
     def to_xml(self, request=None):
         self.serialize(request)
         return xobj.toxml(self, self.__class__.__name__)
 
-    def get_absolute_uri(self, request=None):
-        viewName = getattr(self, 'viewName', self.__class__.__name__)
-        urlKey = getattr(self, 'pk', [])
-        if urlKey:
-            urlKey = [str(urlKey[0])]
-        bits = (viewName, urlKey)
-        relativeUrl = reverse(bits[0], None, *bits[1:3])
+    def get_absolute_url(self, request=None):
+        view_name = getattr(self, 'view_name', self.__class__.__name__)
+        url_key = getattr(self, 'pk', [])
+        if url_key:
+            url_key = [str(url_key)]
+        bits = (view_name, url_key)
+        relative_url = reverse(bits[0], None, *bits[1:3])
         if request:
-            return request.build_absolute_uri(relativeUrl)
+            return request.build_absolute_uri(relative_url)
         else:
-            return relativeUrl
+            return relative_url
 
     def get_specific_href(self, href, request=None):
-        url = self.get_absolute_uri(request)
+        url = self.get_absolute_url(request)
         return urlparse.urljoin(url, href)       
 
     def serialize(self, request=None):
 
-        hrefFields = [(f, v) for f, v in self.__class__.__dict__.items() \
+        href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
                         if isinstance(v, XObjHrefModel)]
-        for href in hrefFields:
+        for href in href_fields:
             setattr(self, href[0], 
                     self.get_specific_href(href[1].href, request))
 
         for field in self._meta.fields:
             if isinstance(field, related.RelatedField):
-                self.__dict__[field.verbose_name] = \
-                    XObjHrefModel(getattr(self, field.name).get_absolute_uri())
+                val = getattr(self, field.name, None)
+                if val:
+                    self.__dict__[field.verbose_name] = \
+                        XObjHrefModel(getattr(self, field.name).get_absolute_url())
 
-        for listField in self.list_fields:
-            for field in getattr(self, listField):
+            if isinstance(field, models.DateTimeField):
+                val = getattr(self, field.name, None)
+                if val:
+                    self.__dict__[field.name] = \
+                        getattr(self, field.name).isoformat()
+
+        for list_field in self.list_fields:
+            for field in getattr(self, list_field):
                 field.serialize(request)
+
+    def __setattr__(self, attr, val):
+        super(XObjModel, self).__setattr__(attr, val)
+        if not (attr in self._meta.get_all_field_names() or \
+           attr.startswith('_')):
+            self._to_set = getattr(self, '_to_set', {})
+            self._to_set[attr] = val
+
+    def set_related(self):
+        for attr, val in self._to_set.items():
+            rel_objs = self._meta.get_all_related_objects()
+            for k, v in getattr(val, '__dict__', {}).items():
+                for rel_obj in rel_objs:
+                    if k == rel_obj.var_name:
+                        loaded_v = v.__class__.objects.load(v)
+                        if not loaded_v:
+                            loaded_v = v
+                        getattr(self, rel_obj.get_accessor_name()).add(loaded_v)
 
 class XObjIdModel(XObjModel):
     class Meta:
@@ -71,7 +127,7 @@ class XObjIdModel(XObjModel):
 
     def serialize(self, request=None):
         XObjModel.serialize(self, request)
-        self.id = self.get_absolute_uri(request)
+        self.id = self.get_absolute_url(request)
 
 class XObjHrefModel(XObjModel):
     _xobj = xobj.XObjMetadata(
@@ -83,6 +139,17 @@ class XObjHrefModel(XObjModel):
     def serialize(self, request=None):
         XObjModel.serialize(self, request)
         self.href = self.get_specific_href(self.href, request)
+
+class DateTimeXObjField(models.DateTimeField):
+    _xobj = xobj.XObjMetadata()
+
+    def __init__(self, *args, **kw):
+        models.DateTimeField.__init__(self, *args, **kw)
+
+    def __getattr__(self, attr):
+        if attr == '_xobj':
+            _xobj.text = getattr(self.model(), self.attname).isoformat()
+            return self._xobj
 
 class Inventory(XObjModel):
     class Meta:
@@ -105,8 +172,11 @@ class Systems(XObjModel):
 class System(XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
+    _xobj = xobj.XObjMetadata(
+                tag = 'system')
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
+    description = models.CharField(max_length=8092, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     # Launch date is nullable, we maay get it reported from the hypervisor or
     # physical target, we may not.
@@ -117,23 +187,15 @@ class System(XObjIdModel):
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)
     os_minor_version = models.CharField(max_length=32, null=True)
-
-class ManagedSystem(XObjIdModel):
-    class Meta:
-        db_table = 'inventory_managed_system'
-    managed_system_id = models.AutoField(primary_key=True)
-    system = models.OneToOneField(System)
     activation_date = models.DateTimeField(auto_now_add=True)
-    generated_uuid = models.CharField(max_length=64)
-    local_uuid = models.CharField(max_length=64)
-    ssl_client_certificate = models.CharField(max_length=8092)
-    ssl_client_key = models.CharField(max_length=8092)
-    ssl_server_certificate = models.CharField(max_length=8092)
-    scheduled_event_start_date = models.DateTimeField()
-    launching_user = models.ForeignKey(rbuildermodels.Users)
-    available = models.BooleanField()
-    description = models.CharField(max_length=8092)
-    name = models.CharField(max_length=8092)
+    generated_uuid = models.CharField(max_length=64, unique=True, null=True)
+    local_uuid = models.CharField(max_length=64, null=True)
+    ssl_client_certificate = models.CharField(max_length=8092, null=True)
+    ssl_client_key = models.CharField(max_length=8092, null=True)
+    ssl_server_certificate = models.CharField(max_length=8092, null=True)
+    scheduled_event_start_date = models.DateTimeField(null=True)
+    launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
+    available = models.NullBooleanField()
     STATE_CHOICES = (
         ('activated', 'Activated'),
         ('responsive', 'Responsive'),
@@ -142,10 +204,13 @@ class ManagedSystem(XObjIdModel):
         ('dead', 'Dead'),
         ('mothballed', 'Mothballed'),
     )
-    state = models.CharField(max_length=32, choices=STATE_CHOICES)
-    versions = models.ManyToManyField('Version')
-    management_node = models.ForeignKey('ManagementNode', null=True)
-   
+    state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
+    versions = models.ManyToManyField('Version', null=True)
+    management_node = models.ForeignKey('ManagementNode', null=True,
+                        related_name='system_set')
+
+    load_fields = [local_uuid]
+
 class SystemEventType(XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event_type'
@@ -184,13 +249,26 @@ class SystemEvent(XObjIdModel):
 
 # TODO: is this needed, or should we just use a recursive fk on ManagedSystem?
 class ManagementNode(XObjModel):
-    managed_system = models.OneToOneField(ManagedSystem)
+    system = models.OneToOneField(System)
     # TODO: what extra columns might we want to store about a management node,
     # if any?
+
+class Networks(XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='networks')
+    list_fields = ['network']
+    network = []
+
+    def save(self):
+        return [n.save() for n in network]
 
 class Network(XObjModel):
     class Meta:
         db_table = 'inventory_network'
+    _xobj = xobj.XObjMetadata(
+                tag='network')
     network_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
     ip_address = models.IPAddressField()
@@ -202,18 +280,23 @@ class Network(XObjModel):
     port_type = models.CharField(max_length=32, null=True)
     # TODO: add all the other fields we need about a network
 
+    load_fields = [ip_address, public_dns_name]
+
+    def natural_key(self):
+        return self.ip_address, self.public_dns_name
+
 class SystemLog(XObjModel):
     class Meta:
         db_table = 'inventory_system_log'
     system_log_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
-    entries = models.ManyToManyField('LogEntry', through='SystemLogEntry',
+    log_entries = models.ManyToManyField('LogEntry', through='SystemLogEntry',
         symmetrical=False)
 
 class SystemLogEntry(XObjModel):
     class Meta:
         db_table = 'inventory_system_log_entry'
-    system = models.ForeignKey(SystemLog)
+    system_log = models.ForeignKey(SystemLog)
     log_entry = models.ForeignKey('LogEntry')
     entry_date = models.DateTimeField(auto_now_add=True)
 
@@ -260,25 +343,8 @@ class AvailableUpdate(XObjModel):
         related_name = 'availableUpdate_set')
     last_refreshed = models.DateTimeField(auto_now_add=True)
 
-#
-# Ignore these for now
-#
-#class schedule(XObjModel):
-#    schedule_id = models.AutoField(primary_key=True)
-#    schedule = models.CharField(max_length=4096, null=False)
-#    enabled = models.IntegerField(null=False)
-#    created = models.IntegerField(null=False)
-#
-#class job_states(XObjModel):
-#    class Meta:
-#        managed = False
-#        db_table = 'job_states'
-#    job_state_id = models.AutoField(primary_key=True)
-#    name = models.CharField(max_length=1024, null=False)
-#
-#class managed_system_scheduled_event(XObjModel):
-#    scheduled_event_id = models.AutoField(primary_key=True)
-#    state = models.ForeignKey(job_states, null=False)
-#    managed_system = models.ForeignKey(managed_system)
-#    schedule = models.ForeignKey(schedule)
-#    scheduled_time = models.IntegerField(null=True)
+type_map = {}
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            type_map[mod_obj._xobj.tag] = mod_obj

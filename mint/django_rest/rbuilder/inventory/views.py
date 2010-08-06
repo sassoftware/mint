@@ -10,11 +10,9 @@ import time
 from django.http import HttpResponse
 from django_restapi import resource
 
-from mint.django_rest.deco import requires, returnXml
+from mint.django_rest.deco import requires, return_xml
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import systemdbmgr
-
-from rpath_models import Log, LogHref, SystemsHref, Systems, System, SystemLogHref
 
 MANAGER_CLASS = systemdbmgr.SystemDBManager
 
@@ -31,21 +29,21 @@ class AbstractInventoryService(resource.Resource):
 
 class InventoryService(AbstractInventoryService):
 
-    @returnXml
+    @return_xml
     def read(self, request):
         inventory = models.Inventory()
         return inventory
 
-class InventoryLogsService(AbstractInventoryService):
+class InventoryLogService(AbstractInventoryService):
     
-    @returnXml
+    @return_xml
     def read(self, request):
-        logParser = Log()
-        return logParser
+        log = models.Log()
+        return log
 
 class InventorySystemsService(AbstractInventoryService):
 
-    @returnXml
+    @return_xml
     def read(self, request, system=None):
         if not system:
             systems = self.sysMgr.getSystems()
@@ -61,12 +59,11 @@ class InventorySystemsService(AbstractInventoryService):
             parser = system.getParser(request)
             return parser
     
-    @requires('system', System)
-    @returnXml
+    @requires('system')
+    @return_xml
     def create(self, request, system):
-        managedSystem = self.sysMgr.activateSystem(system)
-        systemParser = managedSystem.getParser()
-        return systemParser
+        system = self.sysMgr.activateSystem(system)
+        return system
 
     def delete(self, request, system):
         system = self.sysMgr.deleteSystem(system)
@@ -84,7 +81,7 @@ class InventorySystemsSystemLogService(AbstractInventoryService):
         systemLog = self.sysMgr.getSystemLog(managedSystem)
 
         if format == 'xml':
-            parserDecorator = returnXml
+            parserDecorator = return_xml
             func = parserDecorator(systemLog.getParser)
             return func()
         elif format == 'raw':
