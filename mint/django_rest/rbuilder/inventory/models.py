@@ -123,7 +123,7 @@ class XObjIdModel(XObjModel):
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                attributes = ['id'])
+                attributes = {'id':str})
 
     def serialize(self, request=None):
         XObjModel.serialize(self, request)
@@ -142,17 +142,6 @@ class XObjHrefModel(XObjModel):
     def serialize(self, request=None):
         XObjModel.serialize(self, request)
         self.href = self.get_specific_href(self.href, request)
-
-class DateTimeXObjField(models.DateTimeField):
-    _xobj = xobj.XObjMetadata()
-
-    def __init__(self, *args, **kw):
-        models.DateTimeField.__init__(self, *args, **kw)
-
-    def __getattr__(self, attr):
-        if attr == '_xobj':
-            _xobj.text = getattr(self.model(), self.attname).isoformat()
-            return self._xobj
 
 class Inventory(XObjModel):
     class Meta:
@@ -176,7 +165,8 @@ class System(XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
     _xobj = xobj.XObjMetadata(
-                tag = 'system')
+                tag = 'system',
+                attributes = {'id':str})
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
