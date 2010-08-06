@@ -49,7 +49,7 @@ class DjangoDocument(xobj.Document):
     def fillFromClass(self, xobj):
         pass
 
-    def setItemCurrentVal(self, xobj, key, current, val):
+    def setItemCurrentValue(self, xobj, key, current, val):
         field = xobj._meta.get_field_by_name(key)[0]
         if not field.null and getattr(xobj, key, '') == '':
             setattr(xobj, key, val)
