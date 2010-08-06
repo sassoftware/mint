@@ -20,14 +20,26 @@ class BaseManager(models.Manager):
     _transient = True
 
     def load(self, model_inst):
-        self.model_inst = model_inst
-    
-    def get_by_natural_key(self, **kwargs):
         try:
-            return self.get(**kwargs)
-        except exceptions.ObjectDoesNotExist, e:
+            loaded_model = self.get(**model_inst.load_fields_dict())
+        except exceptions.ObjectDoesNotExist:
+            loaded_model = None
+        if loaded_model:
+            for field in loaded_model._meta.fields:
+                try:
+                    if getattr(model_inst, field.name) is None:
+                        continue
+                except exceptions.ObjectDoesNotExist, e:
+                    continue
+                if getattr(model_inst, field.name) != \
+                   getattr(loaded_model, field.name):
+                    setattr(loaded_model, field.name, 
+                        getattr(model_inst, field.name))
+            loaded_model._to_set = getattr(model_inst, '_to_set', {})
+            return loaded_model
+        else:
             return None
-
+    
 class XObjModel(models.Model):
     objects = BaseManager()
 
@@ -35,6 +47,13 @@ class XObjModel(models.Model):
         abstract = True
 
     list_fields = []
+    load_fields = {}
+
+    def load_fields_dict(self):
+        fields_dict = {}
+        for f in self.load_fields:
+            fields_dict[f.name] = getattr(self, f.name, None)
+        return fields_dict
 
     def to_xml(self, request=None):
         self.serialize(request)
@@ -82,18 +101,14 @@ class XObjModel(models.Model):
                 field.serialize(request)
 
     def __setattr__(self, attr, val):
-        if attr in self._meta.get_all_field_names() or \
-           attr.startswith('_'):
-            super(XObjModel, self).__setattr__(attr, val)
-        else:
-            super(XObjModel, self).__setattr__(attr, val)
+        super(XObjModel, self).__setattr__(attr, val)
+        if not (attr in self._meta.get_all_field_names() or \
+           attr.startswith('_')):
             self._to_set = getattr(self, '_to_set', {})
             self._to_set[attr] = val
 
     def set_related(self):
         for attr, val in self._to_set.items():
-            if not val:
-                continue
             rel_objs = self._meta.get_all_related_objects()
             for k, v in getattr(val, '__dict__', {}).items():
                 for rel_obj in rel_objs:
@@ -102,13 +117,6 @@ class XObjModel(models.Model):
                         if not loaded_v:
                             loaded_v = v
                         getattr(self, rel_obj.get_accessor_name()).add(loaded_v)
-
-            # for rel_obj, rel_mod in rel_objs:
-                # if attr in rel_obj.opts.get_all_field_names():
-                    # if not rel_mod:
-                        # rel_mod = rel_obj.model()
-                    # setattr(rel_mod, attr, val)
-                    # getattr(self, rel_obj.get_accessor_name()).add(rel_mod)
 
 class XObjIdModel(XObjModel):
     class Meta:
@@ -161,20 +169,7 @@ class Systems(XObjModel):
     def save(self):
         return [s.save() for s in self.system]
 
-class SystemManager(BaseManager):
-
-    def load(self, model_inst):
-        super(SystemManager, self).load(model_inst)
-        loaded_model = self.get_by_natural_key(
-                        generated_uuid=model_inst.generated_uuid)
-        if loaded_model:
-            model_inst.pk = loaded_model.pk
-            return model_inst
-        else:
-            return None
-
 class System(XObjIdModel):
-    objects = SystemManager()
     class Meta:
         db_table = 'inventory_system'
     _xobj = xobj.XObjMetadata(
@@ -213,7 +208,9 @@ class System(XObjIdModel):
     versions = models.ManyToManyField('Version', null=True)
     management_node = models.ForeignKey('ManagementNode', null=True,
                         related_name='system_set')
-   
+
+    load_fields = [local_uuid]
+
 class SystemEventType(XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event_type'
@@ -267,14 +264,7 @@ class Networks(XObjModel):
     def save(self):
         return [n.save() for n in network]
 
-class NetworkManager(BaseManager):
-    def load(self, model_inst):
-        super(NetworkManager, self).load(model_inst)
-        return self.get_by_natural_key(ip_address=model_inst.ip_address,
-                    public_dns_name=model_inst.public_dns_name)
-
 class Network(XObjModel):
-    objects = NetworkManager()
     class Meta:
         db_table = 'inventory_network'
     _xobj = xobj.XObjMetadata(
@@ -289,6 +279,8 @@ class Network(XObjModel):
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
     # TODO: add all the other fields we need about a network
+
+    load_fields = [ip_address, public_dns_name]
 
     def natural_key(self):
         return self.ip_address, self.public_dns_name
@@ -356,27 +348,3 @@ for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:
             type_map[mod_obj._xobj.tag] = mod_obj
-            
-    
-#
-# Ignore these for now
-#
-#class schedule(XObjModel):
-#    schedule_id = models.AutoField(primary_key=True)
-#    schedule = models.CharField(max_length=4096, null=False)
-#    enabled = models.IntegerField(null=False)
-#    created = models.IntegerField(null=False)
-#
-#class job_states(XObjModel):
-#    class Meta:
-#        managed = False
-#        db_table = 'job_states'
-#    job_state_id = models.AutoField(primary_key=True)
-#    name = models.CharField(max_length=1024, null=False)
-#
-#class managed_system_scheduled_event(XObjModel):
-#    scheduled_event_id = models.AutoField(primary_key=True)
-#    state = models.ForeignKey(job_states, null=False)
-#    managed_system = models.ForeignKey(managed_system)
-#    schedule = models.ForeignKey(schedule)
-#    scheduled_time = models.IntegerField(null=True)

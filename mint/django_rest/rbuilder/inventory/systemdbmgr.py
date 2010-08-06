@@ -102,8 +102,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def activateSystem(self, system):
         # sanitized_system = self._sanitize_system(system)
         try:
-            db_system = models.System.objects.get_by_natural_key(
-                            generated_uuid=system.generated_uuid)
+            db_system = models.System.objects.load(system)
         except models.System.DoesNotExist:
             db_system = None
 
@@ -119,6 +118,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             pass
         else:
             # New activation, need to create a new managedSystem
+            import epdb; epdb.st()  
             db_system = system
             
         db_system.save()
