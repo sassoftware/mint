@@ -118,6 +118,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         managedSystem.populateRelatedModelsFromParser(sanitizedSystem)
         managedSystem.saveAll()
         self.logSystem(managedSystem, models.SYSTEM_ACTIVATED_LOG)
+        
+        # create an activation event for the system
+        activation_event_type = models.SystemEventType.objects.get(name=models.SystemEventType.ACTIVATION)
+        activation_event = models.SystemEvent(system=system, event_type=activation_event_type, 
+            priority=activation_event_type.priority)
+        activation_event.save()
 
         return managedSystem
 
