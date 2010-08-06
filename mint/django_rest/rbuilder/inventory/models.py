@@ -78,6 +78,8 @@ class XObjModel(models.Model):
     def serialize(self, request=None):
         if hasattr(self, '_xobj'):
             for elem in self._xobj.elements:
+                if getattr(self, elem, None):
+                    continue
                 elemVal = type_map.get(elem, None)
                 if not elemVal:
                     continue
@@ -101,8 +103,7 @@ class XObjModel(models.Model):
         href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
                         if isinstance(v, XObjHrefModel)]
         for href in href_fields:
-            setattr(self, href[0], 
-                    self.get_specific_href(href[1].href, request))
+            href[1].serialize(request)
 
         for field in self._meta.fields:
             if isinstance(field, related.RelatedField):
@@ -161,8 +162,7 @@ class XObjHrefModel(XObjModel):
         self.href = href
 
     def serialize(self, request=None):
-        XObjModel.serialize(self, request)
-        self.href = self.get_specific_href(self.href, request)
+        self.href = request.build_absolute_uri(self.href)
 
 class Inventory(XObjModel):
     class Meta:
