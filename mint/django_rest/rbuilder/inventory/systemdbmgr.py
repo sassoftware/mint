@@ -39,24 +39,19 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         dstore = storage.DiskStorage(cfg)
         return dstore
 
-    def getSystem(self, system):
-        managedSystem = models.managed_system.objects.get(pk=system)
-        self.log_system(managedSystem, "System data fetched.")
-        managedSystem.populateRelatedModelsFromDb()
-        return self._unSanitizeSystem(managedSystem)
+    def getSystem(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        self.log_system(system, "System data fetched.")
+        return system
 
     def deleteSystem(self, system):
         managedSystem = models.managed_system.objects.get(pk=system)
         managedSystem.delete()
 
     def getSystems(self):
-        systems = models.managed_system.objects.all()
-        retSystems = []
-        for system in systems:
-            self.log_system(system, "System data fetched.")
-            system.populateRelatedModelsFromDb()
-            retSystems.append(self._unSanitizeSystem(system))
-        return retSystems
+        Systems = models.Systems()
+        Systems.system = list(models.System.objects.all())
+        return Systems
 
     def _sanitize_system(self, system):
         systemCopy = copy.deepcopy(system)

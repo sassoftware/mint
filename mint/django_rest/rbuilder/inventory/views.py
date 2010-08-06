@@ -44,20 +44,11 @@ class InventoryLogService(AbstractInventoryService):
 class InventorySystemsService(AbstractInventoryService):
 
     @return_xml
-    def read(self, request, system=None):
-        if not system:
-            systems = self.sysMgr.getSystems()
-            systemParsers = []
-            for s in systems:
-                parser = s.getParser(request)
-                systemParsers.append(parser)
-            systemsParser = Systems.factory()
-            [systemsParser.add_system(sp) for sp in systemParsers]
-            return systemsParser
+    def read(self, request, system_id=None):
+        if system_id:
+            return self.sysMgr.getSystem(system_id)
         else:
-            system = self.sysMgr.getSystem(system)
-            parser = system.getParser(request)
-            return parser
+            return self.sysMgr.getSystems()
     
     @requires('system')
     @return_xml
