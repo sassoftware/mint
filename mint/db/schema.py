@@ -1135,7 +1135,7 @@ def _createInventorySchema(db):
     if 'inventory_system_log_entry' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_system_log_entry" (
-                "id" integer NOT NULL PRIMARY KEY,
+                "system_log_entry_id" integer NOT NULL PRIMARY KEY,
                 "system_log_id" integer NOT NULL REFERENCES "inventory_system_log" ("system_log_id"),
                 "log_entry_id" integer NOT NULL,
                 "entry_date" timestamp with time zone NOT NULL
