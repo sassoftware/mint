@@ -310,6 +310,7 @@ class SystemLog(XObjModel):
 class SystemLogEntry(XObjModel):
     class Meta:
         db_table = 'inventory_system_log_entry'
+    system_log_entry_id = models.AutoField(primary_key=True)
     system_log = models.ForeignKey(SystemLog)
     log_entry = models.ForeignKey('LogEntry')
     entry_date = models.DateTimeField(auto_now_add=True)
