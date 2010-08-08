@@ -319,6 +319,7 @@ SYSTEM_ACTIVATED_LOG = "System activated via ractivate"
 SYSTEM_MANUALLY_ACTIVATED_LOG = "System manually activated via rBuilder"
 SYSTEM_POLLED_LOG = "System polled."
 SYSTEM_FETCHED_LOG = "System data fetched."
+SYSTEM_ACTIVATION_REGISTERED = "Activation event registered"
 
 class LogEntry(XObjModel):
     class Meta:
