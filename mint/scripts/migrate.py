@@ -1072,8 +1072,8 @@ class MigrateTo_50(SchemaMigration):
             "inventory_cpu",
             "inventory_software_version_update",
             "inventory_software_version",
-            "inventory_managed_system",
-            "job_managed_system")
+            "job_managed_system",
+            "inventory_managed_system")
 
         if 'inventory_system' not in db.tables:
             cu.execute("""
