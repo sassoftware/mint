@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from django_restapi import resource
 
 from mint.django_rest.deco import requires, return_xml
+from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import systemdbmgr
 
@@ -91,4 +92,21 @@ class InventorySystemsSystemLogService(AbstractInventoryService):
         else:
             pass
 
+class InventoryUsersService(AbstractInventoryService):
+    
+    def read(self, request, user):
+        if request:
+            response = HttpResponse()
+            response.write('<html>%s</html>' % user)
+            return response
+        else:
+            user = rbuildermodels.Users.objects.get(username=user)
+            return user
+
+class InventorySystemsEventService(AbstractInventoryService):
+
+    def read(self, request, system):
+        response = HttpResponse()
+        response.write('<html>events for system %s</html>' % system)
+        return response
 

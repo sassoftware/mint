@@ -104,9 +104,9 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         matched_ips = []
         if db_system:
             matched_ips = [n.ip_address for n in \
-                           db_system.network_set.all() \
+                           db_system.networks.all() \
                            if n.ip_address in \
-                           [m.ip_address for m in system.network_set.all()]]
+                           [m.ip_address for m in system.networks.all()]]
 
         if matched_ips:
             # TODO: update, log activation
