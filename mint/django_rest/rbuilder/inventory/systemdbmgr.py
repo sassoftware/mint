@@ -356,7 +356,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             
     def createSystemEvent(self, system, event_type, enable_time=None):
         if not enable_time:
-            enable_time = datetime.datetime.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            enable_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
         event = models.SystemEvent(system=system, event_type=event_type, 
             priority=event_type.priority, time_enabled=enable_time)
         event.save()
