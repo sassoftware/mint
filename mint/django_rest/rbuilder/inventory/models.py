@@ -310,10 +310,10 @@ class SystemLogEntry(XObjModel):
     class Meta:
         db_table = 'inventory_system_log_entry'
         
-    ACTIVATED_LOG = "System activated via ractivate"
-    MANUALLY_ACTIVATED_LOG = "System manually activated via rBuilder"
-    POLLED_LOG = "System polled."
-    FETCHED_LOG = "System data fetched."
+    ACTIVATED = "System activated via ractivate"
+    MANUALLY_ACTIVATED = "System manually activated via rBuilder"
+    POLLED = "System polled."
+    FETCHED = "System data fetched."
     ACTIVATION_REGISTERED = "System activation event registered"    
     
     system_log_entry_id = models.AutoField(primary_key=True)
