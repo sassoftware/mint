@@ -51,7 +51,6 @@ class BaseManager(models.Manager):
         fields = {}
         for f in model._meta.fields:
             fields[f.name] = f
-        field_names = model._meta.get_all_field_names()
         accessors = {}
         for r in model._meta.get_all_related_objects():
             accessors[r.get_accessor_name()] = r
@@ -125,7 +124,6 @@ class XObjModel(models.Model):
         fields = {}
         for f in self._meta.fields:
             fields[f.name] = f
-        field_names = self._meta.get_all_field_names()
         accessors = {}
         for r in self._meta.get_all_related_objects():
             accessors[r.get_accessor_name()] = r
