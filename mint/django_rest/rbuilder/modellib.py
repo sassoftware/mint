@@ -58,6 +58,8 @@ class BaseManager(models.Manager):
             if key in fields.keys():
                 if isinstance(fields[key], related.RelatedField):
                     val = fields[key].related.parent_model.objects.load_from_href(val)
+                else:
+                    val = str(val)
                 setattr(model, key, val)
         loaded_model = self.load(model)
         if not loaded_model:
