@@ -171,7 +171,6 @@ class SystemLogEntry(modellib.XObjModel):
     MANUALLY_ACTIVATED = "System manually activated via rBuilder"
     POLLED = "System polled."
     FETCHED = "System data fetched."
-    ACTIVATION_REGISTERED = "System activation event registered"    
     
     system_log_entry_id = models.AutoField(primary_key=True)
     system_log = models.ForeignKey(SystemLog)

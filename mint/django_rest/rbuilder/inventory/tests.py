@@ -97,6 +97,25 @@ class SystemsTestCase(XMLTestCase):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
         self.mintConfig = self.system_manager.cfg
+        self.mock_scheduleSystemActivationEvent_called = False
+        self.mock_scheduleSystemPollEvent_called = False
+        self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.system_manager.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
+        
+    def mock_scheduleSystemActivationEvent(self, system):
+        self.mock_scheduleSystemActivationEvent_called = True
+        
+    def mock_scheduleSystemPollEvent(self, system):
+        self.mock_scheduleSystemPollEvent_called = True
+        
+    def testAddSystemNull(self):
+        
+        try:
+            # create the system
+            system = None
+            self.system_manager.addSystem(system)
+        except:
+            assert(False) # should not throw exception
         
     def _saveSystem(self):
         system = models.System()
@@ -123,27 +142,25 @@ class SystemsTestCase(XMLTestCase):
         return system
 
     def testAddSystem(self):
-        
-        # start with no logs/system events
-        models.SystemLog.objects.all().delete()
-        models.SystemEvent.objects.all().delete()
-        
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever")
-        self.system_manager.activateSystem(system)
+        system = models.System(name="mgoblue", description="best appliance ever", activated=False)
+        self.system_manager.addSystem(system)
         assert(system is not None)
         
-        # make sure we have our activation event
-        activation_event = models.SystemEventType.objects.get(name=models.SystemEventType.ACTIVATION)
-        event = models.SystemEvent.objects.filter(system=system,event_type=activation_event).get()
-        assert(event is not None)
+        # make sure we scheduled our activation event
+        assert(self.mock_scheduleSystemActivationEvent_called)
         
-        # make sure e have our log entry
-        log = models.SystemLog.objects.filter(system=system).get()
-        sys_activated_entry = log.log_entries.all()[0]
-        sys_registered_entry = log.log_entries.all()[1]
-        assert(sys_activated_entry.entry == models.SystemLogEntry.ACTIVATED)
-        assert(sys_registered_entry.entry == models.SystemLogEntry.ACTIVATION_REGISTERED)
+    def testAddActivatedSystem(self):
+        # create the system
+        system = models.System(name="mgoblue", description="best appliance ever", activated=True)
+        self.system_manager.addSystem(system)
+        assert(system is not None)
+        
+        # make sure we did not schedule activation
+        assert(self.mock_scheduleSystemActivationEvent_called == False)
+        
+        # make sure we scheduled poll event
+        assert(self.mock_scheduleSystemPollEvent_called)
         
     def testGetSystems(self):
         system = self._saveSystem()
@@ -165,9 +182,43 @@ class SystemEventTestCase(XMLTestCase):
     
     def setUp(self):
         self.client = Client()
+        self.system_manager = systemdbmgr.SystemDBManager()
+        
+        # need a system
+        self.system = models.System(name="mgoblue", description="best appliance ever")
+        self.system.save()
+        
+        # start with no logs/system events
+        models.SystemLog.objects.all().delete()
+        models.SystemEvent.objects.all().delete()
             
     def tearDown(self):
         pass
+    
+    def testScheduleSystemPollEvent(self):
+        self.system_manager.scheduleSystemPollEvent(self.system)
+        
+        # make sure we have our poll event
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        event = models.SystemEvent.objects.filter(system=self.system,event_type=poll_event).get()
+        assert(event is not None)
+        
+        # make sure we have our log event
+        log = models.SystemLog.objects.filter(system=self.system).get()
+        sys_activated_entries = log.log_entries.all()
+        assert(len(sys_activated_entries) == 1)
+        
+    def testScheduleSystemActivationEvent(self):
+        self.system_manager.scheduleSystemActivationEvent(self.system)
+        
+        activation_event = models.SystemEventType.objects.get(name=models.SystemEventType.ACTIVATION)
+        event = models.SystemEvent.objects.filter(system=self.system,event_type=activation_event).get()
+        assert(event is not None)
+        
+        # make sure we have our log event
+        log = models.SystemLog.objects.filter(system=self.system).get()
+        sys_activated_entries = log.log_entries.all()
+        assert(len(sys_activated_entries) == 1)
         
 class SystemEventProcessingTestCase(XMLTestCase):
     
