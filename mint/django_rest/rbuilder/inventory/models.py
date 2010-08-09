@@ -55,7 +55,7 @@ class System(modellib.XObjIdModel):
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
-    # Launch date is nullable, we maay get it reported from the hypervisor or
+    # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
     launch_date = models.DateTimeField(null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
@@ -73,6 +73,7 @@ class System(modellib.XObjIdModel):
     scheduled_event_start_date = models.DateTimeField(null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.NullBooleanField()
+    activated = models.NullBooleanField()
     STATE_CHOICES = (
         ('activated', 'Activated'),
         ('responsive', 'Responsive'),
@@ -165,6 +166,7 @@ class SystemLogEntry(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_log_entry'
         
+    ADDED = "System added to inventory"
     ACTIVATED = "System activated via ractivate"
     MANUALLY_ACTIVATED = "System manually activated via rBuilder"
     POLLED = "System polled."

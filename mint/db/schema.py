@@ -1069,6 +1069,7 @@ def _createInventorySchema(db):
                 "scheduled_event_start_date" timestamp with time zone,
                 "launching_user_id" integer REFERENCES "users" ("userid"),
                 "available" bool,
+                "activated" bool,
                 "state" varchar(32),
                 "management_node_id" integer
             ) %(TABLEOPTS)s""" % db.keywords)
