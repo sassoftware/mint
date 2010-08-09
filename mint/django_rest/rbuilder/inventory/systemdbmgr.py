@@ -112,6 +112,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             # mark the system as needing activation
             self.scheduleSystemActivationEvent(system)
 
+        return system
+
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
