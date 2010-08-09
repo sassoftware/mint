@@ -11,7 +11,8 @@ from django import http
 
 from xobj import xobj
 
-from rbuilder.inventory import models 
+from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder.inventory import models 
 
 def str_to_underscore(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
@@ -45,6 +46,7 @@ def to_camel_case(node):
                 setattr(child, name, str_to_camel_case(getattr(child, name)))
                 to_camel_case(child)
 
+
 class DjangoDocument(xobj.Document):
     def fillFromClass(self, xobj):
         pass
@@ -55,6 +57,13 @@ class DjangoDocument(xobj.Document):
             setattr(xobj, key, val)
         else:
             super(DjangoDocument, self).setItemCurrentVal(xobj, key, current, val)
+
+    def instanitatePythonType(self, element, parentXObj, pythonType, text):
+        import epdb; epdb.st()  
+        if type(pythonType) == models.ForeignKeyByHref:
+            return models.ForeignKeyByHref(element).get_model()
+        else:
+            return super(DjangoDocument, self).instantiatePythonType(pythonType, text)
 
 def requires(model_name):
     """
@@ -69,14 +78,15 @@ def requires(model_name):
             root_node = doc.documentElement
             to_underscore(root_node)
             underscore_xml = doc.toxml(encoding='UTF-8')
-            built_model = xobj.parse(underscore_xml, documentClass=DjangoDocument, typeMap=models.type_map)
+            built_model = xobj.parse(underscore_xml)#, documentClass=DjangoDocument, typeMap=models.type_map)
             built_model = getattr(built_model, model_name)
-            loaded_model = models.type_map[model_name].objects.load(built_model)
-            if not loaded_model:
-                built_model.save()
-                loaded_model = built_model
-            loaded_model.set_related()
-            kw[model_name] = loaded_model
+            model = modellib.type_map[model_name].objects.load_from_object(built_model)
+            # loaded_model = models.type_map[model_name].objects.load(built_model)
+            # if not loaded_model:
+                # built_model.save()
+                # loaded_model = built_model
+            # loaded_model.set_related()
+            kw[model_name] = model
             return function(*args, **kw)
 
         return inner
