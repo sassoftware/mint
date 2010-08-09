@@ -12,7 +12,6 @@ import testsetup
 from conary import versions
 from conary.deps import deps
 
-import mint_test
 from mint_test import djangotest
 
 class SystemDbMgrTest(djangotest.DjangoTest):

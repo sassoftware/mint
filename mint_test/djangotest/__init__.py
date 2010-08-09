@@ -4,13 +4,6 @@ import testsuite
 
 import os
 import sys
-import testsuite
-import time
-
-import testsetup
-
-from conary import versions
-from conary.deps import deps
 
 import mint_test
 
@@ -54,7 +47,6 @@ class DjangoTest(TestCase):
                 sys.modules.pop(k)
 
     def setUp(self):
-        import epdb; epdb.st()  
         unimported = {}
         self._unImport()
         TestCase.setUp(self)
@@ -70,4 +62,3 @@ class DjangoTest(TestCase):
 
     def tearDown(self):
         self._import()
-        fixtures.FixturedUnitTest.tearDown(self)
