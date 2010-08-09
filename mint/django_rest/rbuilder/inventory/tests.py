@@ -1,3 +1,4 @@
+import collections
 import datetime
 from django.test import TestCase
 from django.test.client import Client
@@ -5,20 +6,80 @@ from django.test.client import Client
 from mint.django_rest.rbuilder.inventory import systemdbmgr
 from mint.django_rest.rbuilder.inventory import models
 
-class InventoryTestCase(TestCase):
+from mint.django_rest.rbuilder.inventory import testsxml
+
+class XMLTestCase(TestCase):
+    def assertXMLEquals(self, first, second):
+        from lxml import etree
+        tree0 = self._removeTail(etree.fromstring(first.strip()))
+        tree1 = self._removeTail(etree.fromstring(second.strip()))
+        if not self._nodecmp(tree0, tree1):
+            data0 = etree.tostring(tree0, pretty_print=True, with_tail=False)
+            data1 = etree.tostring(tree1, pretty_print=True, with_tail=False)
+            import difflib
+            diff = '\n'.join(list(difflib.unified_diff(data0.splitlines(),
+                    data1.splitlines()))[2:])
+            self.fail(diff)
+
+    @classmethod
+    def _removeTail(self, node):
+        stack = collections.deque([ node ])
+        while stack:
+            n = stack.pop()
+            n.tail = None
+            children = n.getchildren()
+            if children:
+                # We don't accept mixed content
+                n.text = None
+            stack.extend(n.getchildren())
+        return node
+
+    @classmethod
+    def _strip(cls, data):
+        if data is None:
+            return None
+        # Convert empty string to None
+        return data.strip() or None
+
+    @classmethod
+    def _nodecmp(cls, node1, node2):
+        if node1.attrib != node2.attrib:
+            return False
+        if node1.nsmap != node2.nsmap:
+            return False
+        children1 = node1.getchildren()
+        children2 = node2.getchildren()
+
+        if children1 or children2:
+            # Compare text in nodes that have children (mixed content).
+            # We shouldn't have mixed content, but we need to be flexible.
+            if cls._strip(node1.text) != cls._strip(node2.text):
+                return False
+            if len(children1) != len(children2):
+                return False
+            for ch1, ch2 in zip(children1, children2):
+                if not cls._nodecmp(ch1, ch2):
+                    return False
+            return True
+        # No children, compare the text
+        return node1.text == node2.text
+
+class InventoryTestCase(XMLTestCase):
           
     #Setup all of the objects that will be needed for this TestCase
     def setUp(self):
         self.client = Client()
 
-    def notestGetTypes(self):
+    def testGetTypes(self):
         response = self.client.get('/api/inventory/')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.inventory_xml)
         
         response = self.client.post('/api/inventory/?_method=GET')
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.inventory_xml)
         
-    def notestPostTypes(self):
+    def testPostTypes(self):
         response = self.client.post('/api/inventory/')
         self.assertEquals(response.status_code, 405)
         
@@ -26,17 +87,41 @@ class InventoryTestCase(TestCase):
         response = self.client.put('/api/inventory/')
         self.assertEquals(response.status_code, 405)
         
-    def notestDeleteTypes(self):
+    def testDeleteTypes(self):
         response = self.client.delete('/api/inventory/')
         self.assertEquals(response.status_code, 405)
        
-class SystemsTestCase(TestCase):
+class SystemsTestCase(XMLTestCase):
     
     def setUp(self):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
         self.mintConfig = self.system_manager.cfg
         
+    def _saveSystem(self):
+        system = models.System()
+        system.name = 'testsystemname'
+        system.description = 'testsystemdescription'
+        system.local_uuid = 'testsystemlocaluuid'
+        system.generated_uuid = 'testsystemgenerateduuid'
+        system.ssl_client_certificate = 'testsystemsslclientcertificate'
+        system.ssl_client_key = 'testsystemsslclientkey'
+        system.ssl_server_certificate = 'testsystemsslservercertificate'
+        system.activated = True
+        system.state = 'activated'
+        system.save()
+
+        network = models.Network()
+        network.ip_address = '1.1.1.1'
+        network.device_name = 'eth0'
+        network.public_dns_name = 'testnetwork.example.com'
+        network.netmask = '255.255.255.0'
+        network.port_type = 'lan'
+        network.system = system
+        network.save()
+
+        return system
+
     def testAddSystem(self):
         
         # start with no logs/system events
@@ -60,7 +145,23 @@ class SystemsTestCase(TestCase):
         assert(sys_activated_entry.entry == models.SystemLogEntry.ACTIVATED)
         assert(sys_registered_entry.entry == models.SystemLogEntry.ACTIVATION_REGISTERED)
         
-class SystemEventTestCase(TestCase):
+    def testGetSystems(self):
+        system = self._saveSystem()
+        response = self.client.get('/api/inventory/systems/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.systems_xml % (system.activation_date.isoformat(),
+                system.created_date.isoformat()))
+
+    def testGetSystem(self):
+        system = self._saveSystem()
+        response = self.client.get('/api/inventory/systems/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.system_xml % (system.activation_date.isoformat(),
+                system.created_date.isoformat()))
+
+class SystemEventTestCase(XMLTestCase):
     
     def setUp(self):
         self.client = Client()
@@ -68,7 +169,7 @@ class SystemEventTestCase(TestCase):
     def tearDown(self):
         pass
         
-class SystemEventProcessingTestCase(TestCase):
+class SystemEventProcessingTestCase(XMLTestCase):
     
     # do not load other fixtures for this test case as it is very data order dependent
     fixtures = ['system_event_processing']

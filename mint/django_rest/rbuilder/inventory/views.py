@@ -27,6 +27,21 @@ class AbstractInventoryService(resource.Resource):
         self.sysMgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
         return resource.Resource.__call__(self, request, *args, **kw)
 
+    def read(self, request, *args, **kwargs):
+        response = HttpResponse(status=405)
+        return response
+
+    def create(self, request, *args, **kwargs):
+        response = HttpResponse(status=405)
+        return response
+
+    def update(self, request, *args, **kwargs):
+        response = HttpResponse(status=405)
+        return response
+
+    def delete(self, request, *args, **kwargs):
+        response = HttpResponse(status=405)
+        return response
 
 class InventoryService(AbstractInventoryService):
 
