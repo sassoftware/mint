@@ -54,7 +54,7 @@ class InventorySystemsService(AbstractInventoryService):
     @requires('system')
     @return_xml
     def create(self, request, system):
-        system = self.sysMgr.activateSystem(system)
+        system = self.sysMgr.addSystem(system)
         return system
 
     def delete(self, request, system):

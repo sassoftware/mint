@@ -93,41 +93,24 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         system_log_entry, created = models.SystemLogEntry.objects.get_or_create(
             system_log=system_log, log_entry=log_entry)
         system_log_entry.save()
-
-    def activateSystem(self, system):
-        # sanitized_system = self._sanitize_system(system)
-        try:
-            db_system = models.System.objects.load(system)
-        except models.System.DoesNotExist:
-            db_system = None
-
-        matched_ips = []
-        if db_system:
-            matched_ips = [n.ip_address for n in \
-                           db_system.networks.all() \
-                           if n.ip_address in \
-                           [m.ip_address for m in system.networks.all()]]
-
-        if matched_ips:
-            # TODO: update, log activation
-            pass
-        else:
-            # New activation, need to create a new managedSystem
-            db_system = system
-            
-        db_system.save()
-        self.log_system(db_system, models.SystemLogEntry.ACTIVATED)
         
-        # create an activation event for the system
-        activation_event_type = models.SystemEventType.objects.get(
-            name=models.SystemEventType.ACTIVATION)
-        activation_event = models.SystemEvent(
-            system=db_system, event_type=activation_event_type, 
-            priority=activation_event_type.priority)
-        activation_event.save()
-        self.log_system(db_system, models.SystemLogEntry.ACTIVATION_REGISTERED)
-
-        return db_system
+    def addSystem(self, system):
+        '''Add a new system to inventory'''
+        
+        if not system:
+            return
+        
+        # add the system
+        system.save()
+        self.log_system(system, models.SystemLogEntry.ADDED)
+        
+        if system.activated:
+            # TODO:  how to de-dup?
+            self.log_system(system, models.SystemLogEntry.ACTIVATED)
+            self.scheduleSystemPollEvent(system)
+        else:
+            # mark the system as needing activation
+            self.scheduleSystemActivationEvent(system)
 
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
@@ -349,22 +332,34 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         self.cleanupSystemEvent(event)
         
         # create the next event if needed
-        self.createNextSystemPollEvent(event)
+        if event.event_type.name == models.SystemEventType.POLL or event.event_type.name == models.SystemEventType.POLL_NOW:
+            self.scheduleSystemPollEvent(event.system)
+        else:
+            log.debug("%s events do not trigger a new event creation" % event.event_type.name)
+        
         
     def cleanupSystemEvent(self, event):
         # remove the event since it has been handled
         log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
         event.delete()
             
-    def createNextSystemPollEvent(self, triggerEvent):
-        if triggerEvent.event_type.name == models.SystemEventType.POLL or triggerEvent.event_type.name == models.SystemEventType.POLL_NOW:
+    def scheduleSystemPollEvent(self, system):
+        '''Schedule an event for the system to be polled'''
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        self.createSystemEvent(system, poll_event)
+        
+    def scheduleSystemActivationEvent(self, system):
+        '''Schedule an event for the system to be activated'''
+        activation_event_type = models.SystemEventType.objects.get(
+            name=models.SystemEventType.ACTIVATION)
+        self.createSystemEvent(system, activation_event_type)
+            
+    def createSystemEvent(self, system, event_type, enable_time=None):
+        if not enable_time:
             enable_time = datetime.datetime.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
-            poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
-            next_event = models.SystemEvent(system=triggerEvent.system, event_type=poll_event, 
-                priority=poll_event.priority, time_enabled=enable_time)
-            next_event.save()
-            poll_msg = "Poll event registered and will be enabled on %s" % enable_time
-            self.log_system(next_event.system, poll_msg)
-            log.info(poll_msg)
-        else:
-            log.debug("%s events do not trigger a new event creation" % triggerEvent.event_type.name)
+        event = models.SystemEvent(system=system, event_type=event_type, 
+            priority=event_type.priority, time_enabled=enable_time)
+        event.save()
+        msg = "System %s event registered and will be enabled on %s" % (event_type.name, enable_time)
+        self.log_system(event.system, msg)
+        log.info(msg)
