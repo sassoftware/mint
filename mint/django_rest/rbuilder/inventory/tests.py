@@ -144,8 +144,8 @@ class SystemsTestCase(XMLTestCase):
     def testAddSystem(self):
         # create the system
         system = models.System(name="mgoblue", description="best appliance ever", activated=False)
-        self.system_manager.addSystem(system)
-        assert(system is not None)
+        new_system = self.system_manager.addSystem(system)
+        assert(new_system is not None)
         
         # make sure we scheduled our activation event
         assert(self.mock_scheduleSystemActivationEvent_called)
@@ -153,8 +153,8 @@ class SystemsTestCase(XMLTestCase):
     def testAddActivatedSystem(self):
         # create the system
         system = models.System(name="mgoblue", description="best appliance ever", activated=True)
-        self.system_manager.addSystem(system)
-        assert(system is not None)
+        new_system = self.system_manager.addSystem(system)
+        assert(new_system is not None)
         
         # make sure we did not schedule activation
         assert(self.mock_scheduleSystemActivationEvent_called == False)
