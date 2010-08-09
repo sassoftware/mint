@@ -8,8 +8,6 @@ import re
 from xml.dom import minidom
 
 from django import http
-from django.db.models.fields import related
-from django.core import urlresolvers
 
 from xobj import xobj
 
