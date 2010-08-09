@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import testsuite
-
 import os
 import sys
 
@@ -11,7 +9,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 builtins = sys.modules.keys()
-unimported = {}
+unimported = {} #pepflakes ignore
 
 class DjangoTest(TestCase):
 
