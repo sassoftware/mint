@@ -309,29 +309,23 @@ class SystemLog(XObjModel):
 class SystemLogEntry(XObjModel):
     class Meta:
         db_table = 'inventory_system_log_entry'
+        
+    ACTIVATED_LOG = "System activated via ractivate"
+    MANUALLY_ACTIVATED_LOG = "System manually activated via rBuilder"
+    POLLED_LOG = "System polled."
+    FETCHED_LOG = "System data fetched."
+    ACTIVATION_REGISTERED = "System activation event registered"    
+    
     system_log_entry_id = models.AutoField(primary_key=True)
     system_log = models.ForeignKey(SystemLog)
     log_entry = models.ForeignKey('LogEntry')
     entry_date = models.DateTimeField(auto_now_add=True)
 
-SYSTEM_ACTIVATED_LOG = "System activated via ractivate"
-SYSTEM_MANUALLY_ACTIVATED_LOG = "System manually activated via rBuilder"
-SYSTEM_POLLED_LOG = "System polled."
-SYSTEM_FETCHED_LOG = "System data fetched."
-SYSTEM_ACTIVATION_REGISTERED = "System activation event registered"
-
 class LogEntry(XObjModel):
     class Meta:
         db_table = 'inventory_log_entry'
-    # TODO fill these out
-    ENTRY_CHOICES = (
-        (SYSTEM_ACTIVATED_LOG, SYSTEM_ACTIVATED_LOG),
-        (SYSTEM_MANUALLY_ACTIVATED_LOG, SYSTEM_MANUALLY_ACTIVATED_LOG),
-        (SYSTEM_POLLED_LOG, SYSTEM_POLLED_LOG),
-        (SYSTEM_FETCHED_LOG, SYSTEM_FETCHED_LOG),
-    )
     entry_id = models.AutoField(primary_key=True)
-    entry = models.CharField(max_length=8092, choices=ENTRY_CHOICES)
+    entry = models.CharField(max_length=8092)
 
 class Version(XObjModel):
     class Meta:

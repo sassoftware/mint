@@ -57,8 +57,8 @@ class SystemsTestCase(TestCase):
         log = models.SystemLog.objects.filter(system=system).get()
         sys_activated_entry = log.log_entries.all()[0]
         sys_registered_entry = log.log_entries.all()[1]
-        assert(sys_activated_entry.entry == models.SYSTEM_ACTIVATED_LOG)
-        assert(sys_registered_entry.entry == models.SYSTEM_ACTIVATION_REGISTERED)
+        assert(sys_activated_entry.entry == models.SystemLogEntry.ACTIVATED_LOG)
+        assert(sys_registered_entry.entry == models.SystemLogEntry.ACTIVATION_REGISTERED)
         
 class SystemEventTestCase(TestCase):
     

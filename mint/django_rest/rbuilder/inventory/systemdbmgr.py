@@ -90,8 +90,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         system_log, created = models.SystemLog.objects.get_or_create(
                                 system=system)
         system_log.save()
-        system_log_entry = models.SystemLogEntry(system_log=system_log,
-                                log_entry=log_entry)
+        system_log_entry, created = models.SystemLogEntry.objects.get_or_create(
+            system_log=system_log, log_entry=log_entry)
         system_log_entry.save()
 
     def activateSystem(self, system):
@@ -116,7 +116,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             db_system = system
             
         db_system.save()
-        self.log_system(db_system, models.SYSTEM_ACTIVATED_LOG)
+        self.log_system(db_system, models.SystemLogEntry.ACTIVATED_LOG)
         
         # create an activation event for the system
         activation_event_type = models.SystemEventType.objects.get(
@@ -125,7 +125,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             system=db_system, event_type=activation_event_type, 
             priority=activation_event_type.priority)
         activation_event.save()
-        self.log_system(system, models.SYSTEM_ACTIVATION_REGISTERED)
+        self.log_system(system, models.SystemLogEntry.ACTIVATION_REGISTERED)
 
         return db_system
 
