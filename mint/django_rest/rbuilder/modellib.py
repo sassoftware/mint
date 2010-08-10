@@ -145,7 +145,7 @@ class XObjModel(models.Model):
                 elif val is None:
                         val = ''
                 elif isinstance(fields[key], models.DateTimeField):
-                    val = val.isoformat()
+                    val = "%s+00:00" % val.isoformat()
                 setattr(xobj_model, key, val)
             elif isinstance(val, XObjHrefModel):
                 val.serialize(request)
@@ -219,6 +219,4 @@ class DateTimeUtcField(models.DateTimeField):
             return value
         else:
             return super(models.DateField, self).pre_save(model_instance, add)
-
-
 
