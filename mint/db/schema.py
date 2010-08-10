@@ -1130,7 +1130,9 @@ def _createInventorySchema(db):
         cu.execute("""
             CREATE TABLE "inventory_system_log_entry" (
                 "system_log_entry_id" %(PRIMARYKEY)s,
-                "system_log_id" integer NOT NULL REFERENCES "inventory_system_log" ("system_log_id"),
+                "system_log_id" integer NOT NULL 
+                    REFERENCES "inventory_system_log" ("system_log_id")
+                    ON DELETE CASCADE,
                 "entry" VARCHAR(8092),
                 "entry_date" timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
