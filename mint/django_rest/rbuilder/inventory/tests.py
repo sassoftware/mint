@@ -178,6 +178,14 @@ class SystemsTestCase(XMLTestCase):
             testsxml.system_xml % (system.activation_date.isoformat(),
                 system.created_date.isoformat()))
 
+    def testPostSystem(self):
+        system_xml = testsxml.system_xml % \
+            (datetime.datetime.utcnow(), datetime.datetime.utcnow())
+        response = self.client.post('/api/inventory/systems/', 
+            data=system_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, system_xml)
+
 class SystemEventTestCase(XMLTestCase):
     
     def setUp(self):
