@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import datetime
+from dateutil import tz
 import urlparse
 
 from django.db import models
@@ -143,7 +145,7 @@ class XObjModel(models.Model):
                 elif val is None:
                         val = ''
                 elif isinstance(fields[key], models.DateTimeField):
-                    val = val.isoformat()
+                    val = "%s+00:00" % val.isoformat()
                 setattr(xobj_model, key, val)
             elif isinstance(val, XObjHrefModel):
                 val.serialize(request)
@@ -208,4 +210,13 @@ class DeferrableForeignKey(models.ForeignKey):
     def __init__(self, *args, **kwargs):
         self.deferred = kwargs.pop('deferred', False)
         super(DeferrableForeignKey, self).__init__(*args, **kwargs)
+
+class DateTimeUtcField(models.DateTimeField):
+    def pre_save(self, model_instance, add):
+        if self.auto_now or (self.auto_now_add and add):
+            value = datetime.datetime.now(tz.tzutc())
+            setattr(model_instance, self.attname, value)
+            return value
+        else:
+            return super(models.DateField, self).pre_save(model_instance, add)
 
