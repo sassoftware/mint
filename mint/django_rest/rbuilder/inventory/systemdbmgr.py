@@ -304,6 +304,19 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         if not created:
             cachedUpdate.last_refreshed = datetime.datetime.now()
             cachedUpdate.save()
+            
+    def getSystemEvent(self, event_id):
+        event = models.SystemEvent.objects.get(pk=event_id)
+        return event
+
+    def deleteSystemEvent(self, event):
+        event = models.SystemEvent.objects.get(pk=event)
+        event.delete()
+
+    def getSystemEvents(self):
+        SystemEvents = models.SystemEvents()
+        SystemEvents.systemEvent = list(models.SystemEvent.objects.all())
+        return SystemEvents
     
     def getSystemEventsForProcessing(self):        
         events = None
@@ -338,7 +351,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             self.scheduleSystemPollEvent(event.system)
         else:
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
-        
         
     def cleanupSystemEvent(self, event):
         # remove the event since it has been handled
