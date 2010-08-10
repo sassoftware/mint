@@ -150,7 +150,8 @@ class XObjModel(models.Model):
                 elif val is None:
                         val = ''
                 elif isinstance(fields[key], models.DateTimeField):
-                    val = "%s+00:00" % val.isoformat()
+                    val = val.replace(tzinfo=tz.tzutc())
+                    val = val.isoformat()
                 setattr(xobj_model, key, val)
             elif isinstance(val, XObjHrefModel):
                 val.serialize(request)

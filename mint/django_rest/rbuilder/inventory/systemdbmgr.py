@@ -171,8 +171,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             return None
 
     def getSystemLog(self, system):
-        systemLog = models.system_log(managed_system=system)
-        systemLog.populateRelatedModelsFromDb(system)
         return systemLog
 
     def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):

@@ -1,5 +1,6 @@
 import collections
 import datetime
+from dateutil import tz
 from django.test import TestCase
 from django.test.client import Client
 
@@ -179,12 +180,15 @@ class SystemsTestCase(XMLTestCase):
                 system.created_date.isoformat()))
 
     def testPostSystem(self):
-        system_xml = testsxml.system_xml % \
-            (datetime.datetime.utcnow(), datetime.datetime.utcnow())
+        curr_time = datetime.datetime.now(tz.tzutc())
+        system_xml = testsxml.system_xml % ('', '')
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, system_xml)
+        system = models.System.objects.get(pk=1)
+        self.assertXMLEquals(response.content, testsxml.system_xml % \
+            (system.activation_date.isoformat() + '+00:00',
+             system.created_date.isoformat() + '+00:00'))
 
 class SystemEventTestCase(XMLTestCase):
     
