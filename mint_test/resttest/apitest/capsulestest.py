@@ -62,14 +62,32 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
     </contentProvider>
 </platformDefinition>
 """,
+    'localhost@centos:plat' : """\
+<platformDefinition>
+    <contentProvider name="centos" description="Yum Repository">
+      <contentSourceType name="repomd"
+        description="Yum Repository" isSingleton="false" />
+        <dataSource name="5.5/os/i386" description="CentOS (v. 5.5 for 32-bit x86)"/>
+        <dataSource name="5.5/os/x86_64" description="CentOS (v. 5.5 for 64-bit x86_64)"/>
+        <dataSource name="5.5/updates/i386" description="CentOS (v. 5.5 updates for 32-bit x86)"/>
+        <dataSource name="5.5/updates/x86_64" description="CentOS (v. 5.5 updates for 64-bit x86_64)"/>
+        <dataSource name="5.4/os/i386" description="CentOS (v. 5.4 for 32-bit x86)"/>
+        <dataSource name="5.4/os/x86_64" description="CentOS (v. 5.4 for 64-bit x86_64)"/>
+        <dataSource name="5.4/updates/i386" description="CentOS (v. 5.4 updates for 32-bit x86)"/>
+        <dataSource name="5.4/updates/x86_64" description="CentOS (v. 5.4 updates for 64-bit x86_64)"/>
+    </contentProvider>
+</platformDefinition>
+""",
 }
     LabelToContentSourcesMap = {
         'localhost@rpl:plat' : [ 'RHN', 'proxy', 'satellite' ],
         'localhost@sles:plat' : [ 'nu', 'SMT' ],
+        'localhost@centos:plat' : [ 'repomd' ],
     }
     def setUpIndexerCfg(self):
         self.mockPlatformLoadFromRepository()
         db = self.openRestDatabase()
+        self.mintCfg.availablePlatforms.append('localhost@centos:plat')
         self.mintCfg.availablePlatforms.append('localhost@sles:plat')
         self._addPlatformSources(db)
         self.capsulecfg = db.capsuleMgr.getIndexerConfig()
@@ -410,7 +428,25 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         smt2.username = 'username_smt2'
         smt2.password = 'password_smt2'
         smt2.platformLabel = 'localhost@sles:plat'
-        return [ proxy1, proxy2, src, sat, nu, smt1, smt2 ]
+
+        centos1 = self.Source()
+        centos1.contentSourceType = 'repomd'
+        centos1.name = 'Yum Repository'
+        centos1.shortName = 'centos1'
+        centos1.sourceUrl = 'https://centos1/'
+        centos1.username = None # No auth required here
+        centos1.platformLabel = 'localhost@centos:plat'
+
+        centos2 = self.Source()
+        centos2.contentSourceType = 'repomd'
+        centos2.name = 'Yum Repository'
+        centos2.shortName = 'centos2'
+        centos2.sourceUrl = 'https://centos2/'
+        centos2.username = 'username-centos2'
+        centos2.password = 'password-centos2'
+        centos2.platformLabel = 'localhost@centos:plat'
+
+        return [ proxy1, proxy2, src, sat, nu, smt1, smt2, centos1, centos2 ]
 
     def testRefreshMultipleSources(self):
         indexer = base.IndexerTestMixIn.indexer(self)
@@ -433,20 +469,39 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         self.failUnlessEqual([x.rpc.username for x in sources],
             ['JeanValjeanProxy1', 'JeanValjeanSatellite', 'JeanValjean'])
         sources = list(indexer.iterYumRepositories())
-        self.failUnlessEqual([x.label for x in sources], sorted([
-            'SLE10-SDK-SP3-Online/sles-10-i586',
-            'SLES10-SP3-Updates/sles-10-i586',
-            'SLE10-SDK-SP3-Online/sles-10-x86_64',
-            'SLES10-SP3-Online/sles-10-x86_64',
-            'SLE10-SDK-SP3-Updates/sles-10-x86_64',
-            'SLE10-SDK-SP3-Pool/sles-10-x86_64',
-            'SLES10-SP3-Updates/sles-10-x86_64',
-            'SLES10-SP3-Pool/sles-10-x86_64',
-            'SLES10-SP3-Pool/sles-10-i586',
-            'SLE10-SDK-SP3-Pool/sles-10-i586',
-            'SLES10-SP3-Online/sles-10-i586',
-            'SLE10-SDK-SP3-Updates/sles-10-i586',
-        ]))
+        self.failUnlessEqual([x.label for x in sources], [
+            'centos:5.4/os/i386',
+            'centos:5.4/os/x86_64',
+            'centos:5.4/updates/i386',
+            'centos:5.4/updates/x86_64',
+            'centos:5.5/os/i386',
+            'centos:5.5/os/x86_64',
+            'centos:5.5/updates/i386',
+            'centos:5.5/updates/x86_64',
+            'novell:SLE10-SDK-SP3-Online/sles-10-i586',
+            'novell:SLE10-SDK-SP3-Online/sles-10-x86_64',
+            'novell:SLE10-SDK-SP3-Pool/sles-10-i586',
+            'novell:SLE10-SDK-SP3-Pool/sles-10-x86_64',
+            'novell:SLE10-SDK-SP3-Updates/sles-10-i586',
+            'novell:SLE10-SDK-SP3-Updates/sles-10-x86_64',
+            'novell:SLES10-SP3-Online/sles-10-i586',
+            'novell:SLES10-SP3-Online/sles-10-x86_64',
+            'novell:SLES10-SP3-Pool/sles-10-i586',
+            'novell:SLES10-SP3-Pool/sles-10-x86_64',
+            'novell:SLES10-SP3-Updates/sles-10-i586',
+            'novell:SLES10-SP3-Updates/sles-10-x86_64',
+        ])
+        centosUrls = ['https://centos1//5.4/os/i386',
+            'https://username-centos2:password-centos2@centos2//5.4/os/i386']
+        novellUrls = [
+            'https://smt1//SLES10-SP3-Updates/sles-10-x86_64',
+            'https://username_smt2:password_smt2@smt2//SLES10-SP3-Updates/sles-10-x86_64',
+            'https://username_nu:password_nu@nu.novell.com/repo/$RCE/SLES10-SP3-Updates/sles-10-x86_64',
+        ]
+        self.failUnlessEqual([ str(y.url) for y in sources[0].sources ],
+            centosUrls)
+        self.failUnlessEqual([ str(y.url) for y in sources[-1].sources ],
+            novellUrls)
 
         self.failUnless(indexer.hasSources())
 
