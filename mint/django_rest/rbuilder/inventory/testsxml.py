@@ -88,13 +88,13 @@ system_xml = """\
 system_events_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvents>
-    <systemEvent id="http://testserver/api/inventory/systems/1/systemEvent/">
+    <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
         <priority>50</priority>
         <timeEnabled>%s</timeEnabled>
         <systemEventId>1</systemEventId>
         <timeCreated>%s</timeCreated>
     </systemEvent>
-    <systemEvent id="http://testserver/api/inventory/systems/2/systemEvent/">
+    <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
         <priority>100</priority>
         <timeEnabled>%s</timeEnabled>
         <systemEventId>2</systemEventId>
@@ -105,7 +105,7 @@ system_events_xml = """\
 
 system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<systemEvent id="http://testserver/api/inventory/systems/1/systemEvent/">
+<systemEvent id="http://testserver/api/inventory/systemEvents/1/">
     <priority>50</priority>
     <timeEnabled>%s</timeEnabled>
     <systemEventId>1</systemEventId>
