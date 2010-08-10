@@ -195,6 +195,56 @@ class SystemEventTestCase(XMLTestCase):
     def tearDown(self):
         pass
     
+    def testGetSystemEventsRest(self):
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        act_event = models.SystemEventType.objects.get(name=models.SystemEventType.ACTIVATION)
+        event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        event1.save()
+        event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
+        event2.save()
+        response = self.client.get('/api/inventory/systemEvents/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.system_events_xml % (event1.time_enabled.isoformat(), event1.time_created.isoformat(),
+                event2.time_enabled.isoformat(), event2.time_created.isoformat()))
+        
+    def testGetSystemEventRest(self):
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        event.save()
+        response = self.client.get('/api/inventory/systemEvents/%d/' % event.system_event_id)
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.system_event_xml % (event.time_enabled.isoformat(), event.time_created.isoformat()))
+    
+    def testGetSystemEvent(self):
+        # add an event
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        event.save()
+        new_event = self.system_manager.getSystemEvent(event.system_event_id)
+        assert(new_event == event)
+        
+    def testGetSystemEvents(self):
+        # add an event
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        act_event = models.SystemEventType.objects.get(name=models.SystemEventType.ACTIVATION)
+        event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        event1.save()
+        event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
+        event2.save()
+        SystemEvents = self.system_manager.getSystemEvents()
+        assert(len(SystemEvents.systemEvent) == 2)
+        
+    def testDeleteSystemEvent(self):
+        # add an event
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        event.save()
+        self.system_manager.deleteSystemEvent(event.system_event_id)
+        events = models.SystemEvent.objects.all()
+        assert(len(events) == 0)
+    
     def testScheduleSystemPollEvent(self):
         self.system_manager.scheduleSystemPollEvent(self.system)
         

@@ -35,6 +35,17 @@ class Systems(modellib.XObjModel):
 
     def save(self):
         return [s.save() for s in self.system]
+    
+class SystemEvents(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'systemEvents')
+    list_fields = ['systemEvent']
+    systemEvent = []
+
+    def save(self):
+        return [s.save() for s in self.systemEvent]
 
 class Networks(modellib.XObjModel):
     class Meta:

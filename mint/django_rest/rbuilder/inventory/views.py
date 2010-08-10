@@ -119,9 +119,11 @@ class InventoryUsersService(AbstractInventoryService):
             return user
 
 class InventorySystemsEventService(AbstractInventoryService):
-
-    def read(self, request, system):
-        response = HttpResponse()
-        response.write('<html>events for system %s</html>' % system)
-        return response
+    
+    @return_xml
+    def read(self, request, system_event_id=None):
+        if system_event_id:
+            return self.sysMgr.getSystemEvent(system_event_id)
+        else:
+            return self.sysMgr.getSystemEvents()
 

@@ -84,3 +84,31 @@ system_xml = """\
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
+
+system_events_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systemEvents>
+    <systemEvent id="http://testserver/api/inventory/systems/1/systemEvent/">
+        <priority>50</priority>
+        <timeEnabled>%s</timeEnabled>
+        <systemEventId>1</systemEventId>
+        <timeCreated>%s</timeCreated>
+    </systemEvent>
+    <systemEvent id="http://testserver/api/inventory/systems/2/systemEvent/">
+        <priority>100</priority>
+        <timeEnabled>%s</timeEnabled>
+        <systemEventId>2</systemEventId>
+        <timeCreated>%s</timeCreated>
+    </systemEvent>
+</systemEvents>
+"""
+
+system_event_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systemEvent id="http://testserver/api/inventory/systems/1/systemEvent/">
+    <priority>50</priority>
+    <timeEnabled>%s</timeEnabled>
+    <systemEventId>1</systemEventId>
+    <timeCreated>%s</timeCreated>
+</systemEvent>
+"""
