@@ -40,7 +40,7 @@ systems_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
-    <systemEvent/>
+    <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
     <createdDate>%s</createdDate>
@@ -80,7 +80,7 @@ system_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <systemEvent/>
+  <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
   <createdDate>%s</createdDate>

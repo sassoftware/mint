@@ -101,9 +101,12 @@ class XObjModel(models.Model):
         xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
-    def get_absolute_url(self, request=None):
+    def get_absolute_url(self, request=None, pk=None):
         view_name = getattr(self, 'view_name', self.__class__.__name__)
-        url_key = getattr(self, 'pk', [])
+        if not pk:
+            url_key = getattr(self, 'pk', [])
+        else:
+            url_key = pk
         if url_key:
             url_key = [str(url_key)]
         bits = (view_name, url_key)
@@ -140,7 +143,7 @@ class XObjModel(models.Model):
                         href_model._xobj = xobj.XObjMetadata(
                                             attributes = {'href':str})
                         val_href = href_model()
-                        val_href.href = val.get_absolute_url(request)
+                        val_href.href = val.get_absolute_url(request, self.pk)
                         val = val_href
                 elif val is None:
                         val = ''
@@ -154,11 +157,11 @@ class XObjModel(models.Model):
             var_name = accessors[accessor].var_name
             accessor_model = type(accessor, (object,), {})()
             if getattr(accessors[accessor].field, 'deferred', False):
-                for rel_mod in getattr(self, accessor).all():
-                    href = rel_mod.get_absolute_url(request)
-                    accessor_model._xobj = xobj.XObjMetadata(
-                        attributes={'href':str})
-                    setattr(accessor_model, 'href', href)
+                rel_mod = getattr(self, accessor).model()
+                href = rel_mod.get_absolute_url(request, self.pk)
+                accessor_model._xobj = xobj.XObjMetadata(
+                    attributes={'href':str})
+                accessor_model.href = href
                 setattr(xobj_model, accessor, accessor_model)
             else:
                 accessor_model = type(accessor, (object,), {})()
