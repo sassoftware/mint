@@ -258,12 +258,28 @@ class SystemEventTestCase(XMLTestCase):
         sys_activated_entries = log.log_entries.all()
         assert(len(sys_activated_entries) == 1)
         
+    def testScheduleSystemPollNowEvent(self):
+        self.system_manager.scheduleSystemPollNowEvent(self.system)
+        
+        pn_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL_NOW)
+        event = models.SystemEvent.objects.filter(system=self.system,event_type=pn_event).get()
+        assert(event is not None)
+        # should have been enabled immediately
+        assert(event.time_enabled <= datetime.datetime.utcnow())
+        
+        # make sure we have our log event
+        log = models.SystemLog.objects.filter(system=self.system).get()
+        sys_activated_entries = log.log_entries.all()
+        assert(len(sys_activated_entries) == 1)
+        
     def testScheduleSystemActivationEvent(self):
         self.system_manager.scheduleSystemActivationEvent(self.system)
         
         activation_event = models.SystemEventType.objects.get(name=models.SystemEventType.ACTIVATION)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=activation_event).get()
         assert(event is not None)
+        # should have been enabled immediately
+        assert(event.time_enabled <= datetime.datetime.utcnow())
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()

@@ -362,11 +362,21 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
         self.createSystemEvent(system, poll_event)
         
+    def scheduleSystemPollNowEvent(self, system):
+        '''Schedule an event for the system to be polled now'''
+        # happens on demand, so enable now
+        enable_time = datetime.datetime.utcnow()
+        event_type = models.SystemEventType.objects.get(
+            name=models.SystemEventType.POLL_NOW)
+        self.createSystemEvent(system, event_type, enable_time)
+        
     def scheduleSystemActivationEvent(self, system):
         '''Schedule an event for the system to be activated'''
+        # activation events happen on demand, so enable now
+        enable_time = datetime.datetime.utcnow()
         activation_event_type = models.SystemEventType.objects.get(
             name=models.SystemEventType.ACTIVATION)
-        self.createSystemEvent(system, activation_event_type)
+        self.createSystemEvent(system, activation_event_type, enable_time)
             
     def createSystemEvent(self, system, event_type, enable_time=None):
         if not enable_time:
