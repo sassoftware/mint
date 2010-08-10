@@ -192,4 +192,11 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
             [ ('name1', dict(data = '11'), userCreds[('type1', 'name1')]),
               ('name2', dict(data = '12'), userCreds[('type1', 'name2')])])
 
+        self.failUnlessEqual(tmgr.getTargetsForUsers('type1'), [
+            (2, userName, 'name1', dict(data = '11'),
+                userCreds[('type1', 'name1')]),
+            (2, userName, 'name2', dict(data = '12'),
+                userCreds[('type1', 'name2')]),
+        ])
+
 testsetup.main()

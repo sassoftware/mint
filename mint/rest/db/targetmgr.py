@@ -108,6 +108,31 @@ class TargetManager(manager.Manager):
             ret.append((targetName, cfg, userCreds.get(targetName, {})))
         return ret
 
+    def getTargetsForUsers(self, targetType):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT Targets.targetName,
+                   TargetUserCredentials.credentials,
+                   Users.username,
+                   Users.userid
+              FROM Targets
+         LEFT JOIN TargetUserCredentials USING (targetId)
+              JOIN Users USING (userId)
+             WHERE Targets.targetType = ?
+        """, targetType)
+        userCreds = {}
+        for targetName, creds, userName, userId in cu:
+            userCreds[targetName] = (userId, userName, mintdata.unmarshalTargetUserCredentials(creds))
+        targetConfig = self.getConfiguredTargetsByType(targetType)
+        ret = []
+        for targetName, cfg in sorted(targetConfig.items()):
+            userId, userName, userCredentials = userCreds.get(targetName,
+                (None, None, None))
+            if userName is None:
+                continue
+            ret.append((userId, userName, targetName, cfg, userCredentials))
+        return ret
+
     def setTargetCredentialsForUser(self, targetType, targetName, userName,
                                     credentials):
         userId = self.getUserId(userName)
