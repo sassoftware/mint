@@ -54,23 +54,23 @@ class System(modellib.XObjIdModel):
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
     # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
-    launch_date = models.DateTimeField(null=True)
+    launch_date = modellib.DateTimeUtcField(null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = models.CharField(max_length=255, null=True)
     reservation_id = models.CharField(max_length=255, null=True)
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)
     os_minor_version = models.CharField(max_length=32, null=True)
-    activation_date = models.DateTimeField(auto_now_add=True)
+    activation_date = modellib.DateTimeUtcField(auto_now_add=True)
     generated_uuid = models.CharField(max_length=64, unique=True, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
     ssl_client_key = models.CharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
-    scheduled_event_start_date = models.DateTimeField(null=True)
+    scheduled_event_start_date = modellib.DateTimeUtcField(null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.NullBooleanField()
     activated = models.NullBooleanField()
@@ -122,8 +122,8 @@ class SystemEvent(modellib.XObjIdModel):
     system = modellib.DeferrableForeignKey(System, db_index=True,
         related_name='system_event', deferred=True)
     event_type = models.ForeignKey(SystemEventType)
-    time_created = models.DateTimeField(auto_now_add=True)
-    time_enabled = models.DateTimeField(default=datetime.datetime.utcnow(), db_index=True)
+    time_created = modellib.DateTimeUtcField(auto_now_add=True)
+    time_enabled = modellib.DateTimeUtcField(default=datetime.datetime.utcnow(), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
 
 # TODO: is this needed, or should we just use a recursive fk on ManagedSystem?
@@ -175,7 +175,7 @@ class SystemLogEntry(modellib.XObjModel):
     system_log_entry_id = models.AutoField(primary_key=True)
     system_log = models.ForeignKey(SystemLog)
     log_entry = models.ForeignKey('LogEntry')
-    entry_date = models.DateTimeField(auto_now_add=True)
+    entry_date = modellib.DateTimeUtcField(auto_now_add=True)
 
 class LogEntry(modellib.XObjModel):
     class Meta:
@@ -208,7 +208,7 @@ class AvailableUpdate(modellib.XObjModel):
     # update was checked for, none was found.
     software_version_available_update = models.ForeignKey(Version,
         related_name = 'software_version_available_update_set')
-    last_refreshed = models.DateTimeField(auto_now_add=True)
+    last_refreshed = modellib.DateTimeUtcField(auto_now_add=True)
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
