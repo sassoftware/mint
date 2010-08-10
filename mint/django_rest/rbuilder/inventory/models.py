@@ -157,6 +157,7 @@ class Network(modellib.XObjModel):
     public_dns_name = models.CharField(max_length=255)
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
+    primary = models.NullBooleanField()
     # TODO: add all the other fields we need about a network
 
     load_fields = [ip_address, public_dns_name]

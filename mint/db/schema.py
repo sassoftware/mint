@@ -1104,7 +1104,8 @@ def _createInventorySchema(db):
                 "device_name" varchar(255) NOT NULL,
                 "public_dns_name" varchar(255) NOT NULL,
                 "netmask" varchar(20),
-                "port_type" varchar(32)
+                "port_type" varchar(32),
+                "primary" bool
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_network'] = []
         changed = True
