@@ -9,6 +9,7 @@ import logging
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.dbstore import sqllib
+from conary.deps import deps
 
 from mint import jobstatus
 from mint import mint_error
@@ -27,8 +28,9 @@ from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
 from mint.rest.db import releasemgr
+from mint.rest.db import systemmgr
+from mint.rest.db import targetmgr
 from mint.rest.db import usermgr
-
 
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
@@ -128,7 +130,9 @@ class Database(DBInterface):
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
+        self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
         self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
+        self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
         if subscribers is None:
             subscribers = []
             subscribers.append(emailnotifier.EmailNotifier(cfg, self,
@@ -461,16 +465,25 @@ class Database(DBInterface):
             enabled=platformEnabled,
             platformId = platformId)
 
+    def updateProductVersionStage(self, hostname, version, stageName, trove):
+        return self.productMgr.updateProductVersionStage(hostname, version, stageName, trove)
+
+    def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
+        return self.productMgr.getGroupPromoteJobStatus(hostname, version, stage, jobId)
+
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
-        for stage in pd.getStages():
+        stages = pd.getStages()
+        for stage in stages:
             if str(stage.name) == stageName:
+                promotable = ((stage.name != stages[-1].name and True) or False) 
                 return models.Stage(name=str(stage.name),
                                     label=str(pd.getLabelForStage(stage.name)),
                                     hostname=hostname,
-                                    version=version)
+                                    version=version,
+                                    isPromotable=promotable)
         raise errors.StageNotFound(stageName)
 
     @readonly    
@@ -478,11 +491,14 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         pd = self.productMgr.getProductVersionDefinition(hostname, version)
         stageList = models.Stages()
-        for stage in pd.getStages():
+        stages = pd.getStages()
+        for stage in stages:
+            promotable = ((stage.name != stages[-1].name and True) or False)
             stageList.stages.append(models.Stage(name=str(stage.name),
                                  label=str(pd.getLabelForStage(stage.name)),
                                  hostname=hostname,
-                                 version=version))
+                                 version=version,
+                                 isPromotable=promotable))
         return stageList
 
     def listImagesForProductVersion(self, hostname, version):

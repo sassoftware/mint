@@ -91,6 +91,7 @@ class MintConfig(ConfigFile):
     configured              = (CfgBool, False)
     dataPath                = (CfgPath, '/srv/rbuilder/')
     rBuilderOnline          = (CfgBool, False)
+    rBuilderExternal        = (CfgBool, False)
 
     # Backend configuration
     adminMail               = (CfgString, 'mint@rpath.org')
@@ -139,6 +140,8 @@ class MintConfig(ConfigFile):
     removeTrovesVisible     = (CfgBool, False)
     hideFledgling           = (CfgBool, False)
     allowTroveRefSearch     = (CfgBool, True)
+    moduleHooksDir          = (CfgPath, '/usr/share/rbuilder-ui/modules/hooks/')
+    moduleHooksExt          = (CfgString, '*.swf')
 
     # User authentication
     authCacheTimeout        = (CfgInt, None,

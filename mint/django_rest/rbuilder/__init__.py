@@ -1,5 +1,10 @@
 #
+import os
+
 from xobj import xobj
+
+if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'mint.django_rest.settings'
 
 class LinkElement(object):
     _xobj = xobj.XObjMetadata(

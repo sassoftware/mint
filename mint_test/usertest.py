@@ -141,6 +141,7 @@ class UsersTest(fixtures.FixturedUnitTest):
             
     @fixtures.fixture("Full")
     def testDefaultedDataAWS(self, db, data):
+        raise testsuite.SkipTestException("EC2 Credentials no longer set like this")
         client = self.getClient('user')
         user = client.getUser(data['user'])
 
@@ -206,6 +207,7 @@ class UsersTest(fixtures.FixturedUnitTest):
         
     @fixtures.fixture('Full')
     def testUserDataDictAWS(self, db, data):
+        raise testsuite.SkipTestException("EC2 Credentials no longer set like this")
         client = self.getClient('user')
         user = client.getUser(data['user'])
         baseDict = user.getDataDict(user.getDataTemplateAWS())

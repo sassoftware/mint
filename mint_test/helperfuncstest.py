@@ -657,7 +657,7 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(prd.platform.buildTemplates)
 
         prd = proddef.ProductDefinition()
-        prd.addContainerTemplate(prd.imageType('installableIsoImage'))
+        prd.addContainerTemplate(prd.imageType('amiImage'))
         addDefaultPlatformToProductDefinition(prd)
         self.failIf(prd.platform.containerTemplates)
         self.failIf(prd.platform.architectures)
