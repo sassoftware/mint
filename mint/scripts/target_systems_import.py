@@ -61,35 +61,48 @@ class TargetSystemsImport(scriptlibrary.SingletonScript):
                 username=self.cfg.authUser, 
                 token=authToken,
                 admin=True,
-                userId=userId)
+                userId=userId,
+                authorized=True)
         auth = authmgr.AuthenticationManager(self.cfg, db)
         auth.setAuth(mintAuth, authToken)
         restdb = RestDatabase(self.cfg, db)
         
         # do i need these?
-        #db.auth = auth
-        
         restdb.auth.userId = userId
-        
-        targetDrivers = self.loadTargetDrivers(restdb)
-        for targetType, driver in targetDrivers:
-            print "Processing target %s" % targetType
-            print driver.getUserCredentials()
+        restdb.auth.setAuth(mintAuth, authToken)
+
+        for driver in self.loadTargetDrivers(restdb):
+            print "Processing target %s %s, user %s" % (driver.cloudType,
+                driver.cloudName, driver.userId)
+            print driver.getAllInstances()
         #from mint.django_rest.rbuilder.inventory import systemdbmgr
         #system_manager = systemdbmgr.SystemDBManager()
         #system_manager.importTargetSystems()
         
-    def loadTargetDrivers(self, restdb):
-        storagePath = os.path.join(restdb.cfg.dataPath, 'catalog')
-        storageConfig = storage.StorageConfig(storagePath=storagePath)
-        drivers = []
+
+    def loadTargetDriverClasses(self):
         for driverName in [ 'ec2', 'vmware', 'vws', 'xenent' ]:
             driverClass = __import__('catalogService.rest.drivers.%s' % (driverName),
                                       {}, {}, ['driver']).driver
-            driver = driverClass(storageConfig, driverName, db = restdb, userId="admin")
-            drivers.append((driverClass.cloudType, driver))
-        return drivers
-        
+            yield driverClass
+
+    def loadTargetDrivers(self, restdb):
+        storagePath = os.path.join(restdb.cfg.dataPath, 'catalog')
+        storageConfig = storage.StorageConfig(storagePath=storagePath)
+        targets = [ (1, "admin", "vsphere.eng.rpath.com", {}, {})]
+        for driverClass in self.loadTargetDriverClasses():
+            targetType = driverClass.cloudType
+            #targets = restdb.targetmgr.getTargetsForUsers(targetType)
+            if targetType != 'vmware':
+                continue
+            for userId, userName, targetName, _, _ in targets:
+                driver = driverClass(storageConfig, targetType,
+                    cloudName=targetName, userId=userName, db=restdb)
+                if not driver.isDriverFunctional():
+                    continue
+                driver._nodeFactory.baseUrl = "https://localhost"
+                yield driver
+
     def usage(self):
         print >> sys.stderr, "Usage: %s [useLocalSettings]" % \
             sys.argv[0]
