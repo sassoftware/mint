@@ -5,7 +5,6 @@
 #
 import sys
 import datetime
-import urlparse
 from dateutil import tz
 
 from django.db import models
