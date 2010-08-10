@@ -166,16 +166,16 @@ class Network(modellib.XObjModel):
     def natural_key(self):
         return self.ip_address, self.public_dns_name
 
-class SystemLog(modellib.XObjModel):
+class SystemLog(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_log'
     system_log_id = models.AutoField(primary_key=True)
     system = modellib.DeferrableForeignKey(System, deferred=True,
         related_name='system_log')
-    log_entries = models.ManyToManyField('LogEntry', through='SystemLogEntry',
-        symmetrical=False)
 
 class SystemLogEntry(modellib.XObjModel):
+    _xobj = xobj.XObjMetadata(
+                tag='systemLogEntry')
     class Meta:
         db_table = 'inventory_system_log_entry'
         
@@ -184,17 +184,19 @@ class SystemLogEntry(modellib.XObjModel):
     MANUALLY_ACTIVATED = "System manually activated via rBuilder"
     POLLED = "System polled."
     FETCHED = "System data fetched."
-    
-    system_log_entry_id = models.AutoField(primary_key=True)
-    system_log = models.ForeignKey(SystemLog)
-    log_entry = models.ForeignKey('LogEntry')
-    entry_date = modellib.DateTimeUtcField(auto_now_add=True)
+    choices = (
+        (ADDED, ADDED),
+        (ACTIVATED, ACTIVATED),
+        (MANUALLY_ACTIVATED, MANUALLY_ACTIVATED),
+        (POLLED, POLLED),
+        (FETCHED, FETCHED),
+    )
 
-class LogEntry(modellib.XObjModel):
-    class Meta:
-        db_table = 'inventory_log_entry'
-    entry_id = models.AutoField(primary_key=True)
-    entry = models.CharField(max_length=8092)
+    system_log_entry_id = models.AutoField(primary_key=True)
+    system_log = models.ForeignKey(SystemLog,
+        related_name='system_log_entries')
+    entry = models.CharField(max_length=8092, choices=choices)
+    entry_date = modellib.DateTimeUtcField(auto_now_add=True)
 
 class Version(modellib.XObjModel):
     class Meta:
