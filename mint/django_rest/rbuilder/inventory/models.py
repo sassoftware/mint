@@ -6,6 +6,7 @@
 import sys
 import datetime
 import urlparse
+from dateutil import tz
 
 from django.db import models
 
@@ -134,7 +135,8 @@ class SystemEvent(modellib.XObjIdModel):
         related_name='system_event', deferred=True)
     event_type = models.ForeignKey(SystemEventType)
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
-    time_enabled = modellib.DateTimeUtcField(default=datetime.datetime.utcnow(), db_index=True)
+    time_enabled = modellib.DateTimeUtcField(
+        default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
 
 # TODO: is this needed, or should we just use a recursive fk on ManagedSystem?

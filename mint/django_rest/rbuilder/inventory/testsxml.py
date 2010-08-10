@@ -25,6 +25,7 @@ systems_xml = """\
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
+        <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
       </network>
     </networks>
@@ -64,6 +65,7 @@ system_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
+      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
     </network>
   </networks>
