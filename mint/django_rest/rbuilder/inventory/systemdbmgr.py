@@ -387,3 +387,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         msg = "System %s event registered and will be enabled on %s" % (event_type.name, enable_time)
         self.log_system(event.system, msg)
         log.info(msg)
+        
+    def importTargetSystems(self):
+        log.info("Importing target systems")

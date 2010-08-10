@@ -23,7 +23,7 @@ static_files =				\
 	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
-	process_system_events \
+	process-system-events \
 	rbuilder-database		\
 	refresh-auth			\
 	rmake-reset			\
@@ -35,6 +35,7 @@ static_files =				\
 	update-top-projects		\
 	validate-proxy-settings		\
 	set-password                    \
+	target-systems-import \
 	repository-log-scrape
 
 generated_files =	\
