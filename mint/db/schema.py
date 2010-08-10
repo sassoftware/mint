@@ -1084,6 +1084,7 @@ def _createInventorySchema(db):
                 "id" %(PRIMARYKEY)s,
                 "system_id" integer NOT NULL UNIQUE 
                     REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_managementnode'] = []
         changed = True
@@ -1125,21 +1126,12 @@ def _createInventorySchema(db):
         changed |= db.createIndex("inventory_system_log",
             "inventory_system_log_system_id_idx", "system_id")
 
-    if 'inventory_log_entry' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_log_entry" (
-                "entry_id" %(PRIMARYKEY)s,
-                "entry" varchar(8092) NOT NULL
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_log_entry'] = []
-        changed = True
-        
     if 'inventory_system_log_entry' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_system_log_entry" (
                 "system_log_entry_id" %(PRIMARYKEY)s,
                 "system_log_id" integer NOT NULL REFERENCES "inventory_system_log" ("system_log_id"),
-                "log_entry_id" integer NOT NULL,
+                "entry" VARCHAR(8092),
                 "entry_date" timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_log_entry'] = []
@@ -1221,7 +1213,8 @@ def _createInventorySchema(db):
             CREATE TABLE "inventory_system_event" (
                 "system_event_id" %(PRIMARYKEY)s,
                 "system_id" integer NOT NULL 
-                    REFERENCES "inventory_system" ("system_id"),
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
                 "event_type_id" integer NOT NULL 
                     REFERENCES "inventory_system_event_type" 
                         ("system_event_type_id"),

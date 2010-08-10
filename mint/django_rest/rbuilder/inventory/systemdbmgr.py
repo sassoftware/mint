@@ -54,15 +54,13 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         return Systems
 
     def log_system(self, system, log_msg):
-        log_entry, created = models.LogEntry.objects.get_or_create(
-                                entry=log_msg) 
-        log_entry.save()
         system_log, created = models.SystemLog.objects.get_or_create(
-                                system=system)
+            system=system)
+        system_log_entry = models.SystemLogEntry(system_log=system_log,
+            entry=log_msg)
+        system_log.system_log_entries.add(system_log_entry)
         system_log.save()
-        system_log_entry, created = models.SystemLogEntry.objects.get_or_create(
-            system_log=system_log, log_entry=log_entry)
-        system_log_entry.save()
+        return system_log
         
     def addSystem(self, system):
         '''Add a new system to inventory'''
@@ -171,7 +169,11 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             return None
 
     def getSystemLog(self, system):
-        return systemLog
+        systemLog = system.system_log.all()
+        if systemLog:
+            return systemLog[0]
+        else:
+            models.SystemLog()
 
     def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)

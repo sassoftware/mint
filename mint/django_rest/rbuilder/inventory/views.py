@@ -88,9 +88,9 @@ class InventorySystemsSystemLogService(AbstractInventoryService):
         systemLog = self.sysMgr.getSystemLog(managedSystem)
 
         if format == 'xml':
-            parserDecorator = return_xml
-            func = parserDecorator(systemLog.getParser)
-            return func()
+            func = lambda x, req: systemLog
+            func = return_xml(func)
+            return func(None, request)
         elif format == 'raw':
             tzSave = os.environ['TZ']
             os.environ['TZ'] = request.environ['TZ']

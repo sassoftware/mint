@@ -157,7 +157,11 @@ class XObjModel(models.Model):
                 val.serialize(request)
                 setattr(xobj_model, key, val)
         for accessor in accessors.keys():
-            var_name = accessors[accessor].var_name
+            if hasattr(accessors[accessor].model, '_xobj') and \
+               accessors[accessor].model._xobj.tag:
+                    var_name = accessors[accessor].model._xobj.tag
+            else:
+                var_name = accessors[accessor].var_name
             accessor_model = type(accessor, (object,), {})()
             if getattr(accessors[accessor].field, 'deferred', False):
                 rel_mod = getattr(self, accessor).model()

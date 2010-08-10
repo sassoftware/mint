@@ -180,7 +180,6 @@ class SystemsTestCase(XMLTestCase):
                 system.created_date.isoformat()))
 
     def testPostSystem(self):
-        curr_time = datetime.datetime.now(tz.tzutc())
         system_xml = testsxml.system_xml % ('', '')
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
@@ -189,6 +188,23 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.system_xml % \
             (system.activation_date.isoformat() + '+00:00',
              system.created_date.isoformat() + '+00:00'))
+
+    def testGetSystemLog(self):
+        system_xml = testsxml.system_xml % ('', '')
+        response = self.client.post('/api/inventory/systems/', 
+            data=system_xml, content_type='text/xml')
+        response = self.client.get('/api/inventory/systems/1/')
+        response = self.client.get('/api/inventory/systems/1/systemLog/')
+        self.assertEquals(response.status_code, 200)
+        content = []
+        # Just remove lines with dates in them, it's easier to test for now.
+        for line in response.content.split('\n'):
+            if 'entryDate' in line or \
+               'poll event' in line:
+                continue
+            else:
+                content.append(line)
+        self.assertXMLEquals('\n'.join(content), testsxml.system_log)
 
 class SystemEventTestCase(XMLTestCase):
     
@@ -267,7 +283,7 @@ class SystemEventTestCase(XMLTestCase):
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_activated_entries = log.log_entries.all()
+        sys_activated_entries = log.system_log_entries.all()
         assert(len(sys_activated_entries) == 1)
         
     def testScheduleSystemPollNowEvent(self):
@@ -281,7 +297,7 @@ class SystemEventTestCase(XMLTestCase):
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_activated_entries = log.log_entries.all()
+        sys_activated_entries = log.system_log_entries.all()
         assert(len(sys_activated_entries) == 1)
         
     def testScheduleSystemActivationEvent(self):
@@ -295,7 +311,7 @@ class SystemEventTestCase(XMLTestCase):
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_activated_entries = log.log_entries.all()
+        sys_activated_entries = log.system_log_entries.all()
         assert(len(sys_activated_entries) == 1)
         
 class SystemEventProcessingTestCase(XMLTestCase):

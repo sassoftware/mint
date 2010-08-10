@@ -114,3 +114,31 @@ system_event_xml = """\
     <timeCreated>%s</timeCreated>
 </systemEvent>
 """
+
+system_log = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systemLog id="http://testserver/api/inventory/systems/1/systemLog/">
+  <systemLogEntries>
+    <systemLogEntry>
+      <entry>System added to inventory</entry>
+      <systemLogEntryId>1</systemLogEntryId>
+    </systemLogEntry>
+    <systemLogEntry>
+      <entry>System activated via ractivate</entry>
+      <systemLogEntryId>2</systemLogEntryId>
+    </systemLogEntry>
+    <systemLogEntry>
+      <systemLogEntryId>3</systemLogEntryId>
+    </systemLogEntry>
+    <systemLogEntry>
+      <entry>System data fetched.</entry>
+      <systemLogEntryId>4</systemLogEntryId>
+    </systemLogEntry>
+    <systemLogEntry>
+      <entry>System data fetched.</entry>
+      <systemLogEntryId>5</systemLogEntryId>
+    </systemLogEntry>
+  </systemLogEntries>
+  <systemLogId>1</systemLogId>
+</systemLog>
+"""
