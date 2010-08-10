@@ -53,36 +53,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         Systems.system = list(models.System.objects.all())
         return Systems
 
-    def _sanitize_system(self, system):
-        systemCopy = copy.deepcopy(system)
-        if systemCopy.generated_uuid:
-            key = os.path.join(systemCopy.generated_uuid, 'x509key')
-            keyPath = self.systemStore.set(key, systemCopy.ssl_client_key)
-            systemCopy.ssl_client_key = keyPath
-            cert = os.path.join(systemCopy.generated_uuid, 'x509cert')
-            certPath = self.systemStore.set(cert, systemCopy.ssl_client_certificate)
-            systemCopy.ssl_client_certificate = certPath
-            serverCert = os.path.join(systemCopy.generated_uuid, 'x509servercert')
-            serverCertPath = self.systemStore.set(serverCert, systemCopy.ssl_server_certificate)
-            systemCopy.ssl_server_certificate = serverCertPath
-
-        return systemCopy
-
-    def _unSanitizeSystem(self, system):
-        systemCopy = copy.deepcopy(system)
-        keyPath = systemCopy.ssl_client_key
-        key = open(keyPath).read()
-        systemCopy.ssl_client_key = key
-        certPath = systemCopy.ssl_client_certificate
-        cert = open(certPath).read()
-        systemCopy.ssl_client_certificate = cert
-        if systemCopy.ssl_server_certificate:
-            serverCertPath = systemCopy.ssl_server_certificate
-            serverCert = open(serverCertPath).read()
-            systemCopy.ssl_server_certificate = serverCert
-
-        return systemCopy
-
     def log_system(self, system, log_msg):
         log_entry, created = models.LogEntry.objects.get_or_create(
                                 entry=log_msg) 
@@ -201,8 +171,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             return None
 
     def getSystemLog(self, system):
-        systemLog = models.system_log(managed_system=system)
-        systemLog.populateRelatedModelsFromDb(system)
         return systemLog
 
     def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):

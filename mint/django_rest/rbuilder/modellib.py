@@ -60,8 +60,10 @@ class BaseManager(models.Manager):
             if key in fields.keys():
                 if isinstance(fields[key], related.RelatedField):
                     val = fields[key].related.parent_model.objects.load_from_href(val)
-                else:
+                elif val:
                     val = str(val)
+                else:
+                    val = None
                 setattr(model, key, val)
         loaded_model = self.load(model)
         if not loaded_model:
@@ -148,7 +150,8 @@ class XObjModel(models.Model):
                 elif val is None:
                         val = ''
                 elif isinstance(fields[key], models.DateTimeField):
-                    val = "%s+00:00" % val.isoformat()
+                    val = val.replace(tzinfo=tz.tzutc())
+                    val = val.isoformat()
                 setattr(xobj_model, key, val)
             elif isinstance(val, XObjHrefModel):
                 val.serialize(request)
