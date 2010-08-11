@@ -347,14 +347,28 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         self.createSystemEvent(system, activation_event_type, enable_time)
             
     def createSystemEvent(self, system, event_type, enable_time=None):
-        if not enable_time:
-            enable_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
-        event = models.SystemEvent(system=system, event_type=event_type, 
-            priority=event_type.priority, time_enabled=enable_time)
-        event.save()
-        msg = "System %s event registered and will be enabled on %s" % (event_type.name, enable_time)
-        self.log_system(event.system, msg)
-        log.info(msg)
+        # do not create events for systems that we cannot possibly contact
+        if self.getSystemHasHostInfo(system):
+            if not enable_time:
+                enable_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            event = models.SystemEvent(system=system, event_type=event_type, 
+                priority=event_type.priority, time_enabled=enable_time)
+            event.save()
+            msg = "System %s event registered and will be enabled on %s" % (event_type.name, enable_time)
+            self.log_system(event.system, msg)
+            log.info(msg)
+        else:
+            log.info("System %s %s event cannot be registered because there is no host information" % (system.name, event_type.name))
+        
+    def getSystemHasHostInfo(self, system):
+        hasInfo = False
+        if system and system.networks:
+            for network in system.networks.all():
+                if network.ip_address or network.ipv6_address or network.public_dns_name:
+                    hasInfo = True
+                    break
+                
+        return hasInfo
         
     def importTargetSystems(self, targetDrivers):
         for driver in targetDrivers:
@@ -373,15 +387,17 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                     db_system.description = sys.instanceDescription.getText()
                     dnsName = sys.dnsName and sys.dnsName.getText() or None
                     state = sys.state and sys.state.getText() or "unknown"
+                    systemsAdded = systemsAdded +1
+                    log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
+                    db_system.save()
                     if dnsName:
-                        systemsAdded = systemsAdded +1
-                        log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName, state))
-                        db_system.save()
                         network = models.Network(system=db_system, public_dns_name=dnsName, primary=True)
                         network.save()
-                        self.addSystem(db_system)
                     else:
                         log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))
+                    
+                    # now add it
+                    self.addSystem(db_system)
                 log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
                     driver.cloudName, driver.cloudType, driver.userId))
 
