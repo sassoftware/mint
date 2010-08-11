@@ -4,10 +4,11 @@
 # All Rights Reserved
 #
 
-import copy
+import sys
 import datetime
 import os
 import time
+import traceback
 
 from django.db import connection
 
@@ -372,34 +373,42 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         
     def importTargetSystems(self, targetDrivers):
         for driver in targetDrivers:
-            log.info("Processing target %s (%s) as user %s" % (driver.cloudName, 
-                driver.cloudType, driver.userId))
-            systems = driver.getAllInstances()
-            systemsAdded = 0
-            if systems:
-                log.info("Importing %d systems from target %s (%s) as user %s" % (len(systems), 
-                    driver.cloudName, driver.cloudType, driver.userId))
-                target = rbuildermodels.Targets.objects.filter(targetname=driver.cloudName).get()
-                for sys in systems:
-                    db_system = models.System(name=sys.instanceName.getText(),
-                        description=sys.instanceDescription.getText(), target=target)
-                    db_system.name = sys.instanceName.getText()
-                    db_system.description = sys.instanceDescription.getText()
-                    dnsName = sys.dnsName and sys.dnsName.getText() or None
-                    state = sys.state and sys.state.getText() or "unknown"
-                    systemsAdded = systemsAdded +1
-                    log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
-                    db_system.save()
-                    if dnsName:
-                        network = models.Network(system=db_system, public_dns_name=dnsName, primary=True)
-                        network.save()
-                    else:
-                        log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))
-                    
-                    # now add it
-                    self.addSystem(db_system)
-                log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
-                    driver.cloudName, driver.cloudType, driver.userId))
+            try:
+                self.importTargetSystem(driver)
+            except Exception, e:
+                tb = sys.exc_info()[2]
+                traceback.print_tb(tb)
+                sys.exit("Failed importing systems from target %s: %s" % (driver.cloudType, e))
+        
+    def importTargetSystem(self, driver):
+        log.info("Processing target %s (%s) as user %s" % (driver.cloudName, 
+            driver.cloudType, driver.userId))
+        systems = driver.getAllInstances()
+        systemsAdded = 0
+        if systems:
+            log.info("Importing %d systems from target %s (%s) as user %s" % (len(systems), 
+                driver.cloudName, driver.cloudType, driver.userId))
+            target = rbuildermodels.Targets.objects.filter(targetname=driver.cloudName).get()
+            for sys in systems:
+                db_system = models.System(name=sys.instanceName.getText(),
+                    description=sys.instanceDescription.getText(), target=target)
+                db_system.name = sys.instanceName.getText()
+                db_system.description = sys.instanceDescription.getText()
+                dnsName = sys.dnsName and sys.dnsName.getText() or None
+                state = sys.state and sys.state.getText() or "unknown"
+                systemsAdded = systemsAdded +1
+                log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
+                db_system.save()
+                if dnsName:
+                    network = models.Network(system=db_system, public_dns_name=dnsName, primary=True)
+                    network.save()
+                else:
+                    log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))
+                
+                # now add it
+                self.addSystem(db_system)
+            log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
+                driver.cloudName, driver.cloudType, driver.userId))
 
     def getSystemsLog(self):
         systemsLog = models.SystemsLog()
