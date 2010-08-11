@@ -41,7 +41,7 @@ class BaseManager(models.Manager):
     def load_from_href(self, obj, request):
         href = getattr(obj, 'href', None)
         if href:
-            path = urlparse.urlparse(href).path
+            path = urlparse.urlparse(href)[2]
             resolver = urlresolvers.resolve(path)
             func, args = resolver[0:2]
             model = func.get(*args)
