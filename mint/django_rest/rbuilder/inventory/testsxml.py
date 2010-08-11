@@ -27,6 +27,7 @@ systems_xml = """\
         <portType>lan</portType>
         <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
+        <system href="http://testserver/api/inventory/systems/1/"/>
       </network>
     </networks>
     <systemJobs/>
@@ -68,6 +69,7 @@ system_xml = """\
       <portType>lan</portType>
       <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <system href="http://testserver/api/inventory/systems/1/"/>
     </network>
   </networks>
   <systemJobs/>
@@ -93,16 +95,20 @@ system_events_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvents>
     <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
+        <eventType/>
+        <system href="http://testserver/api/inventory/systems/1/"/>
+        <timeCreated>%s</timeCreated>
         <priority>50</priority>
         <timeEnabled>%s</timeEnabled>
         <systemEventId>1</systemEventId>
-        <timeCreated>%s</timeCreated>
     </systemEvent>
     <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
+        <eventType/>
+        <system href="http://testserver/api/inventory/systems/2/"/>
+        <timeCreated>%s</timeCreated>
         <priority>100</priority>
         <timeEnabled>%s</timeEnabled>
         <systemEventId>2</systemEventId>
-        <timeCreated>%s</timeCreated>
     </systemEvent>
 </systemEvents>
 """
@@ -110,10 +116,12 @@ system_events_xml = """\
 system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
+    <eventType/>
+    <system href="http://testserver/api/inventory/systems/1/"/>
+    <timeCreated>%s</timeCreated>
     <priority>50</priority>
     <timeEnabled>%s</timeEnabled>
     <systemEventId>1</systemEventId>
-    <timeCreated>%s</timeCreated>
 </systemEvent>
 """
 
@@ -122,26 +130,37 @@ system_log = """\
 <systemLog id="http://testserver/api/inventory/systems/1/systemLog/">
   <systemLogEntries>
     <systemLogEntry>
-      <entry>System added to inventory</entry>
+      <entry>System data fetched.</entry>
+      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>1</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
-      <entry>System activated via ractivate</entry>
+      <entry>System added to inventory</entry>
+      <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
       <systemLogEntryId>2</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
+      <entry>System activated via ractivate</entry>
+      <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
       <systemLogEntryId>3</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
-      <entry>System data fetched.</entry>
+      <systemLog href="http://testserver/api/inventory/systems/4/systemLog/"/>
       <systemLogEntryId>4</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
       <entry>System data fetched.</entry>
+      <systemLog href="http://testserver/api/inventory/systems/5/systemLog/"/>
       <systemLogEntryId>5</systemLogEntryId>
+    </systemLogEntry>
+    <systemLogEntry>
+      <entry>System data fetched.</entry>
+      <systemLog href="http://testserver/api/inventory/systems/6/systemLog/"/>
+      <systemLogEntryId>6</systemLogEntryId>
     </systemLogEntry>
   </systemLogEntries>
   <systemLogId>1</systemLogId>
+  <system href="http://testserver/api/inventory/systems/1/"/>
 </systemLog>
 """
 
@@ -150,24 +169,18 @@ systems_log = """\
 <systemsLog>
   <systemLogEntry>
     <entry>System added to inventory</entry>
+    <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <systemLogEntryId>1</systemLogEntryId>
   </systemLogEntry>
   <systemLogEntry>
+    <entry>System added to inventory</entry>
+    <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <systemLogEntryId>2</systemLogEntryId>
   </systemLogEntry>
   <systemLogEntry>
     <entry>System added to inventory</entry>
+    <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
     <systemLogEntryId>3</systemLogEntryId>
-  </systemLogEntry>
-  <systemLogEntry>
-    <systemLogEntryId>4</systemLogEntryId>
-  </systemLogEntry>
-  <systemLogEntry>
-    <entry>System added to inventory</entry>
-    <systemLogEntryId>5</systemLogEntryId>
-  </systemLogEntry>
-  <systemLogEntry>
-    <systemLogEntryId>6</systemLogEntryId>
   </systemLogEntry>
 </systemsLog>
 """

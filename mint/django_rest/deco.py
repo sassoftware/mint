@@ -46,25 +46,6 @@ def to_camel_case(node):
                 setattr(child, name, str_to_camel_case(getattr(child, name)))
                 to_camel_case(child)
 
-
-class DjangoDocument(xobj.Document):
-    def fillFromClass(self, xobj):
-        pass
-
-    def setItemCurrentValue(self, xobj, key, current, val):
-        field = xobj._meta.get_field_by_name(key)[0]
-        if not field.null and getattr(xobj, key, '') == '':
-            setattr(xobj, key, val)
-        else:
-            super(DjangoDocument, self).setItemCurrentVal(xobj, key, current, val)
-
-    def instanitatePythonType(self, element, parentXObj, pythonType, text):
-        import epdb; epdb.st()  
-        if type(pythonType) == models.ForeignKeyByHref:
-            return models.ForeignKeyByHref(element).get_model()
-        else:
-            return super(DjangoDocument, self).instantiatePythonType(pythonType, text)
-
 def requires(model_name):
     """
     Decorator that parses the post data on a request into the class
@@ -73,14 +54,15 @@ def requires(model_name):
     def decorate(function):
 
         def inner(*args, **kw):
-            xml = args[1].raw_post_data
+            request = args[1]
+            xml = request.raw_post_data
             doc = minidom.parseString(xml)
             root_node = doc.documentElement
             to_underscore(root_node)
             underscore_xml = doc.toxml(encoding='UTF-8')
             built_model = xobj.parse(underscore_xml)#, documentClass=DjangoDocument, typeMap=models.type_map)
             built_model = getattr(built_model, model_name)
-            model = modellib.type_map[model_name].objects.load_from_object(built_model)
+            model = modellib.type_map[model_name].objects.load_from_object(built_model, request)
             # loaded_model = models.type_map[model_name].objects.load(built_model)
             # if not loaded_model:
                 # built_model.save()

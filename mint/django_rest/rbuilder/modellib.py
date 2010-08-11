@@ -37,18 +37,18 @@ class BaseManager(models.Manager):
         else:
             return None
 
-    def load_from_href(self, obj):
+    def load_from_href(self, obj, request):
         href = getattr(obj, 'href', None)
         if href:
             path = urlparse.urlparse(href).path
             resolver = urlresolvers.resolve(path)
             func, args = resolver[0:2]
-            model = func.read(None, *args)
+            model = func.get(*args)
             return model
         else:
             return None
 
-    def load_from_object(self, obj, save=True):
+    def load_from_object(self, obj, request, save=True):
         model = self.model()
         fields = {}
         for f in model._meta.fields:
@@ -59,12 +59,13 @@ class BaseManager(models.Manager):
         for key, val in obj.__dict__.items():
             if key in fields.keys():
                 if isinstance(fields[key], related.RelatedField):
-                    val = fields[key].related.parent_model.objects.load_from_href(val)
+                    val = fields[key].related.parent_model.objects.load_from_href(val, request)
                 elif val:
                     val = str(val)
                 else:
                     val = None
                 setattr(model, key, val)
+
         loaded_model = self.load(model)
         if not loaded_model:
             if save:
@@ -80,7 +81,7 @@ class BaseManager(models.Manager):
                     rel_objs = [rel_objs]
                 for rel_obj in rel_objs:
                     rel_mod = type_map[rel_obj_name].objects.load_from_object(
-                        rel_obj, save=False)
+                        rel_obj, request, save=False)
                     getattr(loaded_model, key).add(rel_mod)
         return loaded_model
     
@@ -112,7 +113,10 @@ class XObjModel(models.Model):
         if url_key:
             url_key = [str(url_key)]
         bits = (view_name, url_key)
-        relative_url = urlresolvers.reverse(bits[0], None, *bits[1:3])
+        try:
+            relative_url = urlresolvers.reverse(bits[0], None, *bits[1:3])
+        except urlresolvers.NoReverseMatch:
+            return None
         if request:
             return request.build_absolute_uri(relative_url)
         else:
@@ -151,8 +155,6 @@ class XObjModel(models.Model):
                 setattr(xobj_model, key, val)
 
         for field in fields.keys():
-            # TODO set this appropriately
-            #continue
             if isinstance(fields[field], related.RelatedField):
                 val = getattr(self, field)
                 if val:
@@ -160,12 +162,8 @@ class XObjModel(models.Model):
                         self.__class__.__name__, (object,), {})()
                     href_model._xobj = xobj.XObjMetadata(
                                         attributes = {'href':str})
-                    try:
-                        href_model.href = val.get_absolute_url(request, self.pk)
-                    except urlresolvers.NoReverseMatch:
-                        href_model = val
-                    val = href_model
-                    setattr(xobj_model, field, val)
+                    href_model.href = val.get_absolute_url(request, self.pk)
+                    setattr(xobj_model, field, href_model)
 
         for accessor in accessors.keys():
             if hasattr(accessors[accessor].model, '_xobj') and \

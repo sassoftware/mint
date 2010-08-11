@@ -20,6 +20,7 @@ MANAGER_CLASS = systemdbmgr.SystemDBManager
 class AbstractInventoryService(resource.Resource):
 
     def __init__(self):
+        self.sysMgr = MANAGER_CLASS(cfg=None)
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
         resource.Resource.__init__(self, permitted_methods=permitted_methods)
 
@@ -60,11 +61,14 @@ class InventorySystemsService(AbstractInventoryService):
 
     @return_xml
     def read(self, request, system_id=None):
+        return self.get(system_id)
+    
+    def get(self, system_id=None):
         if system_id:
             return self.sysMgr.getSystem(system_id)
         else:
             return self.sysMgr.getSystems()
-    
+
     @requires('system')
     @return_xml
     def create(self, request, system):
@@ -109,13 +113,13 @@ class InventorySystemsSystemLogService(AbstractInventoryService):
 class InventoryUsersService(AbstractInventoryService):
     
     def read(self, request, user):
-        if request:
-            response = HttpResponse()
-            response.write('<html>%s</html>' % user)
-            return response
-        else:
-            user = rbuildermodels.Users.objects.get(username=user)
-            return user
+        response = HttpResponse()
+        response.write('<html>%s</html>' % user)
+        return response
+
+    def get(self, user):
+        user = rbuildermodels.Users.objects.get(username=user)
+        return user
 
 class InventorySystemsEventService(AbstractInventoryService):
     

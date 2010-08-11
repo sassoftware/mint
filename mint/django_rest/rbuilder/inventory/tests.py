@@ -245,7 +245,11 @@ class SystemEventTestCase(XMLTestCase):
         self.system_manager = systemdbmgr.SystemDBManager()
         
         # need a system
+        network = models.Network(ip_address='1.1.1.1')
         self.system = models.System(name="mgoblue", description="best appliance ever")
+        self.system.save()
+        network.system = self.system
+        self.system.networks.add(network)
         self.system.save()
         
         # start with no logs/system events
@@ -265,8 +269,9 @@ class SystemEventTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/systemEvents/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.system_events_xml % (event1.time_enabled.isoformat(), event1.time_created.isoformat(),
-                event2.time_enabled.isoformat(), event2.time_created.isoformat()))
+            testsxml.system_events_xml % \
+                (event1.time_created.isoformat(), event1.time_enabled.isoformat(),
+                 event2.time_created.isoformat(), event2.time_enabled.isoformat()))
         
     def testGetSystemEventRest(self):
         poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
@@ -275,7 +280,7 @@ class SystemEventTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/systemEvents/%d/' % event.system_event_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.system_event_xml % (event.time_enabled.isoformat(), event.time_created.isoformat()))
+            testsxml.system_event_xml % (event.time_created.isoformat(), event.time_enabled.isoformat()))
     
     def testGetSystemEvent(self):
         # add an event

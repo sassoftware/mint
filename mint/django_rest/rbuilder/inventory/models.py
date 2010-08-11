@@ -157,7 +157,7 @@ class SystemEvent(modellib.XObjIdModel):
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferrableForeignKey(System, db_index=True,
         related_name='system_event', deferred=True)
-    event_type = models.ForeignKey(SystemEventType)
+    event_type = modellib.DeferrableForeignKey(SystemEventType, deferred=True)
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
