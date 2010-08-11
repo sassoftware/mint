@@ -20,7 +20,9 @@ class BaseManager(models.Manager):
         try:
             loaded_model = self.get(**model_inst.load_fields_dict())
         except exceptions.ObjectDoesNotExist:
-            loaded_model = None
+            return None
+        except exceptions.MultipleObjectsReturned:
+            return None
         if loaded_model:
             for field in loaded_model._meta.fields:
                 try:
@@ -32,7 +34,6 @@ class BaseManager(models.Manager):
                    getattr(loaded_model, field.name):
                     setattr(loaded_model, field.name, 
                         getattr(model_inst, field.name))
-            loaded_model._to_set = getattr(model_inst, '_to_set', {})
             return loaded_model
         else:
             return None
