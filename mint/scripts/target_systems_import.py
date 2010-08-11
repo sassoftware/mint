@@ -70,15 +70,12 @@ class TargetSystemsImport(scriptlibrary.SingletonScript):
         # do i need these?
         restdb.auth.userId = userId
         restdb.auth.setAuth(mintAuth, authToken)
-
-        for driver in self.loadTargetDrivers(restdb):
-            print "Processing target %s %s, user %s" % (driver.cloudType,
-                driver.cloudName, driver.userId)
-            print driver.getAllInstances()
-        #from mint.django_rest.rbuilder.inventory import systemdbmgr
-        #system_manager = systemdbmgr.SystemDBManager()
-        #system_manager.importTargetSystems()
         
+        from mint.django_rest.rbuilder.inventory import systemdbmgr
+        system_manager = systemdbmgr.SystemDBManager()
+        
+        targetDrivers = self.loadTargetDrivers(restdb)
+        system_manager.importTargetSystems(targetDrivers)
 
     def loadTargetDriverClasses(self):
         for driverName in [ 'ec2', 'vmware', 'vws', 'xenent' ]:
