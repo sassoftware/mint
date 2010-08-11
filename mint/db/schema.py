@@ -1235,6 +1235,17 @@ def _createInventorySchema(db):
             "inventory_system_event_priority", "priority")
         changed = True
 
+    if 'inventory_system_job' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_job" (
+                "system_job_id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL 
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "job_uuid" varchar(64) NOT NULL
+            ) %(TABLEOPTS)s""" db.keywords)
+        db.tables['inventory_system_job'] = []
+
     return changed
 
 def _addTableRows(db, table, uniqueKey, rows):
