@@ -1279,7 +1279,7 @@ class MigrateTo_50(SchemaMigration):
                     "job_uuid" varchar(64) NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_job'] = []
-
+            changed = True
 
             return changed
 
