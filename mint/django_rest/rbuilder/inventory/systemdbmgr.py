@@ -360,3 +360,11 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         
     def importTargetSystems(self):
         log.info("Importing target systems")
+
+    def getSystemsLog(self):
+        systemsLog = models.SystemsLog()
+        systemLogEntries = \
+            models.SystemLogEntry.objects.all().order_by('entry_date')
+        systemsLog.systemLogEntry = list(systemLogEntries)
+        return systemsLog
+        

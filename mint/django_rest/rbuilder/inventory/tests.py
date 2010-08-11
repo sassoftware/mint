@@ -92,6 +92,25 @@ class InventoryTestCase(XMLTestCase):
         response = self.client.delete('/api/inventory/')
         self.assertEquals(response.status_code, 405)
        
+
+class LogTestCase(XMLTestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.system_manager = systemdbmgr.SystemDBManager()
+
+    def testGetLog(self):
+        system = models.System(name="mgoblue", 
+            description="best appliance ever", activated=False)
+        new_system = self.system_manager.addSystem(system)
+        system = models.System(name="mgoblue2", 
+            description="best appliance ever2", activated=False)
+        new_system = self.system_manager.addSystem(system)
+        system = models.System(name="mgoblue3", 
+            description="best appliance ever3", activated=False)
+        new_system = self.system_manager.addSystem(system)
+        response = self.client.get('/api/inventory/log/')
+
 class SystemsTestCase(XMLTestCase):
     
     def setUp(self):
@@ -144,7 +163,8 @@ class SystemsTestCase(XMLTestCase):
 
     def testAddSystem(self):
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever", activated=False)
+        system = models.System(name="mgoblue", 
+            description="best appliance ever", activated=False)
         new_system = self.system_manager.addSystem(system)
         assert(new_system is not None)
         

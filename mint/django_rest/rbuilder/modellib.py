@@ -136,26 +136,37 @@ class XObjModel(models.Model):
         accessors = {}
         for r in self._meta.get_all_related_objects():
             accessors[r.get_accessor_name()] = r
+
         for key, val in self.__dict__.items():
             if key in fields.keys():
-                if isinstance(fields[key], related.RelatedField):
-                    if val:
-                        href_model = type('%s_href' % \
-                            self.__class__.__name__, (object,), {})()
-                        href_model._xobj = xobj.XObjMetadata(
-                                            attributes = {'href':str})
-                        val_href = href_model()
-                        val_href.href = val.get_absolute_url(request, self.pk)
-                        val = val_href
-                elif val is None:
+                if val is None:
                         val = ''
                 elif isinstance(fields[key], models.DateTimeField):
                     val = val.replace(tzinfo=tz.tzutc())
                     val = val.isoformat()
                 setattr(xobj_model, key, val)
+                fields.pop(key)
             elif isinstance(val, XObjHrefModel):
                 val.serialize(request)
                 setattr(xobj_model, key, val)
+
+        for field in fields.keys():
+            # TODO set this appropriately
+            continue
+            if isinstance(fields[field], related.RelatedField):
+                val = getattr(self, field)
+                if val:
+                    href_model = type('%s_href' % \
+                        self.__class__.__name__, (object,), {})()
+                    href_model._xobj = xobj.XObjMetadata(
+                                        attributes = {'href':str})
+                    try:
+                        href_model.href = val.get_absolute_url(request, self.pk)
+                    except urlresolvers.NoReverseMatch:
+                        href_model = val
+                    val = href_model
+                    setattr(xobj_model, field, val)
+
         for accessor in accessors.keys():
             if hasattr(accessors[accessor].model, '_xobj') and \
                accessors[accessor].model._xobj.tag:
@@ -180,6 +191,7 @@ class XObjModel(models.Model):
                     setattr(xobj_model, accessor, accessor_model)
                 except exceptions.ObjectDoesNotExist:
                     setattr(xobj_model, accessor, None)
+
         for list_field in self.list_fields:
             for val in getattr(self, list_field, []):
                 val_model = val.serialize(request)

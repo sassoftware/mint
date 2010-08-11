@@ -54,8 +54,7 @@ class InventoryLogService(AbstractInventoryService):
     
     @return_xml
     def read(self, request):
-        log = models.Log()
-        return log
+        return self.sysMgr.getSystemsLog()
 
 class InventorySystemsService(AbstractInventoryService):
 
