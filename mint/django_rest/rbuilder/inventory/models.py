@@ -41,7 +41,7 @@ class SystemsLog(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag='systemsLog')
-    list_fields = 'systemLogEntries'
+    list_fields = ['systemLogEntry']
     systemLogEntry = []
 
 class SystemEvents(modellib.XObjModel):

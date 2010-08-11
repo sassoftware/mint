@@ -110,6 +110,17 @@ class LogTestCase(XMLTestCase):
             description="best appliance ever3", activated=False)
         new_system = self.system_manager.addSystem(system)
         response = self.client.get('/api/inventory/log/')
+        # Just remove lines with dates in them, it's easier to test for now.
+        content = []
+        for line in response.content.split('\n'):
+            if 'entryDate' in line or \
+               'poll event' in line or \
+               'activation event' in line:
+                continue
+            else:
+                content.append(line)
+        self.assertXMLEquals('\n'.join(content), testsxml.systems_log)
+
 
 class SystemsTestCase(XMLTestCase):
     

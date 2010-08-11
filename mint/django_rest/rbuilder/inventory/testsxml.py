@@ -142,3 +142,30 @@ system_log = """\
   <systemLogId>1</systemLogId>
 </systemLog>
 """
+
+systems_log = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systemsLog>
+  <systemLogEntry>
+    <entry>System added to inventory</entry>
+    <systemLogEntryId>1</systemLogEntryId>
+  </systemLogEntry>
+  <systemLogEntry>
+    <systemLogEntryId>2</systemLogEntryId>
+  </systemLogEntry>
+  <systemLogEntry>
+    <entry>System added to inventory</entry>
+    <systemLogEntryId>3</systemLogEntryId>
+  </systemLogEntry>
+  <systemLogEntry>
+    <systemLogEntryId>4</systemLogEntryId>
+  </systemLogEntry>
+  <systemLogEntry>
+    <entry>System added to inventory</entry>
+    <systemLogEntryId>5</systemLogEntryId>
+  </systemLogEntry>
+  <systemLogEntry>
+    <systemLogEntryId>6</systemLogEntryId>
+  </systemLogEntry>
+</systemsLog>
+"""
