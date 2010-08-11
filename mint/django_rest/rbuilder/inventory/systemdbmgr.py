@@ -361,19 +361,28 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             log.info("Processing target %s (%s) as user %s" % (driver.cloudName, 
                 driver.cloudType, driver.userId))
             systems = driver.getAllInstances()
+            systemsAdded = 0
             if systems:
                 log.info("Importing %d systems from target %s (%s) as user %s" % (len(systems), 
                     driver.cloudName, driver.cloudType, driver.userId))
-                sys = systems[0]
-                db_system = models.System(name=sys.instanceName.getText(),
-                    description=sys.instanceDescription.getText())
-                db_system.name = sys.instanceName.getText()
-                db_system.description = sys.instanceDescription.getText()
-                log.info("Adding system %s (%s)" % (db_system.name, sys.dnsName.getText()))
-                db_system.save()
-                network = models.Network(system=db_system, ip_address=sys.dnsName.getText(),
-                    public_dns_name=sys.dnsName.getText(), primary=True)
-                network.save()
+                target = rbuildermodels.Targets.objects.filter(targetname=driver.cloudName).get()
+                for sys in systems:
+                    db_system = models.System(name=sys.instanceName.getText(),
+                        description=sys.instanceDescription.getText(), target=target)
+                    db_system.name = sys.instanceName.getText()
+                    db_system.description = sys.instanceDescription.getText()
+                    if sys.dnsName and sys.dnsName.getText():
+                        systemsAdded = systemsAdded +1
+                        log.info("Adding system %s (%s)" % (db_system.name, sys.dnsName.getText()))
+                        db_system.save()
+                        network = models.Network(system=db_system, ip_address=sys.dnsName.getText(),
+                            public_dns_name=sys.dnsName.getText(), primary=True)
+                        network.save()
+                        self.addSystem(db_system)
+                    else:
+                        log.info("No ip information found for system %s" % db_system.name)
+                log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
+                    driver.cloudName, driver.cloudType, driver.userId))
 
     def getSystemsLog(self):
         systemsLog = models.SystemsLog()

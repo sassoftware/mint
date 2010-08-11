@@ -152,7 +152,7 @@ class XObjModel(models.Model):
 
         for field in fields.keys():
             # TODO set this appropriately
-            continue
+            #continue
             if isinstance(fields[field], related.RelatedField):
                 val = getattr(self, field)
                 if val:
