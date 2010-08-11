@@ -348,6 +348,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         self.createSystemEvent(system, activation_event_type, enable_time)
             
     def createSystemEvent(self, system, event_type, enable_time=None):
+        event = None
+        
         # do not create events for systems that we cannot possibly contact
         if self.getSystemHasHostInfo(system):
             if not enable_time:
@@ -360,6 +362,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             log.info(msg)
         else:
             log.info("System %s %s event cannot be registered because there is no host information" % (system.name, event_type.name))
+        
+        return event
         
     def getSystemHasHostInfo(self, system):
         hasInfo = False
