@@ -175,8 +175,8 @@ class Sessions(modellib.XObjModel):
 
 class Targets(modellib.XObjModel):
     targetid = models.IntegerField(primary_key=True)
-    type = models.CharField(max_length=255)
-    name = models.CharField(unique=True, max_length=255)
+    targettype = models.CharField(max_length=255)
+    targetname = models.CharField(unique=True, max_length=255)
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targets'
