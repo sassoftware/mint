@@ -123,6 +123,7 @@ class LogTestCase(XMLTestCase):
 
 
 class SystemsTestCase(XMLTestCase):
+    fixtures = ['system_job']
     
     def setUp(self):
         self.client = Client()
