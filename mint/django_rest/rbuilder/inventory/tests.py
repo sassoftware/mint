@@ -237,6 +237,33 @@ class SystemsTestCase(XMLTestCase):
             else:
                 content.append(line)
         self.assertXMLEquals('\n'.join(content), testsxml.system_log)
+        
+    def testGetSystemHasHostInfo(self):
+        system = models.System(name="mgoblue")
+        system.save()
+        assert(self.system_manager.getSystemHasHostInfo(system) == False)
+        
+        network = models.Network(system=system)
+        network.save()
+        system.networks.add(network)
+        assert(self.system_manager.getSystemHasHostInfo(system) == False)
+        
+        network2 = models.Network(ip_address="1.1.1.1", system=system)
+        network2.save()
+        system.networks.add(network2)
+        assert(self.system_manager.getSystemHasHostInfo(system))
+        
+        network2.delete()
+        network = models.Network(ipv6_address="1.1.1.1", system=system)
+        network.save()
+        system.networks.add(network)
+        assert(self.system_manager.getSystemHasHostInfo(system))
+        
+        network.delete()
+        network = models.Network(public_dns_name="foo.bar.com", system=system)
+        network.save()
+        system.networks.add(network)
+        assert(self.system_manager.getSystemHasHostInfo(system))
 
 class SystemEventTestCase(XMLTestCase):
     
@@ -304,6 +331,20 @@ class SystemEventTestCase(XMLTestCase):
         self.system_manager.deleteSystemEvent(event.system_event_id)
         events = models.SystemEvent.objects.all()
         assert(len(events) == 0)
+        
+    def testCreateSystemEvent(self):
+        network = models.Network(system=self.system)
+        network.save()
+        self.system.networks.add(network)
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        event = self.system_manager.createSystemEvent(self.system, poll_event)
+        assert(event is None)
+                
+        network2 = models.Network(system=self.system, ip_address="1.1.1.1")
+        network2.save()
+        self.system.networks.add(network2)
+        event = self.system_manager.createSystemEvent(self.system, poll_event)
+        assert(event is not None)
     
     def testScheduleSystemPollEvent(self):
         self.system_manager.scheduleSystemPollEvent(self.system)
