@@ -162,7 +162,7 @@ class XObjModel(models.Model):
                         self.__class__.__name__, (object,), {})()
                     href_model._xobj = xobj.XObjMetadata(
                                         attributes = {'href':str})
-                    href_model.href = val.get_absolute_url(request, self.pk)
+                    href_model.href = val.get_absolute_url(request)
                     setattr(xobj_model, field, href_model)
 
         for accessor in accessors.keys():

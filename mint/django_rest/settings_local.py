@@ -15,6 +15,7 @@ try:
     DATABASE_NAME = os.environ['MINT_LOCAL_DB']  # Or path to database file if using sqlite3.
 except:
     DATABASE_NAME = os.path.realpath('../mint-local.db')
+TEST_DATABASE_NAME = '../test-mint-local.db'
 
 appsList = list(INSTALLED_APPS)
 appsList.append('django.contrib.admin')
