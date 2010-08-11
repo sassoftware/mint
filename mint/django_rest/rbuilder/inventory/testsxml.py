@@ -36,10 +36,10 @@ systems_xml = """\
     <systemId>1</systemId>
     <scheduledEventStartDate/>
     <launchDate/>
-    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+    <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <available/>
     <description>testsystemdescription</description>
-    <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <targetSystemId/>
     <osMinorVersion/>
     <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>

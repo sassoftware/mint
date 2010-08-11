@@ -338,17 +338,19 @@ class SystemEventTestCase(XMLTestCase):
         assert(len(events) == 0)
         
     def testCreateSystemEvent(self):
-        network = models.Network(system=self.system)
+        local_system = models.System(name="mgoblue_local", description="best appliance ever")
+        local_system.save()
+        network = models.Network(system=local_system)
         network.save()
-        self.system.networks.add(network)
+        local_system.networks.add(network)
         poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
-        event = self.system_manager.createSystemEvent(self.system, poll_event)
+        event = self.system_manager.createSystemEvent(local_system, poll_event)
         assert(event is None)
                 
-        network2 = models.Network(system=self.system, ip_address="1.1.1.1")
+        network2 = models.Network(system=local_system, ip_address="1.1.1.1")
         network2.save()
-        self.system.networks.add(network2)
-        event = self.system_manager.createSystemEvent(self.system, poll_event)
+        local_system.networks.add(network2)
+        event = self.system_manager.createSystemEvent(local_system, poll_event)
         assert(event is not None)
     
     def testScheduleSystemPollEvent(self):
@@ -468,9 +470,9 @@ class SystemEventProcessingTestCase(XMLTestCase):
         except models.SystemEvent.DoesNotExist:
             pass
         poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
-        event = models.SystemEvent.objects.get(system=event.system, event_type=poll_event)
+        local_system = poll_event.systemevent_set.all()[0]
+        event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
         assert(event is not None)
-        assert(event.time_enabled > datetime.datetime.now())
         
     def testProcessSystemEventsNoTrigger(self):
         # make sure activation event doesn't trigger next poll event
