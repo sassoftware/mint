@@ -126,3 +126,8 @@ class InventorySystemsEventService(AbstractInventoryService):
         else:
             return self.sysMgr.getSystemEvents()
 
+class InventoryJobsService(AbstractInventoryService):
+    
+    @return_xml
+    def read(self, request, system, job_uuid=None):
+        return self.sysMgr.getSystemJobs(system, job_uuid)

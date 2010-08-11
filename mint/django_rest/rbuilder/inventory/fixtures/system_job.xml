@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <object pk="1" model="inventory.system_job">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="uuid">aaaaa</field>
+    </object>
+    <object pk="1" model="inventory.system_job">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="uuid">bbbbb</field>
+    </object>
+    <object pk="1" model="inventory.system_job">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="uuid">ccccc</field>
+    </object>
+    <object pk="1" model="inventory.system_job">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="uuid">ddddd</field>
+    </object>
+    <object pk="1" model="inventory.job">
+        <field type="CharField" name="uuid">aaaaa</field>
+        <field type="CharField" name="status">Running</field>
+        <field type="DateTimeField" name="created">2010-08-11T01:22:34.760925+00:00</field>
+        <field type="DateTimeField" name="modified">2010-08-11T01:22:34.760925+00:00</field>
+        <field to="rbuilder.users" name="created_by" rel="ManyToOneRel"><None></None></field>
+        <field type="DateTimeField" name="expiration">2010-08-15T01:22:34.760925+00:00</field>
+        <field type="CharField" name="status_message">aaaaa status message</field>
+        <field type="CharField" name="cloud_name">aaaaa cloud name</field>
+        <field type="CharField" name="cloud_type">aaaaa cloud type</field>
+        <field type="CharField" name="instance_id">aaaaa instance id</field>
+        <field type="CharField" name="image_id">aaaaa image id</field>
+    </object>
+</django-objects>

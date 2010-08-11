@@ -108,6 +108,23 @@ class System(modellib.XObjIdModel):
 
     load_fields = [local_uuid]
 
+    def addJobs(self):
+        return
+        # Put these imports here for now so they don't break anything
+        # globally.
+        from rmake import client
+        RMAKE_ADDRESS = 'http://localhost:9998'
+        rmake_client = client.RmakeClient(RMAKE_ADDRESS)
+
+        job_uuids = [sj.job_uuid for sj in self.system_jobs.all()]
+        rmake_jobs = rmake_client.getJobs(job_uuids)
+
+        for rmake_job in rmake_jobs:
+            # TODO, make a models.Job instance
+
+            # add it to the system
+            pass
+
 class SystemEventType(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event_type'
@@ -218,7 +235,6 @@ class Version(modellib.XObjModel):
         through='AvailableUpdate', symmetrical=False,
         related_name = 'availableUpdates_set')
 
-
 class AvailableUpdate(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_available_update'
@@ -232,6 +248,55 @@ class AvailableUpdate(modellib.XObjModel):
     software_version_available_update = models.ForeignKey(Version,
         related_name = 'software_version_available_update_set')
     last_refreshed = modellib.DateTimeUtcField(auto_now_add=True)
+
+class SystemJob(modellib.XObjModel):
+    class Meta:
+        db_table = 'inventory_system_job'
+    system_job_id = models.AutoField(primary_key=True)
+    system = models.ForeignKey(System, related_name='system_jobs')
+    job_uuid = models.CharField(max_length=64)
+
+class Job(modellib.XObjModel):
+    class Meta:
+        abstract = True
+
+    status_choices = (
+        ('Queued', 'Queued'),
+        ('Running', 'Running'),
+        ('Failed', 'Failed'),
+        ('Completed', 'Completed'),
+    )
+
+    uuid = models.CharField(max_length=64)
+    status = models.CharField(16, choices=status_choices)
+    created = modellib.DateTimeUtcField(auto_now_add=True)
+    modified = modellib.DateTimeUtcField(auto_now_add=True)
+    created_by = models.ForeignKey(rbuildermodels.Users)
+    expiration = modellib.DateTimeUtcField(auto_now_add=True)
+    status_message = models.TextField()
+    cloud_name = models.CharField(max_length=64)
+    cloud_type = models.CharField(max_length=64)
+    instance_id = models.CharField(max_length=255)
+    image_id = models.CharField(max_length=255)
+    fault = models.ForeignKey('ErrorResponse', null=True)
+    result_resource = modellib.XObjHrefModel()
+
+class JobHistory(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    job_history_id = models.AutoField(primary_key=True)
+    timestamp = modellib.DateTimeUtcField(auto_now_add=True)
+    content = models.TextField()
+
+class ErrorResponse(modellib.XObjModel):
+    _xobj = xobj.XObjMetadata(
+                tag='fault')
+    class Meta:
+        abstract = True
+    code = models.TextField()
+    message = models.TextField()
+    traceback = models.TextField()
+    product_code = models.TextField()
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

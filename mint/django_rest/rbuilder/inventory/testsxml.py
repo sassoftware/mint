@@ -29,6 +29,7 @@ systems_xml = """\
         <publicDnsName>testnetwork.example.com</publicDnsName>
       </network>
     </networks>
+    <systemJobs/>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <state>activated</state>
     <systemId>1</systemId>
@@ -69,6 +70,7 @@ system_xml = """\
       <publicDnsName>testnetwork.example.com</publicDnsName>
     </network>
   </networks>
+  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <state>activated</state>
   <systemId>1</systemId>

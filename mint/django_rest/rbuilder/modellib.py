@@ -222,7 +222,7 @@ class XObjHrefModel(XObjModel):
     _xobj = xobj.XObjMetadata(
                 attributes = {'href':str})
 
-    def __init__(self, href):
+    def __init__(self, href=None):
         self.href = href
 
     def serialize(self, request=None):

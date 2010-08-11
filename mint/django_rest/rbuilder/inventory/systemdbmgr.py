@@ -25,23 +25,11 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
     def __init__(self, *args, **kw):
         rbuilder_manager.RbuilderDjangoManager.__init__(self, *args, **kw)
-        self.systemStore = self.getSystemStore()
-
-    def getSystemStore(self):
-        if self.cfg is None:
-            storagePath = '/tmp/storage'
-        elif hasattr(self.cfg, 'storagePath'):
-            storagePath = self.cfg.storagePath
-        else:
-            storagePath = os.path.join(self.cfg.dataPath, 'catalog')
-        path = os.path.join(storagePath, 'systems')
-        cfg = storage.StorageConfig(storagePath=path)
-        dstore = storage.DiskStorage(cfg)
-        return dstore
 
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
         self.log_system(system, "System data fetched.")
+        system.addJobs()
         return system
 
     def deleteSystem(self, system):
@@ -51,6 +39,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def getSystems(self):
         Systems = models.Systems()
         Systems.system = list(models.System.objects.all())
+        xxx = [s.addJobs() for s in Systems.system]
         return Systems
 
     def log_system(self, system, log_msg):
@@ -367,4 +356,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             models.SystemLogEntry.objects.all().order_by('entry_date')
         systemsLog.systemLogEntry = list(systemLogEntries)
         return systemsLog
-        
+
+    def getSystemJobs(self, system, job_uuid):
+        return None
