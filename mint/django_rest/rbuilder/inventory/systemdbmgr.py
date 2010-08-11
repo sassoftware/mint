@@ -103,9 +103,14 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         return None
 
     def getSystemByInstanceId(self, instanceId):
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
+        # TODO:  this code is outdated.  Returning plain system every time to move
+        # forward, but we need to fix this to properly handle updates
+        managedSystem = None
+        #managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
-            return models.System()
+            sys = models.System()
+            sys.is_manageable = False
+            return sys
         managedSystemObj = managedSystem.getParser()
         if not self.isManageable(managedSystem):
             managedSystemObj.ssl_client_certificate = None
@@ -180,6 +185,10 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             systemSoftwareVersion.save()
 
     def getSoftwareVersionsForInstanceId(self, instanceId):
+        # TODO:  this code is outdated.  Returning None every time to move
+        # forward, but we need to fix this to properly handle updates
+        return None
+    
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
             return None
