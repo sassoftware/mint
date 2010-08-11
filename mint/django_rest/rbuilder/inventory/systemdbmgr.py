@@ -375,12 +375,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                         systemsAdded = systemsAdded +1
                         log.info("Adding system %s (%s)" % (db_system.name, sys.dnsName.getText()))
                         db_system.save()
-                        network = models.Network(system=db_system, ip_address=sys.dnsName.getText(),
-                            public_dns_name=sys.dnsName.getText(), primary=True)
+                        network = models.Network(system=db_system, public_dns_name=sys.dnsName.getText(),
+                            primary=True)
                         network.save()
                         self.addSystem(db_system)
                     else:
-                        log.info("No ip information found for system %s" % db_system.name)
+                        log.info("No public dns information found for system %s" % db_system.name)
                 log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
                     driver.cloudName, driver.cloudType, driver.userId))
 

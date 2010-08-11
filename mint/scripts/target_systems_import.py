@@ -86,12 +86,10 @@ class TargetSystemsImport(scriptlibrary.SingletonScript):
     def loadTargetDrivers(self, restdb):
         storagePath = os.path.join(restdb.cfg.dataPath, 'catalog')
         storageConfig = storage.StorageConfig(storagePath=storagePath)
-        targets = [ (1, "admin", "vsphere.eng.rpath.com", {}, {})]
+        #targets = [ (1, "admin", "vsphere.eng.rpath.com", {}, {})]
         for driverClass in self.loadTargetDriverClasses():
             targetType = driverClass.cloudType
-            #targets = restdb.targetmgr.getTargetsForUsers(targetType)
-            if targetType != 'vmware':
-                continue
+            targets = restdb.targetMgr.getTargetsForUsers(targetType)
             for userId, userName, targetName, _, _ in targets:
                 driver = driverClass(storageConfig, targetType,
                     cloudName=targetName, userId=userName, db=restdb)
