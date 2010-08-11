@@ -1243,7 +1243,7 @@ def _createInventorySchema(db):
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
                 "job_uuid" varchar(64) NOT NULL
-            ) %(TABLEOPTS)s""" db.keywords)
+            ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_job'] = []
 
     return changed
