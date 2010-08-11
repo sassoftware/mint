@@ -399,6 +399,15 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 db_system.name = sys.instanceName.getText()
                 db_system.description = sys.instanceDescription.getText()
                 dnsName = sys.dnsName and sys.dnsName.getText() or None
+                
+                # TODO:  remove this and figure out how to de-dup for real
+                try:
+                    models.Network.objects.filter(public_dns_name=dnsName).all()
+                    log.info("System %s (%s) already exists in inventory" % (db_system.name, dnsName))
+                    continue
+                except models.Network.DoesNotExist:
+                    pass # keep chugging along
+                
                 state = sys.state and sys.state.getText() or "unknown"
                 systemsAdded = systemsAdded +1
                 log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
