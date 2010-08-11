@@ -36,6 +36,14 @@ class Systems(modellib.XObjModel):
     def save(self):
         return [s.save() for s in self.system]
     
+class SystemsLog(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='systemsLog')
+    list_fields = 'systemLogEntries'
+    systemLogEntry = []
+
 class SystemEvents(modellib.XObjModel):
     class Meta:
         abstract = True
