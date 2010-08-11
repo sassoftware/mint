@@ -1112,6 +1112,8 @@ def _createInventorySchema(db):
         changed = True
         changed |= db.createIndex("inventory_network",
             "inventory_network_system_id_idx", "system_id")
+        changed |= db.createIndex("inventory_network",
+            "inventory_network_public_dns_name_idx", "public_dns_name")
 
     if 'inventory_system_log' not in db.tables:
         cu.execute("""
