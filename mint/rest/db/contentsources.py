@@ -176,7 +176,8 @@ class _RepositoryMetadataSourceType(ContentSourceType):
         url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
         url = mintutils.urlAddAuth(url, self.username, self.password)
         try:
-            sourceyum.YumRepositorySource(self.repomdLabel, url)
+            src = sourceyum.YumRepositorySource(self.repomdLabel, url)
+            _ = src.timestamp
         except sourceyum.repomd.errors.DownloadError, e:
             return (False, False,
                 'Error validating: %s: %s' % (e.code, e.msg))
