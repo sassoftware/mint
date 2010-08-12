@@ -24,8 +24,8 @@ from mint.django_rest.rbuilder import rbuilder_manager
 
 try:
     from rpath_repeater import client as repeater_client
-except ImportError:
-    pass
+except:
+    log.info("Failed loading repeater client, expected in local mode only")
 
 class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
@@ -70,10 +70,13 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         if system.activated:
             # TODO:  how to de-dup?
             system.activation_date = datetime.datetime.now(tz.tzutc())
+            system.current_state = models.System.ACTIVATED
             system.save()
             self.log_system(system, models.SystemLogEntry.ACTIVATED)
             self.scheduleSystemPollEvent(system)
         else:
+            system.current_state = models.System.UNMANAGED
+            system.save()
             # mark the system as needing activation
             self.scheduleSystemActivationEvent(system)
 
@@ -298,7 +301,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         events = None
         try:
             # get events in order based on whether or not they are enabled and what their priority is (descending)
-            current_time = datetime.datetime.utcnow()
+            current_time = datetime.datetime.now(tz.tzutc())
             events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemPollCount].all()
         except models.SystemEvent.DoesNotExist:
             pass
@@ -318,8 +321,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         # TODO:  dispatch it here, whatever that means
-        rep_client = repeater_client.RepeaterClient()
-
+        rep_client = None
+        try:
+            rep_client = repeater_client.RepeaterClient()
+        except:
+            log.info("Failed loading repeater client, expected in local mode only")
+            
         network = None        
         networks = event.system.networks.all()
         for net in networks:
@@ -328,7 +335,13 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 break;
             
         if network:
-            rep_client.activate(network)
+            try:
+                uuid, job = rep_client.activate(network.public_dns_name)
+                log.info("System %s activation in progress (ip %s, uuid %s)" % (event.system.name, network.public_dns_name, uuid))
+            except Exception, e:
+                tb = sys.exc_info()[2]
+                traceback.print_tb(tb)
+                log.error("Failed activating system %s (id %d): %s" % (event.system.name, event.system.system_id, e))
         
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)
@@ -352,7 +365,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
-        enable_time = datetime.datetime.utcnow()
+        enable_time = datetime.datetime.now(tz.tzutc())
         event_type = models.SystemEventType.objects.get(
             name=models.SystemEventType.POLL_NOW)
         self.createSystemEvent(system, event_type, enable_time)
@@ -360,7 +373,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def scheduleSystemActivationEvent(self, system):
         '''Schedule an event for the system to be activated'''
         # activation events happen on demand, so enable now
-        enable_time = datetime.datetime.utcnow()
+        enable_time = datetime.datetime.now(tz.tzutc())
         activation_event_type = models.SystemEventType.objects.get(
             name=models.SystemEventType.ACTIVATION)
         self.createSystemEvent(system, activation_event_type, enable_time)
@@ -371,7 +384,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         # do not create events for systems that we cannot possibly contact
         if self.getSystemHasHostInfo(system):
             if not enable_time:
-                enable_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+                enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
             event = models.SystemEvent(system=system, event_type=event_type, 
                 priority=event_type.priority, time_enabled=enable_time)
             event.save()
@@ -400,7 +413,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             except Exception, e:
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
-                sys.exit("Failed importing systems from target %s: %s" % (driver.cloudType, e))
+                log.error("Failed importing systems from target %s: %s" % (driver.cloudType, e))
         
     def importTargetSystem(self, driver):
         log.info("Processing target %s (%s) as user %s" % (driver.cloudName, 
@@ -419,12 +432,10 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 dnsName = sys.dnsName and sys.dnsName.getText() or None
                 
                 # TODO:  remove this and figure out how to de-dup for real
-                try:
-                    models.Network.objects.filter(public_dns_name=dnsName).all()
+                nets = models.Network.objects.filter(public_dns_name=dnsName).all()
+                if nets:
                     log.info("System %s (%s) already exists in inventory" % (db_system.name, dnsName))
                     continue
-                except models.Network.DoesNotExist:
-                    pass # keep chugging along
                 
                 state = sys.state and sys.state.getText() or "unknown"
                 systemsAdded = systemsAdded +1

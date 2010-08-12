@@ -1070,7 +1070,7 @@ def _createInventorySchema(db):
                 "launching_user_id" integer REFERENCES "users" ("userid"),
                 "available" bool,
                 "activated" bool,
-                "state" varchar(32),
+                "current_state" varchar(32),
                 "management_node_id" integer
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []

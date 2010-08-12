@@ -70,6 +70,15 @@ class System(modellib.XObjIdModel):
                 tag = 'system',
                 attributes = {'id':str},
                 elements = ['networks'])
+    
+    UNMANAGED = "unmanaged"
+    ACTIVATED = "activated"
+    RESPONSIVE = "responsive"
+    SHUTDOWN = "shutdown"
+    NONRESPONSIVE = "non-responsive"
+    DEAD = "dead"
+    MOTHBALLED = "mothballed"
+    
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
@@ -94,14 +103,15 @@ class System(modellib.XObjIdModel):
     available = models.NullBooleanField()
     activated = models.NullBooleanField()
     STATE_CHOICES = (
-        ('activated', 'Activated'),
-        ('responsive', 'Responsive'),
-        ('shut_down', 'Shut Down'),
-        ('non-responsive', 'Non-Responsive'),
-        ('dead', 'Dead'),
-        ('mothballed', 'Mothballed'),
+        (UNMANAGED, UNMANAGED),
+        (ACTIVATED, ACTIVATED),
+        (RESPONSIVE, RESPONSIVE),
+        (SHUTDOWN, SHUTDOWN),
+        (NONRESPONSIVE, NONRESPONSIVE),
+        (DEAD, DEAD),
+        (MOTHBALLED, MOTHBALLED),
     )
-    state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
+    current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
     versions = models.ManyToManyField('Version', null=True)
     management_node = models.ForeignKey('ManagementNode', null=True,
                         related_name='system_set')
