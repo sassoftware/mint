@@ -179,6 +179,7 @@ class SystemsTestCase(XMLTestCase):
             description="best appliance ever", activated=False)
         new_system = self.system_manager.addSystem(system)
         assert(new_system is not None)
+        assert(new_system.current_state == models.System.UNMANAGED)
         
         # make sure we scheduled our activation event
         assert(self.mock_scheduleSystemActivationEvent_called)
@@ -188,6 +189,7 @@ class SystemsTestCase(XMLTestCase):
         system = models.System(name="mgoblue", description="best appliance ever", activated=True)
         new_system = self.system_manager.addSystem(system)
         assert(new_system is not None)
+        assert(new_system.current_state == models.System.ACTIVATED)
         
         # make sure we did not schedule activation
         assert(self.mock_scheduleSystemActivationEvent_called == False)

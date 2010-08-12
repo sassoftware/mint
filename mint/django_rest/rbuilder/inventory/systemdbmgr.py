@@ -22,7 +22,10 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder import rbuilder_manager
 
-from rpath_repeater import client as repeater_client
+try:
+    from rpath_repeater import client as repeater_client
+except:
+    log.info("Failed loading repeater client, expected in local mode only")
 
 class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
@@ -67,10 +70,13 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         if system.activated:
             # TODO:  how to de-dup?
             system.activation_date = datetime.datetime.now(tz.tzutc())
+            system.current_state = models.System.ACTIVATED
             system.save()
             self.log_system(system, models.SystemLogEntry.ACTIVATED)
             self.scheduleSystemPollEvent(system)
         else:
+            system.current_state = models.System.UNMANAGED
+            system.save()
             # mark the system as needing activation
             self.scheduleSystemActivationEvent(system)
 
@@ -315,7 +321,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         # TODO:  dispatch it here, whatever that means
-        rep_client = repeater_client.RepeaterClient('http://localhost:9998')
+        rep_client = None
+        try:
+            rep_client = repeater_client.RepeaterClient()
+        except:
+            log.info("Failed loading repeater client, expected in local mode only")
+            
         network = None        
         networks = event.system.networks.all()
         for net in networks:
