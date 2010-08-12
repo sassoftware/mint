@@ -22,7 +22,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder import rbuilder_manager
 
-from rpath_storage import api1 as storage
+from rpath_repeater import client as repeater_client
 
 class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
@@ -314,12 +314,23 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         # TODO:  dispatch it here, whatever that means
+        rep_client = repeater_client.RepeaterClient()
+
+        network = None        
+        networks = event.system.networks.all()
+        for net in networks:
+            if net.primary:
+                network = net
+                break;
+            
+        if network:
+            rep_client.activate(network)
         
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)
         
         # create the next event if needed
-        if event.event_type.name == models.SystemEventType.POLL or event.event_type.name == models.SystemEventType.POLL_NOW:
+        if event.event_type.name == models.SystemEventType.POLL:
             self.scheduleSystemPollEvent(event.system)
         else:
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
@@ -402,6 +413,15 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 db_system.name = sys.instanceName.getText()
                 db_system.description = sys.instanceDescription.getText()
                 dnsName = sys.dnsName and sys.dnsName.getText() or None
+                
+                # TODO:  remove this and figure out how to de-dup for real
+                try:
+                    models.Network.objects.filter(public_dns_name=dnsName).all()
+                    log.info("System %s (%s) already exists in inventory" % (db_system.name, dnsName))
+                    continue
+                except models.Network.DoesNotExist:
+                    pass # keep chugging along
+                
                 state = sys.state and sys.state.getText() or "unknown"
                 systemsAdded = systemsAdded +1
                 log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))

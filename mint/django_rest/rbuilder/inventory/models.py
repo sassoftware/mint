@@ -180,7 +180,7 @@ class Network(modellib.XObjModel):
     # TODO: how long should this be?
     ipv6_address = models.CharField(max_length=32, null=True)
     device_name = models.CharField(max_length=255) 
-    public_dns_name = models.CharField(max_length=255)
+    public_dns_name = models.CharField(max_length=255, db_index=True)
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
     primary = models.NullBooleanField()
