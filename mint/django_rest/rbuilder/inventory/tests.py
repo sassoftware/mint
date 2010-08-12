@@ -540,7 +540,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         network.primary = True
         network.system = system
         network.save()
-        import epdb; epdb.st()
+
         # sanity check dispatching activation event
         self.mock_scheduleSystemPollEvent_called = False # reset it
         event = models.SystemEvent(system=system, event_type=act_event, priority=act_event.priority)
