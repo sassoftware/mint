@@ -203,6 +203,7 @@ class SystemLogEntry(modellib.XObjModel):
                 tag='systemLogEntry')
     class Meta:
         db_table = 'inventory_system_log_entry'
+        ordering = ['entry_date']
         
     ADDED = "System added to inventory"
     ACTIVATED = "System activated via ractivate"
