@@ -7,6 +7,8 @@
 # Also note: You'll have to insert the output of 'django-admin.py sqlcustom [appname]'
 # into your database.
 
+import urlparse
+
 from django.db import models
 from django.conf import settings
 
@@ -180,6 +182,15 @@ class Targets(modellib.XObjModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targets'
+
+    def get_absolute_url(self, request):
+        uri = request.build_absolute_uri()
+        parts = urlparse.urlparse(uri)
+        path = '/catalog/clouds/%s/instances/%s/' % \
+            (self.targettype, self.targetname)
+        parts = list(parts)
+        parts[2] = path
+        return urlparse.urlunparse(parts)
 
 class TargetUserCredentials(modellib.XObjModel):
     targetid = models.ForeignKey(Targets, db_column="targetid")

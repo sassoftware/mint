@@ -91,6 +91,48 @@ system_xml = """\
   <osType/>
 </system>"""
 
+system_target_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/1/">
+  <activated>True</activated>
+  <sslClientKey>testsystemsslclientkey</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <deviceName>eth0</deviceName>
+      <ipAddress>1.1.1.1</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <primary/>
+      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <system href="http://testserver/api/inventory/systems/1/"/>
+    </network>
+  </networks>
+  <systemJobs/>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <state>activated</state>
+  <systemId>1</systemId>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <available/>
+  <description>testsystemdescription</description>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
+  <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname/"/>
+  <name>testsystemname</name>
+  <localUuid>testsystemlocaluuid</localUuid>
+  <createdDate>%s</createdDate>
+  <osType/>
+</system>"""
+
 system_events_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvents>

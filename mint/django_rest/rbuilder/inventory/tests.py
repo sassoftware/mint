@@ -4,6 +4,7 @@ from dateutil import tz
 from django.test import TestCase
 from django.test.client import Client
 
+from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import systemdbmgr
 from mint.django_rest.rbuilder.inventory import models
 
@@ -208,6 +209,18 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.created_date.isoformat()))
+
+    def testGetSystemWithTarget(self):
+        target = rbuildermodels.Targets(pk=1, targettype='testtargettype',
+            targetname='testtargetname')
+        target.save()
+        system = self._saveSystem()
+        system.target = target
+        system.save()
+        response = self.client.get('/api/inventory/systems/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.system_target_xml % \
+            system.created_date.isoformat())
 
     def testPostSystem(self):
         system_xml = testsxml.system_xml % ('')
