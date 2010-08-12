@@ -403,9 +403,19 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
         self.mintConfig = self.system_manager.cfg
+        self.mock_cleanupSystemEvent_called = False
+        self.mock_scheduleSystemPollEvent_called = False
+        self.system_manager.cleanupSystemEvent = self.mock_cleanupSystemEvent
+        self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
             
     def tearDown(self):
         pass
+        
+    def mock_cleanupSystemEvent(self, event):
+        self.mock_cleanupSystemEvent_called = True;
+        
+    def mock_scheduleSystemPollEvent(self, system):
+        self.mock_scheduleSystemPollEvent_called = True;
         
     def testGetSystemEventsForProcessing(self):
         
@@ -497,3 +507,46 @@ class SystemEventProcessingTestCase(XMLTestCase):
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
+        
+    def testDispatchSystemEvent(self):
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        poll_now_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL_NOW)
+        act_event = models.SystemEventType.objects.get(name=models.SystemEventType.ACTIVATION)
+        
+        system = models.System(name="hey")
+        system.save()
+        
+        # sanity check dispatching poll event
+        event = models.SystemEvent(system=system,event_type=poll_event, priority=poll_event.priority)
+        event.save()
+        self.system_manager.dispatchSystemEvent(event)
+        assert(self.mock_cleanupSystemEvent_called)
+        assert(self.mock_scheduleSystemPollEvent_called)
+        
+        # sanity check dispatching poll_now event
+        self.mock_scheduleSystemPollEvent_called = False # reset it
+        event = models.SystemEvent(system=system, event_type=poll_now_event, priority=poll_now_event.priority)
+        event.save()
+        self.system_manager.dispatchSystemEvent(event)
+        assert(self.mock_cleanupSystemEvent_called)
+        assert(self.mock_scheduleSystemPollEvent_called == False)
+        
+        network = models.Network()
+        network.ip_address = '1.1.1.1'
+        network.device_name = 'eth0'
+        network.public_dns_name = 'testnetwork.example.com'
+        network.netmask = '255.255.255.0'
+        network.port_type = 'lan'
+        network.primary = True
+        network.system = system
+        network.save()
+        import epdb; epdb.st()
+        # sanity check dispatching activation event
+        self.mock_scheduleSystemPollEvent_called = False # reset it
+        event = models.SystemEvent(system=system, event_type=act_event, priority=act_event.priority)
+        event.save()
+        self.system_manager.dispatchSystemEvent(event)
+        assert(self.mock_cleanupSystemEvent_called)
+        assert(self.mock_scheduleSystemPollEvent_called == False)
+        
+        
