@@ -1102,7 +1102,7 @@ def _createInventorySchema(db):
                     ON DELETE CASCADE,
                 "ip_address" char(15) NOT NULL,
                 "ipv6_address" varchar(32),
-                "device_name" varchar(255) NOT NULL,
+                "device_name" varchar(255),
                 "public_dns_name" varchar(255) NOT NULL,
                 "netmask" varchar(20),
                 "port_type" varchar(32),
