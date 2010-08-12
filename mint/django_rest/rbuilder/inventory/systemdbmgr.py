@@ -63,6 +63,18 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         if not system:
             return
         
+        # TODO:  remove this and figure out how to de-dup for real
+        sysNets = system.networks.all()
+        if sysNets:
+            sysNet = sysNets[0]
+            nets = models.Network.objects.filter(public_dns_name=sysNet.public_dns_name).all()
+            if nets:
+                for net in nets:
+                    sys = net.system
+                    if sys.system_id != system.system_id:
+                        log.info("System %s (%s) already exists in inventory" % (sys.name, net.public_dns_name))
+                        sys.delete()
+        
         # add the system
         system.save()
         self.log_system(system, models.SystemLogEntry.ADDED)
