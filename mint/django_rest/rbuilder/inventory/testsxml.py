@@ -32,7 +32,7 @@ systems_xml = """\
     </networks>
     <systemJobs/>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-    <state>activated</state>
+    <currentState>activated</currentState>
     <systemId>1</systemId>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -74,7 +74,7 @@ system_xml = """\
   </networks>
   <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <state>activated</state>
+  <currentState>activated</currentState>
   <systemId>1</systemId>
   <scheduledEventStartDate/>
   <launchDate/>
@@ -115,7 +115,7 @@ system_target_xml = """\
   </networks>
   <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <state>activated</state>
+  <currentState>activated</currentState>
   <systemId>1</systemId>
   <scheduledEventStartDate/>
   <launchDate/>
