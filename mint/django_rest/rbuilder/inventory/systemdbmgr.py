@@ -70,7 +70,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             nets = models.Network.objects.filter(public_dns_name=sysNet.public_dns_name).all()
             if nets:
                 for net in nets:
-                    sys = net.system
+                    sys = net.system # pyflakes=ignore
                     if sys.system_id != system.system_id:
                         log.info("System %s (%s) already exists in inventory" % (sys.name, net.public_dns_name))
                         sys.delete()
