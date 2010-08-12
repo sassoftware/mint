@@ -32,7 +32,6 @@ systems_xml = """\
     </networks>
     <systemJobs/>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-    <currentState>activated</currentState>
     <systemId>1</systemId>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -45,6 +44,7 @@ systems_xml = """\
     <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
+    <currentState>activated</currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </system>
@@ -74,7 +74,6 @@ system_xml = """\
   </networks>
   <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <currentState>activated</currentState>
   <systemId>1</systemId>
   <scheduledEventStartDate/>
   <launchDate/>
@@ -87,6 +86,7 @@ system_xml = """\
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>activated</currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
@@ -115,7 +115,6 @@ system_target_xml = """\
   </networks>
   <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <currentState>activated</currentState>
   <systemId>1</systemId>
   <scheduledEventStartDate/>
   <launchDate/>
@@ -129,6 +128,7 @@ system_target_xml = """\
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname/"/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>activated</currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""

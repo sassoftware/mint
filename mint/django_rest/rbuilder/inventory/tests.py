@@ -160,7 +160,7 @@ class SystemsTestCase(XMLTestCase):
         system.ssl_client_key = 'testsystemsslclientkey'
         system.ssl_server_certificate = 'testsystemsslservercertificate'
         system.activated = True
-        system.currentState = 'activated'
+        system.current_state = 'activated'
         system.save()
 
         network = models.Network()
@@ -207,7 +207,6 @@ class SystemsTestCase(XMLTestCase):
 
     def testGetSystem(self):
         system = self._saveSystem()
-        import epdb; epdb.st()
         response = self.client.get('/api/inventory/systems/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
