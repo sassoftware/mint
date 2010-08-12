@@ -186,7 +186,7 @@ class Targets(modellib.XObjModel):
     def get_absolute_url(self, request):
         uri = request.build_absolute_uri()
         parts = urlparse.urlparse(uri)
-        path = '/catalog/clouds/%s/instances/%s/' % \
+        path = '/catalog/clouds/%s/instances/%s' % \
             (self.targettype, self.targetname)
         parts = list(parts)
         parts[2] = path
