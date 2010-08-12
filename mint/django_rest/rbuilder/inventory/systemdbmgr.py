@@ -22,10 +22,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder import rbuilder_manager
 
-try:
-    from rpath_repeater import client as repeater_client
-except ImportError:
-    pass
+from rpath_repeater import client as repeater_client
 
 class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
@@ -318,8 +315,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         # TODO:  dispatch it here, whatever that means
-        #rep_client = repeater_client.RepeaterClient()
-
+        rep_client = repeater_client.RepeaterClient('http://localhost:9998')
         network = None        
         networks = event.system.networks.all()
         for net in networks:
@@ -327,8 +323,13 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 network = net
                 break;
             
-        #if network:
-            #rep_client.activate(network)
+        if network:
+            try:
+                rep_client.activate(network.public_dns_name)
+            except Exception, e:
+                tb = sys.exc_info()[2]
+                traceback.print_tb(tb)
+                sys.exit("Failed activating system %s (id %d): %s" % (event.system.name, event.system.system_id, e))
         
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)

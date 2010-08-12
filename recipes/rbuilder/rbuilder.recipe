@@ -65,6 +65,7 @@ class rBuilderProduct(CPackageRecipe):
         'rpath-capsule-indexer:python',
         'rpath-job:python',
         'rpath-models:python',
+        'rpath-repeater:python',
         'rpath-storage:python',
         'rpath-product-definition:python',
         'simplejson:python',
