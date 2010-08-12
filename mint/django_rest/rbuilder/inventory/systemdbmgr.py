@@ -329,7 +329,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             except Exception, e:
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
-                sys.exit("Failed activating system %s (id %d): %s" % (event.system.name, event.system.system_id, e))
+                log.error("Failed activating system %s (id %d): %s" % (event.system.name, event.system.system_id, e))
         
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)
@@ -401,7 +401,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             except Exception, e:
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
-                sys.exit("Failed importing systems from target %s: %s" % (driver.cloudType, e))
+                log.error("Failed importing systems from target %s: %s" % (driver.cloudType, e))
         
     def importTargetSystem(self, driver):
         log.info("Processing target %s (%s) as user %s" % (driver.cloudName, 
