@@ -1089,7 +1089,7 @@ class MigrateTo_50(SchemaMigration):
                     "os_type" varchar(64),
                     "os_major_version" varchar(32),
                     "os_minor_version" varchar(32),
-                    "activation_date" timestamp with time zone NOT NULL,
+                    "activation_date" timestamp with time zone,
                     "generated_uuid" varchar(64) UNIQUE,
                     "local_uuid" varchar(64),
                     "ssl_client_certificate" varchar(8092),

@@ -83,7 +83,7 @@ class System(modellib.XObjIdModel):
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)
     os_minor_version = models.CharField(max_length=32, null=True)
-    activation_date = modellib.DateTimeUtcField()
+    activation_date = modellib.DateTimeUtcField(null=True)
     generated_uuid = models.CharField(max_length=64, unique=True, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
