@@ -83,7 +83,7 @@ class System(modellib.XObjIdModel):
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)
     os_minor_version = models.CharField(max_length=32, null=True)
-    activation_date = modellib.DateTimeUtcField(auto_now_add=True)
+    activation_date = modellib.DateTimeUtcField()
     generated_uuid = models.CharField(max_length=64, unique=True, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
@@ -112,7 +112,7 @@ class System(modellib.XObjIdModel):
         return
         # Put these imports here for now so they don't break anything
         # globally.
-        from rmake import client
+        from rmake3 import client
         RMAKE_ADDRESS = 'http://localhost:9998'
         rmake_client = client.RmakeClient(RMAKE_ADDRESS)
 

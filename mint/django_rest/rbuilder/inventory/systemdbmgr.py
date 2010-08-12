@@ -10,6 +10,8 @@ import os
 import time
 import traceback
 
+from dateutil import tz
+
 from django.db import connection
 
 from conary import versions
@@ -64,6 +66,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         
         if system.activated:
             # TODO:  how to de-dup?
+            system.activation_date = datetime.datetime.now(tz.tzutc())
             self.log_system(system, models.SystemLogEntry.ACTIVATED)
             self.scheduleSystemPollEvent(system)
         else:
