@@ -190,6 +190,7 @@ class Targets(modellib.XObjModel):
             (self.targettype, self.targetname)
         parts = list(parts)
         parts[2] = path
+        parts[4] = ''
         return urlparse.urlunparse(parts)
 
 class TargetUserCredentials(modellib.XObjModel):
