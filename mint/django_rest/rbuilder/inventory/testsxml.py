@@ -125,7 +125,7 @@ system_target_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
-  <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname/"/>
+  <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
   <currentState>activated</currentState>
