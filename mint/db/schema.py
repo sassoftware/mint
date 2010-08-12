@@ -1100,7 +1100,7 @@ def _createInventorySchema(db):
                 "system_id" integer NOT NULL 
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
-                "ip_address" char(15) NOT NULL,
+                "ip_address" char(15),
                 "ipv6_address" varchar(32),
                 "device_name" varchar(255),
                 "public_dns_name" varchar(255) NOT NULL,

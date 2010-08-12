@@ -186,7 +186,7 @@ class Network(modellib.XObjModel):
                 tag='network')
     network_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System, related_name='networks')
-    ip_address = models.CharField(max_length=15)
+    ip_address = models.CharField(max_length=15, null=True)
     # TODO: how long should this be?
     ipv6_address = models.CharField(max_length=32, null=True)
     device_name = models.CharField(max_length=255) 
