@@ -20,7 +20,6 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder import rbuilder_manager
 
-from rpath_storage import api1 as storage
 from rpath_repeater import client as repeater_client
 
 class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
