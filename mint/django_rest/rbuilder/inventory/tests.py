@@ -200,29 +200,29 @@ class SystemsTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/systems/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.systems_xml % (system.activation_date.isoformat(),
-                system.created_date.isoformat()))
+            testsxml.systems_xml % (system.created_date.isoformat()))
 
     def testGetSystem(self):
         system = self._saveSystem()
         response = self.client.get('/api/inventory/systems/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.system_xml % (system.activation_date.isoformat(),
-                system.created_date.isoformat()))
+            testsxml.system_xml % (system.created_date.isoformat()))
 
     def testPostSystem(self):
-        system_xml = testsxml.system_xml % ('', '')
+        system_xml = testsxml.system_xml % ('')
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
-        self.assertXMLEquals(response.content, testsxml.system_xml % \
-            (system.activation_date.isoformat() + '+00:00',
-             system.created_date.isoformat() + '+00:00'))
+        system_xml = testsxml.system_xml.replace('<activationDate/>',
+            '<activationDate>%s</activationDate>' % \
+            (system.activation_date.isoformat() + '+00:00'))
+        self.assertXMLEquals(response.content, system_xml % \
+            (system.created_date.isoformat() + '+00:00'))
 
     def testGetSystemLog(self):
-        system_xml = testsxml.system_xml % ('', '')
+        system_xml = testsxml.system_xml % ('')
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         response = self.client.get('/api/inventory/systems/1/')

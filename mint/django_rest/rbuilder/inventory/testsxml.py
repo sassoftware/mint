@@ -14,7 +14,7 @@ systems_xml = """\
     <activated>True</activated>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
-    <activationDate>%s</activationDate>
+    <activationDate/>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
     <reservationId/>
     <networks>
@@ -56,7 +56,7 @@ system_xml = """\
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate>%s</activationDate>
+  <activationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <reservationId/>
   <networks>
