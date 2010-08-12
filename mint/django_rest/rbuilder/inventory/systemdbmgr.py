@@ -336,7 +336,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             
         if network:
             try:
-                rep_client.activate(network.public_dns_name)
+                uuid, job = rep_client.activate(network.public_dns_name)
+                log.info("System %s activation in progress (ip %s, uuid %s)" % (event.system.name, network.public_dns_name, uuid))
             except Exception, e:
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
