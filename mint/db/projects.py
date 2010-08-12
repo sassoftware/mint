@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import base64
 import os
 import string
 import sys
@@ -10,6 +11,7 @@ import time
 
 from mint import buildtypes
 from mint.lib import database
+from mint.lib import data as mintdata
 from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
         hostPortParse, configureClientProxies, getProjectText
 from mint import helperfuncs
@@ -725,25 +727,27 @@ class ProjectUsersTable(database.DatabaseTable):
             raise ItemNotFound()
 
     def getEC2AccountNumbersForProjectUsers(self, projectId):
-        writers = []
-        readers = []
+        writers = set()
+        readers = set()
         cu = self.db.cursor()
         cu.execute("""
-            SELECT CASE WHEN MIN(pu.level) <= 1 THEN 1 ELSE 0 END AS isWriter,
-                ud.value AS awsAccountNumber
-            FROM projectUsers AS pu
-                JOIN userData AS ud
-                    ON ud.name = 'awsAccountNumber'
-                       AND pu.userId = ud.userId
-                       AND length(ud.value) > 0
-            WHERE pu.projectId = ?
-            GROUP BY ud.value""", projectId)
-        for res in cu.fetchall():
-            if res[0]:
-                writers.append(res[1])
+            SELECT CASE WHEN pu.level <= 1 THEN 1 ELSE 0 END AS isWriter,
+                tuc.credentials AS creds
+              FROM projectUsers AS pu
+              JOIN TargetUserCredentials AS tuc USING (userId)
+              JOIN Targets USING (targetId)
+             WHERE pu.projectId = ?
+               AND Targets.targetType = ?
+               AND Targets.targetName = ?""", projectId, 'ec2', 'aws')
+        for isWriter, creds in cu.fetchall():
+            val = mintdata.unmarshalTargetUserCredentials(creds).get('accountId')
+            if val is None:
+                continue
+            if isWriter:
+                writers.add(val)
             else:
-                readers.append(res[1])
-        return writers, readers
+                readers.add(val)
+        return sorted(writers), sorted(readers)
 
     def new(self, projectId, userId, level, commit=True):
         assert(level in userlevels.LEVELS)

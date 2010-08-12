@@ -16,10 +16,10 @@ ${name} would like to become a developer on ${projectName}.
 To respond to this request:
 
  o Login to ${cfg.productName}.
- o Select ${projectName} from the 'Pending requests' dropdown menu
-   within the right-hand sidebar.
-     (Note: ${projectName} may not be present in the dropdown menu
-     if the user has retracted their request or another ${projectText().lower()}
-     owner has already responded to it.)
+ o Click 'Appliances'
+ o Click 'Appliances I own/develop'
+ o Click on the ${projectName} appliance
+ o Click on the orange drop down 'Action' menu on the right.  Select 
+   'Manage membership'
  o You can find all outstanding requests under the 'Requestors' heading at
    the bottom of the page.</plain>

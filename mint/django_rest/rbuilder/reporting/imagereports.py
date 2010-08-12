@@ -36,28 +36,29 @@ class ImagesPerProduct(Resource):
             if param is not None and not pattern.match(param):
                 return HttpResponseBadRequest('Invalid query parameter: %s' 
                     % param)       
-               
-        where_stmt = "p.shortname = '%(product)s' and p.projectid = b.projectid" % locals()
+
+        qargs = dict(product=product, units=units)       
+        where_stmt = " WHERE p.shortname = %(product)s and p.projectid = b.projectid"
         
         if starttime:
             where_stmt += " and b.timecreated > %(starttime)s" % locals()
-            
+            qargs['starttime'] = starttime
+
         if endtime:
             where_stmt += " and b.timecreated < %(endtime)s" % locals()
+            qargs['endtime'] = endtime
             
-        extract_stmt = """date_trunc('%s', timestamp with time zone 'epoch' 
+        sql_query = """SELECT date_trunc(%(units)s, timestamp with time zone 'epoch' 
             + cast (b.timecreated as INTEGER) * INTERVAL 
-            '1 second')""" % units
-        
-        sql_query = """SELECT %(extract_stmt)s, count(1)
+            '1 second'), count(1)
             from builds b, projects p 
-            where %(where_stmt)s 
-            group by %(extract_stmt)s
-			order by %(extract_stmt)s"""
+            """
+            
+        sql_query += where_stmt + " group by 1 order by 1"""
         
         cursor = connection.cursor()
         
-        cursor.execute(sql_query % locals())
+        cursor.execute(sql_query, qargs )
          
         segreport = TimeSegmentReport(request, units, starttime, endtime)
         
@@ -103,7 +104,7 @@ class ImagesDownloaded(Resource):
                         % param)       
                
         rows = Downloads.objects.extra\
-            (select={'time':"SUBSTRING(timedownloaded,1,%d)" %\
+            (select={'time':"SUBSTRING(TEXT(timedownloaded),1,%d)" %\
              size[units]['length']}).values('time').distinct().\
              annotate(downloads = Count('ip'))
         
@@ -141,27 +142,27 @@ class ApplianceDownloads(Resource):
 
         length = size[units]['length']
         
-        where_stmt = """p.projectid=b.projectid and dl.urlid =  bfu.urlid 
-            and bf.fileid = bfu.urlid and bf.buildid = b.buildid
-            and p.shortname = '%(product)s'""" % locals()
+        qargs = dict(product=product, length=length)
+        where_stmt = """ WHERE p.projectid=b.projectid and dl.urlid =  bfu.urlid 
+            and bf.fileid = bfu.fileid and bf.buildid = b.buildid
+            and p.shortname = %(product)s""" 
         
         if starttime:
             startpoint = time.strftime('%Y%m%d%H%M%S', time.localtime(float(starttime)))
             where_stmt += " and timedownloaded > %s" % startpoint
-            
+             
         if endtime:
             endpoint = time.strftime('%Y%m%d%H%M%S', time.localtime(float(endtime)))
             where_stmt += " and timedownloaded < %s" % endpoint     
         
 #FIXME: This needs to be more djangoized and the table relationships can use another look               
-        sql_query = """select DISTINCT (SUBSTRING(timedownloaded,1,%(length)d)) AS "time", COUNT(dl."ip") AS "downloads" 
+        sql_query = """select DISTINCT (SUBSTRING(TEXT(timedownloaded),1,%(length)s)) AS "time", COUNT(dl."ip") AS "downloads" 
             FROM urldownloads dl, projects p, builds b, buildfilesurlsmap bfu, buildfiles bf
-            where %(where_stmt)s
-            GROUP BY SUBSTRING(timedownloaded,1,%(length)d)"""
-        
+            """ + where_stmt + " GROUP BY 1"
+            
         cursor = connection.cursor()
         
-        cursor.execute(sql_query % locals())
+        cursor.execute(sql_query, qargs )
         
         segreport = TimeSegmentReport(request, units, starttime, endtime)
         
