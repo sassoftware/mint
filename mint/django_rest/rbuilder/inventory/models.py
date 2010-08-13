@@ -166,9 +166,9 @@ class SystemEvent(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event'
     system_event_id = models.AutoField(primary_key=True)
-    system = modellib.DeferrableForeignKey(System, db_index=True,
-        related_name='system_event', deferred=True)
-    event_type = modellib.DeferrableForeignKey(SystemEventType, deferred=True)
+    system = modellib.DeferredForeignKey(System, db_index=True,
+        related_name='system_event')
+    event_type = modellib.DeferredForeignKey(SystemEventType)
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
@@ -206,8 +206,7 @@ class SystemLog(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_log'
     system_log_id = models.AutoField(primary_key=True)
-    system = modellib.DeferrableForeignKey(System, deferred=True,
-        related_name='system_log')
+    system = modellib.DeferredForeignKey(System, related_name='system_log')
 
 class SystemLogEntry(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
