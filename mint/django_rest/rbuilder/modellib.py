@@ -136,7 +136,8 @@ class BaseManager(models.Manager):
     def add_accessors(self, model, obj, request=None):
         """
         For each obj attribute, if the attribute matches an accessor name,
-        load all the acccessor models off obj and add them to model.
+        load all the acccessor models off obj and add them to the model's 
+        accessor.
         """
         accessors = model.get_accessor_dict()
 
