@@ -133,6 +133,23 @@ class BaseManager(models.Manager):
 
         return model
 
+    def add_list_fields(self, model, obj):
+        """
+        For each list_field on the model, get the objects off of obj, load
+        their corrosponding model and add them to our model in a list.
+        """
+        for key in model.list_fields:
+            flist = getattr(obj, key, None)
+            mods = []
+            for val in flist:
+                m = type_map[key].objects.load_from_object(
+                        val, request, save=False)
+                mods.append(m)
+            if mods:
+                setattr(model, key, mods)
+
+        return model
+
     def add_accessors(self, model, obj, request=None):
         """
         For each obj attribute, if the attribute matches an accessor name,
@@ -170,9 +187,15 @@ class BaseManager(models.Manager):
         # emtpy model instance to start with.
         model = self.model()
 
+        # Don't even attempt to save abstract models
+        if model._meta.abstract:
+            save = False
+
         model = self.add_fields(model, obj)
         if save:
             created, model = self.load_or_create(model)
+
+        model = self.add_list_fields(model, obj)
 
         model = self.add_accessors(model, obj, request)
 
