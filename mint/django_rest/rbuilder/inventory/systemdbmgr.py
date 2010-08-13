@@ -56,6 +56,11 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         system_log.system_log_entries.add(system_log_entry)
         system_log.save()
         return system_log
+    
+    def addSystems(self, systemList):
+        '''Add add one or more systems to inventory'''
+        for system in systemList:
+            self.addSystem(system)
         
     def addSystem(self, system):
         '''Add a new system to inventory'''

@@ -29,7 +29,8 @@ class Systems(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag = 'systems')
+                tag = 'systems',
+                elements=['system'])
     list_fields = ['system']
     system = []
 

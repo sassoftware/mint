@@ -224,6 +224,15 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             system.created_date.isoformat())
 
+    def testPutSystems(self):
+        systems_xml = testsxml.systems_xml % ('')
+        import epdb; epdb.st()
+        response = self.client.put('/api/inventory/systems/', 
+            data=systems_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 200)
+        systems = models.System.objects.all()
+        assert(len(systems == 2))
+        
     def testPostSystem(self):
         system_xml = testsxml.system_xml % ('')
         response = self.client.post('/api/inventory/systems/', 

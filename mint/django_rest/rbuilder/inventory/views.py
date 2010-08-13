@@ -10,6 +10,7 @@ import time
 from django.http import HttpResponse
 from django_restapi import resource
 
+from mint.django_rest import logger as log
 from mint.django_rest.deco import requires, return_xml
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
@@ -74,6 +75,12 @@ class InventorySystemsService(AbstractInventoryService):
     def create(self, request, system):
         system = self.sysMgr.addSystem(system)
         return system
+    
+    @requires('systems')
+    @return_xml
+    def update(self, request, systems):
+        systems = self.sysMgr.addSystems(systems.system)
+        return self.sysMgr.getSystems()
 
     def delete(self, request, system):
         system = self.sysMgr.deleteSystem(system)

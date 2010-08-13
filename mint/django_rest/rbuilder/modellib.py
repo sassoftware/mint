@@ -51,6 +51,10 @@ class BaseManager(models.Manager):
 
     def load_from_object(self, obj, request, save=True):
         model = self.model()
+        
+        if model._meta.abstract:
+            save = False
+        
         fields = {}
         for f in model._meta.fields:
             fields[f.name] = f
@@ -66,12 +70,25 @@ class BaseManager(models.Manager):
                 else:
                     val = None
                 setattr(model, key, val)
+        
+        for key in model.list_fields:
+            flist = getattr(obj, key, None)
+            mods = []
+            for val in flist:
+                m = type_map[key].objects.load_from_object(
+                        val, request, save=False)
+                mods.append(m)
+            if mods:
+                setattr(self.model, key, mods)
 
-        loaded_model = self.load(model)
+        loaded_model = None
+        if not model._meta.abstract:
+            loaded_model = self.load(model)
         if not loaded_model:
             if save:
                 model.save()
             loaded_model = model
+            
         for key, val in obj.__dict__.items():
             if key in accessors.keys():
                 rel_obj_name = accessors[key].var_name
@@ -84,6 +101,7 @@ class BaseManager(models.Manager):
                     rel_mod = type_map[rel_obj_name].objects.load_from_object(
                         rel_obj, request, save=False)
                     getattr(loaded_model, key).add(rel_mod)
+                
         return loaded_model
     
 class XObjModel(models.Model):
