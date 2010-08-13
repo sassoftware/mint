@@ -226,7 +226,6 @@ class SystemsTestCase(XMLTestCase):
 
     def testPutSystems(self):
         systems_xml = testsxml.systems_xml % ('')
-        import epdb; epdb.st()
         response = self.client.put('/api/inventory/systems/', 
             data=systems_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
