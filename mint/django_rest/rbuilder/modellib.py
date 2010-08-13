@@ -62,7 +62,10 @@ class BaseManager(models.Manager):
                 if isinstance(fields[key], related.RelatedField):
                     val = fields[key].related.parent_model.objects.load_from_href(val, request)
                 elif val:
-                    val = str(val)
+                    if fields[key].primary_key:
+                        val = int(val)
+                    else:
+                        val = str(val)
                 else:
                     val = None
                 setattr(model, key, val)
