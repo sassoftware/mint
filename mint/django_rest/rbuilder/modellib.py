@@ -407,11 +407,12 @@ class XObjModel(models.Model):
         return xobj_model
 
 class XObjIdModel(XObjModel):
+    """
+    Model that sets an id attribute on itself corrosponding to the href for
+    this model.
+    """
     class Meta:
         abstract = True
-
-    _xobj = xobj.XObjMetadata(
-                attributes = {'id':str})
 
     def serialize(self, request=None):
         xobj_model = XObjModel.serialize(self, request)
@@ -421,6 +422,9 @@ class XObjIdModel(XObjModel):
         return xobj_model
 
 class XObjHrefModel(XObjModel):
+    """
+    Model that serializes to an href.
+    """
     class Meta:
         abstract = True
 
@@ -433,12 +437,21 @@ class XObjHrefModel(XObjModel):
     def serialize(self, request=None):
         self.href = request.build_absolute_uri(self.href)
 
-class DeferrableForeignKey(models.ForeignKey):
+class DeferredForeignKey(models.ForeignKey):
+    """
+    Foreign Key that is deferred.  That means that as we enconter instances of
+    this foreign key during serialization, we will create an href for the
+    model instead of a full xml representation of the model.
+    """
     def __init__(self, *args, **kwargs):
-        self.deferred = kwargs.pop('deferred', False)
-        super(DeferrableForeignKey, self).__init__(*args, **kwargs)
+        self.deferred = True
+        super(DeferredForeignKey, self).__init__(*args, **kwargs)
 
 class DateTimeUtcField(models.DateTimeField):
+    """
+    Like a DateTimeField, but default to using a datetime value that is set to
+    utc time and utc time zone for default values.
+    """
     def pre_save(self, model_instance, add):
         if self.auto_now or (self.auto_now_add and add):
             value = datetime.datetime.now(tz.tzutc())
