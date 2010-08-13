@@ -10,7 +10,6 @@ import time
 from django.http import HttpResponse
 from django_restapi import resource
 
-from mint.django_rest import logger as log
 from mint.django_rest.deco import requires, return_xml
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
