@@ -23,7 +23,7 @@
     <path>/usr/lib64/jabberd</path>
     <driver>pgsql</driver>
     <pgsql>
-      <conninfo>dbname=jabber user=jabber</conninfo>
+      <conninfo>dbname=jabberd user=jabberd port=5439</conninfo>
     </pgsql>
   </storage>
 

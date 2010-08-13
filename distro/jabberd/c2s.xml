@@ -68,7 +68,7 @@
     </ssl-mechanisms>
 
     <pgsql>
-      <conninfo>dbname=jabber user=jabber</conninfo>
+      <conninfo>dbname=jabberd user=jabberd port=5439</conninfo>
     </pgsql>
 
   </authreg>
