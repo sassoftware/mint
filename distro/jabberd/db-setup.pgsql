@@ -1,3 +1,6 @@
+-- Silence "BLAH will create implicit index BLAH"
+SET client_min_messages = 'WARNING';
+
 --
 -- This is the required schema for PostgreSQL. Load this into the
 -- database using the psql interactive terminal:
