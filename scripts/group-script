@@ -111,6 +111,11 @@ createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
 chown -f apache:apache /srv/rbuilder/data/db /srv/rbuilder/repos/* 2>/dev/null
 rm -f /srv/rbuilder/data/platformName.cache
 
+# jabberd database
+createuser -SDRU postgres jabberd &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=jabberd jabberd &>/dev/null && \
+    psql -U jabberd -d jabberd -Xqf /usr/share/rbuilder/jabberd/db-setup.pgsql
+
 # Migrate the mint config
 "$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
 chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf

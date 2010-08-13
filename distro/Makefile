@@ -63,6 +63,7 @@ install: default-install httpd-sysconfig
 	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
+	echo '# chkconfig: 345 22 50' > $(DESTDIR)/etc/chkconfig.d/jabberd
 	# anaconda
 	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/
@@ -70,7 +71,7 @@ install: default-install httpd-sysconfig
 	# jabberd
 	mkdir -p $(DESTDIR)/usr/share/rbuilder/jabberd
 	chmod 0750 $(DESTDIR)/usr/share/rbuilder/jabberd
-	cp jabberd/*.xml $(DESTDIR)/usr/share/rbuilder/jabberd/
+	cp jabberd/*.xml jabberd/db-setup.pgsql $(DESTDIR)/usr/share/rbuilder/jabberd/
 	install -D -m0644 jabberd/sysconfig $(DESTDIR)/etc/sysconfig/jabberd
 
 httpd-sysconfig:
