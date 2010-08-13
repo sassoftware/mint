@@ -225,12 +225,12 @@ class SystemsTestCase(XMLTestCase):
             system.created_date.isoformat())
 
     def testPutSystems(self):
-        systems_xml = testsxml.systems_xml % ('')
+        systems_xml = testsxml.systems_put_xml % ('', '')
         response = self.client.put('/api/inventory/systems/', 
             data=systems_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         systems = models.System.objects.all()
-        assert(len(systems == 2))
+        assert(len(systems) == 2)
         
     def testPostSystem(self):
         system_xml = testsxml.system_xml % ('')

@@ -133,17 +133,18 @@ class BaseManager(models.Manager):
 
         return model
 
-    def add_list_fields(self, model, obj):
+    def add_list_fields(self, model, obj, request):
         """
         For each list_field on the model, get the objects off of obj, load
         their corrosponding model and add them to our model in a list.
         """
         for key in model.list_fields:
             flist = getattr(obj, key, None)
+            if type(flist) != type([]):
+                flist = [flist]
             mods = []
             for val in flist:
-                m = type_map[key].objects.load_from_object(
-                        val, request, save=False)
+                m = type_map[key].objects.load_from_object( val, request)
                 mods.append(m)
             if mods:
                 setattr(model, key, mods)
@@ -195,7 +196,7 @@ class BaseManager(models.Manager):
         if save:
             created, model = self.load_or_create(model)
 
-        model = self.add_list_fields(model, obj)
+        model = self.add_list_fields(model, obj, request)
 
         model = self.add_accessors(model, obj, request)
 

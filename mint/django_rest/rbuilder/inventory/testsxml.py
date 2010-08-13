@@ -50,6 +50,83 @@ systems_xml = """\
   </system>
 </systems>"""
 
+systems_put_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systems>
+  <system id="http://testserver/api/inventory/systems/1/">
+    <activated>True</activated>
+    <sslClientKey>testsystemsslclientkey</sslClientKey>
+    <osMajorVersion/>
+    <activationDate/>
+    <generatedUuid>testsystemgenerateduuid</generatedUuid>
+    <reservationId/>
+    <networks>
+      <network>
+        <deviceName>eth0</deviceName>
+        <ipAddress>1.1.1.1</ipAddress>
+        <ipv6Address/>
+        <netmask>255.255.255.0</netmask>
+        <networkId>1</networkId>
+        <portType>lan</portType>
+        <primary/>
+        <publicDnsName>testnetwork.example.com</publicDnsName>
+      </network>
+    </networks>
+    <systemJobs/>
+    <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+    <scheduledEventStartDate/>
+    <launchDate/>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+    <available/>
+    <description>testsystemdescription</description>
+    <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+    <targetSystemId/>
+    <osMinorVersion/>
+    <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
+    <name>testsystemname</name>
+    <localUuid>testsystemlocaluuid</localUuid>
+    <currentState>activated</currentState>
+    <createdDate>%s</createdDate>
+    <osType/>
+  </system>
+  <system id="http://testserver/api/inventory/systems/2/">
+    <activated>True</activated>
+    <sslClientKey>testsystemsslclientkey</sslClientKey>
+    <osMajorVersion/>
+    <activationDate/>
+    <generatedUuid>testsystem2generateduuid</generatedUuid>
+    <reservationId/>
+    <networks>
+      <network>
+        <deviceName>eth0</deviceName>
+        <ipAddress>2.2.2.2</ipAddress>
+        <ipv6Address/>
+        <netmask>255.255.255.0</netmask>
+        <networkId>2</networkId>
+        <portType>lan</portType>
+        <primary/>
+        <publicDnsName>testnetwork2.example.com</publicDnsName>
+      </network>
+    </networks>
+    <systemJobs/>
+    <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+    <scheduledEventStartDate/>
+    <launchDate/>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+    <available/>
+    <description>testsystemdescription</description>
+    <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+    <targetSystemId/>
+    <osMinorVersion/>
+    <systemEvent href="http://testserver/api/inventory/systemEvents/2/"/>
+    <name>testsystemname</name>
+    <localUuid>testsystem2localuuid</localUuid>
+    <currentState>activated</currentState>
+    <createdDate>%s</createdDate>
+    <osType/>
+  </system>
+</systems>"""
+
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1/">
