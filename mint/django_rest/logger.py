@@ -10,7 +10,7 @@ import sys
 def getlogger():
     logger = logging.getLogger()
     hdlr = logging.StreamHandler(sys.stderr)
-    formatter = logging.Formatter('[%(asctime)s] %(levelname)-8s"%(message)s"','%Y-%m-%d %a %H:%M:%S') 
+    formatter = logging.Formatter('[%(asctime)s] %(levelname)-8s"%(message)s"','%Y-%m-%d %a %H:%M:%S+00:00') 
     
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
