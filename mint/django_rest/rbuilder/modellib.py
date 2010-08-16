@@ -202,7 +202,7 @@ class BaseManager(models.Manager):
 
         return model
 
-    
+
 class XObjModel(models.Model):
     """
     Common model class all models should inherit from.  Overrides the default
