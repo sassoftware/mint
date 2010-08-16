@@ -233,7 +233,7 @@ class SystemsTestCase(XMLTestCase):
         assert(len(systems) == 2)
         
     def testPostSystem(self):
-        system_xml = testsxml.system_xml % ('')
+        system_xml = testsxml.system_post_xml
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
