@@ -252,6 +252,12 @@ class MintConfig(ConfigFile):
                                 "whether or not to generate a scrambled password for the "
                                 "guided tour currently this is set to false (see WEB-354) "
                                 "until further notice")
+    
+    # inventory
+    systemPollCount = (CfgInt, 1,
+                          "The number of systems to poll at a time")
+    systemEventDelay = (CfgInt, 5,
+                          "The number of minutes to wait before enabling a systems next polling task")
 
 
     # *** BEGIN DEPRECATED VALUES ***

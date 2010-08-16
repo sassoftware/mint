@@ -5,6 +5,7 @@
 import logging
 import os
 import sys
+import time
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
@@ -43,12 +44,15 @@ def add_columns(db, table, *columns):
     ...     'somethingelse STRING')
     '''
     cu = db.cursor()
+    changed = False
 
     for column in columns:
         try:
             cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
+            changed = True
         except sqlerrors.DuplicateColumnName:
             pass
+    return changed
 
 
 def drop_tables(db, *tables):
@@ -1051,6 +1055,236 @@ class MigrateTo_49(SchemaMigration):
             REFERENCES targets(targetid) ON DELETE SET NULL
         """)
         return True
+
+class MigrateTo_50(SchemaMigration):
+    Version = (50, 0)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        changed = drop_tables(db,
+            "inventory_system_target",
+            "inventory_system_software_version",
+            "inventory_system_information",
+            "inventory_network_information",
+            "inventory_storage_volume",
+            "inventory_cpu",
+            "inventory_software_version_update",
+            "inventory_software_version",
+            "job_managed_system",
+            "inventory_managed_system")
+
+        if 'inventory_system' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system" (
+                    "system_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL,
+                    "description" varchar(8092),
+                    "created_date" timestamp with time zone NOT NULL,
+                    "launch_date" timestamp with time zone,
+                    "target_id" integer REFERENCES "targets" ("targetid"),
+                    "target_system_id" varchar(255),
+                    "reservation_id" varchar(255),
+                    "os_type" varchar(64),
+                    "os_major_version" varchar(32),
+                    "os_minor_version" varchar(32),
+                    "activation_date" timestamp with time zone,
+                    "generated_uuid" varchar(64) UNIQUE,
+                    "local_uuid" varchar(64),
+                    "ssl_client_certificate" varchar(8092),
+                    "ssl_client_key" varchar(8092),
+                    "ssl_server_certificate" varchar(8092),
+                    "scheduled_event_start_date" timestamp with time zone,
+                    "launching_user_id" integer REFERENCES "users" ("userid"),
+                    "available" bool,
+                    "activated" bool,
+                    "current_state" varchar(32),
+                    "management_node_id" integer
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system",
+                "inventory_system_target_id_idx", "target_id")
+
+        if 'inventory_managementnode' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_managementnode" (
+                    "id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL UNIQUE 
+                        REFERENCES "inventory_system" ("system_id")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_managementnode'] = []
+            changed = True
+            changed |= db.createIndex("inventory_managementnode",
+                "inventory_managementnode_system_id_idx_uq",
+                "system_id", unique=True)
+                        
+
+        if 'inventory_network' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_network" (
+                    "network_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "ip_address" char(15),
+                    "ipv6_address" varchar(32),
+                    "device_name" varchar(255),
+                    "public_dns_name" varchar(255) NOT NULL,
+                    "netmask" varchar(20),
+                    "port_type" varchar(32),
+                    "primary" bool
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_network'] = []
+            changed = True
+            changed |= db.createIndex("inventory_network",
+                "inventory_network_system_id_idx", "system_id")
+            changed |= db.createIndex("inventory_network",
+            "inventory_network_public_dns_name_idx", "public_dns_name")
+
+        if 'inventory_system_log' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_log" (
+                    "system_log_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_log'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system_log",
+                "inventory_system_log_system_id_idx", "system_id")
+
+        if 'inventory_log_entry' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_log_entry" (
+                    "entry_id" %(PRIMARYKEY)s,
+                    "entry" varchar(8092) NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_log_entry'] = []
+            changed = True
+            
+        if 'inventory_system_log_entry' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_log_entry" (
+                    "system_log_entry_id" %(PRIMARYKEY)s,
+                    "system_log_id" integer NOT NULL REFERENCES "inventory_system_log" ("system_log_id"),
+                    "log_entry_id" integer NOT NULL,
+                    "entry_date" timestamp with time zone NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_log_entry'] = []
+            changed = True
+
+        if 'inventory_version' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_version" (
+                    "version_id" %(PRIMARYKEY)s,
+                    "name" text NOT NULL,
+                    "version" text NOT NULL,
+                    "flavor" text NOT NULL,
+                    UNIQUE ("name", "version", "flavor")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_version'] = []
+            changed = True
+
+        if 'inventory_available_update' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_available_update" (
+                    "available_update_id" %(PRIMARYKEY)s,
+                    "software_version_id" integer NOT NULL 
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
+                    "software_version_available_update_id" integer NOT NULL 
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
+                    "last_refreshed" timestamp with time zone NOT NULL,
+                    UNIQUE ("software_version_id", "available_update_id")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_available_update'] = []
+            changed = True
+            changed |= db.createIndex("inventory_available_update",
+                "inventory_available_update_software_version_id_idx",
+                "software_version_id")
+            changed |= db.createIndex("inventory_available_update",
+                "inventory_available_update_software_version_available_update_id_idx",
+                "software_version_available_update_id")
+
+        if 'inventory_system_versions' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_versions" (
+                    "id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "version_id" integer NOT NULL
+                        REFERENCES "inventory_version" ("version_id")
+                        ON DELETE CASCADE,
+                    UNIQUE ("system_id", "version_id")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_versions'] = []
+            changed = True
+            changed |= db.createIndex("inventory_system_versions",
+                "inventory_system_versions_system_id_idx", "system_id")
+            changed |= db.createIndex("inventory_system_versions",
+                "inventory_system_versions_version_id", "version_id")
+
+        if 'inventory_system_event_type' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_event_type" (
+                    "system_event_type_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL,
+                    "description" varchar(8092) NOT NULL,
+                    "priority" smallint NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_event_type'] = []
+            changed = True
+            changed |= schema._addTableRows(db, 'inventory_system_event_type', 'name',
+                [ dict(name="activation", 
+                       description='on-demand activation event', priority=100),
+                  dict(name="poll", 
+                       description='standard polling event', priority=50),
+                  dict(name="poll_now", 
+                       description='on-demand polling event', priority=90)])
+            
+        if 'inventory_system_event' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_event" (
+                    "system_event_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id"),
+                    "event_type_id" integer NOT NULL 
+                        REFERENCES "inventory_system_event_type" 
+                            ("system_event_type_id"),
+                    "time_created" timestamp with time zone NOT NULL,
+                    "time_enabled" timestamp with time zone NOT NULL,
+                    "priority" smallint NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_event'] = []
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_system_id", "system_id")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_event_type_id", "event_type_id")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_time_enabled", "time_enabled")
+            changed |= db.createIndex("inventory_system_event",
+                "inventory_system_event_priority", "priority")
+            changed = True
+
+        if 'inventory_system_job' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_job" (
+                    "system_job_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
+                    "job_uuid" varchar(64) NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_job'] = []
+            changed = True
+
+            return changed
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

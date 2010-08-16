@@ -7,10 +7,14 @@
 # Also note: You'll have to insert the output of 'django-admin.py sqlcustom [appname]'
 # into your database.
 
+import urlparse
+
 from django.db import models
 from django.conf import settings
 
-class UserGroups(models.Model):
+from mint.django_rest.rbuilder import modellib
+
+class UserGroups(modellib.XObjModel):
     usergroupid = models.AutoField(primary_key=True)
     usergroup = models.CharField(unique=True, max_length=128)
     
@@ -21,7 +25,7 @@ class UserGroups(models.Model):
     def __unicode__(self):
         return self.usergroup
 
-class Users(models.Model):
+class Users(modellib.XObjModel):
     userid = models.AutoField(primary_key=True)
     username = models.CharField(unique=True, max_length=128)
     fullname = models.CharField(max_length=128)
@@ -43,7 +47,7 @@ class Users(models.Model):
     def __unicode__(self):
         return self.username
         
-class UserGroupMembers(models.Model):
+class UserGroupMembers(modellib.XObjModel):
     usergroupid = models.ForeignKey(UserGroups, db_column='usergroupid', related_name='group')
     userid = models.ForeignKey(Users, db_column='userid', related_name='usermember')
     
@@ -51,7 +55,7 @@ class UserGroupMembers(models.Model):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroupmembers'
     
-class Products(models.Model):
+class Products(modellib.XObjModel):
     productId = models.AutoField(primary_key=True, db_column='projectid', blank=True)
     hostname = models.CharField(unique=True, max_length=63)
     name = models.CharField(unique=True, max_length=128)
@@ -81,7 +85,7 @@ class Products(models.Model):
     def _attributes(self):
         return ({'id': self.hostname})
 
-class Members(models.Model):
+class Members(modellib.XObjModel):
     productId = models.ForeignKey(Products, db_column='projectid', related_name='product')
     userid = models.ForeignKey(Users, db_column='userid', related_name='user')
     level = models.SmallIntegerField()
@@ -89,7 +93,7 @@ class Members(models.Model):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'projectusers'
         
-class Versions(models.Model):
+class Versions(modellib.XObjModel):
     productVersionId = models.AutoField(primary_key=True)
     productId = models.ForeignKey(Products, db_column='projectid')
     namespace = models.CharField(max_length=16)
@@ -104,7 +108,7 @@ class Versions(models.Model):
         return self.name
         
 
-class Releases(models.Model):
+class Releases(modellib.XObjModel):
     pubreleaseid = models.AutoField(primary_key=True)
     productId = models.ForeignKey(Products, db_column='projectid', related_name='releasesProduct')
     name = models.CharField(max_length=255)
@@ -125,7 +129,7 @@ class Releases(models.Model):
     def __unicode__(self):
         return self.name
                
-class Images(models.Model):
+class Images(modellib.XObjModel):
     imageId = models.AutoField(primary_key=True, db_column='buildid')
     productId = models.ForeignKey(Products, db_column='projectid')
     pubreleaseid = models.ForeignKey(Releases, null=True, db_column='pubreleaseid')
@@ -153,7 +157,7 @@ class Images(models.Model):
     def __unicode__(self):
         return self.name
         
-class Downloads(models.Model):
+class Downloads(modellib.XObjModel):
     imageId = models.ForeignKey(Images, db_column='urlid')
     timedownloaded = models.CharField(max_length=14)
     ip = models.CharField(max_length=64)
@@ -162,7 +166,7 @@ class Downloads(models.Model):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'urldownloads'
 
-class Sessions(models.Model):
+class Sessions(modellib.XObjModel):
     sessionId = models.AutoField(primary_key=True, db_column='sessidx')
     sid = models.CharField(max_length=64, unique=True)
     data = models.TextField()
@@ -171,7 +175,7 @@ class Sessions(models.Model):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'sessions'
 
-class Targets(models.Model):
+class Targets(modellib.XObjModel):
     targetid = models.IntegerField(primary_key=True)
     targettype = models.CharField(max_length=255)
     targetname = models.CharField(unique=True, max_length=255)
@@ -179,7 +183,17 @@ class Targets(models.Model):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targets'
 
-class TargetUserCredentials(models.Model):
+    def get_absolute_url(self, request):
+        uri = request.build_absolute_uri()
+        parts = urlparse.urlparse(uri)
+        path = '/catalog/clouds/%s/instances/%s' % \
+            (self.targettype, self.targetname)
+        parts = list(parts)
+        parts[2] = path
+        parts[4] = ''
+        return urlparse.urlunparse(parts)
+
+class TargetUserCredentials(modellib.XObjModel):
     targetid = models.ForeignKey(Targets, db_column="targetid")
     userid = models.ForeignKey(Users, db_column="userid")
     credentials = models.TextField()

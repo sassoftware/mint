@@ -32,7 +32,8 @@ class RbuilderRestServer(RestController):
             'registration' : registration.RegistrationController,
             'notices'  : notices.NoticesController,
             'capsules'  : capsules.CapsulesController,
-            'reports/'  : 'getReportsList',
+            'reports/'  : 'djangoHandoff',
+            'inventory/' : 'djangoHandoff',
             'moduleHooks' : modulehooks.ModuleController,}
 
     def __init__(self, cfg, db):
@@ -67,5 +68,5 @@ class RbuilderRestServer(RestController):
         return result + request.extension
 
     # This is a handoff to the django URIs
-    def getReportsList(self, request):
+    def djangoHandoff(self, request):
         return None

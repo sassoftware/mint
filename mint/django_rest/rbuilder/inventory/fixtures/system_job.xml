@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <object pk="1" model="inventory.systemjob">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="job_uuid">aaaaa</field>
+    </object>
+    <object pk="1" model="inventory.systemjob">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="job_uuid">bbbbb</field>
+    </object>
+    <object pk="1" model="inventory.systemjob">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="job_uuid">ccccc</field>
+    </object>
+    <object pk="1" model="inventory.systemjob">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="job_uuid">ddddd</field>
+    </object>
+</django-objects>

@@ -28,6 +28,8 @@
 # rMake XMLRPC and messagebus
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 9999 -j ACCEPT
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 50900 -j ACCEPT
+# XMPP for Update Service control
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 5222 -j ACCEPT
 # Reject anything that hasn't been allowed yet
 -A INPUT -m tcp -p tcp -j REJECT --reject-with tcp-reset
 -A INPUT -j REJECT

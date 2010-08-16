@@ -6,12 +6,11 @@
 
 import logging
 import sys
-from django.conf import settings
 
 def getlogger():
     logger = logging.getLogger()
     hdlr = logging.StreamHandler(sys.stderr)
-    formatter = logging.Formatter('[%(asctime)s]%(levelname)-8s"%(message)s"','%Y-%m-%d %a %H:%M:%S') 
+    formatter = logging.Formatter('[%(asctime)s] %(levelname)-8s"%(message)s"','%Y-%m-%d %a %H:%M:%S') 
     
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
@@ -22,6 +21,10 @@ def getlogger():
 def debug(msg):
     logger = getlogger()
     logger.debug(msg)
+    
+def info(msg):
+    logger = getlogger()
+    logger.info(msg)
     
 def error(msg):
     logger = getlogger()

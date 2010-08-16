@@ -3,40 +3,107 @@
 #
 # All Rights Reserved
 #
+
+import sys
 import datetime
-import logging
 import os
 import time
+import traceback
+
+from dateutil import tz
 
 from django.db import connection
 
 from conary import versions
 from conary.deps import deps
 
-from mint.django_rest.rbuilder import inventory
+from mint.django_rest import logger as log
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.inventory import generateds_system
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder import rbuilder_manager
 
-class RbuilderDjangoManager(object):
-    def __init__(self, cfg, userName):
-        self.cfg = cfg
-        if userName is None:
-            self.user = None
-        else:
-            # The salt field contains binary data that blows django's little
-            # mind when it tries to decode it as UTF-8. Since we don't need it
-            # here, defer the loading of that column
-            self.user = rbuildermodels.Users.objects.defer("salt").get(username = userName)
+try:
+    from rpath_repeater import client as repeater_client
+except:
+    log.info("Failed loading repeater client, expected in local mode only")
 
-class SystemDBManager(RbuilderDjangoManager):
+class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
+
+    def __init__(self, *args, **kw):
+        rbuilder_manager.RbuilderDjangoManager.__init__(self, *args, **kw)
+
+    def getSystem(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        self.log_system(system, "System data fetched.")
+        system.addJobs()
+        return system
+
+    def deleteSystem(self, system):
+        managedSystem = models.managed_system.objects.get(pk=system)
+        managedSystem.delete()
 
     def getSystems(self):
-        return models.managed_systems.objects.all()
+        Systems = models.Systems()
+        Systems.system = list(models.System.objects.all())
+        xxx = [s.addJobs() for s in Systems.system]
+        return Systems
 
-    def createSystem(self, system):
+    def log_system(self, system, log_msg):
+        system_log, created = models.SystemLog.objects.get_or_create(
+            system=system)
+        system_log_entry = models.SystemLogEntry(system_log=system_log,
+            entry=log_msg)
+        system_log.system_log_entries.add(system_log_entry)
+        system_log.save()
+        return system_log
+    
+    def addSystems(self, systemList):
+        '''Add add one or more systems to inventory'''
+        for system in systemList:
+            self.addSystem(system)
+        
+    def addSystem(self, system):
+        '''Add a new system to inventory'''
+        
+        if not system:
+            return
+        
+        # TODO:  remove this and figure out how to de-dup for real
+        sysNets = system.networks.all()
+        if sysNets:
+            sysNet = sysNets[0]
+            nets = models.Network.objects.filter(public_dns_name=sysNet.public_dns_name).all()
+            if nets:
+                for net in nets:
+                    system2 = net.system
+                    if system2.system_id != system.system_id:
+                        log.info("System %s (%s) already exists in inventory"
+                                % (system2.name, net.public_dns_name))
+                        system2.delete()
+        
+        # add the system
+        system.save()
+        self.log_system(system, models.SystemLogEntry.ADDED)
+        
+        if system.activated:
+            # TODO:  how to de-dup?
+            system.activation_date = datetime.datetime.now(tz.tzutc())
+            system.current_state = models.System.ACTIVATED
+            system.save()
+            self.log_system(system, models.SystemLogEntry.ACTIVATED)
+            self.scheduleSystemPollEvent(system)
+        else:
+            system.current_state = models.System.UNMANAGED
+            system.save()
+            # mark the system as needing activation
+            self.scheduleSystemActivationEvent(system)
+
+        return system
+
+    def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
+        managedSystem.launch_date = int(time.time())
         managedSystem.save()
         target = rbuildermodels.Targets.objects.get(
                     targettype=system.target_type,
@@ -49,14 +116,30 @@ class SystemDBManager(RbuilderDjangoManager):
     def updateSystem(self, system):
         systemTarget = models.system_target.objects.get(
                         target_system_id=system.target_system_id)
-        systemTarget.managed_system.updateFromParser(system)
-        systemTarget.managed_system.save()
-        return systemTarget.managed_system
+        managedSystem = systemTarget.managed_system
+        managedSystem.updateFromParser(system)
+        managedSystem.save()
+        return managedSystem
+
+    def matchSystem(self, system):
+        matchingIPs = models.network_information.objects.filter(
+                        ip_address=system.ip_address)
+        for matchingIP in matchingIPs:
+            sslCert = open(matchingIP.managed_system.ssl_client_certificate).read()
+            if sslCert == system.ssl_client_certificate:
+                return matchingIP.managed_system
+
+        return None
 
     def getSystemByInstanceId(self, instanceId):
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
+        # TODO:  this code is outdated.  Returning plain system every time to move
+        # forward, but we need to fix this to properly handle updates
+        managedSystem = None
+        #managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
-            return inventory.System()
+            sys = models.System()
+            sys.is_manageable = False
+            return sys
         managedSystemObj = managedSystem.getParser()
         if not self.isManageable(managedSystem):
             managedSystemObj.ssl_client_certificate = None
@@ -108,6 +191,13 @@ class SystemDBManager(RbuilderDjangoManager):
         else:
             return None
 
+    def getSystemLog(self, system):
+        systemLog = system.system_log.all()
+        if systemLog:
+            return systemLog[0]
+        else:
+            models.SystemLog()
+
     def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
@@ -124,6 +214,10 @@ class SystemDBManager(RbuilderDjangoManager):
             systemSoftwareVersion.save()
 
     def getSoftwareVersionsForInstanceId(self, instanceId):
+        # TODO:  this code is outdated.  Returning None every time to move
+        # forward, but we need to fix this to properly handle updates
+        return None
+    
         managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
             return None
@@ -208,3 +302,180 @@ class SystemDBManager(RbuilderDjangoManager):
             cachedUpdate.last_refreshed = datetime.datetime.now()
             cachedUpdate.save()
             
+    def getSystemEvent(self, event_id):
+        event = models.SystemEvent.objects.get(pk=event_id)
+        return event
+
+    def deleteSystemEvent(self, event):
+        event = models.SystemEvent.objects.get(pk=event)
+        event.delete()
+
+    def getSystemEvents(self):
+        SystemEvents = models.SystemEvents()
+        SystemEvents.systemEvent = list(models.SystemEvent.objects.all())
+        return SystemEvents
+    
+    def getSystemEventsForProcessing(self):        
+        events = None
+        try:
+            # get events in order based on whether or not they are enabled and what their priority is (descending)
+            current_time = datetime.datetime.now(tz.tzutc())
+            events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemPollCount].all()
+        except models.SystemEvent.DoesNotExist:
+            pass
+        
+        return events
+    
+    def processSystemEvents(self):
+        events = self.getSystemEventsForProcessing()
+        if not events:
+            log.info("No systems events to process")
+            return
+        
+        for event in events:
+            self.dispatchSystemEvent(event)
+
+    def dispatchSystemEvent(self, event):
+        log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
+        
+        # TODO:  dispatch it here, whatever that means
+        rep_client = None
+        try:
+            rep_client = repeater_client.RepeaterClient()
+        except:
+            log.info("Failed loading repeater client, expected in local mode only")
+            
+        network = None        
+        networks = event.system.networks.all()
+        for net in networks:
+            if net.primary:
+                network = net
+                break;
+            
+        if network:
+            try:
+                uuid, job = rep_client.activate(network.public_dns_name)
+                log.info("System %s activation in progress (ip %s, uuid %s)" % (event.system.name, network.public_dns_name, uuid))
+            except Exception, e:
+                tb = sys.exc_info()[2]
+                traceback.print_tb(tb)
+                log.error("Failed activating system %s (id %d): %s" % (event.system.name, event.system.system_id, e))
+        
+        # cleanup now that the event has been processed
+        self.cleanupSystemEvent(event)
+        
+        # create the next event if needed
+        if event.event_type.name == models.SystemEventType.POLL:
+            self.scheduleSystemPollEvent(event.system)
+        else:
+            log.debug("%s events do not trigger a new event creation" % event.event_type.name)
+        
+    def cleanupSystemEvent(self, event):
+        # remove the event since it has been handled
+        log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
+        event.delete()
+            
+    def scheduleSystemPollEvent(self, system):
+        '''Schedule an event for the system to be polled'''
+        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        self.createSystemEvent(system, poll_event)
+        
+    def scheduleSystemPollNowEvent(self, system):
+        '''Schedule an event for the system to be polled now'''
+        # happens on demand, so enable now
+        enable_time = datetime.datetime.now(tz.tzutc())
+        event_type = models.SystemEventType.objects.get(
+            name=models.SystemEventType.POLL_NOW)
+        self.createSystemEvent(system, event_type, enable_time)
+        
+    def scheduleSystemActivationEvent(self, system):
+        '''Schedule an event for the system to be activated'''
+        # activation events happen on demand, so enable now
+        enable_time = datetime.datetime.now(tz.tzutc())
+        activation_event_type = models.SystemEventType.objects.get(
+            name=models.SystemEventType.ACTIVATION)
+        self.createSystemEvent(system, activation_event_type, enable_time)
+            
+    def createSystemEvent(self, system, event_type, enable_time=None):
+        event = None
+        
+        # do not create events for systems that we cannot possibly contact
+        if self.getSystemHasHostInfo(system):
+            if not enable_time:
+                enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            event = models.SystemEvent(system=system, event_type=event_type, 
+                priority=event_type.priority, time_enabled=enable_time)
+            event.save()
+            msg = "System %s event registered and will be enabled on %s" % (event_type.name, enable_time)
+            self.log_system(event.system, msg)
+            log.info(msg)
+        else:
+            log.info("System %s %s event cannot be registered because there is no host information" % (system.name, event_type.name))
+        
+        return event
+        
+    def getSystemHasHostInfo(self, system):
+        hasInfo = False
+        if system and system.networks:
+            for network in system.networks.all():
+                if network.ip_address or network.ipv6_address or network.public_dns_name:
+                    hasInfo = True
+                    break
+                
+        return hasInfo
+        
+    def importTargetSystems(self, targetDrivers):
+        for driver in targetDrivers:
+            try:
+                self.importTargetSystem(driver)
+            except Exception, e:
+                tb = sys.exc_info()[2]
+                traceback.print_tb(tb)
+                log.error("Failed importing systems from target %s: %s" % (driver.cloudType, e))
+        
+    def importTargetSystem(self, driver):
+        log.info("Processing target %s (%s) as user %s" % (driver.cloudName, 
+            driver.cloudType, driver.userId))
+        systems = driver.getAllInstances()
+        systemsAdded = 0
+        if systems:
+            log.info("Importing %d systems from target %s (%s) as user %s" % (len(systems), 
+                driver.cloudName, driver.cloudType, driver.userId))
+            target = rbuildermodels.Targets.objects.filter(targetname=driver.cloudName).get()
+            for sys in systems:
+                db_system = models.System(name=sys.instanceName.getText(),
+                    description=sys.instanceDescription.getText(), target=target)
+                db_system.name = sys.instanceName.getText()
+                db_system.description = sys.instanceDescription.getText()
+                dnsName = sys.dnsName and sys.dnsName.getText() or None
+                
+                # TODO:  remove this and figure out how to de-dup for real
+                nets = models.Network.objects.filter(public_dns_name=dnsName).all()
+                if nets:
+                    log.info("System %s (%s) already exists in inventory" % (db_system.name, dnsName))
+                    continue
+                
+                state = sys.state and sys.state.getText() or "unknown"
+                systemsAdded = systemsAdded +1
+                log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
+                db_system.save()
+                if dnsName:
+                    network = models.Network(system=db_system, public_dns_name=dnsName, primary=True)
+                    network.save()
+                else:
+                    log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))
+                
+                # now add it
+                self.addSystem(db_system)
+            log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
+                driver.cloudName, driver.cloudType, driver.userId))
+
+    def getSystemsLog(self):
+        systemsLog = models.SystemsLog()
+        systemLogEntries = \
+            models.SystemLogEntry.objects.all().order_by('entry_date')
+        systemsLog.systemLogEntry = list(systemLogEntries)
+        return systemsLog
+
+    def getSystemJobs(self, system, job_uuid):
+        return None
