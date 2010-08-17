@@ -227,6 +227,12 @@ class XObjModel(models.Model):
     # dynamically using xobj.
     load_fields = {}
 
+    # Models that reference each other can cause infinite recursion when we
+    # try to serialize them, since we serialize related objects.  Set this
+    # flag to False in a model that has circular references to tell it not to
+    # serialize models that refer to it with foreign keys.
+    serialize_accessors = True
+
     def load_fields_dict(self):
         """
         Returns a dict of field name, field value for each field in
@@ -310,6 +316,16 @@ class XObjModel(models.Model):
             accessors[r.get_accessor_name()] = r
         return accessors
 
+    def get_m2m_accessor_dict(self):
+        """
+        dict of many to many field names and their managers.
+        """
+        m2m_accessors = {}
+        for m in self._meta.get_m2m_with_model():
+            f = m[0]
+            m2m_accessors[f.name] = getattr(self, f.name)
+        return m2m_accessors
+
     def serialize_fields(self, xobj_model, fields, request):
         """
         For each attribute on self (the model), see if it's a field, if so,
@@ -342,14 +358,19 @@ class XObjModel(models.Model):
         for field in fields.keys():
             if isinstance(fields[field], related.RelatedField):
                 val = getattr(self, field)
+                serialized = getattr(fields[field], 'serialized', False)
                 if val:
-                    href_model = type('%s_href' % \
-                        self.__class__.__name__, (object,), {})()
-                    href_model._xobj = xobj.XObjMetadata(
-                                        attributes = {'href':str})
-                    href_model.href = val.get_absolute_url(request)
-                    setattr(xobj_model, field, href_model)
-
+                    if not serialized:
+                        href_model = type('%s_href' % \
+                            self.__class__.__name__, (object,), {})()
+                        href_model._xobj = xobj.XObjMetadata(
+                                            attributes = {'href':str})
+                        href_model.href = val.get_absolute_url(request)
+                        setattr(xobj_model, field, href_model)
+                    else:
+                        val = val.serialize(request)
+                        setattr(xobj_model, field, val)
+                        
     def serialize_accessors(self, xobj_model, accessors, request):
         """
         Builds up an object for each accessor for this model and sets it on
@@ -396,6 +417,42 @@ class XObjModel(models.Model):
                 except exceptions.ObjectDoesNotExist:
                     setattr(xobj_model, accessor, None)
 
+    def serialize_m2m_accessors(self, xobj_model, m2m_accessors, request):
+        """
+        Build up an object for each many to many field on this model and set
+        it on xobj_model.
+        """
+        for m2m_accessor in m2m_accessors:
+            # Look up the name of the related model for the accessor.  Can be
+            # overriden via _xobj.  E.g., The related model name for the
+            # networks accessor on system is "network".
+            if hasattr(m2m_accessors[m2m_accessor].model, '_xobj') and \
+               m2m_accessors[m2m_accessor].model._xobj.tag:
+                    var_name = m2m_accessors[m2m_accessor].model._xobj.tag
+            else:
+                var_name = \
+                    m2m_accessors[m2m_accessor].model._meta.verbose_name
+
+            # Simple object to create for our m2m_accessor
+            m2m_accessor_model = type(m2m_accessor, (object,), {})()
+
+            # In django, m2m_accessors are always lists of other models.
+            setattr(m2m_accessor_model, var_name, [])
+            try:
+                # For each related model in the m2m_accessor, serialize
+                # it, then append the serialized object to the list on
+                # m2m_accessor_model.
+                for rel_mod in getattr(self, m2m_accessor).all():
+                    rel_mod = rel_mod.serialize(request)
+                    getattr(m2m_accessor_model, var_name).append(rel_mod)
+
+                setattr(xobj_model, m2m_accessor, m2m_accessor_model)
+
+            # TODO: do we still need to handle this exception here? not
+            # sure what was throwing it.
+            except exceptions.ObjectDoesNotExist:
+                setattr(xobj_model, m2m_accessor, None)
+
     def serialize_list_fields(self, xobj_model, request):
         """
         Special handling of list_fields.  For each field in list_fields, get
@@ -422,11 +479,14 @@ class XObjModel(models.Model):
         xobj_model = type(name, (object,), {})()
 
         fields = self.get_field_dict()
-        accessors = self.get_accessor_dict()
+        m2m_accessors = self.get_m2m_accessor_dict()
 
         self.serialize_fields(xobj_model, fields, request)
         self.serialize_fk_fields(xobj_model, fields, request)
-        self.serialize_accessors(xobj_model, accessors, request)
+        if self.serialize_accessors:
+            accessors = self.get_accessor_dict()
+            self.serialize_accessors(xobj_model, accessors, request)
+        self.serialize_m2m_accessors(xobj_model, m2m_accessors, request)
         self.serialize_list_fields(xobj_model, request)
 
         return xobj_model
@@ -471,6 +531,17 @@ class DeferredForeignKey(models.ForeignKey):
     def __init__(self, *args, **kwargs):
         self.deferred = True
         super(DeferredForeignKey, self).__init__(*args, **kwargs)
+
+class SerializedForeignKey(models.ForeignKey):
+    """
+    By default, Foreign Keys serialize to hrefs. Use this field class if you
+    want them to serialize to the full xml object representation instead.  Be
+    careful of self referenceing models that can cause infinite recursion.
+    """
+    def __init__(self, *args, **kwargs):
+        self.serialized = True
+        super(SerializedForeignKey, self).__init__(*args, **kwargs)
+    
 
 class DateTimeUtcField(models.DateTimeField):
     """

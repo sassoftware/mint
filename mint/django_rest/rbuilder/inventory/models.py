@@ -113,7 +113,7 @@ class System(modellib.XObjIdModel):
         (MOTHBALLED, MOTHBALLED),
     )
     current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
-    versions = models.ManyToManyField('Version', null=True)
+    installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.ForeignKey('ManagementNode', null=True,
                         related_name='system_set')
 
@@ -234,31 +234,29 @@ class SystemLogEntry(modellib.XObjModel):
     entry = models.CharField(max_length=8092, choices=choices)
     entry_date = modellib.DateTimeUtcField(auto_now_add=True)
 
+class Trove(modellib.XObjModel):
+    class Meta:
+        db_table = 'inventory_trove'
+        unique_together = (('name', 'version', 'flavor'),)
+    trove_id = models.AutoField(primary_key=True)
+    name = models.TextField()
+    version = modellib.SerializedForeignKey('Version')
+    flavor = models.TextField()
+    last_available_update_refresh = modellib.DateTimeUtcField(
+        auto_now_add=True)
+    available_updates = models.ManyToManyField('Version',
+        related_name='available_updates')
+
 class Version(modellib.XObjModel):
+    serialize_accessors = False
     class Meta:
         db_table = 'inventory_version'
-        unique_together = (('name', 'version', 'flavor'),)
     version_id = models.AutoField(primary_key=True)
-    name = models.TextField()
-    version = models.TextField()
+    full = models.TextField()
+    label = models.TextField()
+    revision = models.TextField()
+    ordering = models.TextField()
     flavor = models.TextField()
-    available_updates = models.ManyToManyField('self',
-        through='AvailableUpdate', symmetrical=False,
-        related_name = 'availableUpdates_set')
-
-class AvailableUpdate(modellib.XObjModel):
-    class Meta:
-        db_table = 'inventory_available_update'
-        unique_together = (('software_version', 
-                            'software_version_available_update'),)
-    available_update_id = models.AutoField(primary_key=True)
-    software_version = models.ForeignKey(Version,
-        related_name='software_version_set')
-    # This column is nullable, which basically means that the last time an
-    # update was checked for, none was found.
-    software_version_available_update = models.ForeignKey(Version,
-        related_name = 'software_version_available_update_set')
-    last_refreshed = modellib.DateTimeUtcField(auto_now_add=True)
 
 class SystemJob(modellib.XObjModel):
     class Meta:

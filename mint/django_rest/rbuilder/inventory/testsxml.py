@@ -11,6 +11,7 @@ systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/inventory/systems/1/">
+    <installedSoftware/>
     <activated>True</activated>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
@@ -130,6 +131,7 @@ systems_put_xml = """\
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1/">
+  <installedSoftware/>
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
@@ -207,6 +209,7 @@ system_post_xml = """\
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1/">
+  <installedSoftware/>
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
