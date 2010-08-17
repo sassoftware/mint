@@ -369,7 +369,12 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
         response = self.client.get('/api/inventory/systems/%s/' % system.pk)
-        print response.content
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.system_version_xml % \
+            (self.trove.last_available_update_refresh.isoformat(),
+             self.trove2.last_available_update_refresh.isoformat(),
+             system.created_date.isoformat()))
 
 class SystemEventTestCase(XMLTestCase):
     
