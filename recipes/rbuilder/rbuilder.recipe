@@ -52,7 +52,7 @@ class rBuilderProduct(CPackageRecipe):
         'mod_python:runtime',
         'pcreator:python',
         'PIL:python',
-        'postgresql-server:runtime',
+        'postgresql:runtime',
         'psycopg2:python',
         'pyOpenSSL:python',
         'python-dateutil:python',

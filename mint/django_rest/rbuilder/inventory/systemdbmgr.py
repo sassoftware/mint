@@ -479,3 +479,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
     def getSystemJobs(self, system, job_uuid):
         return None
+    
+    def resolveSystems(self):
+        '''Used to resolve system dups and possibly other issues'''
+        log.info("Resolving system inventory records")

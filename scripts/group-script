@@ -116,6 +116,11 @@ createuser -SDRU postgres jabberd &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=jabberd jabberd &>/dev/null && \
     psql -U jabberd -d jabberd -Xqf /usr/share/rbuilder/jabberd/db-setup.pgsql
 
+# rMake database
+createuser -SDRU postgres rmake &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=rmake rmake &>/dev/null
+
+
 # Migrate the mint config
 "$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
 chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
@@ -206,7 +211,11 @@ then
     [ -e /var/lock/subsys/rmake-node ] && service rmake-node stop
     service rmake stop
     service rmake-messagebus condstop
+    [ -e /var/lock/subsys/rmake3-node ] && service rmake3-node stop
+    [ -e /var/lock/subsys/rmake3 ] && service rmake3 stop
     # Start everything
+    service rmake3 start
+    service rmake3-node start
     service rmake-messagebus start
     service rmake start
     service rmake-node start
