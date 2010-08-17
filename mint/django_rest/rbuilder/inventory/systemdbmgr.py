@@ -425,6 +425,10 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         return hasInfo
         
     def importTargetSystems(self, targetDrivers):
+        if not targetDrivers:
+            log.info("No targets found, nothing to import")
+            return
+        
         for driver in targetDrivers:
             try:
                 self.importTargetSystem(driver)
@@ -447,6 +451,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                     description=sys.instanceDescription.getText(), target=target)
                 db_system.name = sys.instanceName.getText()
                 db_system.description = sys.instanceDescription.getText()
+                db_system.target_system_id = sys.instanceId.getText()
                 dnsName = sys.dnsName and sys.dnsName.getText() or None
                 
                 # TODO:  remove this and figure out how to de-dup for real
