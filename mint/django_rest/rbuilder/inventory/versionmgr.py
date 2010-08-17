@@ -44,8 +44,8 @@ class VersionManager(rbuilder_manager.RbuilderDjangoManager):
         f = str(f)
 
         full = str(v.getFull())
-        ordering=str(v.versions[-1].timeStamp
-        revision=str(v.trailingRevision())
+        ordering = str(v.versions[-1].timeStamp)
+        revision = str(v.trailingRevision())
         label = str(v.trailingLabel())
 
         version, created = models.Version.objects.get_or_create(
