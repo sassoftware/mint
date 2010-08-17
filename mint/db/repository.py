@@ -18,6 +18,7 @@ from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
 from conary.dbstore.sqlerrors import CursorError
+from conary.lib import httputils
 from conary.lib import util
 from conary.repository import errors as reposerrors
 from conary.repository import netclient
@@ -83,6 +84,7 @@ def withNetServer(method):
 class RepositoryManager(object):
     def __init__(self, cfg, db, bypass=False):
         self.cfg = cfg
+        self.proxyMap = httputils.URLOpener.newProxyMapFromDict(cfg.proxy)
         self.db = db
         self.bypass = bypass
         self.reposDBCache = {}
@@ -169,7 +171,7 @@ class RepositoryManager(object):
             entitlements.addEntitlement('*', entitlement)
 
         cache = netclient.ServerCache(repMap, userMap,
-                entitlements=entitlements, proxies=self.cfg.proxy)
+                entitlements=entitlements, proxyMap=self.proxyMap)
         return cache[fqdn]
 
     def getRepos(self, userId=None):
@@ -880,6 +882,6 @@ class MultiShimNetClient(shimclient.ShimNetClient):
         repMap = conarycfg.RepoMap()
         userMap = conarycfg.UserInformation()
         netclient.NetworkRepositoryClient.__init__(self, repMap, userMap,
-                proxy=manager.cfg.proxy)
+                proxyMap=manager.proxyMap)
 
         self.c = MultiShimServerCache(manager, userId)
