@@ -35,6 +35,7 @@ static_files =				\
 	update-top-projects		\
 	validate-proxy-settings		\
 	set-password                    \
+	system-resolver \
 	target-systems-import \
 	repository-log-scrape
 

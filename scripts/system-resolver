@@ -1,0 +1,16 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# All Rights Reserved
+#
+"""
+This script can be used to resolve duplicates in the system inventory
+"""
+
+import sys
+from mint.scripts import system_resolver
+
+if __name__ == '__main__':
+    sys.exit(system_resolver.SystemResolver().run())
+    
