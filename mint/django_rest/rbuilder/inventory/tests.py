@@ -248,10 +248,7 @@ class ManagementNodesTestCase(XMLTestCase):
             data=xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
-        xml = testsxml.management_node_post_xml.replace('<activationDate/>',
-            '<activationDate>%s</activationDate>' % \
-            (management_node.activation_date.isoformat() + '+00:00'))
-        self.assertXMLEquals(response.content, xml % \
+        self.assertXMLEquals(response.content, testsxml.management_node_xml % \
             (management_node.created_date.isoformat() + '+00:00'))
 
 class SystemsTestCase(XMLTestCase):

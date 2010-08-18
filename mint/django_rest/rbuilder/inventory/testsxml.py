@@ -131,7 +131,7 @@ management_node_post_xml = """\
   <systems/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <local/>
+  <local>True</local>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <installedSoftware/>
   <description>test management node desc</description>
@@ -144,7 +144,7 @@ management_node_post_xml = """\
   <systemPtr href="http://testserver/api/inventory/systems/1/"/>
   <localUuid>test management node luuid</localUuid>
   <currentState>activated</currentState>
-  <createdDate>%s</createdDate>
+  <createdDate/>
   <osType/>
 </managementNode>"""
 
