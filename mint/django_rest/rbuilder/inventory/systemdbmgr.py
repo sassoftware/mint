@@ -65,6 +65,16 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             return
         
         managementNode.save()
+        self.log_system(managementNode, models.SystemLogEntry.ADDED)
+        
+        if managementNode.activated:
+            managementNode.activation_date = datetime.datetime.now(tz.tzutc())
+            managementNode.current_state = models.System.ACTIVATED
+            managementNode.save()
+            self.log_system(managementNode, models.SystemLogEntry.ACTIVATED)
+        else:
+            managementNode.current_state = models.System.UNMANAGED
+            managementNode.save()
         
         return managementNode
 
@@ -101,6 +111,9 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                                 % (system2.name, net.public_dns_name))
                         system2.delete()
         
+        if system.is_management_node:
+            return self.addManagementNode(system)
+            
         # add the system
         system.save()
         self.log_system(system, models.SystemLogEntry.ADDED)

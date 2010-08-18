@@ -248,7 +248,10 @@ class ManagementNodesTestCase(XMLTestCase):
             data=xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
-        self.assertXMLEquals(response.content, testsxml.management_node_xml % \
+        management_node_xml = testsxml.management_node_xml.replace('<activationDate/>',
+            '<activationDate>%s</activationDate>' % \
+            (management_node.activation_date.isoformat() + '+00:00'))
+        self.assertXMLEquals(response.content, management_node_xml % \
             (management_node.created_date.isoformat() + '+00:00'))
 
 class SystemsTestCase(XMLTestCase):
@@ -301,6 +304,20 @@ class SystemsTestCase(XMLTestCase):
         
         # make sure we scheduled poll event
         assert(self.mock_scheduleSystemPollEvent_called)
+        
+    def testAddActivatedManagementNodeSystem(self):
+        # create the system
+        system = models.System(name="mgoblue", description="best appliance ever", activated=True)
+        system.is_management_node = True
+        new_system = self.system_manager.addSystem(system)
+        assert(new_system is not None)
+        assert(new_system.current_state == models.System.ACTIVATED)
+        
+        # make sure we did not schedule activation
+        assert(self.mock_scheduleSystemActivationEvent_called == False)
+        
+        # make sure we did not scheduled poll event since this is a management node
+        assert(self.mock_scheduleSystemPollEvent_called == False)
         
     def testGetSystems(self):
         system = self._saveSystem()
