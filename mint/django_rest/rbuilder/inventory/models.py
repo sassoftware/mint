@@ -19,9 +19,10 @@ class Inventory(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory',
-                elements = ['systems', 'log'])
+                elements = ['managementNodes', 'systems', 'log'])
 
     def __init__(self):
+        self.managementNodes = modellib.XObjHrefModel('managementNodes/')
         self.systems = modellib.XObjHrefModel('systems/')
         self.log = modellib.XObjHrefModel('log/')
 
@@ -36,6 +37,18 @@ class Systems(modellib.XObjModel):
 
     def save(self):
         return [s.save() for s in self.system]
+    
+class ManagementNodes(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'managementNodes',
+                elements=['managementNode'])
+    list_fields = ['managementNode']
+    managementNode = []
+
+    def save(self):
+        return [s.save() for s in self.managementNode]
     
 class SystemsLog(modellib.XObjModel):
     class Meta:
@@ -174,9 +187,13 @@ class SystemEvent(modellib.XObjIdModel):
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
 
-class ManagementNode(modellib.XObjModel):
+class ManagementNode(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_management_node'
+    _xobj = xobj.XObjMetadata(
+                tag = 'managementNode',
+                attributes = {'id':str})
+    
     management_node_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, unique=True)
     local = models.NullBooleanField()

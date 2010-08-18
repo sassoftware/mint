@@ -47,6 +47,27 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         Systems.system = list(models.System.objects.all())
         xxx = [s.addJobs() for s in Systems.system]
         return Systems
+    
+    def getManagementNode(self, management_node_id):
+        managementNode = models.ManagementNode.objects.get(pk=management_node_id)
+        self.log_system(managementNode.system, "System data fetched.")
+        return managementNode
+    
+    def getManagementNodes(self):
+        ManagementNodes = models.ManagementNodes()
+        ManagementNodes.managementNode = list(models.ManagementNode.objects.all())
+        return ManagementNodes
+    
+    def addManagementNode(self, managementNode):
+        """Add a management node to the inventory"""
+        
+        if not managementNode:
+            return
+        
+        managementNode.system.save()
+        managementNode.save()
+        
+        return managementNode
 
     def log_system(self, system, log_msg):
         system_log, created = models.SystemLog.objects.get_or_create(

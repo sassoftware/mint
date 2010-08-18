@@ -4,8 +4,56 @@ inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
   <log href="http://testserver/api/inventory/log/"/>
+  <managementNodes href="http://testserver/api/inventory/managementNodes/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
 </inventory>"""
+
+management_nodes_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<managementNodes>
+  <managementNode id="http://testserver/api/inventory/managementNodes/1/">
+    <local>True</local>
+    <managementNodeId>1</managementNodeId>
+    <systemSet/>
+    <system href="http://testserver/api/inventory/systems/1/"/>
+  </managementNode>
+  <managementNode id="http://testserver/api/inventory/managementNodes/2/">
+    <local>False</local>
+    <managementNodeId>2</managementNodeId>
+    <systemSet/>
+    <system href="http://testserver/api/inventory/systems/2/"/>
+  </managementNode>
+</managementNodes>"""
+
+management_node_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<managementNode id="http://testserver/api/inventory/managementNodes/1/">
+  <local>True</local>
+  <managementNodeId>1</managementNodeId>
+  <systemSet/>
+  <system href="http://testserver/api/inventory/systems/1/"/>
+</managementNode>"""
+
+management_node_post_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<managementNode>
+  <system>
+      <networks>
+        <network>
+          <deviceName>eth0</deviceName>
+          <ipAddress>1.1.1.1</ipAddress>
+          <ipv6Address/>
+          <netmask>255.255.255.0</netmask>
+          <portType>lan</portType>
+          <primary/>
+          <publicDnsName>testnetwork.example.com</publicDnsName>
+        </network>
+      </networks>
+      <description>testsystemdescription</description>
+      <name>testsystemname</name>
+  </system>
+  <local>True</local>
+</managementNode>"""
 
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>

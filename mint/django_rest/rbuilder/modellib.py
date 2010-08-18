@@ -493,7 +493,7 @@ class XObjModel(models.Model):
 
 class XObjIdModel(XObjModel):
     """
-    Model that sets an id attribute on itself corrosponding to the href for
+    Model that sets an id attribute on itself corresponding to the href for
     this model.
     """
     class Meta:

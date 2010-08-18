@@ -56,6 +56,24 @@ class InventoryLogService(AbstractInventoryService):
     @return_xml
     def read(self, request):
         return self.sysMgr.getSystemsLog()
+    
+class InventoryManagementNodeService(AbstractInventoryService):
+    
+    @return_xml
+    def read(self, request, management_node_id=None):
+        return self.get(management_node_id)
+    
+    def get(self, management_node_id=None):
+        if management_node_id:
+            return self.sysMgr.getManagementNode(management_node_id)
+        else:
+            return self.sysMgr.getManagementNodes()
+        
+    @requires('managementNode')
+    @return_xml
+    def create(self, request, managementNode):
+        managementNode = self.sysMgr.addManagementNode(managementNode)
+        return managementNode
 
 class InventorySystemsService(AbstractInventoryService):
 
