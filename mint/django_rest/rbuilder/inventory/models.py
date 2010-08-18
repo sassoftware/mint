@@ -151,39 +151,47 @@ class System(modellib.XObjIdModel):
             # add it to the system
             pass
 
-class SystemEventType(modellib.XObjIdModel):
+class EventType(modellib.XObjIdModel):
     class Meta:
-        db_table = 'inventory_system_event_type'
+        db_table = 'inventory_event_type'
         
-    POLL = "poll"
-    POLL_PRIORITY = 50
-    POLL_DESC = "standard polling event"
+    SYSTEM_POLL = "system poll"
+    SYSTEM_POLL_PRIORITY = 50
+    SYSTEM_POLL_DESC = "standard system polling event"
     
-    POLL_NOW = "poll_now"
-    POLL_NOW_PRIORITY = 90
-    POLL_NOW_DESC = "on-demand polling event"
+    SYSTEM_POLL_IMMEDIATE = "immediate system poll"
+    SYSTEM_POLL_IMMEDIATE_PRIORITY = 90
+    SYSTEM_POLL_IMMEDIATE_DESC = "on-demand system polling event"
     
-    ACTIVATION = "activation"
-    ACTIVATION_PRIORITY = 100
-    ACTIVATION_DESC = "on-demand activation event"
+    SYSTEM_ACTIVATION = "system activation"
+    SYSTEM_ACTIVATION_PRIORITY = 100
+    SYSTEM_ACTIVATION_DESC = "on-demand system activation event"
         
-    system_event_type_id = models.AutoField(primary_key=True)
+    event_type_id = models.AutoField(primary_key=True)
     EVENT_TYPES = (
-        (ACTIVATION, ACTIVATION_DESC),
-        (POLL_NOW, POLL_NOW_DESC),
-        (POLL, POLL_DESC),
+        (SYSTEM_ACTIVATION, SYSTEM_ACTIVATION_DESC),
+        (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
+        (SYSTEM_POLL, SYSTEM_POLL_DESC),
     )
     name = models.CharField(max_length=8092, db_index=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
-    
+
+class Job(modellib.XObjModel):
+    class Meta:
+        db_table = 'inventory_job'
+    job_id = models.AutoField(primary_key=True)
+    job_uuid = models.CharField(max_length=64)
+    event_type = models.ForeignKey(EventType)
+    time_created = modellib.DateTimeUtcField(auto_now_add=True)
+
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event'
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, db_index=True,
         related_name='system_event')
-    event_type = modellib.DeferredForeignKey(SystemEventType)
+    event_type = modellib.DeferredForeignKey(EventType)
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
@@ -296,11 +304,10 @@ class Version(modellib.XObjModel):
 class SystemJob(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_job'
-    system_job_id = models.AutoField(primary_key=True)
-    system = models.ForeignKey(System, related_name='system_jobs')
-    job_uuid = models.CharField(max_length=64)
+    system = models.ForeignKey(System)
+    job = models.ForeignKey(Job)
 
-class Job(modellib.XObjModel):
+class Job_(modellib.XObjModel):
     class Meta:
         abstract = True
 

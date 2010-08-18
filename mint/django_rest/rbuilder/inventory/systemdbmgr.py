@@ -371,38 +371,66 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def dispatchSystemEvent(self, event):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
-        # TODO:  dispatch it here, whatever that means
         rep_client = None
         try:
             rep_client = repeater_client.RepeaterClient()
         except:
             log.info("Failed loading repeater client, expected in local mode only")
-            
-        network = None        
         networks = event.system.networks.all()
-        for net in networks:
-            if net.primary:
-                network = net
-                break;
-            
-        if network:
-            try:
-                uuid, job = rep_client.activate(network.public_dns_name)
-                log.info("System %s activation in progress (ip %s, uuid %s)" % (event.system.name, network.public_dns_name, uuid))
-            except Exception, e:
-                tb = sys.exc_info()[2]
-                traceback.print_tb(tb)
-                log.error("Failed activating system %s (id %d): %s" % (event.system.name, event.system.system_id, e))
-        
+        # Extract primary
+        networks = [ x for x in networks if x.primary ]
+
+        activationEvents = set([ models.EventType.SYSTEM_ACTIVATION ])
+        pollEvents = set([
+            models.EventType.SYSTEM_POLL,
+            models.EventType.SYSTEM_POLL_IMMEDIATE,
+        ])
+        if networks:
+            destination = networks[0].public_dns_name
+            eventType = event.event_type.name
+            sputnik = "sputnik1"
+            if eventType in activationEvents:
+                self._runSystemEvent(event, destination,
+                    rep_client.activate, destination, sputnik)
+            elif eventType in pollEvents:
+                self._runSystemEvent(event, destination,
+                    rep_client.poll, destination, sputnik)
+            else:
+                log.error("Unknown event type %s" % eventType)
+
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)
-        
+
         # create the next event if needed
-        if event.event_type.name == models.SystemEventType.POLL:
+        if event.event_type.name == models.EventType.SYSTEM_POLL:
             self.scheduleSystemPollEvent(event.system)
         else:
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
-        
+
+    @classmethod
+    def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
+        systemName = event.system.name
+        eventType = event.event_type.name
+        log.info("System %s (%s), task type '%s' launching" %
+            (systemName, destination, eventType))
+        try:
+            uuid, job = method(*args, **kwargs)
+        except Exception, e:
+            tb = sys.exc_info()[2]
+            traceback.print_tb(tb)
+            log.error("System %s (%s), task type '%s' failed: %s" %
+                (systemName, destination, eventType, str(e)))
+            return None, None
+
+        log.info("System %s (%s), task %s (%s) in progress" %
+            (systemName, destination, uuid, eventType))
+        job = models.Job()
+        job.job_uuid = str(uuid)
+        job.event_type = event.event_type
+        job.system = event.system
+        job.save()
+        return uuid, job
+
     def cleanupSystemEvent(self, event):
         # remove the event since it has been handled
         log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
@@ -410,23 +438,23 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
-        poll_event = models.SystemEventType.objects.get(name=models.SystemEventType.POLL)
+        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         self.createSystemEvent(system, poll_event)
         
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
         enable_time = datetime.datetime.now(tz.tzutc())
-        event_type = models.SystemEventType.objects.get(
-            name=models.SystemEventType.POLL_NOW)
+        event_type = models.EventType.objects.get(
+            name=models.EventType.SYSTEM_POLL_IMMEDIATE)
         self.createSystemEvent(system, event_type, enable_time)
         
     def scheduleSystemActivationEvent(self, system):
         '''Schedule an event for the system to be activated'''
         # activation events happen on demand, so enable now
         enable_time = datetime.datetime.now(tz.tzutc())
-        activation_event_type = models.SystemEventType.objects.get(
-            name=models.SystemEventType.ACTIVATION)
+        activation_event_type = models.EventType.objects.get(
+            name=models.EventType.SYSTEM_ACTIVATION)
         self.createSystemEvent(system, activation_event_type, enable_time)
             
     def createSystemEvent(self, system, event_type, enable_time=None):

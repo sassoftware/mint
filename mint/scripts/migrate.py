@@ -1230,33 +1230,33 @@ class MigrateTo_50(SchemaMigration):
             changed |= db.createIndex("inventory_system_versions",
                 "inventory_system_versions_version_id", "version_id")
 
-        if 'inventory_system_event_type' not in db.tables:
+        tableName = 'inventory_event_type'
+        if tableName not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_system_event_type" (
-                    "system_event_type_id" %(PRIMARYKEY)s,
+                CREATE TABLE "inventory_event_type" (
+                    "event_type_id" %(PRIMARYKEY)s,
                     "name" varchar(8092) NOT NULL,
                     "description" varchar(8092) NOT NULL,
                     "priority" smallint NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_system_event_type'] = []
+            db.tables[tableName] = []
             changed = True
-            changed |= schema._addTableRows(db, 'inventory_system_event_type', 'name',
-                [ dict(name="activation", 
-                       description='on-demand activation event', priority=100),
-                  dict(name="poll", 
-                       description='standard polling event', priority=50),
-                  dict(name="poll_now", 
-                       description='on-demand polling event', priority=90)])
-            
+            changed |= _addTableRows(db, tableName, 'name',
+                [ dict(name="system activation",
+                       description='on-demand system activation event', priority=100),
+                  dict(name="system poll",
+                       description='standard system polling event', priority=50),
+                  dict(name="immediate system poll",
+                       description='on-demand system polling event', priority=90)])
+
         if 'inventory_system_event' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system_event" (
                     "system_event_id" %(PRIMARYKEY)s,
-                    "system_id" integer NOT NULL 
+                    "system_id" integer NOT NULL
                         REFERENCES "inventory_system" ("system_id"),
-                    "event_type_id" integer NOT NULL 
-                        REFERENCES "inventory_system_event_type" 
-                            ("system_event_type_id"),
+                    "event_type_id" integer NOT NULL
+                        REFERENCES "inventory_event_type"
                     "time_created" timestamp with time zone NOT NULL,
                     "time_enabled" timestamp with time zone NOT NULL,
                     "priority" smallint NOT NULL
@@ -1272,18 +1272,33 @@ class MigrateTo_50(SchemaMigration):
                 "inventory_system_event_priority", "priority")
             changed = True
 
-        if 'inventory_system_job' not in db.tables:
+        tableName = 'inventory_job'
+        if tableName not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_system_job" (
-                    "system_job_id" %(PRIMARYKEY)s,
-                    "system_id" integer NOT NULL 
-                        REFERENCES "inventory_system" ("system_id")
-                        ON DELETE CASCADE,
-                    "job_uuid" varchar(64) NOT NULL
+                CREATE TABLE inventory_job (
+                    job_id %(PRIMARYKEY)s,
+                    job_uuid varchar(64) NOT NULL UNIQUE,
+                    job_type integer NOT NULL
+                        REFERENCES inventory_event_type,
+                    time_created timestamp with time zone NOT NULL DEFAULT now()
                 ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_system_job'] = []
+            db.tables[tableName] = []
             changed = True
 
+        tableName = "inventory_system_job"
+        if 'inventory_system_job' not in db.tables:
+            cu.execute("""
+                CREATE TABLE inventory_system_job (
+                    job_id integer NOT NULL
+                        REFERENCES inventory_job
+                        ON DELETE CASCADE,
+                    system_id integer NOT NULL
+                        REFERENCES inventory_system
+                        ON DELETE CASCADE,
+                    UNIQUE(job_id)
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables[tableName] = []
+            changed = True
         return changed
 
 

@@ -154,13 +154,13 @@ class InventorySystemsEventService(AbstractInventoryService):
         else:
             return self.sysMgr.getSystemEvents()
 
-class InventorySystemEventTypesService(AbstractInventoryService):
+class InventoryEventTypesService(AbstractInventoryService):
     @return_xml
     def read(self, request, event_type_id=None):
         if event_type_id:
-            return models.SystemEventType.objects.get(pk=event_type_id)
+            return models.EventType.objects.get(pk=event_type_id)
         else:
-            return models.SystemEventType.objects.all()
+            return models.EventType.objects.all()
 
 class InventoryJobsService(AbstractInventoryService):
     

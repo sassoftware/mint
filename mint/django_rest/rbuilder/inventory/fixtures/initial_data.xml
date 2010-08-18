@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
-    <object pk="1" model="inventory.systemeventtype">
-        <field type="CharField" name="name">activation</field>
+    <object pk="1" model="inventory.eventtype">
+        <field type="CharField" name="name">system activation</field>
         <field type="CharField" name="description">on-demand activation event</field>
         <field type="SmallIntegerField" name="priority">100</field>
     </object>
-    <object pk="2" model="inventory.systemeventtype">
-        <field type="CharField" name="name">poll_now</field>
+    <object pk="2" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system poll</field>
         <field type="CharField" name="description">on-demand polling event</field>
         <field type="SmallIntegerField" name="priority">90</field>
     </object>
-    <object pk="3" model="inventory.systemeventtype">
-        <field type="CharField" name="name">poll</field>
+    <object pk="3" model="inventory.eventtype">
+        <field type="CharField" name="name">system poll</field>
         <field type="CharField" name="description">standard polling event</field>
         <field type="SmallIntegerField" name="priority">50</field>
     </object>
