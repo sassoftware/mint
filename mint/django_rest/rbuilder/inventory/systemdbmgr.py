@@ -376,6 +376,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             rep_client = repeater_client.RepeaterClient()
         except:
             log.info("Failed loading repeater client, expected in local mode only")
+            return
         networks = event.system.networks.all()
         # Extract primary
         networks = [ x for x in networks if x.primary ]
