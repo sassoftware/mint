@@ -1072,6 +1072,7 @@ def _createInventorySchema(db):
                 "available" bool,
                 "activated" bool,
                 "current_state" varchar(32),
+                "is_management_node" bool,
                 "management_node_id" integer
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
@@ -1082,7 +1083,9 @@ def _createInventorySchema(db):
     if 'inventory_management_node' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_management_node" (
-                "system_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "inventory_system" ("system_id"),
+                "system_ptr_id" integer NOT NULL PRIMARY KEY 
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
                 "local" bool
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_management_node'] = []
@@ -1254,7 +1257,7 @@ def _addManagementNode(db):
     # add the system
     changed |= _addTableRows(db, 'inventory_system', 'name',
             [dict(name="Local Management Node", description='Local rBuilder management node',
-                  created_date=datetime.datetime.now(tz.tzutc()))])
+                  is_management_node='true', created_date=datetime.datetime.now(tz.tzutc()))])
     
     # get the system id
     cu = db.cursor()

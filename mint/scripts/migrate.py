@@ -1101,6 +1101,7 @@ class MigrateTo_50(SchemaMigration):
                     "available" bool,
                     "activated" bool,
                     "current_state" varchar(32),
+                    "is_management_node" bool,
                     "management_node_id" integer
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system'] = []
@@ -1111,7 +1112,9 @@ class MigrateTo_50(SchemaMigration):
         if 'inventory_management_node' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_management_node" (
-                    "system_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "inventory_system" ("system_id"),
+                    "system_ptr_id" integer NOT NULL PRIMARY KEY 
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
                     "local" bool
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_management_node'] = []
