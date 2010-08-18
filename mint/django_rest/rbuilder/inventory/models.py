@@ -127,8 +127,10 @@ class System(modellib.XObjIdModel):
     )
     current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
     installed_software = models.ManyToManyField('Trove', null=True)
+    is_management_node = models.NullBooleanField()
+    # the management node managing this system.
     management_node = models.ForeignKey('ManagementNode', null=True,
-                        related_name='system_set')
+                        related_name='systems')
 
     load_fields = [local_uuid]
 
@@ -194,6 +196,10 @@ class ManagementNode(System):
                 tag = 'managementNode',
                 attributes = {'id':str})
     local = models.NullBooleanField()
+    
+    def save(self, *args, **kw):
+        self.is_management_node = True
+        modellib.XObjModel.save(self, *args, **kw)
 
 class Network(modellib.XObjModel):
     class Meta:

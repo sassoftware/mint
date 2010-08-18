@@ -102,6 +102,7 @@ class XMLTestCase(TestCase):
         management_node.activated = True
         management_node.current_state = 'activated'
         management_node.local = True
+        management_node.is_management_node = True
         management_node.save()
 
         network = models.Network()
@@ -227,11 +228,19 @@ class ManagementNodesTestCase(XMLTestCase):
             assert(False) # should not throw exception
         
     def testAddManagementNode(self):
-        # create the system
         management_node = self._saveManagementNode()
         new_management_node = self.system_manager.addManagementNode(management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
+        assert(new_management_node.is_management_node)
+        
+    def testAddManagementNodeSave(self):
+        management_node = self._saveManagementNode()
+        management_node.is_management_node = False
+        assert(management_node.is_management_node == False)
+        # now save, which should automatically set is_management_node
+        management_node.save()
+        assert(management_node.is_management_node)
         
     def testPostManagementNode(self):
         xml = testsxml.management_node_post_xml

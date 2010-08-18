@@ -35,6 +35,7 @@ management_nodes_xml = """\
       <systemJobs/>
       <sslServerCertificate>test management node server cert</sslServerCertificate>
       <systemId>1</systemId>
+      <systems/>
       <scheduledEventStartDate/>
       <launchDate/>
       <local>True</local>
@@ -44,8 +45,8 @@ management_nodes_xml = """\
       <sslClientCertificate>test management node client cert</sslClientCertificate>
       <targetSystemId/>
       <osMinorVersion/>
+      <isManagementNode>True</isManagementNode>
       <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
-      <systemSet/>
       <name>test management node</name>
       <systemPtr href="http://testserver/api/inventory/systems/1/"/>
       <localUuid>test management node luuid</localUuid>
@@ -81,6 +82,7 @@ management_node_xml = """\
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systemId>1</systemId>
+  <systems/>
   <scheduledEventStartDate/>
   <launchDate/>
   <local>True</local>
@@ -90,8 +92,8 @@ management_node_xml = """\
   <sslClientCertificate>test management node client cert</sslClientCertificate>
   <targetSystemId/>
   <osMinorVersion/>
+  <isManagementNode>True</isManagementNode>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
-  <systemSet/>
   <name>test management node</name>
   <systemPtr href="http://testserver/api/inventory/systems/1/"/>
   <localUuid>test management node luuid</localUuid>
@@ -126,6 +128,7 @@ management_node_post_xml = """\
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systemId>1</systemId>
+  <systems/>
   <scheduledEventStartDate/>
   <launchDate/>
   <local/>
@@ -135,8 +138,8 @@ management_node_post_xml = """\
   <sslClientCertificate>test management node client cert</sslClientCertificate>
   <targetSystemId/>
   <osMinorVersion/>
+  <isManagementNode>True</isManagementNode>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
-  <systemSet/>
   <name>test management node</name>
   <systemPtr href="http://testserver/api/inventory/systems/1/"/>
   <localUuid>test management node luuid</localUuid>
@@ -180,6 +183,7 @@ systems_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
+    <isManagementNode/>
     <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
@@ -221,6 +225,7 @@ systems_put_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
+    <isManagementNode/>
     <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
@@ -257,6 +262,7 @@ systems_put_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
+    <isManagementNode/>
     <systemEvent href="http://testserver/api/inventory/systemEvents/2/"/>
     <name>testsystemname</name>
     <localUuid>testsystem2localuuid</localUuid>
@@ -300,6 +306,7 @@ system_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
+  <isManagementNode/>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -378,6 +385,7 @@ system_target_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
+  <isManagementNode/>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <name>testsystemname</name>
@@ -565,6 +573,7 @@ system_version_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
+  <isManagementNode/>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
