@@ -26,7 +26,7 @@ try:
     from rpath_repeater import client as repeater_client
 except:
     log.info("Failed loading repeater client, expected in local mode only")
-    repeater_client = None
+    repeater_client = None # pyflakes=ignore
 
 class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
