@@ -129,7 +129,7 @@ class System(modellib.XObjIdModel):
     installed_software = models.ManyToManyField('Trove', null=True)
     is_management_node = models.NullBooleanField()
     # the management node managing this system.
-    management_node = models.ForeignKey('ManagementNode', null=True,
+    managing_node = models.ForeignKey('ManagementNode', null=True,
                         related_name='systems')
 
     load_fields = [local_uuid]

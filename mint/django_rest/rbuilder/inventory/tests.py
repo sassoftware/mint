@@ -323,13 +323,12 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         response = self.client.get('/api/inventory/systems/')
         self.assertEquals(response.status_code, 200)
-        import epdb; epdb.st()  
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.created_date.isoformat()))
 
     def testGetSystem(self):
         system = self._saveSystem()
-        response = self.client.get('/api/inventory/systems/1/')
+        response = self.client.get('/api/inventory/systems/2/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.created_date.isoformat()))

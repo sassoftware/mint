@@ -423,11 +423,8 @@ class XObjModel(models.Model):
                             rel_mod = rel_mod.serialize(request)
                             getattr(accessor_model, var_name).append(rel_mod)
                     else:
-                        import epdb; epdb.st()  
-                        rel_mod = getattr(self, accessor)
-                        if rel_mod:
-                            rel_mod = rel_mod.serialize()
-                            accessor_model = rel_mod
+                        accessor_model = None
+                        continue
 
                     setattr(xobj_model, accessor, accessor_model)
 

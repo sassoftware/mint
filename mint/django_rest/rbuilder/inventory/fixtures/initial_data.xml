@@ -74,7 +74,7 @@
       <None/>
     </field>
     <field type="NullBooleanField" name="is_management_node">True</field>
-    <field to="inventory.managementnode" name="management_node" rel="ManyToOneRel">
+    <field to="inventory.managementnode" name="managing_node" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"/>
