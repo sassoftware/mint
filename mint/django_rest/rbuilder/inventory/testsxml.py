@@ -35,6 +35,7 @@ management_nodes_xml = """\
       <systemJobs/>
       <sslServerCertificate>test management node server cert</sslServerCertificate>
       <systemId>1</systemId>
+      <systems/>
       <scheduledEventStartDate/>
       <launchDate/>
       <local>True</local>
@@ -45,7 +46,6 @@ management_nodes_xml = """\
       <targetSystemId/>
       <osMinorVersion/>
       <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
-      <systemSet/>
       <name>test management node</name>
       <systemPtr href="http://testserver/api/inventory/systems/1/"/>
       <localUuid>test management node luuid</localUuid>
@@ -81,6 +81,7 @@ management_node_xml = """\
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systemId>1</systemId>
+  <systems/>
   <scheduledEventStartDate/>
   <launchDate/>
   <local>True</local>
@@ -91,7 +92,6 @@ management_node_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
-  <systemSet/>
   <name>test management node</name>
   <systemPtr href="http://testserver/api/inventory/systems/1/"/>
   <localUuid>test management node luuid</localUuid>
@@ -126,6 +126,7 @@ management_node_post_xml = """\
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systemId>1</systemId>
+  <systems/>
   <scheduledEventStartDate/>
   <launchDate/>
   <local/>
@@ -136,7 +137,6 @@ management_node_post_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
-  <systemSet/>
   <name>test management node</name>
   <systemPtr href="http://testserver/api/inventory/systems/1/"/>
   <localUuid>test management node luuid</localUuid>
