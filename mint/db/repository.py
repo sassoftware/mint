@@ -847,6 +847,9 @@ class MultiShimServerCache(object):
         self.userId = userId
         self.cache = {}
 
+        # netclient reaches in to get this
+        self.proxyMap = manager.proxyMap
+
     @staticmethod
     def _getServerName(item):
         #pylint: disable-msg=W0212
