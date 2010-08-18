@@ -22,7 +22,7 @@
         <field type="NullBooleanField" name="available"><None></None></field>
         <field type="CharField" name="current_state"><None></None></field>
         <field to="inventory.managementnode" name="management_node" rel="ManyToOneRel"><None></None></field>
-        <field to="inventory.version" name="versions" rel="ManyToManyRel"></field>
+        <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
     <object pk="2" model="inventory.system">
         <field type="CharField" name="name">mgoblue2</field>
@@ -46,7 +46,7 @@
         <field type="NullBooleanField" name="available"><None></None></field>
         <field type="CharField" name="current_state"><None></None></field>
         <field to="inventory.managementnode" name="management_node" rel="ManyToOneRel"><None></None></field>
-        <field to="inventory.version" name="versions" rel="ManyToManyRel"></field>
+        <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
     <object pk="3" model="inventory.system">
         <field type="CharField" name="name">mgoblue3</field>
@@ -70,7 +70,7 @@
         <field type="NullBooleanField" name="available"><None></None></field>
         <field type="CharField" name="current_state"><None></None></field>
         <field to="inventory.managementnode" name="management_node" rel="ManyToOneRel"><None></None></field>
-        <field to="inventory.version" name="versions" rel="ManyToManyRel"></field>
+        <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
     <object pk="1" model="inventory.systemevent">
         <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
