@@ -1111,17 +1111,11 @@ class MigrateTo_50(SchemaMigration):
         if 'inventory_management_node' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_management_node" (
-                    "management_node_id" %(PRIMARYKEY)s,
-                    "system_id" integer NOT NULL 
-                        REFERENCES "inventory_system" ("system_id")
-                        ON DELETE CASCADE,
+                    "system_ptr_id" integer NOT NULL PRIMARY KEY REFERENCES "inventory_system" ("system_id"),
                     "local" bool
-                )   %(TABLEOPTS)s""" % db.keywords)
+                ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_management_node'] = []
             changed = True
-            changed |= db.createIndex("inventory_management_node",
-                "inventory_management_node_system_id_idx_uq",
-                "system_id", unique=True)
             # add local management node
             changed |= schema._addManagementNode(db)
 

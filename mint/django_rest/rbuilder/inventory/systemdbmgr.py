@@ -50,7 +50,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     
     def getManagementNode(self, management_node_id):
         managementNode = models.ManagementNode.objects.get(pk=management_node_id)
-        self.log_system(managementNode.system, "System data fetched.")
+        self.log_system(managementNode, "System data fetched.")
         return managementNode
     
     def getManagementNodes(self):
@@ -64,7 +64,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         if not managementNode:
             return
         
-        managementNode.system.save()
         managementNode.save()
         
         return managementNode

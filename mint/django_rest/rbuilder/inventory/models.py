@@ -187,15 +187,12 @@ class SystemEvent(modellib.XObjIdModel):
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
 
-class ManagementNode(modellib.XObjIdModel):
+class ManagementNode(System):
     class Meta:
         db_table = 'inventory_management_node'
     _xobj = xobj.XObjMetadata(
                 tag = 'managementNode',
                 attributes = {'id':str})
-    
-    management_node_id = models.AutoField(primary_key=True)
-    system = modellib.DeferredForeignKey(System, unique=True)
     local = models.NullBooleanField()
 
 class Network(modellib.XObjModel):

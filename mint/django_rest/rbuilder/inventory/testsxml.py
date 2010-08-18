@@ -12,47 +12,137 @@ management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNodes>
   <managementNode id="http://testserver/api/inventory/managementNodes/1/">
-    <local>True</local>
-    <managementNodeId>1</managementNodeId>
-    <systemSet/>
-    <system href="http://testserver/api/inventory/systems/1/"/>
-  </managementNode>
-  <managementNode id="http://testserver/api/inventory/managementNodes/2/">
-    <local>False</local>
-    <managementNodeId>2</managementNodeId>
-    <systemSet/>
-    <system href="http://testserver/api/inventory/systems/2/"/>
-  </managementNode>
+      <available/>
+      <activated>True</activated>
+      <sslClientKey>test management node client key</sslClientKey>
+      <osMajorVersion/>
+      <activationDate/>
+      <generatedUuid>test management node guuid</generatedUuid>
+      <reservationId/>
+      <networks>
+        <network>
+          <deviceName>eth0</deviceName>
+          <ipAddress>2.2.2.2</ipAddress>
+          <ipv6Address/>
+          <netmask>255.255.255.0</netmask>
+          <networkId>1</networkId>
+          <portType>lan</portType>
+          <primary/>
+          <publicDnsName>testnetwork.example.com</publicDnsName>
+          <system href="http://testserver/api/inventory/systems/1/"/>
+        </network>
+      </networks>
+      <systemJobs/>
+      <sslServerCertificate>test management node server cert</sslServerCertificate>
+      <systemId>1</systemId>
+      <scheduledEventStartDate/>
+      <launchDate/>
+      <local>True</local>
+      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+      <installedSoftware/>
+      <description>test management node desc</description>
+      <sslClientCertificate>test management node client cert</sslClientCertificate>
+      <targetSystemId/>
+      <osMinorVersion/>
+      <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
+      <systemSet/>
+      <name>test management node</name>
+      <systemPtr href="http://testserver/api/inventory/systems/1/"/>
+      <localUuid>test management node luuid</localUuid>
+      <currentState>activated</currentState>
+      <createdDate>%s</createdDate>
+      <osType/>
+    </managementNode>
 </managementNodes>"""
 
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode id="http://testserver/api/inventory/managementNodes/1/">
+  <available/>
+  <activated>True</activated>
+  <sslClientKey>test management node client key</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
+  <generatedUuid>test management node guuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <deviceName>eth0</deviceName>
+      <ipAddress>2.2.2.2</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <primary/>
+      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <system href="http://testserver/api/inventory/systems/1/"/>
+    </network>
+  </networks>
+  <systemJobs/>
+  <sslServerCertificate>test management node server cert</sslServerCertificate>
+  <systemId>1</systemId>
+  <scheduledEventStartDate/>
+  <launchDate/>
   <local>True</local>
-  <managementNodeId>1</managementNodeId>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <installedSoftware/>
+  <description>test management node desc</description>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
   <systemSet/>
-  <system href="http://testserver/api/inventory/systems/1/"/>
+  <name>test management node</name>
+  <systemPtr href="http://testserver/api/inventory/systems/1/"/>
+  <localUuid>test management node luuid</localUuid>
+  <currentState>activated</currentState>
+  <createdDate>%s</createdDate>
+  <osType/>
 </managementNode>"""
 
 management_node_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode>
-  <system>
-      <networks>
-        <network>
-          <deviceName>eth0</deviceName>
-          <ipAddress>1.1.1.1</ipAddress>
-          <ipv6Address/>
-          <netmask>255.255.255.0</netmask>
-          <portType>lan</portType>
-          <primary/>
-          <publicDnsName>testnetwork.example.com</publicDnsName>
-        </network>
-      </networks>
-      <description>testsystemdescription</description>
-      <name>testsystemname</name>
-  </system>
-  <local>True</local>
+  <available/>
+  <activated>True</activated>
+  <sslClientKey>test management node client key</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
+  <generatedUuid>test management node guuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <deviceName>eth0</deviceName>
+      <ipAddress>2.2.2.2</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <primary/>
+      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <system href="http://testserver/api/inventory/systems/1/"/>
+    </network>
+  </networks>
+  <systemJobs/>
+  <sslServerCertificate>test management node server cert</sslServerCertificate>
+  <systemId>1</systemId>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <local/>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <installedSoftware/>
+  <description>test management node desc</description>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
+  <systemSet/>
+  <name>test management node</name>
+  <systemPtr href="http://testserver/api/inventory/systems/1/"/>
+  <localUuid>test management node luuid</localUuid>
+  <currentState>activated</currentState>
+  <createdDate>%s</createdDate>
+  <osType/>
 </managementNode>"""
 
 systems_xml = """\

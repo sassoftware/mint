@@ -90,6 +90,31 @@ class XMLTestCase(TestCase):
 
         return system
     
+    def _saveManagementNode(self):
+        management_node = models.ManagementNode()
+        management_node.name = 'test management node'
+        management_node.description = 'test management node desc'
+        management_node.local_uuid = 'test management node luuid'
+        management_node.generated_uuid = 'test management node guuid'
+        management_node.ssl_client_certificate = 'test management node client cert'
+        management_node.ssl_client_key = 'test management node client key'
+        management_node.ssl_server_certificate = 'test management node server cert'
+        management_node.activated = True
+        management_node.current_state = 'activated'
+        management_node.local = True
+        management_node.save()
+
+        network = models.Network()
+        network.ip_address = '2.2.2.2'
+        network.device_name = 'eth0'
+        network.public_dns_name = 'testnetwork.example.com'
+        network.netmask = '255.255.255.0'
+        network.port_type = 'lan'
+        network.system = management_node
+        network.save()
+
+        return management_node
+    
     def _saveSystem2(self):
         system = models.System()
         system.name = 'testsystemname2'
@@ -178,23 +203,19 @@ class ManagementNodesTestCase(XMLTestCase):
         self.system_manager = systemdbmgr.SystemDBManager()
         
     def testGetManagementNodes(self):
-        system = self._saveSystem()
-        management_node = models.ManagementNode(system=system, local=True)
-        management_node.save();
-        system2 = self._saveSystem2()
-        management_node2 = models.ManagementNode(system=system2, local=False)
-        management_node2.save();
+        management_node = self._saveManagementNode()
         response = self.client.get('/api/inventory/managementNodes/')
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.management_nodes_xml)
+        self.assertXMLEquals(response.content, 
+            testsxml.management_nodes_xml % (management_node.created_date.isoformat()))
 
     def testGetManagementNode(self):
-        system = self._saveSystem()
-        management_node = models.ManagementNode(system=system, local=True)
+        management_node = self._saveManagementNode()
         management_node.save();
         response = self.client.get('/api/inventory/managementNodes/1/')
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.management_node_xml)
+        self.assertXMLEquals(response.content, 
+            testsxml.management_node_xml % (management_node.created_date.isoformat()))
         
     def testAddManagementNodeNull(self):
         
@@ -207,8 +228,7 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testAddManagementNode(self):
         # create the system
-        system = self._saveSystem()
-        management_node = models.ManagementNode(system=system, local=True)
+        management_node = self._saveManagementNode()
         new_management_node = self.system_manager.addManagementNode(management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
@@ -221,9 +241,9 @@ class ManagementNodesTestCase(XMLTestCase):
         management_node = models.ManagementNode.objects.get(pk=1)
         xml = testsxml.management_node_post_xml.replace('<activationDate/>',
             '<activationDate>%s</activationDate>' % \
-            (management_node.system.activation_date.isoformat() + '+00:00'))
+            (management_node.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, xml % \
-            (management_node.system.created_date.isoformat() + '+00:00'))
+            (management_node.created_date.isoformat() + '+00:00'))
 
 class SystemsTestCase(XMLTestCase):
     fixtures = ['system_job']
