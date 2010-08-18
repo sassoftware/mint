@@ -116,6 +116,10 @@ class BaseManager(models.Manager):
 
         for key, val in obj.__dict__.items():
             if key in fields.keys():
+                # special case for fields that may not exist at load time or we
+                # want to ignore for other reasons
+                if key in model.load_ignore_fields:
+                    continue;
                 # Special case for FK fields which should be hrefs.
                 if isinstance(fields[key], related.RelatedField):
                     val = fields[key].related.parent_model.objects.load_from_href(
@@ -226,6 +230,11 @@ class XObjModel(models.Model):
     # Allows us to load a model from the db to match one we've built
     # dynamically using xobj.
     load_fields = {}
+    
+    # Fields that we want ignore when loading a model.  This is most often used
+    # with multi-table inheritance when we are creating an object that subclasses
+    # another.  We want to ignore the reference to its parent.
+    load_ignore_fields = {}
 
     # Models that reference each other can cause infinite recursion when we
     # try to serialize them, since we serialize related objects.  Set this

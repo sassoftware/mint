@@ -197,6 +197,8 @@ class ManagementNode(System):
                 attributes = {'id':str})
     local = models.NullBooleanField()
     
+    load_ignore_fields = ["system_ptr"]
+    
     def save(self, *args, **kw):
         self.is_management_node = True
         modellib.XObjModel.save(self, *args, **kw)
