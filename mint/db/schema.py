@@ -1256,8 +1256,10 @@ def _addManagementNode(db):
     
     # add the system
     changed |= _addTableRows(db, 'inventory_system', 'name',
-            [dict(name="Local Management Node", description='Local rBuilder management node',
-                  is_management_node='true', created_date=datetime.datetime.now(tz.tzutc()))])
+            [dict(name="Local Management Node", 
+                  description='Local rBuilder management node',
+                  is_management_node='true', 
+                  created_date=str(datetime.datetime.now(tz.tzutc())))])
     
     # get the system id
     cu = db.cursor()

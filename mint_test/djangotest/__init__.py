@@ -52,7 +52,6 @@ class DjangoTest(fixtures.FixturedUnitTest):
         # Need to prepare settings.py before importing any django modules.
         self.setUpDjangoSettingsModule()
         self.importDjango()
-        self.client = Client()
 
     def _import(self):
         for k, v in unimported.items():
