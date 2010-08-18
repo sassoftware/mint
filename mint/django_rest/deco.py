@@ -61,7 +61,8 @@ def requires(model_name):
             to_underscore(root_node)
             underscore_xml = doc.toxml(encoding='UTF-8')
             built_model = xobj.parse(underscore_xml)#, documentClass=DjangoDocument, typeMap=models.type_map)
-            built_model = getattr(built_model, model_name)
+            model_xml = str_to_underscore(model_name)
+            built_model = getattr(built_model, model_xml)
             model = modellib.type_map[model_name].objects.load_from_object(built_model, request)
             # loaded_model = models.type_map[model_name].objects.load(built_model)
             # if not loaded_model:
