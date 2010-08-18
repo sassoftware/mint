@@ -373,7 +373,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         rep_client = None
-        if repeaterClient is None:
+        if repeater_client is None:
             log.info("Failed loading repeater client, expected in local mode only")
             return
         networks = event.system.networks.all()
