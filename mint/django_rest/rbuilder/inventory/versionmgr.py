@@ -8,9 +8,10 @@ from datetime import datetime
 from dateutil import tz
 
 from mint.db.database import Database
-from mint.rest.database import Database as RestDatabase
+from mint.rest.db.database import Database as RestDatabase
 
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder import rbuilder_manager
 from mint.django_rest.rbuilder.inventory import models 
 
 
