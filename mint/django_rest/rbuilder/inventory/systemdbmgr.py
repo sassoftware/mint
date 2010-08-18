@@ -26,6 +26,7 @@ try:
     from rpath_repeater import client as repeater_client
 except:
     log.info("Failed loading repeater client, expected in local mode only")
+    repeater_client = None
 
 class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
@@ -372,9 +373,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         rep_client = None
-        try:
-            rep_client = repeater_client.RepeaterClient()
-        except:
+        if repeaterClient is None:
             log.info("Failed loading repeater client, expected in local mode only")
             return
         networks = event.system.networks.all()
