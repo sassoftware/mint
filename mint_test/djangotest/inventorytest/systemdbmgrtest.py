@@ -65,7 +65,7 @@ END:VCALENDAR"""
             created=created))
 
     def setUp(self):
-        DjangoTest.setUp(self)
+        djangotest.DjangoTest.setUp(self)
         self._data()
 
     def testLaunchSystem(self):

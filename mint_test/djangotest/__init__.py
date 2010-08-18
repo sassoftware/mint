@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
+import testsuite
+
 import os
 import sys
 
 import mint_test
-
-from django.test import TestCase
-from django.test.client import Client
+from mint_test import fixtures
 
 builtins = sys.modules.keys()
 unimported = {} #pepflakes ignore
 
-class DjangoTest(TestCase):
+class DjangoTest(fixtures.FixturedUnitTest):
 
     def setUpDjangoSettingsModule(self):
         settingsFile = os.path.join(mint_test.__path__[0], 'server/settings.py.in')
@@ -47,7 +47,7 @@ class DjangoTest(TestCase):
     def setUp(self):
         unimported = {}
         self._unImport()
-        TestCase.setUp(self)
+        fixtures.FixturedUnitTest.setUp(self)
         self.db, self.data = self.loadFixture('Empty')
         # Need to prepare settings.py before importing any django modules.
         self.setUpDjangoSettingsModule()
