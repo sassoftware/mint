@@ -174,11 +174,12 @@ class SystemEvent(modellib.XObjIdModel):
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
 
-# TODO: is this needed, or should we just use a recursive fk on ManagedSystem?
 class ManagementNode(modellib.XObjModel):
-    system = models.OneToOneField(System)
-    # TODO: what extra columns might we want to store about a management node,
-    # if any?
+    class Meta:
+        db_table = 'inventory_management_node'
+    management_node_id = models.AutoField(primary_key=True)
+    system = modellib.DeferredForeignKey(System, unique=True)
+    local = models.NullBooleanField()
 
 class Network(modellib.XObjModel):
     class Meta:

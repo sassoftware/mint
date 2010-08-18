@@ -21,7 +21,8 @@ L{migrate<mint.migrate>} module.
 '''
 
 import logging
-import time
+import datetime
+from dateutil import tz
 from conary.dbstore import sqlerrors, sqllib
 
 log = logging.getLogger(__name__)
@@ -1077,21 +1078,23 @@ def _createInventorySchema(db):
         changed = True
         changed |= db.createIndex("inventory_system",
             "inventory_system_target_id_idx", "target_id")
-
-    if 'inventory_managementnode' not in db.tables:
+        
+    if 'inventory_management_node' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_managementnode" (
-                "id" %(PRIMARYKEY)s,
-                "system_id" integer NOT NULL UNIQUE 
+            CREATE TABLE "inventory_management_node" (
+                "management_node_id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL 
                     REFERENCES "inventory_system" ("system_id")
-                    ON DELETE CASCADE
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_managementnode'] = []
+                    ON DELETE CASCADE,
+                "local" bool
+            )   %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_management_node'] = []
         changed = True
-        changed |= db.createIndex("inventory_managementnode",
-            "inventory_managementnode_system_id_idx_uq",
+        changed |= db.createIndex("inventory_management_node",
+            "inventory_management_node_system_id_idx_uq",
             "system_id", unique=True)
-                    
+        # add local management node
+        changed |= _addManagementNode(db)
 
     if 'inventory_network' not in db.tables:
         cu.execute("""
@@ -1249,6 +1252,26 @@ def _createInventorySchema(db):
         db.tables['inventory_system_job'] = []
         changed = True
 
+    return changed
+
+def _addManagementNode(db):
+    changed = False
+    
+    # add the system
+    changed |= _addTableRows(db, 'inventory_system', 'name',
+            [dict(name="Local Management Node", description='Local rBuilder management node',
+                  created_date=datetime.datetime.now(tz.tzutc()))])
+    
+    # get the system id
+    cu = db.cursor()
+    cu.execute("SELECT system_id from inventory_system where name='Local Management Node'")
+    ids = cu.fetchall()
+    if len(ids) == 1:
+        systemId = ids[0][0]
+        # add the management node
+        changed |= _addTableRows(db, 'inventory_management_node', 'system_id',
+                [dict(system_id=systemId, local='true')])
+    
     return changed
 
 def _addTableRows(db, table, uniqueKey, rows):

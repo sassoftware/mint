@@ -1073,7 +1073,8 @@ class MigrateTo_50(SchemaMigration):
             "inventory_software_version_update",
             "inventory_software_version",
             "job_managed_system",
-            "inventory_managed_system")
+            "inventory_managed_system",
+            "inventory_managementnode")
 
         if 'inventory_system' not in db.tables:
             cu.execute("""
@@ -1106,20 +1107,23 @@ class MigrateTo_50(SchemaMigration):
             changed = True
             changed |= db.createIndex("inventory_system",
                 "inventory_system_target_id_idx", "target_id")
-
-        if 'inventory_managementnode' not in db.tables:
+            
+        if 'inventory_management_node' not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_managementnode" (
-                    "id" %(PRIMARYKEY)s,
-                    "system_id" integer NOT NULL UNIQUE 
+                CREATE TABLE "inventory_management_node" (
+                    "management_node_id" %(PRIMARYKEY)s,
+                    "system_id" integer NOT NULL 
                         REFERENCES "inventory_system" ("system_id")
-                ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_managementnode'] = []
+                        ON DELETE CASCADE,
+                    "local" bool
+                )   %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_management_node'] = []
             changed = True
-            changed |= db.createIndex("inventory_managementnode",
-                "inventory_managementnode_system_id_idx_uq",
+            changed |= db.createIndex("inventory_management_node",
+                "inventory_management_node_system_id_idx_uq",
                 "system_id", unique=True)
-                        
+            # add local management node
+            changed |= schema._addManagementNode(db)
 
         if 'inventory_network' not in db.tables:
             cu.execute("""
@@ -1283,7 +1287,7 @@ class MigrateTo_50(SchemaMigration):
             db.tables['inventory_system_job'] = []
             changed = True
 
-            return changed
+        return changed
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
