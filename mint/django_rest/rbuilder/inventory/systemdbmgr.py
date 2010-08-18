@@ -48,7 +48,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         Systems.system = list(models.System.objects.all())
         xxx = [s.addJobs() for s in Systems.system]
         return Systems
-    
+
     def getManagementNode(self, management_node_id):
         managementNode = models.ManagementNode.objects.get(pk=management_node_id)
         self.log_system(managementNode, "System data fetched.")
@@ -372,10 +372,10 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def dispatchSystemEvent(self, event):
         log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
-        rep_client = None
         if repeater_client is None:
             log.info("Failed loading repeater client, expected in local mode only")
             return
+        rep_client = repeater_client.RepeaterClient()
         networks = event.system.networks.all()
         # Extract primary
         networks = [ x for x in networks if x.primary ]
