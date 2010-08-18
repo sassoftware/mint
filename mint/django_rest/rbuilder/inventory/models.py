@@ -257,10 +257,22 @@ class Trove(modellib.XObjModel):
     name = models.TextField()
     version = modellib.SerializedForeignKey('Version')
     flavor = models.TextField()
+    is_top_level = models.BooleanField()
     last_available_update_refresh = modellib.DateTimeUtcField(
         auto_now_add=True)
     available_updates = models.ManyToManyField('Version',
         related_name='available_updates')
+
+    def _is_top_level_group(self):
+        return self.name.startswith('group-') and \
+            self.name.endswith('-appliance')
+
+    def save(self, *args, **kw):
+        if self._is_top_level_group():
+            self.is_top_level = True
+        else:
+            self.is_top_level = False
+        modellib.XObjModel.save(self, *args, **kw)
 
 class Version(modellib.XObjModel):
     serialize_accessors = False

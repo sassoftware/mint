@@ -505,6 +505,7 @@ system_version_xml = """\
         </version>
       </availableUpdates>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+      <isTopLevel>True</isTopLevel>
       <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
       <name>group-clover-appliance</name>
       <troveId>1</troveId>
@@ -520,6 +521,7 @@ system_version_xml = """\
     <trove>
       <availableUpdates/>
       <flavor>desktop is: x86_64</flavor>
+      <isTopLevel>False</isTopLevel>
       <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
       <name>emacs</name>
       <troveId>2</troveId>
