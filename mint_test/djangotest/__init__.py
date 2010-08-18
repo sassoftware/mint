@@ -30,11 +30,13 @@ class DjangoTest(fixtures.FixturedUnitTest):
         from mint.django_rest.rbuilder import models as rbuildermodels
         from mint.django_rest.rbuilder import inventory
         from mint.django_rest.rbuilder.inventory import systemdbmgr
+        from mint.django_rest.rbuilder.inventory import versionmgr
         from mint.django_rest.rbuilder.inventory import models as systemmodels
         self.inventory = inventory
         self.rbuildermodels = rbuildermodels
         self.systemdbmgr = systemdbmgr
         self.systemmodels = systemmodels
+        self.versionmgr = versionmgr
 
     def _unImport(self):
         # "Unimport" anything that was imported so the next test will have a new
