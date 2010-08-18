@@ -1241,7 +1241,7 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables[tableName] = []
             changed = True
-            changed |= _addTableRows(db, tableName, 'name',
+            changed |= schema._addTableRows(db, tableName, 'name',
                 [ dict(name="system activation",
                        description='on-demand system activation event', priority=100),
                   dict(name="system poll",
