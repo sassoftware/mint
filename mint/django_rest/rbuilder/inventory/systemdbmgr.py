@@ -46,7 +46,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def getSystems(self):
         Systems = models.Systems()
         Systems.system = list(models.System.objects.all())
-        xxx = [s.addJobs() for s in Systems.system]
+        for s in Systems.system:
+            s.addJobs()
         return Systems
 
     def getManagementNode(self, management_node_id):
