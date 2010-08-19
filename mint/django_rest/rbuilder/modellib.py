@@ -216,9 +216,13 @@ class SystemManager(BaseManager):
         if the system already exists.
         """
         
-        dupCheckFieldsDict = [
-            dict(local_uuid=model_inst.local_uuid, generated_uuid=model_inst.generated_uuid)
-        ]
+        loaded_model = None
+        dupCheckFieldsDict = []
+        
+        # only check uuids if they are not none
+        if model_inst.local_uuid and model_inst.generated_uuid:
+            dupCheckFieldsDict.append(dict(local_uuid=model_inst.local_uuid, 
+                generated_uuid=model_inst.generated_uuid))
         
         for d in dupCheckFieldsDict:    
             loaded_model = self.tryLoad(d)
