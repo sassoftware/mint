@@ -40,8 +40,12 @@ class VersionManager(rbuilder_manager.RbuilderDjangoManager):
     def set_installed_software(self, system, installed_versions):
         for installed_version in installed_versions:
             trove = self.trove_from_nvf(installed_version)
-            installed_software, created = \
-                system.installed_software.get_or_create(version=trove.version)
+            matching_troves = system.installed_software.filter(
+                name=trove.name, version=trove.version, 
+                flavor=trove.flavor)
+            if not matching_troves:
+                system.installed_software.add(trove)
+                system.save()
 
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)

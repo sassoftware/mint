@@ -1210,8 +1210,8 @@ def _createInventorySchema(db):
                 job_id %(PRIMARYKEY)s,
                 job_uuid varchar(64) NOT NULL UNIQUE,
                 job_type integer NOT NULL
-                    REFERENCES inventory_event_type,
-                time_created timestamp with time zone NOT NULL DEFAULT now()
+                    REFERENCES inventory_event_type (event_type_id),
+                time_created timestamp with time zone NOT NULL DEFAULT now
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True

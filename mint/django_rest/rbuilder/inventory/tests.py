@@ -354,7 +354,7 @@ class SystemsTestCase(XMLTestCase):
             data=systems_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         systems = models.System.objects.all()
-        assert(len(systems) == 2)
+        assert(len(systems) == 3)
         
     def testPostSystem(self):
         system_xml = testsxml.system_post_xml
