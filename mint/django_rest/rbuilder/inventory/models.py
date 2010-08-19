@@ -212,7 +212,7 @@ class SystemEvent(modellib.XObjIdModel):
     
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, db_index=True,
-        related_name='system_event')
+        related_name='system_events')
     event_type = modellib.DeferredForeignKey(EventType)
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
