@@ -509,7 +509,6 @@ system_event_post_xml = """\
     <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
     <system href="http://testserver/api/inventory/systems/2/"/>
     <priority>50</priority>
-    <timeEnabled>%s</timeEnabled>
 </systemEvent>
 """
 

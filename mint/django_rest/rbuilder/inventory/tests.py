@@ -637,9 +637,7 @@ class SystemEventTestCase(XMLTestCase):
     def testAddSystemEventNull(self):
         
         try:
-            # create the system
-            systemEvent = None
-            self.system_manager.addSystemEvent(systemEvent)
+            self.system_manager.addSystemSystemEvent(None, None)
         except:
             assert(False) # should not throw exception
         
@@ -651,7 +649,7 @@ class SystemEventTestCase(XMLTestCase):
             time_enabled=datetime.datetime.now(tz.tzutc()))
         systemEvent.save()
         assert(systemEvent is not None)
-        self.system_manager.addSystemEvent(systemEvent)
+        self.system_manager.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called)
         
     def testAddSystemPollNowEvent(self):
@@ -662,7 +660,7 @@ class SystemEventTestCase(XMLTestCase):
             time_enabled=datetime.datetime.now(tz.tzutc()))
         systemEvent.save()
         assert(systemEvent is not None)
-        self.system_manager.addSystemEvent(systemEvent)
+        self.system_manager.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called)
         
     def testAddSystemPollEvent(self):
@@ -673,22 +671,20 @@ class SystemEventTestCase(XMLTestCase):
             time_enabled=datetime.datetime.now(tz.tzutc()))
         systemEvent.save()
         assert(systemEvent is not None)
-        self.system_manager.addSystemEvent(systemEvent)
+        self.system_manager.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called == False)
         
     def testPostSystemEvent(self):
         url = '/api/inventory/systems/%d/systemEvent/' % self.system.system_id
-        system_event_post_xml = testsxml.system_event_post_xml % \
-            (datetime.datetime.now())
+        system_event_post_xml = testsxml.system_event_post_xml
         response = self.client.post(url,
             data=system_event_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system_event = models.SystemEvent.objects.get(pk=1)
-        system_event_xml = testsxml.system_event_xml.replace('<timeEnabled/>',
-            '<timeEnabled>%s</timeEnabled>' % \
-            (system_event.time_enabled.isoformat() + '+00:00'))
-        self.assertXMLEquals(response.content, system_event_xml % \
-            (system_event.created_date.isoformat() + '+00:00'))
+        system_event_xml = testsxml.system_event_xml % \
+            (system_event.time_created.isoformat() + '+00:00',
+            system_event.time_enabled.isoformat() + '+00:00')
+        self.assertXMLEquals(response.content, system_event_xml)
         
 class SystemEventProcessingTestCase(XMLTestCase):
     

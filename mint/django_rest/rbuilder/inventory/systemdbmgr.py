@@ -350,12 +350,22 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         SystemEvents.systemEvent = list(models.SystemEvent.objects.all())
         return SystemEvents
     
-    def addSystemEvent(self, systemEvent):
+    def getSystemSystemEvents(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        events = models.SystemEvent.objects.all(system=system)
+        return events
+    
+    def getSystemSystemEvent(self, system_id, system_event_id):
+        event = models.SystemEvent.objects.get(pk=system_event_id)
+        return event
+    
+    def addSystemSystemEvent(self, system_id, systemEvent):
         """Add a system event to a system"""
         
-        if not systemEvent:
+        if not system_id or not systemEvent:
             return
         
+        systemEvent.system = models.System.objects.get(pk=system_id)
         systemEvent.save()
         
         dispatchNow = False
