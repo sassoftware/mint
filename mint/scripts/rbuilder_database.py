@@ -44,7 +44,7 @@ class RBuilderDatabase(scriptlibrary.SingletonScript):
         if self.options.create:
             print >> sys.stderr, "Force-creating database schema ..."
             db.loadSchema()
-            schema.createSchema(db)
+            schema.createSchema(db, cfg=self.cfg)
         else:
             schema.loadSchema(db, self.cfg, self.options.should_migrate)
             if self.options.should_migrate and db.driver == 'sqlite':
