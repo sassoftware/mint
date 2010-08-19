@@ -1278,7 +1278,7 @@ class MigrateTo_50(SchemaMigration):
                 CREATE TABLE inventory_job (
                     job_id %(PRIMARYKEY)s,
                     job_uuid varchar(64) NOT NULL UNIQUE,
-                    job_type integer NOT NULL
+                    event_type_id integer NOT NULL
                         REFERENCES inventory_event_type,
                     time_created timestamp with time zone NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
