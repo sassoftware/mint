@@ -333,6 +333,7 @@ class Version(modellib.XObjModel):
 class SystemJob(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_job'
+    system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
     job = models.ForeignKey(Job)
 
