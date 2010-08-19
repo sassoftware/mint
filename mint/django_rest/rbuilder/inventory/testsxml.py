@@ -21,7 +21,6 @@ management_nodes_xml = """\
     <managingNode/>
     <reservationId/>
     <networks/>
-    <systemJobs/>
     <sslServerCertificate/>
     <systemId>1</systemId>
     <launchingUser/>
@@ -36,6 +35,7 @@ management_nodes_xml = """\
     <targetSystemId/>
     <osMinorVersion/>
     <isManagementNode>True</isManagementNode>
+    <systemjobSet/>
     <systemEvent href="http://testserver/api/inventory/systemEvents/1/"/>
     <name>Local Management Node</name>
     <target/>
@@ -67,7 +67,6 @@ management_nodes_xml = """\
         <system href="http://testserver/api/inventory/systems/2/"/>
       </network>
     </networks>
-    <systemJobs/>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <systemId>2</systemId>
     <launchingUser/>
@@ -82,6 +81,7 @@ management_nodes_xml = """\
     <targetSystemId/>
     <osMinorVersion/>
     <isManagementNode>True</isManagementNode>
+    <systemjobSet/>
     <systemEvent href="http://testserver/api/inventory/systemEvents/2/"/>
     <name>test management node</name>
     <target/>
@@ -118,7 +118,6 @@ management_node_xml = """\
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -133,6 +132,7 @@ management_node_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <isManagementNode>True</isManagementNode>
+  <systemjobSet/>
   <systemEvent href="http://testserver/api/inventory/systemEvents/2/"/>
   <name>test management node</name>
   <target/>
@@ -166,7 +166,7 @@ management_node_post_xml = """\
       <system href="http://testserver/api/inventory/systems/1/"/>
     </network>
   </networks>
-  <systemJobs/>
+  <systemjobSet/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systems/>
   <scheduledEventStartDate/>
@@ -201,7 +201,6 @@ systems_xml = """\
     <managingNode/>
     <reservationId/>
     <networks/>
-    <systemJobs/>
     <sslServerCertificate/>
     <systemId>1</systemId>
     <launchingUser/>
@@ -244,13 +243,6 @@ systems_xml = """\
         <system href="http://testserver/api/inventory/systems/2/"/>
       </network>
     </networks>
-    <systemJobs>
-      <systemjob>
-        <jobUuid>ddddd</jobUuid>
-        <system href="http://testserver/api/inventory/systems/2/"/>
-        <systemJobId>1</systemJobId>
-      </systemjob>
-    </systemJobs>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemId>2</systemId>
     <launchingUser/>
@@ -377,13 +369,6 @@ system_xml = """\
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
-  <systemJobs>
-    <systemjob>
-      <jobUuid>ddddd</jobUuid>
-      <system href="http://testserver/api/inventory/systems/2/"/>
-      <systemJobId>1</systemJobId>
-    </systemjob>
-  </systemJobs>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -465,13 +450,6 @@ system_target_xml = """\
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
-  <systemJobs>
-    <systemjob>
-      <jobUuid>ddddd</jobUuid>
-      <system href="http://testserver/api/inventory/systems/2/"/>
-      <systemJobId>1</systemJobId>
-    </systemjob>
-  </systemJobs>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -498,7 +476,7 @@ system_events_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvents>
     <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
-        <eventType href="http://testserver/api/inventory/systemEventTypes/3/"/>
+        <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
         <system href="http://testserver/api/inventory/systems/2/"/>
         <timeCreated>%s</timeCreated>
         <priority>50</priority>
@@ -506,7 +484,7 @@ system_events_xml = """\
         <systemEventId>1</systemEventId>
     </systemEvent>
     <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
-        <eventType href="http://testserver/api/inventory/systemEventTypes/1/"/>
+        <eventType href="http://testserver/api/inventory/eventTypes/1/"/>
         <system href="http://testserver/api/inventory/systems/2/"/>
         <timeCreated>%s</timeCreated>
         <priority>100</priority>
@@ -519,7 +497,7 @@ system_events_xml = """\
 system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
-    <eventType href="http://testserver/api/inventory/systemEventTypes/3/"/>
+    <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
     <system href="http://testserver/api/inventory/systems/2/"/>
     <timeCreated>%s</timeCreated>
     <priority>50</priority>
@@ -657,13 +635,6 @@ system_version_xml = """\
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
-  <systemJobs>
-    <systemjob>
-      <jobUuid>ddddd</jobUuid>
-      <system href="http://testserver/api/inventory/systems/2/"/>
-      <systemJobId>1</systemJobId>
-    </systemjob>
-  </systemJobs>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
