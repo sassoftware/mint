@@ -33,6 +33,15 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def __init__(self, *args, **kw):
         rbuilder_manager.RbuilderDjangoManager.__init__(self, *args, **kw)
 
+    def getEventTypes(self):
+        EventTypes = models.EventTypes()
+        EventTypes.eventType = list(models.EventType.objects.all())
+        return EventTypes
+    
+    def getEventType(self, event_type_id):
+        eventType = models.EventType.objects.get(pk=event_type_id)
+        return eventType
+
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
         self.log_system(system, "System data fetched.")

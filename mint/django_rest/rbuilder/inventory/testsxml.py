@@ -3,10 +3,50 @@
 inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
+  <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <log href="http://testserver/api/inventory/log/"/>
   <managementNodes href="http://testserver/api/inventory/managementNodes/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
 </inventory>"""
+
+event_type_xml="""\
+<?xml version="1.0" encoding="UTF-8"?>
+<eventType id="http://testserver/api/inventory/eventTypes/1/">
+  <systemeventSet href="http://testserver/api/inventory/systemEvents/1/"/>
+  <description>on-demand activation event</description><priority>110</priority>
+  <jobSet/>
+  <eventTypeId>1</eventTypeId>
+  <name>system activation</name>
+</eventType>"""
+
+event_types_xml="""\
+<?xml version="1.0" encoding="UTF-8"?>
+<eventTypes>
+  <eventType id="http://testserver/api/inventory/eventTypes/1/">
+    <systemeventSet href="http://testserver/api/inventory/systemEvents/1/"/>
+    <description>on-demand activation event</description>
+    <priority>110</priority>
+    <jobSet/>
+    <eventTypeId>1</eventTypeId>
+    <name>system activation</name>
+  </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/2/">
+    <systemeventSet href="http://testserver/api/inventory/systemEvents/2/"/>
+    <description>on-demand polling event</description>
+    <priority>105</priority>
+    <jobSet/>
+    <eventTypeId>2</eventTypeId>
+    <name>immediate system poll</name>
+  </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/3/">
+    <systemeventSet href="http://testserver/api/inventory/systemEvents/3/"/>
+    <description>standard polling event</description>
+    <priority>50</priority>
+    <jobSet/>
+    <eventTypeId>3</eventTypeId>
+    <name>system poll</name>
+  </eventType>
+</eventTypes>"""
 
 management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>

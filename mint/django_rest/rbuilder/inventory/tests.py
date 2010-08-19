@@ -498,6 +498,25 @@ class SystemVersionsTestCase(XMLTestCase):
             (self.trove.last_available_update_refresh.isoformat(),
              self.trove2.last_available_update_refresh.isoformat(),
              system.created_date.isoformat()))
+        
+class EventTypeTestCase(XMLTestCase):
+    
+    def setUp(self):
+        self.client = Client()
+        self.system_manager = systemdbmgr.SystemDBManager()
+            
+    def tearDown(self):
+        pass
+    
+    def testGetEventTypes(self):
+        response = self.client.get('/api/inventory/eventTypes/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.event_types_xml)
+
+    def testGetEventType(self):
+        response = self.client.get('/api/inventory/eventTypes/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.event_type_xml)
 
 class SystemEventTestCase(XMLTestCase):
     
