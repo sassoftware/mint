@@ -288,7 +288,6 @@ systems_put_xml = """\
         <publicDnsName>testnetwork.example.com</publicDnsName>
       </network>
     </networks>
-    <systemJobs/>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -325,7 +324,6 @@ systems_put_xml = """\
         <publicDnsName>testnetwork2.example.com</publicDnsName>
       </network>
     </networks>
-    <systemJobs/>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -410,7 +408,6 @@ system_post_xml = """\
       <publicDnsName>testnetwork.example.com</publicDnsName>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <scheduledEventStartDate/>
   <launchDate/>
