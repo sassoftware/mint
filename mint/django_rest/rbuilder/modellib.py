@@ -20,7 +20,7 @@ class BaseManager(models.Manager):
     deserialize an object from xobj into an instance of the model.
     """
 
-    def load_from_db(self, model_inst):
+    def load_from_db(self, model_inst, accessors):
         """
         Load a model from the db based on model_inst.  Uses load_fields on the
         model to look up a corrosponding model in the db. 
@@ -36,7 +36,7 @@ class BaseManager(models.Manager):
             return None
 
 
-    def load(self, model_inst):
+    def load(self, model_inst, accessors):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -47,7 +47,7 @@ class BaseManager(models.Manager):
         model_inst.
         """
 
-        loaded_model = self.load_from_db(model_inst)
+        loaded_model = self.load_from_db(model_inst, accessors)
 
         # For each field on loaded_model, see if that field is defined on
         # model_inst, if it is and the value is different, update the value on
@@ -70,14 +70,14 @@ class BaseManager(models.Manager):
 
         return loaded_model
 
-    def load_or_create(self, model_inst):
+    def load_or_create(self, model_inst, accessors):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
         """
         created = False
         # Load the model from the db.
-        loaded_model = self.load(model_inst)
+        loaded_model = self.load(model_inst, accessors)
         if not loaded_model:
             # No matching model was found. We need to save.  This scenario
             # means we must be creating something new (POST), so it's safe to
@@ -157,16 +157,13 @@ class BaseManager(models.Manager):
 
         return model
 
-    def add_accessors(self, model, obj, request=None):
-        """
-        For each obj attribute, if the attribute matches an accessor name,
-        load all the acccessor models off obj and add them to the model's 
-        accessor.
-        """
+    def get_accessors(self, model, obj, request=None):
         accessors = model.get_accessor_dict()
+        ret_accessors = {}
 
         for key, val in obj.__dict__.items():
             if key in accessors.keys():
+                ret_accessors[key] = []
                 rel_obj_name = accessors[key].var_name
                 rel_objs = getattr(val, rel_obj_name, None)
                 if rel_objs is None:
@@ -180,7 +177,18 @@ class BaseManager(models.Manager):
                     # so pass False for the save flag.
                     rel_mod = type_map[rel_obj_name].objects.load_from_object(
                         rel_obj, request, save=False)
-                    getattr(model, key).add(rel_mod)
+                    ret_accessors[key].append(rel_mod)
+        return ret_accessors
+
+    def add_accessors(self, model, accessors):
+        """
+        For each obj attribute, if the attribute matches an accessor name,
+        load all the acccessor models off obj and add them to the model's 
+        accessor.
+        """
+        for key, val in accessors.items():
+            for v in val:
+                getattr(model, key).add(v)
         return model
 
     def load_from_object(self, obj, request, save=True):
@@ -199,18 +207,19 @@ class BaseManager(models.Manager):
             save = False
 
         model = self.add_fields(model, obj, request)
+        accessors = self.get_accessors(model, obj, request)
         if save:
-            created, model = self.load_or_create(model)
+            created, model = self.load_or_create(model, accessors)
 
         model = self.add_list_fields(model, obj, request)
 
-        model = self.add_accessors(model, obj, request)
+        model = self.add_accessors(model, accessors)
 
         return model
 
 class SystemManager(BaseManager):
     
-    def load_from_db(self, model_inst):
+    def load_from_db(self, model_inst, accessors):
         """
         Overridden because systems have several checks required to determine 
         if the system already exists.
