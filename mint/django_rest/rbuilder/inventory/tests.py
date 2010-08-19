@@ -44,6 +44,15 @@ class XMLTestCase(TestCase):
         return data.strip() or None
 
     @classmethod
+    def _sortChildren(self, child1, child2):
+        if child1.tag < child2.tag:
+            return -1
+        elif child1.tag == child2.tag:
+            return 0
+        else:
+            return 1
+
+    @classmethod
     def _nodecmp(cls, node1, node2):
         if node1.attrib != node2.attrib:
             return False
@@ -51,6 +60,10 @@ class XMLTestCase(TestCase):
             return False
         children1 = node1.getchildren()
         children2 = node2.getchildren()
+        # For the purpose of these tests, we don't care about ordering,
+        # so sort all the children before comparing.
+        children1.sort(cmp=cls._sortChildren)
+        children2.sort(cmp=cls._sortChildren)
 
         if children1 or children2:
             # Compare text in nodes that have children (mixed content).
