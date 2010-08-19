@@ -8,6 +8,7 @@ import datetime
 from dateutil import tz
 
 from django.db import models
+from django.core import exceptions
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -129,7 +130,7 @@ class System(modellib.XObjIdModel):
     installed_software = models.ManyToManyField('Trove', null=True)
     is_management_node = models.NullBooleanField()
     # the management node managing this system.
-    management_node = models.ForeignKey('ManagementNode', null=True,
+    managing_node = models.ForeignKey('ManagementNode', null=True,
                         related_name='systems')
 
     load_fields = [local_uuid]
@@ -238,6 +239,13 @@ class SystemLog(modellib.XObjIdModel):
         db_table = 'inventory_system_log'
     system_log_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, related_name='system_log')
+
+    def get_absolute_url(self, request, pk=None):
+        try:
+            pk = self.system.pk
+        except exceptions.ObjectDoesNotExist:
+            pk = pk
+        return modellib.XObjIdModel.get_absolute_url(self, request, pk)
 
 class SystemLogEntry(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(

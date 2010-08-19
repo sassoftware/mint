@@ -379,6 +379,8 @@ class XObjModel(models.Model):
                     else:
                         val = val.serialize(request)
                         setattr(xobj_model, field, val)
+                else:
+                    setattr(xobj_model, field, '')
                         
     def serialize_accessors(self, xobj_model, accessors, request):
         """
@@ -415,9 +417,14 @@ class XObjModel(models.Model):
                     # For each related model in the accessor, serialize it,
                     # then append the serialized object to the list on
                     # accessor_model.
-                    for rel_mod in getattr(self, accessor).all():
-                        rel_mod = rel_mod.serialize(request)
-                        getattr(accessor_model, var_name).append(rel_mod)
+                    if isinstance(getattr(self, accessor),
+                        BaseManager):
+                        for rel_mod in getattr(self, accessor).all():
+                            rel_mod = rel_mod.serialize(request)
+                            getattr(accessor_model, var_name).append(rel_mod)
+                    else:
+                        accessor_model = None
+                        continue
 
                     setattr(xobj_model, accessor, accessor_model)
 

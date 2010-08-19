@@ -1141,40 +1141,6 @@ def _createInventorySchema(db):
         db.tables['inventory_system_log_entry'] = []
         changed = True
 
-    if 'inventory_version' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_version" (
-                "version_id" %(PRIMARYKEY)s,
-                "name" text NOT NULL,
-                "version" text NOT NULL,
-                "flavor" text NOT NULL,
-                UNIQUE ("name", "version", "flavor")
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_version'] = []
-        changed = True
-
-    if 'inventory_available_update' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_available_update" (
-                "available_update_id" %(PRIMARYKEY)s,
-                "software_version_id" integer NOT NULL 
-                    REFERENCES "inventory_version" ("version_id")
-                    ON DELETE CASCADE,
-                "software_version_available_update_id" integer NOT NULL 
-                    REFERENCES "inventory_version" ("version_id")
-                    ON DELETE CASCADE,
-                "last_refreshed" timestamp with time zone NOT NULL,
-                UNIQUE ("software_version_id", "available_update_id")
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_available_update'] = []
-        changed = True
-        changed |= db.createIndex("inventory_available_update",
-            "inventory_available_update_software_version_id_idx",
-            "software_version_id")
-        changed |= db.createIndex("inventory_available_update",
-            "inventory_available_update_software_version_available_update_id_idx",
-            "software_version_available_update_id")
-
     if 'inventory_system_versions' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_system_versions" (
@@ -1266,6 +1232,58 @@ def _createInventorySchema(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
+
+    if 'inventory_trove_available_updates' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_trove_available_updates" (
+                "id" %(PRIMARYKEY)s,
+                "trove_id" INTEGER NOT NULL,
+                "version_id" INTEGER NOT NULL,
+                UNIQUE ("trove_id", "version_id")
+            )""" % db.keywords)
+        db.tables['inventory_trove_available_updates'] = []
+        changed = True
+
+    if 'inventory_version' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_version" (
+                "version_id" %(PRIMARYKEY)s,
+                "full" TEXT NOT NULL,
+                "label" TEXT NOT NULL,
+                "revision" TEXT NOT NULL,
+                "ordering" TEXT NOT NULL,
+                "flavor" TEXT NOT NULL
+            )""" % db.keywords)
+        db.tables['inventory_version'] = []
+        changed = True
+
+    if 'inventory_trove' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_trove" (
+                "trove_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "version_id" INTEGER NOT NULL
+                    REFERENCES "inventory_version" ("version_id"),
+                "flavor" text NOT NULL,
+                "is_top_level" BOOL NOT NULL,
+                "last_available_update_refresh" timestamp with time zone
+                    NOT NULL,
+                UNIQUE ("name", "version_id", "flavor")
+            )""" % db.keywords)
+
+        db.tables['inventory_trove'] = []
+        changed = True
+
+    if 'inventory_system_installed_software' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_installed_software" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL 
+                    REFERENCES "inventory_system" ("system_id"),
+                "trove_id" INTEGER NOT NULL
+                    REFERENCES "inventory_trove" ("trove_id"),
+                UNIQUE ("system_id", "trove_id")
+            )"""  % db.keywords)
 
     return changed
 

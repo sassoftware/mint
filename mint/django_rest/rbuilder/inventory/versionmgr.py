@@ -7,6 +7,9 @@
 from datetime import datetime
 from dateutil import tz
 
+from conary import conaryclient
+from conary import versions
+
 from mint.db.database import Database
 from mint.rest.db.database import Database as RestDatabase
 
@@ -36,18 +39,19 @@ class VersionManager(rbuilder_manager.RbuilderDjangoManager):
 
     def set_installed_software(self, system, installed_versions):
         for installed_version in installed_versions:
-            trove = self.trove_from_nvf(installed_software)
+            trove = self.trove_from_nvf(installed_version)
             installed_software, created = \
-                system.installed_software.get_or_create(trove_id=trove.pk)
+                system.installed_software.get_or_create(version=trove.version)
 
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)
+        thawed_v = versions.ThawVersion(v)
         f = str(f)
 
-        full = str(v.getFull())
-        ordering = str(v.versions[-1].timeStamp)
-        revision = str(v.trailingRevision())
-        label = str(v.trailingLabel())
+        full = str(v)
+        ordering = str(thawed_v.versions[-1].timeStamp)
+        revision = str(thawed_v.trailingRevision())
+        label = str(thawed_v.trailingLabel())
 
         version, created = models.Version.objects.get_or_create(
             full=full, ordering=ordering, revision=revision, label=label,
