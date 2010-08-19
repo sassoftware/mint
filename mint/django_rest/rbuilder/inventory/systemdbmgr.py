@@ -375,29 +375,29 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         
         if repeater_client is None:
             log.info("Failed loading repeater client, expected in local mode only")
-            return
-        rep_client = repeater_client.RepeaterClient()
-        networks = event.system.networks.all()
-        # Extract primary
-        networks = [ x for x in networks if x.primary ]
-
-        activationEvents = set([ models.EventType.SYSTEM_ACTIVATION ])
-        pollEvents = set([
-            models.EventType.SYSTEM_POLL,
-            models.EventType.SYSTEM_POLL_IMMEDIATE,
-        ])
-        if networks:
-            destination = networks[0].public_dns_name
-            eventType = event.event_type.name
-            sputnik = "sputnik1"
-            if eventType in activationEvents:
-                self._runSystemEvent(event, destination,
-                    rep_client.activate, destination, sputnik)
-            elif eventType in pollEvents:
-                self._runSystemEvent(event, destination,
-                    rep_client.poll, destination, sputnik)
-            else:
-                log.error("Unknown event type %s" % eventType)
+        else:
+            rep_client = repeater_client.RepeaterClient()
+            networks = event.system.networks.all()
+            # Extract primary
+            networks = [ x for x in networks if x.primary ]
+    
+            activationEvents = set([ models.EventType.SYSTEM_ACTIVATION ])
+            pollEvents = set([
+                models.EventType.SYSTEM_POLL,
+                models.EventType.SYSTEM_POLL_IMMEDIATE,
+            ])
+            if networks:
+                destination = networks[0].public_dns_name
+                eventType = event.event_type.name
+                sputnik = "sputnik1"
+                if eventType in activationEvents:
+                    self._runSystemEvent(event, destination,
+                        rep_client.activate, destination, sputnik)
+                elif eventType in pollEvents:
+                    self._runSystemEvent(event, destination,
+                        rep_client.poll, destination, sputnik)
+                else:
+                    log.error("Unknown event type %s" % eventType)
 
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)

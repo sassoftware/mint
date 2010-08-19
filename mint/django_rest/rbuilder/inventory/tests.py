@@ -691,7 +691,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.mintConfig.systemPollCount = 3
         
         events = self.system_manager.getSystemEventsForProcessing()
-        assert(len(events) == 4)
+        assert(len(events) == 3)
         
     def testProcessSystemEvents(self):
         
