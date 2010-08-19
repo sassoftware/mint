@@ -185,13 +185,13 @@ class BaseManager(models.Manager):
 
     def load_from_object(self, obj, request, save=True):
         """
-        Given an object (obj) from xobj, create and return the  corrosponding
+        Given an object (obj) from xobj, create and return the  corresponding
         model, loading it from the db if one exists.  obj does not have to be
         from xobj, but it should match the similar structure of an object that
         xobj would create from xml.
         """
         # Every manager has access to the model it's a manager for, create an
-        # emtpy model instance to start with.
+        # empty model instance to start with.
         model = self.model()
 
         # Don't even attempt to save abstract models
@@ -244,7 +244,7 @@ class SystemManager(BaseManager):
     
 class ManagementNodeManager(SystemManager):
     """
-    Overridden because systems have several checks required to determine 
+    Overridden because management nodes have several checks required to determine 
     if the system already exists.
     """
 
