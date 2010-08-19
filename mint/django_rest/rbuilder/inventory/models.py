@@ -315,38 +315,6 @@ class SystemJob(modellib.XObjModel):
     system = models.ForeignKey(System)
     job = models.ForeignKey(Job)
 
-class Job_(modellib.XObjModel):
-    class Meta:
-        abstract = True
-
-    status_choices = (
-        ('Queued', 'Queued'),
-        ('Running', 'Running'),
-        ('Failed', 'Failed'),
-        ('Completed', 'Completed'),
-    )
-
-    uuid = models.CharField(max_length=64)
-    status = models.CharField(16, choices=status_choices)
-    created = modellib.DateTimeUtcField(auto_now_add=True)
-    modified = modellib.DateTimeUtcField(auto_now_add=True)
-    created_by = models.ForeignKey(rbuildermodels.Users)
-    expiration = modellib.DateTimeUtcField(auto_now_add=True)
-    status_message = models.TextField()
-    cloud_name = models.CharField(max_length=64)
-    cloud_type = models.CharField(max_length=64)
-    instance_id = models.CharField(max_length=255)
-    image_id = models.CharField(max_length=255)
-    fault = models.ForeignKey('ErrorResponse', null=True)
-    result_resource = modellib.XObjHrefModel()
-
-class JobHistory(modellib.XObjModel):
-    class Meta:
-        abstract = True
-    job_history_id = models.AutoField(primary_key=True)
-    timestamp = modellib.DateTimeUtcField(auto_now_add=True)
-    content = models.TextField()
-
 class ErrorResponse(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
                 tag='fault')
