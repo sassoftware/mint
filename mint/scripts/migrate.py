@@ -1289,6 +1289,7 @@ class MigrateTo_50(SchemaMigration):
         if 'inventory_system_job' not in db.tables:
             cu.execute("""
                 CREATE TABLE inventory_system_job (
+                    system_job_id %(PRIMARYKEY)s,
                     job_id integer NOT NULL
                         REFERENCES inventory_job
                         ON DELETE CASCADE,
