@@ -195,7 +195,7 @@ class LogTestCase(XMLTestCase):
                 continue
             else:
                 content.append(line)
-        self.assertXMLEquals('\n'.join(content), testsxml.systems_log)
+        self.assertXMLEquals('\n'.join(content), testsxml.systems_log_xml)
 
 class ManagementNodesTestCase(XMLTestCase):
     
@@ -213,7 +213,7 @@ class ManagementNodesTestCase(XMLTestCase):
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
         management_node.save();
-        response = self.client.get('/api/inventory/managementNodes/1/')
+        response = self.client.get('/api/inventory/managementNodes/2/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_node_xml % (management_node.created_date.isoformat()))
@@ -247,7 +247,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self.client.post('/api/inventory/managementNodes/', 
             data=xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        management_node = models.ManagementNode.objects.get(pk=1)
+        management_node = models.ManagementNode.objects.get(pk=2)
         management_node_xml = testsxml.management_node_xml.replace('<activationDate/>',
             '<activationDate>%s</activationDate>' % \
             (management_node.activation_date.isoformat() + '+00:00'))
@@ -340,7 +340,7 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         system.target = target
         system.save()
-        response = self.client.get('/api/inventory/systems/1/')
+        response = self.client.get('/api/inventory/systems/2/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             system.created_date.isoformat())
@@ -361,7 +361,7 @@ class SystemsTestCase(XMLTestCase):
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=1)
+        system = models.System.objects.get(pk=2)
         system_xml = testsxml.system_xml.replace('<activationDate/>',
             '<activationDate>%s</activationDate>' % \
             (system.activation_date.isoformat() + '+00:00'))
@@ -369,11 +369,10 @@ class SystemsTestCase(XMLTestCase):
             (system.created_date.isoformat() + '+00:00'))
 
     def testGetSystemLog(self):
-        system_xml = testsxml.system_xml % ('')
         response = self.client.post('/api/inventory/systems/', 
-            data=system_xml, content_type='text/xml')
-        response = self.client.get('/api/inventory/systems/1/')
-        response = self.client.get('/api/inventory/systems/1/systemLog/')
+            data=testsxml.system_post_xml, content_type='text/xml')
+        response = self.client.get('/api/inventory/systems/2/')
+        response = self.client.get('/api/inventory/systems/2/systemLog/')
         self.assertEquals(response.status_code, 200)
         content = []
         # Just remove lines with dates in them, it's easier to test for now.
@@ -383,7 +382,7 @@ class SystemsTestCase(XMLTestCase):
                 continue
             else:
                 content.append(line)
-        self.assertXMLEquals('\n'.join(content), testsxml.system_log)
+        self.assertXMLEquals('\n'.join(content), testsxml.system_log_xml)
         
     def testGetSystemHasHostInfo(self):
         system = models.System(name="mgoblue")
@@ -692,7 +691,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.mintConfig.systemPollCount = 3
         
         events = self.system_manager.getSystemEventsForProcessing()
-        assert(len(events) == 3)
+        assert(len(events) == 4)
         
     def testProcessSystemEvents(self):
         
