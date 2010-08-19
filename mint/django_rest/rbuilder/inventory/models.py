@@ -233,6 +233,10 @@ class SystemEvent(modellib.XObjIdModel):
             self.view_name = 'SystemsSystemEvent'
         return modellib.XObjIdModel.get_absolute_url(self, request, parent)
 
+    def save(self, *args, **kw):
+        self.priority = self.event_type.priority
+        modellib.XObjIdModel.save(self, *args, **kw)
+
 class ManagementNode(System):
     class Meta:
         db_table = 'inventory_management_node'
