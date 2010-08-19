@@ -377,17 +377,15 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         systemEvent.system = models.System.objects.get(pk=system_id)
         systemEvent.save()
         
-        dispatchNow = False
         enable_time = None
-        if systemEvent.event_type.priority >= models.EventType.ON_DEMAND_BASE:
-            dispatchNow = True
+        if systemEvent.dispatchImmediately():
             enable_time = datetime.datetime.now(tz.tzutc())
         else:
             enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
             
         self.logSystemEvent(systemEvent, enable_time)
         
-        if dispatchNow:
+        if systemEvent.dispatchImmediately():
             self.dispatchSystemEvent(systemEvent)
         
         return systemEvent
@@ -413,11 +411,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             self.dispatchSystemEvent(event)
 
     def dispatchSystemEvent(self, event):
-        log.info("Processing %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
+        log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
         if repeater_client is None:
             log.info("Failed loading repeater client, expected in local mode only")
         else:
+            self.log_system(event.system,  "Dispatching %s event" % event.event_type.name)
             self._dispatchSystemEvent(event)
 
         # cleanup now that the event has been processed
@@ -514,6 +513,9 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 priority=event_type.priority, time_enabled=enable_time)
             event.save()
             self.logSystemEvent(event, enable_time)
+            
+            if event.dispatchImmediately():
+                self.dispatchSystemEvent(event)
         else:
             log.info("System %s %s event cannot be registered because there is no host information" % (system.name, event_type.name))
         

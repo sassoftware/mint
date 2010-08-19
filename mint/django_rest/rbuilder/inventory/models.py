@@ -218,6 +218,9 @@ class SystemEvent(modellib.XObjIdModel):
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
+    
+    def dispatchImmediately(self):
+        return self.event_type.priority >= EventType.ON_DEMAND_BASE
 
 class ManagementNode(System):
     class Meta:

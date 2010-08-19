@@ -605,6 +605,7 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         event = self.system_manager.createSystemEvent(local_system, poll_event)
         assert(event is None)
+        assert(self.mock_dispatchSystemEvent_called == False)
                 
         network2 = models.Network(system=local_system, ip_address="1.1.1.1")
         network2.save()
@@ -614,6 +615,7 @@ class SystemEventTestCase(XMLTestCase):
     
     def testScheduleSystemPollEvent(self):
         self.system_manager.scheduleSystemPollEvent(self.system)
+        assert(self.mock_dispatchSystemEvent_called == False)
         
         # make sure we have our poll event
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
@@ -627,6 +629,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testScheduleSystemPollNowEvent(self):
         self.system_manager.scheduleSystemPollNowEvent(self.system)
+        assert(self.mock_dispatchSystemEvent_called)
         
         pn_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=pn_event).get()
@@ -641,6 +644,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testScheduleSystemActivationEvent(self):
         self.system_manager.scheduleSystemActivationEvent(self.system)
+        assert(self.mock_dispatchSystemEvent_called)
         
         activation_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=activation_event).get()
