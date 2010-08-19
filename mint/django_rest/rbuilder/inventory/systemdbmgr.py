@@ -362,9 +362,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def getSystemSystemEvents(self, system_id):
         system = models.System.objects.get(pk=system_id)
         events = models.SystemEvent.objects.filter(system=system)
-        events = list(events)
         system_events = models.SystemEvents()
-        system_events.systemEvent = events
+        system_events.systemEvent = list(events)
         return system_events
     
     def getSystemSystemEvent(self, system_id, system_event_id):
