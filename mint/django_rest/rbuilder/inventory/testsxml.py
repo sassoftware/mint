@@ -463,6 +463,41 @@ system_post_xml = """\
   <osType/>
 </system>"""
 
+system_post_xml_dup = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <activated>True</activated>
+  <sslClientKey>testsystemsslclientkey</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <deviceName>eth0</deviceName>
+      <ipAddress>1.1.1.1</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <portType>lan</portType>
+      <primary/>
+      <publicDnsName>testnetwork.example.com</publicDnsName>
+    </network>
+  </networks>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <available/>
+  <description>testsystemdescription</description>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <name>testsystemname</name>
+  <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>dead</currentState>
+  <osType/>
+</system>"""
+
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/2/">

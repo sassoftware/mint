@@ -206,6 +206,41 @@ class BaseManager(models.Manager):
 
         return model
 
+class SystemManager(BaseManager):
+    
+    def load_from_db(self, model_inst):
+        """
+        Overridden because systems have several checks required to determine 
+        if the system already exists.
+        """
+        
+        dupCheckFieldsDict = [
+            dict(local_uuid=model_inst.local_uuid, generated_uuid=model_inst.generated_uuid)
+        ]
+        
+        for d in dupCheckFieldsDict:    
+            loaded_model = self.tryLoad(d)
+            if loaded_model is not None:
+                break;
+        
+        return loaded_model
+        
+    def tryLoad(self, loadDict):
+        try:
+            loaded_model = self.get(**loadDict)
+            return loaded_model
+        except exceptions.ObjectDoesNotExist:
+            return None
+        except exceptions.MultipleObjectsReturned:
+            return None
+        
+        return loaded_model
+    
+class ManagementNodeManager(SystemManager):
+    """
+    Overridden because systems have several checks required to determine 
+    if the system already exists.
+    """
 
 class XObjModel(models.Model):
     """
