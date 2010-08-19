@@ -107,6 +107,23 @@ class InventorySystemsService(AbstractInventoryService):
     def launch(self, instanceId, targetType, targetName):
         return self.sysMgr.launchSystem(instanceId, targetType, targetName)
 
+class InventorySystemsSystemEventService(AbstractInventoryService):
+    
+    @return_xml
+    def read(self, request, system_id, system_event_id=None):
+        return self.get(system_id)
+        
+    def get(self, system_id, system_event_id=None):
+        if system_event_id:
+            return self.sysMgr.getSystemSystemEvent(system_id, system_event_id)
+        else:
+            return self.sysMgr.getSystemSystemEvents(system_id)
+        
+    @requires('systemEvent')
+    @return_xml
+    def create(self, request, system_id, systemEvent):
+        systemEvent = self.sysMgr.addSystemSystemEvent(system_id, systemEvent)
+        return systemEvent
 
 class InventorySystemsSystemLogService(AbstractInventoryService):
 
@@ -156,12 +173,6 @@ class InventorySystemsEventService(AbstractInventoryService):
             return self.sysMgr.getSystemEvent(system_event_id)
         else:
             return self.sysMgr.getSystemEvents()
-        
-    @requires('systemEvent')
-    @return_xml
-    def create(self, request, systemEvent):
-        systemEvent = self.sysMgr.addSystemEvent(systemEvent)
-        return systemEvent
 
 class InventoryEventTypesService(AbstractInventoryService):
     @return_xml
