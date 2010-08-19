@@ -1043,7 +1043,7 @@ def _createRepositoryLogSchema(db):
 
     return changed
 
-def _createInventorySchema(db):
+def _createInventorySchema(db, cfg):
     cu = db.cursor()
     changed = False
 
@@ -1090,8 +1090,6 @@ def _createInventorySchema(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_management_node'] = []
         changed = True
-        # add local management node
-        changed |= _addManagementNode(db)
 
     if 'inventory_network' not in db.tables:
         cu.execute("""
@@ -1114,6 +1112,10 @@ def _createInventorySchema(db):
             "inventory_network_system_id_idx", "system_id")
         changed |= db.createIndex("inventory_network",
             "inventory_network_public_dns_name_idx", "public_dns_name")
+        
+    # add local management node.  must be done after inventory_system and 
+    # inventory_network are added
+    changed |= _addManagementNode(db, cfg)
 
     if 'inventory_system_log' not in db.tables:
         cu.execute("""
@@ -1288,14 +1290,15 @@ def _createInventorySchema(db):
 
     return changed
 
-def _addManagementNode(db):
+def _addManagementNode(db, cfg):
     changed = False
     
     # add the system
     changed |= _addTableRows(db, 'inventory_system', 'name',
             [dict(name="Local Management Node", 
                   description='Local rBuilder management node',
-                  is_management_node='true', 
+                  is_management_node='true',
+                  current_state="unmanaged",
                   created_date=str(datetime.datetime.now(tz.tzutc())))])
     
     # get the system id
@@ -1304,6 +1307,10 @@ def _addManagementNode(db):
     ids = cu.fetchall()
     if len(ids) == 1:
         systemId = ids[0][0]
+        # add the network
+        net_dict = dict(system_id=systemId, public_dns_name='127.0.0.1')
+        net_dict["\"primary\""] = 'true'
+        changed |= _addTableRows(db, 'inventory_network', 'public_dns_name', [net_dict])
         # add the management node
         changed |= _addTableRows(db, 'inventory_management_node', 'system_ptr_id',
                 [dict(system_ptr_id=systemId, local='true')])
@@ -1458,7 +1465,7 @@ def _createJobsSchema(db):
     return changed
 
 # create the (permanent) server repository schema
-def createSchema(db, doCommit=True):
+def createSchema(db, doCommit=True, cfg=None):
     if not hasattr(db, "tables"):
         db.loadSchema()
 
@@ -1484,7 +1491,7 @@ def createSchema(db, doCommit=True):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
-    changed |= _createInventorySchema(db)
+    changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
 
@@ -1540,7 +1547,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
     if version == 0:
         log.info("Creating new mint database schema with version %s",
                 RBUILDER_DB_VERSION)
-        createSchema(db)
+        createSchema(db, cfg=cfg)
         setVer = migrate.majorMinor(RBUILDER_DB_VERSION.major)
         return db.setVersion(setVer)
 

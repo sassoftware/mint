@@ -1120,7 +1120,7 @@ class MigrateTo_50(SchemaMigration):
             db.tables['inventory_management_node'] = []
             changed = True
             # add local management node
-            changed |= schema._addManagementNode(db)
+            changed |= schema._addManagementNode(db, self.cfg)
 
         if 'inventory_network' not in db.tables:
             cu.execute("""

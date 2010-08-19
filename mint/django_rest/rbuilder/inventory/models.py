@@ -99,6 +99,9 @@ class System(modellib.XObjIdModel):
                 attributes = {'id':str},
                 elements = ['networks'])
     
+    # need our own object manager for dup detection
+    objects = modellib.SystemManager()
+    
     UNMANAGED = "unmanaged"
     ACTIVATED = "activated"
     RESPONSIVE = "responsive"
@@ -239,6 +242,9 @@ class ManagementNode(System):
     local = models.NullBooleanField()
     
     load_ignore_fields = ["system_ptr"]
+    
+    # need our own object manager for dup detection
+    objects = modellib.ManagementNodeManager()
     
     def save(self, *args, **kw):
         self.is_management_node = True

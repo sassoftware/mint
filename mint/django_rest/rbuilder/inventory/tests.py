@@ -380,6 +380,24 @@ class SystemsTestCase(XMLTestCase):
             (system.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, system_xml % \
             (system.created_date.isoformat() + '+00:00'))
+        
+    def testPostSystemDupUuid(self):
+        # add the first system
+        system_xml = testsxml.system_post_xml
+        response = self.client.post('/api/inventory/systems/', 
+            data=system_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 200)
+        system = models.System.objects.get(pk=2)
+        assert(system.current_state != "dead")
+        
+        # add it with same uuids but with different current state to make sure
+        # we get back same system with update prop
+        system_xml = testsxml.system_post_xml_dup
+        response = self.client.post('/api/inventory/systems/', 
+            data=system_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 200)
+        this_system = models.System.objects.get(pk=2)
+        assert(this_system.current_state != "dead")
 
     def testGetSystemLog(self):
         response = self.client.post('/api/inventory/systems/', 

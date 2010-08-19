@@ -13,6 +13,7 @@ rbuilder_dirs = {
     'diffcache':                    (0775, ('root', 'apache')),
     'entitlements':                 (0775, ('root', 'apache')),
     'finished-images':              (0775, ('root', 'apache')),
+    'jobs':                         (0775, ('root', 'apache')),
     'notices':                      (0775, ('root', 'apache')),
     'proxy-contents':               (0775, ('root', 'apache')),
     'repos':                        (0775, ('root', 'apache')),
