@@ -350,6 +350,29 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         SystemEvents.systemEvent = list(models.SystemEvent.objects.all())
         return SystemEvents
     
+    def addSystemEvent(self, systemEvent):
+        """Add a system event to a system"""
+        
+        if not systemEvent:
+            return
+        
+        systemEvent.save()
+        
+        dispatchNow = False
+        enable_time = None
+        if systemEvent.event_type.priority >= models.EventType.ON_DEMAND_BASE:
+            dispatchNow = True
+            enable_time = datetime.datetime.now(tz.tzutc())
+        else:
+            enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            
+        self.logSystemEvent(systemEvent, enable_time)
+        
+        if dispatchNow:
+            self.dispatchSystemEvent(systemEvent)
+        
+        return systemEvent
+    
     def getSystemEventsForProcessing(self):        
         events = None
         try:
@@ -468,13 +491,16 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             event = models.SystemEvent(system=system, event_type=event_type, 
                 priority=event_type.priority, time_enabled=enable_time)
             event.save()
-            msg = "System %s event registered and will be enabled on %s" % (event_type.name, enable_time)
-            self.log_system(event.system, msg)
-            log.info(msg)
+            self.logSystemEvent(event, enable_time)
         else:
             log.info("System %s %s event cannot be registered because there is no host information" % (system.name, event_type.name))
         
         return event
+    
+    def logSystemEvent(self, event, enable_time):
+        msg = "System %s event registered and will be enabled on %s" % (event.event_type.name, enable_time)
+        self.log_system(event.system, msg)
+        log.info(msg)
         
     def getSystemHasHostInfo(self, system):
         hasInfo = False
