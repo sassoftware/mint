@@ -1140,6 +1140,19 @@ def _createInventorySchema(db):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_log_entry'] = []
         changed = True
+        
+    if 'inventory_version' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_version" (
+                "version_id" %(PRIMARYKEY)s,
+                "full" TEXT NOT NULL,
+                "label" TEXT NOT NULL,
+                "revision" TEXT NOT NULL,
+                "ordering" TEXT NOT NULL,
+                "flavor" TEXT NOT NULL
+            )""" % db.keywords)
+        db.tables['inventory_version'] = []
+        changed = True
 
     if 'inventory_system_versions' not in db.tables:
         cu.execute("""
@@ -1211,7 +1224,7 @@ def _createInventorySchema(db):
                 job_uuid varchar(64) NOT NULL UNIQUE,
                 job_type integer NOT NULL
                     REFERENCES inventory_event_type (event_type_id),
-                time_created timestamp with time zone NOT NULL DEFAULT now
+                time_created timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
@@ -1243,19 +1256,6 @@ def _createInventorySchema(db):
                 UNIQUE ("trove_id", "version_id")
             )""" % db.keywords)
         db.tables['inventory_trove_available_updates'] = []
-        changed = True
-
-    if 'inventory_version' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_version" (
-                "version_id" %(PRIMARYKEY)s,
-                "full" TEXT NOT NULL,
-                "label" TEXT NOT NULL,
-                "revision" TEXT NOT NULL,
-                "ordering" TEXT NOT NULL,
-                "flavor" TEXT NOT NULL
-            )""" % db.keywords)
-        db.tables['inventory_version'] = []
         changed = True
 
     if 'inventory_trove' not in db.tables:

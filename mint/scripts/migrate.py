@@ -1177,18 +1177,6 @@ class MigrateTo_50(SchemaMigration):
             db.tables['inventory_system_log_entry'] = []
             changed = True
 
-        if 'inventory_version' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_version" (
-                    "version_id" %(PRIMARYKEY)s,
-                    "name" text NOT NULL,
-                    "version" text NOT NULL,
-                    "flavor" text NOT NULL,
-                    UNIQUE ("name", "version", "flavor")
-                ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_version'] = []
-            changed = True
-
         if 'inventory_available_update' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_available_update" (
@@ -1210,6 +1198,18 @@ class MigrateTo_50(SchemaMigration):
             changed |= db.createIndex("inventory_available_update",
                 "inventory_available_update_software_version_available_update_id_idx",
                 "software_version_available_update_id")
+            
+        if 'inventory_version' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_version" (
+                    "version_id" %(PRIMARYKEY)s,
+                    "name" text NOT NULL,
+                    "version" text NOT NULL,
+                    "flavor" text NOT NULL,
+                    UNIQUE ("name", "version", "flavor")
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_version'] = []
+            changed = True
 
         if 'inventory_system_versions' not in db.tables:
             cu.execute("""
@@ -1280,7 +1280,7 @@ class MigrateTo_50(SchemaMigration):
                     job_uuid varchar(64) NOT NULL UNIQUE,
                     job_type integer NOT NULL
                         REFERENCES inventory_event_type,
-                    time_created timestamp with time zone NOT NULL DEFAULT now()
+                    time_created timestamp with time zone NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables[tableName] = []
             changed = True
