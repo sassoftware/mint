@@ -1308,7 +1308,7 @@ def _addManagementNode(db, cfg):
     if len(ids) == 1:
         systemId = ids[0][0]
         # add the network
-        net_dict = dict(system_id=systemId, public_dns_name=cfg.siteHost)
+        net_dict = dict(system_id=systemId, public_dns_name='127.0.0.1')
         net_dict["\"primary\""] = 'true'
         changed |= _addTableRows(db, 'inventory_network', 'public_dns_name', [net_dict])
         # add the management node
