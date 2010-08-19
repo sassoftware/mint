@@ -1102,7 +1102,7 @@ class MigrateTo_50(SchemaMigration):
                     "activated" bool,
                     "current_state" varchar(32),
                     "is_management_node" bool,
-                    "management_node_id" integer
+                    "managing_node_id" integer
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system'] = []
             changed = True
