@@ -213,7 +213,8 @@ class SystemEvent(modellib.XObjIdModel):
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, db_index=True,
         related_name='system_events')
-    event_type = modellib.DeferredForeignKey(EventType)
+    event_type = modellib.DeferredForeignKey(EventType,
+        related_name='system_events')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
@@ -221,6 +222,13 @@ class SystemEvent(modellib.XObjIdModel):
     
     def dispatchImmediately(self):
         return self.event_type.priority >= EventType.ON_DEMAND_BASE
+
+    def get_absolute_url(self, request, parent=None): 
+        if isinstance(parent, EventType):
+            self.view_name = 'SystemEventsByType'
+        elif isinstance(parent, System):
+            self.view_name = 'SystemsSystemEvent'
+        return modellib.XObjIdModel.get_absolute_url(self, request, parent)
 
 class ManagementNode(System):
     class Meta:
@@ -264,12 +272,12 @@ class SystemLog(modellib.XObjIdModel):
     system_log_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, related_name='system_log')
 
-    def get_absolute_url(self, request, pk=None):
-        try:
-            pk = self.system.pk
-        except exceptions.ObjectDoesNotExist:
-            pk = pk
-        return modellib.XObjIdModel.get_absolute_url(self, request, pk)
+    def get_absolute_url(self, request, parent=None):
+        if not parent:
+            parent = self.system
+        if isinstance(parent, System):
+            view_name = 'SystemLog'
+        return modellib.XObjIdModel.get_absolute_url(self, request, parent)
 
 class SystemLogEntry(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(

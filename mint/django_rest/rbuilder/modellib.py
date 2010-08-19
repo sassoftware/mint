@@ -259,7 +259,7 @@ class XObjModel(models.Model):
         xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
-    def get_absolute_url(self, request=None, pk=None):
+    def get_absolute_url(self, request=None, parent=None):
         """
         Return an absolute url for this model.  Incorporates the same behavior
         as the django decorator models.pattern, but we use it directly here so
@@ -269,14 +269,14 @@ class XObjModel(models.Model):
         # allow it to be overriden by a view_name attribute.
         view_name = getattr(self, 'view_name', self.__class__.__name__)
 
-        # If pk wasn't specified, use our own pk, e.g., pk can be specified so
-        # that when generating a url for a Network model, the system pk can be
-        # sent in, such that the result is /api/inventory/systems/1/networks,
-        # where 1 is the system pk.
-        if not pk:
+        # If parent wasn't specified, use our own pk, e.g., parent can be
+        # specified so that when generating a url for a Network model, the
+        # system parent can be sent in, such that the result is
+        # /api/inventory/systems/1/networks, where 1 is the system pk.
+        if not parent:
             url_key = getattr(self, 'pk', [])
         else:
-            url_key = pk
+            url_key = parent.pk
         if url_key:
             url_key = [str(url_key)]
 
@@ -405,7 +405,7 @@ class XObjModel(models.Model):
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
                 rel_mod = getattr(self, accessor).model()
-                href = rel_mod.get_absolute_url(request, self.pk)
+                href = rel_mod.get_absolute_url(request, self)
                 accessor_model._xobj = xobj.XObjMetadata(
                     attributes={'href':str})
                 accessor_model.href = href

@@ -711,7 +711,7 @@ class SystemEventTestCase(XMLTestCase):
         assert(self.mock_dispatchSystemEvent_called == False)
         
     def testPostSystemEvent(self):
-        url = '/api/inventory/systems/%d/systemEvent/' % self.system.system_id
+        url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
         response = self.client.post(url,
             data=system_event_post_xml, content_type='text/xml')
@@ -808,7 +808,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         except models.SystemEvent.DoesNotExist:
             pass
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        local_system = poll_event.systemevent_set.all()[0]
+        local_system = poll_event.system_events.all()[0]
         event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
         assert(event is not None)
         

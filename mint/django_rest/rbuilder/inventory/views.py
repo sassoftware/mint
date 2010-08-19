@@ -162,7 +162,7 @@ class InventoryUsersService(AbstractInventoryService):
         user = rbuildermodels.Users.objects.get(username=user)
         return user
 
-class InventorySystemsEventService(AbstractInventoryService):
+class InventorySystemEventsService(AbstractInventoryService):
     
     @return_xml
     def read(self, request, system_event_id=None):
@@ -173,6 +173,13 @@ class InventorySystemsEventService(AbstractInventoryService):
             return self.sysMgr.getSystemEvent(system_event_id)
         else:
             return self.sysMgr.getSystemEvents()
+
+class InventorySystemEventsByTypeService(AbstractInventoryService):
+
+    @return_xml
+    def read(self, request, event_type):
+        # TODO, something for real
+        return None
 
 class InventoryEventTypesService(AbstractInventoryService):
     

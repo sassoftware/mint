@@ -12,7 +12,7 @@ inventory_xml = """\
 event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <eventType id="http://testserver/api/inventory/eventTypes/1/">
-  <systemeventSet href="http://testserver/api/inventory/systemEvents/1/"/>
+  <systemEvents href="http://testserver/api/inventory/systemEventsByType/1/"/>
   <description>on-demand activation event</description><priority>110</priority>
   <jobSet/>
   <eventTypeId>1</eventTypeId>
@@ -23,28 +23,28 @@ event_types_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <eventTypes>
   <eventType id="http://testserver/api/inventory/eventTypes/1/">
-    <systemeventSet href="http://testserver/api/inventory/systemEvents/1/"/>
-    <description>on-demand activation event</description>
+    <name>system activation</name>
+    <systemEvents href="http://testserver/api/inventory/systemEventsByType/1/"/>
     <priority>110</priority>
     <jobSet/>
     <eventTypeId>1</eventTypeId>
-    <name>system activation</name>
+    <description>on-demand activation event</description>
   </eventType>
   <eventType id="http://testserver/api/inventory/eventTypes/2/">
-    <systemeventSet href="http://testserver/api/inventory/systemEvents/2/"/>
-    <description>on-demand polling event</description>
+    <name>immediate system poll</name>
+    <systemEvents href="http://testserver/api/inventory/systemEventsByType/2/"/>
     <priority>105</priority>
     <jobSet/>
     <eventTypeId>2</eventTypeId>
-    <name>immediate system poll</name>
+    <description>on-demand polling event</description>
   </eventType>
   <eventType id="http://testserver/api/inventory/eventTypes/3/">
-    <systemeventSet href="http://testserver/api/inventory/systemEvents/3/"/>
-    <description>standard polling event</description>
+    <name>system poll</name>
+    <systemEvents href="http://testserver/api/inventory/systemEventsByType/3/"/>
     <priority>50</priority>
     <jobSet/>
     <eventTypeId>3</eventTypeId>
-    <name>system poll</name>
+    <description>standard polling event</description>
   </eventType>
 </eventTypes>"""
 
@@ -76,7 +76,7 @@ management_nodes_xml = """\
     <osMinorVersion/>
     <isManagementNode>True</isManagementNode>
     <systemjobSet/>
-    <systemEvents href="http://testserver/api/inventory/systemEvents/1/"/>
+    <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <name>Local Management Node</name>
     <target/>
     <systemPtr href="http://testserver/api/inventory/systems/1/"/>
@@ -122,7 +122,7 @@ management_nodes_xml = """\
     <osMinorVersion/>
     <isManagementNode>True</isManagementNode>
     <systemjobSet/>
-    <systemEvents href="http://testserver/api/inventory/systemEvents/2/"/>
+    <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <name>test management node</name>
     <target/>
     <systemPtr href="http://testserver/api/inventory/systems/2/"/>
@@ -173,7 +173,7 @@ management_node_xml = """\
   <osMinorVersion/>
   <isManagementNode>True</isManagementNode>
   <systemjobSet/>
-  <systemEvents href="http://testserver/api/inventory/systemEvents/2/"/>
+  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
   <name>test management node</name>
   <target/>
   <systemPtr href="http://testserver/api/inventory/systems/2/"/>
@@ -219,7 +219,7 @@ management_node_post_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <isManagementNode>True</isManagementNode>
-  <systemEvents href="http://testserver/api/inventory/systemEvents/1/"/>
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <name>test management node</name>
   <systemPtr href="http://testserver/api/inventory/systems/1/"/>
   <localUuid>test management node luuid</localUuid>
@@ -253,7 +253,7 @@ systems_xml = """\
     <targetSystemId/>
     <osMinorVersion/>
     <isManagementNode>True</isManagementNode>
-    <systemEvents href="http://testserver/api/inventory/systemEvents/1/"/>
+    <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <target/>
     <name>Local Management Node</name>
     <localUuid/>
@@ -295,7 +295,7 @@ systems_xml = """\
     <targetSystemId/>
     <osMinorVersion/>
     <isManagementNode/>
-    <systemEvents href="http://testserver/api/inventory/systemEvents/2/"/>
+    <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <target/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
@@ -338,7 +338,7 @@ systems_put_xml = """\
     <targetSystemId/>
     <osMinorVersion/>
     <isManagementNode/>
-    <systemEvents href="http://testserver/api/inventory/systemEvents/1/"/>
+    <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
     <currentState>activated</currentState>
@@ -374,7 +374,7 @@ systems_put_xml = """\
     <targetSystemId/>
     <osMinorVersion/>
     <isManagementNode/>
-    <systemEvents href="http://testserver/api/inventory/systemEvents/2/"/>
+    <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystem2localuuid</localUuid>
     <currentState>activated</currentState>
@@ -419,7 +419,7 @@ system_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <isManagementNode/>
-  <systemEvents href="http://testserver/api/inventory/systemEvents/2/"/>
+  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -499,7 +499,7 @@ system_target_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <isManagementNode/>
-  <systemEvents href="http://testserver/api/inventory/systemEvents/2/"/>
+  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -693,7 +693,7 @@ system_version_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <isManagementNode/>
-  <systemEvents href="http://testserver/api/inventory/systemEvents/2/"/>
+  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
