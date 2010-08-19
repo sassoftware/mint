@@ -1243,11 +1243,11 @@ class MigrateTo_50(SchemaMigration):
             changed = True
             changed |= schema._addTableRows(db, tableName, 'name',
                 [ dict(name="system activation",
-                       description='on-demand system activation event', priority=100),
+                       description='on-demand system activation event', priority=110),
                   dict(name="system poll",
                        description='standard system polling event', priority=50),
                   dict(name="immediate system poll",
-                       description='on-demand system polling event', priority=90)])
+                       description='on-demand system polling event', priority=105)])
 
         if 'inventory_system_event' not in db.tables:
             cu.execute("""

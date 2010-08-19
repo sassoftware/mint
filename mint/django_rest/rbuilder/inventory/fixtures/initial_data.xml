@@ -3,12 +3,12 @@
     <object pk="1" model="inventory.eventtype">
         <field type="CharField" name="name">system activation</field>
         <field type="CharField" name="description">on-demand activation event</field>
-        <field type="SmallIntegerField" name="priority">100</field>
+        <field type="SmallIntegerField" name="priority">110</field>
     </object>
     <object pk="2" model="inventory.eventtype">
         <field type="CharField" name="name">immediate system poll</field>
         <field type="CharField" name="description">on-demand polling event</field>
-        <field type="SmallIntegerField" name="priority">90</field>
+        <field type="SmallIntegerField" name="priority">105</field>
     </object>
     <object pk="3" model="inventory.eventtype">
         <field type="CharField" name="name">system poll</field>

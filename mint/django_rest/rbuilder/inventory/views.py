@@ -149,14 +149,26 @@ class InventorySystemsEventService(AbstractInventoryService):
     
     @return_xml
     def read(self, request, system_event_id=None):
+        return self.get(system_event_id)
+        
+    def get(self, system_event_id=None):
         if system_event_id:
             return self.sysMgr.getSystemEvent(system_event_id)
         else:
             return self.sysMgr.getSystemEvents()
+        
+    @requires('systemEvent')
+    @return_xml
+    def create(self, request, systemEvent):
+        systemEvent = self.sysMgr.addSystemEvent(systemEvent)
+        return systemEvent
 
 class InventoryEventTypesService(AbstractInventoryService):
     @return_xml
     def read(self, request, event_type_id=None):
+        return self.get(event_type_id)
+        
+    def get(self, event_type_id=None):
         if event_type_id:
             return models.EventType.objects.get(pk=event_type_id)
         else:

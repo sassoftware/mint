@@ -156,16 +156,20 @@ class EventType(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_event_type'
         
+    # on-demand events need to be > 100 to be dispatched immediately
+    # DO NOT CHANGE POLL PRIORITIES HERE WITHOUT CHANGING IN schema.py also
+    ON_DEMAND_BASE = 100
+    
     SYSTEM_POLL = "system poll"
     SYSTEM_POLL_PRIORITY = 50
     SYSTEM_POLL_DESC = "standard system polling event"
     
     SYSTEM_POLL_IMMEDIATE = "immediate system poll"
-    SYSTEM_POLL_IMMEDIATE_PRIORITY = 90
+    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE +5
     SYSTEM_POLL_IMMEDIATE_DESC = "on-demand system polling event"
     
     SYSTEM_ACTIVATION = "system activation"
-    SYSTEM_ACTIVATION_PRIORITY = 100
+    SYSTEM_ACTIVATION_PRIORITY = ON_DEMAND_BASE +10
     SYSTEM_ACTIVATION_DESC = "on-demand system activation event"
         
     event_type_id = models.AutoField(primary_key=True)
@@ -189,6 +193,10 @@ class Job(modellib.XObjModel):
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event'
+    _xobj = xobj.XObjMetadata(
+                tag = 'systemEvent',
+                attributes = {'id':str})
+    
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, db_index=True,
         related_name='system_event')

@@ -487,7 +487,7 @@ system_events_xml = """\
         <eventType href="http://testserver/api/inventory/eventTypes/1/"/>
         <system href="http://testserver/api/inventory/systems/2/"/>
         <timeCreated>%s</timeCreated>
-        <priority>100</priority>
+        <priority>110</priority>
         <timeEnabled>%s</timeEnabled>
         <systemEventId>2</systemEventId>
     </systemEvent>
@@ -503,6 +503,16 @@ system_event_xml = """\
     <priority>50</priority>
     <timeEnabled>%s</timeEnabled>
     <systemEventId>1</systemEventId>
+</systemEvent>
+"""
+
+system_event_post_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systemEvent>
+    <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
+    <system href="http://testserver/api/inventory/systems/2/"/>
+    <priority>50</priority>
+    <timeEnabled>%s</timeEnabled>
 </systemEvent>
 """
 
