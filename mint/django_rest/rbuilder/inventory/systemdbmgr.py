@@ -105,22 +105,9 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         
     def addSystem(self, system):
         '''Add a new system to inventory'''
-        
+
         if not system:
             return
-        
-        # TODO:  remove this and figure out how to de-dup for real
-        sysNets = system.networks.all()
-        if sysNets:
-            sysNet = sysNets[0]
-            nets = models.Network.objects.filter(public_dns_name=sysNet.public_dns_name).all()
-            if nets:
-                for net in nets:
-                    system2 = net.system
-                    if system2.system_id != system.system_id:
-                        log.info("System %s (%s) already exists in inventory"
-                                % (system2.name, net.public_dns_name))
-                        system2.delete()
         
         if system.is_management_node:
             return self.addManagementNode(system)
@@ -130,15 +117,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         self.log_system(system, models.SystemLogEntry.ADDED)
         
         if system.activated:
-            # TODO:  how to de-dup?
             system.activation_date = datetime.datetime.now(tz.tzutc())
             system.current_state = models.System.ACTIVATED
             system.save()
             self.log_system(system, models.SystemLogEntry.ACTIVATED)
             self.scheduleSystemPollEvent(system)
         else:
-            system.current_state = models.System.UNMANAGED
-            system.save()
             # mark the system as needing activation
             self.scheduleSystemActivationEvent(system)
 
@@ -567,12 +551,6 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 db_system.description = sys.instanceDescription.getText()
                 db_system.target_system_id = sys.instanceId.getText()
                 dnsName = sys.dnsName and sys.dnsName.getText() or None
-                
-                # TODO:  remove this and figure out how to de-dup for real
-                nets = models.Network.objects.filter(public_dns_name=dnsName).all()
-                if nets:
-                    log.info("System %s (%s) already exists in inventory" % (db_system.name, dnsName))
-                    continue
                 
                 state = sys.state and sys.state.getText() or "unknown"
                 systemsAdded = systemsAdded +1

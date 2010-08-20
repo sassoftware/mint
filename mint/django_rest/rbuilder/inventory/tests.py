@@ -216,6 +216,21 @@ class ManagementNodesTestCase(XMLTestCase):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
         
+    def testManagementNodeSave(self):
+        # make sure state gets set to unmanaged
+        management_node = models.ManagementNode(name="mgoblue", 
+            description="best node ever")
+        assert(management_node.current_state != models.System.UNMANAGED)
+        management_node.save()
+        assert(management_node.is_management_node)
+        assert(management_node.current_state == models.System.UNMANAGED)
+        
+        # make sure we honor the state if set though
+        management_node = models.ManagementNode(name="mgoblue", 
+            description="best node ever", current_state=models.System.DEAD)
+        management_node.save()
+        assert(management_node.current_state == models.System.DEAD)
+        
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
         response = self.client.get('/api/inventory/managementNodes/')
@@ -294,6 +309,20 @@ class SystemsTestCase(XMLTestCase):
             self.system_manager.addSystem(system)
         except:
             assert(False) # should not throw exception
+            
+    def testSystemSave(self):
+        # make sure state gets set to unmanaged
+        system = models.System(name="mgoblue", 
+            description="best appliance ever")
+        assert(system.current_state != models.System.UNMANAGED)
+        system.save()
+        assert(system.current_state == models.System.UNMANAGED)
+        
+        # make sure we honor the state if set though
+        system = models.System(name="mgoblue", 
+            description="best appliance ever", current_state=models.System.DEAD)
+        system.save()
+        assert(system.current_state == models.System.DEAD)
         
     def testAddSystem(self):
         # create the system
@@ -384,7 +413,7 @@ class SystemsTestCase(XMLTestCase):
         
     def testPostSystemDupUuid(self):
         # add the first system
-        system_xml = testsxml.system_post_xml
+        system_xml = testsxml.system_post_xml_dup
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
@@ -393,12 +422,12 @@ class SystemsTestCase(XMLTestCase):
         
         # add it with same uuids but with different current state to make sure
         # we get back same system with update prop
-        system_xml = testsxml.system_post_xml_dup
+        system_xml = testsxml.system_post_xml_dup2
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=2)
-        assert(this_system.current_state != "dead")
+        assert(this_system.current_state == "dead")
 
     def testGetSystemLog(self):
         response = self.client.post('/api/inventory/systems/', 
