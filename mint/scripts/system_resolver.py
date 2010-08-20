@@ -15,7 +15,7 @@ import logging
 from mint import config
 from mint.lib import scriptlibrary
 
-class SystemResolver(scriptlibrary.SingletonScript):
+class Script(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = 'system_resolver.log'
     newLogger = True

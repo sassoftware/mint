@@ -25,7 +25,7 @@ from mint.rest.db import authmgr
 #from catalogService import handler
 #from catalogService.rest.api.clouds import CloudTypeController, SUPPORTED_MODULES
 
-class TargetSystemsImport(scriptlibrary.SingletonScript):
+class Script(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = 'target_systems_import.log'
     newLogger = True
