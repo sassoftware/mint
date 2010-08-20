@@ -1151,29 +1151,11 @@ def _createInventorySchema(db, cfg):
                 "label" TEXT NOT NULL,
                 "revision" TEXT NOT NULL,
                 "ordering" TEXT NOT NULL,
-                "flavor" TEXT NOT NULL
+                "flavor" TEXT NOT NULL,
+                UNIQUE("full", "ordering", "flavor")
             )""" % db.keywords)
         db.tables['inventory_version'] = []
         changed = True
-
-    if 'inventory_system_versions' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system_versions" (
-                "id" %(PRIMARYKEY)s,
-                "system_id" integer NOT NULL
-                    REFERENCES "inventory_system" ("system_id")
-                    ON DELETE CASCADE,
-                "version_id" integer NOT NULL
-                    REFERENCES "inventory_version" ("version_id")
-                    ON DELETE CASCADE,
-                UNIQUE ("system_id", "version_id")
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_system_versions'] = []
-        changed = True
-        changed |= db.createIndex("inventory_system_versions",
-            "inventory_system_versions_system_id_idx", "system_id")
-        changed |= db.createIndex("inventory_system_versions",
-            "inventory_system_versions_version_id", "version_id")
 
     tableName = 'inventory_event_type'
     if tableName not in db.tables:
