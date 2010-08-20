@@ -132,7 +132,7 @@ class BaseManager(models.Manager):
                     else:
                         # Cast to str, django will just do the right thing.
                         val = str(val)
-                        val = fields[key].get_prep_value(val)
+                        #val = fields[key].get_prep_value(val)
                 else:
                     val = None
 

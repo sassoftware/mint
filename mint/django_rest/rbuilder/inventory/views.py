@@ -57,6 +57,24 @@ class InventoryLogService(AbstractInventoryService):
     def read(self, request):
         return self.sysMgr.getSystemsLog()
     
+class InventoryZoneService(AbstractInventoryService):
+    
+    @return_xml
+    def read(self, request, zone_id=None):
+        return self.get(zone_id)
+    
+    def get(self, zone_id=None):
+        if zone_id:
+            return self.sysMgr.getZone(zone_id)
+        else:
+            return self.sysMgr.getZones()
+        
+    @requires('zone')
+    @return_xml
+    def create(self, request, zone):
+        zone = self.sysMgr.addZone(zone)
+        return zone
+    
 class InventoryManagementNodeService(AbstractInventoryService):
     
     @return_xml

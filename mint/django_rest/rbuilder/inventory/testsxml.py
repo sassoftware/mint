@@ -48,6 +48,52 @@ event_types_xml="""\
   </eventType>
 </eventTypes>"""
 
+zones_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zones>
+  <zone id="http://testserver/api/inventory/zones/1/">
+    <createdDate>2010-08-20T20:23:38+00:00</createdDate>
+    <zoneId>1</zoneId>
+    <name>some zone</name>
+    <description>some zone desc</description>
+  </zone>
+  <zone id="http://testserver/api/inventory/zones/2/">
+    <createdDate>%s</createdDate>
+    <zoneId>2</zoneId>
+    <name>Local Zone</name>
+    <description>Some local zone</description>
+  </zone>
+</zones>
+"""
+
+zone_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone id="http://testserver/api/inventory/zones/2/">
+  <createdDate>%s</createdDate>
+  <zoneId>2</zoneId>
+  <name>Local Zone</name>
+  <description>Some local zone</description>
+</zone>
+"""
+
+zone_post_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone>
+  <description>Some local zone</description>
+  <name>Local Zone</name>
+</zone>
+"""
+
+zone_post_response_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone id="http://testserver/api/inventory/zones/1/">
+  <createdDate>%s</createdDate>
+  <description>Some local zone</description>
+  <name>Local Zone</name>
+  <zoneId>1</zoneId>
+</zone>
+"""
+
 management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNodes>

@@ -41,6 +41,25 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def getEventType(self, event_type_id):
         eventType = models.EventType.objects.get(pk=event_type_id)
         return eventType
+    
+    def getZone(self, zone_id):
+        zone = models.Zone.objects.get(pk=zone_id)
+        return zone
+    
+    def getZones(self):
+        Zones = models.Zones()
+        Zones.zone = list(models.Zone.objects.all())
+        return Zones
+
+    def addZone(self, zone):
+        """Add a zone"""
+        
+        if not zone:
+            return
+        
+        zone.save()
+        
+        return zone
 
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)

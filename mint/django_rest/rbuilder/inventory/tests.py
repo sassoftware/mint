@@ -78,6 +78,14 @@ class XMLTestCase(TestCase):
             return True
         # No children, compare the text
         return node1.text == node2.text
+    
+    def _saveZone(self):
+        zone = models.Zone()
+        zone.name = "Local Zone"
+        zone.description = "Some local zone"
+        zone.save()
+        
+        return zone
 
     def _saveSystem(self):
         system = models.System()
@@ -209,6 +217,47 @@ class LogTestCase(XMLTestCase):
             else:
                 content.append(line)
         self.assertXMLEquals('\n'.join(content), testsxml.systems_log_xml)
+        
+class ZonesTestCase(XMLTestCase):
+    
+    def setUp(self):
+        self.client = Client()
+        self.system_manager = systemdbmgr.SystemDBManager()
+        
+    def testGetZones(self):
+        zone = self._saveZone()
+        response = self.client.get('/api/inventory/zones/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.zones_xml % (zone.created_date.isoformat()))
+
+    def testGetZone(self):
+        zone = self._saveZone()
+        response = self.client.get('/api/inventory/zones/2/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.zone_xml % (zone.created_date.isoformat()))
+        
+    def testAddZoneNodeNull(self):
+        
+        try:
+            self.system_manager.addZone(None)
+        except:
+            assert(False) # should not throw exception
+        
+    def testAddZone(self):
+        zone = self._saveZone()
+        new_zone = self.system_manager.addZone(zone)
+        assert(new_zone is not None)
+        
+    def testPostZone(self):
+        xml = testsxml.zone_post_xml
+        response = self.client.post('/api/inventory/zones/', 
+            data=xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 200)
+        zone = models.Zone.objects.get(pk=1)
+        self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
+            (zone.created_date.isoformat() + '+00:00'))
 
 class ManagementNodesTestCase(XMLTestCase):
     

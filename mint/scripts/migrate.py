@@ -1271,6 +1271,17 @@ class MigrateTo_50(SchemaMigration):
             changed |= db.createIndex("inventory_system_event",
                 "inventory_system_event_priority", "priority")
             changed = True
+            
+        if 'inventory_zone' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_zone" (
+                    "zone_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL,
+                    "description" varchar(8092),
+                    "created_date" timestamp with time zone NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_zone'] = []
+            changed = True
 
         tableName = 'inventory_job'
         if tableName not in db.tables:

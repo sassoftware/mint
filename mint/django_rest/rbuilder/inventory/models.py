@@ -90,6 +90,26 @@ class Networks(modellib.XObjModel):
                 tag='networks',
                 elements=['network'])
     list_fields = ['network']
+    
+class Zones(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='zones',
+                elements=['zone'])
+    list_fields = ['zone']
+    
+class Zone(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_zone'
+    _xobj = xobj.XObjMetadata(
+                tag = 'zone',
+                attributes = {'id':str})
+    
+    zone_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=8092)
+    description = models.CharField(max_length=8092, null=True)
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
 class System(modellib.XObjIdModel):
     class Meta:
