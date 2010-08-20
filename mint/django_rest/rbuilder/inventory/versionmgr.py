@@ -28,8 +28,18 @@ class VersionManager(rbuilder_manager.RbuilderDjangoManager):
         # Need a rest db object for additional functionality.  If other mgr's
         # end up needing one as well, we can move this into
         # RbuilderDjangoManager.
-        mint_db = Database(self.cfg)
-        self.rest_db = RestDatabase(self.cfg, mint_db)
+        self._restDb = None
+
+    @property
+    def rest_db(self):
+        if self.cfg is None:
+            return None
+        if self._restDb is None:
+            from django.conf import settings
+            self.cfg.dbPath = settings.DATABASE_NAME
+            mint_db = Database(self.cfg)
+            self.rest_db = RestDatabase(self.cfg, mint_db)
+        return self._restDb
 
     def get_software_versions(self, system):
         pass
@@ -38,32 +48,50 @@ class VersionManager(rbuilder_manager.RbuilderDjangoManager):
         system.installed_software.all().delete()
 
     def set_installed_software(self, system, installed_versions):
+        oldInstalled = dict((x.getNVF(), x)
+            for x in system.installed_software.all())
+
+        # Do the delta
+        toAdd = []
         for installed_version in installed_versions:
-            trove = self.trove_from_nvf(installed_version)
-            matching_troves = system.installed_software.filter(
-                name=trove.name, version=trove.version, 
-                flavor=trove.flavor)
-            if not matching_troves:
-                system.installed_software.add(trove)
-                system.save()
+            if isinstance(installed_version, basestring):
+                trove = self.trove_from_nvf(installed_version)
+            else:
+                trove = installed_version
+            nvf = trove.getNVF()
+            isInst = oldInstalled.pop(nvf, None)
+            if isInst is None:
+                toAdd.append(trove)
+        for trove in oldInstalled.itervalues():
+            system.installed_software.remove(trove)
+        for trove in toAdd:
+            system.installed_software.add(self._trove(trove))
+        system.save()
 
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)
-        thawed_v = versions.ThawVersion(v)
         f = str(f)
 
-        full = str(v)
-        ordering = str(thawed_v.versions[-1].timeStamp)
-        revision = str(thawed_v.trailingRevision())
-        label = str(thawed_v.trailingLabel())
+        thawed_v = versions.ThawVersion(v)
+        version = models.Version()
+        version.fromConaryVersion(thawed_v)
+        version.flavor = f
 
-        version, created = models.Version.objects.get_or_create(
-            full=full, ordering=ordering, revision=revision, label=label,
-            flavor=f)
+        trove = models.Trove()
+        trove.name = n
+        trove.version = version
+        trove.flavor = f
+        return trove
 
-        trove, created = models.Trove.objects.get_or_create(
-            name=n, version=version, flavor=f)
-
+    @classmethod
+    def _trove(cls, trove):
+        """
+        If the trove is new, save it to the db, otherwise return the existing
+        one
+        """
+        created, version = models.Version.objects.load_or_create(trove.version)
+        trove.version = version
+        created, trove = models.Trove.objects.load_or_create(trove)
         return trove
 
     def cache_available_update(self, nvf, update_nvf):
@@ -72,7 +100,7 @@ class VersionManager(rbuilder_manager.RbuilderDjangoManager):
         available_update, created = models.AvailableUpdate.get_or_create(
             trove=trove, trove_available_update=update_trove)
         available_update.save()
-                
+
     def clear_cached_updates(self, nvf):
         trove = self.trove_from_nvf(nvf)
         trove.available_updates.all().delete()

@@ -677,9 +677,7 @@ systems_log_xml = """\
 </systemsLog>
 """
 
-system_version_xml = """\
-<?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2/">
+installed_software_xml = """\
   <installedSoftware>
     <trove>
       <availableUpdates>
@@ -731,6 +729,12 @@ system_version_xml = """\
       </version>
     </trove>
   </installedSoftware>
+"""
+
+system_version_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/2/">
+  %s
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
@@ -768,7 +772,29 @@ system_version_xml = """\
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
   <currentState>activated</currentState>
-  <createdDate>%s</createdDate>
+  <createdDate>%%s</createdDate>
   <osType/>
 </system>
+""" % installed_software_xml
+
+installed_software_post_xml = """\
+  <installedSoftware>
+    <trove>
+      <name>group-chater-appliance</name>
+      <version>
+        <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
+        <ordering>1234567890.12</ordering>
+      </version>
+      <flavor>is: x86</flavor>
+    </trove>
+    <trove>
+      <name>vim</name>
+      <version>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <ordering>1272410163.98</ordering>
+      </version>
+      <flavor>desktop is: x86_64</flavor>
+    </trove>
+  </installedSoftware>
 """
+

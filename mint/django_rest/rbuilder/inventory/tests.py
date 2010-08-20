@@ -1,3 +1,4 @@
+from conary import versions
 import collections
 import datetime
 from dateutil import tz
@@ -479,6 +480,8 @@ class SystemVersionsTestCase(XMLTestCase):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
         self.mintConfig = self.system_manager.cfg
+        from django.conf import settings
+        self.mintConfig.dbPath = settings.DATABASE_NAME
         self.mock_scheduleSystemActivationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
@@ -494,8 +497,8 @@ class SystemVersionsTestCase(XMLTestCase):
         version = models.Version()
         version.full = '/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1'
         version.label = 'clover.eng.rpath.com@rpath:clover-1-devel'
-        version.ordering = '1272410162.98'
-        version.revision = '1-2-1'
+        version.ordering = '1234567890.12'
+        version.revision = 'change me gently'
         version.flavor = \
             '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
         version.save()
@@ -508,21 +511,15 @@ class SystemVersionsTestCase(XMLTestCase):
         trove.save()
 
         version_update = models.Version()
-        version_update.full = '/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1'
-        version_update.label = 'clover.eng.rpath.com@rpath:clover-1-devel'
-        version_update.ordering = '1272410162.98'
-        version_update.revision = '1-3-1'
-        version_update.flavor = \
-            '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
+        version_update.fromConaryVersion(versions.ThawVersion(
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567890.13:1-3-1'))
+        version_update.flavor = version.flavor
         version_update.save()
 
         version_update2 = models.Version()
-        version_update2.full = '/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1'
-        version_update2.label = 'clover.eng.rpath.com@rpath:clover-1-devel'
-        version_update2.ordering = '1272410162.98'
-        version_update2.revision = '1-4-1'
-        version_update2.flavor = \
-            '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
+        version_update2.fromConaryVersion(versions.ThawVersion(
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567890.14:1-4-1'))
+        version_update2.flavor = version.flavor
         version_update2.save()
 
         trove.available_updates.add(version_update)
@@ -530,17 +527,15 @@ class SystemVersionsTestCase(XMLTestCase):
         trove.save()
 
         version2 = models.Version()
-        version2.full = '/contrib.rpath.org@rpl:2/23.0.60cvs20080523-1-0.1'
-        version2.label = 'contrib.rpath.org@rpl:2'
-        version2.ordering = '1272410163.98'
+        version2.fromConaryVersion(versions.ThawVersion(
+            '/contrib.rpath.org@rpl:devel//2/1234567890.12:23.0.60cvs20080523-1-0.1'))
         version2.flavor = 'desktop is: x86_64'
-        version2.revision = '23.0.60cvs20080523-1-0.1'
         version2.save()
 
         trove2 = models.Trove()
         trove2.name = 'emacs'
-        trove2.flavor = 'desktop is: x86_64'
         trove2.version = version2
+        trove2.flavor = version2.flavor
         trove2.save()
 
         self.trove = trove
@@ -559,7 +554,33 @@ class SystemVersionsTestCase(XMLTestCase):
             (self.trove.last_available_update_refresh.isoformat(),
              self.trove2.last_available_update_refresh.isoformat(),
              system.created_date.isoformat()))
-        
+
+    def testGetInstalledSoftwareRest(self):
+        system = self._saveSystem()
+        self._saveTrove()
+        system.installed_software.add(self.trove)
+        system.installed_software.add(self.trove2)
+        system.save()
+        url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
+        response = self.client.get(url)
+        self.assertXMLEquals(response.content,
+            testsxml.installed_software_xml %(
+                self.trove.last_available_update_refresh.isoformat(),
+                self.trove2.last_available_update_refresh.isoformat()))
+
+    def testSetInstalledSoftwareRest(self):
+        system = self._saveSystem()
+        self._saveTrove()
+        system.installed_software.add(self.trove)
+        system.installed_software.add(self.trove2)
+        system.save()
+
+        url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
+        response = self.client.post(url,
+            data=testsxml.installed_software_post_xml,
+            content_type="application/xml")
+        self.assertXMLEquals(response.content, "<FIXME/>")
+
 class EventTypeTestCase(XMLTestCase):
     
     def setUp(self):
@@ -619,7 +640,7 @@ class SystemEventTestCase(XMLTestCase):
             testsxml.system_events_xml % \
                 (event1.time_created.isoformat(), event1.time_enabled.isoformat(),
                  event2.time_created.isoformat(), event2.time_enabled.isoformat()))
-        
+
     def testGetSystemEventRest(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
