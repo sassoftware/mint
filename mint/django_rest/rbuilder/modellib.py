@@ -16,14 +16,14 @@ type_map = {}
 class BaseManager(models.Manager):
     """
     Common manager class all models should use.  Adds ability to load a model
-    from the database baesd on an existing model, and the ability to
+    from the database based on an existing model, and the ability to
     deserialize an object from xobj into an instance of the model.
     """
 
     def load_from_db(self, model_inst, accessors):
         """
         Load a model from the db based on model_inst.  Uses load_fields on the
-        model to look up a corrosponding model in the db. 
+        model to look up a corresponding model in the db. 
 
         Override this method for more specific behavior for a given model.
         """
@@ -40,7 +40,7 @@ class BaseManager(models.Manager):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
-        if it does returns a corrosponding model with the correct fields set
+        if it does returns a corresponding model with the correct fields set
         (such as pk, which wouldn't be set on model_inst).
 
         If a matching model was found, update it's fields with the values from
@@ -91,7 +91,7 @@ class BaseManager(models.Manager):
 
     def load_from_href(self, href):
         """
-        Given an href, return the corrosponding model.
+        Given an href, return the corresponding model.
         """
         if href:
             path = urlparse.urlparse(href)[2]
@@ -143,7 +143,7 @@ class BaseManager(models.Manager):
     def add_list_fields(self, model, obj, request):
         """
         For each list_field on the model, get the objects off of obj, load
-        their corrosponding model and add them to our model in a list.
+        their corresponding model and add them to our model in a list.
         """
         for key in model.list_fields:
             flist = getattr(obj, key, None)
