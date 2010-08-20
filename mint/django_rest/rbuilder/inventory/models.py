@@ -234,7 +234,8 @@ class SystemEvent(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, request, parent)
 
     def save(self, *args, **kw):
-        self.priority = self.event_type.priority
+        if not self.priority:
+            self.priority = self.event_type.priority
         modellib.XObjIdModel.save(self, *args, **kw)
 
 class ManagementNode(System):

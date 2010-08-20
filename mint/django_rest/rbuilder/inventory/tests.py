@@ -644,6 +644,19 @@ class SystemEventTestCase(XMLTestCase):
         local_system.networks.add(network2)
         event = self.system_manager.createSystemEvent(local_system, poll_event)
         assert(event is not None)
+        
+    def testSaveSystemEvent(self):
+        self._saveSystem()
+        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        event = models.SystemEvent(system=self.system, event_type=poll_event)
+        event.save()
+        # make sure event priority was set even though we didn't pass it in
+        assert(event.priority == poll_event.priority)
+        
+        event2 = models.SystemEvent(system=self.system, event_type=poll_event, priority=1)
+        event2.save()
+        # make sure we honor priority if set
+        assert(event2.priority == 1)
     
     def testScheduleSystemPollEvent(self):
         self.system_manager.scheduleSystemPollEvent(self.system)
