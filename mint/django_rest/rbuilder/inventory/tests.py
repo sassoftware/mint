@@ -12,11 +12,11 @@ from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
 
 class XMLTestCase(TestCase):
-    def assertXMLEquals(self, first, second):
+    def assertXMLEquals(self, first, second, ignoreNodes=None):
         from lxml import etree
         tree0 = self._removeTail(etree.fromstring(first.strip()))
         tree1 = self._removeTail(etree.fromstring(second.strip()))
-        if not self._nodecmp(tree0, tree1):
+        if not self._nodecmp(tree0, tree1, ignoreNodes=ignoreNodes):
             data0 = etree.tostring(tree0, pretty_print=True, with_tail=False)
             data1 = etree.tostring(tree1, pretty_print=True, with_tail=False)
             import difflib
@@ -54,13 +54,16 @@ class XMLTestCase(TestCase):
             return 1
 
     @classmethod
-    def _nodecmp(cls, node1, node2):
+    def _nodecmp(cls, node1, node2, ignoreNodes=None):
         if node1.attrib != node2.attrib:
             return False
         if node1.nsmap != node2.nsmap:
             return False
-        children1 = node1.getchildren()
-        children2 = node2.getchildren()
+        ignoreNodes = set(ignoreNodes or [])
+        children1 = [ x for x in node1.getchildren()
+            if x.tag not in ignoreNodes ]
+        children2 = [ x for x in node2.getchildren()
+            if x.tag not in ignoreNodes ]
         # For the purpose of these tests, we don't care about ordering,
         # so sort all the children before comparing.
         children1.sort(cmp=cls._sortChildren)
@@ -74,7 +77,7 @@ class XMLTestCase(TestCase):
             if len(children1) != len(children2):
                 return False
             for ch1, ch2 in zip(children1, children2):
-                if not cls._nodecmp(ch1, ch2):
+                if not cls._nodecmp(ch1, ch2, ignoreNodes=ignoreNodes):
                     return False
             return True
         # No children, compare the text
@@ -579,7 +582,9 @@ class SystemVersionsTestCase(XMLTestCase):
         response = self.client.post(url,
             data=testsxml.installed_software_post_xml,
             content_type="application/xml")
-        self.assertXMLEquals(response.content, "<FIXME/>")
+        self.assertXMLEquals(response.content,
+            testsxml.installed_software_response_xml,
+            ignoreNodes = ['lastAvailableUpdateRefresh'])
 
 class EventTypeTestCase(XMLTestCase):
     

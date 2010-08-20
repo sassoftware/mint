@@ -89,6 +89,9 @@ class VersionManager(rbuilder_manager.RbuilderDjangoManager):
         If the trove is new, save it to the db, otherwise return the existing
         one
         """
+        # First, make sure the flavor is part of the version object
+        if not trove.version.flavor:
+            trove.version.flavor = trove.flavor
         created, version = models.Version.objects.load_or_create(trove.version)
         trove.version = version
         created, trove = models.Trove.objects.load_or_create(trove)

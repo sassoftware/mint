@@ -798,3 +798,39 @@ installed_software_post_xml = """\
   </installedSoftware>
 """
 
+installed_software_response_xml = """
+  <installedSoftware>
+    <trove>
+      <availableUpdates/>
+      <flavor>is: x86</flavor>
+      <isTopLevel>True</isTopLevel>
+      <lastAvailableUpdateRefresh>XXX</lastAvailableUpdateRefresh>
+      <name>group-chater-appliance</name>
+      <troveId>3</troveId>
+      <version>
+        <flavor>is: x86</flavor>
+        <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
+        <label>chater.eng.rpath.com@rpath:chater-1-devel</label>
+        <ordering>1234567890.12</ordering>
+        <revision>1-2-1</revision>
+        <versionId>5</versionId>
+      </version>
+    </trove>
+    <trove>
+      <availableUpdates/>
+      <flavor>desktop is: x86_64</flavor>
+      <isTopLevel>False</isTopLevel>
+      <lastAvailableUpdateRefresh>XXX</lastAvailableUpdateRefresh>
+      <name>vim</name>
+      <troveId>4</troveId>
+      <version>
+        <flavor>desktop is: x86_64</flavor>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <ordering>1272410163.98</ordering>
+        <revision>23.0.60cvs20080523-1-0.1</revision>
+        <versionId>6</versionId>
+      </version>
+    </trove>
+  </installedSoftware>
+"""
