@@ -20,7 +20,7 @@ class BaseManager(models.Manager):
     deserialize an object from xobj into an instance of the model.
     """
 
-    def load_from_db(self, model_inst, accessors):
+    def load_from_db(self, model_inst, accessors=None):
         """
         Load a model from the db based on model_inst.  Uses load_fields on the
         model to look up a corresponding model in the db. 
@@ -36,7 +36,7 @@ class BaseManager(models.Manager):
             return None
 
 
-    def load(self, model_inst, accessors):
+    def load(self, model_inst, accessors=None):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -70,7 +70,7 @@ class BaseManager(models.Manager):
 
         return loaded_model
 
-    def load_or_create(self, model_inst, accessors):
+    def load_or_create(self, model_inst, accessors=None):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
