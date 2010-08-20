@@ -15,7 +15,7 @@ import logging
 from mint import config
 from mint.lib import scriptlibrary
 
-class ProcessSystemEvents(scriptlibrary.SingletonScript):
+class Scripts(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = 'system_events.log'
     newLogger = True

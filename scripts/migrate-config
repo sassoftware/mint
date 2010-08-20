@@ -1,6 +1,0 @@
-#!/usr/bin/python
-from mint.scripts import migrate_config
-import sys
-
-if __name__ == '__main__':
-    sys.exit(migrate_config.MigrateConfig().run())

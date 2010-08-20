@@ -13,7 +13,7 @@ from mint.lib import scriptlibrary
 from mint.scripts.db2db.migrate import switchToPostgres
 
 
-class RBuilderDatabase(scriptlibrary.SingletonScript):
+class Script(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = 'scripts.log'
     options = None
