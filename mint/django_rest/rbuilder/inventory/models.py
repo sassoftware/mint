@@ -150,6 +150,11 @@ class System(modellib.XObjIdModel):
                         related_name='systems')
 
     load_fields = [local_uuid]
+    
+    def save(self, *args, **kw):
+        if not self.current_state:
+            self.current_state = System.UNMANAGED
+        modellib.XObjIdModel.save(self, *args, **kw)
 
     def addJobs(self):
         return
@@ -253,7 +258,7 @@ class ManagementNode(System):
     
     def save(self, *args, **kw):
         self.is_management_node = True
-        modellib.XObjModel.save(self, *args, **kw)
+        System.save(self, *args, **kw)
 
 class Network(modellib.XObjModel):
     class Meta:
