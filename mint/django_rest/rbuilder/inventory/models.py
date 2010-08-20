@@ -11,7 +11,6 @@ from conary import versions
 from conary.deps import deps
 
 from django.db import models
-from django.core import exceptions
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
