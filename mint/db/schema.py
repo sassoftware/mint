@@ -37,6 +37,19 @@ def _createTrigger(db, table, column = "changed"):
     return retInsert or retUpdate
 
 
+def createTable(db, name, definition):
+    """Helper for creating a table if it doesn't already exist.
+
+    Pass C{None} as C{name} to force creation.
+    """
+    if name and name in db.tables:
+        return False
+    cu = db.cursor()
+    cu.execute(definition % db.keywords)
+    db.tables[name] = []
+    return True
+
+
 def _createUsers(db):
     cu = db.cursor()
     changed = False
@@ -1091,9 +1104,9 @@ def _createInventorySchema(db, cfg):
         db.tables['inventory_management_node'] = []
         changed = True
 
-    if 'inventory_network' not in db.tables:
+    if 'inventory_system_network' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_network" (
+            CREATE TABLE "inventory_system_network" (
                 "network_id" %(PRIMARYKEY)s,
                 "system_id" integer NOT NULL 
                     REFERENCES "inventory_system" ("system_id")
@@ -1104,17 +1117,19 @@ def _createInventorySchema(db, cfg):
                 "public_dns_name" varchar(255) NOT NULL,
                 "netmask" varchar(20),
                 "port_type" varchar(32),
-                "primary" bool
+                "active" bool,
+                "required" bool,
+                UNIQUE ("system_id", "public_dns_name", "ip_address", "ipv6_address")
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_network'] = []
+        db.tables['inventory_system_network'] = []
         changed = True
-        changed |= db.createIndex("inventory_network",
-            "inventory_network_system_id_idx", "system_id")
-        changed |= db.createIndex("inventory_network",
-            "inventory_network_public_dns_name_idx", "public_dns_name")
+        changed |= db.createIndex("inventory_system_network",
+            "inventory_system_network_system_id_idx", "system_id")
+        changed |= db.createIndex("inventory_system_network",
+            "inventory_system_network_public_dns_name_idx", "public_dns_name")
         
     # add local management node.  must be done after inventory_system and 
-    # inventory_network are added
+    # inventory_system_network are added
     changed |= _addManagementNode(db, cfg)
 
     if 'inventory_system_log' not in db.tables:
@@ -1151,29 +1166,11 @@ def _createInventorySchema(db, cfg):
                 "label" TEXT NOT NULL,
                 "revision" TEXT NOT NULL,
                 "ordering" TEXT NOT NULL,
-                "flavor" TEXT NOT NULL
+                "flavor" TEXT NOT NULL,
+                UNIQUE("full", "ordering", "flavor")
             )""" % db.keywords)
         db.tables['inventory_version'] = []
         changed = True
-
-    if 'inventory_system_versions' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system_versions" (
-                "id" %(PRIMARYKEY)s,
-                "system_id" integer NOT NULL
-                    REFERENCES "inventory_system" ("system_id")
-                    ON DELETE CASCADE,
-                "version_id" integer NOT NULL
-                    REFERENCES "inventory_version" ("version_id")
-                    ON DELETE CASCADE,
-                UNIQUE ("system_id", "version_id")
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_system_versions'] = []
-        changed = True
-        changed |= db.createIndex("inventory_system_versions",
-            "inventory_system_versions_system_id_idx", "system_id")
-        changed |= db.createIndex("inventory_system_versions",
-            "inventory_system_versions_version_id", "version_id")
 
     tableName = 'inventory_event_type'
     if tableName not in db.tables:
@@ -1217,7 +1214,18 @@ def _createInventorySchema(db, cfg):
         changed |= db.createIndex("inventory_system_event",
             "inventory_system_event_priority", "priority")
         changed = True
-
+    
+    if 'inventory_zone' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_zone" (
+                "zone_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL,
+                "description" varchar(8092),
+                "created_date" timestamp with time zone NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_zone'] = []
+        changed = True
+        
     tableName = 'inventory_job'
     if tableName not in db.tables:
         cu.execute("""
@@ -1308,9 +1316,8 @@ def _addManagementNode(db, cfg):
     if len(ids) == 1:
         systemId = ids[0][0]
         # add the network
-        net_dict = dict(system_id=systemId, public_dns_name='127.0.0.1')
-        net_dict["\"primary\""] = 'true'
-        changed |= _addTableRows(db, 'inventory_network', 'public_dns_name', [net_dict])
+        changed |= _addTableRows(db, 'inventory_system_network', 'public_dns_name',
+            [dict(system_id=systemId, public_dns_name='127.0.0.1', active=True)])
         # add the management node
         changed |= _addTableRows(db, 'inventory_management_node', 'system_ptr_id',
                 [dict(system_ptr_id=systemId, local='true')])
@@ -1464,6 +1471,30 @@ def _createJobsSchema(db):
 
     return changed
 
+
+def _createPKI(db):
+    """Public key infrastructure tables"""
+    changed = False
+
+    changed |= createTable(db, 'pki_certificates', """
+        CREATE TABLE pki_certificates (
+            fingerprint             text PRIMARY KEY,
+            purpose                 text NOT NULL,
+            is_ca                   boolean NOT NULL DEFAULT false,
+            x509_pem                text NOT NULL,
+            pkey_pem                text NOT NULL,
+            issuer_fingerprint      text
+                REFERENCES pki_certificates ( fingerprint )
+                ON DELETE SET NULL,
+            ca_serial_index         integer,
+            time_issued             timestamptz NOT NULL,
+            time_expired            timestamptz NOT NULL,
+            UNIQUE ( fingerprint, ca_serial_index )
+        )""")
+
+    return changed
+
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
     if not hasattr(db, "tables"):
@@ -1494,6 +1525,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
+    changed |= _createPKI(db)
 
     if doCommit:
         db.commit()

@@ -14,6 +14,7 @@ from mint.django_rest.deco import requires, return_xml
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import systemdbmgr
+from mint.django_rest.rbuilder.inventory import versionmgr
 
 MANAGER_CLASS = systemdbmgr.SystemDBManager
 
@@ -21,11 +22,14 @@ class AbstractInventoryService(resource.Resource):
 
     def __init__(self):
         self.sysMgr = MANAGER_CLASS(cfg=None)
+        self.versionMgr = versionmgr.VersionManager(cfg=None)
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
         resource.Resource.__init__(self, permitted_methods=permitted_methods)
 
     def __call__(self, request, *args, **kw):
         self.sysMgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
+        self.versionMgr = versionmgr.VersionManager(
+            cfg=getattr(request, 'cfg', None))
         return resource.Resource.__call__(self, request, *args, **kw)
 
     def read(self, request, *args, **kwargs):
@@ -56,6 +60,24 @@ class InventoryLogService(AbstractInventoryService):
     @return_xml
     def read(self, request):
         return self.sysMgr.getSystemsLog()
+    
+class InventoryZoneService(AbstractInventoryService):
+    
+    @return_xml
+    def read(self, request, zone_id=None):
+        return self.get(zone_id)
+    
+    def get(self, zone_id=None):
+        if zone_id:
+            return self.sysMgr.getZone(zone_id)
+        else:
+            return self.sysMgr.getZones()
+        
+    @requires('zone')
+    @return_xml
+    def create(self, request, zone):
+        zone = self.sysMgr.addZone(zone)
+        return zone
     
 class InventoryManagementNodeService(AbstractInventoryService):
     
@@ -180,6 +202,23 @@ class InventorySystemEventsByTypeService(AbstractInventoryService):
     def read(self, request, event_type):
         # TODO, something for real
         return None
+
+class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
+    @return_xml
+    def read(self, request, system_id):
+        system = self.sysMgr.getSystem(system_id)
+        installedSoftware = models.InstalledSoftware()
+        installedSoftware.trove = system.installed_software.all()
+        return installedSoftware
+
+    @requires('installedSoftware')
+    @return_xml
+    def create(self, request, system_id, installedSoftware):
+        system = self.sysMgr.getSystem(system_id)
+        self.versionMgr.set_installed_software(system, installedSoftware.trove)
+        installedSoftware = models.InstalledSoftware()
+        installedSoftware.trove = system.installed_software.all()
+        return installedSoftware
 
 class InventoryEventTypesService(AbstractInventoryService):
     

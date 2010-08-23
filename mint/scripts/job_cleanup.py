@@ -22,7 +22,7 @@ from mint.lib.scriptlibrary import GenericScript
 log = logging.getLogger(__name__)
 
 
-class JobCleanupScript(GenericScript):
+class Script(GenericScript):
     logFileName = 'scripts.log'
     newLogger = True
     timeout = 120

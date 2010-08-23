@@ -6,9 +6,7 @@
 
 SUBDIRS = artwork postgresql stubs
 
-extra_dist = schema.in.py
-
-generated_files = schema custom.cfg rbuilder.conf
+generated_files = custom.cfg rbuilder.conf
 
 .PHONY: all install $(generated_files)
 
@@ -22,8 +20,6 @@ install: default-install httpd-sysconfig
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
 	# rBuilder entitlement
 	install -D -m0644 entitlements.xml $(DESTDIR)/etc/conary/entitlements.xml
-	# rBuilder misc
-	install -D -m0644 schema $(DESTDIR)/usr/share/rbuilder/schema
 	# rAPA bits
 	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
 	install -D -m0644 backup.flat $(DESTDIR)/etc/raa/backup.d/rBAFiles
@@ -79,9 +75,6 @@ httpd-sysconfig:
 	echo "ulimit -n 65536" > $(DESTDIR)/etc/sysconfig/httpd
 
 clean: default-clean
-
-schema: schema.in.py
-	python schema.in.py > schema
 
 custom.cfg: custom.cfg.in
 	sed -e s,@VERSION@,$(SHORTVER), custom.cfg.in > custom.cfg

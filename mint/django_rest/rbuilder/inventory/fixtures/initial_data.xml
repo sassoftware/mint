@@ -83,4 +83,9 @@
     <field type="NullBooleanField" name="local">True</field>
     <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"/>
   </object>
+  <object pk="1" model="inventory.zone">
+        <field type="CharField" name="name">some zone</field>
+        <field type="CharField" name="description">some zone desc</field>
+        <field type="DateTimeField" name="created_date">2010-08-20 20:23:38</field>
+    </object>
 </django-objects>

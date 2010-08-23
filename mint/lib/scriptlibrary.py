@@ -34,9 +34,14 @@ class GenericScript(object):
         self.name = os.path.basename(sys.argv[0])
         self.resetLogging()
 
-    def resetLogging(self, quiet=False, fileLevel=logging.DEBUG):
+    def resetLogging(self, quiet=False, verbose=False, fileLevel=logging.DEBUG):
         if self.newLogger:
-            level = quiet and logging.ERROR or logging.INFO
+            if verbose:
+                level = logging.DEBUG
+            elif quiet:
+                level = logging.ERROR
+            else:
+                level = logging.INFO
             mintutils.setupLogging(self.logPath, consoleLevel=level,
                     fileLevel=fileLevel)
             # Set the conary logger to not eat messages

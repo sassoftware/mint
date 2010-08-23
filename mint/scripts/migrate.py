@@ -1,5 +1,7 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
 #
 
 import logging
@@ -124,6 +126,10 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None):
         cu.execute("DROP TABLE %s" % tmpTable)
 
     db.loadSchema()
+
+
+def createTable(db, definition):
+    return schema.createTable(db, None, definition)
 
 
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
@@ -1122,9 +1128,9 @@ class MigrateTo_50(SchemaMigration):
             # add local management node
             changed |= schema._addManagementNode(db, self.cfg)
 
-        if 'inventory_network' not in db.tables:
+        if 'inventory_system_network' not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_network" (
+                CREATE TABLE "inventory_system_network" (
                     "network_id" %(PRIMARYKEY)s,
                     "system_id" integer NOT NULL 
                         REFERENCES "inventory_system" ("system_id")
@@ -1135,14 +1141,16 @@ class MigrateTo_50(SchemaMigration):
                     "public_dns_name" varchar(255) NOT NULL,
                     "netmask" varchar(20),
                     "port_type" varchar(32),
-                    "primary" bool
+                    "active" bool,
+                    "required" bool,
+                    UNIQUE ("system_id", "public_dns_name", "ip_address", "ipv6_address")
                 ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_network'] = []
+            db.tables['inventory_system_network'] = []
             changed = True
-            changed |= db.createIndex("inventory_network",
-                "inventory_network_system_id_idx", "system_id")
-            changed |= db.createIndex("inventory_network",
-            "inventory_network_public_dns_name_idx", "public_dns_name")
+            changed |= db.createIndex("inventory_system_network",
+                "inventory_system_network_system_id_idx", "system_id")
+            changed |= db.createIndex("inventory_system_network",
+            "inventory_system_network_public_dns_name_idx", "public_dns_name")
 
         if 'inventory_system_log' not in db.tables:
             cu.execute("""
@@ -1203,32 +1211,15 @@ class MigrateTo_50(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_version" (
                     "version_id" %(PRIMARYKEY)s,
-                    "name" text NOT NULL,
-                    "version" text NOT NULL,
-                    "flavor" text NOT NULL,
-                    UNIQUE ("name", "version", "flavor")
+                    "full" TEXT NOT NULL,
+                    "label" TEXT NOT NULL,
+                    "revision" TEXT NOT NULL,
+                    "ordering" TEXT NOT NULL,
+                    "flavor" TEXT NOT NULL,
+                    UNIQUE("full", "ordering", "flavor")
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_version'] = []
             changed = True
-
-        if 'inventory_system_versions' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_versions" (
-                    "id" %(PRIMARYKEY)s,
-                    "system_id" integer NOT NULL
-                        REFERENCES "inventory_system" ("system_id")
-                        ON DELETE CASCADE,
-                    "version_id" integer NOT NULL
-                        REFERENCES "inventory_version" ("version_id")
-                        ON DELETE CASCADE,
-                    UNIQUE ("system_id", "version_id")
-                ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_system_versions'] = []
-            changed = True
-            changed |= db.createIndex("inventory_system_versions",
-                "inventory_system_versions_system_id_idx", "system_id")
-            changed |= db.createIndex("inventory_system_versions",
-                "inventory_system_versions_version_id", "version_id")
 
         tableName = 'inventory_event_type'
         if tableName not in db.tables:
@@ -1271,6 +1262,17 @@ class MigrateTo_50(SchemaMigration):
             changed |= db.createIndex("inventory_system_event",
                 "inventory_system_event_priority", "priority")
             changed = True
+            
+        if 'inventory_zone' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_zone" (
+                    "zone_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL,
+                    "description" varchar(8092),
+                    "created_date" timestamp with time zone NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_zone'] = []
+            changed = True
 
         tableName = 'inventory_job'
         if tableName not in db.tables:
@@ -1300,7 +1302,24 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables[tableName] = []
             changed = True
-        return changed
+
+        createTable(db, """
+            CREATE TABLE pki_certificates (
+                fingerprint             text PRIMARY KEY,
+                purpose                 text NOT NULL,
+                is_ca                   boolean NOT NULL DEFAULT false,
+                x509_pem                text NOT NULL,
+                pkey_pem                text NOT NULL,
+                issuer_fingerprint      text
+                    REFERENCES pki_certificates ( fingerprint )
+                    ON DELETE SET NULL,
+                ca_serial_index         integer,
+                time_issued             timestamptz NOT NULL,
+                time_expired            timestamptz NOT NULL,
+                UNIQUE ( fingerprint, ca_serial_index )
+            )""")
+
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################

@@ -21,7 +21,7 @@
 
   <local>
     <id realm='' require-starttls='true' register-enable='true'
-      pemfile='/srv/rbuilder/pki/rbuilder/jabberd/certificate.pem'
+      pemfile='/srv/rbuilder/pki/jabberd.pem'
       >rbuilder.rpath</id>
     <ip>0.0.0.0</ip>
     <port>5222</port>

@@ -7,8 +7,10 @@ import sys
 import datetime
 from dateutil import tz
 
+from conary import versions
+from conary.deps import deps
+
 from django.db import models
-from django.core import exceptions
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -90,6 +92,26 @@ class Networks(modellib.XObjModel):
                 tag='networks',
                 elements=['network'])
     list_fields = ['network']
+    
+class Zones(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='zones',
+                elements=['zone'])
+    list_fields = ['zone']
+    
+class Zone(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_zone'
+    _xobj = xobj.XObjMetadata(
+                tag = 'zone',
+                attributes = {'id':str})
+    
+    zone_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=8092)
+    description = models.CharField(max_length=8092, null=True)
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
 class System(modellib.XObjIdModel):
     class Meta:
@@ -148,8 +170,14 @@ class System(modellib.XObjIdModel):
     # the management node managing this system.
     managing_node = models.ForeignKey('ManagementNode', null=True,
                         related_name='systems')
+    systemJobs = models.ManyToManyField("Job", through="SystemJob")
 
     load_fields = [local_uuid]
+    
+    def save(self, *args, **kw):
+        if not self.current_state:
+            self.current_state = System.UNMANAGED
+        modellib.XObjIdModel.save(self, *args, **kw)
 
     def addJobs(self):
         return
@@ -167,6 +195,14 @@ class System(modellib.XObjIdModel):
 
             # add it to the system
             pass
+
+class InstalledSoftware(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='installedSoftware',
+                elements=['trove'])
+    list_fields = ['trove']
 
 class EventType(modellib.XObjIdModel):
     class Meta:
@@ -234,7 +270,8 @@ class SystemEvent(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, request, parent)
 
     def save(self, *args, **kw):
-        self.priority = self.event_type.priority
+        if not self.priority:
+            self.priority = self.event_type.priority
         modellib.XObjIdModel.save(self, *args, **kw)
 
 class ManagementNode(System):
@@ -252,11 +289,13 @@ class ManagementNode(System):
     
     def save(self, *args, **kw):
         self.is_management_node = True
-        modellib.XObjModel.save(self, *args, **kw)
+        System.save(self, *args, **kw)
 
 class Network(modellib.XObjModel):
     class Meta:
-        db_table = 'inventory_network'
+        db_table = 'inventory_system_network'
+        unique_together = (('system', 'public_dns_name', 'ip_address', 'ipv6_address'),)
+        
     _xobj = xobj.XObjMetadata(
                 tag='network')
     network_id = models.AutoField(primary_key=True)
@@ -268,8 +307,8 @@ class Network(modellib.XObjModel):
     public_dns_name = models.CharField(max_length=255, db_index=True)
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
-    primary = models.NullBooleanField()
-    # TODO: add all the other fields we need about a network
+    active = models.NullBooleanField()
+    required = models.NullBooleanField()
 
     load_fields = [ip_address, public_dns_name]
 
@@ -319,6 +358,8 @@ class Trove(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_trove'
         unique_together = (('name', 'version', 'flavor'),)
+
+    _xobj = xobj.XObjMetadata(tag='trove')
     trove_id = models.AutoField(primary_key=True)
     name = models.TextField()
     version = modellib.SerializedForeignKey('Version')
@@ -329,21 +370,29 @@ class Trove(modellib.XObjModel):
     available_updates = models.ManyToManyField('Version',
         related_name='available_updates')
 
+    load_fields = [ name, version, flavor ]
+
     def _is_top_level_group(self):
         return self.name.startswith('group-') and \
             self.name.endswith('-appliance')
 
     def save(self, *args, **kw):
-        if self._is_top_level_group():
-            self.is_top_level = True
-        else:
-            self.is_top_level = False
+        self.is_top_level = self._is_top_level_group()
         modellib.XObjModel.save(self, *args, **kw)
+
+    def getFlavor(self):
+        if not self.flavor:
+            return None
+        return deps.parseFlavor(self.flavor)
+
+    def getNVF(self):
+        return self.name, self.version.conaryVersion, self.getFlavor()
 
 class Version(modellib.XObjModel):
     serialize_accessors = False
     class Meta:
         db_table = 'inventory_version'
+        unique_together = [ ('full', 'ordering', 'flavor'), ]
     version_id = models.AutoField(primary_key=True)
     full = models.TextField()
     label = models.TextField()
@@ -351,12 +400,33 @@ class Version(modellib.XObjModel):
     ordering = models.TextField()
     flavor = models.TextField()
 
+    load_fields = [ full, ordering, flavor ]
+
+    @property
+    def conaryVersion(self):
+        v = versions.VersionFromString(self.full,
+            timeStamps = [ float(self.ordering) ] )
+        return v
+
+    def fromConaryVersion(self, version):
+        self.full = str(version)
+        self.label = str(version.trailingLabel())
+        self.revision = str(version.trailingRevision())
+        self.ordering = str(version.timeStamps()[0])
+
+    def save(self, *args, **kwargs):
+        # If the object is incomplete, fill in the missing information
+        if not self.label or not self.revision:
+            v = self.conaryVersion
+            self.fromConaryVersion(v)
+        return super(self.__class__, self).save(self, *args, **kwargs)
+
 class SystemJob(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_job'
     system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
-    job = models.ForeignKey(Job)
+    job = modellib.DeferredForeignKey(Job)
 
 class ErrorResponse(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(

@@ -16,14 +16,14 @@ type_map = {}
 class BaseManager(models.Manager):
     """
     Common manager class all models should use.  Adds ability to load a model
-    from the database baesd on an existing model, and the ability to
+    from the database based on an existing model, and the ability to
     deserialize an object from xobj into an instance of the model.
     """
 
-    def load_from_db(self, model_inst, accessors):
+    def load_from_db(self, model_inst, accessors=None):
         """
         Load a model from the db based on model_inst.  Uses load_fields on the
-        model to look up a corrosponding model in the db. 
+        model to look up a corresponding model in the db. 
 
         Override this method for more specific behavior for a given model.
         """
@@ -36,11 +36,11 @@ class BaseManager(models.Manager):
             return None
 
 
-    def load(self, model_inst, accessors):
+    def load(self, model_inst, accessors=None):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
-        if it does returns a corrosponding model with the correct fields set
+        if it does returns a corresponding model with the correct fields set
         (such as pk, which wouldn't be set on model_inst).
 
         If a matching model was found, update it's fields with the values from
@@ -70,7 +70,7 @@ class BaseManager(models.Manager):
 
         return loaded_model
 
-    def load_or_create(self, model_inst, accessors):
+    def load_or_create(self, model_inst, accessors=None):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
@@ -91,7 +91,7 @@ class BaseManager(models.Manager):
 
     def load_from_href(self, href):
         """
-        Given an href, return the corrosponding model.
+        Given an href, return the corresponding model.
         """
         if href:
             path = urlparse.urlparse(href)[2]
@@ -107,7 +107,7 @@ class BaseManager(models.Manager):
         else:
             return None
 
-    def add_fields(self, model, obj, request):
+    def add_fields(self, model, obj, request, save=True):
         """
         For each obj attribute, if the attribute matches a field name on
         model, set the attribute's value on model.
@@ -122,7 +122,7 @@ class BaseManager(models.Manager):
                     continue;
                 # Special case for FK fields which should be hrefs.
                 if isinstance(fields[key], SerializedForeignKey):
-                    val = fields[key].related.parent_model.objects.load_from_object(val, request)
+                    val = fields[key].related.parent_model.objects.load_from_object(val, request, save=save)
                 elif isinstance(fields[key], related.RelatedField):
                     val = fields[key].related.parent_model.objects.load_from_href(
                         getattr(val, 'href', None))
@@ -132,6 +132,7 @@ class BaseManager(models.Manager):
                     else:
                         # Cast to str, django will just do the right thing.
                         val = str(val)
+                        val = fields[key].get_prep_value(val)
                 else:
                     val = None
 
@@ -139,10 +140,10 @@ class BaseManager(models.Manager):
 
         return model
 
-    def add_list_fields(self, model, obj, request):
+    def add_list_fields(self, model, obj, request, save=True):
         """
         For each list_field on the model, get the objects off of obj, load
-        their corrosponding model and add them to our model in a list.
+        their corresponding model and add them to our model in a list.
         """
         for key in model.list_fields:
             flist = getattr(obj, key, None)
@@ -150,7 +151,8 @@ class BaseManager(models.Manager):
                 flist = [flist]
             mods = []
             for val in flist:
-                m = type_map[key].objects.load_from_object( val, request)
+                m = type_map[key].objects.load_from_object(val, request,
+                    save=save)
                 mods.append(m)
             if mods:
                 setattr(model, key, mods)
@@ -206,12 +208,12 @@ class BaseManager(models.Manager):
         if model._meta.abstract:
             save = False
 
-        model = self.add_fields(model, obj, request)
+        model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
         if save:
             created, model = self.load_or_create(model, accessors)
 
-        model = self.add_list_fields(model, obj, request)
+        model = self.add_list_fields(model, obj, request, save=save)
 
         model = self.add_accessors(model, accessors)
 
@@ -414,10 +416,11 @@ class XObjModel(models.Model):
         For each remaining field in fields, see if it's a FK field, if so set
         the create an href object and set it on xobj_model.
         """
-        for field in fields.keys():
-            if isinstance(fields[field], related.RelatedField):
-                val = getattr(self, field)
-                serialized = getattr(fields[field], 'serialized', False)
+        for fieldName in fields:
+            field = fields[fieldName]
+            if isinstance(field, related.RelatedField):
+                val = getattr(self, fieldName)
+                serialized = getattr(field, 'serialized', False)
                 if val:
                     if not serialized:
                         href_model = type('%s_href' % \
@@ -425,13 +428,13 @@ class XObjModel(models.Model):
                         href_model._xobj = xobj.XObjMetadata(
                                             attributes = {'href':str})
                         href_model.href = val.get_absolute_url(request)
-                        setattr(xobj_model, field, href_model)
+                        setattr(xobj_model, fieldName, href_model)
                     else:
                         val = val.serialize(request)
-                        setattr(xobj_model, field, val)
+                        setattr(xobj_model, fieldName, val)
                 else:
-                    setattr(xobj_model, field, '')
-                        
+                    setattr(xobj_model, fieldName, '')
+
     def serialize_accessors(self, xobj_model, accessors, request):
         """
         Builds up an object for each accessor for this model and sets it on

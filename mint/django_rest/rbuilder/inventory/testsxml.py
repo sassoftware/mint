@@ -48,6 +48,52 @@ event_types_xml="""\
   </eventType>
 </eventTypes>"""
 
+zones_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zones>
+  <zone id="http://testserver/api/inventory/zones/1/">
+    <createdDate>2010-08-20T20:23:38+00:00</createdDate>
+    <zoneId>1</zoneId>
+    <name>some zone</name>
+    <description>some zone desc</description>
+  </zone>
+  <zone id="http://testserver/api/inventory/zones/2/">
+    <createdDate>%s</createdDate>
+    <zoneId>2</zoneId>
+    <name>Local Zone</name>
+    <description>Some local zone</description>
+  </zone>
+</zones>
+"""
+
+zone_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone id="http://testserver/api/inventory/zones/2/">
+  <createdDate>%s</createdDate>
+  <zoneId>2</zoneId>
+  <name>Local Zone</name>
+  <description>Some local zone</description>
+</zone>
+"""
+
+zone_post_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone>
+  <description>Some local zone</description>
+  <name>Local Zone</name>
+</zone>
+"""
+
+zone_post_response_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone id="http://testserver/api/inventory/zones/1/">
+  <createdDate>%s</createdDate>
+  <description>Some local zone</description>
+  <name>Local Zone</name>
+  <zoneId>1</zoneId>
+</zone>
+"""
+
 management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNodes>
@@ -96,14 +142,15 @@ management_nodes_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>2.2.2.2</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
+        <required/>
         <system href="http://testserver/api/inventory/systems/2/"/>
       </network>
     </networks>
@@ -147,14 +194,15 @@ management_node_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>2.2.2.2</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
@@ -195,14 +243,15 @@ management_node_post_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>2.2.2.2</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/1/"/>
     </network>
   </networks>
@@ -272,14 +321,15 @@ systems_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>1.1.1.1</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
+        <required/>
         <system href="http://testserver/api/inventory/systems/2/"/>
       </network>
     </networks>
@@ -318,14 +368,15 @@ systems_put_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>1.1.1.1</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
+        <required/>
       </network>
     </networks>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -354,14 +405,15 @@ systems_put_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>2.2.2.2</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>2</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork2.example.com</publicDnsName>
+        <required/>
       </network>
     </networks>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -396,14 +448,15 @@ system_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
@@ -439,13 +492,14 @@ system_post_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
     </network>
   </networks>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -466,7 +520,7 @@ system_post_xml = """\
 system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
-  <activated>True</activated>
+  <activated>False</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <activationDate/>
@@ -474,13 +528,50 @@ system_post_xml_dup = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
+    </network>
+  </networks>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <available/>
+  <description>testsystemdescription</description>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <name>testsystemname</name>
+  <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>activated</currentState>
+  <osType/>
+</system>"""
+
+system_post_xml_dup2 = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <activated>False</activated>
+  <sslClientKey>testsystemsslclientkey</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <active/>
+      <deviceName>eth0</deviceName>
+      <ipAddress>1.1.1.1</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <portType>lan</portType>
+      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
     </network>
   </networks>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -511,14 +602,15 @@ system_target_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
@@ -642,9 +734,7 @@ systems_log_xml = """\
 </systemsLog>
 """
 
-system_version_xml = """\
-<?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2/">
+installed_software_xml = """\
   <installedSoftware>
     <trove>
       <availableUpdates>
@@ -696,6 +786,12 @@ system_version_xml = """\
       </version>
     </trove>
   </installedSoftware>
+"""
+
+system_version_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/2/">
+  %s
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
@@ -705,14 +801,15 @@ system_version_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
@@ -733,7 +830,65 @@ system_version_xml = """\
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
   <currentState>activated</currentState>
-  <createdDate>%s</createdDate>
+  <createdDate>%%s</createdDate>
   <osType/>
 </system>
+""" % installed_software_xml
+
+installed_software_post_xml = """\
+  <installedSoftware>
+    <trove>
+      <name>group-chater-appliance</name>
+      <version>
+        <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
+        <ordering>1234567890.12</ordering>
+      </version>
+      <flavor>is: x86</flavor>
+    </trove>
+    <trove>
+      <name>vim</name>
+      <version>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <ordering>1272410163.98</ordering>
+      </version>
+      <flavor>desktop is: x86_64</flavor>
+    </trove>
+  </installedSoftware>
+"""
+
+installed_software_response_xml = """
+  <installedSoftware>
+    <trove>
+      <availableUpdates/>
+      <flavor>is: x86</flavor>
+      <isTopLevel>True</isTopLevel>
+      <lastAvailableUpdateRefresh>XXX</lastAvailableUpdateRefresh>
+      <name>group-chater-appliance</name>
+      <troveId>3</troveId>
+      <version>
+        <flavor>is: x86</flavor>
+        <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
+        <label>chater.eng.rpath.com@rpath:chater-1-devel</label>
+        <ordering>1234567890.12</ordering>
+        <revision>1-2-1</revision>
+        <versionId>5</versionId>
+      </version>
+    </trove>
+    <trove>
+      <availableUpdates/>
+      <flavor>desktop is: x86_64</flavor>
+      <isTopLevel>False</isTopLevel>
+      <lastAvailableUpdateRefresh>XXX</lastAvailableUpdateRefresh>
+      <name>vim</name>
+      <troveId>4</troveId>
+      <version>
+        <flavor>desktop is: x86_64</flavor>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <ordering>1272410163.98</ordering>
+        <revision>23.0.60cvs20080523-1-0.1</revision>
+        <versionId>6</versionId>
+      </version>
+    </trove>
+  </installedSoftware>
 """

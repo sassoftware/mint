@@ -1,3 +1,4 @@
+from conary import versions
 import collections
 import datetime
 from dateutil import tz
@@ -11,11 +12,11 @@ from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
 
 class XMLTestCase(TestCase):
-    def assertXMLEquals(self, first, second):
+    def assertXMLEquals(self, first, second, ignoreNodes=None):
         from lxml import etree
         tree0 = self._removeTail(etree.fromstring(first.strip()))
         tree1 = self._removeTail(etree.fromstring(second.strip()))
-        if not self._nodecmp(tree0, tree1):
+        if not self._nodecmp(tree0, tree1, ignoreNodes=ignoreNodes):
             data0 = etree.tostring(tree0, pretty_print=True, with_tail=False)
             data1 = etree.tostring(tree1, pretty_print=True, with_tail=False)
             import difflib
@@ -53,13 +54,16 @@ class XMLTestCase(TestCase):
             return 1
 
     @classmethod
-    def _nodecmp(cls, node1, node2):
+    def _nodecmp(cls, node1, node2, ignoreNodes=None):
         if node1.attrib != node2.attrib:
             return False
         if node1.nsmap != node2.nsmap:
             return False
-        children1 = node1.getchildren()
-        children2 = node2.getchildren()
+        ignoreNodes = set(ignoreNodes or [])
+        children1 = [ x for x in node1.getchildren()
+            if x.tag not in ignoreNodes ]
+        children2 = [ x for x in node2.getchildren()
+            if x.tag not in ignoreNodes ]
         # For the purpose of these tests, we don't care about ordering,
         # so sort all the children before comparing.
         children1.sort(cmp=cls._sortChildren)
@@ -73,11 +77,19 @@ class XMLTestCase(TestCase):
             if len(children1) != len(children2):
                 return False
             for ch1, ch2 in zip(children1, children2):
-                if not cls._nodecmp(ch1, ch2):
+                if not cls._nodecmp(ch1, ch2, ignoreNodes=ignoreNodes):
                     return False
             return True
         # No children, compare the text
         return node1.text == node2.text
+    
+    def _saveZone(self):
+        zone = models.Zone()
+        zone.name = "Local Zone"
+        zone.description = "Some local zone"
+        zone.save()
+        
+        return zone
 
     def _saveSystem(self):
         system = models.System()
@@ -209,12 +221,68 @@ class LogTestCase(XMLTestCase):
             else:
                 content.append(line)
         self.assertXMLEquals('\n'.join(content), testsxml.systems_log_xml)
+        
+class ZonesTestCase(XMLTestCase):
+    
+    def setUp(self):
+        self.client = Client()
+        self.system_manager = systemdbmgr.SystemDBManager()
+        
+    def testGetZones(self):
+        zone = self._saveZone()
+        response = self.client.get('/api/inventory/zones/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.zones_xml % (zone.created_date.isoformat()))
+
+    def testGetZone(self):
+        zone = self._saveZone()
+        response = self.client.get('/api/inventory/zones/2/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.zone_xml % (zone.created_date.isoformat()))
+        
+    def testAddZoneNodeNull(self):
+        
+        try:
+            self.system_manager.addZone(None)
+        except:
+            assert(False) # should not throw exception
+        
+    def testAddZone(self):
+        zone = self._saveZone()
+        new_zone = self.system_manager.addZone(zone)
+        assert(new_zone is not None)
+        
+    def testPostZone(self):
+        xml = testsxml.zone_post_xml
+        response = self.client.post('/api/inventory/zones/', 
+            data=xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 200)
+        zone = models.Zone.objects.get(pk=1)
+        self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
+            (zone.created_date.isoformat() + '+00:00'))
 
 class ManagementNodesTestCase(XMLTestCase):
     
     def setUp(self):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
+        
+    def testManagementNodeSave(self):
+        # make sure state gets set to unmanaged
+        management_node = models.ManagementNode(name="mgoblue", 
+            description="best node ever")
+        assert(management_node.current_state != models.System.UNMANAGED)
+        management_node.save()
+        assert(management_node.is_management_node)
+        assert(management_node.current_state == models.System.UNMANAGED)
+        
+        # make sure we honor the state if set though
+        management_node = models.ManagementNode(name="mgoblue", 
+            description="best node ever", current_state=models.System.DEAD)
+        management_node.save()
+        assert(management_node.current_state == models.System.DEAD)
         
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
@@ -267,6 +335,47 @@ class ManagementNodesTestCase(XMLTestCase):
             (management_node.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, management_node_xml % \
             (management_node.created_date.isoformat() + '+00:00'))
+        
+class NetworksTestCase(XMLTestCase):
+    
+    def setUp(self):
+        self.client = Client()
+        self.system_manager = systemdbmgr.SystemDBManager()
+        self.mintConfig = self.system_manager.cfg
+        self.system = models.System(name="mgoblue", description="best appliance ever")
+        self.system.save()
+        
+    def testExtractNetworkToUse(self):
+        
+        # try a net with no required/active nets
+        network = models.Network(public_dns_name="foo.com", active=False, required=False)
+        network.system = self.system
+        network.save()
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net is None)
+        
+        # try one with required only
+        network.required = True
+        network.save()
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net is not None)
+        
+        # try one with active only
+        network.required = False
+        network.active = True
+        network.save()
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net is not None)
+        
+        # now add a required one in addition to active one to test order
+        network2 = models.Network(public_dns_name="foo2.com", active=False, required=True)
+        network2.system = self.system
+        network2.save()
+        assert(len(self.system.networks.all()) == 2)
+        assert(self.system.networks.all()[0].required == False)
+        assert(self.system.networks.all()[1].required == True)
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net.network_id == network2.network_id)
 
 class SystemsTestCase(XMLTestCase):
     fixtures = ['system_job']
@@ -294,6 +403,20 @@ class SystemsTestCase(XMLTestCase):
             self.system_manager.addSystem(system)
         except:
             assert(False) # should not throw exception
+            
+    def testSystemSave(self):
+        # make sure state gets set to unmanaged
+        system = models.System(name="mgoblue", 
+            description="best appliance ever")
+        assert(system.current_state != models.System.UNMANAGED)
+        system.save()
+        assert(system.current_state == models.System.UNMANAGED)
+        
+        # make sure we honor the state if set though
+        system = models.System(name="mgoblue", 
+            description="best appliance ever", current_state=models.System.DEAD)
+        system.save()
+        assert(system.current_state == models.System.DEAD)
         
     def testAddSystem(self):
         # create the system
@@ -384,7 +507,7 @@ class SystemsTestCase(XMLTestCase):
         
     def testPostSystemDupUuid(self):
         # add the first system
-        system_xml = testsxml.system_post_xml
+        system_xml = testsxml.system_post_xml_dup
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
@@ -393,12 +516,12 @@ class SystemsTestCase(XMLTestCase):
         
         # add it with same uuids but with different current state to make sure
         # we get back same system with update prop
-        system_xml = testsxml.system_post_xml_dup
+        system_xml = testsxml.system_post_xml_dup2
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=2)
-        assert(this_system.current_state != "dead")
+        assert(this_system.current_state == "dead")
 
     def testGetSystemLog(self):
         response = self.client.post('/api/inventory/systems/', 
@@ -450,6 +573,8 @@ class SystemVersionsTestCase(XMLTestCase):
         self.client = Client()
         self.system_manager = systemdbmgr.SystemDBManager()
         self.mintConfig = self.system_manager.cfg
+        from django.conf import settings
+        self.mintConfig.dbPath = settings.DATABASE_NAME
         self.mock_scheduleSystemActivationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
@@ -465,8 +590,8 @@ class SystemVersionsTestCase(XMLTestCase):
         version = models.Version()
         version.full = '/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1'
         version.label = 'clover.eng.rpath.com@rpath:clover-1-devel'
-        version.ordering = '1272410162.98'
-        version.revision = '1-2-1'
+        version.ordering = '1234567890.12'
+        version.revision = 'change me gently'
         version.flavor = \
             '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
         version.save()
@@ -479,21 +604,15 @@ class SystemVersionsTestCase(XMLTestCase):
         trove.save()
 
         version_update = models.Version()
-        version_update.full = '/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1'
-        version_update.label = 'clover.eng.rpath.com@rpath:clover-1-devel'
-        version_update.ordering = '1272410162.98'
-        version_update.revision = '1-3-1'
-        version_update.flavor = \
-            '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
+        version_update.fromConaryVersion(versions.ThawVersion(
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567890.13:1-3-1'))
+        version_update.flavor = version.flavor
         version_update.save()
 
         version_update2 = models.Version()
-        version_update2.full = '/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1'
-        version_update2.label = 'clover.eng.rpath.com@rpath:clover-1-devel'
-        version_update2.ordering = '1272410162.98'
-        version_update2.revision = '1-4-1'
-        version_update2.flavor = \
-            '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
+        version_update2.fromConaryVersion(versions.ThawVersion(
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567890.14:1-4-1'))
+        version_update2.flavor = version.flavor
         version_update2.save()
 
         trove.available_updates.add(version_update)
@@ -501,17 +620,15 @@ class SystemVersionsTestCase(XMLTestCase):
         trove.save()
 
         version2 = models.Version()
-        version2.full = '/contrib.rpath.org@rpl:2/23.0.60cvs20080523-1-0.1'
-        version2.label = 'contrib.rpath.org@rpl:2'
-        version2.ordering = '1272410163.98'
+        version2.fromConaryVersion(versions.ThawVersion(
+            '/contrib.rpath.org@rpl:devel//2/1234567890.12:23.0.60cvs20080523-1-0.1'))
         version2.flavor = 'desktop is: x86_64'
-        version2.revision = '23.0.60cvs20080523-1-0.1'
         version2.save()
 
         trove2 = models.Trove()
         trove2.name = 'emacs'
-        trove2.flavor = 'desktop is: x86_64'
         trove2.version = version2
+        trove2.flavor = version2.flavor
         trove2.save()
 
         self.trove = trove
@@ -530,7 +647,35 @@ class SystemVersionsTestCase(XMLTestCase):
             (self.trove.last_available_update_refresh.isoformat(),
              self.trove2.last_available_update_refresh.isoformat(),
              system.created_date.isoformat()))
-        
+
+    def testGetInstalledSoftwareRest(self):
+        system = self._saveSystem()
+        self._saveTrove()
+        system.installed_software.add(self.trove)
+        system.installed_software.add(self.trove2)
+        system.save()
+        url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
+        response = self.client.get(url)
+        self.assertXMLEquals(response.content,
+            testsxml.installed_software_xml %(
+                self.trove.last_available_update_refresh.isoformat(),
+                self.trove2.last_available_update_refresh.isoformat()))
+
+    def testSetInstalledSoftwareRest(self):
+        system = self._saveSystem()
+        self._saveTrove()
+        system.installed_software.add(self.trove)
+        system.installed_software.add(self.trove2)
+        system.save()
+
+        url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
+        response = self.client.post(url,
+            data=testsxml.installed_software_post_xml,
+            content_type="application/xml")
+        self.assertXMLEquals(response.content,
+            testsxml.installed_software_response_xml,
+            ignoreNodes = ['lastAvailableUpdateRefresh'])
+
 class EventTypeTestCase(XMLTestCase):
     
     def setUp(self):
@@ -590,7 +735,7 @@ class SystemEventTestCase(XMLTestCase):
             testsxml.system_events_xml % \
                 (event1.time_created.isoformat(), event1.time_enabled.isoformat(),
                  event2.time_created.isoformat(), event2.time_enabled.isoformat()))
-        
+
     def testGetSystemEventRest(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
@@ -644,6 +789,19 @@ class SystemEventTestCase(XMLTestCase):
         local_system.networks.add(network2)
         event = self.system_manager.createSystemEvent(local_system, poll_event)
         assert(event is not None)
+        
+    def testSaveSystemEvent(self):
+        self._saveSystem()
+        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        event = models.SystemEvent(system=self.system, event_type=poll_event)
+        event.save()
+        # make sure event priority was set even though we didn't pass it in
+        assert(event.priority == poll_event.priority)
+        
+        event2 = models.SystemEvent(system=self.system, event_type=poll_event, priority=1)
+        event2.save()
+        # make sure we honor priority if set
+        assert(event2.priority == 1)
     
     def testScheduleSystemPollEvent(self):
         self.system_manager.scheduleSystemPollEvent(self.system)
@@ -752,8 +910,10 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.mintConfig = self.system_manager.cfg
         self.mock_cleanupSystemEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
+        self.mock_extractNetworkToUse_called = False
         self.system_manager.cleanupSystemEvent = self.mock_cleanupSystemEvent
         self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.system_manager._extractNetworkToUse = self.mock_extractNetworkToUse
             
     def tearDown(self):
         pass
@@ -763,6 +923,9 @@ class SystemEventProcessingTestCase(XMLTestCase):
         
     def mock_scheduleSystemPollEvent(self, system):
         self.mock_scheduleSystemPollEvent_called = True;
+        
+    def mock_extractNetworkToUse(self, system):
+        self.mock_extractNetworkToUse_called = True
         
     def testGetSystemEventsForProcessing(self):
         
@@ -877,16 +1040,6 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.system_manager.dispatchSystemEvent(event)
         assert(self.mock_cleanupSystemEvent_called)
         assert(self.mock_scheduleSystemPollEvent_called == False)
-        
-        network = models.Network()
-        network.ip_address = '1.1.1.1'
-        network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork.example.com'
-        network.netmask = '255.255.255.0'
-        network.port_type = 'lan'
-        network.primary = True
-        network.system = system
-        network.save()
 
         # sanity check dispatching activation event
         self.mock_scheduleSystemPollEvent_called = False # reset it
@@ -894,6 +1047,3 @@ class SystemEventProcessingTestCase(XMLTestCase):
         event.save()
         self.system_manager.dispatchSystemEvent(event)
         assert(self.mock_cleanupSystemEvent_called)
-        assert(self.mock_scheduleSystemPollEvent_called == False)
-        
-        

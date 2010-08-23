@@ -41,6 +41,25 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
     def getEventType(self, event_type_id):
         eventType = models.EventType.objects.get(pk=event_type_id)
         return eventType
+    
+    def getZone(self, zone_id):
+        zone = models.Zone.objects.get(pk=zone_id)
+        return zone
+    
+    def getZones(self):
+        Zones = models.Zones()
+        Zones.zone = list(models.Zone.objects.all())
+        return Zones
+
+    def addZone(self, zone):
+        """Add a zone"""
+        
+        if not zone:
+            return
+        
+        zone.save()
+        
+        return zone
 
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
@@ -105,22 +124,9 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         
     def addSystem(self, system):
         '''Add a new system to inventory'''
-        
+
         if not system:
             return
-        
-        # TODO:  remove this and figure out how to de-dup for real
-        sysNets = system.networks.all()
-        if sysNets:
-            sysNet = sysNets[0]
-            nets = models.Network.objects.filter(public_dns_name=sysNet.public_dns_name).all()
-            if nets:
-                for net in nets:
-                    system2 = net.system
-                    if system2.system_id != system.system_id:
-                        log.info("System %s (%s) already exists in inventory"
-                                % (system2.name, net.public_dns_name))
-                        system2.delete()
         
         if system.is_management_node:
             return self.addManagementNode(system)
@@ -130,15 +136,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         self.log_system(system, models.SystemLogEntry.ADDED)
         
         if system.activated:
-            # TODO:  how to de-dup?
             system.activation_date = datetime.datetime.now(tz.tzutc())
             system.current_state = models.System.ACTIVATED
             system.save()
             self.log_system(system, models.SystemLogEntry.ACTIVATED)
             self.scheduleSystemPollEvent(system)
         else:
-            system.current_state = models.System.UNMANAGED
-            system.save()
             # mark the system as needing activation
             self.scheduleSystemActivationEvent(system)
 
@@ -432,17 +435,16 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
     def _dispatchSystemEvent(self, event):
         rep_client = repeater_client.RepeaterClient()
-        networks = event.system.networks.all()
-        # Extract primary
-        networks = [ x for x in networks if x.primary ]
 
         activationEvents = set([ models.EventType.SYSTEM_ACTIVATION ])
         pollEvents = set([
             models.EventType.SYSTEM_POLL,
             models.EventType.SYSTEM_POLL_IMMEDIATE,
         ])
-        if networks:
-            destination = networks[0].public_dns_name
+        
+        network = self._extractNetworkToUse(event.system)
+        if network:
+            destination = network.public_dns_name
             eventType = event.event_type.name
             sputnik = "sputnik1"
             if eventType in activationEvents:
@@ -453,6 +455,20 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                     rep_client.poll, destination, sputnik)
             else:
                 log.error("Unknown event type %s" % eventType)
+                
+    def _extractNetworkToUse(self, system):
+        networks = system.networks.all()
+        
+        # first look for user required nets
+        nets = [ x for x in networks if x.required ]
+        if nets:
+            return nets[0]
+        
+        # now look for a non-required active net
+        nets = [ x for x in networks if x.active ]
+        if nets:
+            return nets[0]
+        
 
     @classmethod
     def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
@@ -568,18 +584,12 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 db_system.target_system_id = sys.instanceId.getText()
                 dnsName = sys.dnsName and sys.dnsName.getText() or None
                 
-                # TODO:  remove this and figure out how to de-dup for real
-                nets = models.Network.objects.filter(public_dns_name=dnsName).all()
-                if nets:
-                    log.info("System %s (%s) already exists in inventory" % (db_system.name, dnsName))
-                    continue
-                
                 state = sys.state and sys.state.getText() or "unknown"
                 systemsAdded = systemsAdded +1
                 log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
                 db_system.save()
                 if dnsName:
-                    network = models.Network(system=db_system, public_dns_name=dnsName, primary=True)
+                    network = models.Network(system=db_system, public_dns_name=dnsName, active=True)
                     network.save()
                 else:
                     log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))
