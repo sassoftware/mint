@@ -29,7 +29,7 @@ except:
     log.info("Failed loading repeater client, expected in local mode only")
     repeater_client = None  # pyflakes=ignore
 
-class SystemDBManager(base.BaseManager):
+class SystemManager(base.BaseManager):
     @base.exposed
     def getEventTypes(self):
         EventTypes = models.EventTypes()

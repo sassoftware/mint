@@ -39,8 +39,8 @@ class Script(scriptlibrary.SingletonScript):
             os.environ['MINT_LOCAL_DB'] = os.path.realpath("../mint/mint-local.db")
         os.environ['DJANGO_SETTINGS_MODULE'] = settingsModule
         
-        from mint.django_rest.rbuilder.inventory import systemdbmgr
-        system_manager = systemdbmgr.SystemDBManager()
+        from mint.django_rest.rbuilder.inventory import systemmgr
+        system_manager = systemmgr.SystemManager()
         system_manager.resolveSystems()
 
     def usage(self):

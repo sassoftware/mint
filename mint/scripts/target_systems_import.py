@@ -71,8 +71,8 @@ class Script(scriptlibrary.SingletonScript):
         restdb.auth.userId = userId
         restdb.auth.setAuth(mintAuth, authToken)
         
-        from mint.django_rest.rbuilder.inventory import systemdbmgr
-        system_manager = systemdbmgr.SystemDBManager()
+        from mint.django_rest.rbuilder.inventory import systemmgr
+        system_manager = systemmgr.SystemManager()
         
         targetDrivers = self.loadTargetDrivers(restdb)
         system_manager.importTargetSystems(targetDrivers)

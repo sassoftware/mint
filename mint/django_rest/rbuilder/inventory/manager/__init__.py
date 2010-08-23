@@ -11,13 +11,13 @@ from mint.django_rest.rbuilder import rbuilder_manager
 from mint.db.database import Database
 from mint.rest.db.database import Database as RestDatabase
 
-from mint.django_rest.rbuilder.inventory.manager import systemdbmgr
+from mint.django_rest.rbuilder.inventory.manager import systemmgr
 from mint.django_rest.rbuilder.inventory.manager import versionmgr
 
 class Manager(rbuilder_manager.RbuilderDjangoManager):
     def __init__(self, cfg=None, userName=None):
         super(self.__class__, self).__init__(cfg=cfg, userName=userName)
-        self.sysMgr = systemdbmgr.SystemDBManager(weakref.proxy(self))
+        self.sysMgr = systemmgr.SystemManager(weakref.proxy(self))
         self.versionMgr = versionmgr.VersionManager(weakref.proxy(self))
         # We instantiate _restDb lazily
         self._restDb = None
