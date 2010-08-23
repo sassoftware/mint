@@ -229,6 +229,8 @@ class BaseManager(models.Manager):
             created, model = self.load_or_create(model, accessors)
         else:
             model = self.load(model, accessors)
+            if not model:
+                model = self.model()
 
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
