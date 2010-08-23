@@ -1122,9 +1122,9 @@ class MigrateTo_50(SchemaMigration):
             # add local management node
             changed |= schema._addManagementNode(db, self.cfg)
 
-        if 'inventory_network' not in db.tables:
+        if 'inventory_system_network' not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_network" (
+                CREATE TABLE "inventory_system_network" (
                     "network_id" %(PRIMARYKEY)s,
                     "system_id" integer NOT NULL 
                         REFERENCES "inventory_system" ("system_id")
@@ -1136,14 +1136,15 @@ class MigrateTo_50(SchemaMigration):
                     "netmask" varchar(20),
                     "port_type" varchar(32),
                     "active" bool,
-                    "required" bool
+                    "required" bool,
+                    UNIQUE ("system_id", "public_dns_name", "ip_address", "ipv6_address")
                 ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_network'] = []
+            db.tables['inventory_system_network'] = []
             changed = True
-            changed |= db.createIndex("inventory_network",
-                "inventory_network_system_id_idx", "system_id")
-            changed |= db.createIndex("inventory_network",
-            "inventory_network_public_dns_name_idx", "public_dns_name")
+            changed |= db.createIndex("inventory_system_network",
+                "inventory_system_network_system_id_idx", "system_id")
+            changed |= db.createIndex("inventory_system_network",
+            "inventory_system_network_public_dns_name_idx", "public_dns_name")
 
         if 'inventory_system_log' not in db.tables:
             cu.execute("""

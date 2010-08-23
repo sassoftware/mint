@@ -293,7 +293,9 @@ class ManagementNode(System):
 
 class Network(modellib.XObjModel):
     class Meta:
-        db_table = 'inventory_network'
+        db_table = 'inventory_system_network'
+        unique_together = (('system', 'public_dns_name', 'ip_address', 'ipv6_address'),)
+        
     _xobj = xobj.XObjMetadata(
                 tag='network')
     network_id = models.AutoField(primary_key=True)

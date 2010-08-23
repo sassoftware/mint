@@ -142,14 +142,15 @@ management_nodes_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>2.2.2.2</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
+        <required/>
         <system href="http://testserver/api/inventory/systems/2/"/>
       </network>
     </networks>
@@ -193,14 +194,15 @@ management_node_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>2.2.2.2</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
@@ -241,14 +243,15 @@ management_node_post_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>2.2.2.2</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/1/"/>
     </network>
   </networks>
@@ -318,14 +321,15 @@ systems_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>1.1.1.1</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
+        <required/>
         <system href="http://testserver/api/inventory/systems/2/"/>
       </network>
     </networks>
@@ -364,14 +368,15 @@ systems_put_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>1.1.1.1</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork.example.com</publicDnsName>
+        <required/>
       </network>
     </networks>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -400,14 +405,15 @@ systems_put_xml = """\
     <reservationId/>
     <networks>
       <network>
+        <active/>
         <deviceName>eth0</deviceName>
         <ipAddress>2.2.2.2</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>2</networkId>
         <portType>lan</portType>
-        <primary/>
         <publicDnsName>testnetwork2.example.com</publicDnsName>
+        <required/>
       </network>
     </networks>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -442,14 +448,15 @@ system_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
@@ -485,13 +492,14 @@ system_post_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
     </network>
   </networks>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -520,13 +528,14 @@ system_post_xml_dup = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
     </network>
   </networks>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -555,13 +564,14 @@ system_post_xml_dup2 = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
     </network>
   </networks>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
@@ -592,14 +602,15 @@ system_target_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
@@ -790,14 +801,15 @@ system_version_xml = """\
   <reservationId/>
   <networks>
     <network>
+      <active/>
       <deviceName>eth0</deviceName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <primary/>
       <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>

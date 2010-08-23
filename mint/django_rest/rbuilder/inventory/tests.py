@@ -924,6 +924,9 @@ class SystemEventProcessingTestCase(XMLTestCase):
     def mock_scheduleSystemPollEvent(self, system):
         self.mock_scheduleSystemPollEvent_called = True;
         
+    def mock_extractNetworkToUse(self, system):
+        self.mock_extractNetworkToUse_called = True
+        
     def testGetSystemEventsForProcessing(self):
         
         events = self.system_manager.getSystemEventsForProcessing()
@@ -1029,7 +1032,6 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.system_manager.dispatchSystemEvent(event)
         assert(self.mock_cleanupSystemEvent_called)
         assert(self.mock_scheduleSystemPollEvent_called)
-        assert(self.mock_extractNetworkToUse_called)
         
         # sanity check dispatching poll_now event
         self.mock_scheduleSystemPollEvent_called = False # reset it
@@ -1038,7 +1040,6 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.system_manager.dispatchSystemEvent(event)
         assert(self.mock_cleanupSystemEvent_called)
         assert(self.mock_scheduleSystemPollEvent_called == False)
-        assert(self.mock_extractNetworkToUse_called)
 
         # sanity check dispatching activation event
         self.mock_scheduleSystemPollEvent_called = False # reset it
@@ -1046,6 +1047,3 @@ class SystemEventProcessingTestCase(XMLTestCase):
         event.save()
         self.system_manager.dispatchSystemEvent(event)
         assert(self.mock_cleanupSystemEvent_called)
-        assert(self.mock_scheduleSystemPollEvent_called == False)
-        
-        
