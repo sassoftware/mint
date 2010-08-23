@@ -15,77 +15,51 @@
         <field type="CharField" name="description">standard polling event</field>
         <field type="SmallIntegerField" name="priority">50</field>
     </object>
-  <object pk="1" model="inventory.system">
-    <field type="CharField" name="name">Local Management Node</field>
-    <field type="CharField" name="description">Local rBuilder management node</field>
-    <field type="DateTimeField" name="created_date">2010-08-18 22:28:26</field>
-    <field type="DateTimeField" name="launch_date">
-      <None/>
-    </field>
-    <field to="rbuilder.targets" name="target" rel="ManyToOneRel">
-      <None/>
-    </field>
-    <field type="CharField" name="target_system_id">
-      <None/>
-    </field>
-    <field type="CharField" name="reservation_id">
-      <None/>
-    </field>
-    <field type="CharField" name="os_type">
-      <None/>
-    </field>
-    <field type="CharField" name="os_major_version">
-      <None/>
-    </field>
-    <field type="CharField" name="os_minor_version">
-      <None/>
-    </field>
-    <field type="DateTimeField" name="activation_date">
-      <None/>
-    </field>
-    <field type="CharField" name="generated_uuid">
-      <None/>
-    </field>
-    <field type="CharField" name="local_uuid">
-      <None/>
-    </field>
-    <field type="CharField" name="ssl_client_certificate">
-      <None/>
-    </field>
-    <field type="CharField" name="ssl_client_key">
-      <None/>
-    </field>
-    <field type="CharField" name="ssl_server_certificate">
-      <None/>
-    </field>
-    <field type="DateTimeField" name="scheduled_event_start_date">
-      <None/>
-    </field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
-      <None/>
-    </field>
-    <field type="NullBooleanField" name="available">
-      <None/>
-    </field>
-    <field type="NullBooleanField" name="activated">
-      <None/>
-    </field>
-    <field type="CharField" name="current_state">
-      <None/>
-    </field>
-    <field type="NullBooleanField" name="is_management_node">True</field>
-    <field to="inventory.managementnode" name="managing_node" rel="ManyToOneRel">
-      <None/>
-    </field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"/>
-  </object>
-  <object pk="1" model="inventory.managementnode">
-    <field type="NullBooleanField" name="local">True</field>
-    <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"/>
-  </object>
+  <object pk="2" model="inventory.system">
+        <field type="CharField" name="name">rPath Update Service</field>
+        <field type="CharField" name="description">Local rPath Update Service</field>
+        <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="CharField" name="reservation_id"><None></None></field>
+        <field type="CharField" name="os_type"><None></None></field>
+        <field type="CharField" name="os_major_version"><None></None></field>
+        <field type="CharField" name="os_minor_version"><None></None></field>
+        <field type="DateTimeField" name="activation_date"><None></None></field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field type="NullBooleanField" name="available"><None></None></field>
+        <field type="NullBooleanField" name="activated"><None></None></field>
+        <field type="CharField" name="current_state">unmanaged</field>
+        <field type="NullBooleanField" name="management_node">True</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+    </object>
+  <object pk="2" model="inventory.managementnode">
+        <field type="NullBooleanField" name="local"><None></None></field>
+        <field to="inventory.zone" name="zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+    </object>
   <object pk="1" model="inventory.zone">
-        <field type="CharField" name="name">some zone</field>
-        <field type="CharField" name="description">some zone desc</field>
-        <field type="DateTimeField" name="created_date">2010-08-20 20:23:38</field>
+        <field type="CharField" name="name">Local rBuilder</field>
+        <field type="CharField" name="description">Local rBuilder management zone</field>
+        <field type="DateTimeField" name="created_date">2010-08-23 22:05:49</field>
+    </object>
+   <object pk="1" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="public_dns_name">127.0.0.1</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="required"><None></None></field>
     </object>
 </django-objects>

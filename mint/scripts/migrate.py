@@ -1107,26 +1107,25 @@ class MigrateTo_50(SchemaMigration):
                     "available" bool,
                     "activated" bool,
                     "current_state" varchar(32),
-                    "is_management_node" bool,
-                    "managing_node_id" integer
+                    "management_node" bool,
+                    "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system'] = []
             changed = True
             changed |= db.createIndex("inventory_system",
                 "inventory_system_target_id_idx", "target_id")
             
-        if 'inventory_management_node' not in db.tables:
+        if 'inventory_zone_management_node' not in db.tables:
             cu.execute("""
-                CREATE TABLE "inventory_management_node" (
+                CREATE TABLE "inventory_zone_management_node" (
                     "system_ptr_id" integer NOT NULL PRIMARY KEY 
                         REFERENCES "inventory_system" ("system_id")
                         ON DELETE CASCADE,
-                    "local" bool
+                    "local" bool,
+                    "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id")
                 ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_management_node'] = []
+            db.tables['inventory_zone_management_node'] = []
             changed = True
-            # add local management node
-            changed |= schema._addManagementNode(db, self.cfg)
 
         if 'inventory_system_network' not in db.tables:
             cu.execute("""
@@ -1153,6 +1152,9 @@ class MigrateTo_50(SchemaMigration):
                 "inventory_system_network_system_id_idx", "system_id")
             changed |= db.createIndex("inventory_system_network",
             "inventory_system_network_public_dns_name_idx", "public_dns_name")
+
+        # add local management zone
+        changed |= schema._addManagementZone(db, self.cfg)
 
         if 'inventory_system_log' not in db.tables:
             cu.execute("""

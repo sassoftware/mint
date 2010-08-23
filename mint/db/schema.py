@@ -1085,23 +1085,24 @@ def _createInventorySchema(db, cfg):
                 "available" bool,
                 "activated" bool,
                 "current_state" varchar(32),
-                "is_management_node" bool,
-                "managing_node_id" integer
+                "management_node" bool,
+                "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         changed = True
         changed |= db.createIndex("inventory_system",
             "inventory_system_target_id_idx", "target_id")
         
-    if 'inventory_management_node' not in db.tables:
+    if 'inventory_zone_management_node' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_management_node" (
+            CREATE TABLE "inventory_zone_management_node" (
                 "system_ptr_id" integer NOT NULL PRIMARY KEY 
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
-                "local" bool
+                "local" bool,
+                "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id")
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_management_node'] = []
+        db.tables['inventory_zone_management_node'] = []
         changed = True
 
     if 'inventory_system_network' not in db.tables:
@@ -1130,9 +1131,9 @@ def _createInventorySchema(db, cfg):
         changed |= db.createIndex("inventory_system_network",
             "inventory_system_network_public_dns_name_idx", "public_dns_name")
         
-    # add local management node.  must be done after inventory_system and 
+    # add local management zone.  must be done after inventory_system and 
     # inventory_system_network are added
-    changed |= _addManagementNode(db, cfg)
+    changed |= _addManagementZone(db, cfg)
 
     if 'inventory_system_log' not in db.tables:
         cu.execute("""
@@ -1300,29 +1301,43 @@ def _createInventorySchema(db, cfg):
 
     return changed
 
-def _addManagementNode(db, cfg):
+def _addManagementZone(db, cfg):
     changed = False
     
-    # add the system
-    changed |= _addTableRows(db, 'inventory_system', 'name',
-            [dict(name="Local Management Node", 
-                  description='Local rBuilder management node',
-                  is_management_node='true',
-                  current_state="unmanaged",
+    # add the zone
+    changed |= _addTableRows(db, 'inventory_zone', 'name',
+            [dict(name="Local rBuilder", 
+                  description='Local rBuilder management zone',
                   created_date=str(datetime.datetime.now(tz.tzutc())))])
     
-    # get the system id
+    # get the zone id
     cu = db.cursor()
-    cu.execute("SELECT system_id from inventory_system where name='Local Management Node'")
+    cu.execute("SELECT zone_id from inventory_zone where name='Local rBuilder'")
     ids = cu.fetchall()
     if len(ids) == 1:
-        systemId = ids[0][0]
-        # add the network
-        changed |= _addTableRows(db, 'inventory_system_network', 'public_dns_name',
-            [dict(system_id=systemId, public_dns_name='127.0.0.1', active=True)])
-        # add the management node
-        changed |= _addTableRows(db, 'inventory_management_node', 'system_ptr_id',
-                [dict(system_ptr_id=systemId, local='true')])
+        zoneId = ids[0][0]
+    
+        # add the system
+        changed |= _addTableRows(db, 'inventory_system', 'name',
+                [dict(name="rPath Update Service", 
+                      description='Local rPath Update Service',
+                      management_node='true',
+                      current_state="unmanaged",
+                      managing_zone_id=zoneId,
+                      created_date=str(datetime.datetime.now(tz.tzutc())))])
+        
+        # get the system id
+        cu = db.cursor()
+        cu.execute("SELECT system_id from inventory_system where name='rPath Update Service'")
+        ids = cu.fetchall()
+        if len(ids) == 1:
+            systemId = ids[0][0]
+            # add the network
+            changed |= _addTableRows(db, 'inventory_system_network', 'public_dns_name',
+                [dict(system_id=systemId, public_dns_name='127.0.0.1', active=True)])
+            # add the management node
+            changed |= _addTableRows(db, 'inventory_zone_management_node', 'system_ptr_id',
+                    [dict(system_ptr_id=systemId, local='true', zone_id=zoneId)])
     
     return changed
 
