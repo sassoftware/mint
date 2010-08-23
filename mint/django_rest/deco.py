@@ -81,9 +81,11 @@ def return_xml(function):
     node of modelName.
     """
     def inner(*args, **kw):
+        ret_val = function(*args, **kw)
+        if isinstance(ret_val, http.HttpResponse):
+            return ret_val
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
-        ret_val = function(*args, **kw)
         request = args[1]
         xml = ret_val.to_xml(request)
         doc = minidom.parseString(xml)
