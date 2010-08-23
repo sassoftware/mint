@@ -1119,7 +1119,9 @@ def _createInventorySchema(db, cfg):
                 "port_type" varchar(32),
                 "active" bool,
                 "required" bool,
-                UNIQUE ("system_id", "public_dns_name", "ip_address", "ipv6_address")
+                UNIQUE ("system_id", "public_dns_name"),
+                UNIQUE ("system_id", "ip_address"),
+                UNIQUE ("system_id", "ipv6_address")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_network'] = []
         changed = True
