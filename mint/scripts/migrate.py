@@ -1135,7 +1135,8 @@ class MigrateTo_50(SchemaMigration):
                     "public_dns_name" varchar(255) NOT NULL,
                     "netmask" varchar(20),
                     "port_type" varchar(32),
-                    "primary" bool
+                    "active" bool,
+                    "required" bool
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_network'] = []
             changed = True

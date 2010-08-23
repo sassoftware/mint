@@ -435,17 +435,16 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
 
     def _dispatchSystemEvent(self, event):
         rep_client = repeater_client.RepeaterClient()
-        networks = event.system.networks.all()
-        # Extract primary
-        networks = [ x for x in networks if x.primary ]
 
         activationEvents = set([ models.EventType.SYSTEM_ACTIVATION ])
         pollEvents = set([
             models.EventType.SYSTEM_POLL,
             models.EventType.SYSTEM_POLL_IMMEDIATE,
         ])
-        if networks:
-            destination = networks[0].public_dns_name
+        
+        network = self._extractNetworkToUse(event.system)
+        if network:
+            destination = network.public_dns_name
             eventType = event.event_type.name
             sputnik = "sputnik1"
             if eventType in activationEvents:
@@ -456,6 +455,20 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                     rep_client.poll, destination, sputnik)
             else:
                 log.error("Unknown event type %s" % eventType)
+                
+    def _extractNetworkToUse(self, system):
+        networks = system.networks.all()
+        
+        # first look for user required nets
+        nets = [ x for x in networks if x.required ]
+        if nets:
+            return nets[0]
+        
+        # now look for a non-required active net
+        nets = [ x for x in networks if x.active ]
+        if nets:
+            return nets[0]
+        
 
     @classmethod
     def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
@@ -576,7 +589,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
                 log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
                 db_system.save()
                 if dnsName:
-                    network = models.Network(system=db_system, public_dns_name=dnsName, primary=True)
+                    network = models.Network(system=db_system, public_dns_name=dnsName, active=True)
                     network.save()
                 else:
                     log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))

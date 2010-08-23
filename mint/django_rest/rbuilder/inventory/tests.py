@@ -335,6 +335,47 @@ class ManagementNodesTestCase(XMLTestCase):
             (management_node.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, management_node_xml % \
             (management_node.created_date.isoformat() + '+00:00'))
+        
+class NetworksTestCase(XMLTestCase):
+    
+    def setUp(self):
+        self.client = Client()
+        self.system_manager = systemdbmgr.SystemDBManager()
+        self.mintConfig = self.system_manager.cfg
+        self.system = models.System(name="mgoblue", description="best appliance ever")
+        self.system.save()
+        
+    def testExtractNetworkToUse(self):
+        
+        # try a net with no required/active nets
+        network = models.Network(public_dns_name="foo.com", active=False, required=False)
+        network.system = self.system
+        network.save()
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net is None)
+        
+        # try one with required only
+        network.required = True
+        network.save()
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net is not None)
+        
+        # try one with active only
+        network.required = False
+        network.active = True
+        network.save()
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net is not None)
+        
+        # now add a required one in addition to active one to test order
+        network2 = models.Network(public_dns_name="foo2.com", active=False, required=True)
+        network2.system = self.system
+        network2.save()
+        assert(len(self.system.networks.all()) == 2)
+        assert(self.system.networks.all()[0].required == False)
+        assert(self.system.networks.all()[1].required == True)
+        net = self.system_manager._extractNetworkToUse(self.system)
+        assert(net.network_id == network2.network_id)
 
 class SystemsTestCase(XMLTestCase):
     fixtures = ['system_job']
@@ -869,8 +910,10 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.mintConfig = self.system_manager.cfg
         self.mock_cleanupSystemEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
+        self.mock_extractNetworkToUse_called = False
         self.system_manager.cleanupSystemEvent = self.mock_cleanupSystemEvent
         self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.system_manager._extractNetworkToUse = self.mock_extractNetworkToUse
             
     def tearDown(self):
         pass
@@ -986,6 +1029,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.system_manager.dispatchSystemEvent(event)
         assert(self.mock_cleanupSystemEvent_called)
         assert(self.mock_scheduleSystemPollEvent_called)
+        assert(self.mock_extractNetworkToUse_called)
         
         # sanity check dispatching poll_now event
         self.mock_scheduleSystemPollEvent_called = False # reset it
@@ -994,16 +1038,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.system_manager.dispatchSystemEvent(event)
         assert(self.mock_cleanupSystemEvent_called)
         assert(self.mock_scheduleSystemPollEvent_called == False)
-        
-        network = models.Network()
-        network.ip_address = '1.1.1.1'
-        network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork.example.com'
-        network.netmask = '255.255.255.0'
-        network.port_type = 'lan'
-        network.primary = True
-        network.system = system
-        network.save()
+        assert(self.mock_extractNetworkToUse_called)
 
         # sanity check dispatching activation event
         self.mock_scheduleSystemPollEvent_called = False # reset it

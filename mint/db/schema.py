@@ -1104,7 +1104,8 @@ def _createInventorySchema(db, cfg):
                 "public_dns_name" varchar(255) NOT NULL,
                 "netmask" varchar(20),
                 "port_type" varchar(32),
-                "primary" bool
+                "active" bool,
+                "required" bool
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_network'] = []
         changed = True
@@ -1301,9 +1302,8 @@ def _addManagementNode(db, cfg):
     if len(ids) == 1:
         systemId = ids[0][0]
         # add the network
-        net_dict = dict(system_id=systemId, public_dns_name='127.0.0.1')
-        net_dict["\"primary\""] = 'true'
-        changed |= _addTableRows(db, 'inventory_network', 'public_dns_name', [net_dict])
+        changed |= _addTableRows(db, 'inventory_network', 'public_dns_name',
+            [dict(system_id=systemId, public_dns_name='127.0.0.1', active=True)])
         # add the management node
         changed |= _addTableRows(db, 'inventory_management_node', 'system_ptr_id',
                 [dict(system_ptr_id=systemId, local='true')])
