@@ -47,7 +47,7 @@ def getConfig(path=RBUILDER_CONFIG):
     mintCfg = MintConfig()
     try:
         mintCfg.read(path, exception=True)
-    except CfgEnvironmentError, err:
+    except CfgEnvironmentError:
         raise mint_error.ConfigurationMissing()
     else:
         return mintCfg
