@@ -56,10 +56,14 @@ install: default-install httpd-sysconfig
 	install -D -m0644 FreeSans.ttf $(DESTDIR)/usr/share/splashy/themes/rbuilder/FreeSans.ttf
 	# chkconfig overrides
 	mkdir -p $(DESTDIR)/etc/chkconfig.d
-	echo '# chkconfig: 345 23 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	echo '# chkconfig: 345 15 74' > $(DESTDIR)/etc/chkconfig.d/ntpd
+	echo '# chkconfig: 345 21 70' > $(DESTDIR)/etc/chkconfig.d/postgresql-rbuilder
+	echo '# chkconfig: 345 22 68' > $(DESTDIR)/etc/chkconfig.d/pgbouncer
+	echo '# chkconfig: 345 25 65' > $(DESTDIR)/etc/chkconfig.d/rbuilder
+	echo '# chkconfig: 345 25 40' > $(DESTDIR)/etc/chkconfig.d/rmake-messagebus
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
-	echo '# chkconfig: 345 22 50' > $(DESTDIR)/etc/chkconfig.d/jabberd
+	echo '# chkconfig: 345 50 25' > $(DESTDIR)/etc/chkconfig.d/jabberd
+	echo '# chkconfig: 345 50 15' > $(DESTDIR)/etc/chkconfig.d/httpd
 	# anaconda
 	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/

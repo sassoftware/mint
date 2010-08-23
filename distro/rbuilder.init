@@ -1,10 +1,14 @@
 #!/bin/bash
-# chkconfig: 345 22 16
+# chkconfig: 345 25 65
 # description: Configure the system for rBuilder Appliance on startup
-# 
-# Copyright (c) 2008 rPath, Inc
-# All rights reserved
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
+#
 
+# NB: the above chkconfig line is overridden via chkconfig.d so it can be
+# adjacent to all the other overrides.
 
 case "$1" in
 start)
