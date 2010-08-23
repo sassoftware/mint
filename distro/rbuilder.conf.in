@@ -63,7 +63,7 @@ availablePlatforms      rhel.rpath.com@rpath:rhel-5-client-workstation
 availablePlatforms      sles.rpath.com@rpath:sles-10sp3
 availablePlatforms      centos.rpath.com@rpath:centos-5e
 availablePlatforms      conary.rpath.com@rpl:2
-availablePlatforms      windemo.rb.rpath.com@rpath:windows-1
+availablePlatforms      windows.rpath.com@rpath:windows-common
 
 # Available platform names. Should match the order of availablePlatforms
 availablePlatformNames  Red Hat Enterprise Linux 4
