@@ -5,6 +5,7 @@ from dateutil import tz
 import urlparse
 
 from django.db import models
+from django.db.models import fields as djangofields
 from django.db.models.fields import related
 from django.core import exceptions
 from django.core import urlresolvers 
@@ -129,6 +130,14 @@ class BaseManager(models.Manager):
                 elif isinstance(fields[key], related.RelatedField):
                     val = fields[key].related.parent_model.objects.load_from_href(
                         getattr(val, 'href', None))
+                elif isinstance(fields[key], djangofields.BooleanField) or \
+                     isinstance(fields[key], 
+                        djangofields.NullBooleanField):
+                    val = str(val)
+                    if True.__str__().lower() == val.lower():
+                        val = True
+                    else:
+                        val = False
                 elif val:
                     if fields[key].primary_key:
                         val = int(val)
