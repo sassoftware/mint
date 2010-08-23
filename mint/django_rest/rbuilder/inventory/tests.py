@@ -516,7 +516,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=2)
-        self.failUnlessEqual(system.current_state, "dead")
+        self.failUnlessEqual(this_system.current_state, "dead")
 
     def testGetSystemLog(self):
         response = self.client.post('/api/inventory/systems/', 
@@ -685,7 +685,8 @@ class SystemVersionsTestCase(XMLTestCase):
             content_type="application/xml")
         self.assertXMLEquals(response.content,
             testsxml.system_version_put_response_xml,
-            ignoreNodes = ['lastAvailableUpdateRefresh'])
+            ignoreNodes = ['lastAvailableUpdateRefresh',
+                'createdDate'])
 
 class EventTypeTestCase(XMLTestCase):
 

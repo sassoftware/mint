@@ -157,9 +157,7 @@ class SystemDBManager(base.BaseManager):
         return system
 
     @base.exposed
-    def updateSystem(self, system, newSystem):
-        # Only software inventory for now
-        self.mgr.setInstalledSoftware(system, newSystem.installedSoftware.trove)
+    def updateSystem(self, system):
         system.save()
 
     def launchSystem(self, system):

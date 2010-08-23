@@ -154,6 +154,7 @@ management_nodes_xml = """\
         <system href="http://testserver/api/inventory/systems/2/"/>
       </network>
     </networks>
+    </systemJobs>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <systemId>2</systemId>
     <launchingUser/>
@@ -206,6 +207,7 @@ management_node_xml = """\
       <system href="http://testserver/api/inventory/systems/2/"/>
     </network>
   </networks>
+  </systemJobs>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -255,7 +257,6 @@ management_node_post_xml = """\
       <system href="http://testserver/api/inventory/systems/1/"/>
     </network>
   </networks>
-  <systemjobSet/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <systems/>
   <scheduledEventStartDate/>
@@ -280,7 +281,7 @@ management_node_post_xml = """\
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
-  <system id="http://testserver/api/inventory/systems/1/">
+  <system id="http://testserver/api/inventory/systems/1">
     <installedSoftware/>
     <activated/>
     <sslClientKey/>
@@ -290,6 +291,7 @@ systems_xml = """\
     <managingNode/>
     <reservationId/>
     <networks/>
+    <systemJobs/>
     <sslServerCertificate/>
     <systemId>1</systemId>
     <launchingUser/>
@@ -310,7 +312,7 @@ systems_xml = """\
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
     <osType/>
   </system>
-  <system id="http://testserver/api/inventory/systems/2/">
+  <system id="http://testserver/api/inventory/systems/2">
     <installedSoftware/>
     <activated>True</activated>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
@@ -330,9 +332,10 @@ systems_xml = """\
         <portType>lan</portType>
         <publicDnsName>testnetwork.example.com</publicDnsName>
         <required/>
-        <system href="http://testserver/api/inventory/systems/2/"/>
+        <system href="http://testserver/api/inventory/systems/2"/>
       </network>
     </networks>
+    <systemJobs/>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemId>2</systemId>
     <launchingUser/>
@@ -359,7 +362,7 @@ systems_xml = """\
 systems_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
-  <system id="http://testserver/api/inventory/systems/1/">
+  <system id="http://testserver/api/inventory/systems/1">
     <activated>True</activated>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
@@ -396,7 +399,7 @@ systems_put_xml = """\
     <createdDate>%s</createdDate>
     <osType/>
   </system>
-  <system id="http://testserver/api/inventory/systems/2/">
+  <system id="http://testserver/api/inventory/systems/2">
     <activated>True</activated>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
@@ -437,7 +440,7 @@ systems_put_xml = """\
 
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2/">
+<system id="http://testserver/api/inventory/systems/2">
   <installedSoftware/>
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
@@ -457,9 +460,10 @@ system_xml = """\
       <portType>lan</portType>
       <publicDnsName>testnetwork.example.com</publicDnsName>
       <required/>
-      <system href="http://testserver/api/inventory/systems/2/"/>
+      <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
+  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -557,7 +561,7 @@ system_post_xml_dup2 = system_post_xml_dup.replace('activated', 'dead')
 
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2/">
+<system id="http://testserver/api/inventory/systems/2">
   <installedSoftware/>
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
@@ -577,9 +581,10 @@ system_target_xml = """\
       <portType>lan</portType>
       <publicDnsName>testnetwork.example.com</publicDnsName>
       <required/>
-      <system href="http://testserver/api/inventory/systems/2/"/>
+      <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
+  </systemJobs>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -607,7 +612,7 @@ system_events_xml = """\
 <systemEvents>
     <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
         <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
-        <system href="http://testserver/api/inventory/systems/2/"/>
+        <system href="http://testserver/api/inventory/systems/2"/>
         <timeCreated>%s</timeCreated>
         <priority>50</priority>
         <timeEnabled>%s</timeEnabled>
@@ -615,7 +620,7 @@ system_events_xml = """\
     </systemEvent>
     <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
         <eventType href="http://testserver/api/inventory/eventTypes/1/"/>
-        <system href="http://testserver/api/inventory/systems/2/"/>
+        <system href="http://testserver/api/inventory/systems/2"/>
         <timeCreated>%s</timeCreated>
         <priority>110</priority>
         <timeEnabled>%s</timeEnabled>
@@ -628,7 +633,7 @@ system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
     <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
-    <system href="http://testserver/api/inventory/systems/2/"/>
+    <system href="http://testserver/api/inventory/systems/2"/>
     <timeCreated>%s</timeCreated>
     <priority>50</priority>
     <timeEnabled>%s</timeEnabled>
@@ -640,7 +645,7 @@ system_event_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent>
     <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
-    <system href="http://testserver/api/inventory/systems/2/"/>
+    <system href="http://testserver/api/inventory/systems/2"/>
     <priority>50</priority>
 </systemEvent>
 """
@@ -675,7 +680,7 @@ system_log_xml = """\
     </systemLogEntry>
   </systemLogEntries>
   <systemLogId>1</systemLogId>
-  <system href="http://testserver/api/inventory/systems/2/"/>
+  <system href="http://testserver/api/inventory/systems/2"/>
 </systemLog>
 """
 
@@ -756,7 +761,7 @@ installed_software_xml = """\
 
 system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2/">
+<system id="http://testserver/api/inventory/systems/2">
   %s
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
@@ -776,9 +781,10 @@ system_version_xml = """\
       <portType>lan</portType>
       <publicDnsName>testnetwork.example.com</publicDnsName>
       <required/>
-      <system href="http://testserver/api/inventory/systems/2/"/>
+      <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
+  </systemJobs>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -808,6 +814,7 @@ installed_software_post_xml = """\
       <version>
         <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
         <ordering>1234567890.12</ordering>
+        <flavor>is: x86</flavor>
       </version>
       <flavor>is: x86</flavor>
     </trove>
@@ -816,6 +823,7 @@ installed_software_post_xml = """\
       <version>
         <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
         <ordering>1272410163.98</ordering>
+        <flavor>desktop is: x86_64</flavor>
       </version>
       <flavor>desktop is: x86_64</flavor>
     </trove>
@@ -861,7 +869,7 @@ installed_software_response_xml = """
 
 system_version_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2/">
+<system id="http://testserver/api/inventory/systems/2">
   %s
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -869,9 +877,50 @@ system_version_put_xml = """\
 """ % installed_software_post_xml
 
 system_version_put_response_xml = """\
-<system id="http://testserver/api/inventory/systems/2/">
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/2">
   %s
+  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
+  <activated>True</activated>
+  <sslClientKey>testsystemsslclientkey</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <managingNode/>
+  <reservationId/>
+  <networks>
+    <network>
+      <active/>
+      <deviceName>eth0</deviceName>
+      <ipAddress>1.1.1.1</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/2"/>
+    </network>
+  </networks>
+  <systemJobs/>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <systemId>2</systemId>
+  <launchingUser/>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <available/>
+  <description>testsystemdescription</description>
+  <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <isManagementNode/>
+  <systemjobSet/>
+  <target/>
+  <name/>
   <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>activated</currentState>
+  <createdDate>2010-08-23T21:41:31.278455+00:00</createdDate>
+  <osType/>
 </system>
 """ % installed_software_response_xml
