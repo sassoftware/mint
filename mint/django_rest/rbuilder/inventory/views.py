@@ -130,14 +130,14 @@ class InventorySystemsSystemService(AbstractInventoryService):
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    @requires('system')
+    @requires('system', save=False)
     @return_xml
     def update(self, request, system_id, system):
         oldSystem = self.mgr.getSystem(system_id)
         if not oldSystem:
             return HttpResponse(status=404)
         # This really should be an update
-        self.mgr.addSystem(system)
+        self.mgr.updateSystem(oldSystem, system)
         return self.mgr.getSystem(system_id)
 
     def delete(self, request, system_id):

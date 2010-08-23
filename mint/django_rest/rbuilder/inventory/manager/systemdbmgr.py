@@ -156,6 +156,12 @@ class SystemDBManager(base.BaseManager):
 
         return system
 
+    @base.exposed
+    def updateSystem(self, system, newSystem):
+        # Only software inventory for now
+        self.mgr.setInstalledSoftware(system, newSystem.installedSoftware.trove)
+        system.save()
+
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
@@ -168,15 +174,6 @@ class SystemDBManager(base.BaseManager):
             target=target, target_system_id=system.target_system_id)
         systemTarget.save()
         return systemTarget
-
-    @base.exposed
-    def updateSystem(self, system):
-        systemTarget = models.system_target.objects.get(
-                        target_system_id=system.target_system_id)
-        managedSystem = systemTarget.managed_system
-        managedSystem.updateFromParser(system)
-        managedSystem.save()
-        return managedSystem
 
     def matchSystem(self, system):
         matchingIPs = models.network_information.objects.filter(

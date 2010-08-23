@@ -46,7 +46,7 @@ def to_camel_case(node):
                 setattr(child, name, str_to_camel_case(getattr(child, name)))
                 to_camel_case(child)
 
-def requires(model_name):
+def requires(model_name, save=True):
     """
     Decorator that parses the post data on a request into the class
     specified by modelClass.
@@ -63,7 +63,8 @@ def requires(model_name):
             built_model = xobj.parse(underscore_xml)#, documentClass=DjangoDocument, typeMap=models.type_map)
             model_xml = str_to_underscore(model_name)
             built_model = getattr(built_model, model_xml)
-            model = modellib.type_map[model_name].objects.load_from_object(built_model, request)
+            model = modellib.type_map[model_name].objects.load_from_object(
+                built_model, request, save=save)
             # loaded_model = models.type_map[model_name].objects.load(built_model)
             # if not loaded_model:
                 # built_model.save()
