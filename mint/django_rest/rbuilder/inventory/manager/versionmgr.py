@@ -5,15 +5,10 @@
 #
 
 from datetime import datetime
-from dateutil import tz
 
 from conary import conaryclient
 from conary import versions
 
-from mint.db.database import Database
-from mint.rest.db.database import Database as RestDatabase
-
-from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 
 import base
@@ -97,7 +92,6 @@ class VersionManager(base.BaseManager):
     cclient = property(_get_conary_client)
 
     def get_available_updates(self, nvf, force=False):
-        now = datetime.datetime.now(tz.utc())
         one_day = datetime.timedelta(1)
         trove = self.trove_from_nvf(nvf)
 
@@ -106,7 +100,7 @@ class VersionManager(base.BaseManager):
 
         return trove.available_updates.all()
 
-    def refresh_updates(self, nvf):
+    def refresh_updates(self, softwareVersions):
         content = []
 
         for trvName, trvVersion, trvFlavor in softwareVersions:
@@ -128,7 +122,6 @@ class VersionManager(base.BaseManager):
             # trvName and trvVersion are str's, trvFlavor is a
             # conary.deps.deps.Flavor.
             label = trvVersion.trailingLabel()
-            revision = trvVersion.trailingRevision()
 
             # Search the label for the trove of the top level item.  It should
             # only (hopefully) return 1 result.

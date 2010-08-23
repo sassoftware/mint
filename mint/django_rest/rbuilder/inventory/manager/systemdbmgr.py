@@ -14,7 +14,7 @@ from dateutil import tz
 
 from django.db import connection
 
-from conary import versions
+from conary import versions as cnyver
 from conary.deps import deps
 
 from mint.django_rest import logger as log
@@ -194,9 +194,9 @@ class SystemDBManager(base.BaseManager):
         managedSystem = None
         #managedSystem = self.getManagedSystemForInstanceId(instanceId)
         if not managedSystem:
-            sys = models.System()
-            sys.is_manageable = False
-            return sys
+            syst = models.System()
+            syst.is_manageable = False
+            return syst
         managedSystemObj = managedSystem.getParser()
         if not self.isManageable(managedSystem):
             managedSystemObj.ssl_client_certificate = None
@@ -324,7 +324,7 @@ class SystemDBManager(base.BaseManager):
         updatesAvailable = [c for c in cachedUpdates if c.available_update is not None]
         if updatesAvailable:
            updatesAvailable  = [(str(s.available_update.name),
-                              versions.ThawVersion(s.available_update.version),
+                              cnyver.ThawVersion(s.available_update.version),
                               deps.parseFlavor(s.available_update.flavor)) for s in updatesAvailable]
         else:
             return []
