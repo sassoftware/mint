@@ -21,7 +21,7 @@
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field type="NullBooleanField" name="available"><None></None></field>
         <field type="CharField" name="current_state"><None></None></field>
-        <field to="inventory.managementnode" name="managing_node" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
     <object pk="2" model="inventory.system">
@@ -45,7 +45,7 @@
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field type="NullBooleanField" name="available"><None></None></field>
         <field type="CharField" name="current_state"><None></None></field>
-        <field to="inventory.managementnode" name="managing_node" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
     <object pk="3" model="inventory.system">
@@ -69,7 +69,7 @@
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field type="NullBooleanField" name="available"><None></None></field>
         <field type="CharField" name="current_state"><None></None></field>
-        <field to="inventory.managementnode" name="managing_node" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
     <object pk="1" model="inventory.systemevent">

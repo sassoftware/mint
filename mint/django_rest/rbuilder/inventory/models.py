@@ -22,10 +22,10 @@ class Inventory(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory',
-                elements = ['managementNodes', 'systems', 'log', "eventTypes"])
+                elements = ['managementZones', 'systems', 'log', "eventTypes"])
 
     def __init__(self):
-        self.managementNodes = modellib.XObjHrefModel('managementNodes/')
+        self.managementZones = modellib.XObjHrefModel('managementZones/')
         self.systems = modellib.XObjHrefModel('systems/')
         self.log = modellib.XObjHrefModel('log/')
         self.eventTypes = modellib.XObjHrefModel('eventTypes/')
@@ -166,10 +166,8 @@ class System(modellib.XObjIdModel):
     )
     current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
     installed_software = models.ManyToManyField('Trove', null=True)
-    is_management_node = models.NullBooleanField()
-    # the management node managing this system.
-    managing_node = models.ForeignKey('ManagementNode', null=True,
-                        related_name='systems')
+    management_node = models.NullBooleanField()
+    managing_zone = models.ForeignKey('Zone', null=True)
     systemJobs = models.ManyToManyField("Job", through="SystemJob")
 
     load_fields = [local_uuid]
@@ -195,6 +193,25 @@ class System(modellib.XObjIdModel):
 
             # add it to the system
             pass
+        
+class ManagementNode(System):
+    class Meta:
+        db_table = 'inventory_zone_management_node'
+    _xobj = xobj.XObjMetadata(
+                tag = 'managementNode',
+                attributes = {'id':str})
+    local = models.NullBooleanField()
+    zone = models.ForeignKey(Zone, related_name='managementNodes')
+    
+    # ignore auto generated ptr from inheritance
+    load_ignore_fields = ["system_ptr"]
+    
+    # need our own object manager for dup detection
+    objects = modellib.ManagementNodeManager()
+    
+    def save(self, *args, **kw):
+        self.management_node = True
+        System.save(self, *args, **kw)
 
 class InstalledSoftware(modellib.XObjModel):
     class Meta:
@@ -273,23 +290,6 @@ class SystemEvent(modellib.XObjIdModel):
         if not self.priority:
             self.priority = self.event_type.priority
         modellib.XObjIdModel.save(self, *args, **kw)
-
-class ManagementNode(System):
-    class Meta:
-        db_table = 'inventory_management_node'
-    _xobj = xobj.XObjMetadata(
-                tag = 'managementNode',
-                attributes = {'id':str})
-    local = models.NullBooleanField()
-    
-    load_ignore_fields = ["system_ptr"]
-    
-    # need our own object manager for dup detection
-    objects = modellib.ManagementNodeManager()
-    
-    def save(self, *args, **kw):
-        self.is_management_node = True
-        System.save(self, *args, **kw)
 
 class Network(modellib.XObjModel):
     class Meta:
