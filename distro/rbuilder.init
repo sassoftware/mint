@@ -10,6 +10,27 @@
 # NB: the above chkconfig line is overridden via chkconfig.d so it can be
 # adjacent to all the other overrides.
 
+
+check_postgres() {
+    psql -U postgres -l &>/dev/null
+}
+
+wait_for_postgres() {
+    check_postgres && return 0
+    echo -n "Waiting for PostgreSQL to start "
+    for i in `seq 30`; do
+        if check_postgres; then
+            echo " done"
+            return 0
+        fi
+        echo -n "."
+        sleep 1;
+    done
+    echo " failed!"
+    return 1
+}
+
+
 case "$1" in
 start)
   if [ "`ps -A | grep httpd | grep -v lighttpd | grep -v grep`" != "" ]
@@ -17,6 +38,10 @@ start)
     echo "httpd is running. Please stop that service before running this script" > /dev/stderr
     exit 1
   fi
+
+  . /etc/sysconfig/postgresql-rbuilder
+  export PGPORT
+  wait_for_postgres || exit 1
 
   # Generate SSL certs for various things on initial boot.
   /usr/share/rbuilder/scripts/generate-certs.sh

@@ -14,6 +14,7 @@ import logging
 import optparse
 import os
 import psycopg2
+import socket
 from conary.lib import digestlib
 from conary.lib import util as cny_util
 from M2Crypto import EVP
@@ -96,22 +97,18 @@ class Script(GenericScript):
         certs = dict((x[0], x[1:]) for x in self._fetch())
 
         # Create, insert and deploy missing certificates
+        fqdn = socket.gethostname()
+        # CAs have no CN because they're never utilized directly.
         self._create(certs, 'hg_ca',
                 desc="rBuilder High-Grade Certificate Authority")
         self._create(certs, 'lg_ca',
                 desc="rBuilder Low-Grade Certificate Authority")
-
-        # Only make a site cert if siteHost has been configured.
-        if self.cfg.siteHost != 'rpath.com':
-            self._create(certs, 'site', issuer=certs['hg_ca'],
-                    desc='rBuilder Site Certificate', common=self.cfg.siteHost)
-        elif 'site' not in certs:
-            log.info("siteHost is not yet set; skipping site "
-                    "certificate generation.")
-
-        # XMPP server doesn't have a CN:
-        #  * It's not a public service
-        #  * It's never accessed by a "well-known" name
+        # The site certificate has a CN. After changing the system hostname, it
+        # may need to be regenerated.
+        self._create(certs, 'site', issuer=certs['hg_ca'],
+                desc='rBuilder Site Certificate', common=fqdn)
+        # These have no CN because they're not public services and aren't
+        # necessarily accessed via a "well-known" name.
         self._create(certs, 'xmpp', issuer=certs['hg_ca'],
                 desc='rBuilder XMPP Certificate')
 
@@ -185,23 +182,30 @@ class Script(GenericScript):
             for d_purpose, path, group in DEPLOY_LIST:
                 if d_purpose != purpose:
                     continue
+                self._deploy(purpose, x509, pkey, path, group)
 
-                try:
-                    groupid = grp.getgrnam(group).gr_gid
-                except KeyError:
-                    log.info("Not deploying %r to %s: group %s not found.",
-                            purpose, path, group)
-                    continue
+    def _deploy(self, purpose, x509, pkey, path, group):
+        """Write one certificate to the filesystem."""
+        try:
+            groupid = grp.getgrnam(group).gr_gid
+        except KeyError:
+            log.info("Not deploying %r to %s: group %s not found.",
+                    purpose, path, group)
+            return
 
-                fobj = cny_util.AtomicFile(path, chmod=0640)
-                os.chown(fobj.name, 0, groupid)
+        fobj = cny_util.AtomicFile(path, chmod=0640)
+        os.chown(fobj.name, 0, groupid)
 
-                ext = path.split('.')[-1]
-                assert ext in ('pem', 'crt', 'key')
-                if ext in ('pem', 'crt'):
-                    fobj.write(x509)
-                if ext in ('pem', 'key'):
-                    fobj.write(pkey)
+        ext = path.split('.')[-1]
+        assert ext in ('pem', 'crt', 'key')
+        if ext in ('pem', 'crt'):
+            fobj.write(x509)
+        if ext in ('pem', 'key'):
+            fobj.write(pkey)
 
-                fobj.commit()
-                log.debug("Deployed %r to %s (group %s)", purpose, path, group)
+        if self.dry_run:
+            fobj.close()
+            log.debug("Would deploy %r to %s (group %s)", purpose, path, group)
+        else:
+            fobj.commit()
+            log.debug("Deployed %r to %s (group %s)", purpose, path, group)
