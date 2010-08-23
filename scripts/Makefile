@@ -39,6 +39,7 @@ generated_files = $(generic_scripts)
 generic_scripts = \
 	job-cleanup			\
 	migrate-config			\
+	pki-tool			\
 	process-system-events		\
 	rbuilder-database		\
 	system-resolver			\

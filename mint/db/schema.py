@@ -37,6 +37,19 @@ def _createTrigger(db, table, column = "changed"):
     return retInsert or retUpdate
 
 
+def createTable(db, name, definition):
+    """Helper for creating a table if it doesn't already exist.
+
+    Pass C{None} as C{name} to force creation.
+    """
+    if name and name in db.tables:
+        return False
+    cu = db.cursor()
+    cu.execute(definition % db.keywords)
+    db.tables[name] = []
+    return True
+
+
 def _createUsers(db):
     cu = db.cursor()
     changed = False
@@ -1458,6 +1471,30 @@ def _createJobsSchema(db):
 
     return changed
 
+
+def _createPKI(db):
+    """Public key infrastructure tables"""
+    changed = False
+
+    changed |= createTable(db, 'pki_certificates', """
+        CREATE TABLE pki_certificates (
+            fingerprint             text PRIMARY KEY,
+            purpose                 text NOT NULL,
+            is_ca                   boolean NOT NULL DEFAULT false,
+            x509_pem                text NOT NULL,
+            pkey_pem                text NOT NULL,
+            issuer_fingerprint      text
+                REFERENCES pki_certificates ( fingerprint )
+                ON DELETE SET NULL,
+            ca_serial_index         integer,
+            time_issued             timestamptz NOT NULL,
+            time_expired            timestamptz NOT NULL,
+            UNIQUE ( fingerprint, ca_serial_index )
+        )""")
+
+    return changed
+
+
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
     if not hasattr(db, "tables"):
@@ -1488,6 +1525,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
+    changed |= _createPKI(db)
 
     if doCommit:
         db.commit()

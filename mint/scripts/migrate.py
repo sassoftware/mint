@@ -1,5 +1,7 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
 #
 
 import logging
@@ -124,6 +126,10 @@ def rebuild_table(db, table, fieldsOut, fieldsIn=None):
         cu.execute("DROP TABLE %s" % tmpTable)
 
     db.loadSchema()
+
+
+def createTable(db, definition):
+    return schema.createTable(db, None, definition)
 
 
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
@@ -1296,7 +1302,24 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables[tableName] = []
             changed = True
-        return changed
+
+        createTable(db, """
+            CREATE TABLE pki_certificates (
+                fingerprint             text PRIMARY KEY,
+                purpose                 text NOT NULL,
+                is_ca                   boolean NOT NULL DEFAULT false,
+                x509_pem                text NOT NULL,
+                pkey_pem                text NOT NULL,
+                issuer_fingerprint      text
+                    REFERENCES pki_certificates ( fingerprint )
+                    ON DELETE SET NULL,
+                ca_serial_index         integer,
+                time_issued             timestamptz NOT NULL,
+                time_expired            timestamptz NOT NULL,
+                UNIQUE ( fingerprint, ca_serial_index )
+            )""")
+
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################

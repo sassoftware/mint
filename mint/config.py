@@ -13,7 +13,7 @@ from mint import mint_error
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.dbstore import CfgDriver
 from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
-        CfgList, CfgPath, CfgString)
+        CfgList, CfgPath, CfgString, CfgEnvironmentError)
 
 
 RBUILDER_DATA = os.getenv('RBUILDER_DATA', '/srv/rbuilder/')
@@ -46,9 +46,9 @@ def getConfig(path=RBUILDER_CONFIG):
     """
     mintCfg = MintConfig()
     try:
-        mintCfg.read(path)
-    except:
-        raise mint_error.ConfigurationMissing
+        mintCfg.read(path, exception=True)
+    except CfgEnvironmentError, err:
+        raise mint_error.ConfigurationMissing()
     else:
         return mintCfg
 
@@ -360,3 +360,39 @@ class MintConfig(ConfigFile):
         if 'default' in self.database:
             self._options['database'].write(fObj,
                     {'default': self.database['default']}, {})
+
+    def getDBParams(self):
+        """Return a dictionary of psycopg params needed to connect to mintdb."""
+        if self.dbDriver not in ('postgresql', 'pgpool'):
+            raise RuntimeError("Cannot convert %s database connection to "
+                    "libpq format." % (self.dbDriver,))
+
+        name = self.dbPath
+        if '/' not in name:
+            return dict(database=name)
+        user = password = host = port = None
+
+        host, name = name.split('/', 1)
+        if '@' not in host:
+            return dict(database=name, host=host)
+
+        user, host = host.split('@', 1)
+        if ':' in user:
+            user, password = user.split(':', 1)
+
+        # Parse bracketed IPv6 addresses
+        i = host.rfind(':')
+        j = host.rfind(']')
+        if i > j:
+            host, port = host[:i], int(host[i+1:])
+        if host[0] == '[' and host[-1] == ']':
+            host = host[1:-1]
+
+        out = dict(database=name, host=host)
+        if port:
+            out['port'] = port
+        if user:
+            out['user'] = user
+        if password:
+            out['password'] = password
+        return out
