@@ -60,6 +60,9 @@ class BaseManager(models.Manager):
                 try:
                     if getattr(model_inst, field.name) is None:
                         continue
+                    # Ignore pk fields
+                    if field.primary_key:
+                        continue
                 except exceptions.ObjectDoesNotExist:
                     continue
                 if getattr(model_inst, field.name) != \
@@ -193,6 +196,18 @@ class BaseManager(models.Manager):
                 getattr(model, key).add(v)
         return model
 
+    def add_m2m_accessors(self, model, obj, request):
+        for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
+            rel_obj_name = m2m_mgr.target_field_name
+            getattr(model, m2m_accessor).clear()
+            for rel_obj in getattr(getattr(obj, m2m_accessor, None),
+                                   rel_obj_name, []):
+                rel_mod = type_map[rel_obj_name].objects.load_from_object(
+                    rel_obj, request)
+                getattr(model, m2m_accessor).add(rel_mod)
+        
+        return model
+
     def load_from_object(self, obj, request, save=True):
         """
         Given an object (obj) from xobj, create and return the  corresponding
@@ -212,9 +227,11 @@ class BaseManager(models.Manager):
         accessors = self.get_accessors(model, obj, request)
         if save:
             created, model = self.load_or_create(model, accessors)
+        else:
+            model = self.load(model, accessors)
 
+        model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
-
         model = self.add_accessors(model, accessors)
 
         return model

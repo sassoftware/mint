@@ -808,6 +808,7 @@ installed_software_post_xml = """\
       <version>
         <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
         <ordering>1234567890.12</ordering>
+        <flavor>is: x86</flavor>
       </version>
       <flavor>is: x86</flavor>
     </trove>
@@ -816,6 +817,7 @@ installed_software_post_xml = """\
       <version>
         <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
         <ordering>1272410163.98</ordering>
+        <flavor>desktop is: x86_64</flavor>
       </version>
       <flavor>desktop is: x86_64</flavor>
     </trove>
@@ -869,9 +871,50 @@ system_version_put_xml = """\
 """ % installed_software_post_xml
 
 system_version_put_response_xml = """\
-<system id="http://testserver/api/inventory/systems/2/">
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/2">
   %s
+  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
+  <activated>True</activated>
+  <sslClientKey>testsystemsslclientkey</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <managingNode/>
+  <reservationId/>
+  <networks>
+    <network>
+      <active/>
+      <deviceName>eth0</deviceName>
+      <ipAddress>1.1.1.1</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/2"/>
+    </network>
+  </networks>
+  <systemJobs/>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <systemId>2</systemId>
+  <launchingUser/>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <available/>
+  <description>testsystemdescription</description>
+  <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <isManagementNode/>
+  <systemjobSet/>
+  <target/>
+  <name/>
   <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>activated</currentState>
+  <createdDate>2010-08-23T21:41:31.278455+00:00</createdDate>
+  <osType/>
 </system>
 """ % installed_software_response_xml

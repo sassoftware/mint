@@ -685,7 +685,8 @@ class SystemVersionsTestCase(XMLTestCase):
             content_type="application/xml")
         self.assertXMLEquals(response.content,
             testsxml.system_version_put_response_xml,
-            ignoreNodes = ['lastAvailableUpdateRefresh'])
+            ignoreNodes = ['lastAvailableUpdateRefresh',
+                'createdDate'])
 
 class EventTypeTestCase(XMLTestCase):
 

@@ -137,7 +137,7 @@ class InventorySystemsSystemService(AbstractInventoryService):
         if not oldSystem:
             return HttpResponse(status=404)
         # This really should be an update
-        self.mgr.updateSystem(oldSystem, system)
+        self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)
 
     def delete(self, request, system_id):
