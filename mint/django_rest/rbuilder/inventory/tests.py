@@ -1,12 +1,16 @@
-from conary import versions
 import collections
 import datetime
+import os
+import shutil
+import tempfile
 from dateutil import tz
+
+from conary import versions
 from django.test import TestCase
 from django.test.client import Client
 
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.inventory import systemdbmgr
+from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
 
 from mint.django_rest.rbuilder.inventory import testsxml
@@ -165,11 +169,19 @@ class XMLTestCase(TestCase):
 
         return system
 
-class InventoryTestCase(XMLTestCase):
-          
-    #Setup all of the objects that will be needed for this TestCase
     def setUp(self):
+        self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
+        mintCfg = os.path.join(self.workDir, "mint.cfg")
+        file(mintCfg, "w")
+        from mint import config
+        config.RBUILDER_CONFIG = mintCfg
         self.client = Client()
+        self.mgr = manager.Manager()
+
+    def cleanUp(self):
+        shutil.rmtree(self.workDir, ignore_errors=True)
+
+class InventoryTestCase(XMLTestCase):
 
     def testGetTypes(self):
         response = self.client.get('/api/inventory/')
@@ -195,21 +207,16 @@ class InventoryTestCase(XMLTestCase):
 
 class LogTestCase(XMLTestCase):
 
-    def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        self.mintConfig = self.system_manager.cfg
-
     def testGetLog(self):
         system = models.System(name="mgoblue", 
             description="best appliance ever", activated=False)
-        new_system = self.system_manager.addSystem(system)
+        new_system = self.mgr.addSystem(system)
         system = models.System(name="mgoblue2", 
             description="best appliance ever2", activated=False)
-        new_system = self.system_manager.addSystem(system)
+        new_system = self.mgr.addSystem(system)
         system = models.System(name="mgoblue3", 
             description="best appliance ever3", activated=False)
-        new_system = self.system_manager.addSystem(system)
+        new_system = self.mgr.addSystem(system)
         response = self.client.get('/api/inventory/log/')
         # Just remove lines with dates in them, it's easier to test for now.
         content = []
@@ -223,11 +230,7 @@ class LogTestCase(XMLTestCase):
         self.assertXMLEquals('\n'.join(content), testsxml.systems_log_xml)
         
 class ZonesTestCase(XMLTestCase):
-    
-    def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        
+
     def testGetZones(self):
         zone = self._saveZone()
         response = self.client.get('/api/inventory/zones/')
@@ -245,13 +248,13 @@ class ZonesTestCase(XMLTestCase):
     def testAddZoneNodeNull(self):
         
         try:
-            self.system_manager.addZone(None)
+            self.mgr.addZone(None)
         except:
             assert(False) # should not throw exception
         
     def testAddZone(self):
         zone = self._saveZone()
-        new_zone = self.system_manager.addZone(zone)
+        new_zone = self.mgr.addZone(zone)
         assert(new_zone is not None)
         
     def testPostZone(self):
@@ -264,11 +267,7 @@ class ZonesTestCase(XMLTestCase):
             (zone.created_date.isoformat() + '+00:00'))
 
 class ManagementNodesTestCase(XMLTestCase):
-    
-    def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        
+
     def testManagementNodeSave(self):
         # make sure state gets set to unmanaged
         management_node = models.ManagementNode(name="mgoblue", 
@@ -304,13 +303,13 @@ class ManagementNodesTestCase(XMLTestCase):
         try:
             # create the system
             managementNode = None
-            self.system_manager.addManagementNode(managementNode)
+            self.mgr.addManagementNode(managementNode)
         except:
             assert(False) # should not throw exception
         
     def testAddManagementNode(self):
         management_node = self._saveManagementNode()
-        new_management_node = self.system_manager.addManagementNode(management_node)
+        new_management_node = self.mgr.addManagementNode(management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
         assert(new_management_node.is_management_node)
@@ -335,13 +334,11 @@ class ManagementNodesTestCase(XMLTestCase):
             (management_node.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, management_node_xml % \
             (management_node.created_date.isoformat() + '+00:00'))
-        
+
 class NetworksTestCase(XMLTestCase):
-    
+
     def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        self.mintConfig = self.system_manager.cfg
+        XMLTestCase.setUp(self)
         self.system = models.System(name="mgoblue", description="best appliance ever")
         self.system.save()
         
@@ -351,20 +348,20 @@ class NetworksTestCase(XMLTestCase):
         network = models.Network(public_dns_name="foo.com", active=False, required=False)
         network.system = self.system
         network.save()
-        net = self.system_manager._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
         assert(net is None)
         
         # try one with required only
         network.required = True
         network.save()
-        net = self.system_manager._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
         assert(net is not None)
         
         # try one with active only
         network.required = False
         network.active = True
         network.save()
-        net = self.system_manager._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
         assert(net is not None)
         
         # now add a required one in addition to active one to test order
@@ -374,20 +371,18 @@ class NetworksTestCase(XMLTestCase):
         assert(len(self.system.networks.all()) == 2)
         assert(self.system.networks.all()[0].required == False)
         assert(self.system.networks.all()[1].required == True)
-        net = self.system_manager._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
         assert(net.network_id == network2.network_id)
 
 class SystemsTestCase(XMLTestCase):
     fixtures = ['system_job']
-    
+
     def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        self.mintConfig = self.system_manager.cfg
+        XMLTestCase.setUp(self)
         self.mock_scheduleSystemActivationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
-        self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.system_manager.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
+        self.mgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.mgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
         
     def mock_scheduleSystemActivationEvent(self, system):
         self.mock_scheduleSystemActivationEvent_called = True
@@ -400,7 +395,7 @@ class SystemsTestCase(XMLTestCase):
         try:
             # create the system
             system = None
-            self.system_manager.addSystem(system)
+            self.mgr.addSystem(system)
         except:
             assert(False) # should not throw exception
             
@@ -422,7 +417,7 @@ class SystemsTestCase(XMLTestCase):
         # create the system
         system = models.System(name="mgoblue", 
             description="best appliance ever", activated=False)
-        new_system = self.system_manager.addSystem(system)
+        new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         assert(new_system.current_state == models.System.UNMANAGED)
         
@@ -432,7 +427,7 @@ class SystemsTestCase(XMLTestCase):
     def testAddActivatedSystem(self):
         # create the system
         system = models.System(name="mgoblue", description="best appliance ever", activated=True)
-        new_system = self.system_manager.addSystem(system)
+        new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         assert(new_system.current_state == models.System.ACTIVATED)
         
@@ -446,7 +441,7 @@ class SystemsTestCase(XMLTestCase):
         # create the system
         system = models.System(name="mgoblue", description="best appliance ever", activated=True)
         system.is_management_node = True
-        new_system = self.system_manager.addSystem(system)
+        new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         assert(new_system.current_state == models.System.ACTIVATED)
         
@@ -512,7 +507,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=2)
-        assert(system.current_state != "dead")
+        self.failUnlessEqual(system.current_state, "activated")
         
         # add it with same uuids but with different current state to make sure
         # we get back same system with update prop
@@ -521,7 +516,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=2)
-        assert(this_system.current_state == "dead")
+        self.failUnlessEqual(system.current_state, "dead")
 
     def testGetSystemLog(self):
         response = self.client.post('/api/inventory/systems/', 
@@ -542,43 +537,42 @@ class SystemsTestCase(XMLTestCase):
     def testGetSystemHasHostInfo(self):
         system = models.System(name="mgoblue")
         system.save()
-        assert(self.system_manager.getSystemHasHostInfo(system) == False)
+        assert(self.mgr.sysMgr.getSystemHasHostInfo(system) == False)
         
         network = models.Network(system=system)
         network.save()
         system.networks.add(network)
-        assert(self.system_manager.getSystemHasHostInfo(system) == False)
+        assert(self.mgr.sysMgr.getSystemHasHostInfo(system) == False)
         
         network2 = models.Network(ip_address="1.1.1.1", system=system)
         network2.save()
         system.networks.add(network2)
-        assert(self.system_manager.getSystemHasHostInfo(system))
+        assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
         
         network2.delete()
         network = models.Network(ipv6_address="1.1.1.1", system=system)
         network.save()
         system.networks.add(network)
-        assert(self.system_manager.getSystemHasHostInfo(system))
+        assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
         
         network.delete()
         network = models.Network(public_dns_name="foo.bar.com", system=system)
         network.save()
         system.networks.add(network)
-        assert(self.system_manager.getSystemHasHostInfo(system))
+        assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
     
     def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        self.mintConfig = self.system_manager.cfg
+        XMLTestCase.setUp(self)
+        self.mintConfig = self.mgr.cfg
         from django.conf import settings
         self.mintConfig.dbPath = settings.DATABASE_NAME
         self.mock_scheduleSystemActivationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
-        self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.system_manager.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
+        self.mgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.mgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
         
     def mock_scheduleSystemActivationEvent(self, system):
         self.mock_scheduleSystemActivationEvent_called = True
@@ -677,14 +671,7 @@ class SystemVersionsTestCase(XMLTestCase):
             ignoreNodes = ['lastAvailableUpdateRefresh'])
 
 class EventTypeTestCase(XMLTestCase):
-    
-    def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-            
-    def tearDown(self):
-        pass
-    
+
     def testGetEventTypes(self):
         response = self.client.get('/api/inventory/eventTypes/')
         self.assertEquals(response.status_code, 200)
@@ -698,9 +685,8 @@ class EventTypeTestCase(XMLTestCase):
 class SystemEventTestCase(XMLTestCase):
     
     def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        
+        XMLTestCase.setUp(self)
+
         # need a system
         network = models.Network(ip_address='1.1.1.1')
         self.system = models.System(name="mgoblue", description="best appliance ever")
@@ -714,11 +700,8 @@ class SystemEventTestCase(XMLTestCase):
         models.SystemEvent.objects.all().delete()
         
         self.mock_dispatchSystemEvent_called = False
-        self.system_manager.dispatchSystemEvent = self.mock_dispatchSystemEvent
-            
-    def tearDown(self):
-        pass
-    
+        self.mgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
+
     def mock_dispatchSystemEvent(self, event):
         self.mock_dispatchSystemEvent_called = True
     
@@ -750,7 +733,7 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        new_event = self.system_manager.getSystemEvent(event.system_event_id)
+        new_event = self.mgr.getSystemEvent(event.system_event_id)
         assert(new_event == event)
         
     def testGetSystemEvents(self):
@@ -761,7 +744,7 @@ class SystemEventTestCase(XMLTestCase):
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
-        SystemEvents = self.system_manager.getSystemEvents()
+        SystemEvents = self.mgr.getSystemEvents()
         assert(len(SystemEvents.systemEvent) == 2)
         
     def testDeleteSystemEvent(self):
@@ -769,7 +752,7 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        self.system_manager.deleteSystemEvent(event.system_event_id)
+        self.mgr.deleteSystemEvent(event.system_event_id)
         events = models.SystemEvent.objects.all()
         assert(len(events) == 0)
         
@@ -780,14 +763,14 @@ class SystemEventTestCase(XMLTestCase):
         network.save()
         local_system.networks.add(network)
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        event = self.system_manager.createSystemEvent(local_system, poll_event)
+        event = self.mgr.createSystemEvent(local_system, poll_event)
         assert(event is None)
         assert(self.mock_dispatchSystemEvent_called == False)
                 
         network2 = models.Network(system=local_system, ip_address="1.1.1.1")
         network2.save()
         local_system.networks.add(network2)
-        event = self.system_manager.createSystemEvent(local_system, poll_event)
+        event = self.mgr.createSystemEvent(local_system, poll_event)
         assert(event is not None)
         
     def testSaveSystemEvent(self):
@@ -804,7 +787,7 @@ class SystemEventTestCase(XMLTestCase):
         assert(event2.priority == 1)
     
     def testScheduleSystemPollEvent(self):
-        self.system_manager.scheduleSystemPollEvent(self.system)
+        self.mgr.scheduleSystemPollEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called == False)
         
         # make sure we have our poll event
@@ -818,7 +801,7 @@ class SystemEventTestCase(XMLTestCase):
         assert(len(sys_activated_entries) == 1)
         
     def testScheduleSystemPollNowEvent(self):
-        self.system_manager.scheduleSystemPollNowEvent(self.system)
+        self.mgr.scheduleSystemPollNowEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called)
         
         pn_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
@@ -833,7 +816,7 @@ class SystemEventTestCase(XMLTestCase):
         assert(len(sys_activated_entries) == 1)
         
     def testScheduleSystemActivationEvent(self):
-        self.system_manager.scheduleSystemActivationEvent(self.system)
+        self.mgr.scheduleSystemActivationEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called)
         
         activation_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
@@ -850,7 +833,7 @@ class SystemEventTestCase(XMLTestCase):
     def testAddSystemEventNull(self):
         
         try:
-            self.system_manager.addSystemSystemEvent(None, None)
+            self.mgr.addSystemSystemEvent(None, None)
         except:
             assert(False) # should not throw exception
         
@@ -862,7 +845,7 @@ class SystemEventTestCase(XMLTestCase):
             time_enabled=datetime.datetime.now(tz.tzutc()))
         systemEvent.save()
         assert(systemEvent is not None)
-        self.system_manager.addSystemSystemEvent(self.system.system_id, systemEvent)
+        self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called)
         
     def testAddSystemPollNowEvent(self):
@@ -873,7 +856,7 @@ class SystemEventTestCase(XMLTestCase):
             time_enabled=datetime.datetime.now(tz.tzutc()))
         systemEvent.save()
         assert(systemEvent is not None)
-        self.system_manager.addSystemSystemEvent(self.system.system_id, systemEvent)
+        self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called)
         
     def testAddSystemPollEvent(self):
@@ -884,7 +867,7 @@ class SystemEventTestCase(XMLTestCase):
             time_enabled=datetime.datetime.now(tz.tzutc()))
         systemEvent.save()
         assert(systemEvent is not None)
-        self.system_manager.addSystemSystemEvent(self.system.system_id, systemEvent)
+        self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called == False)
         
     def testPostSystemEvent(self):
@@ -905,51 +888,54 @@ class SystemEventProcessingTestCase(XMLTestCase):
     fixtures = ['system_event_processing']
     
     def setUp(self):
-        self.client = Client()
-        self.system_manager = systemdbmgr.SystemDBManager()
-        self.mintConfig = self.system_manager.cfg
+        XMLTestCase.setUp(self)
+
+        self.mintConfig = self.mgr.cfg
+        self.mgr.sysMgr.cleanupSystemEvent = self.mock_cleanupSystemEvent
+        self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.mgr.sysMgr._extractNetworkToUse = self.mock_extractNetworkToUse
+        self.resetFlags()
+
+    def resetFlags(self):
         self.mock_cleanupSystemEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mock_extractNetworkToUse_called = False
-        self.system_manager.cleanupSystemEvent = self.mock_cleanupSystemEvent
-        self.system_manager.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.system_manager._extractNetworkToUse = self.mock_extractNetworkToUse
-            
-    def tearDown(self):
-        pass
-        
+
     def mock_cleanupSystemEvent(self, event):
-        self.mock_cleanupSystemEvent_called = True;
-        
-    def mock_scheduleSystemPollEvent(self, system):
-        self.mock_scheduleSystemPollEvent_called = True;
-        
+        self.mock_cleanupSystemEvent_called = True
+
+        self.mock_scheduleSystemPollEvent_called = True
+
     def mock_extractNetworkToUse(self, system):
         self.mock_extractNetworkToUse_called = True
-        
+        return None
+
     def testGetSystemEventsForProcessing(self):
         
-        events = self.system_manager.getSystemEventsForProcessing()
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
         
         # ensure we got our activation event back since it is the highest priority
-        assert(len(events) == 1)
+        self.failUnlessEqual(len(events), 1)
         event = events[0]
-        assert(event.event_type.name == models.EventType.SYSTEM_ACTIVATION)
-        
+        self.failUnlessEqual(event.event_type.name,
+            models.EventType.SYSTEM_ACTIVATION)
+
         # remove the activation event and ensure we get the on demand poll event next
         event.delete()
-        events = self.system_manager.getSystemEventsForProcessing()
-        assert(len(events) == 1)
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
+        self.failUnlessEqual(len(events), 1)
         event = events[0]
-        assert(event.event_type.name == models.EventType.SYSTEM_POLL_IMMEDIATE)
-        
+        self.failUnlessEqual(event.event_type.name,
+            models.EventType.SYSTEM_POLL_IMMEDIATE)
+
         # remove the poll now event and ensure we get the standard poll event next
         event.delete()
-        events = self.system_manager.getSystemEventsForProcessing()
-        assert(len(events) == 1)
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
+        self.failUnlessEqual(len(events), 1)
         event = events[0]
-        assert(event.event_type.name == models.EventType.SYSTEM_POLL)
-        
+        self.failUnlessEqual(event.event_type.name,
+            models.EventType.SYSTEM_POLL)
+
         # add another poll event with a higher priority but a future time 
         # and make sure we don't get it (because of the future activation time)
         orgPollEvent = event
@@ -958,30 +944,33 @@ class SystemEventProcessingTestCase(XMLTestCase):
             event_type=orgPollEvent.event_type, priority=orgPollEvent.priority + 1,
             time_enabled=enabled_time)
         new_poll_event.save()
-        events = self.system_manager.getSystemEventsForProcessing()
-        assert(len(events) == 1)
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
+        self.failUnlessEqual(len(events), 1)
         event = events[0]
-        assert(event.system_event_id != new_poll_event.system_event_id)
+        self.failUnlessEqual(event.system_event_id,
+            new_poll_event.system_event_id)
         
     def testGetSystemEventsForProcessingPollCount(self):
         self.mintConfig.systemPollCount = 3
         
-        events = self.system_manager.getSystemEventsForProcessing()
-        assert(len(events) == 3)
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
+        self.failUnlessEqual(len(events), 3)
         
     def testProcessSystemEvents(self):
         
         #remove the activation event so we handle the poll now event
-        events = self.system_manager.getSystemEventsForProcessing()
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
-        assert(event.event_type.name == models.EventType.SYSTEM_ACTIVATION)
+        self.failUnlessEqual(event.event_type.name,
+            models.EventType.SYSTEM_ACTIVATION)
         event.delete()
         
         # make sure next one is poll now event
-        events = self.system_manager.getSystemEventsForProcessing()
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
-        assert(event.event_type.name == models.EventType.SYSTEM_POLL_IMMEDIATE)
-        self.system_manager.processSystemEvents()
+        self.failUnlessEqual(event.event_type.name,
+            models.EventType.SYSTEM_POLL_IMMEDIATE)
+        self.mgr.sysMgr.processSystemEvents()
         
         # make sure the event was removed and that we have the next poll event 
         # for this system now
@@ -992,7 +981,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         local_system = poll_event.system_events.all()[0]
         event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
-        assert(event is not None)
+        self.failIf(event is not None)
         
     def testProcessSystemEventsNoTrigger(self):
         # make sure activation event doesn't trigger next poll event
@@ -1006,10 +995,11 @@ class SystemEventProcessingTestCase(XMLTestCase):
             pass
         
         # make sure next one is activation now event
-        events = self.system_manager.getSystemEventsForProcessing()
+        events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
-        assert(event.event_type.name == models.EventType.SYSTEM_ACTIVATION)
-        self.system_manager.processSystemEvents()
+        self.failUnlessEqual(event.event_type.name,
+            models.EventType.SYSTEM_ACTIVATION)
+        self.mgr.sysMgr.processSystemEvents()
         
         # should have no poll events still
         try:
@@ -1029,21 +1019,27 @@ class SystemEventProcessingTestCase(XMLTestCase):
         # sanity check dispatching poll event
         event = models.SystemEvent(system=system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        self.system_manager.dispatchSystemEvent(event)
-        assert(self.mock_cleanupSystemEvent_called)
-        assert(self.mock_scheduleSystemPollEvent_called)
-        
+        self.mgr.sysMgr.dispatchSystemEvent(event)
+        self.failUnless(self.mock_cleanupSystemEvent_called)
+        self.failUnless(self.mock_scheduleSystemPollEvent_called)
+        # _extractNetworkToUse is only called if we have a repeater client
+        self.failIf(self.mock_extractNetworkToUse_called)
+
         # sanity check dispatching poll_now event
+        self.resetFlags()
         self.mock_scheduleSystemPollEvent_called = False # reset it
         event = models.SystemEvent(system=system, event_type=poll_now_event, priority=poll_now_event.priority)
         event.save()
-        self.system_manager.dispatchSystemEvent(event)
-        assert(self.mock_cleanupSystemEvent_called)
-        assert(self.mock_scheduleSystemPollEvent_called == False)
+        self.mgr.sysMgr.dispatchSystemEvent(event)
+        self.failUnless(self.mock_cleanupSystemEvent_called)
+        self.failIf(self.mock_scheduleSystemPollEvent_called)
+        # _extractNetworkToUse is only called if we have a repeater client
+        self.failIf(self.mock_extractNetworkToUse_called)
 
         # sanity check dispatching activation event
-        self.mock_scheduleSystemPollEvent_called = False # reset it
+        self.resetFlags()
         event = models.SystemEvent(system=system, event_type=act_event, priority=act_event.priority)
         event.save()
-        self.system_manager.dispatchSystemEvent(event)
-        assert(self.mock_cleanupSystemEvent_called)
+        self.mgr.sysMgr.dispatchSystemEvent(event)
+        self.failUnless(self.mock_cleanupSystemEvent_called)
+        self.failIf(self.mock_scheduleSystemPollEvent_called)

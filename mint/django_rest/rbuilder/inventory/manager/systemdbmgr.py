@@ -20,7 +20,8 @@ from conary.deps import deps
 from mint.django_rest import logger as log
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder import rbuilder_manager
+
+import base
 
 try:
     from rpath_repeater import client as repeater_client
@@ -28,49 +29,52 @@ except:
     log.info("Failed loading repeater client, expected in local mode only")
     repeater_client = None  # pyflakes=ignore
 
-class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
-
-    def __init__(self, *args, **kw):
-        rbuilder_manager.RbuilderDjangoManager.__init__(self, *args, **kw)
-
+class SystemDBManager(base.BaseManager):
+    @base.exposed
     def getEventTypes(self):
         EventTypes = models.EventTypes()
         EventTypes.eventType = list(models.EventType.objects.all())
         return EventTypes
-    
+
+    @base.exposed
     def getEventType(self, event_type_id):
         eventType = models.EventType.objects.get(pk=event_type_id)
         return eventType
-    
+
+    @base.exposed
     def getZone(self, zone_id):
         zone = models.Zone.objects.get(pk=zone_id)
         return zone
-    
+
+    @base.exposed
     def getZones(self):
         Zones = models.Zones()
         Zones.zone = list(models.Zone.objects.all())
         return Zones
 
+    @base.exposed
     def addZone(self, zone):
         """Add a zone"""
-        
+
         if not zone:
             return
-        
+
         zone.save()
-        
         return zone
 
+    @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
         self.log_system(system, "System data fetched.")
         system.addJobs()
         return system
 
+    @base.exposed
     def deleteSystem(self, system):
         managedSystem = models.managed_system.objects.get(pk=system)
         managedSystem.delete()
 
+    @base.exposed
     def getSystems(self):
         Systems = models.Systems()
         Systems.system = list(models.System.objects.all())
@@ -78,16 +82,19 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             s.addJobs()
         return Systems
 
+    @base.exposed
     def getManagementNode(self, management_node_id):
         managementNode = models.ManagementNode.objects.get(pk=management_node_id)
         self.log_system(managementNode, "System data fetched.")
         return managementNode
-    
+
+    @base.exposed
     def getManagementNodes(self):
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.managementNode = list(models.ManagementNode.objects.all())
         return ManagementNodes
-    
+
+    @base.exposed
     def addManagementNode(self, managementNode):
         """Add a management node to the inventory"""
         
@@ -116,18 +123,20 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         system_log.system_log_entries.add(system_log_entry)
         system_log.save()
         return system_log
-    
+
+    @base.exposed
     def addSystems(self, systemList):
         '''Add add one or more systems to inventory'''
         for system in systemList:
             self.addSystem(system)
-        
+
+    @base.exposed
     def addSystem(self, system):
         '''Add a new system to inventory'''
 
         if not system:
             return
-        
+
         if system.is_management_node:
             return self.addManagementNode(system)
             
@@ -159,7 +168,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             target=target, target_system_id=system.target_system_id)
         systemTarget.save()
         return systemTarget
-        
+
+    @base.exposed
     def updateSystem(self, system):
         systemTarget = models.system_target.objects.get(
                         target_system_id=system.target_system_id)
@@ -238,6 +248,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         else:
             return None
 
+    @base.exposed
     def getSystemLog(self, system):
         systemLog = system.system_log.all()
         if systemLog:
@@ -348,31 +359,37 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         if not created:
             cachedUpdate.last_refreshed = datetime.datetime.now()
             cachedUpdate.save()
-            
+
+    @base.exposed
     def getSystemEvent(self, event_id):
         event = models.SystemEvent.objects.get(pk=event_id)
         return event
 
+    @base.exposed
     def deleteSystemEvent(self, event):
         event = models.SystemEvent.objects.get(pk=event)
         event.delete()
 
+    @base.exposed
     def getSystemEvents(self):
         SystemEvents = models.SystemEvents()
         SystemEvents.systemEvent = list(models.SystemEvent.objects.all())
         return SystemEvents
-    
+
+    @base.exposed
     def getSystemSystemEvents(self, system_id):
         system = models.System.objects.get(pk=system_id)
         events = models.SystemEvent.objects.filter(system=system)
         system_events = models.SystemEvents()
         system_events.systemEvent = list(events)
         return system_events
-    
+
+    @base.exposed
     def getSystemSystemEvent(self, system_id, system_event_id):
         event = models.SystemEvent.objects.get(pk=system_event_id)
         return event
-    
+
+    @base.exposed
     def addSystemSystemEvent(self, system_id, systemEvent):
         """Add a system event to a system"""
         
@@ -498,12 +515,14 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         # remove the event since it has been handled
         log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
         event.delete()
-            
+
+    @base.exposed
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         self.createSystemEvent(system, poll_event)
-        
+
+    @base.exposed
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
@@ -511,7 +530,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         event_type = models.EventType.objects.get(
             name=models.EventType.SYSTEM_POLL_IMMEDIATE)
         self.createSystemEvent(system, event_type, enable_time)
-        
+
+    @base.exposed
     def scheduleSystemActivationEvent(self, system):
         '''Schedule an event for the system to be activated'''
         # activation events happen on demand, so enable now
@@ -519,7 +539,8 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         activation_event_type = models.EventType.objects.get(
             name=models.EventType.SYSTEM_ACTIVATION)
         self.createSystemEvent(system, activation_event_type, enable_time)
-            
+
+    @base.exposed
     def createSystemEvent(self, system, event_type, enable_time=None):
         event = None
         
@@ -599,6 +620,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
             log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
                 driver.cloudName, driver.cloudType, driver.userId))
 
+    @base.exposed
     def getSystemsLog(self):
         systemsLog = models.SystemsLog()
         systemLogEntries = \
@@ -606,6 +628,7 @@ class SystemDBManager(rbuilder_manager.RbuilderDjangoManager):
         systemsLog.systemLogEntry = list(systemLogEntries)
         return systemsLog
 
+    @base.exposed
     def getSystemJobs(self, system, job_uuid):
         return None
     

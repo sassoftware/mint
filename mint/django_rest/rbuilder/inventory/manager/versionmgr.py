@@ -14,40 +14,22 @@ from mint.db.database import Database
 from mint.rest.db.database import Database as RestDatabase
 
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder import rbuilder_manager
-from mint.django_rest.rbuilder.inventory import models 
+from mint.django_rest.rbuilder.inventory import models
 
+import base
 
-class VersionManager(rbuilder_manager.RbuilderDjangoManager):
+class VersionManager(base.BaseManager):
     """
     Class encapsulating all logic around versions, available updates, etc.
     """
-
-    def __init__(self, *args, **kw):
-        rbuilder_manager.RbuilderDjangoManager.__init__(self, *args, **kw)
-        # Need a rest db object for additional functionality.  If other mgr's
-        # end up needing one as well, we can move this into
-        # RbuilderDjangoManager.
-        self._restDb = None
-
-    @property
-    def rest_db(self):
-        if self.cfg is None:
-            return None
-        if self._restDb is None:
-            from django.conf import settings
-            self.cfg.dbPath = settings.DATABASE_NAME
-            mint_db = Database(self.cfg)
-            self.rest_db = RestDatabase(self.cfg, mint_db)
-        return self._restDb
-
     def get_software_versions(self, system):
         pass
 
     def delete_installed_software(self, system):
         system.installed_software.all().delete()
 
-    def set_installed_software(self, system, installed_versions):
+    @base.exposed
+    def setInstalledSoftware(self, system, installed_versions):
         oldInstalled = dict((x.getNVF(), x)
             for x in system.installed_software.all())
 

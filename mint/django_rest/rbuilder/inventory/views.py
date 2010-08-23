@@ -13,23 +13,19 @@ from django_restapi import resource
 from mint.django_rest.deco import requires, return_xml
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.inventory import systemdbmgr
-from mint.django_rest.rbuilder.inventory import versionmgr
+from mint.django_rest.rbuilder.inventory import manager
 
-MANAGER_CLASS = systemdbmgr.SystemDBManager
+MANAGER_CLASS = manager.Manager
 
 class AbstractInventoryService(resource.Resource):
 
     def __init__(self):
-        self.sysMgr = MANAGER_CLASS(cfg=None)
-        self.versionMgr = versionmgr.VersionManager(cfg=None)
+        self.mgr = MANAGER_CLASS(cfg=None)
         permitted_methods = ['GET', 'PUT', 'POST', 'DELETE']
         resource.Resource.__init__(self, permitted_methods=permitted_methods)
 
     def __call__(self, request, *args, **kw):
-        self.sysMgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
-        self.versionMgr = versionmgr.VersionManager(
-            cfg=getattr(request, 'cfg', None))
+        self.mgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
         return resource.Resource.__call__(self, request, *args, **kw)
 
     def read(self, request, *args, **kwargs):
@@ -59,7 +55,7 @@ class InventoryLogService(AbstractInventoryService):
     
     @return_xml
     def read(self, request):
-        return self.sysMgr.getSystemsLog()
+        return self.mgr.getSystemsLog()
     
 class InventoryZoneService(AbstractInventoryService):
     
@@ -69,14 +65,14 @@ class InventoryZoneService(AbstractInventoryService):
     
     def get(self, zone_id=None):
         if zone_id:
-            return self.sysMgr.getZone(zone_id)
+            return self.mgr.getZone(zone_id)
         else:
-            return self.sysMgr.getZones()
+            return self.mgr.getZones()
         
     @requires('zone')
     @return_xml
     def create(self, request, zone):
-        zone = self.sysMgr.addZone(zone)
+        zone = self.mgr.addZone(zone)
         return zone
     
 class InventoryManagementNodeService(AbstractInventoryService):
@@ -87,14 +83,14 @@ class InventoryManagementNodeService(AbstractInventoryService):
     
     def get(self, management_node_id=None):
         if management_node_id:
-            return self.sysMgr.getManagementNode(management_node_id)
+            return self.mgr.getManagementNode(management_node_id)
         else:
-            return self.sysMgr.getManagementNodes()
+            return self.mgr.getManagementNodes()
         
     @requires('managementNode')
     @return_xml
     def create(self, request, managementNode):
-        managementNode = self.sysMgr.addManagementNode(managementNode)
+        managementNode = self.mgr.addManagementNode(managementNode)
         return managementNode
 
 class InventorySystemsService(AbstractInventoryService):
@@ -105,29 +101,29 @@ class InventorySystemsService(AbstractInventoryService):
     
     def get(self, system_id=None):
         if system_id:
-            return self.sysMgr.getSystem(system_id)
+            return self.mgr.getSystem(system_id)
         else:
-            return self.sysMgr.getSystems()
+            return self.mgr.getSystems()
 
     @requires('system')
     @return_xml
     def create(self, request, system):
-        system = self.sysMgr.addSystem(system)
+        system = self.mgr.addSystem(system)
         return system
     
     @requires('systems')
     @return_xml
     def update(self, request, systems):
-        systems = self.sysMgr.addSystems(systems.system)
-        return self.sysMgr.getSystems()
+        systems = self.mgr.addSystems(systems.system)
+        return self.mgr.getSystems()
 
     def delete(self, request, system):
-        system = self.sysMgr.deleteSystem(system)
+        system = self.mgr.deleteSystem(system)
         response = HttpResponse(status=204)
         return response
 
     def launch(self, instanceId, targetType, targetName):
-        return self.sysMgr.launchSystem(instanceId, targetType, targetName)
+        return self.mgr.launchSystem(instanceId, targetType, targetName)
 
 class InventorySystemsSystemEventService(AbstractInventoryService):
     
@@ -137,21 +133,21 @@ class InventorySystemsSystemEventService(AbstractInventoryService):
         
     def get(self, system_id, system_event_id=None):
         if system_event_id:
-            return self.sysMgr.getSystemSystemEvent(system_id, system_event_id)
+            return self.mgr.getSystemSystemEvent(system_id, system_event_id)
         else:
-            return self.sysMgr.getSystemSystemEvents(system_id)
+            return self.mgr.getSystemSystemEvents(system_id)
         
     @requires('systemEvent')
     @return_xml
     def create(self, request, system_id, systemEvent):
-        systemEvent = self.sysMgr.addSystemSystemEvent(system_id, systemEvent)
+        systemEvent = self.mgr.addSystemSystemEvent(system_id, systemEvent)
         return systemEvent
 
 class InventorySystemsSystemLogService(AbstractInventoryService):
 
     def read(self, request, system, format='xml'):
-        managedSystem = self.sysMgr.getSystem(system)
-        systemLog = self.sysMgr.getSystemLog(managedSystem)
+        managedSystem = self.mgr.getSystem(system)
+        systemLog = self.mgr.getSystemLog(managedSystem)
 
         if format == 'xml':
             func = lambda x, req: systemLog
@@ -192,9 +188,9 @@ class InventorySystemEventsService(AbstractInventoryService):
         
     def get(self, system_event_id=None):
         if system_event_id:
-            return self.sysMgr.getSystemEvent(system_event_id)
+            return self.mgr.getSystemEvent(system_event_id)
         else:
-            return self.sysMgr.getSystemEvents()
+            return self.mgr.getSystemEvents()
 
 class InventorySystemEventsByTypeService(AbstractInventoryService):
 
@@ -206,7 +202,7 @@ class InventorySystemEventsByTypeService(AbstractInventoryService):
 class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
     @return_xml
     def read(self, request, system_id):
-        system = self.sysMgr.getSystem(system_id)
+        system = self.mgr.getSystem(system_id)
         installedSoftware = models.InstalledSoftware()
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
@@ -214,8 +210,8 @@ class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
     @requires('installedSoftware')
     @return_xml
     def create(self, request, system_id, installedSoftware):
-        system = self.sysMgr.getSystem(system_id)
-        self.versionMgr.set_installed_software(system, installedSoftware.trove)
+        system = self.mgr.getSystem(system_id)
+        self.mgr.setInstalledSoftware(system, installedSoftware.trove)
         installedSoftware = models.InstalledSoftware()
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
@@ -228,12 +224,12 @@ class InventoryEventTypesService(AbstractInventoryService):
         
     def get(self, event_type_id=None):
         if event_type_id:
-            return self.sysMgr.getEventType(event_type_id)
+            return self.mgr.getEventType(event_type_id)
         else:
-            return self.sysMgr.getEventTypes()
+            return self.mgr.getEventTypes()
 
 class InventoryJobsService(AbstractInventoryService):
     
     @return_xml
     def read(self, request, system, job_uuid=None):
-        return self.sysMgr.getSystemJobs(system, job_uuid)
+        return self.mgr.getSystemJobs(system, job_uuid)
