@@ -96,14 +96,11 @@ class InventoryManagementNodeService(AbstractInventoryService):
 class InventorySystemsService(AbstractInventoryService):
 
     @return_xml
-    def read(self, request, system_id=None):
-        return self.get(system_id)
-    
-    def get(self, system_id=None):
-        if system_id:
-            return self.mgr.getSystem(system_id)
-        else:
-            return self.mgr.getSystems()
+    def read(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getSystems()
 
     @requires('system')
     @return_xml
@@ -124,6 +121,29 @@ class InventorySystemsService(AbstractInventoryService):
 
     def launch(self, instanceId, targetType, targetName):
         return self.mgr.launchSystem(instanceId, targetType, targetName)
+
+class InventorySystemsSystemService(AbstractInventoryService):
+    @return_xml
+    def read(self, request, system_id):
+        return self.get(system_id)
+
+    def get(self, system_id):
+        return self.mgr.getSystem(system_id)
+
+    @requires('system')
+    @return_xml
+    def update(self, request, system_id, system):
+        oldSystem = self.mgr.getSystem(system_id)
+        if not oldSystem:
+            return HttpResponse(status=404)
+        # This really should be an update
+        self.mgr.addSystem(system)
+        return self.mgr.getSystem(system_id)
+
+    def delete(self, request, system_id):
+        system = self.mgr.deleteSystem(system_id)
+        response = HttpResponse(status=204)
+        return response
 
 class InventorySystemsSystemEventService(AbstractInventoryService):
     

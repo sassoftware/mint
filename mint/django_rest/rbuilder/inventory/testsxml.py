@@ -858,3 +858,20 @@ installed_software_response_xml = """
     </trove>
   </installedSoftware>
 """
+
+system_version_put_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/2/">
+  %s
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <localUuid>testsystemlocaluuid</localUuid>
+</system>
+""" % installed_software_post_xml
+
+system_version_put_response_xml = """\
+<system id="http://testserver/api/inventory/systems/2/">
+  %s
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <localUuid>testsystemlocaluuid</localUuid>
+</system>
+""" % installed_software_response_xml

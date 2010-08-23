@@ -139,7 +139,7 @@ class SystemDBManager(base.BaseManager):
 
         if system.is_management_node:
             return self.addManagementNode(system)
-            
+
         # add the system
         system.save()
         self.log_system(system, models.SystemLogEntry.ADDED)

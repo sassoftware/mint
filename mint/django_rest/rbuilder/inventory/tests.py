@@ -670,6 +670,23 @@ class SystemVersionsTestCase(XMLTestCase):
             testsxml.installed_software_response_xml,
             ignoreNodes = ['lastAvailableUpdateRefresh'])
 
+    def testSetInstalledSoftwareSystemRest(self):
+        system = self._saveSystem()
+        self._saveTrove()
+        system.installed_software.add(self.trove)
+        system.installed_software.add(self.trove2)
+        system.save()
+
+        data = testsxml.system_version_put_xml
+
+        url = '/api/inventory/systems/%s/' % system.pk
+        response = self.client.put(url,
+            data=data,
+            content_type="application/xml")
+        self.assertXMLEquals(response.content,
+            testsxml.system_version_put_response_xml,
+            ignoreNodes = ['lastAvailableUpdateRefresh'])
+
 class EventTypeTestCase(XMLTestCase):
 
     def testGetEventTypes(self):
