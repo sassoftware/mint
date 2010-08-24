@@ -296,46 +296,67 @@ management_node_post_response_xml = """\
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
-  <system id="http://testserver/api/inventory/systems/1">
-    <installedSoftware/>
-    <activated/>
-    <sslClientKey/>
-    <osMajorVersion/>
-    <activationDate/>
-    <generatedUuid/>
-    <managingNode/>
-    <reservationId/>
-    <networks/>
-    <systemJobs/>
-    <sslServerCertificate/>
-    <systemId>1</systemId>
-    <launchingUser/>
-    <scheduledEventStartDate/>
-    <launchDate/>
-    <sslClientCertificate/>
-    <available/>
-    <description>Local rBuilder management node</description>
-    <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
-    <targetSystemId/>
-    <osMinorVersion/>
-    <isManagementNode>True</isManagementNode>
-    <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-    <target/>
-    <name>Local Management Node</name>
-    <localUuid/>
-    <currentState/>
-    <createdDate>2010-08-18T22:28:26+00:00</createdDate>
-    <osType/>
-  </system>
   <system id="http://testserver/api/inventory/systems/2">
-    <installedSoftware/>
-    <activated>True</activated>
-    <sslClientKey>testsystemsslclientkey</sslClientKey>
-    <osMajorVersion/>
+    <activated/>
     <activationDate/>
-    <generatedUuid>testsystemgenerateduuid</generatedUuid>
-    <managingNode/>
+    <available/>
+    <createdDate>2010-08-18T22:28:26+00:00</createdDate>
+    <currentState>unmanaged</currentState>
+    <description>Local rPath Update Service</description>
+    <generatedUuid/>
+    <hostname/>
+    <installedSoftware/>
+    <launchDate/>
+    <launchingUser/>
+    <localUuid/>
+    <managementNode>True</managementNode>
+    <managingZone href="http://testserver/api/inventory/zones/1/"/>
+    <name>rPath Update Service</name>
+    <networks>
+      <network>
+        <active/>
+        <deviceName/>
+        <dnsName>127.0.0.1</dnsName>
+        <ipAddress/>
+        <ipv6Address/>
+        <netmask/>
+        <networkId>1</networkId>
+        <portType/>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/2"/>
+      </network>
+    </networks>
+    <osMajorVersion/>
+    <osMinorVersion/>
+    <osType/>
     <reservationId/>
+    <scheduledEventStartDate/>
+    <sslClientCertificate/>
+    <sslClientKey/>
+    <sslServerCertificate/>
+    <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
+    <systemId>2</systemId>
+    <systemJobs/>
+    <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+    <target/>
+    <targetSystemId/>
+  </system>
+  <system id="http://testserver/api/inventory/systems/3">
+    <activated>True</activated>
+    <activationDate/>
+    <available/>
+    <createdDate>%s</createdDate>
+    <currentState>activated</currentState>
+    <description>testsystemdescription</description>
+    <generatedUuid>testsystemgenerateduuid</generatedUuid>
+    <hostname/>
+    <installedSoftware/>
+    <launchDate/>
+    <launchingUser/>
+    <localUuid>testsystemlocaluuid</localUuid>
+    <managementNode/>
+    <managingZone/>
+    <name>testsystemname</name>
     <networks>
       <network>
         <active/>
@@ -344,32 +365,26 @@ systems_xml = """\
         <ipAddress>1.1.1.1</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
-        <networkId>1</networkId>
+        <networkId>2</networkId>
         <portType>lan</portType>
         <required/>
-        <system href="http://testserver/api/inventory/systems/2"/>
+        <system href="http://testserver/api/inventory/systems/3"/>
       </network>
     </networks>
-    <systemJobs/>
-    <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-    <systemId>2</systemId>
-    <launchingUser/>
-    <scheduledEventStartDate/>
-    <launchDate/>
-    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-    <available/>
-    <description>testsystemdescription</description>
-    <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
-    <targetSystemId/>
+    <osMajorVersion/>
     <osMinorVersion/>
-    <isManagementNode/>
-    <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
-    <target/>
-    <name>testsystemname</name>
-    <localUuid>testsystemlocaluuid</localUuid>
-    <currentState>activated</currentState>
-    <createdDate>%s</createdDate>
     <osType/>
+    <reservationId/>
+    <scheduledEventStartDate/>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+    <sslClientKey>testsystemsslclientkey</sslClientKey>
+    <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+    <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
+    <systemId>3</systemId>
+    <systemJobs/>
+    <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
+    <target/>
+    <targetSystemId/>
   </system>
 </systems>
 """
