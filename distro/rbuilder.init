@@ -39,7 +39,7 @@ start)
     exit 1
   fi
 
-  . /etc/sysconfig/postgresql-rbuilder
+  . /etc/sysconfig/pgsql/postgresql-rbuilder
   export PGPORT
   wait_for_postgres || exit 1
 

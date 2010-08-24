@@ -167,7 +167,9 @@ class rBuilderProduct(CPackageRecipe):
 
     def policy(r):
 
+        # Data directories
         r.Ownership('root', 'jabber', '/usr/share/rbuilder/jabberd')
+        r.ExcludeDirectories(exceptions='/srv/rbuilder/pki')
 
         # These config files are managed at runtime or by the admin, not
         # by conary.

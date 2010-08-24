@@ -441,11 +441,7 @@ class SystemManager(base.BaseManager):
     def dispatchSystemEvent(self, event):
         log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
         
-        if repeater_client is None:
-            log.info("Failed loading repeater client, expected in local mode only")
-        else:
-            self.log_system(event.system,  "Dispatching %s event" % event.event_type.name)
-            self._dispatchSystemEvent(event)
+        self._dispatchSystemEvent(event)
 
         # cleanup now that the event has been processed
         self.cleanupSystemEvent(event)
@@ -457,31 +453,37 @@ class SystemManager(base.BaseManager):
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
 
     def _dispatchSystemEvent(self, event):
-        rep_client = repeater_client.RepeaterClient()
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        if repClient is None:
+            log.info("Failed loading repeater client, expected in local mode only")
+            return
+        self.log_system(event.system,  "Dispatching %s event" % event.event_type.name)
 
         activationEvents = set([ models.EventType.SYSTEM_ACTIVATION ])
         pollEvents = set([
             models.EventType.SYSTEM_POLL,
             models.EventType.SYSTEM_POLL_IMMEDIATE,
         ])
-        
+
         network = self._extractNetworkToUse(event.system)
         if network:
-            destination = network.public_dns_name
+            destination = network.ip_address
             eventType = event.event_type.name
             sputnik = "sputnik1"
+            requiredNetwork = (network.required and destination) or None
             if eventType in activationEvents:
                 self._runSystemEvent(event, destination,
-                    rep_client.activate, destination, sputnik)
+                    repClient.activate, destination, sputnik)
             elif eventType in pollEvents:
                 self._runSystemEvent(event, destination,
-                    rep_client.poll, destination, sputnik)
+                    repClient.poll, destination, sputnik,
+                    requiredNetwork=requiredNetwork)
             else:
                 log.error("Unknown event type %s" % eventType)
-                
+
     def _extractNetworkToUse(self, system):
         networks = system.networks.all()
-        
+
         # first look for user required nets
         nets = [ x for x in networks if x.required ]
         if nets:
@@ -513,8 +515,12 @@ class SystemManager(base.BaseManager):
         job = models.Job()
         job.job_uuid = str(uuid)
         job.event_type = event.event_type
-        job.system = event.system
         job.save()
+
+        sjob = models.SystemJob()
+        sjob.job = job
+        sjob.system = event.system
+        sjob.save()
         return uuid, job
 
     def cleanupSystemEvent(self, event):

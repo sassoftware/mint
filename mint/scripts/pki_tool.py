@@ -34,6 +34,7 @@ DEPLOY_LIST = [
         ('site', '/srv/rbuilder/pki/httpd.pem', 'apache'),
         ('site', '/srv/rbuilder/pki/rmake.pem', 'rmake'),
         ('xmpp', '/srv/rbuilder/pki/jabberd.pem', 'jabber'),
+        ('outbound', '/srv/rbuilder/pki/outbound.pem', 'root'),
         ]
 
 
@@ -111,6 +112,9 @@ class Script(GenericScript):
         # necessarily accessed via a "well-known" name.
         self._create(certs, 'xmpp', issuer=certs['hg_ca'],
                 desc='rBuilder XMPP Certificate')
+        # This is used for CIM connections outbound from the local system.
+        self._create(certs, 'outbound', issuer=certs['lg_ca'],
+                desc='rBuilder Repeater Client Certificate')
 
         if self.dry_run:
             log.info("Dry run finished; rolling back.")
