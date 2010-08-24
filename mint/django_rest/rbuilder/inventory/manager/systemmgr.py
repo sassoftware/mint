@@ -20,8 +20,8 @@ from conary.deps import deps
 from mint.django_rest import logger as log
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.inventory.manager import base
 
-import base
 
 try:
     from rpath_repeater import client as repeater_client
