@@ -1100,6 +1100,7 @@ class MigrateTo_50(SchemaMigration):
                     "name" varchar(8092) NOT NULL,
                     "description" varchar(8092),
                     "created_date" timestamp with time zone NOT NULL,
+                    "hostname" varchar(8092),
                     "launch_date" timestamp with time zone,
                     "target_id" integer REFERENCES "targets" ("targetid"),
                     "target_system_id" varchar(255),

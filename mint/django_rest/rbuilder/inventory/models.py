@@ -136,6 +136,7 @@ class System(modellib.XObjIdModel):
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    hostname = models.CharField(max_length=8092, null=True)
     # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
     launch_date = modellib.DateTimeUtcField(null=True)
