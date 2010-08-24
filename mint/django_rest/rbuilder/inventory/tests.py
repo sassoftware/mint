@@ -20,12 +20,15 @@ class XMLTestCase(TestCase):
         from lxml import etree
         tree0 = self._removeTail(etree.fromstring(first.strip()))
         tree1 = self._removeTail(etree.fromstring(second.strip()))
-        if not self._nodecmp(tree0, tree1, ignoreNodes=ignoreNodes):
+        nd = self._nodediff(tree0, tree1, ignoreNodes=ignoreNodes)
+        if nd:
+            self.fail(nd)
             data0 = etree.tostring(tree0, pretty_print=True, with_tail=False)
             data1 = etree.tostring(tree1, pretty_print=True, with_tail=False)
             import difflib
             diff = '\n'.join(list(difflib.unified_diff(data0.splitlines(),
                     data1.splitlines()))[2:])
+            print "Failure:", nd
             self.fail(diff)
 
     @classmethod
@@ -50,19 +53,16 @@ class XMLTestCase(TestCase):
 
     @classmethod
     def _sortChildren(self, child1, child2):
-        if child1.tag < child2.tag:
-            return -1
-        elif child1.tag == child2.tag:
-            return 0
-        else:
-            return 1
+        return cmp(child1.tag, child2.tag)
 
     @classmethod
-    def _nodecmp(cls, node1, node2, ignoreNodes=None):
+    def _nodediff(cls, node1, node2, ignoreNodes=None):
+        if node1.tag != node2.tag:
+            return "Different nodes"
         if node1.attrib != node2.attrib:
-            return False
+            return "Attributes: %s != %s" % (node1.attrib, node2.attrib)
         if node1.nsmap != node2.nsmap:
-            return False
+            return "Namespace maps: %s != %s" % (node1.nsmap, node2.nsmap)
         ignoreNodes = set(ignoreNodes or [])
         children1 = [ x for x in node1.getchildren()
             if x.tag not in ignoreNodes ]
@@ -76,16 +76,27 @@ class XMLTestCase(TestCase):
         if children1 or children2:
             # Compare text in nodes that have children (mixed content).
             # We shouldn't have mixed content, but we need to be flexible.
-            if cls._strip(node1.text) != cls._strip(node2.text):
-                return False
+            text1 = cls._strip(node1.text)
+            text2 = cls._strip(node2.text)
+            if text1 != text2:
+                return "Node text: %s != %s" % (text1, text2)
             if len(children1) != len(children2):
-                return False
+                ch1set = set(x.tag for x in children1)
+                ch2set = set(x.tag for x in children2)
+                return "Child list: Counts %d != %d: A-B: %s; B-A: %s" % (
+                    len(children1), len(children2),
+                    ch1set - ch2set, ch2set - ch1set)
             for ch1, ch2 in zip(children1, children2):
-                if not cls._nodecmp(ch1, ch2, ignoreNodes=ignoreNodes):
-                    return False
-            return True
+                nd = cls._nodediff(ch1, ch2, ignoreNodes=ignoreNodes)
+                if nd:
+                    if ch1.tag == ch2.tag:
+                        return ("Node %s" % ch1.tag, nd)
+                    return ("Nodes %s, %s" % (ch1.tag, ch2.tag), nd)
+            return False
         # No children, compare the text
-        return node1.text == node2.text
+        if node1.text == node2.text:
+            return False
+        return (node1.text, node2.text)
     
     def _saveZone(self):
         zone = models.Zone()
@@ -470,7 +481,8 @@ class SystemsTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/systems/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.systems_xml % (system.created_date.isoformat()))
+            testsxml.systems_xml % (system.created_date.isoformat()),
+            ignoreNodes = [ 'createdDate' ])
 
     def testGetSystem(self):
         system = self._saveSystem()
