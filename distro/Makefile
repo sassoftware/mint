@@ -61,6 +61,7 @@ install: default-install httpd-sysconfig
 	echo '# chkconfig: 345 22 68' > $(DESTDIR)/etc/chkconfig.d/pgbouncer
 	echo '# chkconfig: 345 25 65' > $(DESTDIR)/etc/chkconfig.d/rbuilder
 	echo '# chkconfig: 345 25 40' > $(DESTDIR)/etc/chkconfig.d/rmake-messagebus
+	echo '# chkconfig: 345 30 35' > $(DESTDIR)/etc/chkconfig.d/mcp-dispatcher
 	echo '# chkconfig: 345 50 50' > $(DESTDIR)/etc/chkconfig.d/snmpd
 	echo '# chkconfig: 345 50 25' > $(DESTDIR)/etc/chkconfig.d/jabberd
 	echo '# chkconfig: 345 50 15' > $(DESTDIR)/etc/chkconfig.d/httpd
