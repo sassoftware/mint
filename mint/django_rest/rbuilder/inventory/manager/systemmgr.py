@@ -142,7 +142,7 @@ class SystemManager(base.BaseManager):
             return
 
         if system.management_node:
-            return self.addManagementNode(system)
+            return self.addManagementNode(system.zone.zone_id, system)
 
         # add the system
         system.save()
@@ -162,14 +162,12 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def updateSystem(self, system):
+        # XXX This will have to change and be done in modellib, most likely.
         self.check_system_versions(system)
         system.save()
 
     def check_system_versions(self, system):
-        # TODO:
-        # compare the versions in self.installed_software to self.new_versions
-        # and update if necessary
-        return
+        self.mgr.setInstalledSoftware(system, system.new_versions)
 
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
@@ -581,7 +579,7 @@ class SystemManager(base.BaseManager):
         hasInfo = False
         if system and system.networks:
             for network in system.networks.all():
-                if network.ip_address or network.ipv6_address or network.public_dns_name:
+                if network.ip_address or network.ipv6_address or network.dns_name:
                     hasInfo = True
                     break
                 
@@ -622,7 +620,7 @@ class SystemManager(base.BaseManager):
                 log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
                 db_system.save()
                 if dnsName:
-                    network = models.Network(system=db_system, public_dns_name=dnsName, active=True)
+                    network = models.Network(system=db_system, dns_name=dnsName, active=True)
                     network.save()
                 else:
                     log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))

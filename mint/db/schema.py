@@ -1078,6 +1078,7 @@ def _createInventorySchema(db, cfg):
                 "name" varchar(8092) NOT NULL,
                 "description" varchar(8092),
                 "created_date" timestamp with time zone NOT NULL,
+                "hostname" varchar(8092),
                 "launch_date" timestamp with time zone,
                 "target_id" integer REFERENCES "targets" ("targetid"),
                 "target_system_id" varchar(255),
@@ -1126,12 +1127,12 @@ def _createInventorySchema(db, cfg):
                 "ip_address" char(15),
                 "ipv6_address" varchar(32),
                 "device_name" varchar(255),
-                "public_dns_name" varchar(255) NOT NULL,
+                "dns_name" varchar(255) NOT NULL,
                 "netmask" varchar(20),
                 "port_type" varchar(32),
                 "active" bool,
                 "required" bool,
-                UNIQUE ("system_id", "public_dns_name"),
+                UNIQUE ("system_id", "dns_name"),
                 UNIQUE ("system_id", "ip_address"),
                 UNIQUE ("system_id", "ipv6_address")
             ) %(TABLEOPTS)s""" % db.keywords)
@@ -1140,7 +1141,7 @@ def _createInventorySchema(db, cfg):
         changed |= db.createIndex("inventory_system_network",
             "inventory_system_network_system_id_idx", "system_id")
         changed |= db.createIndex("inventory_system_network",
-            "inventory_system_network_public_dns_name_idx", "public_dns_name")
+            "inventory_system_network_dns_name_idx", "dns_name")
         
     # add local management zone.  must be done after inventory_system and 
     # inventory_system_network are added
@@ -1333,8 +1334,8 @@ def _addManagementZone(db, cfg):
         if len(ids) == 1:
             systemId = ids[0][0]
             # add the network
-            changed |= _addTableRows(db, 'inventory_system_network', 'public_dns_name',
-                [dict(system_id=systemId, public_dns_name='127.0.0.1', active=True)])
+            changed |= _addTableRows(db, 'inventory_system_network', 'dns_name',
+                [dict(system_id=systemId, dns_name='127.0.0.1', active=True)])
             # add the management node
             changed |= _addTableRows(db, 'inventory_zone_management_node', 'system_ptr_id',
                     [dict(system_ptr_id=systemId, local='true', zone_id=zoneId)])

@@ -42,7 +42,7 @@ class VersionManager(base.BaseManager):
         for trove in oldInstalled.itervalues():
             system.installed_software.remove(trove)
         for trove in toAdd:
-            system.installed_software.add(self._trove(trove))
+            system.installed_software.add(trove)
         system.save()
 
     def trove_from_nvf(self, nvf):
@@ -66,6 +66,7 @@ class VersionManager(base.BaseManager):
         If the trove is new, save it to the db, otherwise return the existing
         one
         """
+        # XXX unused
         # First, make sure the flavor is part of the version object
         if not trove.version.flavor:
             trove.version.flavor = trove.flavor

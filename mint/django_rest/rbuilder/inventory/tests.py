@@ -111,7 +111,7 @@ class XMLTestCase(TestCase):
         network = models.Network()
         network.ip_address = '1.1.1.1'
         network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork.example.com'
+        network.dns_name = 'testnetwork.example.com'
         network.netmask = '255.255.255.0'
         network.port_type = 'lan'
         network.system = system
@@ -140,7 +140,7 @@ class XMLTestCase(TestCase):
         network = models.Network()
         network.ip_address = '2.2.2.2'
         network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork.example.com'
+        network.dns_name = 'testnetwork.example.com'
         network.netmask = '255.255.255.0'
         network.port_type = 'lan'
         network.system = management_node
@@ -164,7 +164,7 @@ class XMLTestCase(TestCase):
         network = models.Network()
         network.ip_address = '2.2.2.2'
         network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork2.example.com'
+        network.dns_name = 'testnetwork2.example.com'
         network.netmask = '255.255.255.0'
         network.port_type = 'lan'
         network.system = system
@@ -313,13 +313,13 @@ class ManagementNodesTestCase(XMLTestCase):
         try:
             # create the system
             managementNode = None
-            self.mgr.addManagementNode(managementNode)
+            self.mgr.addManagementNode(None, managementNode)
         except:
             assert(False) # should not throw exception
         
     def testAddManagementNode(self):
         management_node = self._saveManagementNode()
-        new_management_node = self.mgr.addManagementNode(management_node)
+        new_management_node = self.mgr.addManagementNode(management_node.zone.zone_id, management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
         assert(new_management_node.management_node)
@@ -357,7 +357,7 @@ class NetworksTestCase(XMLTestCase):
     def testExtractNetworkToUse(self):
         
         # try a net with no required/active nets
-        network = models.Network(public_dns_name="foo.com", active=False, required=False)
+        network = models.Network(dns_name="foo.com", active=False, required=False)
         network.system = self.system
         network.save()
         net = self.mgr.sysMgr._extractNetworkToUse(self.system)
@@ -377,7 +377,7 @@ class NetworksTestCase(XMLTestCase):
         assert(net is not None)
         
         # now add a required one in addition to active one to test order
-        network2 = models.Network(public_dns_name="foo2.com", active=False, required=True)
+        network2 = models.Network(dns_name="foo2.com", active=False, required=True)
         network2.system = self.system
         network2.save()
         assert(len(self.system.networks.all()) == 2)
@@ -450,9 +450,11 @@ class SystemsTestCase(XMLTestCase):
         assert(self.mock_scheduleSystemPollEvent_called)
         
     def testAddActivatedManagementNodeSystem(self):
+        zone = self._saveZone()
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever", activated=True)
-        system.management_node = True
+        system = models.System(name="mgoblue", description="best appliance ever", activated=True,
+            management_node=True)
+        system.zone = zone
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         assert(new_system.current_state == models.System.ACTIVATED)
@@ -570,7 +572,7 @@ class SystemsTestCase(XMLTestCase):
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
         
         network.delete()
-        network = models.Network(public_dns_name="foo.bar.com", system=system)
+        network = models.Network(dns_name="foo.bar.com", system=system)
         network.save()
         system.networks.add(network)
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
@@ -691,20 +693,58 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
 
+        self.failUnlessEqual(
+            [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
+                x.version.label, x.version.revision), x.flavor)
+                for x in system.installed_software.all() ],
+            [
+                ('group-clover-appliance',
+                    ('/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1',
+                     '1234567890.12',
+                     '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)',
+                    'clover.eng.rpath.com@rpath:clover-1-devel',
+                    'change me gently'),
+                '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'),
+                ('emacs',
+                    ('/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1',
+                     '1234567890.12',
+                     'desktop is: x86_64',
+                     'contrib.rpath.org@rpl:2',
+                     '23.0.60cvs20080523-1-0.1'),
+                    'desktop is: x86_64'),
+            ])
+
         data = testsxml.system_version_put_xml
 
         url = '/api/inventory/systems/%s/' % system.pk
         response = self.client.put(url,
             data=data,
             content_type="application/xml")
-        # TODO: verify that the versions on the system are the same, and that
-        # a job was added to update.  Since the job runs asynchronously the
-        # initial response from a version update will still have the old
-        # versions in the xml
-        self.assertXMLEquals(response.content,
-            testsxml.system_version_put_response_xml,
-            ignoreNodes = ['lastAvailableUpdateRefresh',
-                'createdDate'])
+        # Weak attempt to see if the response is XML
+        exp = '<system id="http://testserver/api/inventory/systems/%s">' % system.pk
+        self.failUnless(exp in response.content)
+
+        nsystem = models.System.objects.get(system_id=system.pk)
+        self.failUnlessEqual(
+            [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
+                x.version.label, x.version.revision), x.flavor)
+                for x in nsystem.installed_software.all() ],
+            [
+                ('group-chater-appliance',
+                 ('/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1',
+                     '1234567890.12',
+                     'is: x86',
+                     'chater.eng.rpath.com@rpath:chater-1-devel',
+                     '1-2-1'),
+                 'is: x86'),
+                ('vim',
+                 ('/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1',
+                  '1272410163.98',
+                  'desktop is: x86_64',
+                  'contrib.rpath.org@rpl:2',
+                  '23.0.60cvs20080523-1-0.1'),
+                 'desktop is: x86_64'),
+            ])
 
 class EventTypeTestCase(XMLTestCase):
 

@@ -56,7 +56,7 @@
         <field type="CharField" name="ip_address"><None></None></field>
         <field type="CharField" name="ipv6_address"><None></None></field>
         <field type="CharField" name="device_name"></field>
-        <field type="CharField" name="public_dns_name">127.0.0.1</field>
+        <field type="CharField" name="dns_name">127.0.0.1</field>
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>

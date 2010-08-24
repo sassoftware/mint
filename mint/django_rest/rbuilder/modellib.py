@@ -323,7 +323,7 @@ class XObjModel(models.Model):
     list_fields = []
 
     # Fields which can be used to uniquely load this model from the db, e.g.,
-    # public_dns_name for the Network model, it could be public_dns_name.
+    # dns_name for the Network model, it could be dns_name.
     # Allows us to load a model from the db to match one we've built
     # dynamically using xobj.
     load_fields = {}

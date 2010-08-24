@@ -136,6 +136,7 @@ class System(modellib.XObjIdModel):
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    hostname = models.CharField(max_length=8092, null=True)
     # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
     launch_date = modellib.DateTimeUtcField(null=True)
@@ -296,7 +297,7 @@ class SystemEvent(modellib.XObjIdModel):
 class Network(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_network'
-        unique_together = (('system', 'public_dns_name', 'ip_address', 'ipv6_address'),)
+        unique_together = (('system', 'dns_name', 'ip_address', 'ipv6_address'),)
         
     _xobj = xobj.XObjMetadata(
                 tag='network')
@@ -306,16 +307,16 @@ class Network(modellib.XObjModel):
     # TODO: how long should this be?
     ipv6_address = models.CharField(max_length=32, null=True)
     device_name = models.CharField(max_length=255) 
-    public_dns_name = models.CharField(max_length=255, db_index=True)
+    dns_name = models.CharField(max_length=255, db_index=True)
     netmask = models.CharField(max_length=20, null=True)
     port_type = models.CharField(max_length=32, null=True)
     active = models.NullBooleanField()
     required = models.NullBooleanField()
 
-    load_fields = [ip_address, public_dns_name]
+    load_fields = [ip_address, dns_name]
 
     def natural_key(self):
-        return self.ip_address, self.public_dns_name
+        return self.ip_address, self.dns_name
 
 class SystemLog(modellib.XObjIdModel):
     class Meta:
