@@ -97,12 +97,14 @@ class SystemManager(base.BaseManager):
         return ManagementNodes
 
     @base.exposed
-    def addManagementNode(self, managementNode):
+    def addManagementNode(self, zone_id, managementNode):
         """Add a management node to the inventory"""
         
         if not managementNode:
             return
 
+        zone = models.Zone.objects.get(pk=zone_id)
+        managementNode.zone = zone;
         managementNode.save()
         self.log_system(managementNode, models.SystemLogEntry.ADDED)
         

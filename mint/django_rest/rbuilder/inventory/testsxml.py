@@ -238,6 +238,57 @@ management_node_post_xml = """\
   <osType/>
 </managementNode>"""
 
+management_node_post_response_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<managementNode>
+  <available>False</available>
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
+  <activated>True</activated>
+  <sslClientKey>test management node client key</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
+  <generatedUuid>test management node guuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <active/>
+      <deviceName/>
+      <ipAddress/>
+      <ipv6Address/>
+      <netmask/>
+      <networkId>1</networkId>
+      <portType/>
+      <publicDnsName/>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/1"/>
+    </network>
+  </networks>
+  <systemJobs/>
+  <sslServerCertificate>test management node server cert</sslServerCertificate>
+  <managingZone/>
+  <name>test management node</name>
+  <systemId>1</systemId>
+  <launchingUser/>
+  <managementNode>True</managementNode>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <local>True</local>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
+  <installedSoftware/>
+  <description>test management node desc</description>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <systemjobSet/>
+  <target/>
+  <zone href="http://testserver/api/inventory/zones/2/"/>
+  <systemPtr href="http://testserver/api/inventory/systems/1"/>
+  <localUuid>test management node luuid</localUuid>
+  <currentState>activated</currentState>
+  <createdDate>%s</createdDate>
+  <osType/>
+</managementNode>"""
+
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>

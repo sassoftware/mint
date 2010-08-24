@@ -333,13 +333,14 @@ class ManagementNodesTestCase(XMLTestCase):
         assert(management_node.management_node)
         
     def testPostManagementNode(self):
-        self._saveZone()
+        models.ManagementNode.objects.all().delete()
+        zone = self._saveZone()
         xml = testsxml.management_node_post_xml
-        response = self.client.post('/api/inventory/managementNodes/', 
+        response = self.client.post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
             data=xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
-        management_node_xml = testsxml.management_node_xml.replace(
+        management_node_xml = testsxml.management_node_post_response_xml.replace(
             '<activationDate/>',
             '<activationDate>%s</activationDate>' % \
             (management_node.activation_date.isoformat() + '+00:00'))

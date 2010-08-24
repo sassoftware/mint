@@ -89,8 +89,8 @@ class InventoryManagementNodeService(AbstractInventoryService):
         
     @requires('managementNode')
     @return_xml
-    def create(self, request, managementNode):
-        managementNode = self.mgr.addManagementNode(managementNode)
+    def create(self, request, zone_id, managementNode):
+        managementNode = self.mgr.addManagementNode(zone_id, managementNode)
         return managementNode
 
 class InventorySystemsService(AbstractInventoryService):
