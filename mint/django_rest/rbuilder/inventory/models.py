@@ -171,6 +171,8 @@ class System(modellib.XObjIdModel):
     systemJobs = models.ManyToManyField("Job", through="SystemJob")
 
     load_fields = [local_uuid]
+
+    new_versions = []
     
     def save(self, *args, **kw):
         if not self.current_state:
