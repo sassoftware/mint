@@ -115,7 +115,7 @@ management_nodes_xml = """\
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <publicDnsName>testnetwork.example.com</publicDnsName>
+        <dnsName>testnetwork.example.com</dnsName>
         <required/>
         <system href="http://testserver/api/inventory/systems/1"/>
       </network>
@@ -168,7 +168,7 @@ management_node_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
@@ -218,7 +218,7 @@ management_node_post_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
     </network>
   </networks>
@@ -258,7 +258,7 @@ management_node_post_response_xml = """\
       <netmask/>
       <networkId>1</networkId>
       <portType/>
-      <publicDnsName/>
+      <dnsName/>
       <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
@@ -341,7 +341,7 @@ systems_xml = """\
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <publicDnsName>testnetwork.example.com</publicDnsName>
+        <dnsName>testnetwork.example.com</dnsName>
         <required/>
         <system href="http://testserver/api/inventory/systems/2"/>
       </network>
@@ -389,7 +389,7 @@ systems_put_xml = """\
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <publicDnsName>testnetwork.example.com</publicDnsName>
+        <dnsName>testnetwork.example.com</dnsName>
         <required/>
       </network>
     </networks>
@@ -426,7 +426,7 @@ systems_put_xml = """\
         <netmask>255.255.255.0</netmask>
         <networkId>2</networkId>
         <portType>lan</portType>
-        <publicDnsName>testnetwork2.example.com</publicDnsName>
+        <dnsName>testnetwork2.example.com</dnsName>
         <required/>
       </network>
     </networks>
@@ -469,7 +469,7 @@ system_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
@@ -513,7 +513,7 @@ system_post_xml = """\
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
     </network>
   </networks>
@@ -552,7 +552,7 @@ system_post_xml_response = """\
       <netmask/>
       <networkId>1</networkId>
       <portType/>
-      <publicDnsName/>
+      <dnsName/>
       <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
@@ -597,7 +597,7 @@ system_post_xml_dup = """\
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
     </network>
   </networks>
@@ -640,7 +640,7 @@ system_target_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
@@ -840,7 +840,7 @@ system_version_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
@@ -958,7 +958,7 @@ system_version_put_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <publicDnsName>testnetwork.example.com</publicDnsName>
+      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>

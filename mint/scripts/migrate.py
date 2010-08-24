@@ -1148,12 +1148,12 @@ class MigrateTo_50(SchemaMigration):
                     "ip_address" char(15),
                     "ipv6_address" varchar(32),
                     "device_name" varchar(255),
-                    "public_dns_name" varchar(255) NOT NULL,
+                    "dns_name" varchar(255) NOT NULL,
                     "netmask" varchar(20),
                     "port_type" varchar(32),
                     "active" bool,
                     "required" bool,
-                    UNIQUE ("system_id", "public_dns_name"),
+                    UNIQUE ("system_id", "dns_name"),
                     UNIQUE ("system_id", "ip_address"),
                     UNIQUE ("system_id", "ipv6_address")
                 ) %(TABLEOPTS)s""" % db.keywords)
@@ -1162,7 +1162,7 @@ class MigrateTo_50(SchemaMigration):
             changed |= db.createIndex("inventory_system_network",
                 "inventory_system_network_system_id_idx", "system_id")
             changed |= db.createIndex("inventory_system_network",
-            "inventory_system_network_public_dns_name_idx", "public_dns_name")
+            "inventory_system_network_dns_name_idx", "dns_name")
 
         # add local management zone
         changed |= schema._addManagementZone(db, self.cfg)

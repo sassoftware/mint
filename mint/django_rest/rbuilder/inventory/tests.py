@@ -111,7 +111,7 @@ class XMLTestCase(TestCase):
         network = models.Network()
         network.ip_address = '1.1.1.1'
         network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork.example.com'
+        network.dns_name = 'testnetwork.example.com'
         network.netmask = '255.255.255.0'
         network.port_type = 'lan'
         network.system = system
@@ -140,7 +140,7 @@ class XMLTestCase(TestCase):
         network = models.Network()
         network.ip_address = '2.2.2.2'
         network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork.example.com'
+        network.dns_name = 'testnetwork.example.com'
         network.netmask = '255.255.255.0'
         network.port_type = 'lan'
         network.system = management_node
@@ -164,7 +164,7 @@ class XMLTestCase(TestCase):
         network = models.Network()
         network.ip_address = '2.2.2.2'
         network.device_name = 'eth0'
-        network.public_dns_name = 'testnetwork2.example.com'
+        network.dns_name = 'testnetwork2.example.com'
         network.netmask = '255.255.255.0'
         network.port_type = 'lan'
         network.system = system
@@ -357,7 +357,7 @@ class NetworksTestCase(XMLTestCase):
     def testExtractNetworkToUse(self):
         
         # try a net with no required/active nets
-        network = models.Network(public_dns_name="foo.com", active=False, required=False)
+        network = models.Network(dns_name="foo.com", active=False, required=False)
         network.system = self.system
         network.save()
         net = self.mgr.sysMgr._extractNetworkToUse(self.system)
@@ -377,7 +377,7 @@ class NetworksTestCase(XMLTestCase):
         assert(net is not None)
         
         # now add a required one in addition to active one to test order
-        network2 = models.Network(public_dns_name="foo2.com", active=False, required=True)
+        network2 = models.Network(dns_name="foo2.com", active=False, required=True)
         network2.system = self.system
         network2.save()
         assert(len(self.system.networks.all()) == 2)
@@ -570,7 +570,7 @@ class SystemsTestCase(XMLTestCase):
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
         
         network.delete()
-        network = models.Network(public_dns_name="foo.bar.com", system=system)
+        network = models.Network(dns_name="foo.bar.com", system=system)
         network.save()
         system.networks.add(network)
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
