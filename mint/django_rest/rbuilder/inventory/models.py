@@ -167,7 +167,7 @@ class System(modellib.XObjIdModel):
     current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
-    managing_zone = models.ForeignKey('Zone', null=True)
+    managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
     systemJobs = models.ManyToManyField("Job", through="SystemJob")
 
     load_fields = [local_uuid]

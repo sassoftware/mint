@@ -83,15 +83,17 @@ class SystemManager(base.BaseManager):
         return Systems
 
     @base.exposed
-    def getManagementNode(self, management_node_id):
-        managementNode = models.ManagementNode.objects.get(pk=management_node_id)
-        self.log_system(managementNode, "System data fetched.")
+    def getManagementNode(self, zone_id, management_node_id):
+        zone = models.Zone.objects.get(pk=zone_id)
+        managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
+        self.log_system(managementNode, "Management node data fetched.")
         return managementNode
 
     @base.exposed
-    def getManagementNodes(self):
+    def getManagementNodes(self, zone_id):
+        zone = models.Zone.objects.get(pk=zone_id)
         ManagementNodes = models.ManagementNodes()
-        ManagementNodes.managementNode = list(models.ManagementNode.objects.all())
+        ManagementNodes.managementNode = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
 
     @base.exposed

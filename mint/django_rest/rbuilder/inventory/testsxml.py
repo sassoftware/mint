@@ -5,7 +5,7 @@ inventory_xml = """\
 <inventory>
   <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <log href="http://testserver/api/inventory/log/"/>
-  <managementZones href="http://testserver/api/inventory/managementZones/"/>
+  <zones href="http://testserver/api/inventory/zones/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
 </inventory>"""
 
@@ -52,7 +52,7 @@ zones_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zones>
   <zone id="http://testserver/api/inventory/zones/1/">
-    <systemSet/>
+    <systems/>
     <description>Some local zone</description>
     <createdDate>%s</createdDate>
     <name>Local Zone</name>
@@ -65,7 +65,7 @@ zones_xml = """\
 zone_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/2/">
-  <systemSet/>
+  <systems/>
   <description>Some local zone</description>
   <createdDate>%s</createdDate>
   <name>Local Zone</name>
@@ -97,7 +97,7 @@ zone_post_response_xml = """\
 management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNodes>
-  <managementNode id="http://testserver/api/inventory/managementNodes/1/">
+  <managementNode>
     <available/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <activated>True</activated>
@@ -150,7 +150,7 @@ management_nodes_xml = """\
 
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<managementNode id="http://testserver/api/inventory/managementNodes/1/">
+<managementNode>
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <activated>True</activated>

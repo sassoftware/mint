@@ -295,7 +295,7 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
-        response = self.client.get('/api/inventory/managementNodes/')
+        response = self.client.get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_nodes_xml % (management_node.created_date.isoformat()))
@@ -303,7 +303,7 @@ class ManagementNodesTestCase(XMLTestCase):
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
         management_node.save();
-        response = self.client.get('/api/inventory/managementNodes/1/')
+        response = self.client.get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_node_xml % (management_node.created_date.isoformat()))

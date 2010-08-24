@@ -78,14 +78,14 @@ class InventoryZoneService(AbstractInventoryService):
 class InventoryManagementNodeService(AbstractInventoryService):
     
     @return_xml
-    def read(self, request, management_node_id=None):
-        return self.get(management_node_id)
+    def read(self, request, zone_id, management_node_id=None):
+        return self.get(zone_id, management_node_id)
     
-    def get(self, management_node_id=None):
+    def get(self, zone_id, management_node_id=None):
         if management_node_id:
-            return self.mgr.getManagementNode(management_node_id)
+            return self.mgr.getManagementNode(zone_id, management_node_id)
         else:
-            return self.mgr.getManagementNodes()
+            return self.mgr.getManagementNodes(zone_id)
         
     @requires('managementNode')
     @return_xml
