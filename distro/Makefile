@@ -14,6 +14,8 @@ generated_files = custom.cfg rbuilder.conf
 all: default-all $(generated_files)
 
 install: default-install httpd-sysconfig
+	# data directories
+	mkdir -p $(DESTDIR)/srv/rbuilder/pki
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
