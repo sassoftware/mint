@@ -693,20 +693,58 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
 
+        self.failUnlessEqual(
+            [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
+                x.version.label, x.version.revision), x.flavor)
+                for x in system.installed_software.all() ],
+            [
+                ('group-clover-appliance',
+                    ('/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1',
+                     '1234567890.12',
+                     '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)',
+                    'clover.eng.rpath.com@rpath:clover-1-devel',
+                    'change me gently'),
+                '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'),
+                ('emacs',
+                    ('/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1',
+                     '1234567890.12',
+                     'desktop is: x86_64',
+                     'contrib.rpath.org@rpl:2',
+                     '23.0.60cvs20080523-1-0.1'),
+                    'desktop is: x86_64'),
+            ])
+
         data = testsxml.system_version_put_xml
 
         url = '/api/inventory/systems/%s/' % system.pk
         response = self.client.put(url,
             data=data,
             content_type="application/xml")
-        # TODO: verify that the versions on the system are the same, and that
-        # a job was added to update.  Since the job runs asynchronously the
-        # initial response from a version update will still have the old
-        # versions in the xml
-        self.assertXMLEquals(response.content,
-            testsxml.system_version_put_response_xml,
-            ignoreNodes = ['lastAvailableUpdateRefresh',
-                'createdDate'])
+        # Weak attempt to see if the response is XML
+        exp = '<system id="http://testserver/api/inventory/systems/%s">' % system.pk
+        self.failUnless(exp in response.content)
+
+        nsystem = models.System.objects.get(system_id=system.pk)
+        self.failUnlessEqual(
+            [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
+                x.version.label, x.version.revision), x.flavor)
+                for x in nsystem.installed_software.all() ],
+            [
+                ('group-chater-appliance',
+                 ('/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1',
+                     '1234567890.12',
+                     'is: x86',
+                     'chater.eng.rpath.com@rpath:chater-1-devel',
+                     '1-2-1'),
+                 'is: x86'),
+                ('vim',
+                 ('/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1',
+                  '1272410163.98',
+                  'desktop is: x86_64',
+                  'contrib.rpath.org@rpl:2',
+                  '23.0.60cvs20080523-1-0.1'),
+                 'desktop is: x86_64'),
+            ])
 
 class EventTypeTestCase(XMLTestCase):
 

@@ -162,14 +162,12 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def updateSystem(self, system):
+        # XXX This will have to change and be done in modellib, most likely.
         self.check_system_versions(system)
         system.save()
 
     def check_system_versions(self, system):
-        # TODO:
-        # compare the versions in self.installed_software to self.new_versions
-        # and update if necessary
-        return
+        self.mgr.setInstalledSoftware(system, system.new_versions)
 
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
