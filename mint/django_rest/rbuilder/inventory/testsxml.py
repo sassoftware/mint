@@ -254,15 +254,15 @@ management_node_post_response_xml = """\
   <reservationId/>
   <networks>
     <network>
-      <active/>
-      <deviceName/>
-      <dnsName/>
-      <ipAddress/>
+      <active>False</active>
+      <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
+      <ipAddress>2.2.2.2</ipAddress>
       <ipv6Address/>
-      <netmask/>
+      <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
-      <portType/>
-      <required/>
+      <portType>lan</portType>
+      <required>False</required>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
@@ -539,7 +539,7 @@ system_post_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <available/>
+  <available>False</available>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
@@ -549,21 +549,22 @@ system_post_xml_response = """\
   <reservationId/>
   <networks>
     <network>
-      <active/>
-      <deviceName/>
-      <dnsName/>
-      <ipAddress/>
+      <active>False</active>
+      <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
+      <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
-      <netmask/>
+      <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
-      <portType/>
-      <required/>
+      <portType>lan</portType>
+      <required>False</required>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
   <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
+  <hostname/>
   <systemId>1</systemId>
   <launchingUser/>
   <managementNode/>
