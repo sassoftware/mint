@@ -313,13 +313,13 @@ class ManagementNodesTestCase(XMLTestCase):
         try:
             # create the system
             managementNode = None
-            self.mgr.addManagementNode(managementNode)
+            self.mgr.addManagementNode(None, managementNode)
         except:
             assert(False) # should not throw exception
         
     def testAddManagementNode(self):
         management_node = self._saveManagementNode()
-        new_management_node = self.mgr.addManagementNode(management_node)
+        new_management_node = self.mgr.addManagementNode(management_node.zone.zone_id, management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
         assert(new_management_node.management_node)
@@ -450,9 +450,11 @@ class SystemsTestCase(XMLTestCase):
         assert(self.mock_scheduleSystemPollEvent_called)
         
     def testAddActivatedManagementNodeSystem(self):
+        zone = self._saveZone()
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever", activated=True)
-        system.management_node = True
+        system = models.System(name="mgoblue", description="best appliance ever", activated=True,
+            management_node=True)
+        system.zone = zone
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         assert(new_system.current_state == models.System.ACTIVATED)

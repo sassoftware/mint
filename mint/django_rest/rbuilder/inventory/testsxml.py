@@ -110,12 +110,12 @@ management_nodes_xml = """\
       <network>
         <active/>
         <deviceName>eth0</deviceName>
+        <dnsName>testnetwork.example.com</dnsName>
         <ipAddress>2.2.2.2</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <dnsName>testnetwork.example.com</dnsName>
         <required/>
         <system href="http://testserver/api/inventory/systems/1"/>
       </network>
@@ -123,6 +123,7 @@ management_nodes_xml = """\
     <systemJobs/>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <managingZone/>
+    <hostname/>
     <name>test management node</name>
     <systemId>1</systemId>
     <launchingUser/>
@@ -163,12 +164,12 @@ management_node_xml = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>2.2.2.2</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
@@ -176,6 +177,7 @@ management_node_xml = """\
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
+  <hostname/>
   <name>test management node</name>
   <systemId>1</systemId>
   <launchingUser/>
@@ -213,18 +215,19 @@ management_node_post_xml = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>2.2.2.2</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
     </network>
   </networks>
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
+  <hostname>myhostname</hostname>
   <name>test management node</name>
   <systemId>1</systemId>
   <launchingUser/>
@@ -253,12 +256,12 @@ management_node_post_response_xml = """\
     <network>
       <active/>
       <deviceName/>
+      <dnsName/>
       <ipAddress/>
       <ipv6Address/>
       <netmask/>
       <networkId>1</networkId>
       <portType/>
-      <dnsName/>
       <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
@@ -266,6 +269,7 @@ management_node_post_response_xml = """\
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
+  <hostname>myhostname</hostname>
   <name>test management node</name>
   <systemId>1</systemId>
   <launchingUser/>
@@ -336,12 +340,12 @@ systems_xml = """\
       <network>
         <active/>
         <deviceName>eth0</deviceName>
+        <dnsName>testnetwork.example.com</dnsName>
         <ipAddress>1.1.1.1</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <dnsName>testnetwork.example.com</dnsName>
         <required/>
         <system href="http://testserver/api/inventory/systems/2"/>
       </network>
@@ -384,12 +388,12 @@ systems_put_xml = """\
       <network>
         <active/>
         <deviceName>eth0</deviceName>
+        <dnsName>testnetwork.example.com</dnsName>
         <ipAddress>1.1.1.1</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>1</networkId>
         <portType>lan</portType>
-        <dnsName>testnetwork.example.com</dnsName>
         <required/>
       </network>
     </networks>
@@ -421,12 +425,12 @@ systems_put_xml = """\
       <network>
         <active/>
         <deviceName>eth0</deviceName>
+        <dnsName>testnetwork2.example.com</dnsName>
         <ipAddress>2.2.2.2</ipAddress>
         <ipv6Address/>
         <netmask>255.255.255.0</netmask>
         <networkId>2</networkId>
         <portType>lan</portType>
-        <dnsName>testnetwork2.example.com</dnsName>
         <required/>
       </network>
     </networks>
@@ -464,12 +468,12 @@ system_xml = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
@@ -509,11 +513,11 @@ system_post_xml = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
     </network>
   </networks>
@@ -547,12 +551,12 @@ system_post_xml_response = """\
     <network>
       <active/>
       <deviceName/>
+      <dnsName/>
       <ipAddress/>
       <ipv6Address/>
       <netmask/>
       <networkId>1</networkId>
       <portType/>
-      <dnsName/>
       <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
@@ -593,11 +597,11 @@ system_post_xml_dup = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
     </network>
   </networks>
@@ -635,12 +639,12 @@ system_target_xml = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
@@ -835,12 +839,12 @@ system_version_xml = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
@@ -953,12 +957,12 @@ system_version_put_response_xml = """\
     <network>
       <active/>
       <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <dnsName>testnetwork.example.com</dnsName>
       <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>

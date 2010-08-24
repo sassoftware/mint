@@ -142,7 +142,7 @@ class SystemManager(base.BaseManager):
             return
 
         if system.management_node:
-            return self.addManagementNode(system)
+            return self.addManagementNode(system.zone.zone_id, system)
 
         # add the system
         system.save()
