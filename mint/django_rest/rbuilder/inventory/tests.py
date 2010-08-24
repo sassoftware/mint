@@ -96,7 +96,6 @@ class XMLTestCase(TestCase):
         return zone
 
     def _saveSystem(self):
-        zone = self._saveZone()
         system = models.System()
         system.name = 'testsystemname'
         system.description = 'testsystemdescription'
