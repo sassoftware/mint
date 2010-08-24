@@ -100,7 +100,7 @@ class SystemManager(base.BaseManager):
         
         if not managementNode:
             return
-        
+
         managementNode.save()
         self.log_system(managementNode, models.SystemLogEntry.ADDED)
         
@@ -137,7 +137,7 @@ class SystemManager(base.BaseManager):
         if not system:
             return
 
-        if system.is_management_node:
+        if system.management_node:
             return self.addManagementNode(system)
 
         # add the system

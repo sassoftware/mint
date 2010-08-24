@@ -5,7 +5,7 @@ inventory_xml = """\
 <inventory>
   <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <log href="http://testserver/api/inventory/log/"/>
-  <managementNodes href="http://testserver/api/inventory/managementNodes/"/>
+  <managementZones href="http://testserver/api/inventory/managementZones/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
 </inventory>"""
 
@@ -52,16 +52,12 @@ zones_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zones>
   <zone id="http://testserver/api/inventory/zones/1/">
-    <createdDate>2010-08-20T20:23:38+00:00</createdDate>
-    <zoneId>1</zoneId>
-    <name>some zone</name>
-    <description>some zone desc</description>
-  </zone>
-  <zone id="http://testserver/api/inventory/zones/2/">
-    <createdDate>%s</createdDate>
-    <zoneId>2</zoneId>
-    <name>Local Zone</name>
+    <systemSet/>
     <description>Some local zone</description>
+    <createdDate>%s</createdDate>
+    <name>Local Zone</name>
+    <managementNodes/>
+    <zoneId>1</zoneId>
   </zone>
 </zones>
 """
@@ -69,10 +65,12 @@ zones_xml = """\
 zone_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/2/">
-  <createdDate>%s</createdDate>
-  <zoneId>2</zoneId>
-  <name>Local Zone</name>
+  <systemSet/>
   <description>Some local zone</description>
+  <createdDate>%s</createdDate>
+  <name>Local Zone</name>
+  <managementNodes/>
+  <zoneId>2</zoneId>
 </zone>
 """
 
@@ -87,9 +85,11 @@ zone_post_xml = """\
 zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/1/">
-  <createdDate>%s</createdDate>
+  <systemSet/>
   <description>Some local zone</description>
+  <createdDate>%s</createdDate>
   <name>Local Zone</name>
+  <managementNodes/>
   <zoneId>1</zoneId>
 </zone>
 """
@@ -99,46 +99,12 @@ management_nodes_xml = """\
 <managementNodes>
   <managementNode id="http://testserver/api/inventory/managementNodes/1/">
     <available/>
-    <activated/>
-    <sslClientKey/>
-    <osMajorVersion/>
-    <activationDate/>
-    <generatedUuid/>
-    <managingNode/>
-    <reservationId/>
-    <networks/>
-    <sslServerCertificate/>
-    <systemId>1</systemId>
-    <launchingUser/>
-    <scheduledEventStartDate/>
-    <launchDate/>
-    <local>True</local>
-    <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
-    <systems/>
-    <installedSoftware/>
-    <description>Local rBuilder management node</description>
-    <sslClientCertificate/>
-    <targetSystemId/>
-    <osMinorVersion/>
-    <isManagementNode>True</isManagementNode>
-    <systemjobSet/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-    <name>Local Management Node</name>
-    <target/>
-    <systemPtr href="http://testserver/api/inventory/systems/1/"/>
-    <localUuid/>
-    <currentState/>
-    <createdDate>2010-08-18T22:28:26+00:00</createdDate>
-    <osType/>
-  </managementNode>
-  <managementNode id="http://testserver/api/inventory/managementNodes/2/">
-    <available/>
     <activated>True</activated>
     <sslClientKey>test management node client key</sslClientKey>
     <osMajorVersion/>
     <activationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
-    <managingNode/>
     <reservationId/>
     <networks>
       <network>
@@ -151,29 +117,29 @@ management_nodes_xml = """\
         <portType>lan</portType>
         <publicDnsName>testnetwork.example.com</publicDnsName>
         <required/>
-        <system href="http://testserver/api/inventory/systems/2/"/>
+        <system href="http://testserver/api/inventory/systems/1"/>
       </network>
     </networks>
-    </systemJobs>
+    <systemJobs/>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
-    <systemId>2</systemId>
+    <managingZone/>
+    <name>test management node</name>
+    <systemId>1</systemId>
     <launchingUser/>
+    <managementNode>True</managementNode>
     <scheduledEventStartDate/>
     <launchDate/>
     <local>True</local>
-    <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
-    <systems/>
+    <sslClientCertificate>test management node client cert</sslClientCertificate>
     <installedSoftware/>
     <description>test management node desc</description>
-    <sslClientCertificate>test management node client cert</sslClientCertificate>
+    <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
-    <isManagementNode>True</isManagementNode>
     <systemjobSet/>
-    <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
-    <name>test management node</name>
     <target/>
-    <systemPtr href="http://testserver/api/inventory/systems/2/"/>
+    <zone href="http://testserver/api/inventory/zones/2/"/>
+    <systemPtr href="http://testserver/api/inventory/systems/1"/>
     <localUuid>test management node luuid</localUuid>
     <currentState>activated</currentState>
     <createdDate>%s</createdDate>
@@ -184,14 +150,14 @@ management_nodes_xml = """\
 
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<managementNode id="http://testserver/api/inventory/managementNodes/2/">
+<managementNode id="http://testserver/api/inventory/managementNodes/1/">
   <available/>
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <activated>True</activated>
   <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
   <activationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
-  <managingNode/>
   <reservationId/>
   <networks>
     <network>
@@ -204,29 +170,29 @@ management_node_xml = """\
       <portType>lan</portType>
       <publicDnsName>testnetwork.example.com</publicDnsName>
       <required/>
-      <system href="http://testserver/api/inventory/systems/2/"/>
+      <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  </systemJobs>
+  <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
-  <systemId>2</systemId>
+  <managingZone/>
+  <name>test management node</name>
+  <systemId>1</systemId>
   <launchingUser/>
+  <managementNode>True</managementNode>
   <scheduledEventStartDate/>
   <launchDate/>
   <local>True</local>
-  <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
-  <systems/>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <installedSoftware/>
   <description>test management node desc</description>
-  <sslClientCertificate>test management node client cert</sslClientCertificate>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <isManagementNode>True</isManagementNode>
   <systemjobSet/>
-  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
-  <name>test management node</name>
   <target/>
-  <systemPtr href="http://testserver/api/inventory/systems/2/"/>
+  <zone href="http://testserver/api/inventory/zones/2/"/>
+  <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
   <currentState>activated</currentState>
   <createdDate>%s</createdDate>
@@ -254,27 +220,21 @@ management_node_post_xml = """\
       <portType>lan</portType>
       <publicDnsName>testnetwork.example.com</publicDnsName>
       <required/>
-      <system href="http://testserver/api/inventory/systems/1/"/>
     </network>
   </networks>
+  <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
-  <systems/>
-  <scheduledEventStartDate/>
-  <launchDate/>
-  <local>True</local>
-  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
-  <installedSoftware/>
-  <description>test management node desc</description>
-  <sslClientCertificate>test management node client cert</sslClientCertificate>
-  <targetSystemId/>
-  <osMinorVersion/>
-  <isManagementNode>True</isManagementNode>
-  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
+  <managingZone/>
   <name>test management node</name>
-  <systemPtr href="http://testserver/api/inventory/systems/1/"/>
+  <systemId>1</systemId>
+  <launchingUser/>
+  <managementNode>True</managementNode>
+  <local>True</local>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
+  <description>test management node desc</description>
+  <zone href="http://testserver/api/inventory/zones/2/"/>
   <localUuid>test management node luuid</localUuid>
   <currentState>activated</currentState>
-  <createdDate/>
   <osType/>
 </managementNode>"""
 
@@ -689,17 +649,17 @@ systems_log_xml = """\
 <systemsLog>
   <systemLogEntry>
     <entry>System added to inventory</entry>
-    <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+    <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
     <systemLogEntryId>1</systemLogEntryId>
   </systemLogEntry>
   <systemLogEntry>
     <entry>System added to inventory</entry>
-    <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
+    <systemLog href="http://testserver/api/inventory/systems/4/systemLog/"/>
     <systemLogEntryId>2</systemLogEntryId>
   </systemLogEntry>
   <systemLogEntry>
     <entry>System added to inventory</entry>
-    <systemLog href="http://testserver/api/inventory/systems/4/systemLog/"/>
+    <systemLog href="http://testserver/api/inventory/systems/5/systemLog/"/>
     <systemLogEntryId>3</systemLogEntryId>
   </systemLogEntry>
 </systemsLog>

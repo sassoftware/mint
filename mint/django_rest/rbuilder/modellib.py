@@ -35,7 +35,6 @@ class BaseManager(models.Manager):
         except exceptions.MultipleObjectsReturned:
             return None
 
-
     def load(self, model_inst, accessors=None):
         """
         Load a model based on model_inst, which is an instance of the model.

@@ -96,6 +96,7 @@ class XMLTestCase(TestCase):
         return zone
 
     def _saveSystem(self):
+        zone = self._saveZone()
         system = models.System()
         system.name = 'testsystemname'
         system.description = 'testsystemdescription'
@@ -120,7 +121,10 @@ class XMLTestCase(TestCase):
         return system
     
     def _saveManagementNode(self):
+        zone = self._saveZone();
+        
         management_node = models.ManagementNode()
+        management_node.zone = zone
         management_node.name = 'test management node'
         management_node.description = 'test management node desc'
         management_node.local_uuid = 'test management node luuid'
@@ -131,7 +135,7 @@ class XMLTestCase(TestCase):
         management_node.activated = True
         management_node.current_state = 'activated'
         management_node.local = True
-        management_node.is_management_node = True
+        management_node.management_node = True
         management_node.save()
 
         network = models.Network()
@@ -232,6 +236,7 @@ class LogTestCase(XMLTestCase):
 class ZonesTestCase(XMLTestCase):
 
     def testGetZones(self):
+        models.Zone.objects.all().delete()
         zone = self._saveZone()
         response = self.client.get('/api/inventory/zones/')
         self.assertEquals(response.status_code, 200)
@@ -258,6 +263,7 @@ class ZonesTestCase(XMLTestCase):
         assert(new_zone is not None)
         
     def testPostZone(self):
+        models.Zone.objects.all().delete()
         xml = testsxml.zone_post_xml
         response = self.client.post('/api/inventory/zones/', 
             data=xml, content_type='text/xml')
@@ -268,17 +274,22 @@ class ZonesTestCase(XMLTestCase):
 
 class ManagementNodesTestCase(XMLTestCase):
 
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        models.ManagementNode.objects.all().delete()
+
     def testManagementNodeSave(self):
+        zone = self._saveZone()
         # make sure state gets set to unmanaged
         management_node = models.ManagementNode(name="mgoblue", 
-            description="best node ever")
+            description="best node ever", zone=zone)
         assert(management_node.current_state != models.System.UNMANAGED)
         management_node.save()
-        assert(management_node.is_management_node)
+        assert(management_node.management_node)
         assert(management_node.current_state == models.System.UNMANAGED)
         
         # make sure we honor the state if set though
-        management_node = models.ManagementNode(name="mgoblue", 
+        management_node = models.ManagementNode(name="mgoblue", zone=zone,
             description="best node ever", current_state=models.System.DEAD)
         management_node.save()
         assert(management_node.current_state == models.System.DEAD)
@@ -293,7 +304,7 @@ class ManagementNodesTestCase(XMLTestCase):
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
         management_node.save();
-        response = self.client.get('/api/inventory/managementNodes/2/')
+        response = self.client.get('/api/inventory/managementNodes/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_node_xml % (management_node.created_date.isoformat()))
@@ -312,22 +323,23 @@ class ManagementNodesTestCase(XMLTestCase):
         new_management_node = self.mgr.addManagementNode(management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
-        assert(new_management_node.is_management_node)
+        assert(new_management_node.management_node)
         
     def testAddManagementNodeSave(self):
         management_node = self._saveManagementNode()
-        management_node.is_management_node = False
-        assert(management_node.is_management_node == False)
-        # now save, which should automatically set is_management_node
+        management_node.management_node = False
+        assert(management_node.management_node == False)
+        # now save, which should automatically set management_node
         management_node.save()
-        assert(management_node.is_management_node)
+        assert(management_node.management_node)
         
     def testPostManagementNode(self):
+        self._saveZone()
         xml = testsxml.management_node_post_xml
         response = self.client.post('/api/inventory/managementNodes/', 
             data=xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        management_node = models.ManagementNode.objects.get(pk=2)
+        management_node = models.ManagementNode.objects.get(pk=1)
         management_node_xml = testsxml.management_node_xml.replace(
             '<activationDate/>',
             '<activationDate>%s</activationDate>' % \
@@ -440,7 +452,7 @@ class SystemsTestCase(XMLTestCase):
     def testAddActivatedManagementNodeSystem(self):
         # create the system
         system = models.System(name="mgoblue", description="best appliance ever", activated=True)
-        system.is_management_node = True
+        system.management_node = True
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         assert(new_system.current_state == models.System.ACTIVATED)
@@ -921,7 +933,9 @@ class SystemEventProcessingTestCase(XMLTestCase):
 
     def mock_cleanupSystemEvent(self, event):
         self.mock_cleanupSystemEvent_called = True
+        event.delete()
 
+    def mock_scheduleSystemPollEvent(self, event):
         self.mock_scheduleSystemPollEvent_called = True
 
     def mock_extractNetworkToUse(self, system):
@@ -957,10 +971,9 @@ class SystemEventProcessingTestCase(XMLTestCase):
         # add another poll event with a higher priority but a future time 
         # and make sure we don't get it (because of the future activation time)
         orgPollEvent = event
-        enabled_time = datetime.datetime.now() + datetime.timedelta(1) # now + 1 day
         new_poll_event = models.SystemEvent(system=orgPollEvent.system, 
             event_type=orgPollEvent.event_type, priority=orgPollEvent.priority + 1,
-            time_enabled=enabled_time)
+            time_enabled=orgPollEvent.time_enabled + datetime.timedelta(1))
         new_poll_event.save()
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         self.failUnlessEqual(len(events), 1)
@@ -993,13 +1006,16 @@ class SystemEventProcessingTestCase(XMLTestCase):
         # make sure the event was removed and that we have the next poll event 
         # for this system now
         try:
-            models.SystemEvent.objects.get(system_event_id=event.system_event_id)
+            poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+            event = models.SystemEvent.objects.get(system_event_id=event.system_event_id,
+                event_type=poll_now_event)
+            assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         local_system = poll_event.system_events.all()[0]
         event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
-        self.failIf(event is not None)
+        self.failIf(event is None)
         
     def testProcessSystemEventsNoTrigger(self):
         # make sure activation event doesn't trigger next poll event
