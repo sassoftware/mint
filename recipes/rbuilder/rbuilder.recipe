@@ -41,7 +41,6 @@ class rBuilderProduct(CPackageRecipe):
         'decorator:python',
         'django:python',
         'django-db-postgres:python',
-        'django-db-mysql:python',
         'django-rest-interface:python',
         'dnspython:python',
         'docbook-utils:runtime',
