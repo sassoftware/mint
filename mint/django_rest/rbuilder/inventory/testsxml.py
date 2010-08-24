@@ -481,6 +481,54 @@ system_post_xml = """\
   <osType/>
 </system>"""
 
+system_post_xml_response = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/1">
+  <available/>
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
+  <activated>True</activated>
+  <sslClientKey>testsystemsslclientkey</sslClientKey>
+  <osMajorVersion/>
+  <activationDate/>
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <active/>
+      <deviceName/>
+      <ipAddress/>
+      <ipv6Address/>
+      <netmask/>
+      <networkId>1</networkId>
+      <portType/>
+      <publicDnsName/>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/1"/>
+    </network>
+  </networks>
+  <systemJobs/>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <managingZone/>
+  <systemId>1</systemId>
+  <launchingUser/>
+  <managementNode/>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <installedSoftware/>
+  <description>testsystemdescription</description>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <systemjobSet/>
+  <name>testsystemname</name>
+  <target/>
+  <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>activated</currentState>
+  <createdDate>%s</createdDate>
+  <osType/>
+</system>"""
+
 system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
@@ -513,11 +561,13 @@ system_post_xml_dup = """\
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>dead</currentState>
   <osType/>
 </system>"""
 
-system_post_xml_dup2 = system_post_xml_dup.replace('activated', 'dead')
+system_post_xml_dup2 = system_post_xml_dup.replace(
+    '<currentState>dead</currentState>', 
+    '<currentState>mothballed</currentState>')
 
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>

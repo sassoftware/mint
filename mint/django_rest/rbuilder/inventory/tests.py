@@ -501,12 +501,13 @@ class SystemsTestCase(XMLTestCase):
         assert(len(systems) == 3)
         
     def testPostSystem(self):
+        models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=2)
-        system_xml = testsxml.system_xml.replace('<activationDate/>',
+        system = models.System.objects.get(pk=1)
+        system_xml = testsxml.system_post_xml_response.replace('<activationDate/>',
             '<activationDate>%s</activationDate>' % \
             (system.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, system_xml % \
@@ -514,12 +515,13 @@ class SystemsTestCase(XMLTestCase):
         
     def testPostSystemDupUuid(self):
         # add the first system
+        models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml_dup
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=2)
-        self.failUnlessEqual(system.current_state, "activated")
+        system = models.System.objects.get(pk=1)
+        self.failUnlessEqual(system.current_state, "dead")
         
         # add it with same uuids but with different current state to make sure
         # we get back same system with update prop
@@ -527,8 +529,8 @@ class SystemsTestCase(XMLTestCase):
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        this_system = models.System.objects.get(pk=2)
-        self.failUnlessEqual(this_system.current_state, "dead")
+        this_system = models.System.objects.get(pk=1)
+        self.failUnlessEqual(this_system.current_state, "mothballed")
 
     def testGetSystemLog(self):
         response = self.client.post('/api/inventory/systems/', 
