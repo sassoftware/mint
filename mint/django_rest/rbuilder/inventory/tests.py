@@ -1046,7 +1046,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
-        
+
     def testDispatchSystemEvent(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
@@ -1054,7 +1054,6 @@ class SystemEventProcessingTestCase(XMLTestCase):
         
         system = models.System(name="hey")
         system.save()
-        
         # sanity check dispatching poll event
         event = models.SystemEvent(system=system,event_type=poll_event, priority=poll_event.priority)
         event.save()
@@ -1082,3 +1081,57 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.mgr.sysMgr.dispatchSystemEvent(event)
         self.failUnless(self.mock_cleanupSystemEvent_called)
         self.failIf(self.mock_scheduleSystemPollEvent_called)
+
+class SystemEventProcessing2TestCase(XMLTestCase):
+    # do not load other fixtures for this test case as it is very data order dependent
+    fixtures = ['system_event_processing']
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+
+        class RepeaterClient(object):
+            methodsCalled = []
+
+            def activate(slf, *args, **kwargs):
+                return slf._action('activate', *args, **kwargs)
+
+            def poll(slf, *args, **kwargs):
+                return slf._action('poll', *args, **kwargs)
+
+            def _action(slf, method, *args, **kwargs):
+                count = len(slf.methodsCalled)
+                slf.methodsCalled.append((method, args, kwargs))
+                return "uuid%03d" % count, object()
+
+        class RepeaterMgr(object):
+            repeaterClient = RepeaterClient()
+
+        self.mgr.repeaterMgr = RepeaterMgr()
+        self.system2 = system = models.System(name="hey")
+        system.save()
+        network2 = models.Network(ip_address="2.2.2.2", active=True)
+        network3 = models.Network(ip_address="3.3.3.3", required=True)
+        system.networks.add(network2)
+        system.networks.add(network3)
+        system.save()
+
+    def testDispatchSystemEvent(self):
+        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
+        
+        # sanity check dispatching poll event
+        event = models.SystemEvent(system=self.system2,
+            event_type=poll_event, priority=poll_event.priority)
+        event.save()
+        self.mgr.sysMgr.dispatchSystemEvent(event)
+
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+            [
+                ('poll', (u'3.3.3.3', 'sputnik1'),
+                    {'requiredNetwork': u'3.3.3.3'}),
+            ])
+        system = self.mgr.getSystem(self.system2.system_id)
+        jobs = system.systemJobs.all()
+        self.failUnlessEqual([ x.job_uuid for x in jobs ],
+            ['uuid000'])
