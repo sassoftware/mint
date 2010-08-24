@@ -205,15 +205,21 @@ class BaseManager(models.Manager):
                 getattr(model, key).add(v)
         return model
 
+    def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+        getattr(model, m2m_accessor).add(rel_mod)
+
+    def clear_m2m_accessor(self, model, m2m_accessor):
+        getattr(model, m2m_accessor).clear()
+
     def add_m2m_accessors(self, model, obj, request):
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
             rel_obj_name = m2m_mgr.target_field_name
-            getattr(model, m2m_accessor).clear()
+            self.clear_m2m_accessor(model, m2m_accessor)
             for rel_obj in getattr(getattr(obj, m2m_accessor, None),
                                    rel_obj_name, []):
                 rel_mod = type_map[rel_obj_name].objects.load_from_object(
                     rel_obj, request)
-                getattr(model, m2m_accessor).add(rel_mod)
+                self.set_m2m_accessor(model, m2m_accessor, rel_mod)
         
         return model
 
@@ -281,6 +287,18 @@ class SystemManager(BaseManager):
         
         return loaded_model
     
+    def clear_m2m_accessor(self, model, m2m_accessor):
+        if m2m_accessor == 'installed_software':
+            return
+        else:
+            BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
+
+    def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+        if m2m_accessor == 'installed_software':
+            model.new_versions.append(rel_mod)
+        else:
+            BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+
 class ManagementNodeManager(SystemManager):
     """
     Overridden because management nodes have several checks required to determine 
@@ -321,6 +339,8 @@ class XObjModel(models.Model):
     # flag to False in a model that has circular references to tell it not to
     # serialize models that refer to it with foreign keys.
     serialize_accessors = True
+
+    old_m2m_accessors = {}
 
     def load_fields_dict(self):
         """

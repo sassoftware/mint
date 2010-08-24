@@ -683,6 +683,10 @@ class SystemVersionsTestCase(XMLTestCase):
         response = self.client.put(url,
             data=data,
             content_type="application/xml")
+        # TODO: verify that the versions on the system are the same, and that
+        # a job was added to update.  Since the job runs asynchronously the
+        # initial response from a version update will still have the old
+        # versions in the xml
         self.assertXMLEquals(response.content,
             testsxml.system_version_put_response_xml,
             ignoreNodes = ['lastAvailableUpdateRefresh',
