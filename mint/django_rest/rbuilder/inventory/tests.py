@@ -1169,8 +1169,10 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
-                ('poll', (u'3.3.3.3', 'sputnik1'),
-                    {'requiredNetwork': u'3.3.3.3'}),
+                ('poll', ('3.3.3.3', 'sputnik1'),
+                    {'requiredNetwork': '3.3.3.3',
+                     'resultsLocation':
+                        {'path': '/api/inventory/systems/4', 'port': 8443}}),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.systemJobs.all()

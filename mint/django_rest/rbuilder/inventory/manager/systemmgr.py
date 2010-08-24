@@ -473,8 +473,13 @@ class SystemManager(base.BaseManager):
                 self._runSystemEvent(event, destination,
                     repClient.activate, destination, sputnik)
             elif eventType in pollEvents:
+                # XXX remove the hardcoded port from here
+                resultsLocation = dict(
+                    path = "/api/inventory/systems/%d" % event.system.pk,
+                    port = 8443)
                 self._runSystemEvent(event, destination,
                     repClient.poll, destination, sputnik,
+                    resultsLocation=resultsLocation,
                     requiredNetwork=requiredNetwork)
             else:
                 log.error("Unknown event type %s" % eventType)
