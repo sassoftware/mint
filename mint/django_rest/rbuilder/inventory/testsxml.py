@@ -85,7 +85,7 @@ zone_post_xml = """\
 zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/1/">
-  <systemSet/>
+  <systems/>
   <description>Some local zone</description>
   <createdDate>%s</createdDate>
   <name>Local Zone</name>
@@ -421,7 +421,7 @@ systems_put_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
-    <isManagementNode/>
+    <managementNode/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
@@ -458,7 +458,7 @@ systems_put_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
-    <isManagementNode/>
+    <managementNode/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystem2localuuid</localUuid>
@@ -470,15 +470,16 @@ systems_put_xml = """\
 
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2">
+<system id="http://testserver/api/inventory/systems/1">
   <installedSoftware/>
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <activationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <managingNode/>
+  <managingZone/>
   <reservationId/>
+  <hostname/>
   <networks>
     <network>
       <active/>
@@ -490,23 +491,23 @@ system_xml = """\
       <networkId>1</networkId>
       <portType>lan</portType>
       <required/>
-      <system href="http://testserver/api/inventory/systems/2"/>
+      <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
   <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <systemId>2</systemId>
+  <systemId>1</systemId>
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <available/>
   <description>testsystemdescription</description>
-  <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <isManagementNode/>
-  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
+  <managementNode/>
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -642,14 +643,14 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2">
-  <installedSoftware/>
+<system id="http://testserver/api/inventory/systems/1">
+  <available/>
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <activationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <managingNode/>
   <reservationId/>
   <networks>
     <network>
@@ -662,25 +663,26 @@ system_target_xml = """\
       <networkId>1</networkId>
       <portType>lan</portType>
       <required/>
-      <system href="http://testserver/api/inventory/systems/2"/>
+      <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  </systemJobs>
+  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <systemId>2</systemId>
+  <managingZone/>
+  <hostname/>
+  <systemId>1</systemId>
   <launchingUser/>
+  <managementNode/>
   <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-  <available/>
+  <installedSoftware/>
   <description>testsystemdescription</description>
-  <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <isManagementNode/>
-  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
-  <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <name>testsystemname</name>
+  <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <localUuid>testsystemlocaluuid</localUuid>
   <currentState>activated</currentState>
   <createdDate>%s</createdDate>
@@ -693,7 +695,7 @@ system_events_xml = """\
 <systemEvents>
     <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
         <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
-        <system href="http://testserver/api/inventory/systems/2"/>
+        <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
         <priority>50</priority>
         <timeEnabled>%s</timeEnabled>
@@ -701,7 +703,7 @@ system_events_xml = """\
     </systemEvent>
     <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
         <eventType href="http://testserver/api/inventory/eventTypes/1/"/>
-        <system href="http://testserver/api/inventory/systems/2"/>
+        <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
         <priority>110</priority>
         <timeEnabled>%s</timeEnabled>
@@ -714,7 +716,7 @@ system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
     <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
-    <system href="http://testserver/api/inventory/systems/2"/>
+    <system href="http://testserver/api/inventory/systems/3"/>
     <timeCreated>%s</timeCreated>
     <priority>50</priority>
     <timeEnabled>%s</timeEnabled>
@@ -733,35 +735,30 @@ system_event_post_xml = """\
 
 system_log_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<systemLog id="http://testserver/api/inventory/systems/2/systemLog/">
+<systemLog id="http://testserver/api/inventory/systems/1/systemLog/">
   <systemLogEntries>
     <systemLogEntry>
       <entry>System added to inventory</entry>
-      <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>1</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
       <entry>System activated via ractivate</entry>
-      <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>2</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
-      <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>3</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
       <entry>System data fetched.</entry>
-      <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>4</systemLogEntryId>
-    </systemLogEntry>
-    <systemLogEntry>
-      <entry>System data fetched.</entry>
-      <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
-      <systemLogEntryId>5</systemLogEntryId>
     </systemLogEntry>
   </systemLogEntries>
   <systemLogId>1</systemLogId>
-  <system href="http://testserver/api/inventory/systems/2"/>
+  <system href="http://testserver/api/inventory/systems/1"/>
 </systemLog>
 """
 
@@ -849,7 +846,7 @@ system_version_xml = """\
   <osMajorVersion/>
   <activationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <managingNode/>
+  <managingZone/>
   <reservationId/>
   <networks>
     <network>
@@ -877,7 +874,7 @@ system_version_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <isManagementNode/>
+  <managementNode/>
   <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
   <target/>
   <name>testsystemname</name>
@@ -967,7 +964,7 @@ system_version_put_response_xml = """\
   <osMajorVersion/>
   <activationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <managingNode/>
+  <managingZone/>
   <reservationId/>
   <networks>
     <network>
@@ -995,7 +992,7 @@ system_version_put_response_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <isManagementNode/>
+  <managementNode/>
   <systemjobSet/>
   <target/>
   <name/>

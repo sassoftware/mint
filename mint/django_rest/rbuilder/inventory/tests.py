@@ -485,20 +485,22 @@ class SystemsTestCase(XMLTestCase):
             ignoreNodes = [ 'createdDate' ])
 
     def testGetSystem(self):
+        models.System.objects.all().delete()
         system = self._saveSystem()
-        response = self.client.get('/api/inventory/systems/2/')
+        response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.created_date.isoformat()))
 
     def testGetSystemWithTarget(self):
+        models.System.objects.all().delete()
         target = rbuildermodels.Targets(pk=1, targettype='testtargettype',
             targetname='testtargetname')
         target.save()
         system = self._saveSystem()
         system.target = target
         system.save()
-        response = self.client.get('/api/inventory/systems/2/')
+        response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             system.created_date.isoformat())
@@ -547,10 +549,11 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(this_system.current_state, "mothballed")
 
     def testGetSystemLog(self):
+        models.System.objects.all().delete()
         response = self.client.post('/api/inventory/systems/', 
             data=testsxml.system_post_xml, content_type='text/xml')
-        response = self.client.get('/api/inventory/systems/2/')
-        response = self.client.get('/api/inventory/systems/2/systemLog/')
+        self.assertEquals(response.status_code, 200)
+        response = self.client.get('/api/inventory/systems/1/systemLog/')
         self.assertEquals(response.status_code, 200)
         content = []
         # Just remove lines with dates in them, it's easier to test for now.
