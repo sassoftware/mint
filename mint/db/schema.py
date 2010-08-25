@@ -1336,10 +1336,15 @@ def _addManagementZone(db, cfg):
             systemId = ids[0][0]
             # add the network
             changed |= _addTableRows(db, 'inventory_system_network', 'dns_name',
-                [dict(system_id=systemId, dns_name='127.0.0.1', active=True)])
+                [dict(system_id=systemId, 
+                      dns_name='127.0.0.1', 
+                      active=True,
+                      created_date=str(datetime.datetime.now(tz.tzutc())))])
             # add the management node
             changed |= _addTableRows(db, 'inventory_zone_management_node', 'system_ptr_id',
-                    [dict(system_ptr_id=systemId, local='true', zone_id=zoneId)])
+                    [dict(system_ptr_id=systemId, 
+                          local='true', 
+                          zone_id=zoneId)])
     
     return changed
 
