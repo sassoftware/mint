@@ -250,13 +250,13 @@ class LogTestCase(XMLTestCase):
     def testGetLog(self):
         system = models.System(name="mgoblue", 
             description="best appliance ever", registered=False)
-        new_system = self.mgr.addSystem(system)
+        self.mgr.addSystem(system)
         system = models.System(name="mgoblue2", 
             description="best appliance ever2", registered=False)
-        new_system = self.mgr.addSystem(system)
+        self.mgr.addSystem(system)
         system = models.System(name="mgoblue3", 
             description="best appliance ever3", registered=False)
-        new_system = self.mgr.addSystem(system)
+        self.mgr.addSystem(system)
         response = self.client.get('/api/inventory/log/')
         # Just remove lines with dates in them, it's easier to test for now.
         content = []
@@ -1203,8 +1203,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
     def testDispatchSystemEvent(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+        models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
         
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
