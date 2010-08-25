@@ -309,7 +309,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.management_nodes_xml % (management_node.created_date.isoformat()))
+            testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat() + '+00:00', management_node.created_date.isoformat()))
 
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
@@ -317,7 +317,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.management_node_xml % (management_node.created_date.isoformat()))
+            testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat() + '+00:00', management_node.created_date.isoformat()))
         
     def testAddManagementNodeNull(self):
         
@@ -356,7 +356,7 @@ class ManagementNodesTestCase(XMLTestCase):
             '<activationDate>%s</activationDate>' % \
             (management_node.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, management_node_xml % \
-            (management_node.created_date.isoformat() + '+00:00'))
+            (management_node.networks.all()[0].created_date.isoformat() + '+00:00', management_node.created_date.isoformat() + '+00:00'))
 
 class NetworksTestCase(XMLTestCase):
 
@@ -481,7 +481,7 @@ class SystemsTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/systems/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.systems_xml % (system.created_date.isoformat()),
+            testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'createdDate' ])
 
     def testGetSystem(self):
@@ -490,7 +490,8 @@ class SystemsTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.system_xml % (system.created_date.isoformat()))
+            testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
+            ignoreNodes = [ 'createdDate' ])
 
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
@@ -503,7 +504,8 @@ class SystemsTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
-            system.created_date.isoformat())
+            (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
+            ignoreNodes = [ 'createdDate' ])
 
     def XXXtestPutSystems(self):
         """
@@ -527,7 +529,8 @@ class SystemsTestCase(XMLTestCase):
             '<activationDate>%s</activationDate>' % \
             (system.activation_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, system_xml % \
-            (system.created_date.isoformat() + '+00:00'))
+            (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
+            ignoreNodes = [ 'createdDate' ])
         
     def testPostSystemDupUuid(self):
         # add the first system
