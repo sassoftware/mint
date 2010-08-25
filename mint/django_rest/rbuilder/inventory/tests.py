@@ -141,8 +141,8 @@ class XMLTestCase(TestCase):
         system.ssl_client_certificate = 'testsystemsslclientcertificate'
         system.ssl_client_key = 'testsystemsslclientkey'
         system.ssl_server_certificate = 'testsystemsslservercertificate'
-        system.activated = True
-        system.current_state = 'activated'
+        system.registered = True
+        system.current_state = 'registered'
         system.save()
 
         network = models.Network()
@@ -168,8 +168,8 @@ class XMLTestCase(TestCase):
         management_node.ssl_client_certificate = 'test management node client cert'
         management_node.ssl_client_key = 'test management node client key'
         management_node.ssl_server_certificate = 'test management node server cert'
-        management_node.activated = True
-        management_node.current_state = 'activated'
+        management_node.registered = True
+        management_node.current_state = 'registered'
         management_node.local = True
         management_node.management_node = True
         management_node.save()
@@ -194,8 +194,8 @@ class XMLTestCase(TestCase):
         system.ssl_client_certificate = 'testsystemsslclientcertificate2'
         system.ssl_client_key = 'testsystemsslclientkey2'
         system.ssl_server_certificate = 'testsystemsslservercertificate2'
-        system.activated = True
-        system.current_state = 'activated'
+        system.registered = True
+        system.current_state = 'registered'
         system.save()
 
         network = models.Network()
@@ -249,13 +249,13 @@ class LogTestCase(XMLTestCase):
 
     def testGetLog(self):
         system = models.System(name="mgoblue", 
-            description="best appliance ever", activated=False)
+            description="best appliance ever", registered=False)
         new_system = self.mgr.addSystem(system)
         system = models.System(name="mgoblue2", 
-            description="best appliance ever2", activated=False)
+            description="best appliance ever2", registered=False)
         new_system = self.mgr.addSystem(system)
         system = models.System(name="mgoblue3", 
-            description="best appliance ever3", activated=False)
+            description="best appliance ever3", registered=False)
         new_system = self.mgr.addSystem(system)
         response = self.client.get('/api/inventory/log/')
         # Just remove lines with dates in them, it's easier to test for now.
@@ -263,7 +263,7 @@ class LogTestCase(XMLTestCase):
         for line in response.content.split('\n'):
             if 'entryDate' in line or \
                'poll event' in line or \
-               'activation event' in line:
+               'registration event' in line:
                 continue
             else:
                 content.append(line)
@@ -378,9 +378,9 @@ class ManagementNodesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
         management_node_xml = testsxml.management_node_post_response_xml.replace(
-            '<activationDate/>',
-            '<activationDate>%s</activationDate>' % \
-            (management_node.activation_date.isoformat() + '+00:00'))
+            '<registrationDate/>',
+            '<registrationDate>%s</registrationDate>' % \
+            (management_node.registration_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, management_node_xml % \
             (management_node.networks.all()[0].created_date.isoformat() + '+00:00', management_node.created_date.isoformat() + '+00:00'))
 
@@ -428,13 +428,13 @@ class SystemsTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.mock_scheduleSystemActivationEvent_called = False
+        self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.mgr.sysMgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
+        self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
         
-    def mock_scheduleSystemActivationEvent(self, system):
-        self.mock_scheduleSystemActivationEvent_called = True
+    def mock_scheduleSystemRegistrationEvent(self, system):
+        self.mock_scheduleSystemRegistrationEvent_called = True
         
     def mock_scheduleSystemPollEvent(self, system):
         self.mock_scheduleSystemPollEvent_called = True
@@ -465,39 +465,39 @@ class SystemsTestCase(XMLTestCase):
     def testAddSystem(self):
         # create the system
         system = models.System(name="mgoblue", 
-            description="best appliance ever", activated=False)
+            description="best appliance ever", registered=False)
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         assert(new_system.current_state == models.System.UNMANAGED)
         
-        # make sure we scheduled our activation event
-        assert(self.mock_scheduleSystemActivationEvent_called)
+        # make sure we scheduled our registration event
+        assert(self.mock_scheduleSystemRegistrationEvent_called)
         
-    def testAddActivatedSystem(self):
+    def testAddRegisteredSystem(self):
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever", activated=True)
+        system = models.System(name="mgoblue", description="best appliance ever", registered=True)
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
-        assert(new_system.current_state == models.System.ACTIVATED)
+        assert(new_system.current_state == models.System.REGISTERED)
         
-        # make sure we did not schedule activation
-        assert(self.mock_scheduleSystemActivationEvent_called == False)
+        # make sure we did not schedule registration
+        assert(self.mock_scheduleSystemRegistrationEvent_called == False)
         
         # make sure we scheduled poll event
         assert(self.mock_scheduleSystemPollEvent_called)
         
-    def testAddActivatedManagementNodeSystem(self):
+    def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever", activated=True,
+        system = models.System(name="mgoblue", description="best appliance ever", registered=True,
             management_node=True)
         system.zone = zone
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
-        assert(new_system.current_state == models.System.ACTIVATED)
+        assert(new_system.current_state == models.System.REGISTERED)
         
-        # make sure we did not schedule activation
-        assert(self.mock_scheduleSystemActivationEvent_called == False)
+        # make sure we did not schedule registration
+        assert(self.mock_scheduleSystemRegistrationEvent_called == False)
         
         # make sure we did not scheduled poll event since this is a management node
         assert(self.mock_scheduleSystemPollEvent_called == False)
@@ -551,9 +551,9 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
-        system_xml = testsxml.system_post_xml_response.replace('<activationDate/>',
-            '<activationDate>%s</activationDate>' % \
-            (system.activation_date.isoformat() + '+00:00'))
+        system_xml = testsxml.system_post_xml_response.replace('<registrationDate/>',
+            '<registrationDate>%s</registrationDate>' % \
+            (system.registration_date.isoformat() + '+00:00'))
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'createdDate' ])
@@ -629,13 +629,13 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mintConfig = self.mgr.cfg
         from django.conf import settings
         self.mintConfig.dbPath = settings.DATABASE_NAME
-        self.mock_scheduleSystemActivationEvent_called = False
+        self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.mgr.sysMgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
+        self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
         
-    def mock_scheduleSystemActivationEvent(self, system):
-        self.mock_scheduleSystemActivationEvent_called = True
+    def mock_scheduleSystemRegistrationEvent(self, system):
+        self.mock_scheduleSystemRegistrationEvent_called = True
         
     def mock_scheduleSystemPollEvent(self, system):
         self.mock_scheduleSystemPollEvent_called = True
@@ -828,7 +828,7 @@ class SystemEventTestCase(XMLTestCase):
     
     def testGetSystemEventsRest(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
+        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
         event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
@@ -860,7 +860,7 @@ class SystemEventTestCase(XMLTestCase):
     def testGetSystemEvents(self):
         # add an event
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
+        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
         event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
@@ -918,8 +918,8 @@ class SystemEventTestCase(XMLTestCase):
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_activated_entries = log.system_log_entries.all()
-        assert(len(sys_activated_entries) == 1)
+        sys_registered_entries = log.system_log_entries.all()
+        assert(len(sys_registered_entries) == 1)
         
     def testScheduleSystemPollNowEvent(self):
         self.mgr.scheduleSystemPollNowEvent(self.system)
@@ -933,23 +933,23 @@ class SystemEventTestCase(XMLTestCase):
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_activated_entries = log.system_log_entries.all()
-        assert(len(sys_activated_entries) == 1)
+        sys_registered_entries = log.system_log_entries.all()
+        assert(len(sys_registered_entries) == 1)
         
-    def testScheduleSystemActivationEvent(self):
-        self.mgr.scheduleSystemActivationEvent(self.system)
+    def testScheduleSystemRegistrationEvent(self):
+        self.mgr.scheduleSystemRegistrationEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called)
         
-        activation_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
-        event = models.SystemEvent.objects.filter(system=self.system,event_type=activation_event).get()
+        registration_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        event = models.SystemEvent.objects.filter(system=self.system,event_type=registration_event).get()
         assert(event is not None)
         # should have been enabled immediately
         assert(event.time_enabled <= datetime.datetime.utcnow())
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_activated_entries = log.system_log_entries.all()
-        assert(len(sys_activated_entries) == 1)
+        sys_registered_entries = log.system_log_entries.all()
+        assert(len(sys_registered_entries) == 1)
         
     def testAddSystemEventNull(self):
         
@@ -958,11 +958,11 @@ class SystemEventTestCase(XMLTestCase):
         except:
             assert(False) # should not throw exception
         
-    def testAddSystemActivationEvent(self):
-        # activation event should be dispatched now
-        activation_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
+    def testAddSystemRegistrationEvent(self):
+        # registration event should be dispatched now
+        registration_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
         systemEvent = models.SystemEvent(system=self.system, 
-            event_type=activation_event, priority=activation_event.priority,
+            event_type=registration_event, priority=registration_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
         systemEvent.save()
         assert(systemEvent is not None)
@@ -1037,13 +1037,13 @@ class SystemEventProcessingTestCase(XMLTestCase):
         
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         
-        # ensure we got our activation event back since it is the highest priority
+        # ensure we got our registration event back since it is the highest priority
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_ACTIVATION)
+            models.EventType.SYSTEM_REGISTRATION)
 
-        # remove the activation event and ensure we get the on demand poll event next
+        # remove the registration event and ensure we get the on demand poll event next
         event.delete()
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         self.failUnlessEqual(len(events), 1)
@@ -1060,7 +1060,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
             models.EventType.SYSTEM_POLL)
 
         # add another poll event with a higher priority but a future time 
-        # and make sure we don't get it (because of the future activation time)
+        # and make sure we don't get it (because of the future registration time)
         orgPollEvent = event
         new_poll_event = models.SystemEvent(system=orgPollEvent.system, 
             event_type=orgPollEvent.event_type, priority=orgPollEvent.priority + 1,
@@ -1080,11 +1080,11 @@ class SystemEventProcessingTestCase(XMLTestCase):
         
     def testProcessSystemEvents(self):
         
-        #remove the activation event so we handle the poll now event
+        #remove the registration event so we handle the poll now event
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_ACTIVATION)
+            models.EventType.SYSTEM_REGISTRATION)
         event.delete()
         
         # make sure next one is poll now event
@@ -1109,7 +1109,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failIf(event is None)
         
     def testProcessSystemEventsNoTrigger(self):
-        # make sure activation event doesn't trigger next poll event
+        # make sure registration event doesn't trigger next poll event
         # start with no regular poll events
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         models.SystemEvent.objects.filter(event_type=poll_event).delete()
@@ -1119,11 +1119,11 @@ class SystemEventProcessingTestCase(XMLTestCase):
         except models.SystemEvent.DoesNotExist:
             pass
         
-        # make sure next one is activation now event
+        # make sure next one is registration now event
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_ACTIVATION)
+            models.EventType.SYSTEM_REGISTRATION)
         self.mgr.sysMgr.processSystemEvents()
         
         # should have no poll events still
@@ -1136,7 +1136,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
     def testDispatchSystemEvent(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
+        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
         
         system = models.System(name="hey")
         system.save()
@@ -1160,7 +1160,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         # _extractNetworkToUse is only called if we have a repeater client
         self.failIf(self.mock_extractNetworkToUse_called)
 
-        # sanity check dispatching activation event
+        # sanity check dispatching registration event
         self.resetFlags()
         event = models.SystemEvent(system=system, event_type=act_event, priority=act_event.priority)
         event.save()
@@ -1178,8 +1178,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         class RepeaterClient(object):
             methodsCalled = []
 
-            def activate(slf, *args, **kwargs):
-                return slf._action('activate', *args, **kwargs)
+            def register(slf, *args, **kwargs):
+                return slf._action('register', *args, **kwargs)
 
             def poll(slf, *args, **kwargs):
                 return slf._action('poll', *args, **kwargs)
@@ -1204,7 +1204,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
     def testDispatchSystemEvent(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
         poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_ACTIVATION)
+        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
         
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,

@@ -108,11 +108,11 @@ class SystemManager(base.BaseManager):
         managementNode.save()
         self.log_system(managementNode, models.SystemLogEntry.ADDED)
         
-        if managementNode.activated:
-            managementNode.activation_date = datetime.datetime.now(tz.tzutc())
-            managementNode.current_state = models.System.ACTIVATED
+        if managementNode.registered:
+            managementNode.registration_date = datetime.datetime.now(tz.tzutc())
+            managementNode.current_state = models.System.REGISTERED
             managementNode.save()
-            self.log_system(managementNode, models.SystemLogEntry.ACTIVATED)
+            self.log_system(managementNode, models.SystemLogEntry.REGISTERED)
         else:
             managementNode.current_state = models.System.UNMANAGED
             managementNode.save()
@@ -148,15 +148,15 @@ class SystemManager(base.BaseManager):
         system.save()
         self.log_system(system, models.SystemLogEntry.ADDED)
         
-        if system.activated:
-            system.activation_date = datetime.datetime.now(tz.tzutc())
-            system.current_state = models.System.ACTIVATED
+        if system.registered:
+            system.registration_date = datetime.datetime.now(tz.tzutc())
+            system.current_state = models.System.REGISTERED
             system.save()
-            self.log_system(system, models.SystemLogEntry.ACTIVATED)
+            self.log_system(system, models.SystemLogEntry.REGISTERED)
             self.scheduleSystemPollEvent(system)
         else:
-            # mark the system as needing activation
-            self.scheduleSystemActivationEvent(system)
+            # mark the system as needing registration
+            self.scheduleSystemRegistrationEvent(system)
 
         return system
 
@@ -457,7 +457,7 @@ class SystemManager(base.BaseManager):
             return
         self.log_system(event.system,  "Dispatching %s event" % event.event_type.name)
 
-        activationEvents = set([ models.EventType.SYSTEM_ACTIVATION ])
+        registrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
         pollEvents = set([
             models.EventType.SYSTEM_POLL,
             models.EventType.SYSTEM_POLL_IMMEDIATE,
@@ -469,9 +469,9 @@ class SystemManager(base.BaseManager):
             eventType = event.event_type.name
             sputnik = "sputnik1"
             requiredNetwork = (network.required and destination) or None
-            if eventType in activationEvents:
+            if eventType in registrationEvents:
                 self._runSystemEvent(event, destination,
-                    repClient.activate, destination, sputnik)
+                    repClient.register, destination, sputnik)
             elif eventType in pollEvents:
                 # XXX remove the hardcoded port from here
                 resultsLocation = dict(
@@ -547,13 +547,13 @@ class SystemManager(base.BaseManager):
         self.createSystemEvent(system, event_type, enable_time)
 
     @base.exposed
-    def scheduleSystemActivationEvent(self, system):
-        '''Schedule an event for the system to be activated'''
-        # activation events happen on demand, so enable now
+    def scheduleSystemRegistrationEvent(self, system):
+        '''Schedule an event for the system to be registered'''
+        # registration events happen on demand, so enable now
         enable_time = datetime.datetime.now(tz.tzutc())
-        activation_event_type = models.EventType.objects.get(
-            name=models.EventType.SYSTEM_ACTIVATION)
-        self.createSystemEvent(system, activation_event_type, enable_time)
+        registration_event_type = models.EventType.objects.get(
+            name=models.EventType.SYSTEM_REGISTRATION)
+        self.createSystemEvent(system, registration_event_type, enable_time)
 
     @base.exposed
     def createSystemEvent(self, system, event_type, enable_time=None):

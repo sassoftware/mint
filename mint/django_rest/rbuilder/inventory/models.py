@@ -125,7 +125,7 @@ class System(modellib.XObjIdModel):
     objects = modellib.SystemManager()
     
     UNMANAGED = "unmanaged"
-    ACTIVATED = "activated"
+    REGISTERED = "registered"
     RESPONSIVE = "responsive"
     SHUTDOWN = "shutdown"
     NONRESPONSIVE = "non-responsive"
@@ -146,7 +146,7 @@ class System(modellib.XObjIdModel):
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)
     os_minor_version = models.CharField(max_length=32, null=True)
-    activation_date = modellib.DateTimeUtcField(null=True)
+    registration_date = modellib.DateTimeUtcField(null=True)
     generated_uuid = models.CharField(max_length=64, unique=True, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
     ssl_client_certificate = models.CharField(max_length=8092, null=True)
@@ -155,10 +155,10 @@ class System(modellib.XObjIdModel):
     scheduled_event_start_date = modellib.DateTimeUtcField(null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.NullBooleanField()
-    activated = models.NullBooleanField()
+    registered = models.NullBooleanField()
     STATE_CHOICES = (
         (UNMANAGED, UNMANAGED),
-        (ACTIVATED, ACTIVATED),
+        (REGISTERED, REGISTERED),
         (RESPONSIVE, RESPONSIVE),
         (SHUTDOWN, SHUTDOWN),
         (NONRESPONSIVE, NONRESPONSIVE),
@@ -240,13 +240,13 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE +5
     SYSTEM_POLL_IMMEDIATE_DESC = "on-demand system polling event"
     
-    SYSTEM_ACTIVATION = "system activation"
-    SYSTEM_ACTIVATION_PRIORITY = ON_DEMAND_BASE +10
-    SYSTEM_ACTIVATION_DESC = "on-demand system activation event"
+    SYSTEM_REGISTRATION = "system registration"
+    SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE +10
+    SYSTEM_REGISTRATION_DESC = "on-demand system registration event"
         
     event_type_id = models.AutoField(primary_key=True)
     EVENT_TYPES = (
-        (SYSTEM_ACTIVATION, SYSTEM_ACTIVATION_DESC),
+        (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
         (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
         (SYSTEM_POLL, SYSTEM_POLL_DESC),
     )
@@ -340,14 +340,14 @@ class SystemLogEntry(modellib.XObjModel):
         ordering = ['entry_date']
         
     ADDED = "System added to inventory"
-    ACTIVATED = "System activated via ractivate"
-    MANUALLY_ACTIVATED = "System manually activated via rBuilder"
+    REGISTERED = "System registered via rpath-tools"
+    MANUALLY_REGISTERED = "System manually registered via rBuilder"
     POLLED = "System polled."
     FETCHED = "System data fetched."
     choices = (
         (ADDED, ADDED),
-        (ACTIVATED, ACTIVATED),
-        (MANUALLY_ACTIVATED, MANUALLY_ACTIVATED),
+        (REGISTERED, REGISTERED),
+        (MANUALLY_REGISTERED, MANUALLY_REGISTERED),
         (POLLED, POLLED),
         (FETCHED, FETCHED),
     )

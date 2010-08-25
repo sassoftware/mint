@@ -61,7 +61,7 @@ GET - returns:
     &lt;system&gt;
       &lt;generatedUuid&gt;ea664f09-d9b3-1e2b-ffe4-a5959e66be33&lt;/generatedUuid&gt;
       &lt;localUuid&gt;37b57b01-48d7-11cb-afdb-fedb0213827a   &lt;/localUuid&gt;
-      &lt;activationDate&gt;2010-07-15 15:52:28.927696&lt;/activationDate&gt;
+      &lt;registrationDate&gt;2010-07-15 15:52:28.927696&lt;/registrationDate&gt;
       &lt;sslClientCertificate&gt;
         ssl client certificate contents
       &lt;/sslClientCertificate&gt;
@@ -77,7 +77,7 @@ GET - returns:
     &lt;/system&gt;
 &lt;/systems&gt;
 
-POST - server activations, structure should match above
+POST - server registrations, structure should match above
 PUT - not supported
 DELETE - not supported
 </xsl:comment>

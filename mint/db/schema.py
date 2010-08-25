@@ -1086,7 +1086,7 @@ def _createInventorySchema(db, cfg):
                 "os_type" varchar(64),
                 "os_major_version" varchar(32),
                 "os_minor_version" varchar(32),
-                "activation_date" timestamp with time zone,
+                "registration_date" timestamp with time zone,
                 "generated_uuid" varchar(64) UNIQUE,
                 "local_uuid" varchar(64),
                 "ssl_client_certificate" varchar(8092),
@@ -1095,7 +1095,7 @@ def _createInventorySchema(db, cfg):
                 "scheduled_event_start_date" timestamp with time zone,
                 "launching_user_id" integer REFERENCES "users" ("userid"),
                 "available" bool,
-                "activated" bool,
+                "registered" bool,
                 "current_state" varchar(32),
                 "management_node" bool,
                 "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
@@ -1200,8 +1200,8 @@ def _createInventorySchema(db, cfg):
         db.tables[tableName] = []
         changed = True
         changed |= _addTableRows(db, tableName, 'name',
-            [ dict(name="system activation",
-                   description='on-demand system activation event', priority=110),
+            [ dict(name="system registration",
+                   description='on-demand system registration event', priority=110),
               dict(name="system poll",
                    description='standard system polling event', priority=50),
               dict(name="immediate system poll",

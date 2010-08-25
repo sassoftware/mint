@@ -13,22 +13,22 @@ event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <eventType id="http://testserver/api/inventory/eventTypes/1/">
   <systemEvents href="http://testserver/api/inventory/systemEventsByType/1/"/>
-  <description>on-demand activation event</description><priority>110</priority>
+  <description>on-demand registration event</description><priority>110</priority>
   <jobSet/>
   <eventTypeId>1</eventTypeId>
-  <name>system activation</name>
+  <name>system registration</name>
 </eventType>"""
 
 event_types_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <eventTypes>
   <eventType id="http://testserver/api/inventory/eventTypes/1/">
-    <name>system activation</name>
+    <name>system registration</name>
     <systemEvents href="http://testserver/api/inventory/systemEventsByType/1/"/>
     <priority>110</priority>
     <jobSet/>
     <eventTypeId>1</eventTypeId>
-    <description>on-demand activation event</description>
+    <description>on-demand registration event</description>
   </eventType>
   <eventType id="http://testserver/api/inventory/eventTypes/2/">
     <name>immediate system poll</name>
@@ -100,10 +100,10 @@ management_nodes_xml = """\
   <managementNode>
     <available/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-    <activated>True</activated>
+    <registered>True</registered>
     <sslClientKey>test management node client key</sslClientKey>
     <osMajorVersion/>
-    <activationDate/>
+    <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
     <reservationId/>
     <networks>
@@ -143,7 +143,7 @@ management_nodes_xml = """\
     <zone href="http://testserver/api/inventory/zones/2/"/>
     <systemPtr href="http://testserver/api/inventory/systems/1"/>
     <localUuid>test management node luuid</localUuid>
-    <currentState>activated</currentState>
+    <currentState>registered</currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </managementNode>
@@ -155,10 +155,10 @@ management_node_xml = """\
 <managementNode>
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <reservationId/>
   <networks>
@@ -198,7 +198,7 @@ management_node_xml = """\
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </managementNode>"""
@@ -207,10 +207,10 @@ management_node_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode>
   <available/>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <reservationId/>
   <networks>
@@ -239,7 +239,7 @@ management_node_post_xml = """\
   <description>test management node desc</description>
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <osType/>
 </managementNode>"""
 
@@ -248,10 +248,10 @@ management_node_post_response_xml = """\
 <managementNode>
   <available>False</available>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <reservationId/>
   <networks>
@@ -291,7 +291,7 @@ management_node_post_response_xml = """\
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </managementNode>"""
@@ -300,8 +300,8 @@ systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/inventory/systems/2">
-    <activated/>
-    <activationDate/>
+    <registered/>
+    <registrationDate/>
     <available/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
     <currentState>unmanaged</currentState>
@@ -346,11 +346,11 @@ systems_xml = """\
     <targetSystemId/>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
-    <activated>True</activated>
-    <activationDate/>
+    <registered>True</registered>
+    <registrationDate/>
     <available/>
     <createdDate>%s</createdDate>
-    <currentState>activated</currentState>
+    <currentState>registered</currentState>
     <description>testsystemdescription</description>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
     <hostname/>
@@ -398,10 +398,10 @@ systems_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/inventory/systems/1">
-    <activated>True</activated>
+    <registered>True</registered>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
-    <activationDate/>
+    <registrationDate/>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
     <reservationId/>
     <networks>
@@ -430,15 +430,15 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
-    <currentState>activated</currentState>
+    <currentState>registered</currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </system>
   <system id="http://testserver/api/inventory/systems/2">
-    <activated>True</activated>
+    <registered>True</registered>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
-    <activationDate/>
+    <registrationDate/>
     <generatedUuid>testsystem2generateduuid</generatedUuid>
     <reservationId/>
     <networks>
@@ -467,7 +467,7 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystem2localuuid</localUuid>
-    <currentState>activated</currentState>
+    <currentState>registered</currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </system>
@@ -477,10 +477,10 @@ system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <installedSoftware/>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
   <reservationId/>
@@ -517,7 +517,7 @@ system_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
@@ -525,10 +525,10 @@ system_xml = """\
 system_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <reservationId/>
   <networks>
@@ -554,7 +554,7 @@ system_post_xml = """\
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <osType/>
 </system>"""
 
@@ -563,10 +563,10 @@ system_post_xml_response = """\
 <system id="http://testserver/api/inventory/systems/1">
   <available>False</available>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <reservationId/>
   <networks>
@@ -603,7 +603,7 @@ system_post_xml_response = """\
   <name>testsystemname</name>
   <target/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
@@ -611,10 +611,10 @@ system_post_xml_response = """\
 system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
-  <activated>False</activated>
+  <registered>False</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <reservationId/>
   <networks>
@@ -653,10 +653,10 @@ system_target_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <reservationId/>
   <networks>
@@ -692,7 +692,7 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>
@@ -751,7 +751,7 @@ system_log_xml = """\
       <systemLogEntryId>1</systemLogEntryId>
     </systemLogEntry>
     <systemLogEntry>
-      <entry>System activated via ractivate</entry>
+      <entry>System registered via rpath-tools</entry>
       <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>2</systemLogEntryId>
     </systemLogEntry>
@@ -849,10 +849,10 @@ system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   %s
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
   <reservationId/>
@@ -889,7 +889,7 @@ system_version_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <createdDate>%%s</createdDate>
   <osType/>
 </system>
@@ -969,10 +969,10 @@ system_version_put_response_xml = """\
 <system id="http://testserver/api/inventory/systems/2">
   %s
   <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
-  <activated>True</activated>
+  <registered>True</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
-  <activationDate/>
+  <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
   <reservationId/>
@@ -1007,7 +1007,7 @@ system_version_put_response_xml = """\
   <target/>
   <name/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>activated</currentState>
+  <currentState>registered</currentState>
   <createdDate>2010-08-23T21:41:31.278455+00:00</createdDate>
   <osType/>
 </system>

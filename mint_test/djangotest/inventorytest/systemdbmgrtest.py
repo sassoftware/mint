@@ -236,7 +236,7 @@ END:VCALENDAR"""
         evts = self.sdm.getScheduledEvents([system1])
         # We normally get 2 events here, but depending on timing we may only
         # get one (we're creating events 2 days in advance starting with the
-        # activation time)
+        # registration time)
         self.failUnless(len(evts) >= 1)
 
         system2, targetSystem2 = self._launchSystem(target_system_id='targetInstanceId2')
