@@ -35,6 +35,9 @@ DEPLOY_LIST = [
         ('site', '/srv/rbuilder/pki/rmake.pem', 'rmake'),
         ('xmpp', '/srv/rbuilder/pki/jabberd.pem', 'jabber'),
         ('outbound', '/srv/rbuilder/pki/outbound.pem', 'root'),
+        # Don't rely on these files, they are just for debugging.
+        ('lg_ca', '/srv/rbuilder/pki/lg_ca.crt', 'root'),
+        ('hg_ca', '/srv/rbuilder/pki/hg_ca.crt', 'root'),
         ]
 
 
