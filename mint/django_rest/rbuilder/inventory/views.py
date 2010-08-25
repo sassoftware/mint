@@ -229,7 +229,9 @@ class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
 
     @requires('installedSoftware')
     @return_xml
-    def create(self, request, system_id, installedSoftware):
+    def XXXcreate(self, request, system_id, installedSoftware):
+        # Disabling this, we will set the installed software by posting to the
+        # system itself
         system = self.mgr.getSystem(system_id)
         self.mgr.setInstalledSoftware(system, installedSoftware.trove)
         installedSoftware = models.InstalledSoftware()
