@@ -789,6 +789,13 @@ class SystemVersionsTestCase(XMLTestCase):
                   'contrib.rpath.org@rpl:2',
                   '23.0.60cvs20080523-1-0.1'),
                  'desktop is: x86_64'),
+                ('info-sfcb',
+                 ('/contrib.rpath.org@rpl:2/1-1-1',
+                  '1263856871.03',
+                  '',
+                  'contrib.rpath.org@rpl:2',
+                  '1-1-1'),
+                  ''),
             ])
 
 class EventTypeTestCase(XMLTestCase):
@@ -1215,9 +1222,10 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
                 ('poll', ('3.3.3.3', 'sputnik1'),
-                    {'requiredNetwork': '3.3.3.3',
+                    {
                      'resultsLocation':
-                        {'path': '/api/inventory/systems/4', 'port': 8443}}),
+                        {'path': '/api/inventory/systems/4', 'port': 80},
+                    }),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.systemJobs.all()

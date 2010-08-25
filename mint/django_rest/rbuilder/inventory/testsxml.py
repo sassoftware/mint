@@ -915,6 +915,17 @@ installed_software_post_xml = """\
       </version>
       <flavor>desktop is: x86_64</flavor>
     </trove>
+    <trove>
+      <name>info-sfcb</name>
+      <version>
+        <full>/contrib.rpath.org@rpl:2/1-1-1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <revision>1-1-1</revision>
+        <ordering>1263856871.03</ordering>
+        <flavor/>
+      </version>
+      <flavor/>
+    </trove>
   </installedSoftware>
 """
 

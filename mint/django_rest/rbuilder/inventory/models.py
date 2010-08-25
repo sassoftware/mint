@@ -382,6 +382,8 @@ class Trove(modellib.XObjModel):
 
     def save(self, *args, **kw):
         self.is_top_level = self._is_top_level_group()
+        if self.flavor is None:
+            self.flavor = ''
         modellib.XObjModel.save(self, *args, **kw)
 
     def getFlavor(self):
@@ -423,6 +425,8 @@ class Version(modellib.XObjModel):
         if not self.label or not self.revision:
             v = self.conaryVersion
             self.fromConaryVersion(v)
+        if self.flavor is None:
+            self.flavor = ''
         return super(self.__class__, self).save(self, *args, **kwargs)
 
 class SystemJob(modellib.XObjModel):

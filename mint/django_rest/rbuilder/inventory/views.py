@@ -130,7 +130,7 @@ class InventorySystemsSystemService(AbstractInventoryService):
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    @requires('system', save=False)
+    @requires('system')
     @return_xml
     def update(self, request, system_id, system):
         oldSystem = self.mgr.getSystem(system_id)
