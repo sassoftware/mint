@@ -109,6 +109,7 @@ management_nodes_xml = """\
     <networks>
       <network>
         <active/>
+        <createdDate>%s</createdDate>
         <deviceName>eth0</deviceName>
         <dnsName>testnetwork.example.com</dnsName>
         <ipAddress>2.2.2.2</ipAddress>
@@ -163,6 +164,7 @@ management_node_xml = """\
   <networks>
     <network>
       <active/>
+      <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>2.2.2.2</ipAddress>
@@ -255,6 +257,7 @@ management_node_post_response_xml = """\
   <networks>
     <network>
       <active>False</active>
+      <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>2.2.2.2</ipAddress>
@@ -315,6 +318,7 @@ systems_xml = """\
     <networks>
       <network>
         <active/>
+        <createdDate>2010-08-18T22:28:26+00:00</createdDate>
         <deviceName/>
         <dnsName>127.0.0.1</dnsName>
         <ipAddress/>
@@ -360,6 +364,7 @@ systems_xml = """\
     <networks>
       <network>
         <active/>
+        <createdDate>%s</createdDate>
         <deviceName>eth0</deviceName>
         <dnsName>testnetwork.example.com</dnsName>
         <ipAddress>1.1.1.1</ipAddress>
@@ -483,6 +488,7 @@ system_xml = """\
   <networks>
     <network>
       <active/>
+      <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
@@ -566,6 +572,7 @@ system_post_xml_response = """\
   <networks>
     <network>
       <active>False</active>
+      <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
@@ -655,6 +662,7 @@ system_target_xml = """\
   <networks>
     <network>
       <active/>
+      <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>
@@ -851,6 +859,7 @@ system_version_xml = """\
   <networks>
     <network>
       <active/>
+      <createdDate>%%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
       <ipAddress>1.1.1.1</ipAddress>

@@ -302,6 +302,7 @@ class Network(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
                 tag='network')
     network_id = models.AutoField(primary_key=True)
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
     system = models.ForeignKey(System, related_name='networks')
     ip_address = models.CharField(max_length=15, null=True)
     # TODO: how long should this be?

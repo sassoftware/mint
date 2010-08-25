@@ -1124,6 +1124,7 @@ def _createInventorySchema(db, cfg):
                 "system_id" integer NOT NULL 
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
+                "created_date" timestamp with time zone NOT NULL,
                 "ip_address" char(15),
                 "ipv6_address" varchar(32),
                 "device_name" varchar(255),
