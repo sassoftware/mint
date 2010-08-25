@@ -1165,7 +1165,7 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "inventory_system_log_entry" (
                 "system_log_entry_id" %(PRIMARYKEY)s,
-                "system_log_id" integer NOT NULL 
+                "system_log_id" integer NOT NULL
                     REFERENCES "inventory_system_log" ("system_log_id")
                     ON DELETE CASCADE,
                 "entry" VARCHAR(8092),
@@ -1173,7 +1173,7 @@ def _createInventorySchema(db, cfg):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_log_entry'] = []
         changed = True
-        
+
     if 'inventory_version' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_version" (
@@ -1184,7 +1184,7 @@ def _createInventorySchema(db, cfg):
                 "ordering" TEXT NOT NULL,
                 "flavor" TEXT NOT NULL,
                 UNIQUE("full", "ordering", "flavor")
-            )""" % db.keywords)
+            ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_version'] = []
         changed = True
 
@@ -1238,7 +1238,7 @@ def _createInventorySchema(db, cfg):
                 job_id %(PRIMARYKEY)s,
                 job_uuid varchar(64) NOT NULL UNIQUE,
                 event_type_id integer NOT NULL 
-                    REFERENCES inventory_event_type ("event_type_id"),
+                    REFERENCES inventory_event_type,
                 time_created timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []

@@ -1182,48 +1182,19 @@ class MigrateTo_50(SchemaMigration):
             changed |= db.createIndex("inventory_system_log",
                 "inventory_system_log_system_id_idx", "system_id")
 
-        if 'inventory_log_entry' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_log_entry" (
-                    "entry_id" %(PRIMARYKEY)s,
-                    "entry" varchar(8092) NOT NULL
-                ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_log_entry'] = []
-            changed = True
-            
         if 'inventory_system_log_entry' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system_log_entry" (
                     "system_log_entry_id" %(PRIMARYKEY)s,
-                    "system_log_id" integer NOT NULL REFERENCES "inventory_system_log" ("system_log_id"),
-                    "log_entry_id" integer NOT NULL,
+                    "system_log_id" integer NOT NULL
+                        REFERENCES "inventory_system_log" ("system_log_id")
+                        ON DELETE CASCADE,
+                    "entry" VARCHAR(8092),
                     "entry_date" timestamp with time zone NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_log_entry'] = []
             changed = True
 
-        if 'inventory_available_update' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_available_update" (
-                    "available_update_id" %(PRIMARYKEY)s,
-                    "software_version_id" integer NOT NULL 
-                        REFERENCES "inventory_version" ("version_id")
-                        ON DELETE CASCADE,
-                    "software_version_available_update_id" integer NOT NULL 
-                        REFERENCES "inventory_version" ("version_id")
-                        ON DELETE CASCADE,
-                    "last_refreshed" timestamp with time zone NOT NULL,
-                    UNIQUE ("software_version_id", "available_update_id")
-                ) %(TABLEOPTS)s""" % db.keywords)
-            db.tables['inventory_available_update'] = []
-            changed = True
-            changed |= db.createIndex("inventory_available_update",
-                "inventory_available_update_software_version_id_idx",
-                "software_version_id")
-            changed |= db.createIndex("inventory_available_update",
-                "inventory_available_update_software_version_available_update_id_idx",
-                "software_version_available_update_id")
-            
         if 'inventory_version' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_version" (
@@ -1262,9 +1233,10 @@ class MigrateTo_50(SchemaMigration):
                 CREATE TABLE "inventory_system_event" (
                     "system_event_id" %(PRIMARYKEY)s,
                     "system_id" integer NOT NULL
-                        REFERENCES "inventory_system" ("system_id"),
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
                     "event_type_id" integer NOT NULL
-                        REFERENCES "inventory_event_type"
+                        REFERENCES "inventory_event_type",
                     "time_created" timestamp with time zone NOT NULL,
                     "time_enabled" timestamp with time zone NOT NULL,
                     "priority" smallint NOT NULL
@@ -1308,6 +1280,46 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables[tableName] = []
             changed = True
+
+        if 'inventory_trove_available_updates' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_trove_available_updates" (
+                    "id" %(PRIMARYKEY)s,
+                    "trove_id" INTEGER NOT NULL,
+                    "version_id" INTEGER NOT NULL,
+                    UNIQUE ("trove_id", "version_id")
+                )""" % db.keywords)
+            db.tables['inventory_trove_available_updates'] = []
+            changed = True
+
+        if 'inventory_trove' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_trove" (
+                    "trove_id" %(PRIMARYKEY)s,
+                    "name" TEXT NOT NULL,
+                    "version_id" INTEGER NOT NULL
+                        REFERENCES "inventory_version" ("version_id"),
+                    "flavor" text NOT NULL,
+                    "is_top_level" BOOL NOT NULL,
+                    "last_available_update_refresh" timestamp with time zone
+                        NOT NULL,
+                    UNIQUE ("name", "version_id", "flavor")
+                )""" % db.keywords)
+
+            db.tables['inventory_trove'] = []
+            changed = True
+
+        if 'inventory_system_installed_software' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_installed_software" (
+                    "id" %(PRIMARYKEY)s,
+                    "system_id" INTEGER NOT NULL 
+                        REFERENCES "inventory_system" ("system_id"),
+                    "trove_id" INTEGER NOT NULL
+                        REFERENCES "inventory_trove" ("trove_id"),
+                    UNIQUE ("system_id", "trove_id")
+                )"""  % db.keywords)
+
 
         createTable(db, """
             CREATE TABLE pki_certificates (
