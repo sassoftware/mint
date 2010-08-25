@@ -478,7 +478,7 @@ class SystemManager(base.BaseManager):
                 # XXX remove the hardcoded port from here
                 resultsLocation = dict(
                     path = "/api/inventory/systems/%d" % event.system.pk,
-                    port = 8443)
+                    port = 80)
                 self._runSystemEvent(event, destination,
                     repClient.poll, destination, sputnik,
                     resultsLocation=resultsLocation)
