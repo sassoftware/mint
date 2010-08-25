@@ -404,8 +404,8 @@ class SystemsTestCase(XMLTestCase):
         XMLTestCase.setUp(self)
         self.mock_scheduleSystemActivationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
-        self.mgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.mgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
+        self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.mgr.sysMgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
         
     def mock_scheduleSystemActivationEvent(self, system):
         self.mock_scheduleSystemActivationEvent_called = True
@@ -602,8 +602,8 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mintConfig.dbPath = settings.DATABASE_NAME
         self.mock_scheduleSystemActivationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
-        self.mgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.mgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
+        self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
+        self.mgr.sysMgr.scheduleSystemActivationEvent = self.mock_scheduleSystemActivationEvent
         
     def mock_scheduleSystemActivationEvent(self, system):
         self.mock_scheduleSystemActivationEvent_called = True
@@ -791,7 +791,7 @@ class SystemEventTestCase(XMLTestCase):
         models.SystemEvent.objects.all().delete()
         
         self.mock_dispatchSystemEvent_called = False
-        self.mgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
+        self.mgr.sysMgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
 
     def mock_dispatchSystemEvent(self, event):
         self.mock_dispatchSystemEvent_called = True
