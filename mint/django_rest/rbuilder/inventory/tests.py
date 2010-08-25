@@ -674,6 +674,7 @@ class SystemVersionsTestCase(XMLTestCase):
             testsxml.system_version_xml % \
             (self.trove.last_available_update_refresh.isoformat(),
              self.trove2.last_available_update_refresh.isoformat(),
+             system.networks.all()[0].created_date.isoformat() + '+00:00',
              system.created_date.isoformat()))
 
     def testGetInstalledSoftwareRest(self):
