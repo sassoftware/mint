@@ -1251,13 +1251,13 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE inventory_system_job (
                 system_job_id %(PRIMARYKEY)s,
-                job_id integer NOT NULL
+                job_id integer NOT NULL UNIQUE
                     REFERENCES inventory_job
                     ON DELETE CASCADE,
                 system_id integer NOT NULL
                     REFERENCES inventory_system
                     ON DELETE CASCADE,
-                UNIQUE(job_id)
+                event_uuid varchar(64) NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True

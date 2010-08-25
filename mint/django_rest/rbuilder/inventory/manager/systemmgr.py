@@ -9,7 +9,6 @@ import datetime
 import os
 import time
 import traceback
-import uuid
 
 from dateutil import tz
 
@@ -18,6 +17,7 @@ from django.db import connection
 from conary import versions as cnyver
 from conary.deps import deps
 
+from mint.lib import uuid
 from mint.django_rest import logger as log
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
@@ -469,12 +469,12 @@ class SystemManager(base.BaseManager):
         if network:
             destination = network.ip_address
             eventType = event.event_type.name
-            eventId = event.event_uuid
+            eventUuid = str(uuid.uuid4())
             sputnik = "sputnik1"
             requiredNetwork = (network.required and destination) or None
             if eventType in registrationEvents:
                 self._runSystemEvent(event, destination,
-                    repClient.register, destination, sputnik, eventId=eventId,
+                    repClient.register, destination, sputnik, eventId=eventUuid,
                     requiredNetwork=requiredNetwork)
             elif eventType in pollEvents:
                 # XXX remove the hardcoded port from here
@@ -482,7 +482,7 @@ class SystemManager(base.BaseManager):
                     path = "/api/inventory/systems/%d" % event.system.pk,
                     port = 80)
                 self._runSystemEvent(event, destination,
-                    repClient.poll, destination, sputnik, eventId=eventId,
+                    repClient.poll, destination, sputnik, eventId=eventUuid,
                     resultsLocation=resultsLocation)
             else:
                 log.error("Unknown event type %s" % eventType)
@@ -505,6 +505,7 @@ class SystemManager(base.BaseManager):
     def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
         systemName = event.system.name
         eventType = event.event_type.name
+        eventUuid = kwargs['eventId']
         log.info("System %s (%s), task type '%s' launching" %
             (systemName, destination, eventType))
         try:
@@ -526,6 +527,7 @@ class SystemManager(base.BaseManager):
         sjob = models.SystemJob()
         sjob.job = job
         sjob.system = event.system
+        sjob.event_uuid = eventUuid
         sjob.save()
         return uuid, job
 
@@ -567,7 +569,7 @@ class SystemManager(base.BaseManager):
             if not enable_time:
                 enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
             event = models.SystemEvent(system=system, event_type=event_type, 
-                priority=event_type.priority, time_enabled=enable_time, event_uuid=uuid.uuid4())
+                priority=event_type.priority, time_enabled=enable_time)
             event.save()
             self.logSystemEvent(event, enable_time)
             

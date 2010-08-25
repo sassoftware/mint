@@ -278,7 +278,6 @@ class SystemEvent(modellib.XObjIdModel):
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
-    event_uuid = models.TextField()
 
     def dispatchImmediately(self):
         return self.event_type.priority >= EventType.ON_DEMAND_BASE
@@ -435,7 +434,8 @@ class SystemJob(modellib.XObjModel):
         db_table = 'inventory_system_job'
     system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
-    job = modellib.DeferredForeignKey(Job)
+    job = modellib.DeferredForeignKey(Job, unique=True)
+    event_uuid = modellib.XObjHiddenCharField(max_length=64, unique=True)
 
 class ErrorResponse(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(

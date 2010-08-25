@@ -701,7 +701,8 @@ class SystemVersionsTestCase(XMLTestCase):
             (self.trove.last_available_update_refresh.isoformat(),
              self.trove2.last_available_update_refresh.isoformat(),
              system.networks.all()[0].created_date.isoformat() + '+00:00',
-             system.created_date.isoformat()))
+             system.created_date.isoformat()),
+            ignoreNodes = [ 'createdDate' ])
 
     def testGetInstalledSoftwareRest(self):
         system = self._saveSystem()
@@ -1008,7 +1009,8 @@ class SystemEventTestCase(XMLTestCase):
         system_event_xml = testsxml.system_event_xml % \
             (system_event.time_created.isoformat() + '+00:00',
             system_event.time_enabled.isoformat() + '+00:00')
-        self.assertXMLEquals(response.content, system_event_xml)
+        self.assertXMLEquals(response.content, system_event_xml,
+            ignoreNodes='timeCreated')
         
 class SystemEventProcessingTestCase(XMLTestCase):
     
@@ -1217,12 +1219,22 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         event = models.SystemEvent(system=self.system2,
             event_type=poll_event, priority=poll_event.priority)
         event.save()
-        self.mgr.sysMgr.dispatchSystemEvent(event)
+        def mockedUuid4():
+            return "really-unique-id"
+        from mint.lib import uuid
+        origUuid4 = uuid.uuid4
+        try:
+            uuid.uuid4 = mockedUuid4
+            self.mgr.sysMgr.dispatchSystemEvent(event)
+        finally:
+            uuid.uuid4 = origUuid4
+
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
                 ('poll', ('3.3.3.3', 'sputnik1'),
                     {
+                     'eventId' : 'really-unique-id',
                      'resultsLocation':
                         {'path': '/api/inventory/systems/4', 'port': 80},
                     }),
