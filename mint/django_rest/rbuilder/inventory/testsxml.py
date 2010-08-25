@@ -101,7 +101,6 @@ management_nodes_xml = """\
     <available/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <registered>True</registered>
-    <sslClientKey>test management node client key</sslClientKey>
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
@@ -132,7 +131,6 @@ management_nodes_xml = """\
     <scheduledEventStartDate/>
     <launchDate/>
     <local>True</local>
-    <sslClientCertificate>test management node client cert</sslClientCertificate>
     <installedSoftware/>
     <description>test management node desc</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -156,7 +154,6 @@ management_node_xml = """\
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
@@ -187,7 +184,6 @@ management_node_xml = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <local>True</local>
-  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <installedSoftware/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -249,7 +245,6 @@ management_node_post_response_xml = """\
   <available>False</available>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
@@ -280,7 +275,6 @@ management_node_post_response_xml = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <local>True</local>
-  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <installedSoftware/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -335,8 +329,6 @@ systems_xml = """\
     <osType/>
     <reservationId/>
     <scheduledEventStartDate/>
-    <sslClientCertificate/>
-    <sslClientKey/>
     <sslServerCertificate/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <systemId>2</systemId>
@@ -381,8 +373,6 @@ systems_xml = """\
     <osType/>
     <reservationId/>
     <scheduledEventStartDate/>
-    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-    <sslClientKey>testsystemsslclientkey</sslClientKey>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
     <systemId>3</systemId>
@@ -478,7 +468,6 @@ system_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <installedSoftware/>
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -506,7 +495,6 @@ system_xml = """\
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -564,7 +552,6 @@ system_post_xml_response = """\
   <available>False</available>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -593,7 +580,6 @@ system_post_xml_response = """\
   <managementNode/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <installedSoftware/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -654,7 +640,6 @@ system_target_xml = """\
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -683,7 +668,6 @@ system_target_xml = """\
   <managementNode/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <installedSoftware/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -850,7 +834,6 @@ system_version_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   %s
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -878,7 +861,6 @@ system_version_xml = """\
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>

@@ -441,18 +441,20 @@ class XObjModel(models.Model):
         want to try to serialize it later.
         """
         for key, val in self.__dict__.items():
-            if key in fields.keys():
+            field = fields.pop(key, None)
+            if field is not None:
+                if getattr(field, 'XObjHidden', False):
+                    continue
                 if val is None:
                         val = ''
                 # Special handling of DateTimeFields.  Could make this OO by
                 # calling .seriaize(...) on each field, and overriding that
                 # behavior for DateTimeField's, but as long as it's just this
                 # one case, we'll leave it like this.
-                elif isinstance(fields[key], models.DateTimeField):
+                elif isinstance(field, models.DateTimeField):
                     val = val.replace(tzinfo=tz.tzutc())
                     val = val.isoformat()
                 setattr(xobj_model, key, val)
-                fields.pop(key)
             # TODO: is this still needed, we already called serialize_hrefs.?
             elif isinstance(val, XObjHrefModel):
                 val.serialize(request)
@@ -672,3 +674,5 @@ class DateTimeUtcField(models.DateTimeField):
         else:
             return super(models.DateField, self).pre_save(model_instance, add)
 
+class XObjHiddenCharField(models.CharField):
+    XObjHidden = True
