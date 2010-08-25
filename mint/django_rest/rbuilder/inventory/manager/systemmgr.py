@@ -9,6 +9,7 @@ import datetime
 import os
 import time
 import traceback
+import uuid
 
 from dateutil import tz
 
@@ -468,11 +469,12 @@ class SystemManager(base.BaseManager):
         if network:
             destination = network.ip_address
             eventType = event.event_type.name
+            eventId = event.event_uuid
             sputnik = "sputnik1"
             requiredNetwork = (network.required and destination) or None
             if eventType in registrationEvents:
                 self._runSystemEvent(event, destination,
-                    repClient.register, destination, sputnik,
+                    repClient.register, destination, sputnik, eventId
                     requiredNetwork=requiredNetwork)
             elif eventType in pollEvents:
                 # XXX remove the hardcoded port from here
@@ -480,7 +482,8 @@ class SystemManager(base.BaseManager):
                     path = "/api/inventory/systems/%d" % event.system.pk,
                     port = 80)
                 self._runSystemEvent(event, destination,
-                    repClient.poll, destination, sputnik,
+                    repClient.poll, destination, sputnik, eventId,
+                    requiredNetwork=requiredNetwork)
                     resultsLocation=resultsLocation)
             else:
                 log.error("Unknown event type %s" % eventType)
@@ -565,7 +568,7 @@ class SystemManager(base.BaseManager):
             if not enable_time:
                 enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
             event = models.SystemEvent(system=system, event_type=event_type, 
-                priority=event_type.priority, time_enabled=enable_time)
+                priority=event_type.priority, time_enabled=enable_time, event_uuid=uuid.uuid4())
             event.save()
             self.logSystemEvent(event, enable_time)
             
