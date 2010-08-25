@@ -789,17 +789,17 @@ installed_software_xml = """\
       <availableUpdates>
         <version>
           <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
-          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</full>
           <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
-          <ordering>1272410162.98</ordering>
+          <ordering>1234567890.13</ordering>
           <revision>1-3-1</revision>
           <versionId>2</versionId>
         </version>
         <version>
           <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
-          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</full>
           <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
-          <ordering>1272410162.98</ordering>
+          <ordering>1234567890.14</ordering>
           <revision>1-4-1</revision>
           <versionId>3</versionId>
         </version>
@@ -813,8 +813,8 @@ installed_software_xml = """\
         <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
         <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
         <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
-        <ordering>1272410162.98</ordering>
-        <revision>1-2-1</revision>
+        <ordering>1234567890.12</ordering>
+        <revision>change me gently</revision>
         <versionId>1</versionId>
       </version>
     </trove>
@@ -827,9 +827,9 @@ installed_software_xml = """\
       <troveId>2</troveId>
       <version>
         <flavor>desktop is: x86_64</flavor>
-        <full>/contrib.rpath.org@rpl:2/23.0.60cvs20080523-1-0.1</full>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
         <label>contrib.rpath.org@rpl:2</label>
-        <ordering>1272410163.98</ordering>
+        <ordering>1234567890.12</ordering>
         <revision>23.0.60cvs20080523-1-0.1</revision>
         <versionId>4</versionId>
       </version>
@@ -839,7 +839,7 @@ installed_software_xml = """\
 
 system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2">
+<system id="http://testserver/api/inventory/systems/3">
   %s
   <activated>True</activated>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
@@ -848,6 +848,7 @@ system_version_xml = """\
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
   <reservationId/>
+  <hostname/>
   <networks>
     <network>
       <active/>
@@ -856,26 +857,26 @@ system_version_xml = """\
       <ipAddress>1.1.1.1</ipAddress>
       <ipv6Address/>
       <netmask>255.255.255.0</netmask>
-      <networkId>1</networkId>
+      <networkId>2</networkId>
       <portType>lan</portType>
       <required/>
-      <system href="http://testserver/api/inventory/systems/2"/>
+      <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
-  </systemJobs>
+  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <systemId>2</systemId>
+  <systemId>3</systemId>
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <available/>
   <description>testsystemdescription</description>
-  <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
+  <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
   <managementNode/>
-  <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
+  <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
