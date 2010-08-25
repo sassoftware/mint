@@ -71,11 +71,10 @@ class Script(scriptlibrary.SingletonScript):
         restdb.auth.userId = userId
         restdb.auth.setAuth(mintAuth, authToken)
         
-        from mint.django_rest.rbuilder.inventory import systemmgr
-        system_manager = systemmgr.SystemManager()
-        
+        from mint.django_rest.rbuilder.inventory import manager
+        mgr = manager.Manager()
         targetDrivers = self.loadTargetDrivers(restdb)
-        system_manager.importTargetSystems(targetDrivers)
+        mgr.importTargetSystems(targetDrivers)
 
     def loadTargetDriverClasses(self):
         for driverName in [ 'ec2', 'vmware', 'vws', 'xenent' ]:
