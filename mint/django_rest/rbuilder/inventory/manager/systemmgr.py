@@ -426,13 +426,14 @@ class SystemManager(base.BaseManager):
             pass
         
         return events
-    
+
+    @base.exposed
     def processSystemEvents(self):
         events = self.getSystemEventsForProcessing()
         if not events:
             log.info("No systems events to process")
             return
-        
+
         for event in events:
             self.dispatchSystemEvent(event)
 
