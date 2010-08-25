@@ -89,3 +89,4 @@ class AddCommentsMiddleware(object):
                 pass
 
         return response 
+
