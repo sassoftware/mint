@@ -392,7 +392,7 @@ def uuid3(namespace, name):
     try:
         from hashlib import md5
     except ImportError:
-        from md5 import new as md5
+        from md5 import new as md5  # pyflakes: ignore
     hash = md5(namespace.bytes + name).digest()
     return UUID(bytes=hash[:16], version=3)
 
@@ -419,7 +419,7 @@ def uuid5(namespace, name):
     try:
         from hashlib import sha1
     except ImportError:
-        from sha import new as sha1
+        from sha import new as sha1  # pyflakes: ignore
     hash = sha1(namespace.bytes + name).digest()
     return UUID(bytes=hash[:16], version=5)
 
