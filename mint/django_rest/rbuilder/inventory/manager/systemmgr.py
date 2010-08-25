@@ -474,7 +474,7 @@ class SystemManager(base.BaseManager):
             requiredNetwork = (network.required and destination) or None
             if eventType in registrationEvents:
                 self._runSystemEvent(event, destination,
-                    repClient.register, destination, sputnik, eventId
+                    repClient.register, destination, sputnik, eventId=eventId,
                     requiredNetwork=requiredNetwork)
             elif eventType in pollEvents:
                 # XXX remove the hardcoded port from here
@@ -482,8 +482,7 @@ class SystemManager(base.BaseManager):
                     path = "/api/inventory/systems/%d" % event.system.pk,
                     port = 80)
                 self._runSystemEvent(event, destination,
-                    repClient.poll, destination, sputnik, eventId,
-                    requiredNetwork=requiredNetwork)
+                    repClient.poll, destination, sputnik, eventId=eventId,
                     resultsLocation=resultsLocation)
             else:
                 log.error("Unknown event type %s" % eventType)
