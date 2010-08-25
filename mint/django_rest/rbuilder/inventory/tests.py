@@ -15,33 +15,48 @@ from mint.django_rest.rbuilder.inventory import models
 
 from mint.django_rest.rbuilder.inventory import testsxml
 
-class XMLTestCase(TestCase):
-    def assertXMLEquals(self, first, second, ignoreNodes=None):
-        from lxml import etree
-        tree0 = self._removeTail(etree.fromstring(first.strip()))
-        tree1 = self._removeTail(etree.fromstring(second.strip()))
-        nd = self._nodediff(tree0, tree1, ignoreNodes=ignoreNodes)
-        if nd:
-            self.fail(nd)
-            data0 = etree.tostring(tree0, pretty_print=True, with_tail=False)
-            data1 = etree.tostring(tree1, pretty_print=True, with_tail=False)
-            import difflib
-            diff = '\n'.join(list(difflib.unified_diff(data0.splitlines(),
-                    data1.splitlines()))[2:])
-            print "Failure:", nd
-            self.fail(diff)
+class XML(object):
+    class OrderedDict(dict):
+        def items(self):
+            return sorted(dict.items(self))
 
     @classmethod
-    def _removeTail(self, node):
-        stack = collections.deque([ node ])
-        while stack:
-            n = stack.pop()
-            n.tail = None
-            children = n.getchildren()
-            if children:
-                # We don't accept mixed content
-                n.text = None
-            stack.extend(n.getchildren())
+    def sortKey(cls, obj):
+        return obj.tag
+
+    def __init__(self, orderedChildren=False, ignoreNodes=None):
+        self.orderedChildren = orderedChildren
+        self.ignoreNodes = set(ignoreNodes or ())
+
+    def normalize(self, node, parent=None):
+        """
+        This function will:
+        * reorder child nodes if so requested
+        * ignore some of the nodes
+        * strip tail and mixed content
+        """
+        from lxml import etree
+        attrib = self.OrderedDict(node.attrib)
+        nsmap = self.OrderedDict(node.nsmap)
+
+        if parent is None:
+            nnode = etree.Element(node.tag, nsmap=nsmap, attrib=attrib)
+        else:
+            nnode = etree.SubElement(parent, node.tag, nsmap=nsmap, attrib=attrib)
+        hasChildren = False
+        for x in self._iterator(node):
+            if x.tag in self.ignoreNodes:
+                continue
+            self.normalize(x, parent=nnode)
+            hasChildren = True
+        if not hasChildren:
+            # We don't allow for mixed content
+            nnode.text = self._strip(node.text)
+        return nnode
+
+    def _iterator(self, node):
+        if self.orderedChildren:
+            return sorted(node, key=self.sortKey)
         return node
 
     @classmethod
@@ -52,32 +67,25 @@ class XMLTestCase(TestCase):
         return data.strip() or None
 
     @classmethod
-    def _sortChildren(self, child1, child2):
-        return cmp(child1.tag, child2.tag)
-
-    @classmethod
-    def _nodediff(cls, node1, node2, ignoreNodes=None):
+    def nodediff(cls, node1, node2):
+        """
+        Return False if the nodes are identical, or some random data structure
+        that is intended to be helpful otherwise.
+        """
         if node1.tag != node2.tag:
             return "Different nodes"
         if node1.attrib != node2.attrib:
             return "Attributes: %s != %s" % (node1.attrib, node2.attrib)
         if node1.nsmap != node2.nsmap:
             return "Namespace maps: %s != %s" % (node1.nsmap, node2.nsmap)
-        ignoreNodes = set(ignoreNodes or [])
-        children1 = [ x for x in node1.getchildren()
-            if x.tag not in ignoreNodes ]
-        children2 = [ x for x in node2.getchildren()
-            if x.tag not in ignoreNodes ]
-        # For the purpose of these tests, we don't care about ordering,
-        # so sort all the children before comparing.
-        children1.sort(cmp=cls._sortChildren)
-        children2.sort(cmp=cls._sortChildren)
+        children1 = [ x for x in node1.getchildren() ]
+        children2 = [ x for x in node2.getchildren() ]
 
         if children1 or children2:
             # Compare text in nodes that have children (mixed content).
             # We shouldn't have mixed content, but we need to be flexible.
-            text1 = cls._strip(node1.text)
-            text2 = cls._strip(node2.text)
+            text1 = node1.text
+            text2 = node2.text
             if text1 != text2:
                 return "Node text: %s != %s" % (text1, text2)
             if len(children1) != len(children2):
@@ -87,7 +95,7 @@ class XMLTestCase(TestCase):
                     len(children1), len(children2),
                     ch1set - ch2set, ch2set - ch1set)
             for ch1, ch2 in zip(children1, children2):
-                nd = cls._nodediff(ch1, ch2, ignoreNodes=ignoreNodes)
+                nd = cls.nodediff(ch1, ch2)
                 if nd:
                     if ch1.tag == ch2.tag:
                         return ("Node %s" % ch1.tag, nd)
@@ -97,7 +105,25 @@ class XMLTestCase(TestCase):
         if node1.text == node2.text:
             return False
         return (node1.text, node2.text)
-    
+
+class XMLTestCase(TestCase):
+    def assertXMLEquals(self, first, second, ignoreNodes=None):
+        from lxml import etree
+        X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
+        tree0 = X.normalize(etree.fromstring(first.strip()))
+        tree1 = X.normalize(etree.fromstring(second.strip()))
+        nd = X.nodediff(tree0, tree1)
+        if nd:
+            data0 = etree.tostring(tree0, pretty_print=True, with_tail=False)
+            data1 = etree.tostring(tree1, pretty_print=True, with_tail=False)
+            import difflib
+            diff = '\n'.join(list(difflib.unified_diff(data1.splitlines(),
+                    data0.splitlines()))[2:])
+            # Set this to 1 if the diff is too complicated to read
+            if 0:
+                diff += "\nNode diff: %s" % (nd, )
+            self.fail(diff)
+
     def _saveZone(self):
         zone = models.Zone()
         zone.name = "Local Zone"
