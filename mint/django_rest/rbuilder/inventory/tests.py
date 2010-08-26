@@ -393,35 +393,48 @@ class NetworksTestCase(XMLTestCase):
         
     def testExtractNetworkToUse(self):
         
-        # try a net with no required/active nets
+        # try a net with no required/active nets, but only one net
         network = models.Network(dns_name="foo.com", active=False, required=False)
         network.system = self.system
         network.save()
         net = self.mgr.sysMgr._extractNetworkToUse(self.system)
-        assert(net is None)
-        
+        self.failUnlessEqual(net.dns_name, "foo.com")
+
+        # Second network showed up, we assume no network
+        network2 = models.Network(dns_name = "foo2.com", active=False,
+            required=False)
+        network2.system = self.system
+        network2.save()
+        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
+        self.failUnlessEqual(net, None)
+
         # try one with required only
         network.required = True
         network.save()
         net = self.mgr.sysMgr._extractNetworkToUse(self.system)
-        assert(net is not None)
-        
+        self.failUnlessEqual(net.dns_name, "foo.com")
+
         # try one with active only
         network.required = False
         network.active = True
         network.save()
         net = self.mgr.sysMgr._extractNetworkToUse(self.system)
-        assert(net is not None)
-        
+        self.failUnlessEqual(net.dns_name, "foo.com")
+
         # now add a required one in addition to active one to test order
-        network2 = models.Network(dns_name="foo2.com", active=False, required=True)
-        network2.system = self.system
-        network2.save()
-        assert(len(self.system.networks.all()) == 2)
-        assert(self.system.networks.all()[0].required == False)
-        assert(self.system.networks.all()[1].required == True)
+        network3 = models.Network(dns_name="foo3.com", active=False, required=True)
+        network3.system = self.system
+        network3.save()
+        self.failUnlessEqual(
+            sorted((x.dns_name, x.required, x.active)
+                for x in self.system.networks.all()),
+            [
+                ('foo.com', False, True),
+                ('foo2.com', False, False),
+                ('foo3.com', True, False),
+            ])
         net = self.mgr.sysMgr._extractNetworkToUse(self.system)
-        assert(net.network_id == network2.network_id)
+        self.failUnlessEqual(net.network_id, network3.network_id)
 
 class SystemsTestCase(XMLTestCase):
     fixtures = ['system_job']
@@ -1254,6 +1267,12 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
     def testDispatchActivateSystemEvent(self):
         act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        # Remove all networks
+        for net in self.system2.networks.all():
+            net.delete()
+        network = models.Network(dns_name = 'superduper.com')
+        network.system = self.system2
+        network.save()
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
             event_type=act_event, priority=act_event.priority)
@@ -1271,10 +1290,10 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
-                ('register', ('3.3.3.3', 'sputnik1'),
+                ('register', ('superduper.com', 'sputnik1'),
                     {
                      'eventId' : 'really-unique-id',
-                     'requiredNetwork' : '3.3.3.3',
+                     'requiredNetwork' : None,
                     }),
             ])
         system = self.mgr.getSystem(self.system2.system_id)

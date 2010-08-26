@@ -473,7 +473,8 @@ class SystemManager(base.BaseManager):
 
         network = self._extractNetworkToUse(event.system)
         if network:
-            destination = network.ip_address
+            # If no ip address was set, fall back to dns_name
+            destination = network.ip_address or network.dns_name
             eventType = event.event_type.name
             eventUuid = str(uuid.uuid4())
             sputnik = "sputnik1"
@@ -500,12 +501,16 @@ class SystemManager(base.BaseManager):
         nets = [ x for x in networks if x.required ]
         if nets:
             return nets[0]
-        
+
         # now look for a non-required active net
         nets = [ x for x in networks if x.active ]
         if nets:
             return nets[0]
-        
+
+        # If we only have one network, return that one and hope for the best
+        if len(networks) == 1:
+            return networks[0]
+        return None
 
     @classmethod
     def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
