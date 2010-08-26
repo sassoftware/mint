@@ -256,6 +256,34 @@ class BaseManager(models.Manager):
 
         return model
 
+class TroveManager(BaseManager):
+    def load_from_object(self, obj, request, save=True):
+        # None flavor fixup
+        if getattr(obj, 'flavor', None) is None:
+            obj.flavor = ''
+        # Fix up the flavor in the version object
+        obj.version.flavor = obj.flavor
+        return BaseManager.load_from_object(self, obj, request, save=save)
+
+    def clear_m2m_accessor(self, model, m2m_accessor):
+        # We don't want available_updates to be published via REST
+        if m2m_accessor == 'available_updates':
+            return
+        BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
+
+    def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+        if m2m_accessor == 'available_updates':
+            return
+        return BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+
+class VersionManager(BaseManager):
+    def add_fields(self, model, obj, request, save=True):
+        # Fix up label and revision
+        nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
+        v = nmodel.conaryVersion
+        nmodel.fromConaryVersion(v)
+        return nmodel
+
 class SystemManager(BaseManager):
     
     def load_from_db(self, model_inst, accessors):
@@ -293,8 +321,7 @@ class SystemManager(BaseManager):
     def clear_m2m_accessor(self, model, m2m_accessor):
         if m2m_accessor == 'installed_software':
             return
-        else:
-            BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
+        BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
 
     def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
         if m2m_accessor == 'installed_software':

@@ -366,6 +366,8 @@ class Trove(modellib.XObjIdModel):
         db_table = 'inventory_trove'
         unique_together = (('name', 'version', 'flavor'),)
 
+    objects = modellib.TroveManager()
+
     _xobj = xobj.XObjMetadata(tag='trove')
     trove_id = models.AutoField(primary_key=True)
     name = models.TextField()
@@ -416,6 +418,9 @@ class Version(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_version'
         unique_together = [ ('full', 'ordering', 'flavor'), ]
+
+    objects = modellib.VersionManager()
+
     version_id = models.AutoField(primary_key=True)
     full = models.TextField()
     label = models.TextField()
