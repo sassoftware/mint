@@ -49,7 +49,7 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def getZoneByJID(self, node_jid):
-        zone = ManagementNode.objects.get(node_jid=node_jid).zone
+        zone = models.ManagementNode.objects.get(node_jid=node_jid).zone
         return zone
 
     @base.exposed
