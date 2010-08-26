@@ -601,7 +601,7 @@ class SystemsTestCase(XMLTestCase):
         # Just remove lines with dates in them, it's easier to test for now.
         for line in response.content.split('\n'):
             if 'entryDate' in line or \
-               'poll event' in line:
+               'will be enabled on' in line:
                 continue
             else:
                 content.append(line)

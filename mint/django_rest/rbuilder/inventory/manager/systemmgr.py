@@ -596,7 +596,7 @@ class SystemManager(base.BaseManager):
         return event
     
     def logSystemEvent(self, event, enable_time):
-        msg = "System %s event registered and will be enabled on %s" % (event.event_type.name, enable_time)
+        msg = "Event type '%s' registered and will be enabled on %s" % (event.event_type.name, enable_time)
         self.log_system(event.system, msg)
         log.info(msg)
         
