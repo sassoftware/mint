@@ -135,7 +135,13 @@ class BaseManager(models.Manager):
                  isinstance(field, djangofields.NullBooleanField):
                 val = str(val)
                 val = (val.lower() == str(True).lower())
-            elif val:
+            elif isinstance(field, DateTimeUtcField):
+                # Empty string is not valid, explicitly convert to None
+                if val:
+                    val = str(val)
+                else:
+                    val = None
+            elif val is not None:
                 if field.primary_key:
                     val = int(val)
                 else:
