@@ -472,27 +472,31 @@ class SystemManager(base.BaseManager):
         ])
 
         network = self._extractNetworkToUse(event.system)
-        if network:
-            # If no ip address was set, fall back to dns_name
-            destination = network.ip_address or network.dns_name
-            eventType = event.event_type.name
-            eventUuid = str(uuid.uuid4())
-            sputnik = "sputnik1"
-            requiredNetwork = (network.required and destination) or None
-            if eventType in registrationEvents:
-                self._runSystemEvent(event, destination,
-                    repClient.register, destination, sputnik, eventId=eventUuid,
-                    requiredNetwork=requiredNetwork)
-            elif eventType in pollEvents:
-                # XXX remove the hardcoded port from here
-                resultsLocation = dict(
-                    path = "/api/inventory/systems/%d" % event.system.pk,
-                    port = 80)
-                self._runSystemEvent(event, destination,
-                    repClient.poll, destination, sputnik, eventId=eventUuid,
-                    resultsLocation=resultsLocation)
-            else:
-                log.error("Unknown event type %s" % eventType)
+        if not network:
+            msg = "No valid network information found; giving up"
+            log.error(msg)
+            self.log_system(event.system, msg)
+            return
+        # If no ip address was set, fall back to dns_name
+        destination = network.ip_address or network.dns_name
+        eventType = event.event_type.name
+        eventUuid = str(uuid.uuid4())
+        sputnik = "sputnik1"
+        requiredNetwork = (network.required and destination) or None
+        if eventType in registrationEvents:
+            self._runSystemEvent(event, destination,
+                repClient.register, destination, sputnik, eventId=eventUuid,
+                requiredNetwork=requiredNetwork)
+        elif eventType in pollEvents:
+            # XXX remove the hardcoded port from here
+            resultsLocation = dict(
+                path = "/api/inventory/systems/%d" % event.system.pk,
+                port = 80)
+            self._runSystemEvent(event, destination,
+                repClient.poll, destination, sputnik, eventId=eventUuid,
+                resultsLocation=resultsLocation)
+        else:
+            log.error("Unknown event type %s" % eventType)
 
     def _extractNetworkToUse(self, system):
         networks = system.networks.all()
