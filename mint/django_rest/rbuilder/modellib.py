@@ -55,20 +55,20 @@ class BaseManager(models.Manager):
         # update to a model.
         if loaded_model:
             for field in loaded_model._meta.fields:
+                # Ignore pk fields
+                if field.primary_key:
+                    continue
                 # django throws ObjectDoesNotExist if you try to access a
                 # related model that doesn't exist, so just swallow it.
                 try:
-                    if getattr(model_inst, field.name) is None:
-                        continue
-                    # Ignore pk fields
-                    if field.primary_key:
-                        continue
+                    newFieldVal = getattr(model_inst, field.name, None)
                 except exceptions.ObjectDoesNotExist:
+                    newFieldVal = None
+                if newFieldVal is None:
                     continue
-                if getattr(model_inst, field.name) != \
-                   getattr(loaded_model, field.name):
-                    setattr(loaded_model, field.name, 
-                        getattr(model_inst, field.name))
+                oldFieldVal = getattr(loaded_model, field.name)
+                if newFieldVal != oldFieldVal:
+                    setattr(loaded_model, field.name, newFieldVal)
             return loaded_model
 
         return loaded_model
@@ -118,36 +118,34 @@ class BaseManager(models.Manager):
         fields = model.get_field_dict()
 
         for key, val in obj.__dict__.items():
-            if key in fields.keys():
-                # special case for fields that may not exist at load time or we
-                # want to ignore for other reasons
-                if key in model.load_ignore_fields:
-                    continue;
-                # Special case for FK fields which should be hrefs.
-                if isinstance(fields[key], SerializedForeignKey):
-                    val = fields[key].related.parent_model.objects.load_from_object(val, request, save=save)
-                elif isinstance(fields[key], related.RelatedField):
-                    val = fields[key].related.parent_model.objects.load_from_href(
-                        getattr(val, 'href', None))
-                elif isinstance(fields[key], djangofields.BooleanField) or \
-                     isinstance(fields[key], 
-                        djangofields.NullBooleanField):
-                    val = str(val)
-                    if True.__str__().lower() == val.lower():
-                        val = True
-                    else:
-                        val = False
-                elif val:
-                    if fields[key].primary_key:
-                        val = int(val)
-                    else:
-                        # Cast to str, django will just do the right thing.
-                        val = str(val)
-                        val = fields[key].get_prep_value(val)
+            field = fields.get(key, None)
+            if field is None:
+                continue
+            # special case for fields that may not exist at load time or we
+            # want to ignore for other reasons
+            if key in model.load_ignore_fields:
+                continue
+            # Special case for FK fields which should be hrefs.
+            if isinstance(field, SerializedForeignKey):
+                val = field.related.parent_model.objects.load_from_object(val, request, save=save)
+            elif isinstance(field, related.RelatedField):
+                val = field.related.parent_model.objects.load_from_href(
+                    getattr(val, 'href', None))
+            elif isinstance(field, djangofields.BooleanField) or \
+                 isinstance(field, djangofields.NullBooleanField):
+                val = str(val)
+                val = (val.lower() == str(True).lower())
+            elif val:
+                if field.primary_key:
+                    val = int(val)
                 else:
-                    val = None
+                    # Cast to str, django will just do the right thing.
+                    val = str(val)
+                    val = field.get_prep_value(val)
+            else:
+                val = None
 
-                setattr(model, key, val)
+            setattr(model, key, val)
 
         return model
 
@@ -175,7 +173,7 @@ class BaseManager(models.Manager):
         ret_accessors = {}
 
         for key, val in obj.__dict__.items():
-            if key in accessors.keys():
+            if key in accessors:
                 ret_accessors[key] = []
                 rel_obj_name = accessors[key].var_name
                 rel_objs = getattr(val, rel_obj_name, None)
@@ -490,28 +488,28 @@ class XObjModel(models.Model):
         xobj_model.  This is so that things like <networks> appear as an xml
         representation on <system> xml.
         """
-        for accessor in accessors.keys():
+        for accessorName, accessor in accessors.items():
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
-            if hasattr(accessors[accessor].model, '_xobj') and \
-               accessors[accessor].model._xobj.tag:
-                    var_name = accessors[accessor].model._xobj.tag
+            if hasattr(accessor.model, '_xobj') and \
+               accessor.model._xobj.tag:
+                    var_name = accessor.model._xobj.tag
             else:
-                var_name = accessors[accessor].var_name
+                var_name = accessor.var_name
 
             # Simple object to create for our accessor
-            accessor_model = type(accessor, (object,), {})()
+            accessor_model = type(accessorName, (object,), {})()
 
-            if getattr(accessors[accessor].field, 'deferred', False):
+            if getattr(accessor.field, 'deferred', False):
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
-                rel_mod = getattr(self, accessor).model()
+                rel_mod = getattr(self, accessorName).model()
                 href = rel_mod.get_absolute_url(request, self)
                 accessor_model._xobj = xobj.XObjMetadata(
                     attributes={'href':str})
                 accessor_model.href = href
-                setattr(xobj_model, accessor, accessor_model)
+                setattr(xobj_model, accessorName, accessor_model)
             else:
                 # In django, accessors are always lists of other models.
                 setattr(accessor_model, var_name, [])
@@ -519,21 +517,21 @@ class XObjModel(models.Model):
                     # For each related model in the accessor, serialize it,
                     # then append the serialized object to the list on
                     # accessor_model.
-                    if isinstance(getattr(self, accessor),
+                    if isinstance(getattr(self, accessorName),
                         BaseManager):
-                        for rel_mod in getattr(self, accessor).all():
+                        for rel_mod in getattr(self, accessorName).all():
                             rel_mod = rel_mod.serialize(request)
                             getattr(accessor_model, var_name).append(rel_mod)
                     else:
                         accessor_model = None
                         continue
 
-                    setattr(xobj_model, accessor, accessor_model)
+                    setattr(xobj_model, accessorName, accessor_model)
 
                 # TODO: do we still need to handle this exception here? not
                 # sure what was throwing it.
                 except exceptions.ObjectDoesNotExist:
-                    setattr(xobj_model, accessor, None)
+                    setattr(xobj_model, accessorName, None)
 
     def serialize_m2m_accessors(self, xobj_model, m2m_accessors, request):
         """
