@@ -65,6 +65,15 @@ class WelcomeWindow (InstallWindow):
 
     def getNext(self):
         # If in advanced mode, need to make sure it is ok to format the system.
+        from iutil import memInstalled
+        mem = memInstalled() / 1024
+        if mem < 2000:
+            msg =  _("This installation requires at least 2 GB of RAM (4 GB or more is suggested).  Your system appears to have %d MB of RAM.  The system will now reboot..." % mem)
+            buttons = [ _("_Reboot")]
+            rc = self.anaconda.intf.messageWindow( _("Insufficient Memory"),
+                    msg, type="custom", custom_icon="error", custom_buttons=buttons)
+            import sys; sys.exit(0)
+
         if (self.advanced_supported() and
             not self.anaconda.id.instClass.in_advanced_mode and
             not autopart.queryAutoPartitionOK(self.anaconda)):
