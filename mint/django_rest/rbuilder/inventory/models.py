@@ -208,7 +208,7 @@ class ManagementNode(System):
                 attributes = {'id':str})
     local = models.NullBooleanField()
     zone = models.ForeignKey(Zone, related_name='managementNodes')
-    node_jid = models.CharField(max_length=64)
+    node_jid = models.CharField(max_length=64, null=True)
     
     # ignore auto generated ptr from inheritance
     load_ignore_fields = ["system_ptr"]
