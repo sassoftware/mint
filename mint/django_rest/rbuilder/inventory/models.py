@@ -411,6 +411,14 @@ class Trove(modellib.XObjIdModel):
             return None
         return deps.parseFlavor(self.flavor)
 
+    def getLabel(self):
+        if not self.version.label:
+            return None
+        return versions.Label(self.version.label)
+
+    def getVersion(self):
+        return self.version.conaryVersion
+
     def getNVF(self):
         return self.name, self.version.conaryVersion, self.getFlavor()
 

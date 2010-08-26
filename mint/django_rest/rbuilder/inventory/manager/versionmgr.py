@@ -9,6 +9,7 @@ from dateutil import tz
 
 from conary import conaryclient
 from conary import versions
+from conary.deps import deps
 
 from mint.django_rest.rbuilder.inventory import models
 
@@ -49,7 +50,7 @@ class VersionManager(base.BaseManager):
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
-            # self.set_available_updates(trove)
+            self.set_available_updates(trove)
         system.save()
 
     def trove_from_nvf(self, nvf):
@@ -121,12 +122,12 @@ class VersionManager(base.BaseManager):
         # conary.deps.deps.Flavor.
         trvName = trove.name
         trvVersion = trove.version.conaryVersion
-        trvFlavor = trove.version.flavor
-        label = trove.version.label
+        trvFlavor = trove.getFlavor()
+        trvLabel = trove.getLabel()
 
         # Search the label for the trove of the top level item.  It should
         # only (hopefully) return 1 result.
-        troves = self.cclient.repos.findTroves(label,
+        troves = self.cclient.repos.findTroves(trvLabel,
             [(trvName, trvVersion, trvFlavor)])
         assert(len(troves) == 1)
 
@@ -146,7 +147,7 @@ class VersionManager(base.BaseManager):
         # back.
         assert(len(allVersions) == 1)
         # getTroveVersionList returns a dict with keys of name, values of
-        # (version, [flavors]).
+        # {version: [flavors]}.
         allVersions = allVersions[trvName]
 
         newerVersions = {}
@@ -154,7 +155,7 @@ class VersionManager(base.BaseManager):
             # getTroveVersionList doesn't search by label, so we need to
             # compare the results to the label we're interested in, and make
             # sure the version is newer.
-            if v.trailingLabel() == label and v > repoVersion:
+            if v.trailingLabel() == trvLabel and v > repoVersion:
 
                 # Check that at least one of the flavors found satisfies the
                 # flavor we're interested in.
@@ -170,24 +171,8 @@ class VersionManager(base.BaseManager):
         if newerVersions:
             for ver, fs in newerVersions.iteritems():
                 for flv in fs:
-                    content.append(self._availableUpdateModelFactory(
-                                    (trvName, trvVersion, trvFlavor),
-                                    (trvName, ver, flv)))
-                    self.systemMgr.cacheUpdate(nvfStrs, self._nvfToString(
-                            (trvName, ver, f)))
-            instance.setOutOfDate(True)
-        else:
-            # Cache that no update was available
-            self.systemMgr.cacheUpdate(nvfStrs, None)
-            
-
-        # Add the current version as well.
-        content.append(self._availableUpdateModelFactory(
-                        (trvName, trvVersion, trvFlavor),
-                        (trvName, repoVersion, trvFlavor)))
-
-        # Can only have one repositoryUrl set on the instance, so set it
-        # if this is a top level group.
-        if self._isTopLevelGroup([trvName,]):
-            instance.setRepositoryUrl(
-                self._getRepositoryUrl(repoVersion.getHost()))
+                    new_version = models.Version()
+                    new_version.fromConaryVersion(ver)
+                    new_version.flavor = str(flv)
+                    new_version.save()
+                    trove.available_updates.add(new_version)

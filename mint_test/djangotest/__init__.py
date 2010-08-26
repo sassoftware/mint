@@ -29,14 +29,15 @@ class DjangoTest(fixtures.FixturedUnitTest):
     def importDjango(self):
         from mint.django_rest.rbuilder import models as rbuildermodels
         from mint.django_rest.rbuilder import inventory
-        from mint.django_rest.rbuilder.inventory import systemdbmgr
-        from mint.django_rest.rbuilder.inventory import versionmgr
         from mint.django_rest.rbuilder.inventory import models as systemmodels
+        from mint.django_rest.rbuilder.inventory import manager
+        from mint.django_rest.rbuilder.inventory.manager import versionmgr
+        from mint.django_rest.rbuilder.inventory.manager import systemmgr
+        
         self.inventory = inventory
         self.rbuildermodels = rbuildermodels
-        self.systemdbmgr = systemdbmgr
         self.systemmodels = systemmodels
-        self.versionmgr = versionmgr
+        self.manager = manager
 
     def _unImport(self):
         # "Unimport" anything that was imported so the next test will have a new
@@ -54,6 +55,7 @@ class DjangoTest(fixtures.FixturedUnitTest):
         # Need to prepare settings.py before importing any django modules.
         self.setUpDjangoSettingsModule()
         self.importDjango()
+        self.mgr = self.manager.Manager(self.cfg)
 
     def _import(self):
         for k, v in unimported.items():

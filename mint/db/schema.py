@@ -1283,8 +1283,7 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_version" ("version_id"),
                 "flavor" text NOT NULL,
                 "is_top_level" BOOL NOT NULL,
-                "last_available_update_refresh" timestamp with time zone
-                    NOT NULL,
+                "last_available_update_refresh" timestamp with time zone,
                 UNIQUE ("name", "version_id", "flavor")
             )""" % db.keywords)
 
