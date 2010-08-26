@@ -25,7 +25,9 @@ from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
 class SiteTest(restbase.BaseRestTest):
+
     def testGetInfo(self):
+
         uriTemplate = ''
         uri = uriTemplate
         client = self.getRestClient()
@@ -39,6 +41,7 @@ class SiteTest(restbase.BaseRestTest):
   <userName>anonymous</userName>
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
+  <isExternalRba>false</isExternalRba>
   <identity>
     <rbuilderId></rbuilderId>
     <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>
@@ -49,6 +52,7 @@ class SiteTest(restbase.BaseRestTest):
   <platforms href="http://%(server)s:%(port)s/api/platforms/"/>
   <registration href="http://%(server)s:%(port)s/api/registration"/>
   <reports href="http://%(server)s:%(port)s/api/reports/"/>
+  <moduleHooks href="http://%(server)s:%(port)s/api/moduleHooks/"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
 </rbuilderStatus>
@@ -57,7 +61,7 @@ class SiteTest(restbase.BaseRestTest):
              exp % dict(port = client.port, server = client.server,
                          version=constants.mintVersion,
                          conaryversion=conaryConstants.changeset,
-                         rmakeversion=rmakeConstants.version,
+                         rmakeversion=rmakeConstants.changeset,
                          hostname=os.uname()[1],
                          proddefVer=proddef.BaseDefinition.version))
 

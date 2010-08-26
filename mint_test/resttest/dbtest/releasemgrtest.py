@@ -61,7 +61,7 @@ class ReleaseManagerTest(mint_rephelp.MintDatabaseHelper):
         data = self.setupImages()
         db = self.openMintDatabase(createRepos=False)
         image = db.getImageForProduct('foo', data.imageId)
-        assert(image.release == data.releaseId)
+        assert(image.releaseId == data.releaseId)
         db.deleteRelease('foo', data.releaseId)
         image = db.getImageForProduct('foo', data.imageId)
         assert(image.release is None)
