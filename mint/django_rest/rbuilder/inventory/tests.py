@@ -803,6 +803,12 @@ class SystemVersionsTestCase(XMLTestCase):
                   ''),
             ])
 
+        # Try it again
+        response = self.client.put(url,
+            data=data,
+            content_type="application/xml")
+
+
 class EventTypeTestCase(XMLTestCase):
 
     def testGetEventTypes(self):
