@@ -1222,9 +1222,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
     def testDispatchSystemEvent(self):
         poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
-        models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
-        
+
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
             event_type=poll_event, priority=poll_event.priority)
@@ -1253,3 +1251,38 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         jobs = system.systemJobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
             ['uuid000'])
+
+    def testDispatchActivateSystemEvent(self):
+        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        # sanity check dispatching poll event
+        event = models.SystemEvent(system=self.system2,
+            event_type=act_event, priority=act_event.priority)
+        event.save()
+        def mockedUuid4():
+            return "really-unique-id"
+        from mint.lib import uuid
+        origUuid4 = uuid.uuid4
+        try:
+            uuid.uuid4 = mockedUuid4
+            self.mgr.sysMgr.dispatchSystemEvent(event)
+        finally:
+            uuid.uuid4 = origUuid4
+
+
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+            [
+                ('register', ('3.3.3.3', 'sputnik1'),
+                    {
+                     'eventId' : 'really-unique-id',
+                     'requiredNetwork' : '3.3.3.3',
+                    }),
+            ])
+        system = self.mgr.getSystem(self.system2.system_id)
+        jobs = system.systemJobs.all()
+        self.failUnlessEqual([ x.job_uuid for x in jobs ],
+            ['uuid000'])
+        # XXX find a better way to extract the additional field from the
+        # many-to-many table
+        self.failUnlessEqual(
+            [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
+            [ 'really-unique-id' ])
