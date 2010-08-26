@@ -70,7 +70,7 @@ class WelcomeWindow (InstallWindow):
         if mem < 2000:
             msg =  _("This installation requires at least 2 GB of RAM (4 GB or more is suggested).  Your system appears to have %d MB of RAM.  The system will now reboot..." % mem)
             buttons = [ _("_Reboot")]
-            rc = self.anaconda.intf.messageWindow( _("Insufficient Memory"),
+            self.anaconda.intf.messageWindow( _("Insufficient Memory"),
                     msg, type="custom", custom_icon="error", custom_buttons=buttons)
             import sys; sys.exit(0)
 
