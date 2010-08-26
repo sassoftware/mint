@@ -120,6 +120,7 @@ management_nodes_xml = """\
         <system href="http://testserver/api/inventory/systems/1"/>
       </network>
     </networks>
+    <nodeJid/>
     <systemJobs/>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <managingZone/>
@@ -173,6 +174,7 @@ management_node_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <nodeJid/>
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
@@ -222,6 +224,7 @@ management_node_post_xml = """\
       <required/>
     </network>
   </networks>
+  <nodeJid>abcd</nodeJid>
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
@@ -264,6 +267,7 @@ management_node_post_response_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <nodeJid>abcd</nodeJid>
   <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
