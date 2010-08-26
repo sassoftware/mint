@@ -370,7 +370,7 @@ class Trove(modellib.XObjModel):
     flavor = models.TextField()
     is_top_level = models.BooleanField()
     last_available_update_refresh = modellib.DateTimeUtcField(
-        auto_now_add=True)
+        null=True)
     available_updates = models.ManyToManyField('Version',
         related_name='available_updates')
 
