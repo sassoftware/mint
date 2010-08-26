@@ -21,8 +21,8 @@ class Manager(rbuilder_manager.RbuilderDjangoManager):
         self.sysMgr = systemmgr.SystemManager(weakref.proxy(self))
         self.versionMgr = versionmgr.VersionManager(weakref.proxy(self))
         self.repeaterMgr = repeatermgr.RepeaterManager(weakref.proxy(self))
-        # We instantiate _restDb lazily
-        self._restDb = None
+        # We instantiate _rest_db lazily
+        self._rest_db = None
 
         # Methods we simply copy
         for subMgr in [ self.sysMgr, self.versionMgr ]:
@@ -34,12 +34,12 @@ class Manager(rbuilder_manager.RbuilderDjangoManager):
                     setattr(self, objName, obj)
 
     @property
-    def restDb(self):
+    def rest_db(self):
         if self.cfg is None:
             return None
-        if self._restDb is None:
+        if self._rest_db is None:
             from django.conf import settings
             self.cfg.dbPath = settings.DATABASE_NAME
             mint_db = Database(self.cfg)
-            self.rest_db = RestDatabase(self.cfg, mint_db)
-        return self._restDb
+            self._rest_db = RestDatabase(self.cfg, mint_db)
+        return self._rest_db

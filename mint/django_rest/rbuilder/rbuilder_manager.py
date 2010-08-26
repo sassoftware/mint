@@ -20,7 +20,7 @@ class RbuilderDjangoManager(object):
             except mint_error.ConfigurationMissing:
                 logger.info('Failed to build mint configuration, expected in local mode only')
                 # Use an empty config object
-                self.cfg = config.MintConfig()
+                self.cfg = None
         
         if userName is None:
             self.user = None
