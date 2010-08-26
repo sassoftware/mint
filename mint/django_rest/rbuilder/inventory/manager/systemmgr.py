@@ -112,6 +112,7 @@ class SystemManager(base.BaseManager):
         if managementNode.registered:
             managementNode.registration_date = datetime.datetime.now(tz.tzutc())
             managementNode.current_state = models.System.REGISTERED
+            #TO-DO Need to add the JID to the models.ManagementNode object
             managementNode.save()
             self.log_system(managementNode, models.SystemLogEntry.REGISTERED)
         else:
