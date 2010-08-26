@@ -655,6 +655,8 @@ class SystemVersionsTestCase(XMLTestCase):
         trove.version = version
         trove.flavor = \
             '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
+        trove.last_available_update_refresh = \
+            datetime.datetime.now(tz.tzutc())
         trove.save()
 
         version_update = models.Version()
@@ -683,6 +685,8 @@ class SystemVersionsTestCase(XMLTestCase):
         trove2.name = 'emacs'
         trove2.version = version2
         trove2.flavor = version2.flavor
+        trove2.last_available_update_refresh = \
+            datetime.datetime.now(tz.tzutc())
         trove2.save()
 
         self.trove = trove
@@ -713,7 +717,7 @@ class SystemVersionsTestCase(XMLTestCase):
         url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
         response = self.client.get(url)
         self.assertXMLEquals(response.content,
-            testsxml.installed_software_xml %(
+            testsxml.get_installed_software_xml %(
                 self.trove.last_available_update_refresh.isoformat(),
                 self.trove2.last_available_update_refresh.isoformat()))
 

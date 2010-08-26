@@ -775,6 +775,60 @@ systems_log_xml = """\
 </systemsLog>
 """
 
+get_installed_software_xml = """\
+  <installedSoftware>
+    <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%%3D/clover.eng.rpath.com%%40rpath%%3Aclover-1-devel/1-2-1%%5B%%7E%%21dom0%%2C%%7E%%21domU%%2Cvmware%%2C%%7E%%21xen%%20is%%3A%%20x86%%28i486%%2Ci586%%2Ci686%%2Csse%%2Csse2%%29%%5D">
+      <availableUpdates>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567890.13</ordering>
+          <revision>1-3-1</revision>
+          <versionId>2</versionId>
+        </version>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567890.14</ordering>
+          <revision>1-4-1</revision>
+          <versionId>3</versionId>
+        </version>
+      </availableUpdates>
+      <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+      <isTopLevel>True</isTopLevel>
+      <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
+      <name>group-clover-appliance</name>
+      <troveId>1</troveId>
+      <version>
+        <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+        <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
+        <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+        <ordering>1234567890.12</ordering>
+        <revision>change me gently</revision>
+        <versionId>1</versionId>
+      </version>
+    </trove>
+    <trove id="http://testserver/repos/contrib/api/trove/emacs%%3D/contrib.rpath.org%%40rpl%%3A2/23.0.60cvs20080523-1-0.1%%5Bdesktop%%20is%%3A%%20x86_64%%5D">
+      <availableUpdates/>
+      <flavor>desktop is: x86_64</flavor>
+      <isTopLevel>False</isTopLevel>
+      <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
+      <name>emacs</name>
+      <troveId>2</troveId>
+      <version>
+        <flavor>desktop is: x86_64</flavor>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <ordering>1234567890.12</ordering>
+        <revision>23.0.60cvs20080523-1-0.1</revision>
+        <versionId>4</versionId>
+      </version>
+    </trove>
+  </installedSoftware>
+"""
+
 installed_software_xml = """\
   <installedSoftware>
     <trove>
@@ -875,7 +929,7 @@ system_version_xml = """\
   <createdDate>%%s</createdDate>
   <osType/>
 </system>
-""" % installed_software_xml
+""" % get_installed_software_xml
 
 installed_software_post_xml = """\
   <installedSoftware>

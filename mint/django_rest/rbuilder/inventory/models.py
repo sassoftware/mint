@@ -3,8 +3,10 @@
 #
 # All Rights Reserved
 #
-import sys
 import datetime
+import sys
+import urllib
+import urlparse
 from dateutil import tz
 
 from conary import versions
@@ -358,7 +360,7 @@ class SystemLogEntry(modellib.XObjModel):
     entry = models.CharField(max_length=8092, choices=choices)
     entry_date = modellib.DateTimeUtcField(auto_now_add=True)
 
-class Trove(modellib.XObjModel):
+class Trove(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_trove'
         unique_together = (('name', 'version', 'flavor'),)
@@ -375,6 +377,20 @@ class Trove(modellib.XObjModel):
         related_name='available_updates')
 
     load_fields = [ name, version, flavor ]
+
+    def get_absolute_url(self, request):
+        # Build an id to crest
+        conary_version = self.version.conaryVersion
+        label = conary_version.trailingLabel()
+        revision = conary_version.trailingRevision()
+        shortname = label.getHost().split('.')[0]
+        path = "repos/%s/api/trove/%s=/%s/%s[%s]" % \
+            (shortname, self.name, label.asString(),
+             revision.asString(), self.flavor)
+        path = urllib.quote(path)
+        scheme, netloc = urlparse.urlparse(request.build_absolute_uri())[0:2]
+        url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
+        return url
 
     def _is_top_level_group(self):
         return self.name.startswith('group-') and \

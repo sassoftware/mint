@@ -49,7 +49,7 @@ class VersionManager(base.BaseManager):
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
-            self.set_available_updates(trove)
+            # self.set_available_updates(trove)
         system.save()
 
     def trove_from_nvf(self, nvf):
@@ -93,24 +93,30 @@ class VersionManager(base.BaseManager):
         trove = self.trove_from_nvf(nvf)
         trove.available_updates.all().delete()
 
-    def _get_conary_client(self):
+    def get_conary_client(self):
         if self._cclient is None:
             self._cclient = self.rest_db.productMgr.reposMgr.getUserClient()
         return self._cclient
-    cclient = property(_get_conary_client)
 
     def set_available_updates(self, trove, force=False):
         one_day = datetime.timedelta(1)
 
         if force or trove.last_available_update_refresh is None:
             self.refresh_available_updates(trove)
+            trove.last_available_update_refresh = \
+                datetime.datetime.now(tz.tzutc())
+            trove.save()
             return
 
         if (trove.last_available_update_refresh + one_day) < \
             datetime.datetime.now(tz.tzutc()):
             self.refresh_available_updates(trove)
+            trove.last_available_update_refresh = \
+                datetime.datetime.now(tz.tzutc())
+            trove.save()
 
     def refresh_available_updates(self, trove):
+        self.cclient = self.get_conary_client()
         # trvName and trvVersion are str's, trvFlavor is a
         # conary.deps.deps.Flavor.
         trvName = trove.name
