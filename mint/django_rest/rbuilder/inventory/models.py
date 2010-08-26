@@ -178,6 +178,8 @@ class System(modellib.XObjIdModel):
     def save(self, *args, **kw):
         if not self.current_state:
             self.current_state = System.UNMANAGED
+        if not self.name:
+            self.name = self.hostname and self.hostname or ''
         modellib.XObjIdModel.save(self, *args, **kw)
 
     def addJobs(self):

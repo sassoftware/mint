@@ -462,6 +462,24 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         assert(system.current_state == models.System.DEAD)
         
+        # test name fallback to hostname
+        system = models.System(hostname="mgoblue", 
+            description="best appliance ever")
+        assert(system.name == '')
+        system.save()
+        assert(system.name == system.hostname)
+        
+        # test name fallback to blank
+        system = models.System(description="best appliance ever")
+        assert(system.name == '')
+        system.save()
+        assert(system.name == '')
+        
+        # make sure we honor the name if set though
+        system = models.System(name="mgoblue")
+        system.save()
+        assert(system.name == "mgoblue")
+        
     def testAddSystem(self):
         # create the system
         system = models.System(name="mgoblue", 
