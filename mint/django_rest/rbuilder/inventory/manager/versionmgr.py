@@ -102,6 +102,12 @@ class VersionManager(base.BaseManager):
     def set_available_updates(self, trove, force=False):
         one_day = datetime.timedelta(1)
 
+        # Hack to make sure utc is set as the timezone on
+        # last_available_update_refresh.
+        if trove.last_available_update_refresh is not None:
+            trove.last_available_update_refresh = \
+                trove.last_available_update_refresh.replace(tzinfo=tz.tzutc())
+
         if force or trove.last_available_update_refresh is None:
             self.refresh_available_updates(trove)
             trove.last_available_update_refresh = \

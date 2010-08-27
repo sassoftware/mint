@@ -39,7 +39,11 @@ class Manager(rbuilder_manager.RbuilderDjangoManager):
             return None
         if self._rest_db is None:
             from django.conf import settings
-            self.cfg.dbPath = settings.DATABASE_NAME
+            if settings.DATABASE_ENGINE == 'sqlite3':
+                self.cfg.dbPath = settings.DATABASE_NAME
+            else:
+                self.cfg.dbPath = '%s:%s/%s' % (settings.DATABASE_HOST, 
+                    settings.DATABASE_PORT, settings.DATABASE_NAME)
             mint_db = Database(self.cfg)
             self._rest_db = RestDatabase(self.cfg, mint_db)
         return self._rest_db
