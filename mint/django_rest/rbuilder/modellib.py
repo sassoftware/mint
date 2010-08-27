@@ -175,6 +175,10 @@ class BaseManager(models.Manager):
         return model
 
     def get_accessors(self, model, obj, request=None):
+        """
+        Build and return a dict of accessor name and list of accessor
+        objects.
+        """
         accessors = model.get_accessor_dict()
         ret_accessors = {}
 
@@ -209,12 +213,24 @@ class BaseManager(models.Manager):
         return model
 
     def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+        """
+        Add rel_mod to the correct many to many accessor on model.  Needs to
+        be in a seperate method so that it can be overridden.
+        """
         getattr(model, m2m_accessor).add(rel_mod)
 
     def clear_m2m_accessor(self, model, m2m_accessor):
+        """
+        Clear a many to many accessor.  Needs to be in a seperate method so
+        that it can be overridden.
+        """
         getattr(model, m2m_accessor).clear()
 
     def add_m2m_accessors(self, model, obj, request):
+        """
+        Populate the many tom many accessors on model based on the xobj model
+        in obj.
+        """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
             rel_obj_name = m2m_mgr.target_field_name
             self.clear_m2m_accessor(model, m2m_accessor)
