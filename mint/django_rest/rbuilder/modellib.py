@@ -302,22 +302,17 @@ class SystemManager(BaseManager):
         Overridden because systems have several checks required to determine 
         if the system already exists.
         """
-        
-        loaded_model = None
-        dupCheckFieldsDict = []
-        
+
         # only check uuids if they are not none
         if model_inst.local_uuid and model_inst.generated_uuid:
-            dupCheckFieldsDict.append(dict(local_uuid=model_inst.local_uuid, 
+            loaded_model = self.tryLoad(dict(local_uuid=model_inst.local_uuid,
                 generated_uuid=model_inst.generated_uuid))
-        
-        for d in dupCheckFieldsDict:    
-            loaded_model = self.tryLoad(d)
-            if loaded_model is not None:
-                break;
-        
-        return loaded_model
-        
+            if loaded_model:
+                # a system matching (local_uuid, generated_uuid) was found)
+                return loaded_model
+
+        return None
+
     def tryLoad(self, loadDict):
         try:
             loaded_model = self.get(**loadDict)
