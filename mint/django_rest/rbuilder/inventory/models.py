@@ -475,6 +475,9 @@ class Version(modellib.XObjModel):
 class SystemJob(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_job'
+    # XXX This class should never be serialized directly, but unless an _xobj
+    # field is added, we have no access to it from modellib
+    _xobj = xobj.XObjMetadata(tag='__systemJob')
     system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
     job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')

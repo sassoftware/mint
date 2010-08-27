@@ -673,6 +673,40 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model.event_uuid, eventUuid)
 
+    def testDedupByEventUuid(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
+</system>
+""" % params
+
+        # Create a system with just a name
+        system = models.System(name = 'blippy')
+        system.save()
+        # Create a job
+        eventType = models.EventType.objects.get(
+            name = models.EventType.SYSTEM_REGISTRATION)
+        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType)
+        job.save()
+        systemJob = models.SystemJob(system=system, job=job,
+            event_uuid=eventUuid)
+        systemJob.save()
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        # We should have loaded the old one
+        self.failUnlessEqual(system.pk, model.pk)
+        # XXX this fails although the old field's name shouldn't have been
+        # overwritten
+        #self.failUnlessEqual(model.name, 'blippy')
+
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
     

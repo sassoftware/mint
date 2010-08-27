@@ -267,6 +267,9 @@ class BaseManager(models.Manager):
         if model._meta.abstract:
             save = False
 
+        # We need access to synthetic fields before loading from the DB, they
+        # may be used in load_or_create
+        model = self.add_synthetic_fields(model, obj)
         model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
         if save:
@@ -275,11 +278,12 @@ class BaseManager(models.Manager):
             dbmodel = self.load(model, accessors)
             if dbmodel:
                 model = dbmodel
+        # Copy the synthetic fields again - this is unfortunate
+        model = self.add_synthetic_fields(model, obj)
 
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
-        model = self.add_synthetic_fields(model, obj)
 
         return model
 
@@ -326,6 +330,13 @@ class SystemManager(BaseManager):
             if loaded_model:
                 # a system matching (local_uuid, generated_uuid) was found)
                 return loaded_model
+        if model_inst.event_uuid:
+            # Look up systems by event_uuid
+            systems = [ x.system
+                for x in type_map['__systemJob'].objects.filter(
+                    event_uuid = model_inst.event_uuid) ]
+            if systems:
+                return systems[0]
 
         return None
 
