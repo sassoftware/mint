@@ -721,5 +721,21 @@ class DateTimeUtcField(models.DateTimeField):
         else:
             return super(models.DateField, self).pre_save(model_instance, add)
 
+    def get_prep_value(self, *args, **kwargs):
+        prep_value = super(models.DateTimeField, self).get_prep_value(
+            *args, **kwargs)
+        if isinstance(prep_value, datetime.datetime):
+            return prep_value.replace(tzinfo=tz.tzutc())
+        else:
+            return prep_value
+
+    def get_db_prep_value(self, *args, **kwargs):
+        value = args[0]
+        db_prep_value = self.get_prep_value(value)
+        if isinstance(db_prep_value, datetime.datetime):
+            return str(db_prep_value)
+        else:
+            return db_prep_value
+
 class XObjHiddenCharField(models.CharField):
     XObjHidden = True
