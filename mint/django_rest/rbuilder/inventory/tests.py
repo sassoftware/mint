@@ -654,19 +654,24 @@ class SystemsTestCase(XMLTestCase):
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
 
     def testLoadFromObjectEventUuid(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid)
         xml = """\
 <system>
-  <local_uuid>localuuid001</local_uuid>
-  <generated_uuid>generateduuid001</generated_uuid>
-  <event_uuid>eventuuid001</event_uuid>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
 </system>
-"""
+""" % params
         obj = xobj.parse(xml)
         xobjmodel = obj.system
         model = models.System.objects.load_from_object(xobjmodel, request=None)
-        self.failUnlessEqual(model.local_uuid, 'localuuid001')
-        self.failUnlessEqual(model.generated_uuid, 'generateduuid001')
-        self.failUnlessEqual(model.event_uuid, 'eventuuid001')
+        self.failUnlessEqual(model.local_uuid, localUuid)
+        self.failUnlessEqual(model.generated_uuid, generatedUuid)
+        self.failUnlessEqual(model.event_uuid, eventUuid)
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
