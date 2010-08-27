@@ -472,26 +472,31 @@ class SystemManager(base.BaseManager):
         ])
 
         network = self._extractNetworkToUse(event.system)
-        if network:
-            destination = network.ip_address
-            eventType = event.event_type.name
-            eventUuid = str(uuid.uuid4())
-            sputnik = "sputnik1"
-            requiredNetwork = (network.required and destination) or None
-            if eventType in registrationEvents:
-                self._runSystemEvent(event, destination,
-                    repClient.register, destination, sputnik, eventId=eventUuid,
-                    requiredNetwork=requiredNetwork)
-            elif eventType in pollEvents:
-                # XXX remove the hardcoded port from here
-                resultsLocation = dict(
-                    path = "/api/inventory/systems/%d" % event.system.pk,
-                    port = 80)
-                self._runSystemEvent(event, destination,
-                    repClient.poll, destination, sputnik, eventId=eventUuid,
-                    resultsLocation=resultsLocation)
-            else:
-                log.error("Unknown event type %s" % eventType)
+        if not network:
+            msg = "No valid network information found; giving up"
+            log.error(msg)
+            self.log_system(event.system, msg)
+            return
+        # If no ip address was set, fall back to dns_name
+        destination = network.ip_address or network.dns_name
+        eventType = event.event_type.name
+        eventUuid = str(uuid.uuid4())
+        sputnik = "sputnik1"
+        requiredNetwork = (network.required and destination) or None
+        if eventType in registrationEvents:
+            self._runSystemEvent(event, destination,
+                repClient.register, destination, sputnik, eventId=eventUuid,
+                requiredNetwork=requiredNetwork)
+        elif eventType in pollEvents:
+            # XXX remove the hardcoded port from here
+            resultsLocation = dict(
+                path = "/api/inventory/systems/%d" % event.system.pk,
+                port = 80)
+            self._runSystemEvent(event, destination,
+                repClient.poll, destination, sputnik, eventId=eventUuid,
+                resultsLocation=resultsLocation)
+        else:
+            log.error("Unknown event type %s" % eventType)
 
     def _extractNetworkToUse(self, system):
         networks = system.networks.all()
@@ -500,12 +505,16 @@ class SystemManager(base.BaseManager):
         nets = [ x for x in networks if x.required ]
         if nets:
             return nets[0]
-        
+
         # now look for a non-required active net
         nets = [ x for x in networks if x.active ]
         if nets:
             return nets[0]
-        
+
+        # If we only have one network, return that one and hope for the best
+        if len(networks) == 1:
+            return networks[0]
+        return None
 
     @classmethod
     def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
@@ -587,7 +596,7 @@ class SystemManager(base.BaseManager):
         return event
     
     def logSystemEvent(self, event, enable_time):
-        msg = "System %s event registered and will be enabled on %s" % (event.event_type.name, enable_time)
+        msg = "Event type '%s' registered and will be enabled on %s" % (event.event_type.name, enable_time)
         self.log_system(event.system, msg)
         log.info(msg)
         

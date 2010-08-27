@@ -181,6 +181,8 @@ class System(modellib.XObjIdModel):
     def save(self, *args, **kw):
         if not self.current_state:
             self.current_state = System.UNMANAGED
+        if not self.name:
+            self.name = self.hostname and self.hostname or ''
         modellib.XObjIdModel.save(self, *args, **kw)
 
     def addJobs(self):
@@ -208,7 +210,7 @@ class ManagementNode(System):
                 attributes = {'id':str})
     local = models.NullBooleanField()
     zone = models.ForeignKey(Zone, related_name='managementNodes')
-    node_jid = models.CharField(max_length=64)
+    node_jid = models.CharField(max_length=64, null=True)
     
     # ignore auto generated ptr from inheritance
     load_ignore_fields = ["system_ptr"]

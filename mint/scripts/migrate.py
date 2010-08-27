@@ -1314,7 +1314,8 @@ class MigrateTo_50(SchemaMigration):
                 CREATE TABLE "inventory_system_installed_software" (
                     "id" %(PRIMARYKEY)s,
                     "system_id" INTEGER NOT NULL 
-                        REFERENCES "inventory_system" ("system_id"),
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
                     "trove_id" INTEGER NOT NULL
                         REFERENCES "inventory_trove" ("trove_id"),
                     UNIQUE ("system_id", "trove_id")
