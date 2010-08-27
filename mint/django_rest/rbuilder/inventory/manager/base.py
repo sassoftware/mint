@@ -15,8 +15,8 @@ class BaseManager(object):
         return self.mgr.cfg
 
     @property
-    def restDb(self):
-        return self.mgr.restDb
+    def rest_db(self):
+        return self.mgr.rest_db
 
 def exposed(fn):
     fn.exposed = True

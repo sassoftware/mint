@@ -4,7 +4,8 @@
 # All Rights Reserved
 #
 
-from datetime import datetime
+import datetime
+from dateutil import tz
 
 from conary import conaryclient
 from conary import versions
@@ -17,6 +18,11 @@ class VersionManager(base.BaseManager):
     """
     Class encapsulating all logic around versions, available updates, etc.
     """
+    
+    def __init__(self, *args, **kwargs):
+        base.BaseManager.__init__(self, *args, **kwargs)
+        self._cclient = None
+
     def get_software_versions(self, system):
         pass
 
@@ -43,6 +49,7 @@ class VersionManager(base.BaseManager):
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
+            # self.set_available_updates(trove)
         system.save()
 
     def trove_from_nvf(self, nvf):
@@ -86,112 +93,101 @@ class VersionManager(base.BaseManager):
         trove = self.trove_from_nvf(nvf)
         trove.available_updates.all().delete()
 
-    def _get_conary_client(self):
+    def get_conary_client(self):
         if self._cclient is None:
             self._cclient = self.rest_db.productMgr.reposMgr.getUserClient()
         return self._cclient
-    cclient = property(_get_conary_client)
 
-    def get_available_updates(self, nvf, force=False):
+    def set_available_updates(self, trove, force=False):
         one_day = datetime.timedelta(1)
-        trove = self.trove_from_nvf(nvf)
 
-        if trove.last_available_update_refresh > one_day or force:
-            self.refresh_updates(nvf)
+        if force or trove.last_available_update_refresh is None:
+            self.refresh_available_updates(trove)
+            trove.last_available_update_refresh = \
+                datetime.datetime.now(tz.tzutc())
+            trove.save()
+            return
 
-        return trove.available_updates.all()
+        if (trove.last_available_update_refresh + one_day) < \
+            datetime.datetime.now(tz.tzutc()):
+            self.refresh_available_updates(trove)
+            trove.last_available_update_refresh = \
+                datetime.datetime.now(tz.tzutc())
+            trove.save()
 
-    def refresh_updates(self, softwareVersions):
-        content = []
+    def refresh_available_updates(self, trove):
+        self.cclient = self.get_conary_client()
+        # trvName and trvVersion are str's, trvFlavor is a
+        # conary.deps.deps.Flavor.
+        trvName = trove.name
+        trvVersion = trove.version.conaryVersion
+        trvFlavor = trove.version.flavor
+        label = trove.version.label
 
-        for trvName, trvVersion, trvFlavor in softwareVersions:
-            nvfStrs = self._nvfToString((trvName, trvVersion, trvFlavor))
-            cachedUpdates = self.systemMgr.getCachedUpdates(nvfStrs)
+        # Search the label for the trove of the top level item.  It should
+        # only (hopefully) return 1 result.
+        troves = self.cclient.repos.findTroves(label,
+            [(trvName, trvVersion, trvFlavor)])
+        assert(len(troves) == 1)
 
-            if cachedUpdates is not None:
-                for cachedUpdate in cachedUpdates:
+        # findTroves returns a {} with keys of (name, version, flavor), values
+        # of [(name, repoVersion, repoFlavor)], where repoVersion and
+        # repoFlavor are rich objects with the repository metadata.
+        repoVersion = troves[(trvName, trvVersion, trvFlavor)][0][1]
+        repoFlavors = [f[0][2] for f in troves.values()]
+        # We only asked for 1 flavor, only 1 should be returned.
+        assert(len(repoFlavors) == 1)
+
+        # getTroveVersionList searches a repository (NOT by label), for a
+        # given name/flavor combination.
+        allVersions = self.cclient.repos.getTroveVersionList(
+            trvVersion.getHost(), {trvName:repoFlavors})
+        # We only asked for 1 name/flavor, so we should have only gotten 1
+        # back.
+        assert(len(allVersions) == 1)
+        # getTroveVersionList returns a dict with keys of name, values of
+        # (version, [flavors]).
+        allVersions = allVersions[trvName]
+
+        newerVersions = {}
+        for v, fs in allVersions.iteritems():
+            # getTroveVersionList doesn't search by label, so we need to
+            # compare the results to the label we're interested in, and make
+            # sure the version is newer.
+            if v.trailingLabel() == label and v > repoVersion:
+
+                # Check that at least one of the flavors found satisfies the
+                # flavor we're interested in.
+                satisfiedFlavors = []
+                for f in fs:
+                    # XXX: do we want to use flavor or repoFlavor here?
+                    # XXX: do we want to use stronglySatisfies here?
+                    if f.satisfies(trvFlavor):
+                        satisfiedFlavors.append(f)
+                if satisfiedFlavors:
+                    newerVersions[v] = satisfiedFlavors
+
+        if newerVersions:
+            for ver, fs in newerVersions.iteritems():
+                for flv in fs:
                     content.append(self._availableUpdateModelFactory(
-                                   (trvName, trvVersion, trvFlavor),
-                                   cachedUpdate))
-                    instance.setOutOfDate(True)
-                # Add the current version as well.
-                content.append(self._availableUpdateModelFactory(
-                               (trvName, trvVersion, trvFlavor),
-                               (trvName, trvVersion, trvFlavor)))
-                continue
+                                    (trvName, trvVersion, trvFlavor),
+                                    (trvName, ver, flv)))
+                    self.systemMgr.cacheUpdate(nvfStrs, self._nvfToString(
+                            (trvName, ver, f)))
+            instance.setOutOfDate(True)
+        else:
+            # Cache that no update was available
+            self.systemMgr.cacheUpdate(nvfStrs, None)
+            
 
-            # trvName and trvVersion are str's, trvFlavor is a
-            # conary.deps.deps.Flavor.
-            label = trvVersion.trailingLabel()
+        # Add the current version as well.
+        content.append(self._availableUpdateModelFactory(
+                        (trvName, trvVersion, trvFlavor),
+                        (trvName, repoVersion, trvFlavor)))
 
-            # Search the label for the trove of the top level item.  It should
-            # only (hopefully) return 1 result.
-            troves = self.cclient.repos.findTroves(label,
-                [(trvName, trvVersion, trvFlavor)])
-            assert(len(troves) == 1)
-
-            # findTroves returns a {} with keys of (name, version, flavor), values
-            # of [(name, repoVersion, repoFlavor)], where repoVersion and
-            # repoFlavor are rich objects with the repository metadata.
-            repoVersion = troves[(trvName, trvVersion, trvFlavor)][0][1]
-            repoFlavors = [f[0][2] for f in troves.values()]
-            # We only asked for 1 flavor, only 1 should be returned.
-            assert(len(repoFlavors) == 1)
-
-            # getTroveVersionList searches a repository (NOT by label), for a
-            # given name/flavor combination.
-            allVersions = self.cclient.repos.getTroveVersionList(
-                trvVersion.getHost(), {trvName:repoFlavors})
-            # We only asked for 1 name/flavor, so we should have only gotten 1
-            # back.
-            assert(len(allVersions) == 1)
-            # getTroveVersionList returns a dict with keys of name, values of
-            # (version, [flavors]).
-            allVersions = allVersions[trvName]
-
-            newerVersions = {}
-            for v, fs in allVersions.iteritems():
-                # getTroveVersionList doesn't search by label, so we need to
-                # compare the results to the label we're interested in, and make
-                # sure the version is newer.
-                if v.trailingLabel() == label and v > repoVersion:
-
-                    # Check that at least one of the flavors found satisfies the
-                    # flavor we're interested in.
-                    satisfiedFlavors = []
-                    for f in fs:
-                        # XXX: do we want to use flavor or repoFlavor here?
-                        # XXX: do we want to use stronglySatisfies here?
-                        if f.satisfies(trvFlavor):
-                            satisfiedFlavors.append(f)
-                    if satisfiedFlavors:
-                        newerVersions[v] = satisfiedFlavors
-
-            if newerVersions:
-                for ver, fs in newerVersions.iteritems():
-                    for flv in fs:
-                        content.append(self._availableUpdateModelFactory(
-                                        (trvName, trvVersion, trvFlavor),
-                                        (trvName, ver, flv)))
-                        self.systemMgr.cacheUpdate(nvfStrs, self._nvfToString(
-                                (trvName, ver, f)))
-                instance.setOutOfDate(True)
-            else:
-                # Cache that no update was available
-                self.systemMgr.cacheUpdate(nvfStrs, None)
-                
-
-            # Add the current version as well.
-            content.append(self._availableUpdateModelFactory(
-                            (trvName, trvVersion, trvFlavor),
-                            (trvName, repoVersion, trvFlavor)))
-
-            # Can only have one repositoryUrl set on the instance, so set it
-            # if this is a top level group.
-            if self._isTopLevelGroup([trvName,]):
-                instance.setRepositoryUrl(
-                    self._getRepositoryUrl(repoVersion.getHost()))
-
-        instance.setAvailableUpdate(content)
-
-        return instance
+        # Can only have one repositoryUrl set on the instance, so set it
+        # if this is a top level group.
+        if self._isTopLevelGroup([trvName,]):
+            instance.setRepositoryUrl(
+                self._getRepositoryUrl(repoVersion.getHost()))

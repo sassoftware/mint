@@ -1112,7 +1112,8 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
                 "local" bool,
-                "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id")
+                "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id"),
+                "node_jid" varchar(64)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_zone_management_node'] = []
         changed = True
@@ -1295,7 +1296,8 @@ def _createInventorySchema(db, cfg):
             CREATE TABLE "inventory_system_installed_software" (
                 "id" %(PRIMARYKEY)s,
                 "system_id" INTEGER NOT NULL 
-                    REFERENCES "inventory_system" ("system_id"),
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
                 "trove_id" INTEGER NOT NULL
                     REFERENCES "inventory_trove" ("trove_id"),
                 UNIQUE ("system_id", "trove_id")

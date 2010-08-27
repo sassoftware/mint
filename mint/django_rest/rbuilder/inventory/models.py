@@ -3,8 +3,10 @@
 #
 # All Rights Reserved
 #
-import sys
 import datetime
+import sys
+import urllib
+import urlparse
 from dateutil import tz
 
 from conary import versions
@@ -168,6 +170,7 @@ class System(modellib.XObjIdModel):
     current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
+    #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
     systemJobs = models.ManyToManyField("Job", through="SystemJob")
 
@@ -207,6 +210,7 @@ class ManagementNode(System):
                 attributes = {'id':str})
     local = models.NullBooleanField()
     zone = models.ForeignKey(Zone, related_name='managementNodes')
+    node_jid = models.CharField(max_length=64, null=True)
     
     # ignore auto generated ptr from inheritance
     load_ignore_fields = ["system_ptr"]
@@ -360,10 +364,12 @@ class SystemLogEntry(modellib.XObjModel):
     entry = models.CharField(max_length=8092, choices=choices)
     entry_date = modellib.DateTimeUtcField(auto_now_add=True)
 
-class Trove(modellib.XObjModel):
+class Trove(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_trove'
         unique_together = (('name', 'version', 'flavor'),)
+
+    objects = modellib.TroveManager()
 
     _xobj = xobj.XObjMetadata(tag='trove')
     trove_id = models.AutoField(primary_key=True)
@@ -372,11 +378,25 @@ class Trove(modellib.XObjModel):
     flavor = models.TextField()
     is_top_level = models.BooleanField()
     last_available_update_refresh = modellib.DateTimeUtcField(
-        auto_now_add=True)
+        null=True)
     available_updates = models.ManyToManyField('Version',
         related_name='available_updates')
 
     load_fields = [ name, version, flavor ]
+
+    def get_absolute_url(self, request):
+        # Build an id to crest
+        conary_version = self.version.conaryVersion
+        label = conary_version.trailingLabel()
+        revision = conary_version.trailingRevision()
+        shortname = label.getHost().split('.')[0]
+        path = "repos/%s/api/trove/%s=/%s/%s[%s]" % \
+            (shortname, self.name, label.asString(),
+             revision.asString(), self.flavor)
+        path = urllib.quote(path)
+        scheme, netloc = urlparse.urlparse(request.build_absolute_uri())[0:2]
+        url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
+        return url
 
     def _is_top_level_group(self):
         return self.name.startswith('group-') and \
@@ -401,6 +421,9 @@ class Version(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_version'
         unique_together = [ ('full', 'ordering', 'flavor'), ]
+
+    objects = modellib.VersionManager()
+
     version_id = models.AutoField(primary_key=True)
     full = models.TextField()
     label = models.TextField()
