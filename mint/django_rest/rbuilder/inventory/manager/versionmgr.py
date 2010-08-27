@@ -99,6 +99,7 @@ class VersionManager(base.BaseManager):
             self._cclient = self.rest_db.productMgr.reposMgr.getUserClient()
         return self._cclient
 
+    @base.exposed
     def set_available_updates(self, trove, force=False):
         one_day = datetime.timedelta(1)
 

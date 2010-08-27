@@ -392,9 +392,14 @@ class Trove(modellib.XObjIdModel):
             (shortname, self.name, label.asString(),
              revision.asString(), self.flavor)
         path = urllib.quote(path)
-        scheme, netloc = urlparse.urlparse(request.build_absolute_uri())[0:2]
-        url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
-        return url
+
+        if request:
+            scheme, netloc = urlparse.urlparse(
+                request.build_absolute_uri())[0:2]
+            url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
+            return url
+        else:
+            return path
 
     def _is_top_level_group(self):
         return self.name.startswith('group-') and \

@@ -631,9 +631,15 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mintConfig.dbPath = settings.DATABASE_NAME
         self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
+        self.mock_set_available_updates_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
+        manager.versionmgr.VersionManager.set_available_updates = \
+            self.mock_set_available_updates
         
+    def mock_set_available_updates(self, trove):
+        self.mock_set_available_updates_called = True
+
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
         
@@ -661,13 +667,13 @@ class SystemVersionsTestCase(XMLTestCase):
 
         version_update = models.Version()
         version_update.fromConaryVersion(versions.ThawVersion(
-            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567890.13:1-3-1'))
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567891.13:1-3-1'))
         version_update.flavor = version.flavor
         version_update.save()
 
         version_update2 = models.Version()
         version_update2.fromConaryVersion(versions.ThawVersion(
-            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567890.14:1-4-1'))
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567892.14:1-4-1'))
         version_update2.flavor = version.flavor
         version_update2.save()
 
@@ -735,6 +741,18 @@ class SystemVersionsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content,
             testsxml.installed_software_response_xml,
             ignoreNodes = ['lastAvailableUpdateRefresh'])
+
+    def testAvailableUpdatesXml(self):
+        system = self._saveSystem()
+        self._saveTrove()
+        system.installed_software.add(self.trove)
+        system.installed_software.add(self.trove2)
+        system.save()
+
+        response = self.client.get('/api/inventory/systems/%s' % system.pk)
+        self.assertXMLEquals(response.content, 
+            testsxml.system_available_updates_xml,
+            ignoreNodes=['createdDate', 'lastAvailableUpdateRefresh'])
 
     def testSetInstalledSoftwareSystemRest(self):
         system = self._saveSystem()
