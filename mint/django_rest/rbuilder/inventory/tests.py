@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from dateutil import tz
+from xobj import xobj
 
 from conary import versions
 from django.test import TestCase
@@ -651,6 +652,21 @@ class SystemsTestCase(XMLTestCase):
         network.save()
         system.networks.add(network)
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
+
+    def testLoadFromObjectEventUuid(self):
+        xml = """\
+<system>
+  <local_uuid>localuuid001</local_uuid>
+  <generated_uuid>generateduuid001</generated_uuid>
+  <event_uuid>eventuuid001</event_uuid>
+</system>
+"""
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.local_uuid, 'localuuid001')
+        self.failUnlessEqual(model.generated_uuid, 'generateduuid001')
+        self.failUnlessEqual(model.event_uuid, 'eventuuid001')
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']

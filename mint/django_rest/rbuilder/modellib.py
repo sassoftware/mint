@@ -223,7 +223,17 @@ class BaseManager(models.Manager):
                 rel_mod = type_map[rel_obj_name].objects.load_from_object(
                     rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)
-        
+
+        return model
+
+    def add_synthetic_fields(self, model, obj):
+        # Not all models have the synthetic fields option set, so use getattr
+        for fieldName in getattr(model._meta, 'synthetic_fields', []):
+            val = getattr(obj, fieldName, None)
+            if val is not None:
+                # XXX for now we assume synthetic fields are char only.
+                val = str(val)
+            setattr(model, fieldName, val)
         return model
 
     def load_from_object(self, obj, request, save=True):
@@ -253,6 +263,7 @@ class BaseManager(models.Manager):
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
+        model = self.add_synthetic_fields(model, obj)
 
         return model
 
@@ -640,6 +651,10 @@ class XObjModel(models.Model):
 
         return xobj_model
 
+
+class SyntheticField(object):
+    """A field that has no database storage, but is de-serialized"""
+
 class XObjIdModel(XObjModel):
     """
     Model that sets an id attribute on itself corresponding to the href for
@@ -647,6 +662,18 @@ class XObjIdModel(XObjModel):
     """
     class Meta:
         abstract = True
+
+    class __metaclass__(XObjModel.__metaclass__):
+        def __new__(cls, name, bases, attrs):
+            ret = XObjModel.__metaclass__.__new__(cls, name, bases, attrs)
+            # Find synthetic fields
+            ret._meta.synthetic_fields = synth = set()
+            for k, v in attrs.items():
+                if isinstance(v, SyntheticField):
+                    synth.add(k)
+                    # Default the value to None
+                    setattr(ret, k, None)
+            return ret
 
     def serialize(self, request=None):
         xobj_model = XObjModel.serialize(self, request)

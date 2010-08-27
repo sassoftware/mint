@@ -173,6 +173,7 @@ class System(modellib.XObjIdModel):
     #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
     systemJobs = models.ManyToManyField("Job", through="SystemJob")
+    event_uuid = modellib.SyntheticField()
 
     load_fields = [local_uuid]
 
