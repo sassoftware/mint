@@ -31,8 +31,6 @@ class DjangoTest(fixtures.FixturedUnitTest):
         from mint.django_rest.rbuilder import inventory
         from mint.django_rest.rbuilder.inventory import models as systemmodels
         from mint.django_rest.rbuilder.inventory import manager
-        from mint.django_rest.rbuilder.inventory.manager import versionmgr
-        from mint.django_rest.rbuilder.inventory.manager import systemmgr
         
         self.inventory = inventory
         self.rbuildermodels = rbuildermodels

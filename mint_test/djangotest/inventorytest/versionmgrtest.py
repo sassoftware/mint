@@ -1,17 +1,8 @@
 #!/usr/bin/python
 
-import testsuite
-
-import os
-import sys
-import time
-
-import testsetup
-
 from testutils import mock
 
 from conary import versions
-from conary.deps import deps
 
 from mint_test import djangotest
 
