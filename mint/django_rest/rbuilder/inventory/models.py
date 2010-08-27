@@ -118,6 +118,10 @@ class Zone(modellib.XObjIdModel):
 class System(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
+    # XXX this is hopefully a temporary solution to not serialize the FK
+    # part of a many-to-many relationship
+    _xobj_hidden_accessors = set(['systemjob_set'])
+    _xobj_hidden_m2m = set(['systemJobs'])
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
                 attributes = {'id':str},
@@ -173,6 +177,7 @@ class System(modellib.XObjIdModel):
     #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
     systemJobs = models.ManyToManyField("Job", through="SystemJob")
+    event_uuid = modellib.SyntheticField()
 
     load_fields = [local_uuid]
 
@@ -256,7 +261,7 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
         (SYSTEM_POLL, SYSTEM_POLL_DESC),
     )
-    name = models.CharField(max_length=8092, db_index=True, choices=EVENT_TYPES)
+    name = models.CharField(max_length=8092, unique=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 
@@ -472,7 +477,7 @@ class SystemJob(modellib.XObjModel):
         db_table = 'inventory_system_job'
     system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
-    job = modellib.DeferredForeignKey(Job, unique=True)
+    job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')
     event_uuid = modellib.XObjHiddenCharField(max_length=64, unique=True)
 
 class ErrorResponse(modellib.XObjModel):

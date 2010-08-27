@@ -239,7 +239,17 @@ class BaseManager(models.Manager):
                 rel_mod = type_map[rel_obj_name].objects.load_from_object(
                     rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)
-        
+
+        return model
+
+    def add_synthetic_fields(self, model, obj):
+        # Not all models have the synthetic fields option set, so use getattr
+        for fieldName in getattr(model._meta, 'synthetic_fields', []):
+            val = getattr(obj, fieldName, None)
+            if val is not None:
+                # XXX for now we assume synthetic fields are char only.
+                val = str(val)
+            setattr(model, fieldName, val)
         return model
 
     def load_from_object(self, obj, request, save=True):
@@ -269,6 +279,7 @@ class BaseManager(models.Manager):
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
+        model = self.add_synthetic_fields(model, obj)
 
         return model
 
@@ -307,22 +318,17 @@ class SystemManager(BaseManager):
         Overridden because systems have several checks required to determine 
         if the system already exists.
         """
-        
-        loaded_model = None
-        dupCheckFieldsDict = []
-        
+
         # only check uuids if they are not none
         if model_inst.local_uuid and model_inst.generated_uuid:
-            dupCheckFieldsDict.append(dict(local_uuid=model_inst.local_uuid, 
+            loaded_model = self.tryLoad(dict(local_uuid=model_inst.local_uuid,
                 generated_uuid=model_inst.generated_uuid))
-        
-        for d in dupCheckFieldsDict:    
-            loaded_model = self.tryLoad(d)
-            if loaded_model is not None:
-                break;
-        
-        return loaded_model
-        
+            if loaded_model:
+                # a system matching (local_uuid, generated_uuid) was found)
+                return loaded_model
+
+        return None
+
     def tryLoad(self, loadDict):
         try:
             loaded_model = self.get(**loadDict)
@@ -537,7 +543,10 @@ class XObjModel(models.Model):
         xobj_model.  This is so that things like <networks> appear as an xml
         representation on <system> xml.
         """
-        for accessorName, accessor in accessors.items():
+        xobjHiddenAccessors =  getattr(self, '_xobj_hidden_accessors', set())
+        accessorsList = [ (k, v) for (k, v) in accessors.items()
+            if k not in xobjHiddenAccessors ]
+        for accessorName, accessor in accessorsList:
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
@@ -587,7 +596,10 @@ class XObjModel(models.Model):
         Build up an object for each many to many field on this model and set
         it on xobj_model.
         """
+        hidden = getattr(self, '_xobj_hidden_m2m', [])
         for m2m_accessor in m2m_accessors:
+            if m2m_accessor in hidden:
+                continue
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
@@ -656,6 +668,10 @@ class XObjModel(models.Model):
 
         return xobj_model
 
+
+class SyntheticField(object):
+    """A field that has no database storage, but is de-serialized"""
+
 class XObjIdModel(XObjModel):
     """
     Model that sets an id attribute on itself corresponding to the href for
@@ -663,6 +679,18 @@ class XObjIdModel(XObjModel):
     """
     class Meta:
         abstract = True
+
+    class __metaclass__(XObjModel.__metaclass__):
+        def __new__(cls, name, bases, attrs):
+            ret = XObjModel.__metaclass__.__new__(cls, name, bases, attrs)
+            # Find synthetic fields
+            ret._meta.synthetic_fields = synth = set()
+            for k, v in attrs.items():
+                if isinstance(v, SyntheticField):
+                    synth.add(k)
+                    # Default the value to None
+                    setattr(ret, k, None)
+            return ret
 
     def serialize(self, request=None):
         xobj_model = XObjModel.serialize(self, request)
