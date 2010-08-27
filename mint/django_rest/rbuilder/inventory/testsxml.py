@@ -121,7 +121,6 @@ management_nodes_xml = """\
       </network>
     </networks>
     <nodeJid/>
-    <systemJobs/>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <managingZone/>
     <hostname/>
@@ -137,7 +136,6 @@ management_nodes_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
-    <systemjobSet/>
     <target/>
     <zone href="http://testserver/api/inventory/zones/2/"/>
     <systemPtr href="http://testserver/api/inventory/systems/1"/>
@@ -175,7 +173,6 @@ management_node_xml = """\
     </network>
   </networks>
   <nodeJid/>
-  <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -191,7 +188,6 @@ management_node_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <systemjobSet/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
@@ -225,7 +221,6 @@ management_node_post_xml = """\
     </network>
   </networks>
   <nodeJid>abcd</nodeJid>
-  <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
@@ -268,7 +263,6 @@ management_node_post_response_xml = """\
     </network>
   </networks>
   <nodeJid>abcd</nodeJid>
-  <systemJobs/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
@@ -284,7 +278,6 @@ management_node_post_response_xml = """\
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <systemjobSet/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
@@ -336,7 +329,6 @@ systems_xml = """\
     <sslServerCertificate/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <systemId>2</systemId>
-    <systemJobs/>
     <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <target/>
     <targetSystemId/>
@@ -380,7 +372,6 @@ systems_xml = """\
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
     <systemId>3</systemId>
-    <systemJobs/>
     <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
     <target/>
     <targetSystemId/>
@@ -493,7 +484,6 @@ system_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>1</systemId>
   <launchingUser/>
@@ -575,7 +565,6 @@ system_post_xml_response = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -589,7 +578,6 @@ system_post_xml_response = """\
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <systemjobSet/>
   <name>testsystemname</name>
   <target/>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -663,7 +651,6 @@ system_target_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -913,7 +900,6 @@ system_version_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>3</systemId>
   <launchingUser/>
@@ -1042,7 +1028,6 @@ system_version_put_response_xml = """\
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -1055,7 +1040,6 @@ system_version_put_response_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <managementNode/>
-  <systemjobSet/>
   <target/>
   <name/>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -1138,7 +1122,6 @@ system_available_updates_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>

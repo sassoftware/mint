@@ -118,6 +118,10 @@ class Zone(modellib.XObjIdModel):
 class System(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
+    # XXX this is hopefully a temporary solution to not serialize the FK
+    # part of a many-to-many relationship
+    _xobj_hidden_accessors = set(['systemjob_set'])
+    _xobj_hidden_m2m = set(['systemJobs'])
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
                 attributes = {'id':str},
@@ -473,7 +477,7 @@ class SystemJob(modellib.XObjModel):
         db_table = 'inventory_system_job'
     system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
-    job = modellib.DeferredForeignKey(Job, unique=True)
+    job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')
     event_uuid = modellib.XObjHiddenCharField(max_length=64, unique=True)
 
 class ErrorResponse(modellib.XObjModel):
