@@ -257,7 +257,7 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
         (SYSTEM_POLL, SYSTEM_POLL_DESC),
     )
-    name = models.CharField(max_length=8092, db_index=True, choices=EVENT_TYPES)
+    name = models.CharField(max_length=8092, unique=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 

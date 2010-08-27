@@ -1194,7 +1194,7 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "inventory_event_type" (
                 "event_type_id" %(PRIMARYKEY)s,
-                "name" varchar(8092) NOT NULL,
+                "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092) NOT NULL,
                 "priority" smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
