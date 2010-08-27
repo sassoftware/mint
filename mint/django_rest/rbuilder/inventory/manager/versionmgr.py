@@ -9,7 +9,6 @@ from dateutil import tz
 
 from conary import conaryclient
 from conary import versions
-from conary.deps import deps
 
 from mint.django_rest.rbuilder.inventory import models
 
