@@ -4,10 +4,13 @@
 # All Rights Reserved
 #
 
+import logging
 from mint import config
 from mint import mint_error
-from mint.django_rest import logger
 from mint.django_rest.rbuilder import models as rbuildermodels
+
+log = logging.getLogger(__name__)
+
 
 class RbuilderDjangoManager(object):
     def __init__(self, cfg=None, userName=None):
@@ -18,7 +21,8 @@ class RbuilderDjangoManager(object):
                 cfgPath = config.RBUILDER_CONFIG
                 self.cfg = config.getConfig(cfgPath)
             except mint_error.ConfigurationMissing:
-                logger.info('Failed to build mint configuration, expected in local mode only')
+                log.info("Failed to build mint configuration, "
+                        "expected in local mode only")
                 # Use an empty config object
                 self.cfg = None
         

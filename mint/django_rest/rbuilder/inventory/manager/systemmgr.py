@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import logging
 import sys
 import datetime
 import os
@@ -18,7 +19,6 @@ from conary import versions as cnyver
 from conary.deps import deps
 
 from mint.lib import uuid
-from mint.django_rest import logger as log
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
@@ -29,6 +29,9 @@ try:
 except:
     log.info("Failed loading repeater client, expected in local mode only")
     repeater_client = None  # pyflakes=ignore
+
+log = logging.getLogger(__name__)
+
 
 class SystemManager(base.BaseManager):
     @base.exposed

@@ -4,9 +4,11 @@
 # All Rights Reserved
 #
 
-from mint.django_rest import logger as log
+import logging
 
 import base
+
+log = logging.getLogger(__name__)
 
 try:
     from rpath_repeater import client as repeater_client
