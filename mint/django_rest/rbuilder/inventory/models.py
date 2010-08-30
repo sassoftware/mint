@@ -180,7 +180,7 @@ class System(modellib.XObjIdModel):
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.NullBooleanField()
     registered = models.NullBooleanField()
-    current_state = modellib.InlinedForeignKey(SystemState, null=False,
+    current_state = modellib.APIReadOnlyInlinedForeignKey(SystemState, null=False,
         visible="name")
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()

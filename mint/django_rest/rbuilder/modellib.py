@@ -12,6 +12,20 @@ from django.core import urlresolvers
 
 from xobj import xobj
 
+class XObjHiddenMixIn(object):
+    """
+    Fields implementing this interface will not be serialized in the
+    external API
+    """
+    XObjHidden = True
+
+class APIReadOnlyMixIn(object):
+    """
+    Fields implementing this interface will not be updated through the
+    external API
+    """
+    APIReadOnly = True
+
 type_map = {}
 
 class BaseManager(models.Manager):
@@ -124,6 +138,9 @@ class BaseManager(models.Manager):
             # special case for fields that may not exist at load time or we
             # want to ignore for other reasons
             if key in model.load_ignore_fields:
+                continue
+            if getattr(field, 'APIReadOnly', None):
+                # Ignore APIReadOnly fields
                 continue
             # Special case for FK fields which should be hrefs.
             if isinstance(field, SerializedForeignKey):
@@ -763,7 +780,7 @@ class InlinedForeignKey(models.ForeignKey):
     """
     def __init__(self, *args, **kwargs):
         self.visible = kwargs.pop('visible')
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(InlinedForeignKey, self).__init__(*args, **kwargs)
 
 class DateTimeUtcField(models.DateTimeField):
     """
@@ -794,5 +811,11 @@ class DateTimeUtcField(models.DateTimeField):
         else:
             return db_prep_value
 
-class XObjHiddenCharField(models.CharField):
-    XObjHidden = True
+class XObjHiddenCharField(models.CharField, XObjHiddenMixIn):
+    pass
+
+class APIReadOnlyForeignKey(models.ForeignKey, APIReadOnlyMixIn):
+    pass
+
+class APIReadOnlyInlinedForeignKey(InlinedForeignKey, APIReadOnlyMixIn):
+    pass

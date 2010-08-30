@@ -610,7 +610,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
-        self.failUnlessEqual(system.current_state.name, "dead")
+        self.failUnlessEqual(system.current_state.name, "unmanaged")
         
         # add it with same uuids but with different current state to make sure
         # we get back same system with update prop
@@ -619,7 +619,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=1)
-        self.failUnlessEqual(this_system.current_state.name, "mothballed")
+        self.failUnlessEqual(this_system.current_state.name, "unmanaged")
 
     def testGetSystemLog(self):
         models.System.objects.all().delete()
@@ -718,6 +718,31 @@ class SystemsTestCase(XMLTestCase):
         # XXX this fails although the old field's name shouldn't have been
         # overwritten
         #self.failUnlessEqual(model.name, 'blippy')
+
+    def testIgnoreCurrentStateUpdate(self):
+        # Per discussion with sed, current state field should not be
+        # writable through the API
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+
+        system = models.System(name='blippy', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <current_state>defrobinated</current_state>
+</system>
+""" % params
+
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.pk, system.pk)
+        self.failUnlessEqual(model.current_state.name, "unmanaged")
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
