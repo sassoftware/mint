@@ -772,7 +772,7 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <systemJobs>
+  <system_jobs>
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
@@ -781,7 +781,7 @@ class SystemsTestCase(XMLTestCase):
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-  </systemJobs>
+  </system_jobs>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -1437,7 +1437,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                     }),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.systemJobs.all()
+        jobs = system.system_jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
             ['uuid000'])
 
@@ -1473,7 +1473,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                     }),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.systemJobs.all()
+        jobs = system.system_jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
             ['uuid000'])
         # XXX find a better way to extract the additional field from the

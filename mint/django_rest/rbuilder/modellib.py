@@ -374,7 +374,7 @@ class SystemManager(BaseManager):
     
     def clear_m2m_accessor(self, model, m2m_accessor):
         # XXX Need a better way to handle this
-        if m2m_accessor in [ 'installed_software', 'systemJobs' ]:
+        if m2m_accessor in [ 'installed_software', 'system_jobs' ]:
             return
         BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
 
@@ -382,7 +382,7 @@ class SystemManager(BaseManager):
         # XXX Need a better way to handle this
         if m2m_accessor == 'installed_software':
             model.new_versions.append(rel_mod)
-        elif m2m_accessor == 'systemJobs':
+        elif m2m_accessor == 'system_jobs':
             # Update time_updated, this should in theory be the time when the
             # job completes
             rel_mod.time_updated = datetime.datetime.now(tz.tzutc())

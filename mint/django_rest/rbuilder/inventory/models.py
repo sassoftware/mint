@@ -148,11 +148,11 @@ class System(modellib.XObjIdModel):
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set'])
-    _xobj_hidden_m2m = set(['systemJobs'])
+    _xobj_hidden_m2m = set(['system_jobs'])
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
                 attributes = {'id':str},
-                elements = ['networks', 'systemJobs', ])
+                elements = ['networks', ])
     
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
@@ -186,7 +186,7 @@ class System(modellib.XObjIdModel):
     management_node = models.NullBooleanField()
     #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
-    systemJobs = models.ManyToManyField("Job", through="SystemJob")
+    system_jobs = models.ManyToManyField("Job", through="SystemJob")
     event_uuid = modellib.SyntheticField()
 
     load_fields = [local_uuid]
@@ -514,7 +514,7 @@ class SystemJobs(modellib.XObjModel):
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                tag = 'systemJobs')
+                tag = 'system_jobs')
     list_fields = ['job']
     job = []
 
