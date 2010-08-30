@@ -703,8 +703,7 @@ class SystemsTestCase(XMLTestCase):
         system = models.System(name = 'blippy')
         system.save()
         # Create a job
-        eventType = models.EventType.objects.get(
-            name = models.EventType.SYSTEM_REGISTRATION)
+        eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType)
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
@@ -986,8 +985,8 @@ class SystemEventTestCase(XMLTestCase):
         self.mock_dispatchSystemEvent_called = True
     
     def testGetSystemEventsRest(self):
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
@@ -1000,7 +999,7 @@ class SystemEventTestCase(XMLTestCase):
                  event2.time_created.isoformat(), event2.time_enabled.isoformat()))
 
     def testGetSystemEventRest(self):
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         response = self.client.get('/api/inventory/systemEvents/%d/' % event.system_event_id)
@@ -1010,7 +1009,7 @@ class SystemEventTestCase(XMLTestCase):
     
     def testGetSystemEvent(self):
         # add an event
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         new_event = self.mgr.getSystemEvent(event.system_event_id)
@@ -1018,8 +1017,8 @@ class SystemEventTestCase(XMLTestCase):
         
     def testGetSystemEvents(self):
         # add an event
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
@@ -1029,7 +1028,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testDeleteSystemEvent(self):
         # add an event
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         self.mgr.deleteSystemEvent(event.system_event_id)
@@ -1042,7 +1041,7 @@ class SystemEventTestCase(XMLTestCase):
         network = models.Network(system=local_system)
         network.save()
         local_system.networks.add(network)
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = self.mgr.createSystemEvent(local_system, poll_event)
         assert(event is None)
         assert(self.mock_dispatchSystemEvent_called == False)
@@ -1055,7 +1054,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testSaveSystemEvent(self):
         self._saveSystem()
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system, event_type=poll_event)
         event.save()
         # make sure event priority was set even though we didn't pass it in
@@ -1071,7 +1070,7 @@ class SystemEventTestCase(XMLTestCase):
         assert(self.mock_dispatchSystemEvent_called == False)
         
         # make sure we have our poll event
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=poll_event).get()
         assert(event is not None)
         
@@ -1084,7 +1083,7 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.scheduleSystemPollNowEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called)
         
-        pn_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+        pn_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=pn_event).get()
         assert(event is not None)
         # should have been enabled immediately
@@ -1099,7 +1098,7 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.scheduleSystemRegistrationEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called)
         
-        registration_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        registration_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=registration_event).get()
         assert(event is not None)
         # should have been enabled immediately
@@ -1119,7 +1118,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testAddSystemRegistrationEvent(self):
         # registration event should be dispatched now
-        registration_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        registration_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=registration_event, priority=registration_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
@@ -1130,7 +1129,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testAddSystemPollNowEvent(self):
         # poll now event should be dispatched now
-        poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+        poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=poll_now_event, priority=poll_now_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
@@ -1141,7 +1140,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testAddSystemPollEvent(self):
         # poll event should not be dispatched now
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=poll_event, priority=poll_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
@@ -1257,13 +1256,13 @@ class SystemEventProcessingTestCase(XMLTestCase):
         # make sure the event was removed and that we have the next poll event 
         # for this system now
         try:
-            poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+            poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
             event = models.SystemEvent.objects.get(system_event_id=event.system_event_id,
                 event_type=poll_now_event)
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         local_system = poll_event.system_events.all()[0]
         event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
         self.failIf(event is None)
@@ -1271,7 +1270,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
     def testProcessSystemEventsNoTrigger(self):
         # make sure registration event doesn't trigger next poll event
         # start with no regular poll events
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         models.SystemEvent.objects.filter(event_type=poll_event).delete()
         try:
             models.SystemEvent.objects.get(event_type=poll_event)
@@ -1294,10 +1293,10 @@ class SystemEventProcessingTestCase(XMLTestCase):
             pass
 
     def testDispatchSystemEvent(self):
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
-        poll_now_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL_IMMEDIATE)
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
-        
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
+        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+
         system = models.System(name="hey")
         system.save()
         # sanity check dispatching poll event
@@ -1362,7 +1361,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         system.save()
 
     def testDispatchSystemEvent(self):
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
 
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
@@ -1394,7 +1393,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             ['uuid000'])
 
     def testDispatchActivateSystemEvent(self):
-        act_event = models.EventType.objects.get(name=models.EventType.SYSTEM_REGISTRATION)
+        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         # Remove all networks
         for net in self.system2.networks.all():
             net.delete()

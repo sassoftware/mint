@@ -559,10 +559,14 @@ class SystemManager(base.BaseManager):
         log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
         event.delete()
 
+    @classmethod
+    def eventType(cls, name):
+        return models.EventType.objects.get(name=name)
+
     @base.exposed
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.eventType(models.EventType.SYSTEM_POLL)
         self.createSystemEvent(system, poll_event)
 
     @base.exposed
@@ -570,8 +574,7 @@ class SystemManager(base.BaseManager):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
         enable_time = datetime.datetime.now(tz.tzutc())
-        event_type = models.EventType.objects.get(
-            name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+        event_type = self.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
         self.createSystemEvent(system, event_type, enable_time)
 
     @base.exposed
@@ -579,8 +582,8 @@ class SystemManager(base.BaseManager):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
         enable_time = datetime.datetime.now(tz.tzutc())
-        registration_event_type = models.EventType.objects.get(
-            name=models.EventType.SYSTEM_REGISTRATION)
+        registration_event_type = self.eventType(
+            models.EventType.SYSTEM_REGISTRATION)
         self.createSystemEvent(system, registration_event_type, enable_time)
 
     @base.exposed
