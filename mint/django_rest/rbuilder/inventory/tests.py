@@ -704,7 +704,8 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         # Create a job
         eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
-        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType)
+        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
@@ -742,6 +743,54 @@ class SystemsTestCase(XMLTestCase):
         model = models.System.objects.load_from_object(xobjmodel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
         self.failUnlessEqual(model.current_state.name, "unmanaged")
+
+    def testUpdateCurrentState(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+
+        system = models.System(name='blippy', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+
+        # Create a job
+        eventType = models.EventType.objects.get(
+            name = models.EventType.SYSTEM_POLL)
+        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
+        job.save()
+        systemJob = models.SystemJob(system=system, job=job,
+            event_uuid=eventUuid)
+        systemJob.save()
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid, jobUuid=job.job_uuid,
+            jobState="Completed")
+
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
+  <systemJobs>
+    <job>
+      <job_uuid>%(jobUuid)s</job_uuid>
+      <job_state>%(jobState)s</job_state>
+    </job>
+    <job>
+      <job_uuid>%(jobUuid)s</job_uuid>
+      <job_state>%(jobState)s</job_state>
+    </job>
+  </systemJobs>
+</system>
+""" % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.pk, system.pk)
+
+        job = models.Job.objects.get(pk=job.pk)
+        self.failUnlessEqual(job.job_state.name, 'Completed')
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']

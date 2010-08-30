@@ -152,7 +152,7 @@ class System(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
                 attributes = {'id':str},
-                elements = ['networks'])
+                elements = ['networks', 'systemJobs', ])
     
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
@@ -276,13 +276,39 @@ class EventType(modellib.XObjIdModel):
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 
+class JobState(modellib.XObjModel):
+    class Meta:
+        db_table = "inventory_job_state"
+    QUEUED = "Queued"
+    RUNNING = "Running"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
+    choices = (
+        (QUEUED, QUEUED),
+        (RUNNING, RUNNING),
+        (COMPLETED, COMPLETED),
+        (FAILED, FAILED),
+    )
+    _xobj = xobj.XObjMetadata(tag='job_state')
+
+    job_state_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=64, unique=True, choices=choices)
+
+    load_fields = [ name ]
+
 class Job(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_job'
+    _xobj = xobj.XObjMetadata(tag='job')
+
     job_id = models.AutoField(primary_key=True)
-    job_uuid = models.CharField(max_length=64)
-    event_type = models.ForeignKey(EventType)
+    job_uuid = models.CharField(max_length=64, unique=True)
+    job_state = modellib.InlinedForeignKey(JobState, visible='name')
+    event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, visible='name')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
+    time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
+
+    load_fields = [ job_uuid ]
 
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
@@ -482,6 +508,15 @@ class Version(modellib.XObjModel):
         if self.flavor is None:
             self.flavor = ''
         return super(self.__class__, self).save(self, *args, **kwargs)
+
+class SystemJobs(modellib.XObjModel):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'systemJobs')
+    list_fields = ['job']
+    job = []
 
 class SystemJob(modellib.XObjModel):
     class Meta:

@@ -1275,15 +1275,32 @@ class MigrateTo_50(SchemaMigration):
                 "inventory_system_event_priority", "priority")
             changed = True
 
+        if 'inventory_job_state' not in db.tables:
+            cu.execute("""
+                CREATE TABLE inventory_job_state
+                (
+                    job_state_id %(PRIMARYKEY)s,
+                    name VARCHAR NOT NULL UNIQUE
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_job_state'] = []
+            changed = True
+        changed |= schema._addTableRows(db, 'inventory_job_state', 'name',
+            [
+                dict(name='Queued'), dict(name='Running'),
+                dict(name='Completed'), dict(name='Failed'), ])
+
         tableName = 'inventory_job'
         if tableName not in db.tables:
             cu.execute("""
                 CREATE TABLE inventory_job (
                     job_id %(PRIMARYKEY)s,
                     job_uuid varchar(64) NOT NULL UNIQUE,
+                    job_state_id integer NOT NULL
+                        REFERENCES inventory_job_state,
                     event_type_id integer NOT NULL
                         REFERENCES inventory_event_type,
-                    time_created timestamp with time zone NOT NULL
+                    time_created timestamp with time zone NOT NULL,
+                    time_updated timestamp with time zone NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables[tableName] = []
             changed = True

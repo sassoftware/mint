@@ -23,14 +23,13 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
 
+log = logging.getLogger(__name__)
 
 try:
     from rpath_repeater import client as repeater_client
 except:
     log.info("Failed loading repeater client, expected in local mode only")
     repeater_client = None  # pyflakes=ignore
-
-log = logging.getLogger(__name__)
 
 
 class SystemManager(base.BaseManager):
@@ -548,6 +547,7 @@ class SystemManager(base.BaseManager):
         job = models.Job()
         job.job_uuid = str(uuid)
         job.event_type = event.event_type
+        job.job_state = cls.jobState(models.JobState.RUNNING)
         job.save()
 
         sjob = models.SystemJob()
@@ -565,6 +565,10 @@ class SystemManager(base.BaseManager):
     @classmethod
     def eventType(cls, name):
         return models.EventType.objects.get(name=name)
+
+    @classmethod
+    def jobState(cls, name):
+        return models.JobState.objects.get(name=name)
 
     @base.exposed
     def scheduleSystemPollEvent(self, system):

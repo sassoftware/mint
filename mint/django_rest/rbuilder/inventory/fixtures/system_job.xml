@@ -2,18 +2,22 @@
 <django-objects version="1.0">
   <object pk="1" model="inventory.job">
     <field name="job_uuid">fixture-job-uuid1</field>
+    <field to="inventory.jobstate" name="job_state" rel="ManyToOneRel">1</field>
     <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="inventory.job">
     <field name="job_uuid">fixture-job-uuid2</field>
+    <field to="inventory.jobstate" name="job_state" rel="ManyToOneRel">1</field>
     <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">2</field>
   </object>
   <object pk="3" model="inventory.job">
     <field name="job_uuid">fixture-job-uuid3</field>
+    <field to="inventory.jobstate" name="job_state" rel="ManyToOneRel">1</field>
     <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">3</field>
   </object>
   <object pk="4" model="inventory.job">
     <field name="job_uuid">fixture-job-uuid4</field>
+    <field to="inventory.jobstate" name="job_state" rel="ManyToOneRel">1</field>
     <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="inventory.systemjob">
