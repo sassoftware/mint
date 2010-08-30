@@ -255,8 +255,11 @@ class BaseManager(models.Manager):
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
             rel_obj_name = m2m_mgr.target_field_name
             self.clear_m2m_accessor(model, m2m_accessor)
-            for rel_obj in getattr(getattr(obj, m2m_accessor, None),
-                                   rel_obj_name, []):
+            acobj = getattr(obj, m2m_accessor, None)
+            objlist = getattr(acobj, rel_obj_name, None)
+            if objlist is not None and not isinstance(objlist, list):
+                objlist = [ objlist ]
+            for rel_obj in objlist or []:
                 rel_mod = type_map[rel_obj_name].objects.load_from_object(
                     rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)

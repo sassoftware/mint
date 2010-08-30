@@ -777,10 +777,6 @@ class SystemsTestCase(XMLTestCase):
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-    <job>
-      <job_uuid>%(jobUuid)s</job_uuid>
-      <job_state>%(jobState)s</job_state>
-    </job>
   </system_jobs>
 </system>
 """ % params
