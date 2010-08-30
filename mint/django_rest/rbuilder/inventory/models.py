@@ -115,6 +115,33 @@ class Zone(modellib.XObjIdModel):
     description = models.CharField(max_length=8092, null=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
+class SystemState(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_system_state'
+
+    UNMANAGED = "unmanaged"
+    REGISTERED = "registered"
+    RESPONSIVE = "responsive"
+    SHUTDOWN = "shut down"
+    NONRESPONSIVE = "non-responsive"
+    MOTHBALLED = "mothballed"
+    DEAD = "dead"
+
+    STATE_CHOICES = (
+        (UNMANAGED, UNMANAGED),
+        (REGISTERED, REGISTERED),
+        (RESPONSIVE, RESPONSIVE),
+        (SHUTDOWN, SHUTDOWN),
+        (NONRESPONSIVE, NONRESPONSIVE),
+        (DEAD, DEAD),
+        (MOTHBALLED, MOTHBALLED),
+    )
+
+    system_state_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=8092, unique=True,
+        choices=STATE_CHOICES)
+    description = models.CharField(max_length=8092)
+
 class System(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
@@ -129,15 +156,6 @@ class System(modellib.XObjIdModel):
     
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
-    
-    UNMANAGED = "unmanaged"
-    REGISTERED = "registered"
-    RESPONSIVE = "responsive"
-    SHUTDOWN = "shutdown"
-    NONRESPONSIVE = "non-responsive"
-    DEAD = "dead"
-    MOTHBALLED = "mothballed"
-    
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
@@ -162,16 +180,8 @@ class System(modellib.XObjIdModel):
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.NullBooleanField()
     registered = models.NullBooleanField()
-    STATE_CHOICES = (
-        (UNMANAGED, UNMANAGED),
-        (REGISTERED, REGISTERED),
-        (RESPONSIVE, RESPONSIVE),
-        (SHUTDOWN, SHUTDOWN),
-        (NONRESPONSIVE, NONRESPONSIVE),
-        (DEAD, DEAD),
-        (MOTHBALLED, MOTHBALLED),
-    )
-    current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
+    current_state = modellib.InlinedForeignKey(SystemState, null=False,
+        visible="name")
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
     #TO-DO should this ever be nullable?
@@ -184,8 +194,9 @@ class System(modellib.XObjIdModel):
     new_versions = []
     
     def save(self, *args, **kw):
-        if not self.current_state:
-            self.current_state = System.UNMANAGED
+        if self.current_state_id is None:
+            self.current_state = SystemState.objects.get(
+                name = SystemState.UNMANAGED)
         if not self.name:
             self.name = self.hostname and self.hostname or ''
         modellib.XObjIdModel.save(self, *args, **kw)

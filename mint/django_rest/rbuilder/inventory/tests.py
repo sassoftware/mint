@@ -143,7 +143,8 @@ class XMLTestCase(TestCase):
         system.ssl_client_key = 'testsystemsslclientkey'
         system.ssl_server_certificate = 'testsystemsslservercertificate'
         system.registered = True
-        system.current_state = 'registered'
+        system.current_state = self.mgr.sysMgr.systemState(
+            models.SystemState.REGISTERED)
         system.save()
 
         network = models.Network()
@@ -170,7 +171,8 @@ class XMLTestCase(TestCase):
         management_node.ssl_client_key = 'test management node client key'
         management_node.ssl_server_certificate = 'test management node server cert'
         management_node.registered = True
-        management_node.current_state = 'registered'
+        management_node.current_state = self.mgr.sysMgr.systemState(
+            models.SystemState.REGISTERED)
         management_node.local = True
         management_node.management_node = True
         management_node.save()
@@ -196,7 +198,8 @@ class XMLTestCase(TestCase):
         system.ssl_client_key = 'testsystemsslclientkey2'
         system.ssl_server_certificate = 'testsystemsslservercertificate2'
         system.registered = True
-        system.current_state = 'registered'
+        system.current_state = self.mgr.sysMgr.systemState(
+            models.SystemState.REGISTERED)
         system.save()
 
         network = models.Network()
@@ -320,16 +323,18 @@ class ManagementNodesTestCase(XMLTestCase):
         # make sure state gets set to unmanaged
         management_node = models.ManagementNode(name="mgoblue", 
             description="best node ever", zone=zone)
-        assert(management_node.current_state != models.System.UNMANAGED)
+        _eq = self.failUnlessEqual
+        _eq(management_node.current_state_id, None)
         management_node.save()
         assert(management_node.management_node)
-        assert(management_node.current_state == models.System.UNMANAGED)
+        _eq(management_node.current_state.name, models.SystemState.UNMANAGED)
         
         # make sure we honor the state if set though
         management_node = models.ManagementNode(name="mgoblue", zone=zone,
-            description="best node ever", current_state=models.System.DEAD)
+            description="best node ever",
+            current_state=self.mgr.sysMgr.systemState(models.SystemState.DEAD))
         management_node.save()
-        assert(management_node.current_state == models.System.DEAD)
+        _eq(management_node.current_state.name, models.SystemState.DEAD)
         
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
@@ -466,33 +471,35 @@ class SystemsTestCase(XMLTestCase):
         # make sure state gets set to unmanaged
         system = models.System(name="mgoblue", 
             description="best appliance ever")
-        assert(system.current_state != models.System.UNMANAGED)
+        _eq = self.failUnlessEqual
+        _eq(system.current_state_id, None)
         system.save()
-        assert(system.current_state == models.System.UNMANAGED)
+        _eq(system.current_state.name, models.SystemState.UNMANAGED)
         
         # make sure we honor the state if set though
         system = models.System(name="mgoblue", 
-            description="best appliance ever", current_state=models.System.DEAD)
+            description="best appliance ever",
+            current_state=self.mgr.sysMgr.systemState(models.SystemState.DEAD))
         system.save()
-        assert(system.current_state == models.System.DEAD)
+        _eq(system.current_state.name, models.SystemState.DEAD)
         
         # test name fallback to hostname
         system = models.System(hostname="mgoblue", 
             description="best appliance ever")
-        assert(system.name == '')
+        self.failUnlessEqual(system.name, '')
         system.save()
-        assert(system.name == system.hostname)
+        self.failUnlessEqual(system.name, system.hostname)
         
         # test name fallback to blank
         system = models.System(description="best appliance ever")
-        assert(system.name == '')
+        self.failUnlessEqual(system.name, '')
         system.save()
-        assert(system.name == '')
+        self.failUnlessEqual(system.name, '')
         
         # make sure we honor the name if set though
         system = models.System(name="mgoblue")
         system.save()
-        assert(system.name == "mgoblue")
+        self.failUnlessEqual(system.name, "mgoblue")
         
     def testAddSystem(self):
         # create the system
@@ -500,7 +507,8 @@ class SystemsTestCase(XMLTestCase):
             description="best appliance ever", registered=False)
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
-        assert(new_system.current_state == models.System.UNMANAGED)
+        self.failUnlessEqual(new_system.current_state.name,
+            models.SystemState.UNMANAGED)
         
         # make sure we scheduled our registration event
         assert(self.mock_scheduleSystemRegistrationEvent_called)
@@ -510,10 +518,12 @@ class SystemsTestCase(XMLTestCase):
         system = models.System(name="mgoblue", description="best appliance ever", registered=True)
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
-        assert(new_system.current_state == models.System.REGISTERED)
+        self.failUnlessEqual(new_system.current_state.name,
+            models.SystemState.REGISTERED)
         
         # make sure we did not schedule registration
-        assert(self.mock_scheduleSystemRegistrationEvent_called == False)
+        self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
+            False)
         
         # make sure we scheduled poll event
         assert(self.mock_scheduleSystemPollEvent_called)
@@ -526,13 +536,15 @@ class SystemsTestCase(XMLTestCase):
         system.zone = zone
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
-        assert(new_system.current_state == models.System.REGISTERED)
+        self.failUnlessEqual(new_system.current_state.name,
+            models.SystemState.REGISTERED)
         
         # make sure we did not schedule registration
-        assert(self.mock_scheduleSystemRegistrationEvent_called == False)
+        self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
+            False)
         
         # make sure we did not scheduled poll event since this is a management node
-        assert(self.mock_scheduleSystemPollEvent_called == False)
+        self.failUnlessEqual(self.mock_scheduleSystemPollEvent_called, False)
         
     def testGetSystems(self):
         system = self._saveSystem()
@@ -598,7 +610,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
-        self.failUnlessEqual(system.current_state, "dead")
+        self.failUnlessEqual(system.current_state.name, "dead")
         
         # add it with same uuids but with different current state to make sure
         # we get back same system with update prop
@@ -607,7 +619,7 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=1)
-        self.failUnlessEqual(this_system.current_state, "mothballed")
+        self.failUnlessEqual(this_system.current_state.name, "mothballed")
 
     def testGetSystemLog(self):
         models.System.objects.all().delete()

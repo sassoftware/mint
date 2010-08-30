@@ -128,6 +128,10 @@ class BaseManager(models.Manager):
             # Special case for FK fields which should be hrefs.
             if isinstance(field, SerializedForeignKey):
                 val = field.related.parent_model.objects.load_from_object(val, request, save=save)
+            elif isinstance(field, InlinedForeignKey):
+                lookup = { field.visible : val }
+                # Look up the inlined value
+                val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
                 val = field.related.parent_model.objects.load_from_href(
                     getattr(val, 'href', None))
@@ -534,8 +538,14 @@ class XObjModel(models.Model):
             if isinstance(field, related.RelatedField):
                 val = getattr(self, fieldName)
                 serialized = getattr(field, 'serialized', False)
+                visible = getattr(field, 'visible', None)
                 if val:
-                    if not serialized:
+                    if visible:
+                        # If the visible prop is set, we want to copy the
+                        # field's value for that property
+                        setattr(xobj_model, fieldName,
+                            getattr(val, visible))
+                    elif not serialized:
                         href_model = type('%s_href' % \
                             self.__class__.__name__, (object,), {})()
                         href_model._xobj = xobj.XObjMetadata(
@@ -745,7 +755,15 @@ class SerializedForeignKey(models.ForeignKey):
     def __init__(self, *args, **kwargs):
         self.serialized = True
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
-    
+
+class InlinedForeignKey(models.ForeignKey):
+    """
+    If you want a FK to be serialized as one of its fields, use the "visible"
+    argument
+    """
+    def __init__(self, *args, **kwargs):
+        self.visible = kwargs.pop('visible')
+        super(self.__class__, self).__init__(*args, **kwargs)
 
 class DateTimeUtcField(models.DateTimeField):
     """

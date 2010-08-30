@@ -1093,6 +1093,27 @@ class MigrateTo_50(SchemaMigration):
             db.tables['inventory_zone'] = []
             changed = True
 
+        if 'inventory_system_state' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_state" (
+                    "system_state_id" integer %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_system_state'] = []
+            changed = True
+
+        changed |= schema._addTableRows(db, 'inventory_system_state', 'name',
+                [
+                    dict(name="unmanaged", description="unmanaged"),
+                    dict(name="registered", description="registered"),
+                    dict(name="responsive", description="responsive"),
+                    dict(name="shut down", description="shut down"),
+                    dict(name="non-responsive", description="non-responsive"),
+                    dict(name="mothballed", description="mothballed"),
+                    dict(name="dead", description="dead")
+                ])
+
         if 'inventory_system' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system" (
@@ -1118,7 +1139,8 @@ class MigrateTo_50(SchemaMigration):
                     "launching_user_id" integer REFERENCES "users" ("userid"),
                     "available" bool,
                     "registered" bool,
-                    "current_state" varchar(32),
+                    "current_state_id" integer NOT NULL
+                        REFERENCES "inventory_system_state" ("system_state_id"),
                     "management_node" bool,
                     "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
                 ) %(TABLEOPTS)s""" % db.keywords)

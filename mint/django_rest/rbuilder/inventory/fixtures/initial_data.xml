@@ -36,7 +36,7 @@
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field type="NullBooleanField" name="available"><None></None></field>
         <field type="NullBooleanField" name="registered"><None></None></field>
-        <field type="CharField" name="current_state">unmanaged</field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field type="NullBooleanField" name="management_node">True</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -62,4 +62,32 @@
         <field type="NullBooleanField" name="active"><None></None></field>
         <field type="NullBooleanField" name="required"><None></None></field>
     </object>
+  <object pk="1" model="inventory.systemstate">
+    <field type="CharField" name="name">unmanaged</field>
+    <field type="CharField" name="description">unmanaged</field>
+  </object>
+  <object pk="2" model="inventory.systemstate">
+    <field type="CharField" name="name">registered</field>
+    <field type="CharField" name="description">registered</field>
+  </object>
+  <object pk="3" model="inventory.systemstate">
+    <field type="CharField" name="name">responsive</field>
+    <field type="CharField" name="description">responsive</field>
+  </object>
+  <object pk="4" model="inventory.systemstate">
+    <field type="CharField" name="name">shut down</field>
+    <field type="CharField" name="description">shut down</field>
+  </object>
+  <object pk="5" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive</field>
+    <field type="CharField" name="description">non-responsive</field>
+  </object>
+  <object pk="6" model="inventory.systemstate">
+    <field type="CharField" name="name">mothballed</field>
+    <field type="CharField" name="description">mothballed</field>
+  </object>
+  <object pk="7" model="inventory.systemstate">
+    <field type="CharField" name="name">dead</field>
+    <field type="CharField" name="description">dead</field>
+  </object>
 </django-objects>

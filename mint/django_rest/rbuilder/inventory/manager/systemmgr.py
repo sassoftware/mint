@@ -102,6 +102,10 @@ class SystemManager(base.BaseManager):
         ManagementNodes.managementNode = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
 
+    @classmethod
+    def systemState(cls, stateName):
+        return models.SystemState.objects.get(name = stateName)
+
     @base.exposed
     def addManagementNode(self, zone_id, managementNode):
         """Add a management node to the inventory"""
@@ -116,12 +120,15 @@ class SystemManager(base.BaseManager):
         
         if managementNode.registered:
             managementNode.registration_date = datetime.datetime.now(tz.tzutc())
-            managementNode.current_state = models.System.REGISTERED
+            managementNode.current_state = self.systemState(
+                models.SystemState.REGISTERED)
             #TO-DO Need to add the JID to the models.ManagementNode object
             managementNode.save()
             self.log_system(managementNode, models.SystemLogEntry.REGISTERED)
         else:
             managementNode.current_state = models.System.UNMANAGED
+            managementNode.current_state = self.systemState(
+                models.SystemState.UNMANAGED)
             managementNode.save()
         
         return managementNode
@@ -157,7 +164,8 @@ class SystemManager(base.BaseManager):
         
         if system.registered:
             system.registration_date = datetime.datetime.now(tz.tzutc())
-            system.current_state = models.System.REGISTERED
+            system.current_state = self.systemState(
+                models.SystemState.REGISTERED)
             system.save()
             self.log_system(system, models.SystemLogEntry.REGISTERED)
             self.scheduleSystemPollEvent(system)
