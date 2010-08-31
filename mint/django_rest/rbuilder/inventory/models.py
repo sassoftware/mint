@@ -249,7 +249,8 @@ class InstalledSoftware(modellib.XObjModel):
 class EventType(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_event_type'
-        
+    _xobj = xobj.XObjMetadata(tag='event_type')
+
     # on-demand events need to be > 100 to be dispatched immediately
     # DO NOT CHANGE POLL PRIORITIES HERE WITHOUT CHANGING IN schema.py also
     ON_DEMAND_BASE = 100
@@ -300,6 +301,7 @@ class Job(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_job'
     _xobj = xobj.XObjMetadata(tag='job')
+    objects = modellib.JobManager()
 
     job_id = models.AutoField(primary_key=True)
     job_uuid = models.CharField(max_length=64, unique=True)

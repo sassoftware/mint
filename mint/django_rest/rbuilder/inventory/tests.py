@@ -748,6 +748,8 @@ class SystemsTestCase(XMLTestCase):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'
+        jobState = "Completed"
+        jobUuid = 'rmakeuuid001'
 
         system = models.System(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
@@ -756,18 +758,19 @@ class SystemsTestCase(XMLTestCase):
         # Create a job
         eventType = models.EventType.objects.get(
             name = models.EventType.SYSTEM_POLL)
-        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+        job = models.Job(job_uuid=jobUuid, event_type=eventType,
             job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
         systemJob.save()
 
+        # Pass bogus event uuid, we should not update
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid, jobUuid=job.job_uuid,
-            jobState="Completed")
+            eventUuid=eventUuid + "bogus", jobUuid=jobUuid + "bogus",
+            jobState=jobState)
 
-        xml = """\
+        xmlTempl = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
@@ -779,14 +782,39 @@ class SystemsTestCase(XMLTestCase):
     </job>
   </system_jobs>
 </system>
-""" % params
+"""
+        xml = xmlTempl % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.pk, system.pk)
+
+        # We expect nothing to be updated, since there's no such job
+        job = models.Job.objects.get(pk=job.pk)
+        self.failUnlessEqual(job.job_state.name, 'Running')
+
+        # Now set jobUuid to be correct
+        params['jobUuid'] = jobUuid
+        xml = xmlTempl % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.pk, system.pk)
+
+        # We still expect nothing to be updated, since the event_uuid is wrong
+        job = models.Job.objects.get(pk=job.pk)
+        self.failUnlessEqual(job.job_state.name, 'Running')
+
+        # Now set eventUuid to be correct
+        params['eventUuid'] = eventUuid
+        xml = xmlTempl % params
         obj = xobj.parse(xml)
         xobjmodel = obj.system
         model = models.System.objects.load_from_object(xobjmodel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
         job = models.Job.objects.get(pk=job.pk)
-        self.failUnlessEqual(job.job_state.name, 'Completed')
+        self.failUnlessEqual(job.job_state.name, jobState)
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']

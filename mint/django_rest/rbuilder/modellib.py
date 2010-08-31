@@ -339,6 +339,20 @@ class VersionManager(BaseManager):
         nmodel.fromConaryVersion(v)
         return nmodel
 
+class JobManager(BaseManager):
+    def load_from_db(self, model_inst, accessors):
+        loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+        if loaded_model:
+            return loaded_model
+        # We could not find the job. Create one just because we need to
+        # populate some of the required fields
+        model = self.model()
+        mclass = type_map['job_state']
+        model.job_state = mclass.objects.get(name=mclass.QUEUED)
+        mclass = type_map['event_type']
+        model.event_type = mclass.objects.get(name=mclass.SYSTEM_REGISTRATION)
+        return model
+
 class SystemManager(BaseManager):
     
     def load_from_db(self, model_inst, accessors):
@@ -386,13 +400,23 @@ class SystemManager(BaseManager):
         if m2m_accessor == 'installed_software':
             model.new_versions.append(rel_mod)
         elif m2m_accessor == 'system_jobs':
-            # Update time_updated, this should in theory be the time when the
-            # job completes
-            rel_mod.time_updated = datetime.datetime.now(tz.tzutc())
-            # XXX This just doesn't seem right
-            rel_mod.save()
+            self._handleSystemJob(model, rel_mod)
         else:
             BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+
+    def _handleSystemJob(self, system, job):
+        # Validate event_uuid too - fetch SystemJob entry
+        try:
+            sj = job.systems.get(system__system_id=system.pk)
+        except exceptions.ObjectDoesNotExist:
+            return
+        if sj.event_uuid != system.event_uuid:
+            return
+        # Update time_updated, this should in theory be the time when the
+        # job completes
+        job.time_updated = datetime.datetime.now(tz.tzutc())
+        # XXX This just doesn't seem right
+        job.save()
 
 class ManagementNodeManager(SystemManager):
     """
