@@ -24,6 +24,8 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
 
+log = logging.getLogger(__name__)
+
 class SystemManager(base.BaseManager):
     @base.exposed
     def getEventTypes(self):
