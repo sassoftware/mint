@@ -1359,12 +1359,14 @@ def _addManagementZone(db, cfg):
     if len(ids) == 1:
         zoneId = ids[0][0]
     
+        cu.execute("SELECT system_state_id FROM inventory_system_state WHERE name = 'unmanaged'")
+        stateId = cu.fetchone()[0]
         # add the system
         changed |= _addTableRows(db, 'inventory_system', 'name',
                 [dict(name="rPath Update Service", 
                       description='Local rPath Update Service',
                       management_node='true',
-                      current_state="unmanaged",
+                      current_state_id=stateId,
                       managing_zone_id=zoneId,
                       created_date=str(datetime.datetime.now(tz.tzutc())))])
         
