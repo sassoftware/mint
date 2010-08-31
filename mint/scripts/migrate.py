@@ -1096,7 +1096,7 @@ class MigrateTo_50(SchemaMigration):
         if 'inventory_system_state' not in db.tables:
             cu.execute("""
                 CREATE TABLE "inventory_system_state" (
-                    "system_state_id" integer %(PRIMARYKEY)s,
+                    "system_state_id" %(PRIMARYKEY)s,
                     "name" varchar(8092) NOT NULL UNIQUE,
                     "description" varchar(8092) NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
