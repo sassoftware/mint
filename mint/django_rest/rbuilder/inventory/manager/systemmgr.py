@@ -491,20 +491,22 @@ class SystemManager(base.BaseManager):
         destination = network.ip_address or network.dns_name
         eventType = event.event_type.name
         eventUuid = str(uuid.uuid4())
-        sputnik = "sputnik1"
+        #zone = event.system.managing_zone.name
+        # XXX FIXME
+        zone = None
+        cimParams = repClient.CimParams(host=destination,
+            eventUuid=eventUuid)
         requiredNetwork = (network.required and destination) or None
         if eventType in registrationEvents:
-            self._runSystemEvent(event, destination,
-                repClient.register, destination, sputnik, eventUuid=eventUuid,
-                requiredNetwork=requiredNetwork)
+            self._runSystemEvent(event, repClient.register, cimParams,
+                zone=zone, requiredNetwork=requiredNetwork)
         elif eventType in pollEvents:
             # XXX remove the hardcoded port from here
-            resultsLocation = dict(
+            resultsLocation = repClient.ResultsLocation(
                 path = "/api/inventory/systems/%d" % event.system.pk,
                 port = 80)
-            self._runSystemEvent(event, destination,
-                repClient.poll, destination, sputnik, eventUuid=eventUuid,
-                resultsLocation=resultsLocation)
+            self._runSystemEvent(event, repClient.poll,
+                cimParams, resultsLocation, zone=zone)
         else:
             log.error("Unknown event type %s" % eventType)
 
@@ -527,23 +529,25 @@ class SystemManager(base.BaseManager):
         return None
 
     @classmethod
-    def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
+    def _runSystemEvent(cls, event, method, cimParams, resultsLocation=None,
+            **kwargs):
+        zone = kwargs.pop('zone', None)
         systemName = event.system.name
         eventType = event.event_type.name
-        eventUuid = kwargs['eventUuid']
+        eventUuid = cimParams.eventUuid
         log.info("System %s (%s), task type '%s' launching" %
-            (systemName, destination, eventType))
+            (systemName, cimParams.host, eventType))
         try:
-            uuid, job = method(*args, **kwargs)
+            uuid, job = method(cimParams, resultsLocation, zone=zone)
         except Exception, e:
             tb = sys.exc_info()[2]
             traceback.print_tb(tb)
             log.error("System %s (%s), task type '%s' failed: %s" %
-                (systemName, destination, eventType, str(e)))
+                (systemName, cimParams.host, eventType, str(e)))
             return None, None
 
         log.info("System %s (%s), task %s (%s) in progress" %
-            (systemName, destination, uuid, eventType))
+            (systemName, cimParams.host, uuid, eventType))
         job = models.Job()
         job.job_uuid = str(uuid)
         job.event_type = event.event_type

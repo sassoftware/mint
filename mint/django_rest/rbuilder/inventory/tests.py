@@ -1410,6 +1410,22 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         class RepeaterClient(object):
             methodsCalled = []
 
+            class CimParams(object):
+                def __init__(self, **kwargs):
+                    self.__dict__.update(kwargs)
+                def __eq__(self, other):
+                    return self.__dict__ == other.__dict__
+                def __repr__(self):
+                    return repr(self.__dict__)
+
+            class ResultsLocation(object):
+                def __init__(self, **kwargs):
+                    self.__dict__.update(kwargs)
+                def __eq__(self, other):
+                    return self.__dict__ == other.__dict__
+                def __repr__(self):
+                    return repr(self.__dict__)
+
             def register(slf, *args, **kwargs):
                 return slf._action('register', *args, **kwargs)
 
@@ -1450,15 +1466,18 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         finally:
             uuid.uuid4 = origUuid4
 
+        cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
+        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
-                ('poll', ('3.3.3.3', 'sputnik1'),
-                    {
-                     'eventId' : 'really-unique-id',
-                     'resultsLocation':
-                        {'path': '/api/inventory/systems/4', 'port': 80},
-                    }),
+                ('poll',
+                    (
+                        cimParams(host='3.3.3.3', eventUuid='really-unique-id'),
+                        resLoc(path='/api/inventory/systems/4', port=80),
+                    ),
+                    dict(zone=None),
+                ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.system_jobs.all()
@@ -1487,14 +1506,19 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         finally:
             uuid.uuid4 = origUuid4
 
+        cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
+        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
-                ('register', ('superduper.com', 'sputnik1'),
-                    {
-                     'eventId' : 'really-unique-id',
-                     'requiredNetwork' : None,
-                    }),
+                ('register',
+                    (
+                        cimParams(host='superduper.com',
+                            eventUuid = 'really-unique-id'),
+                        None,
+                    ),
+                    dict(zone=None),
+                ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
         jobs = system.system_jobs.all()
