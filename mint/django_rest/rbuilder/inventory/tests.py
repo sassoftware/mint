@@ -816,6 +816,32 @@ class SystemsTestCase(XMLTestCase):
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
 
+        # Make sure that pasting a system job with just the event uuid and job
+        # info works (i.e. without the local and generated uuids)
+        xmlTempl = """\
+<system>
+  <event_uuid>%(eventUuid)s</event_uuid>
+  <system_jobs>
+    <job>
+      <job_uuid>%(jobUuid)s</job_uuid>
+      <job_state>%(jobState)s</job_state>
+    </job>
+  </system_jobs>
+</system>
+"""
+        jobState = 'Failed'
+        params['jobState'] = jobState
+
+        xml = xmlTempl % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.pk, system.pk)
+
+        job = models.Job.objects.get(pk=job.pk)
+        self.failUnlessEqual(job.job_state.name, jobState)
+
+
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
     
@@ -1507,7 +1533,6 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             uuid.uuid4 = origUuid4
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
-
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
                 ('register',
