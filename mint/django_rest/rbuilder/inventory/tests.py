@@ -1507,7 +1507,6 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             uuid.uuid4 = origUuid4
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
-        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
