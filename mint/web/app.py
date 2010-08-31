@@ -4,10 +4,12 @@
 # All rights reserved
 #
 import base64
+import cgi
 import kid
 import re
 import sys
 import time
+import urllib
 
 from conary.lib import util
 
@@ -52,6 +54,31 @@ class MintApp(WebHandler):
     user = None
     session = {}
 
+
+    @staticmethod
+    def _splitQuery(path):
+        """
+        Split off any query arguments (GET) from C{path}. Returns the path sans
+        query, and a dictionary of the parsed arguments.
+        """
+        path, query = urllib.splitquery(path)
+        args = {}
+        if query:
+            # Force FieldStorage to parse the query string for us. We need to
+            # manufacture a Content-Type that points cgi to the query instead
+            # of the body
+            # We use an rfc822.Message instead of a dictionary because of the
+            # case-insensitive nature of the headers
+            headers = cgi.rfc822.Message(cgi.StringIO(
+                'Content-Type: application/x-www-form-urlencoded'))
+            fs = cgi.FieldStorage(fp = None,
+                    headers = headers,
+                    environ = { 'REQUEST_METHOD' : 'GET',
+                                'QUERY_STRING' : query})
+            for key in fs.keys():
+                args[key] = fs.getvalue(key)
+        return args
+    
     def __init__(self, req, cfg, repServer = None, db=None):
         self.req = req
         self.cfg = cfg
@@ -70,7 +97,7 @@ class MintApp(WebHandler):
         self.req.content_type = self.content_type
 
         try:
-            self.fields = dict(FieldStorage(self.req))
+            self.fields = self._splitQuery(self.req.unparsed_uri)
         # for some reason mod_python raises a 501 error
         # when it fails to parse a POST request. raise
         # a 404 instead.
@@ -87,7 +114,7 @@ class MintApp(WebHandler):
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
     def _handle(self, pathInfo):
-        method = self.req.method.upper()
+        method = self.fields.get('_method', self.req.method).upper()
         if method not in ('GET', 'POST', 'PUT'):
             return apache.HTTP_METHOD_NOT_ALLOWED
 
@@ -181,7 +208,9 @@ class MintApp(WebHandler):
                 traceback = self.cfg.debugMode and tb or None)
         else:
             if self.auth.authorized:
-                self.session.save()
+                pass
+                # I have no idea why this call is here
+                #self.session.save()
             setCacheControl(self.req)
             self.req.headers_out['Last-modified'] = formatHTTPDate()
 
