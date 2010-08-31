@@ -29,8 +29,7 @@ class VersionManager(base.BaseManager):
     def delete_installed_software(self, system):
         system.installed_software.all().delete()
 
-    @base.exposed
-    def setInstalledSoftware(self, system, installed_versions):
+    def _diffVersions(self, system, installed_versions):
         oldInstalled = dict((x.getNVF(), x)
             for x in system.installed_software.all())
 
@@ -45,12 +44,30 @@ class VersionManager(base.BaseManager):
             isInst = oldInstalled.pop(nvf, None)
             if isInst is None:
                 toAdd.append(trove)
+
+        return oldInstalled, toAdd
+
+    @base.exposed
+    def setInstalledSoftware(self, system, installed_versions):
+        oldInstalled, toAdd = self._diffVersions(system, installed_versions)
         for trove in oldInstalled.itervalues():
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
             self.set_available_updates(trove)
         system.save()
+
+    @base.exposed
+    def updateInstalledSoftware(self, system, new_versions):
+        oldInstalled, toAdd = self._diffVersions(system, new_versions)
+        sources = []
+        for nvf in oldInstalled.keys():
+            n, v, f = nvf
+            sources.append("%s=%s[%s]" % (n, str(v), str(f)))
+        for new_version in new_versions:
+            n, v, f = new_version.getNVF()
+            sources.append("%s=%s[%s]" % (n, str(v), str(f)))
+        self.mgr.scheduleSystemApplyUpdateEvent(system, sources)
 
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)

@@ -1201,12 +1201,21 @@ def _createInventorySchema(db, cfg):
         db.tables[tableName] = []
         changed = True
         changed |= _addTableRows(db, tableName, 'name',
-            [ dict(name="system registration",
-                   description='on-demand system registration event', priority=110),
-              dict(name="system poll",
-                   description='standard system polling event', priority=50),
-              dict(name="immediate system poll",
-                   description='on-demand system polling event', priority=105)])
+            [dict(name="system registration",
+                  description='on-demand system registration event', 
+                  priority=110),
+             dict(name="system poll",
+                  description='standard system polling event', 
+                  priority=50),
+             dict(name="immediate system poll",
+                  description='on-demand system polling event', 
+                  priority=105),
+             dict(name="system apply update",
+                  description='apply an update to a system', priority=50),
+             dict(name="immediate system apply update",
+                  description='on-demand apply an update to a system', 
+                  priority=105)
+            ])
         
     if 'inventory_system_event' not in db.tables:
         cu.execute("""
@@ -1219,7 +1228,8 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_event_type",
                 "time_created" timestamp with time zone NOT NULL,
                 "time_enabled" timestamp with time zone NOT NULL,
-                "priority" smallint NOT NULL
+                "priority" smallint NOT NULL,
+                "event_data" varchar
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_event'] = []
         changed |= db.createIndex("inventory_system_event",

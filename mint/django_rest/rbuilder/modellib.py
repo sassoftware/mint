@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import datetime
+from dateutil import parser
 from dateutil import tz
 import urlparse
 
@@ -273,7 +274,10 @@ class BaseManager(models.Manager):
         model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
         if save:
-            created, model = self.load_or_create(model, accessors)
+            try:
+                created, model = self.load_or_create(model, accessors)
+            except Exception, e:
+                import epdb; epdb.serve()
         else:
             dbmodel = self.load(model, accessors)
             if dbmodel:
@@ -761,8 +765,13 @@ class DateTimeUtcField(models.DateTimeField):
             return super(models.DateField, self).pre_save(model_instance, add)
 
     def get_prep_value(self, *args, **kwargs):
+        if isinstance(args[0], basestring):
+            new_args = []
+            new_args.append(parser.parse(args[0]))
+        else:
+            new_args = args
         prep_value = super(models.DateTimeField, self).get_prep_value(
-            *args, **kwargs)
+            *new_args, **kwargs)
         if isinstance(prep_value, datetime.datetime):
             return prep_value.replace(tzinfo=tz.tzutc())
         else:
