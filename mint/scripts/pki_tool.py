@@ -15,6 +15,7 @@ import optparse
 import os
 import psycopg2
 import socket
+import time
 from conary.lib import digestlib
 from conary.lib import util as cny_util
 from M2Crypto import EVP
@@ -134,6 +135,7 @@ class Script(GenericScript):
 
         subject = X509.X509_Name()
         subject.O = desc
+        subject.OU = 'Created at ' + time.strftime('%F %T%z')
         if common is not None:
             subject.CN = common
 
