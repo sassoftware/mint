@@ -46,7 +46,7 @@ event_types_xml="""\
     <eventTypeId>3</eventTypeId>
     <description>standard polling event</description>
   </eventType>
-  <eventType id="http://testserver/api/inventory/eventTypes/4/>
+  <eventType id="http://testserver/api/inventory/eventTypes/4/"/>
     <description>apply an update to a system</description>
     <eventTypeId>4</eventTypeId>
     <jobSet/>
