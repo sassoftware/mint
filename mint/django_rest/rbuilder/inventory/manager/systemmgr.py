@@ -32,6 +32,11 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_POLL,
         models.EventType.SYSTEM_POLL_IMMEDIATE,
     ])
+    SystemUpdateEvents = set([
+        models.EventType.SYSTEM_APPLY_UPDATE,
+        models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+    ])
+
     TZ = tz.tzutc()
 
     @classmethod
