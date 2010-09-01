@@ -87,9 +87,9 @@ class SystemManager(base.BaseManager):
         return system
 
     @base.exposed
-    def deleteSystem(self, system):
-        managedSystem = models.managed_system.objects.get(pk=system)
-        managedSystem.delete()
+    def deleteSystem(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        system.delete()
 
     @base.exposed
     def getSystems(self):
