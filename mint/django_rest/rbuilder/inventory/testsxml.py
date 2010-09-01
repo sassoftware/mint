@@ -677,6 +677,7 @@ system_events_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvents>
     <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
+        <eventData/>
         <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
@@ -685,6 +686,7 @@ system_events_xml = """\
         <systemEventId>1</systemEventId>
     </systemEvent>
     <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
+        <eventData/>
         <eventType href="http://testserver/api/inventory/eventTypes/1/"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
@@ -698,6 +700,7 @@ system_events_xml = """\
 system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
+    <eventData/>
     <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
     <system href="http://testserver/api/inventory/systems/3"/>
     <timeCreated>%s</timeCreated>

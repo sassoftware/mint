@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import cPickle
 import logging
 import sys
 import datetime
@@ -24,13 +25,6 @@ from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
 
 log = logging.getLogger(__name__)
-
-try:
-    from rpath_repeater import client as repeater_client
-except:
-    log.info("Failed loading repeater client, expected in local mode only")
-    repeater_client = None  # pyflakes=ignore
-
 
 class SystemManager(base.BaseManager):
     @base.exposed
@@ -184,7 +178,14 @@ class SystemManager(base.BaseManager):
         system.save()
 
     def check_system_versions(self, system):
-        self.mgr.setInstalledSoftware(system, system.new_versions)
+        # TODO: check for system.event_uuid
+        # If there is an event_uuid set on system, assume we're just updating
+        # the DB with the results of a job, otherwise, update the actual
+        # installed software on the system.
+        if system.event_uuid:
+            self.mgr.setInstalledSoftware(system, system.new_versions)
+        else:
+            self.mgr.updateInstalledSoftware(system, system.new_versions)
 
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
@@ -209,29 +210,6 @@ class SystemManager(base.BaseManager):
 
         return None
 
-    def getSystemByInstanceId(self, instanceId):
-        # TODO:  this code is outdated.  Returning plain system every time to move
-        # forward, but we need to fix this to properly handle updates
-        managedSystem = None
-        #managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            syst = models.System()
-            syst.is_manageable = False
-            return syst
-        managedSystemObj = managedSystem.getParser()
-        if not self.isManageable(managedSystem):
-            managedSystemObj.ssl_client_certificate = None
-            managedSystemObj.ssl_client_key = None
-            managedSystemObj.set_is_manageable(False)
-        else:
-            isManageable = (managedSystem.ssl_client_certificate is not None
-                and managedSystem.ssl_client_key is not None
-                and os.path.exists(managedSystem.ssl_client_certificate)
-                and os.path.exists(managedSystem.ssl_client_key))
-            managedSystemObj.set_is_manageable(isManageable)
-        
-        return managedSystemObj
-
     def isManageable(self, managedSystem):
         if managedSystem.launching_user.userid == self.user.userid:
             # If we own the system, we can manage
@@ -249,26 +227,6 @@ class SystemManager(base.BaseManager):
         row = cu.fetchone()
         return bool(row)
 
-    def addSoftwareVersion(self, softwareVersion):
-        name, version, flavor = softwareVersion
-        version = version.freeze()
-        flavor = str(flavor)
-        softwareVersion, created = models.software_version.objects.get_or_create(name=name,
-                                        version=version, flavor=flavor)
-        return softwareVersion
-
-    def getManagedSystemForInstanceId(self, instanceId):
-        systemTarget = models.system_target.objects.filter(target_system_id=instanceId)
-        if len(systemTarget) == 1:
-            st = systemTarget[0]
-            if st.target_id is None:
-                # System was disassociated from target, probably target got
-                # removed
-                return None
-            return st.managed_system
-        else:
-            return None
-
     @base.exposed
     def getSystemLog(self, system):
         systemLog = system.system_log.all()
@@ -276,110 +234,6 @@ class SystemManager(base.BaseManager):
             return systemLog[0]
         else:
             models.SystemLog()
-
-    def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            return 
-
-        models.system_software_version.objects.filter(managed_system=managedSystem).delete()
-
-        for version in softwareVersion:
-            softwareVersion = self.addSoftwareVersion(version)
-
-            systemSoftwareVersion = models.system_software_version(
-                                        managed_system=managedSystem,
-                                        software_version=softwareVersion)
-            systemSoftwareVersion.save()
-
-    def getSoftwareVersionsForInstanceId(self, instanceId):
-        # TODO:  this code is outdated.  Returning None every time to move
-        # forward, but we need to fix this to properly handle updates
-        return None
-    
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            return None
-        systemSoftwareVersion = \
-            models.system_software_version.objects.filter(managed_system=managedSystem)
-
-        versions = []
-        for version in systemSoftwareVersion:
-            versions.append('%s=%s[%s]' % (
-                version.software_version.name, version.software_version.version,
-                version.software_version.flavor))
-
-        if versions:
-            return '\n'.join(versions)
-        return None
-
-    def deleteSoftwareVersionsForInstanceId(self, instanceId):
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            return 
-        models.system_software_version.objects.filter(managed_system=managedSystem).delete()
-
-    def getCachedUpdates(self, nvf):
-        softwareVersion, created = models.software_version.objects.get_or_create(
-            name=nvf[0], version=nvf[1], flavor=nvf[2])
-
-        # If it was just created, obviously there's nothing cached.
-        if created:
-            return None
-
-        updates = models.software_version_update.objects.filter(
-                    software_version=softwareVersion)
-
-        now = datetime.datetime.now()
-        oneDay = datetime.timedelta(1)
-
-        # RBL-6007 last_refresh should not be None here as there's a not null
-        # constraint, but still check just in case.
-        cachedUpdates = [u for u in updates \
-                         if (u.last_refreshed is not None) and \
-                            (now - u.last_refreshed < oneDay)]
-
-        if not cachedUpdates:
-            return None
-
-        updatesAvailable = [c for c in cachedUpdates if c.available_update is not None]
-        if updatesAvailable:
-           updatesAvailable  = [(str(s.available_update.name),
-                              cnyver.ThawVersion(s.available_update.version),
-                              deps.parseFlavor(s.available_update.flavor)) for s in updatesAvailable]
-        else:
-            return []
-
-        return updatesAvailable 
-                
-    def clearCachedUpdates(self, nvfs):
-        for nvf in nvfs:
-            name, version, flavor = nvf
-            version = version.freeze()
-            flavor = str(flavor)
-            softwareVersion, created = models.software_version.objects.get_or_create(
-                name=name, version=version, flavor=flavor)
-            if not created:
-                updates = models.software_version_update.objects.filter(
-                                software_version=softwareVersion)
-                updates.delete()
-
-    def cacheUpdate(self, nvf, updateNvf):
-        softwareVersion, created = models.software_version.objects.get_or_create(
-            name=nvf[0], version=nvf[1], flavor=nvf[2])
-                
-        if updateNvf:
-            updateSoftwareVersion, created = models.software_version.objects.get_or_create(
-                name=updateNvf[0], version=updateNvf[1], flavor=updateNvf[2])
-        else:
-            updateSoftwareVersion = None
-
-        cachedUpdate, created = models.software_version_update.objects.get_or_create(
-                                    software_version=softwareVersion,
-                                    available_update=updateSoftwareVersion)
-        if not created:
-            cachedUpdate.last_refreshed = datetime.datetime.now()
-            cachedUpdate.save()
 
     @base.exposed
     def getSystemEvent(self, event_id):
@@ -480,6 +334,10 @@ class SystemManager(base.BaseManager):
             models.EventType.SYSTEM_POLL,
             models.EventType.SYSTEM_POLL_IMMEDIATE,
         ])
+        systemUpdateEvents = set([
+            models.EventType.SYSTEM_APPLY_UPDATE,
+            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+        ])
 
         network = self._extractNetworkToUse(event.system)
         if not network:
@@ -507,6 +365,14 @@ class SystemManager(base.BaseManager):
                 port = 80)
             self._runSystemEvent(event, repClient.poll,
                 cimParams, resultsLocation, zone=zone)
+        elif eventType in systemUpdateEvents:
+            # XXX remove the hardcoded port from here
+            resultsLocation = dict(
+                path = "/api/inventory/systems/%d" % event.system.pk,
+                port = 80)
+            data = cPickle.loads(event.event_data)
+            self._runSystemEvent(event, repClient.update, cimParams,
+                zone=zone, sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
 
@@ -538,7 +404,7 @@ class SystemManager(base.BaseManager):
         log.info("System %s (%s), task type '%s' launching" %
             (systemName, cimParams.host, eventType))
         try:
-            uuid, job = method(cimParams, resultsLocation, zone=zone)
+            uuid, job = method(cimParams, resultsLocation, zone=zone, **kwargs)
         except Exception, e:
             tb = sys.exc_info()[2]
             traceback.print_tb(tb)
@@ -598,15 +464,24 @@ class SystemManager(base.BaseManager):
         self.createSystemEvent(system, registration_event_type, enable_time)
 
     @base.exposed
-    def createSystemEvent(self, system, event_type, enable_time=None):
+    def scheduleSystemApplyUpdateEvent(self, system, sources):
+        '''Schedule an event for the system to be updated'''
+        apply_update_event_type = models.EventType.objects.get(
+            name=models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
+        self.createSystemEvent(system, apply_update_event_type, data=sources)
+
+    @base.exposed
+    def createSystemEvent(self, system, event_type, enable_time=None, 
+                          data=None):
         event = None
-        
         # do not create events for systems that we cannot possibly contact
         if self.getSystemHasHostInfo(system):
             if not enable_time:
                 enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            pickledData = cPickle.dumps(data)
             event = models.SystemEvent(system=system, event_type=event_type, 
-                priority=event_type.priority, time_enabled=enable_time)
+                priority=event_type.priority, time_enabled=enable_time,
+                event_data=pickledData)
             event.save()
             self.logSystemEvent(event, enable_time)
             

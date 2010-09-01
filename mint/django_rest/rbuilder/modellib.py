@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import datetime
+from dateutil import parser
 from dateutil import tz
 import urlparse
 
@@ -81,8 +82,11 @@ class BaseManager(models.Manager):
                 if newFieldVal is None:
                     continue
                 oldFieldVal = getattr(loaded_model, field.name)
-                if newFieldVal != oldFieldVal:
-                    setattr(loaded_model, field.name, newFieldVal)
+                try:
+                    if newFieldVal != oldFieldVal:
+                        setattr(loaded_model, field.name, newFieldVal)
+                except TypeError:
+                    import epdb; epdb.serve()  
             return loaded_model
 
         return loaded_model
@@ -146,7 +150,7 @@ class BaseManager(models.Manager):
             if isinstance(field, SerializedForeignKey):
                 val = field.related.parent_model.objects.load_from_object(val, request, save=save)
             elif isinstance(field, InlinedForeignKey):
-                lookup = { field.visible : val }
+                lookup = { field.visible : str(val) }
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
@@ -831,8 +835,13 @@ class DateTimeUtcField(models.DateTimeField):
             return super(models.DateField, self).pre_save(model_instance, add)
 
     def get_prep_value(self, *args, **kwargs):
+        if isinstance(args[0], basestring):
+            new_args = []
+            new_args.append(parser.parse(args[0]))
+        else:
+            new_args = args
         prep_value = super(models.DateTimeField, self).get_prep_value(
-            *args, **kwargs)
+            *new_args, **kwargs)
         if isinstance(prep_value, datetime.datetime):
             return prep_value.replace(tzinfo=tz.tzutc())
         else:
@@ -845,6 +854,13 @@ class DateTimeUtcField(models.DateTimeField):
             return str(db_prep_value)
         else:
             return db_prep_value
+
+    def to_python(self, value):
+        python_value = super(models.DateTimeField, self).to_python(value)
+        if isinstance(python_value, datetime.datetime):
+            return python_value.replace(tzinfo=tz.tzutc())
+        else:
+            return python_value
 
 class XObjHiddenCharField(models.CharField, XObjHiddenMixIn):
     pass

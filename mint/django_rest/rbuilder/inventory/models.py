@@ -260,18 +260,30 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_POLL_DESC = "standard system polling event"
     
     SYSTEM_POLL_IMMEDIATE = "immediate system poll"
-    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE +5
+    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_POLL_IMMEDIATE_DESC = "on-demand system polling event"
     
     SYSTEM_REGISTRATION = "system registration"
-    SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE +10
+    SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE + 10
     SYSTEM_REGISTRATION_DESC = "on-demand system registration event"
+
+    SYSTEM_APPLY_UPDATE = 'system apply update'
+    SYSTEM_APPLY_UPDATE_PRIORITY = 50
+    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'apply an update to a system'
+        
+    SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
+    SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
+    SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
+        'on-demand apply an update to a system'
         
     event_type_id = models.AutoField(primary_key=True)
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
         (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
         (SYSTEM_POLL, SYSTEM_POLL_DESC),
+        (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
+        (SYSTEM_APPLY_UPDATE_IMMEDIATE,
+         SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION),
     )
     name = models.CharField(max_length=8092, unique=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)
@@ -328,6 +340,7 @@ class SystemEvent(modellib.XObjIdModel):
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
+    event_data = models.TextField(null=True)
 
     def dispatchImmediately(self):
         return self.event_type.priority >= EventType.ON_DEMAND_BASE
@@ -480,6 +493,8 @@ class Version(modellib.XObjModel):
         unique_together = [ ('full', 'ordering', 'flavor'), ]
 
     objects = modellib.VersionManager()
+
+    _xobj = xobj.XObjMetadata(tag='version')
 
     version_id = models.AutoField(primary_key=True)
     full = models.TextField()

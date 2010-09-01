@@ -1249,7 +1249,13 @@ class MigrateTo_50(SchemaMigration):
                   dict(name="system poll",
                        description='standard system polling event', priority=50),
                   dict(name="immediate system poll",
-                       description='on-demand system polling event', priority=105)])
+                       description='on-demand system polling event', priority=105),
+                  dict(name="system apply update",
+                       description='apply an update to a system',
+                       priority=50),
+                  dict(name="immediate system apply update",
+                       description='on-demand apply an update to a system', priority=105)
+                ])
 
         if 'inventory_system_event' not in db.tables:
             cu.execute("""
