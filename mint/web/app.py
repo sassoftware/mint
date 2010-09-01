@@ -180,7 +180,7 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = "Bad Parameter", error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
         else:
-            if self.auth.authorized:
+            if self.auth.authorized and isinstance(self.session, SqlSession):
                 self.session.save()
             setCacheControl(self.req)
             self.req.headers_out['Last-modified'] = formatHTTPDate()
