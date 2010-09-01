@@ -871,7 +871,7 @@ class SystemStateTestCase(XMLTestCase):
             generated_uuid=generatedUuid)
         system.save()
 
-        job1 = self._newJob(system, eventUuid1, jobUuid1,
+        self._newJob(system, eventUuid1, jobUuid1,
             models.EventType.SYSTEM_REGISTRATION)
 
         params = dict(eventUuid=eventUuid1, jobUuid=jobUuid1, jobState=jobState)
