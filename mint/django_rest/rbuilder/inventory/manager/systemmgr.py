@@ -175,7 +175,16 @@ class SystemManager(base.BaseManager):
     def updateSystem(self, system):
         # XXX This will have to change and be done in modellib, most likely.
         self.check_system_versions(system)
+        self.check_system_last_job(system)
         system.save()
+
+    def check_system_last_job(self, system):
+        last_job = getattr(system, 'lastJob', None)
+        if last_job and last_job.job_state.name == models.JobState.COMPLETED:
+            if last_job.event_type.name in \
+               (models.EventType.SYSTEM_APPLY_UPDATE,
+                models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE):
+                self.scheduleSystemPollNowEvent(system)
 
     def check_system_versions(self, system):
         # TODO: check for system.event_uuid
