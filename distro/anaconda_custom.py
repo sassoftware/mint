@@ -87,7 +87,7 @@ class InstallClass(BaseInstallClass):
 
         # Create /boot
         requests.append(partRequests.PartitionSpec(
-            fstype=fileSystemTypeGet('ext2'), size=100, mountpoint='/boot',
+            fstype=fileSystemTypeGet('ext3'), size=100, mountpoint='/boot',
             primary=1, format=1))
 
         # Create PVs
@@ -114,11 +114,11 @@ class InstallClass(BaseInstallClass):
             fstype=fileSystemTypeGetDefault(), mountpoint='/var/log', 
             size=4096, format=1, volgroup='vg00'))
 
-        # Create swap
-        (minswap, maxswap) = iutil.swapSuggestion()
+        # Create swap -- always 4GiB
+        # (minswap, maxswap) = iutil.swapSuggestion()
         requests.append(partRequests.LogicalVolumeRequestSpec(lvname='swap',
-            fstype=fileSystemTypeGet('swap'), size=minswap, maxSizeMB=maxswap,
-            grow=1, format=1, volgroup='vg00'))
+            fstype=fileSystemTypeGet('swap'), size=4096, 
+            grow=0, format=1, volgroup='vg00'))
 
         partitions.autoPartitionRequests = requests
 

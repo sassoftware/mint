@@ -49,7 +49,8 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         s3.password = 'Javert:!&#'
         self.failUnlessEqual(s3.getProxies(), proxies)
         self.failUnlessEqual(s3.status(),
-            (False, False, "Error validating: 401: Unauthorized"))
+            (False, False,
+                "Error validating source at url https://nu.novell.com/repo/$RCE/SLES10-SP3-Online/sles-10-i586"))
         # Make sure the username and password made it all the way down to
         # conary's urlopen
         self.failUnlessEqual(str(urls[0]),

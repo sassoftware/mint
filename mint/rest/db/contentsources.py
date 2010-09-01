@@ -174,10 +174,12 @@ class _RepositoryMetadataSourceType(ContentSourceType):
     def status(self):
         sourceyum = rpath_capsule_indexer.sourceyum
         url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
-        url = mintutils.urlAddAuth(url, self.username, self.password)
+        authUrl = mintutils.urlAddAuth(url, self.username, self.password)
         try:
-            src = sourceyum.YumRepositorySource(self.repomdLabel, url)
-            src.timestamp
+            src = sourceyum.YumRepositorySource(self.repomdLabel, authUrl)
+            if src.timestamp is None:
+                return (False, False,
+                    "Error validating source at url %s" % url)
         except sourceyum.repomd.errors.DownloadError, e:
             return (False, False,
                 'Error validating: %s: %s' % (e.code, e.msg))
@@ -201,7 +203,7 @@ class Repomd(_RepositoryMetadataSourceType):
     fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]
     model = models.SmtSource
     _ContentSourceTypeName = 'Yum Repository'
-    repomdLabel = '5.4/os/i386'
+    repomdLabel = '5/os/i386'
 
 contentSourceTypes = {'RHN' : Rhn,
                       'satellite' : Satellite,
