@@ -905,6 +905,97 @@ class SystemStateTestCase(XMLTestCase):
                 'System data fetched.',
             ])
 
+    def testGetNextSystemState(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        jobState = "Completed"
+
+        eventUuid1 = 'eventuuid001'
+        jobUuid1 = 'rmakeuuid001'
+        eventUuid2 = 'eventuuid002'
+        jobUuid2 = 'rmakeuuid002'
+        eventUuid3 = 'eventuuid003'
+        jobUuid3 = 'rmakeuuid003'
+
+        system = models.System(name='blippy', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+
+        stateCompleted = self.mgr.sysMgr.jobState(models.JobState.COMPLETED)
+        stateFailed = self.mgr.sysMgr.jobState(models.JobState.FAILED)
+
+        job1 = self._newJob(system, eventUuid1, jobUuid1,
+            models.EventType.SYSTEM_REGISTRATION)
+        job2 = self._newJob(system, eventUuid2, jobUuid2,
+            models.EventType.SYSTEM_POLL)
+        job3 = self._newJob(system, eventUuid3, jobUuid3,
+            models.EventType.SYSTEM_POLL)
+
+        UNMANAGED = models.SystemState.UNMANAGED
+        REGISTERED = models.SystemState.REGISTERED
+        RESPONSIVE = models.SystemState.RESPONSIVE
+        SHUTDOWN = models.SystemState.SHUTDOWN
+        NONRESPONSIVE = models.SystemState.NONRESPONSIVE
+        DEAD = models.SystemState.DEAD
+        MOTHBALLED = models.SystemState.MOTHBALLED
+
+        tests = [
+            (job1, stateCompleted, UNMANAGED, REGISTERED),
+            (job1, stateCompleted, REGISTERED, REGISTERED),
+            (job1, stateCompleted, RESPONSIVE, REGISTERED),
+            (job1, stateCompleted, SHUTDOWN, REGISTERED),
+            (job1, stateCompleted, NONRESPONSIVE, REGISTERED),
+            (job1, stateCompleted, DEAD, REGISTERED),
+            (job1, stateCompleted, MOTHBALLED, REGISTERED),
+
+            (job1, stateFailed, UNMANAGED, None),
+            (job1, stateFailed, REGISTERED, None),
+            (job1, stateFailed, RESPONSIVE, None),
+            (job1, stateFailed, SHUTDOWN, None),
+            (job1, stateFailed, NONRESPONSIVE, None),
+            (job1, stateFailed, DEAD, None),
+            (job1, stateFailed, MOTHBALLED, None),
+
+            (job2, stateCompleted, UNMANAGED, RESPONSIVE),
+            (job2, stateCompleted, REGISTERED, RESPONSIVE),
+            (job2, stateCompleted, RESPONSIVE, RESPONSIVE),
+            (job2, stateCompleted, SHUTDOWN, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE, RESPONSIVE),
+            (job2, stateCompleted, DEAD, RESPONSIVE),
+            (job2, stateCompleted, MOTHBALLED, RESPONSIVE),
+
+            (job2, stateFailed, UNMANAGED, None),
+            (job2, stateFailed, REGISTERED, NONRESPONSIVE),
+            (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job2, stateFailed, SHUTDOWN, None),
+            (job2, stateFailed, NONRESPONSIVE, None),
+            (job2, stateFailed, DEAD, None),
+            (job2, stateFailed, MOTHBALLED, None),
+
+            (job3, stateCompleted, UNMANAGED, RESPONSIVE),
+            (job3, stateCompleted, REGISTERED, RESPONSIVE),
+            (job3, stateCompleted, RESPONSIVE, RESPONSIVE),
+            (job3, stateCompleted, SHUTDOWN, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE, RESPONSIVE),
+            (job3, stateCompleted, DEAD, RESPONSIVE),
+            (job3, stateCompleted, MOTHBALLED, RESPONSIVE),
+
+            (job3, stateFailed, UNMANAGED, None),
+            (job3, stateFailed, REGISTERED, NONRESPONSIVE),
+            (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job3, stateFailed, SHUTDOWN, None),
+            (job3, stateFailed, NONRESPONSIVE, None),
+            (job3, stateFailed, DEAD, None),
+            (job3, stateFailed, MOTHBALLED, None),
+        ]
+        for (job, jobState, oldState, newState) in tests:
+            system.current_state = self.mgr.sysMgr.systemState(oldState)
+            job.job_state = jobState
+            ret = self.mgr.sysMgr.getNextSystemState(system, job)
+            msg = "Job %s (%s): %s -> %s (expected: %s)" % (
+                (job.event_type.name, jobState.name, oldState, ret, newState))
+            self.failUnlessEqual(ret, newState, msg)
+
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
     

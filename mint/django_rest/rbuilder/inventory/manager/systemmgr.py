@@ -226,6 +226,8 @@ class SystemManager(base.BaseManager):
             system.save()
 
     def getNextSystemState(self, system, job):
+        # XXX Deal with time-based transitions too (i.e.
+        # NONRESPONSIVE -> DEAD, DEAD->MOTHBALLED)
         jobStateName = job.job_state.name
         eventTypeName = job.event_type.name
         if jobStateName == models.JobState.COMPLETED:
@@ -239,7 +241,9 @@ class SystemManager(base.BaseManager):
         if jobStateName == models.JobState.FAILED:
             currentStateName = system.current_state.name
             # Simple cases first.
-            if currentStateName in [models.SystemState.DEAD,
+            if currentStateName in [models.SystemState.UNMANAGED,
+                    models.SystemState.SHUTDOWN,
+                    models.SystemState.DEAD,
                     models.SystemState.MOTHBALLED,
                     models.SystemState.NONRESPONSIVE]:
                 # No changes in this case
@@ -247,6 +251,9 @@ class SystemManager(base.BaseManager):
             if eventTypeName not in self.PollEvents:
                 # Non-polling event, nothing to do
                 return None
+            if currentStateName in [models.SystemState.REGISTERED,
+                    models.SystemState.RESPONSIVE]:
+                return models.SystemState.NONRESPONSIVE
         # Some other job state, do nothing
         return None
 
