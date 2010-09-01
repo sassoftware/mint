@@ -219,10 +219,6 @@ class System(modellib.XObjIdModel):
             # add it to the system
             pass
 
-    def postprocess(self):
-        if not self.lastJob:
-            return
-
 class ManagementNode(System):
     class Meta:
         db_table = 'inventory_zone_management_node'
