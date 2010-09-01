@@ -364,6 +364,9 @@ class SystemManager(base.BaseManager):
         cimParams = repClient.CimParams(host=destination,
             eventUuid=eventUuid)
         requiredNetwork = (network.required and destination) or None
+        resultsLocation = repClient.ResultsLocation(
+            path = "/api/inventory/systems/%d" % event.system.pk,
+            port = 80)
         if eventType in registrationEvents:
             self._runSystemEvent(event, repClient.register, cimParams,
                 zone=zone, requiredNetwork=requiredNetwork)
@@ -376,12 +379,9 @@ class SystemManager(base.BaseManager):
                 cimParams, resultsLocation, zone=zone)
         elif eventType in systemUpdateEvents:
             # XXX remove the hardcoded port from here
-            resultsLocation = dict(
-                path = "/api/inventory/systems/%d" % event.system.pk,
-                port = 80)
             data = cPickle.loads(event.event_data)
             self._runSystemEvent(event, repClient.update, cimParams,
-                zone=zone, sources=data)
+                resultsLocation, zone=zone, sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
 
