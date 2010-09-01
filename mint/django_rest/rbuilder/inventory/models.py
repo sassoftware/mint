@@ -532,7 +532,7 @@ class Version(modellib.XObjModel):
             self.fromConaryVersion(v)
         if self.flavor is None:
             self.flavor = ''
-        return super(self.__class__, self).save(*args, **kwargs)
+        return super(Version, self).save(*args, **kwargs)
 
 class SystemJobs(modellib.XObjModel):
     class Meta:
