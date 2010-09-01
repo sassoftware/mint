@@ -845,6 +845,57 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(job.job_state.name, jobState)
         self.failUnlessEqual(model.lastJob.pk, job.pk)
 
+class SystemStateTestCase(XMLTestCase):
+    def _newJob(self, system, eventUuid, jobUuid, jobType, jobState=None):
+        eventType = self.mgr.sysMgr.eventType(jobType)
+        if jobState is None:
+            jobState = models.JobState.RUNNING
+        jobState = self.mgr.sysMgr.jobState(jobState)
+        job = models.Job(job_uuid=jobUuid, event_type=eventType,
+            job_state=jobState)
+        job.save()
+        systemJob = models.SystemJob(system=system, job=job,
+            event_uuid=eventUuid)
+        systemJob.save()
+        return job
+
+    def testSetCurrentState(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        jobState = "Completed"
+
+        eventUuid1 = 'eventuuid001'
+        jobUuid1 = 'rmakeuuid001'
+
+        system = models.System(name='blippy', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+
+        job1 = self._newJob(system, eventUuid1, jobUuid1,
+            models.EventType.SYSTEM_REGISTRATION)
+
+        params = dict(eventUuid=eventUuid1, jobUuid=jobUuid1, jobState=jobState)
+
+        xmlTempl = """\
+<system>
+  <event_uuid>%(eventUuid)s</event_uuid>
+  <system_jobs>
+    <job>
+      <job_uuid>%(jobUuid)s</job_uuid>
+      <job_state>%(jobState)s</job_state>
+    </job>
+  </system_jobs>
+</system>
+"""
+        xml = xmlTempl % params
+
+        response = self.client.put('/api/inventory/systems/%s' % system.pk,
+            data=xml, content_type='application/xml')
+        self.failUnlessEqual(response.status_code, 200)
+
+        system2 = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system2.current_state.name,
+            models.SystemState.REGISTERED)
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']

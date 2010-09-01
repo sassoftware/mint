@@ -27,6 +27,12 @@ from mint.django_rest.rbuilder.inventory.manager import base
 log = logging.getLogger(__name__)
 
 class SystemManager(base.BaseManager):
+    RegistrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
+    PollEvents = set([
+        models.EventType.SYSTEM_POLL,
+        models.EventType.SYSTEM_POLL_IMMEDIATE,
+    ])
+
     @base.exposed
     def getEventTypes(self):
         EventTypes = models.EventTypes()
@@ -122,7 +128,6 @@ class SystemManager(base.BaseManager):
             managementNode.save()
             self.log_system(managementNode, models.SystemLogEntry.REGISTERED)
         else:
-            managementNode.current_state = models.System.UNMANAGED
             managementNode.current_state = self.systemState(
                 models.SystemState.UNMANAGED)
             managementNode.save()
@@ -157,7 +162,7 @@ class SystemManager(base.BaseManager):
         # add the system
         system.save()
         self.log_system(system, models.SystemLogEntry.ADDED)
-        
+
         if system.registered:
             system.registration_date = datetime.datetime.now(tz.tzutc())
             system.current_state = self.systemState(
@@ -175,6 +180,7 @@ class SystemManager(base.BaseManager):
     def updateSystem(self, system):
         # XXX This will have to change and be done in modellib, most likely.
         self.check_system_versions(system)
+        self.setSystemState(system)
         self.check_system_last_job(system)
         system.save()
 
@@ -195,6 +201,42 @@ class SystemManager(base.BaseManager):
             self.mgr.setInstalledSoftware(system, system.new_versions)
         else:
             self.mgr.updateInstalledSoftware(system, system.new_versions)
+
+    def setSystemState(self, system):
+        job = system.lastJob
+        if job is None:
+            # This update did not come in as a result of a job
+            return
+
+        nextSystemState = self.getNextSystemState(system, job)
+        if nextSystemState is not None:
+            system.current_state = self.systemState(nextSystemState)
+            system.save()
+
+    def getNextSystemState(self, system, job):
+        jobStateName = job.job_state.name
+        eventTypeName = job.event_type.name
+        if jobStateName == models.JobState.COMPLETED:
+            if eventTypeName in self.RegistrationEvents:
+                return models.SystemState.REGISTERED
+            if eventTypeName in self.PollEvents:
+                return models.EventType.RESPONSIVE
+            else:
+                # Add more processing here if needed
+                return None
+        if jobStateName == models.JobState.FAILED:
+            currentStateName = system.current_state.name
+            # Simple cases first.
+            if currentStateName in [models.SystemState.DEAD,
+                    models.SystemState.MOTHBALLED,
+                    models.SystemState.NONRESPONSIVE]:
+                # No changes in this case
+                return None
+            if eventTypeName not in self.PollEvents:
+                # Non-polling event, nothing to do
+                return None
+        # Some other job state, do nothing
+        return None
 
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
@@ -338,16 +380,6 @@ class SystemManager(base.BaseManager):
             return
         self.log_system(event.system,  "Dispatching %s event" % event.event_type.name)
 
-        registrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
-        pollEvents = set([
-            models.EventType.SYSTEM_POLL,
-            models.EventType.SYSTEM_POLL_IMMEDIATE,
-        ])
-        systemUpdateEvents = set([
-            models.EventType.SYSTEM_APPLY_UPDATE,
-            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-        ])
-
         network = self._extractNetworkToUse(event.system)
         if not network:
             msg = "No valid network information found; giving up"
@@ -367,17 +399,17 @@ class SystemManager(base.BaseManager):
         resultsLocation = repClient.ResultsLocation(
             path = "/api/inventory/systems/%d" % event.system.pk,
             port = 80)
-        if eventType in registrationEvents:
+        if eventType in self.RegistrationEvents:
             self._runSystemEvent(event, repClient.register, cimParams,
                 zone=zone, requiredNetwork=requiredNetwork)
-        elif eventType in pollEvents:
+        elif eventType in self.PollEvents:
             # XXX remove the hardcoded port from here
             resultsLocation = repClient.ResultsLocation(
                 path = "/api/inventory/systems/%d" % event.system.pk,
                 port = 80)
             self._runSystemEvent(event, repClient.poll,
                 cimParams, resultsLocation, zone=zone)
-        elif eventType in systemUpdateEvents:
+        elif eventType in self.SystemUpdateEvents:
             # XXX remove the hardcoded port from here
             data = cPickle.loads(event.event_data)
             self._runSystemEvent(event, repClient.update, cimParams,
