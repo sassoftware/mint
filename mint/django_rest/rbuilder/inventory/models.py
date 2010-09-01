@@ -201,6 +201,7 @@ class System(modellib.XObjIdModel):
         if not self.name:
             self.name = self.hostname and self.hostname or ''
         modellib.XObjIdModel.save(self, *args, **kw)
+        self.createLog()
 
     def addJobs(self):
         return
@@ -218,6 +219,12 @@ class System(modellib.XObjIdModel):
 
             # add it to the system
             pass
+
+    def createLog(self):
+        system_log, created = SystemLog.objects.get_or_create(system=self)
+        if created:
+            system_log.save()
+        return system_log
 
 class ManagementNode(System):
     class Meta:

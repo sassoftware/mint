@@ -753,11 +753,6 @@ system_log_xml = """\
       <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>3</systemLogEntryId>
     </systemLogEntry>
-    <systemLogEntry>
-      <entry>System data fetched.</entry>
-      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
-      <systemLogEntryId>4</systemLogEntryId>
-    </systemLogEntry>
   </systemLogEntries>
   <systemLogId>1</systemLogId>
   <system href="http://testserver/api/inventory/systems/1"/>

@@ -83,7 +83,6 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        self.log_system(system, "System data fetched.")
         system.addJobs()
         return system
 
@@ -104,7 +103,6 @@ class SystemManager(base.BaseManager):
     def getManagementNode(self, zone_id, management_node_id):
         zone = models.Zone.objects.get(pk=zone_id)
         managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
-        self.log_system(managementNode, "Management node data fetched.")
         return managementNode
 
     @base.exposed
@@ -145,8 +143,7 @@ class SystemManager(base.BaseManager):
         return managementNode
 
     def log_system(self, system, log_msg):
-        system_log, created = models.SystemLog.objects.get_or_create(
-            system=system)
+        system_log = system.createLog()
         system_log_entry = models.SystemLogEntry(system_log=system_log,
             entry=log_msg)
         system_log.system_log_entries.add(system_log_entry)

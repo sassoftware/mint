@@ -902,8 +902,6 @@ class SystemStateTestCase(XMLTestCase):
         logEntries = log.system_log_entries.order_by('-entry_date')
         self.failUnlessEqual([ x.entry for x in logEntries ],
             [
-                'System data fetched.',
-                'System data fetched.',
             ])
 
         # poll event
@@ -927,11 +925,7 @@ class SystemStateTestCase(XMLTestCase):
         logEntries = log.system_log_entries.order_by('-entry_date')
         self.failUnlessEqual([ x.entry for x in logEntries ],
             [
-                'System data fetched.',
                 'System state change: unmanaged -> responsive',
-                'System data fetched.',
-                'System data fetched.',
-                'System data fetched.',
             ])
 
 
