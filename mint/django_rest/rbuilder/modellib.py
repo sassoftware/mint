@@ -82,11 +82,8 @@ class BaseManager(models.Manager):
                 if newFieldVal is None:
                     continue
                 oldFieldVal = getattr(loaded_model, field.name)
-                try:
-                    if newFieldVal != oldFieldVal:
-                        setattr(loaded_model, field.name, newFieldVal)
-                except TypeError:
-                    import epdb; epdb.serve()  
+                if newFieldVal != oldFieldVal:
+                    setattr(loaded_model, field.name, newFieldVal)
             return loaded_model
 
         return loaded_model

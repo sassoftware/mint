@@ -232,7 +232,7 @@ class SystemManager(base.BaseManager):
             if eventTypeName in self.RegistrationEvents:
                 return models.SystemState.REGISTERED
             if eventTypeName in self.PollEvents:
-                return models.EventType.RESPONSIVE
+                return models.SystemState.RESPONSIVE
             else:
                 # Add more processing here if needed
                 return None

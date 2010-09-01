@@ -29,17 +29,17 @@ class VersionManager(base.BaseManager):
     def delete_installed_software(self, system):
         system.installed_software.all().delete()
 
-    def _diffVersions(self, system, installed_versions):
+    def _diffVersions(self, system, new_versions):
         oldInstalled = dict((x.getNVF(), x)
             for x in system.installed_software.all())
 
         # Do the delta
         toAdd = []
-        for installed_version in installed_versions:
-            if isinstance(installed_version, basestring):
-                trove = self.trove_from_nvf(installed_version)
+        for new_version in new_versions:
+            if isinstance(new_version, basestring):
+                trove = self.trove_from_nvf(new_version)
             else:
-                trove = installed_version
+                trove = new_version
             nvf = trove.getNVF()
             isInst = oldInstalled.pop(nvf, None)
             if isInst is None:
@@ -48,8 +48,8 @@ class VersionManager(base.BaseManager):
         return oldInstalled, toAdd
 
     @base.exposed
-    def setInstalledSoftware(self, system, installed_versions):
-        oldInstalled, toAdd = self._diffVersions(system, installed_versions)
+    def setInstalledSoftware(self, system, new_versions):
+        oldInstalled, toAdd = self._diffVersions(system, new_versions)
         for trove in oldInstalled.itervalues():
             system.installed_software.remove(trove)
         for trove in toAdd:
@@ -197,5 +197,6 @@ class VersionManager(base.BaseManager):
                     new_version = models.Version()
                     new_version.fromConaryVersion(ver)
                     new_version.flavor = str(flv)
+                    new_version = models.Version.objects.load(new_version)
                     new_version.save()
                     trove.available_updates.add(new_version)
