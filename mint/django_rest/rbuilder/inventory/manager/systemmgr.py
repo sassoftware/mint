@@ -232,7 +232,10 @@ class SystemManager(base.BaseManager):
         eventTypeName = job.event_type.name
         if jobStateName == models.JobState.COMPLETED:
             if eventTypeName in self.RegistrationEvents:
-                return models.SystemState.REGISTERED
+                # We don't trust that a registration action did anything, we
+                # won't transition to REGISTERED, rpath-register should be
+                # responsible with that
+                return None
             if eventTypeName in self.PollEvents:
                 return models.SystemState.RESPONSIVE
             else:
@@ -420,16 +423,11 @@ class SystemManager(base.BaseManager):
             port = 80)
         if eventType in self.RegistrationEvents:
             self._runSystemEvent(event, repClient.register, cimParams,
-                zone=zone, requiredNetwork=requiredNetwork)
+                resultsLocation, zone=zone, requiredNetwork=requiredNetwork)
         elif eventType in self.PollEvents:
-            # XXX remove the hardcoded port from here
-            resultsLocation = repClient.ResultsLocation(
-                path = "/api/inventory/systems/%d" % event.system.pk,
-                port = 80)
             self._runSystemEvent(event, repClient.poll,
                 cimParams, resultsLocation, zone=zone)
         elif eventType in self.SystemUpdateEvents:
-            # XXX remove the hardcoded port from here
             data = cPickle.loads(event.event_data)
             self._runSystemEvent(event, repClient.update, cimParams,
                 resultsLocation, zone=zone, sources=data)

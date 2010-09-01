@@ -894,16 +894,46 @@ class SystemStateTestCase(XMLTestCase):
         self.failUnlessEqual(response.status_code, 200)
 
         system2 = models.System.objects.get(pk=system.pk)
+        # Just because the job completed, it doesn't mean the registration
+        # succeeded
         self.failUnlessEqual(system2.current_state.name,
-            models.SystemState.REGISTERED)
+            models.SystemState.UNMANAGED)
         log = models.SystemLog.objects.filter(system=system).get()
         logEntries = log.system_log_entries.order_by('-entry_date')
         self.failUnlessEqual([ x.entry for x in logEntries ],
             [
                 'System data fetched.',
-                'System state change: unmanaged -> registered',
                 'System data fetched.',
             ])
+
+        # poll event
+        eventUuid2 = 'eventuuid002'
+        jobUuid2 = 'rmakeuuid002'
+        self._newJob(system, eventUuid2, jobUuid2,
+            models.EventType.SYSTEM_POLL)
+
+        params = dict(eventUuid=eventUuid2, jobUuid=jobUuid2, jobState=jobState)
+
+        xml = xmlTempl % params
+
+        response = self.client.put('/api/inventory/systems/%s' % system.pk,
+            data=xml, content_type='application/xml')
+        self.failUnlessEqual(response.status_code, 200)
+
+        system2 = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system2.current_state.name,
+            models.SystemState.RESPONSIVE)
+        log = models.SystemLog.objects.filter(system=system).get()
+        logEntries = log.system_log_entries.order_by('-entry_date')
+        self.failUnlessEqual([ x.entry for x in logEntries ],
+            [
+                'System data fetched.',
+                'System state change: unmanaged -> responsive',
+                'System data fetched.',
+                'System data fetched.',
+                'System data fetched.',
+            ])
+
 
     def testGetNextSystemState(self):
         localUuid = 'localuuid001'
@@ -940,13 +970,13 @@ class SystemStateTestCase(XMLTestCase):
         MOTHBALLED = models.SystemState.MOTHBALLED
 
         tests = [
-            (job1, stateCompleted, UNMANAGED, REGISTERED),
-            (job1, stateCompleted, REGISTERED, REGISTERED),
-            (job1, stateCompleted, RESPONSIVE, REGISTERED),
-            (job1, stateCompleted, SHUTDOWN, REGISTERED),
-            (job1, stateCompleted, NONRESPONSIVE, REGISTERED),
-            (job1, stateCompleted, DEAD, REGISTERED),
-            (job1, stateCompleted, MOTHBALLED, REGISTERED),
+            (job1, stateCompleted, UNMANAGED, None),
+            (job1, stateCompleted, REGISTERED, None),
+            (job1, stateCompleted, RESPONSIVE, None),
+            (job1, stateCompleted, SHUTDOWN, None),
+            (job1, stateCompleted, NONRESPONSIVE, None),
+            (job1, stateCompleted, DEAD, None),
+            (job1, stateCompleted, MOTHBALLED, None),
 
             (job1, stateFailed, UNMANAGED, None),
             (job1, stateFailed, REGISTERED, None),
@@ -1687,13 +1717,15 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             uuid.uuid4 = origUuid4
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
+        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
+
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
                 ('register',
                     (
                         cimParams(host='superduper.com',
                             eventUuid = 'really-unique-id'),
-                        None,
+                        resLoc(path='/api/inventory/systems/4', port=80),
                     ),
                     dict(requiredNetwork=None, zone=None),
                 ),
