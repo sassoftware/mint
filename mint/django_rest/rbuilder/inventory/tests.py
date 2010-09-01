@@ -792,6 +792,7 @@ class SystemsTestCase(XMLTestCase):
         # We expect nothing to be updated, since there's no such job
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, 'Running')
+        self.failUnlessEqual(model.lastJob, None)
 
         # Now set jobUuid to be correct
         params['jobUuid'] = jobUuid
@@ -804,6 +805,7 @@ class SystemsTestCase(XMLTestCase):
         # We still expect nothing to be updated, since the event_uuid is wrong
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, 'Running')
+        self.failUnlessEqual(model.lastJob, None)
 
         # Now set eventUuid to be correct
         params['eventUuid'] = eventUuid
@@ -815,6 +817,7 @@ class SystemsTestCase(XMLTestCase):
 
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
+        self.failUnlessEqual(model.lastJob.pk, job.pk)
 
         # Make sure that pasting a system job with just the event uuid and job
         # info works (i.e. without the local and generated uuids)
@@ -840,6 +843,7 @@ class SystemsTestCase(XMLTestCase):
 
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
+        self.failUnlessEqual(model.lastJob.pk, job.pk)
 
 
 class SystemVersionsTestCase(XMLTestCase):

@@ -312,8 +312,14 @@ class BaseManager(models.Manager):
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
+        self.postprocess(model)
 
         return model
+
+    def postprocess(self, model):
+        method = getattr(model, 'postprocess', None)
+        if method is not None:
+            method()
 
 class TroveManager(BaseManager):
     def load_from_object(self, obj, request, save=True):
@@ -409,6 +415,7 @@ class SystemManager(BaseManager):
             BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
 
     def _handleSystemJob(self, system, job):
+        self.lastJob = None
         # Validate event_uuid too - fetch SystemJob entry
         try:
             sj = job.systems.get(system__system_id=system.pk)
@@ -421,6 +428,8 @@ class SystemManager(BaseManager):
         job.time_updated = datetime.datetime.now(tz.tzutc())
         # XXX This just doesn't seem right
         job.save()
+        # Save the job so we know to update the system state
+        system.lastJob = job
 
 class ManagementNodeManager(SystemManager):
     """

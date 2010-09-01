@@ -192,7 +192,8 @@ class System(modellib.XObjIdModel):
     load_fields = [local_uuid]
 
     new_versions = []
-    
+    lastJob = None
+
     def save(self, *args, **kw):
         if self.current_state_id is None:
             self.current_state = SystemState.objects.get(
@@ -217,7 +218,11 @@ class System(modellib.XObjIdModel):
 
             # add it to the system
             pass
-        
+
+    def postprocess(self):
+        if not self.lastJob:
+            return
+
 class ManagementNode(System):
     class Meta:
         db_table = 'inventory_zone_management_node'
