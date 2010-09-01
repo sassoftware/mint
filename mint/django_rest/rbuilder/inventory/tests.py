@@ -1545,7 +1545,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             eventUuid = 'really-unique-id'),
                         None,
                     ),
-                    dict(zone=None),
+                    dict(requiredNetwork=None, zone=None),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)

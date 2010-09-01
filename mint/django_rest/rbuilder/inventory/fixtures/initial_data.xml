@@ -15,6 +15,16 @@
         <field type="CharField" name="description">standard polling event</field>
         <field type="SmallIntegerField" name="priority">50</field>
     </object>
+    <object pk="4" model="inventory.eventtype">
+        <field type="CharField" name="name">system apply update</field>
+        <field type="CharField" name="description">apply an update to a system</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="5" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system apply update</field>
+        <field type="CharField" name="description">on-demand apply an update to a system</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>

@@ -46,6 +46,22 @@ event_types_xml="""\
     <eventTypeId>3</eventTypeId>
     <description>standard polling event</description>
   </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/4/>
+    <description>apply an update to a system</description>
+    <eventTypeId>4</eventTypeId>
+    <jobSet/>
+    <name>system apply update</name>
+    <priority>50</priority>
+    <systemEvents href="http://testserver/api/inventory/systemEventsByType/4/"/>
+  </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/5/">
+    <description>on-demand apply an update to a system</description>
+    <eventTypeId>5</eventTypeId>
+    <jobSet/>
+    <name>immediate system apply update</name>
+    <priority>105</priority>
+    <systemEvents href="http://testserver/api/inventory/systemEventsByType/5/"/>
+  </eventType>
 </eventTypes>"""
 
 zones_xml = """\
@@ -1002,6 +1018,7 @@ system_version_put_xml = """\
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <localUuid>testsystemlocaluuid</localUuid>
   <name>somesystem</name>
+  <eventUuid>testeventuuid</eventUuid>
 </system>
 """ % installed_software_post_xml
 

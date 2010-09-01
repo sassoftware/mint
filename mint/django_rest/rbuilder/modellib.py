@@ -865,7 +865,7 @@ class DateTimeUtcField(models.DateTimeField):
             return db_prep_value
 
     def to_python(self, value):
-        python_value = super(models.DateTimeField, self).to_python(value)
+        python_value = super(DateTimeUtcField, self).to_python(value)
         if isinstance(python_value, datetime.datetime):
             return python_value.replace(tzinfo=tz.tzutc())
         else:
