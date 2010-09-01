@@ -32,6 +32,11 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_POLL,
         models.EventType.SYSTEM_POLL_IMMEDIATE,
     ])
+    TZ = tz.tzutc()
+
+    @classmethod
+    def now(cls):
+        return datetime.datetime.now(cls.TZ)
 
     @base.exposed
     def getEventTypes(self):
@@ -121,7 +126,7 @@ class SystemManager(base.BaseManager):
         self.log_system(managementNode, models.SystemLogEntry.ADDED)
         
         if managementNode.registered:
-            managementNode.registration_date = datetime.datetime.now(tz.tzutc())
+            managementNode.registration_date = self.now()
             managementNode.current_state = self.systemState(
                 models.SystemState.REGISTERED)
             #TO-DO Need to add the JID to the models.ManagementNode object
@@ -164,7 +169,7 @@ class SystemManager(base.BaseManager):
         self.log_system(system, models.SystemLogEntry.ADDED)
 
         if system.registered:
-            system.registration_date = datetime.datetime.now(tz.tzutc())
+            system.registration_date = self.now()
             system.current_state = self.systemState(
                 models.SystemState.REGISTERED)
             system.save()
@@ -210,6 +215,8 @@ class SystemManager(base.BaseManager):
 
         nextSystemState = self.getNextSystemState(system, job)
         if nextSystemState is not None:
+            self.log_system(system, "System state change: %s -> %s" %
+                (system.current_state.name, nextSystemState))
             system.current_state = self.systemState(nextSystemState)
             system.save()
 
@@ -327,9 +334,9 @@ class SystemManager(base.BaseManager):
         
         enable_time = None
         if systemEvent.dispatchImmediately():
-            enable_time = datetime.datetime.now(tz.tzutc())
+            enable_time = self.now()
         else:
-            enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
             
         self.logSystemEvent(systemEvent, enable_time)
         
@@ -342,7 +349,7 @@ class SystemManager(base.BaseManager):
         events = None
         try:
             # get events in order based on whether or not they are enabled and what their priority is (descending)
-            current_time = datetime.datetime.now(tz.tzutc())
+            current_time = self.now()
             events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemPollCount].all()
         except models.SystemEvent.DoesNotExist:
             pass
@@ -491,7 +498,7 @@ class SystemManager(base.BaseManager):
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
-        enable_time = datetime.datetime.now(tz.tzutc())
+        enable_time = self.now()
         event_type = self.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
         self.createSystemEvent(system, event_type, enable_time)
 
@@ -499,7 +506,7 @@ class SystemManager(base.BaseManager):
     def scheduleSystemRegistrationEvent(self, system):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
-        enable_time = datetime.datetime.now(tz.tzutc())
+        enable_time = self.now()
         registration_event_type = self.eventType(
             models.EventType.SYSTEM_REGISTRATION)
         self.createSystemEvent(system, registration_event_type, enable_time)
@@ -518,7 +525,7 @@ class SystemManager(base.BaseManager):
         # do not create events for systems that we cannot possibly contact
         if self.getSystemHasHostInfo(system):
             if not enable_time:
-                enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+                enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
             pickledData = cPickle.dumps(data)
             event = models.SystemEvent(system=system, event_type=event_type, 
                 priority=event_type.priority, time_enabled=enable_time,
