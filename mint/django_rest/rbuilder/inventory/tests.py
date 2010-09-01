@@ -896,6 +896,14 @@ class SystemStateTestCase(XMLTestCase):
         system2 = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(system2.current_state.name,
             models.SystemState.REGISTERED)
+        log = models.SystemLog.objects.filter(system=system).get()
+        logEntries = log.system_log_entries.order_by('-entry_date')
+        self.failUnlessEqual([ x.entry for x in logEntries ],
+            [
+                'System data fetched.',
+                'System state change: unmanaged -> registered',
+                'System data fetched.',
+            ])
 
 class SystemVersionsTestCase(XMLTestCase):
     fixtures = ['system_job']
