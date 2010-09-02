@@ -310,7 +310,7 @@ class ZonesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
-            (zone.created_date.isoformat() + '+00:00'))
+            (zone.created_date.isoformat()))
 
 class ManagementNodesTestCase(XMLTestCase):
 
@@ -341,7 +341,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat() + '+00:00', management_node.created_date.isoformat()))
+            testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(), management_node.created_date.isoformat()))
 
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
@@ -349,7 +349,7 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat() + '+00:00', management_node.created_date.isoformat()))
+            testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(), management_node.created_date.isoformat()))
         
     def testAddManagementNodeNull(self):
         
@@ -386,9 +386,9 @@ class ManagementNodesTestCase(XMLTestCase):
         management_node_xml = testsxml.management_node_post_response_xml.replace(
             '<registrationDate/>',
             '<registrationDate>%s</registrationDate>' % \
-            (management_node.registration_date.isoformat() + '+00:00'))
+            (management_node.registration_date.isoformat()))
         self.assertXMLEquals(response.content, management_node_xml % \
-            (management_node.networks.all()[0].created_date.isoformat() + '+00:00', management_node.created_date.isoformat() + '+00:00'))
+            (management_node.networks.all()[0].created_date.isoformat(), management_node.created_date.isoformat()))
 
 class NetworksTestCase(XMLTestCase):
 
@@ -597,7 +597,7 @@ class SystemsTestCase(XMLTestCase):
         system = models.System.objects.get(pk=1)
         system_xml = testsxml.system_post_xml_response.replace('<registrationDate/>',
             '<registrationDate>%s</registrationDate>' % \
-            (system.registration_date.isoformat() + '+00:00'))
+            (system.registration_date.isoformat()))
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'createdDate' ])
@@ -1109,7 +1109,7 @@ class SystemVersionsTestCase(XMLTestCase):
             testsxml.system_version_xml % \
             (self.trove.last_available_update_refresh.isoformat(),
              self.trove2.last_available_update_refresh.isoformat(),
-             system.networks.all()[0].created_date.isoformat() + '+00:00',
+             system.networks.all()[0].created_date.isoformat(),
              system.created_date.isoformat()),
             ignoreNodes = [ 'createdDate' ])
 
@@ -1364,7 +1364,7 @@ class SystemEventTestCase(XMLTestCase):
         event = models.SystemEvent.objects.filter(system=self.system,event_type=pn_event).get()
         assert(event is not None)
         # should have been enabled immediately
-        assert(event.time_enabled <= datetime.datetime.utcnow())
+        assert(event.time_enabled <= datetime.datetime.now(tz.tzutc()))
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
@@ -1379,7 +1379,7 @@ class SystemEventTestCase(XMLTestCase):
         event = models.SystemEvent.objects.filter(system=self.system,event_type=registration_event).get()
         assert(event is not None)
         # should have been enabled immediately
-        assert(event.time_enabled <= datetime.datetime.utcnow())
+        assert(event.time_enabled <= datetime.datetime.now(tz.tzutc()))
         
         # make sure we have our log event
         log = models.SystemLog.objects.filter(system=self.system).get()
@@ -1434,8 +1434,8 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         system_event = models.SystemEvent.objects.get(pk=1)
         system_event_xml = testsxml.system_event_xml % \
-            (system_event.time_created.isoformat() + '+00:00',
-            system_event.time_enabled.isoformat() + '+00:00')
+            (system_event.time_created.isoformat(),
+            system_event.time_enabled.isoformat())
         self.assertXMLEquals(response.content, system_event_xml,
             ignoreNodes='timeCreated')
         
