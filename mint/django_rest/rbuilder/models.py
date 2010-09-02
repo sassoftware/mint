@@ -200,3 +200,19 @@ class TargetUserCredentials(modellib.XObjModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetusercredentials'
+
+class PkiCertificates(modellib.XObjModel):
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = 'pki_certificates'
+        unique_together = [ ('fingerprint', 'ca_serial_index') ]
+    fingerprint = models.TextField(primary_key=True)
+    purpose = models.TextField(null=False)
+    is_ca = models.BooleanField(null=False, default=False)
+    x509_pem = models.TextField(null=False)
+    pkey_pem = models.TextField(null=False)
+    issuer_fingerprint = models.ForeignKey('self',
+        db_column="issuer_fingerprint", null=True)
+    ca_serial_index = models.IntegerField(null=True)
+    time_issued = modellib.DateTimeUtcField(null=False)
+    time_expired = modellib.DateTimeUtcField(null=False)

@@ -1677,7 +1677,11 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             [
                 ('poll',
                     (
-                        cimParams(host='3.3.3.3', eventUuid='really-unique-id'),
+                        cimParams(
+                            host='3.3.3.3',
+                            eventUuid='really-unique-id',
+                            clientKey=testsxml.pkey_pem,
+                            clientCert=testsxml.x509_pem),
                         resLoc(path='/api/inventory/systems/4', port=80),
                     ),
                     dict(zone=None),
@@ -1718,7 +1722,9 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ('register',
                     (
                         cimParams(host='superduper.com',
-                            eventUuid = 'really-unique-id'),
+                            eventUuid = 'really-unique-id',
+                            clientKey=testsxml.pkey_pem,
+                            clientCert=testsxml.x509_pem),
                         resLoc(path='/api/inventory/systems/4', port=80),
                     ),
                     dict(requiredNetwork=None, zone=None),

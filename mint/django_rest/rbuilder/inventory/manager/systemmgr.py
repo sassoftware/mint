@@ -413,7 +413,17 @@ class SystemManager(base.BaseManager):
         # XXX FIXME
         zone = None
         cimParams = repClient.CimParams(host=destination,
-            eventUuid=eventUuid)
+            eventUuid=eventUuid,
+            clientCert=event.system.ssl_client_certificate,
+            clientKey=event.system.ssl_client_key)
+        if None in [cimParams.clientKey, cimParams.clientCert]:
+            # This is most likely a new system.
+            # Get a cert that is likely to work
+            outCerts = rbuildermodels.PkiCertificates.objects.filter(purpose="outbound").order_by('-time_issued')
+            if outCerts:
+                outCert = outCerts[0]
+                cimParams.clientCert = outCert.x509_pem
+                cimParams.clientKey = outCert.pkey_pem
         requiredNetwork = (network.required and destination) or None
         resultsLocation = repClient.ResultsLocation(
             path = "/api/inventory/systems/%d" % event.system.pk,
