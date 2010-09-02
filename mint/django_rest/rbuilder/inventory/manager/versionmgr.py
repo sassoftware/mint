@@ -54,6 +54,7 @@ class VersionManager(base.BaseManager):
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
+        for trove in system.installed_software.all():
             self.set_available_updates(trove)
         system.save()
 
@@ -197,6 +198,11 @@ class VersionManager(base.BaseManager):
                     new_version = models.Version()
                     new_version.fromConaryVersion(ver)
                     new_version.flavor = str(flv)
-                    new_version = models.Version.objects.load(new_version)
+                    created, new_version = \
+                        models.Version.objects.load_or_create(new_version)
                     new_version.save()
                     trove.available_updates.add(new_version)
+
+        # Always add the current version as an available update, this is so
+        # that remediation will work.
+        trove.available_updates.add(trove.version)
