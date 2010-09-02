@@ -869,6 +869,18 @@ class DateTimeUtcField(models.DateTimeField):
             return db_prep_value
 
     def to_python(self, value):
+        try:
+            # Try to parse the value as a datetime.  We do this b/c django's
+            # to_python parse logic does not support timezones, so it will
+            # always fail.  If we can get parser.parse() to return us a
+            # datetime, django's to_pyhon will be happy.
+            if isinstance(value, basestring):
+                value = parser.parse(value)
+        except ValueError:
+            # We tried to parse it as a datetime, it didn't work, so we know
+            # the super()'s to_python will fail from django, so just pass here
+            # and let that exception be raised.
+            pass
         python_value = super(DateTimeUtcField, self).to_python(value)
         if isinstance(python_value, datetime.datetime):
             return python_value.replace(tzinfo=tz.tzutc())
