@@ -55,7 +55,7 @@ class VersionManager(base.BaseManager):
         for trove in toAdd:
             system.installed_software.add(trove)
         for trove in system.installed_software.all():
-            self.set_available_updates(trove)
+            self.set_available_updates(trove, force=True)
         system.save()
 
     @base.exposed
