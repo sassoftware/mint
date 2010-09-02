@@ -465,6 +465,19 @@ class XObjModel(models.Model):
 
     old_m2m_accessors = {}
 
+    def __setattr__(self, attr, val):
+        """
+        Hack since django has no support for timezones.  Whenever we set an
+        attribute, check to see if it's a field that it is a DateTimeField, if
+        so, call the to_python method on the field with the value.  If we're
+        using our DateTimeUtcField subclass, the timezone will be set to utc.
+        """
+        field = self.get_field_dict().get(attr, None)
+        if field:
+            if isinstance(field, models.DateTimeField):
+                val = field.to_python(val)
+        object.__setattr__(self, attr, val)
+
     def load_fields_dict(self):
         """
         Returns a dict of field name, field value for each field in
