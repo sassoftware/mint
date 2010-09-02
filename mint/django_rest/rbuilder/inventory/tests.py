@@ -1036,7 +1036,7 @@ class SystemVersionsTestCase(XMLTestCase):
         manager.versionmgr.VersionManager.set_available_updates = \
             self.mock_set_available_updates
         
-    def mock_set_available_updates(self, trove):
+    def mock_set_available_updates(self, trove, *args, **kwargs):
         self.mock_set_available_updates_called = True
 
     def mock_scheduleSystemRegistrationEvent(self, system):
