@@ -1,4 +1,9 @@
-from mint.django_rest import logger
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
+#
+
 from mint.django_rest.rbuilder.models import Users, UserGroups, Sessions
 import md5
 import base64

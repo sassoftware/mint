@@ -1071,6 +1071,18 @@ def _createInventorySchema(db, cfg):
         db.tables['inventory_zone'] = []
         changed = True
 
+    if 'inventory_system_state' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_state" (
+                "system_state_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL UNIQUE,
+                "description" varchar(8092) NOT NULL,
+                "created_date" timestamp with time zone NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_state'] = []
+        changed = True
+        changed |= _addSystemStates(db, cfg)
+
     if 'inventory_system' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_system" (
@@ -1096,7 +1108,8 @@ def _createInventorySchema(db, cfg):
                 "launching_user_id" integer REFERENCES "users" ("userid"),
                 "available" bool,
                 "registered" bool,
-                "current_state" varchar(32),
+                "current_state_id" integer NOT NULL
+                    REFERENCES "inventory_system_state" ("system_state_id"),
                 "management_node" bool,
                 "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
             ) %(TABLEOPTS)s""" % db.keywords)
@@ -1112,7 +1125,8 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
                 "local" bool,
-                "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id")
+                "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id"),
+                "node_jid" varchar(64)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_zone_management_node'] = []
         changed = True
@@ -1125,7 +1139,7 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_system" ("system_id")
                     ON DELETE CASCADE,
                 "created_date" timestamp with time zone NOT NULL,
-                "ip_address" char(15),
+                "ip_address" varchar(15),
                 "ipv6_address" varchar(32),
                 "device_name" varchar(255),
                 "dns_name" varchar(255) NOT NULL,
@@ -1165,7 +1179,7 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "inventory_system_log_entry" (
                 "system_log_entry_id" %(PRIMARYKEY)s,
-                "system_log_id" integer NOT NULL 
+                "system_log_id" integer NOT NULL
                     REFERENCES "inventory_system_log" ("system_log_id")
                     ON DELETE CASCADE,
                 "entry" VARCHAR(8092),
@@ -1173,7 +1187,7 @@ def _createInventorySchema(db, cfg):
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_log_entry'] = []
         changed = True
-        
+
     if 'inventory_version' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_version" (
@@ -1184,7 +1198,7 @@ def _createInventorySchema(db, cfg):
                 "ordering" TEXT NOT NULL,
                 "flavor" TEXT NOT NULL,
                 UNIQUE("full", "ordering", "flavor")
-            )""" % db.keywords)
+            ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_version'] = []
         changed = True
 
@@ -1193,19 +1207,28 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "inventory_event_type" (
                 "event_type_id" %(PRIMARYKEY)s,
-                "name" varchar(8092) NOT NULL,
+                "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092) NOT NULL,
                 "priority" smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
         changed |= _addTableRows(db, tableName, 'name',
-            [ dict(name="system registration",
-                   description='on-demand system registration event', priority=110),
-              dict(name="system poll",
-                   description='standard system polling event', priority=50),
-              dict(name="immediate system poll",
-                   description='on-demand system polling event', priority=105)])
+            [dict(name="system registration",
+                  description='on-demand system registration event', 
+                  priority=110),
+             dict(name="system poll",
+                  description='standard system polling event', 
+                  priority=50),
+             dict(name="immediate system poll",
+                  description='on-demand system polling event', 
+                  priority=105),
+             dict(name="system apply update",
+                  description='apply an update to a system', priority=50),
+             dict(name="immediate system apply update",
+                  description='on-demand apply an update to a system', 
+                  priority=105)
+            ])
         
     if 'inventory_system_event' not in db.tables:
         cu.execute("""
@@ -1218,7 +1241,8 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_event_type",
                 "time_created" timestamp with time zone NOT NULL,
                 "time_enabled" timestamp with time zone NOT NULL,
-                "priority" smallint NOT NULL
+                "priority" smallint NOT NULL,
+                "event_data" varchar
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_event'] = []
         changed |= db.createIndex("inventory_system_event",
@@ -1230,16 +1254,33 @@ def _createInventorySchema(db, cfg):
         changed |= db.createIndex("inventory_system_event",
             "inventory_system_event_priority", "priority")
         changed = True
-        
+
+    if 'inventory_job_state' not in db.tables:
+        cu.execute("""
+            CREATE TABLE inventory_job_state
+            (
+                job_state_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_job_state'] = []
+        changed = True
+    changed |= _addTableRows(db, 'inventory_job_state', 'name',
+        [
+            dict(name='Queued'), dict(name='Running'),
+            dict(name='Completed'), dict(name='Failed'), ])
+
     tableName = 'inventory_job'
     if tableName not in db.tables:
         cu.execute("""
             CREATE TABLE inventory_job (
                 job_id %(PRIMARYKEY)s,
                 job_uuid varchar(64) NOT NULL UNIQUE,
-                event_type_id integer NOT NULL 
-                    REFERENCES inventory_event_type ("event_type_id"),
-                time_created timestamp with time zone NOT NULL
+                job_state_id integer NOT NULL
+                    REFERENCES inventory_job_state,
+                event_type_id integer NOT NULL
+                    REFERENCES inventory_event_type,
+                time_created timestamp with time zone NOT NULL,
+                time_updated timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
@@ -1251,13 +1292,13 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE inventory_system_job (
                 system_job_id %(PRIMARYKEY)s,
-                job_id integer NOT NULL
+                job_id integer NOT NULL UNIQUE
                     REFERENCES inventory_job
                     ON DELETE CASCADE,
                 system_id integer NOT NULL
                     REFERENCES inventory_system
                     ON DELETE CASCADE,
-                UNIQUE(job_id)
+                event_uuid varchar(64) NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables[tableName] = []
         changed = True
@@ -1282,8 +1323,7 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_version" ("version_id"),
                 "flavor" text NOT NULL,
                 "is_top_level" BOOL NOT NULL,
-                "last_available_update_refresh" timestamp with time zone
-                    NOT NULL,
+                "last_available_update_refresh" timestamp with time zone,
                 UNIQUE ("name", "version_id", "flavor")
             )""" % db.keywords)
 
@@ -1295,12 +1335,31 @@ def _createInventorySchema(db, cfg):
             CREATE TABLE "inventory_system_installed_software" (
                 "id" %(PRIMARYKEY)s,
                 "system_id" INTEGER NOT NULL 
-                    REFERENCES "inventory_system" ("system_id"),
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
                 "trove_id" INTEGER NOT NULL
                     REFERENCES "inventory_trove" ("trove_id"),
                 UNIQUE ("system_id", "trove_id")
             )"""  % db.keywords)
 
+    return changed
+
+def _addSystemStates(db, cfg):
+    changed = False
+    changed |= _addTableRows(db, 'inventory_system_state', 'name',
+            [
+                dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="registered", description="Polling", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-unknown", description="Not responding: unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-net", description="Not responding: network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-host", description="Not responding: host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-shutdown", description="Not responding: shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-suspended", description="Not responding: suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
+            ])
+    
     return changed
 
 def _addManagementZone(db, cfg):
@@ -1319,12 +1378,14 @@ def _addManagementZone(db, cfg):
     if len(ids) == 1:
         zoneId = ids[0][0]
     
+        cu.execute("SELECT system_state_id FROM inventory_system_state WHERE name = 'unmanaged'")
+        stateId = cu.fetchone()[0]
         # add the system
         changed |= _addTableRows(db, 'inventory_system', 'name',
                 [dict(name="rPath Update Service", 
                       description='Local rPath Update Service',
                       management_node='true',
-                      current_state="unmanaged",
+                      current_state_id=stateId,
                       managing_zone_id=zoneId,
                       created_date=str(datetime.datetime.now(tz.tzutc())))])
         

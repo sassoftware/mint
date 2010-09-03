@@ -15,6 +15,7 @@ import optparse
 import os
 import psycopg2
 import socket
+import time
 from conary.lib import digestlib
 from conary.lib import util as cny_util
 from M2Crypto import EVP
@@ -35,6 +36,9 @@ DEPLOY_LIST = [
         ('site', '/srv/rbuilder/pki/rmake.pem', 'rmake'),
         ('xmpp', '/srv/rbuilder/pki/jabberd.pem', 'jabber'),
         ('outbound', '/srv/rbuilder/pki/outbound.pem', 'root'),
+        # Don't rely on these files, they are just for debugging.
+        ('lg_ca', '/srv/rbuilder/pki/lg_ca.crt', 'root'),
+        ('hg_ca', '/srv/rbuilder/pki/hg_ca.crt', 'root'),
         ]
 
 
@@ -131,6 +135,7 @@ class Script(GenericScript):
 
         subject = X509.X509_Name()
         subject.O = desc
+        subject.OU = 'Created at ' + time.strftime('%F %T%z')
         if common is not None:
             subject.CN = common
 

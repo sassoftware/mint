@@ -46,6 +46,22 @@ event_types_xml="""\
     <eventTypeId>3</eventTypeId>
     <description>standard polling event</description>
   </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/4/">
+    <description>apply an update to a system</description>
+    <eventTypeId>4</eventTypeId>
+    <jobSet/>
+    <name>system apply update</name>
+    <priority>50</priority>
+    <systemEvents href="http://testserver/api/inventory/systemEventsByType/4/"/>
+  </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/5/">
+    <description>on-demand apply an update to a system</description>
+    <eventTypeId>5</eventTypeId>
+    <jobSet/>
+    <name>immediate system apply update</name>
+    <priority>105</priority>
+    <systemEvents href="http://testserver/api/inventory/systemEventsByType/5/"/>
+  </eventType>
 </eventTypes>"""
 
 zones_xml = """\
@@ -101,7 +117,6 @@ management_nodes_xml = """\
     <available/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <registered>True</registered>
-    <sslClientKey>test management node client key</sslClientKey>
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
@@ -121,7 +136,7 @@ management_nodes_xml = """\
         <system href="http://testserver/api/inventory/systems/1"/>
       </network>
     </networks>
-    <systemJobs/>
+    <nodeJid/>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <managingZone/>
     <hostname/>
@@ -132,18 +147,21 @@ management_nodes_xml = """\
     <scheduledEventStartDate/>
     <launchDate/>
     <local>True</local>
-    <sslClientCertificate>test management node client cert</sslClientCertificate>
     <installedSoftware/>
     <description>test management node desc</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
     <osMinorVersion/>
-    <systemjobSet/>
     <target/>
     <zone href="http://testserver/api/inventory/zones/2/"/>
     <systemPtr href="http://testserver/api/inventory/systems/1"/>
     <localUuid>test management node luuid</localUuid>
-    <currentState>registered</currentState>
+    <currentState>
+      <createdDate>%s</createdDate>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </managementNode>
@@ -156,7 +174,6 @@ management_node_xml = """\
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
@@ -176,7 +193,7 @@ management_node_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
+  <nodeJid/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -187,18 +204,21 @@ management_node_xml = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <local>True</local>
-  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <installedSoftware/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <systemjobSet/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <createdDate>%s</createdDate>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </managementNode>"""
@@ -226,7 +246,7 @@ management_node_post_xml = """\
       <required/>
     </network>
   </networks>
-  <systemJobs/>
+  <nodeJid>abcd</nodeJid>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
@@ -239,7 +259,6 @@ management_node_post_xml = """\
   <description>test management node desc</description>
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>registered</currentState>
   <osType/>
 </managementNode>"""
 
@@ -249,7 +268,6 @@ management_node_post_response_xml = """\
   <available>False</available>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
@@ -269,7 +287,7 @@ management_node_post_response_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
+  <nodeJid>abcd</nodeJid>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
@@ -280,18 +298,21 @@ management_node_post_response_xml = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <local>True</local>
-  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <installedSoftware/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <systemjobSet/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <createdDate>%s</createdDate>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </managementNode>"""
@@ -304,7 +325,11 @@ systems_xml = """\
     <registrationDate/>
     <available/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
-    <currentState>unmanaged</currentState>
+    <currentState>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <systemStateId>1</systemStateId>
+    </currentState>
     <description>Local rPath Update Service</description>
     <generatedUuid/>
     <hostname/>
@@ -335,12 +360,9 @@ systems_xml = """\
     <osType/>
     <reservationId/>
     <scheduledEventStartDate/>
-    <sslClientCertificate/>
-    <sslClientKey/>
     <sslServerCertificate/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <systemId>2</systemId>
-    <systemJobs/>
     <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <target/>
     <targetSystemId/>
@@ -350,7 +372,11 @@ systems_xml = """\
     <registrationDate/>
     <available/>
     <createdDate>%s</createdDate>
-    <currentState>registered</currentState>
+      <currentState>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <description>testsystemdescription</description>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
     <hostname/>
@@ -381,12 +407,9 @@ systems_xml = """\
     <osType/>
     <reservationId/>
     <scheduledEventStartDate/>
-    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-    <sslClientKey>testsystemsslclientkey</sslClientKey>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
     <systemId>3</systemId>
-    <systemJobs/>
     <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
     <target/>
     <targetSystemId/>
@@ -430,7 +453,11 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
-    <currentState>registered</currentState>
+    <currentState>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </system>
@@ -467,7 +494,11 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystem2localuuid</localUuid>
-    <currentState>registered</currentState>
+    <currentState>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </system>
@@ -478,7 +509,6 @@ system_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <installedSoftware/>
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -500,13 +530,11 @@ system_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>1</systemId>
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -517,7 +545,11 @@ system_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
@@ -554,7 +586,6 @@ system_post_xml = """\
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
   <osType/>
 </system>"""
 
@@ -564,7 +595,6 @@ system_post_xml_response = """\
   <available>False</available>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -584,7 +614,6 @@ system_post_xml_response = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -593,17 +622,19 @@ system_post_xml_response = """\
   <managementNode/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <installedSoftware/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
   <osMinorVersion/>
-  <systemjobSet/>
   <name>testsystemname</name>
   <target/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
@@ -640,13 +671,12 @@ system_post_xml_dup = """\
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>dead</currentState>
   <osType/>
 </system>"""
 
 system_post_xml_dup2 = system_post_xml_dup.replace(
-    '<currentState>dead</currentState>', 
-    '<currentState>mothballed</currentState>')
+    '<name>testsystemname</name>', 
+    '<name>testsystemnameChanged</name>')
 
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -654,7 +684,6 @@ system_target_xml = """\
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -674,7 +703,6 @@ system_target_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -683,7 +711,6 @@ system_target_xml = """\
   <managementNode/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <installedSoftware/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -692,7 +719,11 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>
@@ -702,6 +733,7 @@ system_events_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvents>
     <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
+        <eventData/>
         <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
@@ -710,6 +742,7 @@ system_events_xml = """\
         <systemEventId>1</systemEventId>
     </systemEvent>
     <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
+        <eventData/>
         <eventType href="http://testserver/api/inventory/eventTypes/1/"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
@@ -723,6 +756,7 @@ system_events_xml = """\
 system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
+    <eventData/>
     <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
     <system href="http://testserver/api/inventory/systems/3"/>
     <timeCreated>%s</timeCreated>
@@ -759,11 +793,6 @@ system_log_xml = """\
       <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>3</systemLogEntryId>
     </systemLogEntry>
-    <systemLogEntry>
-      <entry>System data fetched.</entry>
-      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
-      <systemLogEntryId>4</systemLogEntryId>
-    </systemLogEntry>
   </systemLogEntries>
   <systemLogId>1</systemLogId>
   <system href="http://testserver/api/inventory/systems/1"/>
@@ -789,6 +818,60 @@ systems_log_xml = """\
     <systemLogEntryId>3</systemLogEntryId>
   </systemLogEntry>
 </systemsLog>
+"""
+
+get_installed_software_xml = """\
+  <installedSoftware>
+    <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%%3D/clover.eng.rpath.com%%40rpath%%3Aclover-1-devel/1-2-1%%5B%%7E%%21dom0%%2C%%7E%%21domU%%2Cvmware%%2C%%7E%%21xen%%20is%%3A%%20x86%%28i486%%2Ci586%%2Ci686%%2Csse%%2Csse2%%29%%5D">
+      <availableUpdates>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567891.13</ordering>
+          <revision>1-3-1</revision>
+          <versionId>2</versionId>
+        </version>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567892.14</ordering>
+          <revision>1-4-1</revision>
+          <versionId>3</versionId>
+        </version>
+      </availableUpdates>
+      <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+      <isTopLevel>True</isTopLevel>
+      <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
+      <name>group-clover-appliance</name>
+      <troveId>1</troveId>
+      <version>
+        <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+        <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
+        <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+        <ordering>1234567890.12</ordering>
+        <revision>change me gently</revision>
+        <versionId>1</versionId>
+      </version>
+    </trove>
+    <trove id="http://testserver/repos/contrib/api/trove/emacs%%3D/contrib.rpath.org%%40rpl%%3A2/23.0.60cvs20080523-1-0.1%%5Bdesktop%%20is%%3A%%20x86_64%%5D">
+      <availableUpdates/>
+      <flavor>desktop is: x86_64</flavor>
+      <isTopLevel>False</isTopLevel>
+      <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
+      <name>emacs</name>
+      <troveId>2</troveId>
+      <version>
+        <flavor>desktop is: x86_64</flavor>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <ordering>1234567890.12</ordering>
+        <revision>23.0.60cvs20080523-1-0.1</revision>
+        <versionId>4</versionId>
+      </version>
+    </trove>
+  </installedSoftware>
 """
 
 installed_software_xml = """\
@@ -850,7 +933,6 @@ system_version_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   %s
   <registered>True</registered>
-  <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -872,13 +954,11 @@ system_version_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>3</systemId>
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
@@ -889,11 +969,15 @@ system_version_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%%s</createdDate>
   <osType/>
 </system>
-""" % installed_software_xml
+""" % get_installed_software_xml
 
 installed_software_post_xml = """\
   <installedSoftware>
@@ -914,6 +998,17 @@ installed_software_post_xml = """\
         <flavor>desktop is: x86_64</flavor>
       </version>
       <flavor>desktop is: x86_64</flavor>
+    </trove>
+    <trove>
+      <name>info-sfcb</name>
+      <version>
+        <full>/contrib.rpath.org@rpl:2/1-1-1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <revision>1-1-1</revision>
+        <ordering>1263856871.03</ordering>
+        <flavor/>
+      </version>
+      <flavor/>
     </trove>
   </installedSoftware>
 """
@@ -961,6 +1056,8 @@ system_version_put_xml = """\
   %s
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <localUuid>testsystemlocaluuid</localUuid>
+  <name>somesystem</name>
+  <eventUuid>testeventuuid</eventUuid>
 </system>
 """ % installed_software_post_xml
 
@@ -990,7 +1087,6 @@ system_version_put_response_xml = """\
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
-  <systemJobs/>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -1003,12 +1099,167 @@ system_version_put_response_xml = """\
   <targetSystemId/>
   <osMinorVersion/>
   <managementNode/>
-  <systemjobSet/>
   <target/>
   <name/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>2010-08-23T21:41:31.278455+00:00</createdDate>
   <osType/>
 </system>
 """ % installed_software_response_xml
+
+system_available_updates_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/3">
+  <installedSoftware>
+    <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%3D/clover.eng.rpath.com%40rpath%3Aclover-1-devel/1-2-1%5B%7E%21dom0%2C%7E%21domU%2Cvmware%2C%7E%21xen%20is%3A%20x86%28i486%2Ci586%2Ci686%2Csse%2Csse2%29%5D">
+      <name>group-clover-appliance</name>
+      <troveId>1</troveId>
+      <availableUpdates>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567891.13</ordering>
+          <revision>1-3-1</revision>
+          <versionId>2</versionId>
+        </version>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567892.14</ordering>
+          <revision>1-4-1</revision>
+          <versionId>3</versionId>
+        </version>
+      </availableUpdates>
+      <version>
+        <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+        <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
+        <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+        <ordering>1234567890.12</ordering>
+        <revision>change me gently</revision>
+        <versionId>1</versionId>
+      </version>
+      <lastAvailableUpdateRefresh>2010-08-27T12:21:59.802463+00:00</lastAvailableUpdateRefresh>
+      <isTopLevel>True</isTopLevel>
+      <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+    </trove>
+    <trove id="http://testserver/repos/contrib/api/trove/emacs%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
+      <name>emacs</name>
+      <troveId>2</troveId>
+      <availableUpdates/>
+      <version>
+        <flavor>desktop is: x86_64</flavor>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <ordering>1234567890.12</ordering>
+        <revision>23.0.60cvs20080523-1-0.1</revision>
+        <versionId>4</versionId>
+      </version>
+      <lastAvailableUpdateRefresh>2010-08-27T12:21:59.815100+00:00</lastAvailableUpdateRefresh>
+      <isTopLevel>False</isTopLevel>
+      <flavor>desktop is: x86_64</flavor>
+    </trove>
+  </installedSoftware>
+  <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
+  <osMajorVersion/>
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <reservationId/>
+  <networks>
+    <network>
+      <active/>
+      <createdDate>2010-08-27T12:21:59.801387+00:00</createdDate>
+      <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
+      <ipAddress>1.1.1.1</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>2</networkId>
+      <portType>lan</portType>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/3"/>
+    </network>
+  </networks>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <managingZone/>
+  <hostname/>
+  <systemId>3</systemId>
+  <launchingUser/>
+  <managementNode/>
+  <scheduledEventStartDate/>
+  <launchDate/>
+  <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
+  <available/>
+  <registrationDate/>
+  <description>testsystemdescription</description>
+  <registered>True</registered>
+  <targetSystemId/>
+  <osMinorVersion/>
+  <target/>
+  <name>testsystemname</name>
+  <localUuid>testsystemlocaluuid</localUuid>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
+  <createdDate>2010-08-27T12:21:59.800269+00:00</createdDate>
+  <osType/>
+</system>
+"""
+
+x509_pem = """\
+-----BEGIN CERTIFICATE-----
+MIIDSTCCAjGgAwIBAgIBATANBgkqhkiG9w0BAQUFADBhMTEwLwYDVQQKEyhyQnVp
+bGRlciBMb3ctR3JhZGUgQ2VydGlmaWNhdGUgQXV0aG9yaXR5MSwwKgYDVQQLEyND
+cmVhdGVkIGF0IDIwMTAtMDktMDIgMTE6MTg6NTMtMDQwMDAeFw0xMDA5MDExNTE4
+NTNaFw0yMDA5MDExNTE4NTNaMF0xLTArBgNVBAoTJHJCdWlsZGVyIFJlcGVhdGVy
+IENsaWVudCBDZXJ0aWZpY2F0ZTEsMCoGA1UECxMjQ3JlYXRlZCBhdCAyMDEwLTA5
+LTAyIDExOjE4OjUzLTA0MDAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQCgz+pOK5ROa/+PJo9/3glqvqchCBJIOYiygGpUMGq1p/HKspN08RsuHPL4/1Dd
+h+AGMQndojaumIvuDW/3eP9AgXfJZa6YDjNmhmGTBOqCickOoc/vGmdFnsi6cNCT
+ClBR4MvW770h1yQdSgtUszyixTBLn+5yB5oIIKCXVMxuh63XhTa9TVsk5HRIpAW9
+ZVIaWhRU/QQhYt5qPE7OoePKRkUS3zNXK/LAgPEayzPJbUT4AHku33Ps8dCyVBDC
+oOgKOu0FSGqAqleprDPaQslWx0bjx7kQMObt7ptTTPWGV+T0TSIrz8ab370PYY7e
+KsNXS+Ad9yiZCbcrg5uMYrr7AgMBAAGjEDAOMAwGA1UdEwEB/wQCMAAwDQYJKoZI
+hvcNAQEFBQADggEBAAEOZy8q2W4eRS7jjOHVjKMNBl7qVQafRCApjZmmmHcqWLF9
+oA+wsbuYgbTHYPZ91johrKJx2D7KUj+dhTHLN3QmCSRwschUTLL8SSTlncT6NI4V
+nYvxBhgh45N+RVmk/hWSeNGHPZrHKSnnFyxRWUooDontBoUTlmQP9v6CXGxwFBpb
+k+BIkRElpceL73AMmiquPCUNIeMmGZqQivLvaIzowREQCuXNorJgMAdG5xWddO3H
+/duKEYsL6aGrEG9mw7CAxzA0fcq5T9YFq90nd9E0g3IhfiAWvsrInJmH0c7DhaZ/
+2r9WWECYqxWkHMLsW6PVA0pVTL/XoicHiu6NTac=
+-----END CERTIFICATE-----"""
+
+pkey_pem = """\
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAoM/qTiuUTmv/jyaPf94Jar6nIQgSSDmIsoBqVDBqtafxyrKT
+dPEbLhzy+P9Q3YfgBjEJ3aI2rpiL7g1v93j/QIF3yWWumA4zZoZhkwTqgonJDqHP
+7xpnRZ7IunDQkwpQUeDL1u+9IdckHUoLVLM8osUwS5/ucgeaCCCgl1TMboet14U2
+vU1bJOR0SKQFvWVSGloUVP0EIWLeajxOzqHjykZFEt8zVyvywIDxGsszyW1E+AB5
+Lt9z7PHQslQQwqDoCjrtBUhqgKpXqawz2kLJVsdG48e5EDDm7e6bU0z1hlfk9E0i
+K8/Gm9+9D2GO3irDV0vgHfcomQm3K4ObjGK6+wIDAQABAoIBADDoiz5TCrv/JK6I
+78PX581LRtFI/yZwOR7w52XLg+jTtzoKrcY3Pij8LPmFzTZTCNNZPsLlfvQC+Svh
+clg1uIwJ1ECwaDVevEtGO47XQ+uHtFp65B64TQhjjnEFtqnBzUPZtqUcLM2J/TXb
+Oy77hEmM529YqNCNd09ZfP4JkFNc/PVauJeHfjikLtTCPQxfIL1/SryCCxhpGdOJ
+BYY45enPurzeeTosddxhh0zCfTbjDkZIvC6j0gapMtQ3y0HVu4rqZApZAtqRRkol
+3ThT4f94gOiMUpa3n5GqdeQztBziP2tm0dfqajvY8DkG4l8cLs5JMV3ybzuRjO7D
+nK+ioWECgYEA1Q9q15QVf8SABn4Hx7glwR3y9US2oQxnzD8FSyHys6ayXqrIBRTm
+ctY8fqx5FaAgLRleYrqppAEFHnyv0rNuj5uBG4Vv7hPVFMMB2IjX6Go3y4Kp2Cji
+E0exfaED1fOVF6Qg3YMrlLN9UQDWDVXtowmmf1MZeKJrbHIm9G7/tbcCgYEAwTjS
+uv1yJQvMeCgzhHkYjwaTGFYIIENrwh5v+aqL/qFfisxBb2TGCeWMenel4nI/7Sj8
+Ks5skazLilMY0XvXZQLQb8Z46ejz3qAF90Nt7mR8+3Fi/RG3CV7nlTYKi4EBoRwa
+A6J5HYjJbWsvWPjRun+VC5/RCLaLRt3vBruUBN0CgYBWbXeg1bBW8QYiHBPZ34hp
+K1X4SpRvBhJBFzt1e+LxH2jx4ANdlFnbMa6+kAZaUGddBBJ2qFPSdJt3/4pvRVxP
+IvyfhmSeRitEzco85V34KMZTZsCxL/xtZ8LHPH7K1pGfUnQGh4QxQRJPvrAWHspU
+PcDtm28UsYY0KqZEt5ZBRwKBgQCxF4V8wIH3lkLG9gGRrvNlUx9KNL+p4mFHP2Jd
+r4Qz0m+g5OgsUm537527OSIe05vnn6LPEPbM5VR/6P1cMmcOO3ASohN8P3gUWRJe
+t7xvvEYYpqmVTME3o3YZebhcd9aodPsazbS37wC+enig0RxYFErkpouNstEgGJTU
+1OMrOQKBgGj8bASJ+BypTtg8xnac5FuzEPr0ksjz+FaY+NGeXmfqCxdTvUs0Ue25
+Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
+9GYZo4+j1V1Ld2WUxY+jXJdJetbrPjU4Bq8M+etypQrNJXrX/DD4
+-----END RSA PRIVATE KEY-----"""

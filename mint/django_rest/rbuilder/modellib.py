@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import datetime
+from dateutil import parser
 from dateutil import tz
 import urlparse
 
@@ -11,6 +12,20 @@ from django.core import exceptions
 from django.core import urlresolvers 
 
 from xobj import xobj
+
+class XObjHiddenMixIn(object):
+    """
+    Fields implementing this interface will not be serialized in the
+    external API
+    """
+    XObjHidden = True
+
+class APIReadOnlyMixIn(object):
+    """
+    Fields implementing this interface will not be updated through the
+    external API
+    """
+    APIReadOnly = True
 
 type_map = {}
 
@@ -55,20 +70,20 @@ class BaseManager(models.Manager):
         # update to a model.
         if loaded_model:
             for field in loaded_model._meta.fields:
+                # Ignore pk fields
+                if field.primary_key:
+                    continue
                 # django throws ObjectDoesNotExist if you try to access a
                 # related model that doesn't exist, so just swallow it.
                 try:
-                    if getattr(model_inst, field.name) is None:
-                        continue
-                    # Ignore pk fields
-                    if field.primary_key:
-                        continue
+                    newFieldVal = getattr(model_inst, field.name, None)
                 except exceptions.ObjectDoesNotExist:
+                    newFieldVal = None
+                if newFieldVal is None:
                     continue
-                if getattr(model_inst, field.name) != \
-                   getattr(loaded_model, field.name):
-                    setattr(loaded_model, field.name, 
-                        getattr(model_inst, field.name))
+                oldFieldVal = getattr(loaded_model, field.name)
+                if newFieldVal != oldFieldVal:
+                    setattr(loaded_model, field.name, newFieldVal)
             return loaded_model
 
         return loaded_model
@@ -118,36 +133,47 @@ class BaseManager(models.Manager):
         fields = model.get_field_dict()
 
         for key, val in obj.__dict__.items():
-            if key in fields.keys():
-                # special case for fields that may not exist at load time or we
-                # want to ignore for other reasons
-                if key in model.load_ignore_fields:
-                    continue;
-                # Special case for FK fields which should be hrefs.
-                if isinstance(fields[key], SerializedForeignKey):
-                    val = fields[key].related.parent_model.objects.load_from_object(val, request, save=save)
-                elif isinstance(fields[key], related.RelatedField):
-                    val = fields[key].related.parent_model.objects.load_from_href(
-                        getattr(val, 'href', None))
-                elif isinstance(fields[key], djangofields.BooleanField) or \
-                     isinstance(fields[key], 
-                        djangofields.NullBooleanField):
+            field = fields.get(key, None)
+            if field is None:
+                continue
+            # special case for fields that may not exist at load time or we
+            # want to ignore for other reasons
+            if key in model.load_ignore_fields:
+                continue
+            if getattr(field, 'APIReadOnly', None):
+                # Ignore APIReadOnly fields
+                continue
+            # Special case for FK fields which should be hrefs.
+            if isinstance(field, SerializedForeignKey):
+                val = field.related.parent_model.objects.load_from_object(val, request, save=save)
+            elif isinstance(field, InlinedForeignKey):
+                lookup = { field.visible : str(val) }
+                # Look up the inlined value
+                val = field.related.parent_model.objects.get(**lookup)
+            elif isinstance(field, related.RelatedField):
+                val = field.related.parent_model.objects.load_from_href(
+                    getattr(val, 'href', None))
+            elif isinstance(field, djangofields.BooleanField) or \
+                 isinstance(field, djangofields.NullBooleanField):
+                val = str(val)
+                val = (val.lower() == str(True).lower())
+            elif isinstance(field, DateTimeUtcField):
+                # Empty string is not valid, explicitly convert to None
+                if val:
                     val = str(val)
-                    if True.__str__().lower() == val.lower():
-                        val = True
-                    else:
-                        val = False
-                elif val:
-                    if fields[key].primary_key:
-                        val = int(val)
-                    else:
-                        # Cast to str, django will just do the right thing.
-                        val = str(val)
-                        val = fields[key].get_prep_value(val)
                 else:
                     val = None
+            elif val is not None:
+                if field.primary_key:
+                    val = int(val)
+                else:
+                    # Cast to str, django will just do the right thing.
+                    val = str(val)
+                    val = field.get_prep_value(val)
+            else:
+                val = None
 
-                setattr(model, key, val)
+            setattr(model, key, val)
 
         return model
 
@@ -171,11 +197,15 @@ class BaseManager(models.Manager):
         return model
 
     def get_accessors(self, model, obj, request=None):
+        """
+        Build and return a dict of accessor name and list of accessor
+        objects.
+        """
         accessors = model.get_accessor_dict()
         ret_accessors = {}
 
         for key, val in obj.__dict__.items():
-            if key in accessors.keys():
+            if key in accessors:
                 ret_accessors[key] = []
                 rel_obj_name = accessors[key].var_name
                 rel_objs = getattr(val, rel_obj_name, None)
@@ -205,21 +235,46 @@ class BaseManager(models.Manager):
         return model
 
     def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+        """
+        Add rel_mod to the correct many to many accessor on model.  Needs to
+        be in a seperate method so that it can be overridden.
+        """
         getattr(model, m2m_accessor).add(rel_mod)
 
     def clear_m2m_accessor(self, model, m2m_accessor):
+        """
+        Clear a many to many accessor.  Needs to be in a seperate method so
+        that it can be overridden.
+        """
         getattr(model, m2m_accessor).clear()
 
     def add_m2m_accessors(self, model, obj, request):
+        """
+        Populate the many tom many accessors on model based on the xobj model
+        in obj.
+        """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
             rel_obj_name = m2m_mgr.target_field_name
             self.clear_m2m_accessor(model, m2m_accessor)
-            for rel_obj in getattr(getattr(obj, m2m_accessor, None),
-                                   rel_obj_name, []):
+            acobj = getattr(obj, m2m_accessor, None)
+            objlist = getattr(acobj, rel_obj_name, None)
+            if objlist is not None and not isinstance(objlist, list):
+                objlist = [ objlist ]
+            for rel_obj in objlist or []:
                 rel_mod = type_map[rel_obj_name].objects.load_from_object(
                     rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)
-        
+
+        return model
+
+    def add_synthetic_fields(self, model, obj):
+        # Not all models have the synthetic fields option set, so use getattr
+        for fieldName in getattr(model._meta, 'synthetic_fields', []):
+            val = getattr(obj, fieldName, None)
+            if val is not None:
+                # XXX for now we assume synthetic fields are char only.
+                val = str(val)
+            setattr(model, fieldName, val)
         return model
 
     def load_from_object(self, obj, request, save=True):
@@ -237,6 +292,9 @@ class BaseManager(models.Manager):
         if model._meta.abstract:
             save = False
 
+        # We need access to synthetic fields before loading from the DB, they
+        # may be used in load_or_create
+        model = self.add_synthetic_fields(model, obj)
         model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
         if save:
@@ -245,11 +303,55 @@ class BaseManager(models.Manager):
             dbmodel = self.load(model, accessors)
             if dbmodel:
                 model = dbmodel
+        # Copy the synthetic fields again - this is unfortunate
+        model = self.add_synthetic_fields(model, obj)
 
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
 
+        return model
+
+class TroveManager(BaseManager):
+    def load_from_object(self, obj, request, save=True):
+        # None flavor fixup
+        if getattr(obj, 'flavor', None) is None:
+            obj.flavor = ''
+        # Fix up the flavor in the version object
+        obj.version.flavor = obj.flavor
+        return BaseManager.load_from_object(self, obj, request, save=save)
+
+    def clear_m2m_accessor(self, model, m2m_accessor):
+        # We don't want available_updates to be published via REST
+        if m2m_accessor == 'available_updates':
+            return
+        BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
+
+    def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+        if m2m_accessor == 'available_updates':
+            return
+        return BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+
+class VersionManager(BaseManager):
+    def add_fields(self, model, obj, request, save=True):
+        # Fix up label and revision
+        nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
+        v = nmodel.conaryVersion
+        nmodel.fromConaryVersion(v)
+        return nmodel
+
+class JobManager(BaseManager):
+    def load_from_db(self, model_inst, accessors):
+        loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+        if loaded_model:
+            return loaded_model
+        # We could not find the job. Create one just because we need to
+        # populate some of the required fields
+        model = self.model()
+        mclass = type_map['job_state']
+        model.job_state = mclass.objects.get(name=mclass.QUEUED)
+        mclass = type_map['event_type']
+        model.event_type = mclass.objects.get(name=mclass.SYSTEM_REGISTRATION)
         return model
 
 class SystemManager(BaseManager):
@@ -259,22 +361,24 @@ class SystemManager(BaseManager):
         Overridden because systems have several checks required to determine 
         if the system already exists.
         """
-        
-        loaded_model = None
-        dupCheckFieldsDict = []
-        
+
         # only check uuids if they are not none
         if model_inst.local_uuid and model_inst.generated_uuid:
-            dupCheckFieldsDict.append(dict(local_uuid=model_inst.local_uuid, 
+            loaded_model = self.tryLoad(dict(local_uuid=model_inst.local_uuid,
                 generated_uuid=model_inst.generated_uuid))
-        
-        for d in dupCheckFieldsDict:    
-            loaded_model = self.tryLoad(d)
-            if loaded_model is not None:
-                break;
-        
-        return loaded_model
-        
+            if loaded_model:
+                # a system matching (local_uuid, generated_uuid) was found)
+                return loaded_model
+        if model_inst.event_uuid:
+            # Look up systems by event_uuid
+            systems = [ x.system
+                for x in type_map['__systemJob'].objects.filter(
+                    event_uuid = model_inst.event_uuid) ]
+            if systems:
+                return systems[0]
+
+        return None
+
     def tryLoad(self, loadDict):
         try:
             loaded_model = self.get(**loadDict)
@@ -287,16 +391,36 @@ class SystemManager(BaseManager):
         return loaded_model
     
     def clear_m2m_accessor(self, model, m2m_accessor):
-        if m2m_accessor == 'installed_software':
+        # XXX Need a better way to handle this
+        if m2m_accessor in [ 'installed_software', 'system_jobs' ]:
             return
-        else:
-            BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
+        BaseManager.clear_m2m_accessor(self, model, m2m_accessor)
 
     def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
+        # XXX Need a better way to handle this
         if m2m_accessor == 'installed_software':
             model.new_versions.append(rel_mod)
+        elif m2m_accessor == 'system_jobs':
+            self._handleSystemJob(model, rel_mod)
         else:
             BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
+
+    def _handleSystemJob(self, system, job):
+        self.lastJob = None
+        # Validate event_uuid too - fetch SystemJob entry
+        try:
+            sj = job.systems.get(system__system_id=system.pk)
+        except exceptions.ObjectDoesNotExist:
+            return
+        if sj.event_uuid != system.event_uuid:
+            return
+        # Update time_updated, this should in theory be the time when the
+        # job completes
+        job.time_updated = datetime.datetime.now(tz.tzutc())
+        # XXX This just doesn't seem right
+        job.save()
+        # Save the job so we know to update the system state
+        system.lastJob = job
 
 class ManagementNodeManager(SystemManager):
     """
@@ -340,6 +464,19 @@ class XObjModel(models.Model):
     serialize_accessors = True
 
     old_m2m_accessors = {}
+
+    def __setattr__(self, attr, val):
+        """
+        Hack since django has no support for timezones.  Whenever we set an
+        attribute, check to see if it's a field that it is a DateTimeField, if
+        so, call the to_python method on the field with the value.  If we're
+        using our DateTimeUtcField subclass, the timezone will be set to utc.
+        """
+        field = self.get_field_dict().get(attr, None)
+        if field:
+            if isinstance(field, models.DateTimeField):
+                val = field.to_python(val)
+        object.__setattr__(self, attr, val)
 
     def load_fields_dict(self):
         """
@@ -441,18 +578,20 @@ class XObjModel(models.Model):
         want to try to serialize it later.
         """
         for key, val in self.__dict__.items():
-            if key in fields.keys():
+            field = fields.pop(key, None)
+            if field is not None:
+                if getattr(field, 'XObjHidden', False):
+                    continue
                 if val is None:
                         val = ''
                 # Special handling of DateTimeFields.  Could make this OO by
                 # calling .seriaize(...) on each field, and overriding that
                 # behavior for DateTimeField's, but as long as it's just this
                 # one case, we'll leave it like this.
-                elif isinstance(fields[key], models.DateTimeField):
+                elif isinstance(field, models.DateTimeField):
                     val = val.replace(tzinfo=tz.tzutc())
                     val = val.isoformat()
                 setattr(xobj_model, key, val)
-                fields.pop(key)
             # TODO: is this still needed, we already called serialize_hrefs.?
             elif isinstance(val, XObjHrefModel):
                 val.serialize(request)
@@ -468,8 +607,14 @@ class XObjModel(models.Model):
             if isinstance(field, related.RelatedField):
                 val = getattr(self, fieldName)
                 serialized = getattr(field, 'serialized', False)
+                visible = getattr(field, 'visible', None)
                 if val:
-                    if not serialized:
+                    if visible:
+                        # If the visible prop is set, we want to copy the
+                        # field's value for that property
+                        setattr(xobj_model, fieldName,
+                            getattr(val, visible))
+                    elif not serialized:
                         href_model = type('%s_href' % \
                             self.__class__.__name__, (object,), {})()
                         href_model._xobj = xobj.XObjMetadata(
@@ -488,28 +633,31 @@ class XObjModel(models.Model):
         xobj_model.  This is so that things like <networks> appear as an xml
         representation on <system> xml.
         """
-        for accessor in accessors.keys():
+        xobjHiddenAccessors =  getattr(self, '_xobj_hidden_accessors', set())
+        accessorsList = [ (k, v) for (k, v) in accessors.items()
+            if k not in xobjHiddenAccessors ]
+        for accessorName, accessor in accessorsList:
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
-            if hasattr(accessors[accessor].model, '_xobj') and \
-               accessors[accessor].model._xobj.tag:
-                    var_name = accessors[accessor].model._xobj.tag
+            if hasattr(accessor.model, '_xobj') and \
+               accessor.model._xobj.tag:
+                    var_name = accessor.model._xobj.tag
             else:
-                var_name = accessors[accessor].var_name
+                var_name = accessor.var_name
 
             # Simple object to create for our accessor
-            accessor_model = type(accessor, (object,), {})()
+            accessor_model = type(accessorName, (object,), {})()
 
-            if getattr(accessors[accessor].field, 'deferred', False):
+            if getattr(accessor.field, 'deferred', False):
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
-                rel_mod = getattr(self, accessor).model()
+                rel_mod = getattr(self, accessorName).model()
                 href = rel_mod.get_absolute_url(request, self)
                 accessor_model._xobj = xobj.XObjMetadata(
                     attributes={'href':str})
                 accessor_model.href = href
-                setattr(xobj_model, accessor, accessor_model)
+                setattr(xobj_model, accessorName, accessor_model)
             else:
                 # In django, accessors are always lists of other models.
                 setattr(accessor_model, var_name, [])
@@ -517,28 +665,31 @@ class XObjModel(models.Model):
                     # For each related model in the accessor, serialize it,
                     # then append the serialized object to the list on
                     # accessor_model.
-                    if isinstance(getattr(self, accessor),
+                    if isinstance(getattr(self, accessorName),
                         BaseManager):
-                        for rel_mod in getattr(self, accessor).all():
+                        for rel_mod in getattr(self, accessorName).all():
                             rel_mod = rel_mod.serialize(request)
                             getattr(accessor_model, var_name).append(rel_mod)
                     else:
                         accessor_model = None
                         continue
 
-                    setattr(xobj_model, accessor, accessor_model)
+                    setattr(xobj_model, accessorName, accessor_model)
 
                 # TODO: do we still need to handle this exception here? not
                 # sure what was throwing it.
                 except exceptions.ObjectDoesNotExist:
-                    setattr(xobj_model, accessor, None)
+                    setattr(xobj_model, accessorName, None)
 
     def serialize_m2m_accessors(self, xobj_model, m2m_accessors, request):
         """
         Build up an object for each many to many field on this model and set
         it on xobj_model.
         """
+        hidden = getattr(self, '_xobj_hidden_m2m', [])
         for m2m_accessor in m2m_accessors:
+            if m2m_accessor in hidden:
+                continue
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
@@ -607,6 +758,10 @@ class XObjModel(models.Model):
 
         return xobj_model
 
+
+class SyntheticField(object):
+    """A field that has no database storage, but is de-serialized"""
+
 class XObjIdModel(XObjModel):
     """
     Model that sets an id attribute on itself corresponding to the href for
@@ -614,6 +769,18 @@ class XObjIdModel(XObjModel):
     """
     class Meta:
         abstract = True
+
+    class __metaclass__(XObjModel.__metaclass__):
+        def __new__(cls, name, bases, attrs):
+            ret = XObjModel.__metaclass__.__new__(cls, name, bases, attrs)
+            # Find synthetic fields
+            ret._meta.synthetic_fields = synth = set()
+            for k, v in attrs.items():
+                if isinstance(v, SyntheticField):
+                    synth.add(k)
+                    # Default the value to None
+                    setattr(ret, k, None)
+            return ret
 
     def serialize(self, request=None):
         xobj_model = XObjModel.serialize(self, request)
@@ -657,7 +824,15 @@ class SerializedForeignKey(models.ForeignKey):
     def __init__(self, *args, **kwargs):
         self.serialized = True
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
-    
+
+class InlinedForeignKey(models.ForeignKey):
+    """
+    If you want a FK to be serialized as one of its fields, use the "visible"
+    argument
+    """
+    def __init__(self, *args, **kwargs):
+        self.visible = kwargs.pop('visible')
+        super(InlinedForeignKey, self).__init__(*args, **kwargs)
 
 class DateTimeUtcField(models.DateTimeField):
     """
@@ -672,3 +847,51 @@ class DateTimeUtcField(models.DateTimeField):
         else:
             return super(models.DateField, self).pre_save(model_instance, add)
 
+    def get_prep_value(self, *args, **kwargs):
+        if isinstance(args[0], basestring):
+            new_args = []
+            new_args.append(parser.parse(args[0]))
+        else:
+            new_args = args
+        prep_value = super(models.DateTimeField, self).get_prep_value(
+            *new_args, **kwargs)
+        if isinstance(prep_value, datetime.datetime):
+            return prep_value.replace(tzinfo=tz.tzutc())
+        else:
+            return prep_value
+
+    def get_db_prep_value(self, *args, **kwargs):
+        value = args[0]
+        db_prep_value = self.get_prep_value(value)
+        if isinstance(db_prep_value, datetime.datetime):
+            return str(db_prep_value)
+        else:
+            return db_prep_value
+
+    def to_python(self, value):
+        try:
+            # Try to parse the value as a datetime.  We do this b/c django's
+            # to_python parse logic does not support timezones, so it will
+            # always fail.  If we can get parser.parse() to return us a
+            # datetime, django's to_pyhon will be happy.
+            if isinstance(value, basestring):
+                value = parser.parse(value)
+        except ValueError:
+            # We tried to parse it as a datetime, it didn't work, so we know
+            # the super()'s to_python will fail from django, so just pass here
+            # and let that exception be raised.
+            pass
+        python_value = super(DateTimeUtcField, self).to_python(value)
+        if isinstance(python_value, datetime.datetime):
+            return python_value.replace(tzinfo=tz.tzutc())
+        else:
+            return python_value
+
+class XObjHiddenCharField(models.CharField, XObjHiddenMixIn):
+    pass
+
+class APIReadOnlyForeignKey(models.ForeignKey, APIReadOnlyMixIn):
+    pass
+
+class APIReadOnlyInlinedForeignKey(InlinedForeignKey, APIReadOnlyMixIn):
+    pass

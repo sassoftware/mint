@@ -114,11 +114,6 @@ class InventorySystemsService(AbstractInventoryService):
         systems = self.mgr.addSystems(systems.system)
         return self.mgr.getSystems()
 
-    def delete(self, request, system):
-        system = self.mgr.deleteSystem(system)
-        response = HttpResponse(status=204)
-        return response
-
     def launch(self, instanceId, targetType, targetName):
         return self.mgr.launchSystem(instanceId, targetType, targetName)
 
@@ -130,7 +125,7 @@ class InventorySystemsSystemService(AbstractInventoryService):
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    @requires('system', save=False)
+    @requires('system')
     @return_xml
     def update(self, request, system_id, system):
         oldSystem = self.mgr.getSystem(system_id)

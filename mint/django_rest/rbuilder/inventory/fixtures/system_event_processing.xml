@@ -20,7 +20,7 @@
         <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field type="NullBooleanField" name="available"><None></None></field>
-        <field type="CharField" name="current_state"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
@@ -44,7 +44,7 @@
         <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field type="NullBooleanField" name="available"><None></None></field>
-        <field type="CharField" name="current_state"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>
@@ -68,7 +68,7 @@
         <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field type="NullBooleanField" name="available"><None></None></field>
-        <field type="CharField" name="current_state"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
     </object>

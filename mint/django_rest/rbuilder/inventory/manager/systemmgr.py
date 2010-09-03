@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import cPickle
+import logging
 import sys
 import datetime
 import os
@@ -17,19 +19,30 @@ from django.db import connection
 from conary import versions as cnyver
 from conary.deps import deps
 
-from mint.django_rest import logger as log
+from mint.lib import uuid
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
 
-
-try:
-    from rpath_repeater import client as repeater_client
-except:
-    log.info("Failed loading repeater client, expected in local mode only")
-    repeater_client = None  # pyflakes=ignore
+log = logging.getLogger(__name__)
 
 class SystemManager(base.BaseManager):
+    RegistrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
+    PollEvents = set([
+        models.EventType.SYSTEM_POLL,
+        models.EventType.SYSTEM_POLL_IMMEDIATE,
+    ])
+    SystemUpdateEvents = set([
+        models.EventType.SYSTEM_APPLY_UPDATE,
+        models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+    ])
+
+    TZ = tz.tzutc()
+
+    @classmethod
+    def now(cls):
+        return datetime.datetime.now(cls.TZ)
+
     @base.exposed
     def getEventTypes(self):
         EventTypes = models.EventTypes()
@@ -44,6 +57,11 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getZone(self, zone_id):
         zone = models.Zone.objects.get(pk=zone_id)
+        return zone
+
+    @base.exposed
+    def getZoneByJID(self, node_jid):
+        zone = models.ManagementNode.objects.get(node_jid=node_jid).zone
         return zone
 
     @base.exposed
@@ -65,14 +83,13 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        self.log_system(system, "System data fetched.")
         system.addJobs()
         return system
 
     @base.exposed
-    def deleteSystem(self, system):
-        managedSystem = models.managed_system.objects.get(pk=system)
-        managedSystem.delete()
+    def deleteSystem(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        system.delete()
 
     @base.exposed
     def getSystems(self):
@@ -86,7 +103,6 @@ class SystemManager(base.BaseManager):
     def getManagementNode(self, zone_id, management_node_id):
         zone = models.Zone.objects.get(pk=zone_id)
         managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
-        self.log_system(managementNode, "Management node data fetched.")
         return managementNode
 
     @base.exposed
@@ -95,6 +111,10 @@ class SystemManager(base.BaseManager):
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.managementNode = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
+
+    @classmethod
+    def systemState(cls, stateName):
+        return models.SystemState.objects.get(name = stateName)
 
     @base.exposed
     def addManagementNode(self, zone_id, managementNode):
@@ -109,19 +129,21 @@ class SystemManager(base.BaseManager):
         self.log_system(managementNode, models.SystemLogEntry.ADDED)
         
         if managementNode.registered:
-            managementNode.registration_date = datetime.datetime.now(tz.tzutc())
-            managementNode.current_state = models.System.REGISTERED
+            managementNode.registration_date = self.now()
+            managementNode.current_state = self.systemState(
+                models.SystemState.REGISTERED)
+            #TO-DO Need to add the JID to the models.ManagementNode object
             managementNode.save()
             self.log_system(managementNode, models.SystemLogEntry.REGISTERED)
         else:
-            managementNode.current_state = models.System.UNMANAGED
+            managementNode.current_state = self.systemState(
+                models.SystemState.UNMANAGED)
             managementNode.save()
         
         return managementNode
 
     def log_system(self, system, log_msg):
-        system_log, created = models.SystemLog.objects.get_or_create(
-            system=system)
+        system_log = system.createLog()
         system_log_entry = models.SystemLogEntry(system_log=system_log,
             entry=log_msg)
         system_log.system_log_entries.add(system_log_entry)
@@ -147,10 +169,11 @@ class SystemManager(base.BaseManager):
         # add the system
         system.save()
         self.log_system(system, models.SystemLogEntry.ADDED)
-        
+
         if system.registered:
-            system.registration_date = datetime.datetime.now(tz.tzutc())
-            system.current_state = models.System.REGISTERED
+            system.registration_date = self.now()
+            system.current_state = self.systemState(
+                models.SystemState.REGISTERED)
             system.save()
             self.log_system(system, models.SystemLogEntry.REGISTERED)
             self.scheduleSystemPollEvent(system)
@@ -164,10 +187,78 @@ class SystemManager(base.BaseManager):
     def updateSystem(self, system):
         # XXX This will have to change and be done in modellib, most likely.
         self.check_system_versions(system)
+        self.setSystemState(system)
+        self.check_system_last_job(system)
         system.save()
 
+    def check_system_last_job(self, system):
+        last_job = getattr(system, 'lastJob', None)
+        if last_job and last_job.job_state.name == models.JobState.COMPLETED:
+            if last_job.event_type.name in \
+               (models.EventType.SYSTEM_APPLY_UPDATE,
+                models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE):
+                self.scheduleSystemPollNowEvent(system)
+
     def check_system_versions(self, system):
-        self.mgr.setInstalledSoftware(system, system.new_versions)
+        # TODO: check for system.event_uuid
+        # If there is an event_uuid set on system, assume we're just updating
+        # the DB with the results of a job, otherwise, update the actual
+        # installed software on the system.
+        if system.event_uuid:
+            self.mgr.setInstalledSoftware(system, system.new_versions)
+        else:
+            self.mgr.updateInstalledSoftware(system, system.new_versions)
+
+    def setSystemState(self, system):
+        job = system.lastJob
+        if job is None:
+            # This update did not come in as a result of a job
+            return
+
+        nextSystemState = self.getNextSystemState(system, job)
+        if nextSystemState is not None:
+            self.log_system(system, "System state change: %s -> %s" %
+                (system.current_state.name, nextSystemState))
+            system.current_state = self.systemState(nextSystemState)
+            system.save()
+
+    def getNextSystemState(self, system, job):
+        # XXX Deal with time-based transitions too (i.e.
+        # NONRESPONSIVE -> DEAD, DEAD->MOTHBALLED)
+        jobStateName = job.job_state.name
+        eventTypeName = job.event_type.name
+        if jobStateName == models.JobState.COMPLETED:
+            if eventTypeName in self.RegistrationEvents:
+                # We don't trust that a registration action did anything, we
+                # won't transition to REGISTERED, rpath-register should be
+                # responsible with that
+                return None
+            if eventTypeName in self.PollEvents:
+                return models.SystemState.RESPONSIVE
+            else:
+                # Add more processing here if needed
+                return None
+        if jobStateName == models.JobState.FAILED:
+            currentStateName = system.current_state.name
+            # Simple cases first.
+            if currentStateName in [models.SystemState.UNMANAGED,
+                    models.SystemState.DEAD,
+                    models.SystemState.MOTHBALLED,
+                    models.SystemState.NONRESPONSIVE,
+                    models.SystemState.NONRESPONSIVE_NET,
+                    models.SystemState.NONRESPONSIVE_HOST,
+                    models.SystemState.NONRESPONSIVE_SHUTDOWN,
+                    models.SystemState.NONRESPONSIVE_SUSPENDED]:
+                # No changes in this case
+                return None
+            if eventTypeName not in self.PollEvents:
+                # Non-polling event, nothing to do
+                return None
+            if currentStateName in [models.SystemState.REGISTERED,
+                    models.SystemState.RESPONSIVE]:
+                return models.SystemState.NONRESPONSIVE
+        # Some other job state, do nothing
+        return None
 
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
@@ -192,29 +283,6 @@ class SystemManager(base.BaseManager):
 
         return None
 
-    def getSystemByInstanceId(self, instanceId):
-        # TODO:  this code is outdated.  Returning plain system every time to move
-        # forward, but we need to fix this to properly handle updates
-        managedSystem = None
-        #managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            syst = models.System()
-            syst.is_manageable = False
-            return syst
-        managedSystemObj = managedSystem.getParser()
-        if not self.isManageable(managedSystem):
-            managedSystemObj.ssl_client_certificate = None
-            managedSystemObj.ssl_client_key = None
-            managedSystemObj.set_is_manageable(False)
-        else:
-            isManageable = (managedSystem.ssl_client_certificate is not None
-                and managedSystem.ssl_client_key is not None
-                and os.path.exists(managedSystem.ssl_client_certificate)
-                and os.path.exists(managedSystem.ssl_client_key))
-            managedSystemObj.set_is_manageable(isManageable)
-        
-        return managedSystemObj
-
     def isManageable(self, managedSystem):
         if managedSystem.launching_user.userid == self.user.userid:
             # If we own the system, we can manage
@@ -232,26 +300,6 @@ class SystemManager(base.BaseManager):
         row = cu.fetchone()
         return bool(row)
 
-    def addSoftwareVersion(self, softwareVersion):
-        name, version, flavor = softwareVersion
-        version = version.freeze()
-        flavor = str(flavor)
-        softwareVersion, created = models.software_version.objects.get_or_create(name=name,
-                                        version=version, flavor=flavor)
-        return softwareVersion
-
-    def getManagedSystemForInstanceId(self, instanceId):
-        systemTarget = models.system_target.objects.filter(target_system_id=instanceId)
-        if len(systemTarget) == 1:
-            st = systemTarget[0]
-            if st.target_id is None:
-                # System was disassociated from target, probably target got
-                # removed
-                return None
-            return st.managed_system
-        else:
-            return None
-
     @base.exposed
     def getSystemLog(self, system):
         systemLog = system.system_log.all()
@@ -259,110 +307,6 @@ class SystemManager(base.BaseManager):
             return systemLog[0]
         else:
             models.SystemLog()
-
-    def setSoftwareVersionForInstanceId(self, instanceId, softwareVersion):
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            return 
-
-        models.system_software_version.objects.filter(managed_system=managedSystem).delete()
-
-        for version in softwareVersion:
-            softwareVersion = self.addSoftwareVersion(version)
-
-            systemSoftwareVersion = models.system_software_version(
-                                        managed_system=managedSystem,
-                                        software_version=softwareVersion)
-            systemSoftwareVersion.save()
-
-    def getSoftwareVersionsForInstanceId(self, instanceId):
-        # TODO:  this code is outdated.  Returning None every time to move
-        # forward, but we need to fix this to properly handle updates
-        return None
-    
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            return None
-        systemSoftwareVersion = \
-            models.system_software_version.objects.filter(managed_system=managedSystem)
-
-        versions = []
-        for version in systemSoftwareVersion:
-            versions.append('%s=%s[%s]' % (
-                version.software_version.name, version.software_version.version,
-                version.software_version.flavor))
-
-        if versions:
-            return '\n'.join(versions)
-        return None
-
-    def deleteSoftwareVersionsForInstanceId(self, instanceId):
-        managedSystem = self.getManagedSystemForInstanceId(instanceId)
-        if not managedSystem:
-            return 
-        models.system_software_version.objects.filter(managed_system=managedSystem).delete()
-
-    def getCachedUpdates(self, nvf):
-        softwareVersion, created = models.software_version.objects.get_or_create(
-            name=nvf[0], version=nvf[1], flavor=nvf[2])
-
-        # If it was just created, obviously there's nothing cached.
-        if created:
-            return None
-
-        updates = models.software_version_update.objects.filter(
-                    software_version=softwareVersion)
-
-        now = datetime.datetime.now()
-        oneDay = datetime.timedelta(1)
-
-        # RBL-6007 last_refresh should not be None here as there's a not null
-        # constraint, but still check just in case.
-        cachedUpdates = [u for u in updates \
-                         if (u.last_refreshed is not None) and \
-                            (now - u.last_refreshed < oneDay)]
-
-        if not cachedUpdates:
-            return None
-
-        updatesAvailable = [c for c in cachedUpdates if c.available_update is not None]
-        if updatesAvailable:
-           updatesAvailable  = [(str(s.available_update.name),
-                              cnyver.ThawVersion(s.available_update.version),
-                              deps.parseFlavor(s.available_update.flavor)) for s in updatesAvailable]
-        else:
-            return []
-
-        return updatesAvailable 
-                
-    def clearCachedUpdates(self, nvfs):
-        for nvf in nvfs:
-            name, version, flavor = nvf
-            version = version.freeze()
-            flavor = str(flavor)
-            softwareVersion, created = models.software_version.objects.get_or_create(
-                name=name, version=version, flavor=flavor)
-            if not created:
-                updates = models.software_version_update.objects.filter(
-                                software_version=softwareVersion)
-                updates.delete()
-
-    def cacheUpdate(self, nvf, updateNvf):
-        softwareVersion, created = models.software_version.objects.get_or_create(
-            name=nvf[0], version=nvf[1], flavor=nvf[2])
-                
-        if updateNvf:
-            updateSoftwareVersion, created = models.software_version.objects.get_or_create(
-                name=updateNvf[0], version=updateNvf[1], flavor=updateNvf[2])
-        else:
-            updateSoftwareVersion = None
-
-        cachedUpdate, created = models.software_version_update.objects.get_or_create(
-                                    software_version=softwareVersion,
-                                    available_update=updateSoftwareVersion)
-        if not created:
-            cachedUpdate.last_refreshed = datetime.datetime.now()
-            cachedUpdate.save()
 
     @base.exposed
     def getSystemEvent(self, event_id):
@@ -405,9 +349,9 @@ class SystemManager(base.BaseManager):
         
         enable_time = None
         if systemEvent.dispatchImmediately():
-            enable_time = datetime.datetime.now(tz.tzutc())
+            enable_time = self.now()
         else:
-            enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
             
         self.logSystemEvent(systemEvent, enable_time)
         
@@ -420,19 +364,20 @@ class SystemManager(base.BaseManager):
         events = None
         try:
             # get events in order based on whether or not they are enabled and what their priority is (descending)
-            current_time = datetime.datetime.now(tz.tzutc())
+            current_time = self.now()
             events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemPollCount].all()
         except models.SystemEvent.DoesNotExist:
             pass
         
         return events
-    
+
+    @base.exposed
     def processSystemEvents(self):
         events = self.getSystemEventsForProcessing()
         if not events:
             log.info("No systems events to process")
             return
-        
+
         for event in events:
             self.dispatchSystemEvent(event)
 
@@ -457,32 +402,47 @@ class SystemManager(base.BaseManager):
             return
         self.log_system(event.system,  "Dispatching %s event" % event.event_type.name)
 
-        registrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
-        pollEvents = set([
-            models.EventType.SYSTEM_POLL,
-            models.EventType.SYSTEM_POLL_IMMEDIATE,
-        ])
-
         network = self._extractNetworkToUse(event.system)
-        if network:
-            destination = network.ip_address
-            eventType = event.event_type.name
-            sputnik = "sputnik1"
-            requiredNetwork = (network.required and destination) or None
-            if eventType in registrationEvents:
-                self._runSystemEvent(event, destination,
-                    repClient.register, destination, sputnik)
-            elif eventType in pollEvents:
-                # XXX remove the hardcoded port from here
-                resultsLocation = dict(
-                    path = "/api/inventory/systems/%d" % event.system.pk,
-                    port = 8443)
-                self._runSystemEvent(event, destination,
-                    repClient.poll, destination, sputnik,
-                    resultsLocation=resultsLocation,
-                    requiredNetwork=requiredNetwork)
-            else:
-                log.error("Unknown event type %s" % eventType)
+        if not network:
+            msg = "No valid network information found; giving up"
+            log.error(msg)
+            self.log_system(event.system, msg)
+            return
+        # If no ip address was set, fall back to dns_name
+        destination = network.ip_address or network.dns_name
+        eventType = event.event_type.name
+        eventUuid = str(uuid.uuid4())
+        #zone = event.system.managing_zone.name
+        # XXX FIXME
+        zone = None
+        cimParams = repClient.CimParams(host=destination,
+            eventUuid=eventUuid,
+            clientCert=event.system.ssl_client_certificate,
+            clientKey=event.system.ssl_client_key)
+        if None in [cimParams.clientKey, cimParams.clientCert]:
+            # This is most likely a new system.
+            # Get a cert that is likely to work
+            outCerts = rbuildermodels.PkiCertificates.objects.filter(purpose="outbound").order_by('-time_issued')
+            if outCerts:
+                outCert = outCerts[0]
+                cimParams.clientCert = outCert.x509_pem
+                cimParams.clientKey = outCert.pkey_pem
+        requiredNetwork = (network.required and destination) or None
+        resultsLocation = repClient.ResultsLocation(
+            path = "/api/inventory/systems/%d" % event.system.pk,
+            port = 80)
+        if eventType in self.RegistrationEvents:
+            self._runSystemEvent(event, repClient.register, cimParams,
+                resultsLocation, zone=zone, requiredNetwork=requiredNetwork)
+        elif eventType in self.PollEvents:
+            self._runSystemEvent(event, repClient.poll,
+                cimParams, resultsLocation, zone=zone)
+        elif eventType in self.SystemUpdateEvents:
+            data = cPickle.loads(event.event_data)
+            self._runSystemEvent(event, repClient.update, cimParams,
+                resultsLocation, zone=zone, sources=data)
+        else:
+            log.error("Unknown event type %s" % eventType)
 
     def _extractNetworkToUse(self, system):
         networks = system.networks.all()
@@ -491,38 +451,47 @@ class SystemManager(base.BaseManager):
         nets = [ x for x in networks if x.required ]
         if nets:
             return nets[0]
-        
+
         # now look for a non-required active net
         nets = [ x for x in networks if x.active ]
         if nets:
             return nets[0]
-        
+
+        # If we only have one network, return that one and hope for the best
+        if len(networks) == 1:
+            return networks[0]
+        return None
 
     @classmethod
-    def _runSystemEvent(cls, event, destination, method, *args, **kwargs):
+    def _runSystemEvent(cls, event, method, cimParams, resultsLocation=None,
+            **kwargs):
+        zone = kwargs.pop('zone', None)
         systemName = event.system.name
         eventType = event.event_type.name
+        eventUuid = cimParams.eventUuid
         log.info("System %s (%s), task type '%s' launching" %
-            (systemName, destination, eventType))
+            (systemName, cimParams.host, eventType))
         try:
-            uuid, job = method(*args, **kwargs)
+            uuid, job = method(cimParams, resultsLocation, zone=zone, **kwargs)
         except Exception, e:
             tb = sys.exc_info()[2]
             traceback.print_tb(tb)
             log.error("System %s (%s), task type '%s' failed: %s" %
-                (systemName, destination, eventType, str(e)))
+                (systemName, cimParams.host, eventType, str(e)))
             return None, None
 
         log.info("System %s (%s), task %s (%s) in progress" %
-            (systemName, destination, uuid, eventType))
+            (systemName, cimParams.host, uuid, eventType))
         job = models.Job()
         job.job_uuid = str(uuid)
         job.event_type = event.event_type
+        job.job_state = cls.jobState(models.JobState.RUNNING)
         job.save()
 
         sjob = models.SystemJob()
         sjob.job = job
         sjob.system = event.system
+        sjob.event_uuid = eventUuid
         sjob.save()
         return uuid, job
 
@@ -531,40 +500,56 @@ class SystemManager(base.BaseManager):
         log.debug("cleaning up %s event (id %d) for system %s" % (event.event_type.name, event.system_event_id,event.system.name))
         event.delete()
 
+    @classmethod
+    def eventType(cls, name):
+        return models.EventType.objects.get(name=name)
+
+    @classmethod
+    def jobState(cls, name):
+        return models.JobState.objects.get(name=name)
+
     @base.exposed
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
-        poll_event = models.EventType.objects.get(name=models.EventType.SYSTEM_POLL)
+        poll_event = self.eventType(models.EventType.SYSTEM_POLL)
         self.createSystemEvent(system, poll_event)
 
     @base.exposed
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
-        enable_time = datetime.datetime.now(tz.tzutc())
-        event_type = models.EventType.objects.get(
-            name=models.EventType.SYSTEM_POLL_IMMEDIATE)
+        enable_time = self.now()
+        event_type = self.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
         self.createSystemEvent(system, event_type, enable_time)
 
     @base.exposed
     def scheduleSystemRegistrationEvent(self, system):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
-        enable_time = datetime.datetime.now(tz.tzutc())
-        registration_event_type = models.EventType.objects.get(
-            name=models.EventType.SYSTEM_REGISTRATION)
+        enable_time = self.now()
+        registration_event_type = self.eventType(
+            models.EventType.SYSTEM_REGISTRATION)
         self.createSystemEvent(system, registration_event_type, enable_time)
 
     @base.exposed
-    def createSystemEvent(self, system, event_type, enable_time=None):
+    def scheduleSystemApplyUpdateEvent(self, system, sources):
+        '''Schedule an event for the system to be updated'''
+        apply_update_event_type = models.EventType.objects.get(
+            name=models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
+        self.createSystemEvent(system, apply_update_event_type, data=sources)
+
+    @base.exposed
+    def createSystemEvent(self, system, event_type, enable_time=None, 
+                          data=None):
         event = None
-        
         # do not create events for systems that we cannot possibly contact
         if self.getSystemHasHostInfo(system):
             if not enable_time:
-                enable_time = datetime.datetime.now(tz.tzutc()) + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+                enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            pickledData = cPickle.dumps(data)
             event = models.SystemEvent(system=system, event_type=event_type, 
-                priority=event_type.priority, time_enabled=enable_time)
+                priority=event_type.priority, time_enabled=enable_time,
+                event_data=pickledData)
             event.save()
             self.logSystemEvent(event, enable_time)
             
@@ -576,7 +561,7 @@ class SystemManager(base.BaseManager):
         return event
     
     def logSystemEvent(self, event, enable_time):
-        msg = "System %s event registered and will be enabled on %s" % (event.event_type.name, enable_time)
+        msg = "Event type '%s' registered and will be enabled on %s" % (event.event_type.name, enable_time)
         self.log_system(event.system, msg)
         log.info(msg)
         

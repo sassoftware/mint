@@ -21,7 +21,17 @@ class WelcomeWindow:
         if hasattr(anaconda.id.instClass, 'set_advanced'):
             anaconda.id.instClass.set_advanced(True, anaconda)
 
-        rc = ButtonChoiceWindow(screen, _("%s") % (productName,), 
+        from iutil import memInstalled
+        mem = memInstalled() / 1024
+        if mem < 2000:
+            ButtonChoiceWindow(screen, _("%s") % ("Insufficient Memory",),
+                                _("This installation requires at least 2 GB of RAM\n"
+                                  "(4 GB or more is suggested).\n"
+                                  "The system will now reboot.\n"),
+                                buttons = [ _("Reboot") ], width = 50)
+            import sys; sys.exit(0)
+
+        ButtonChoiceWindow(screen, _("%s") % (productName,), 
                                 _("Welcome to %s!\n\n")
                                 % (productName, ),
                                 buttons = [TEXT_OK_BUTTON], width = 50,

@@ -3,8 +3,10 @@
 #
 # All Rights Reserved
 #
-import sys
 import datetime
+import sys
+import urllib
+import urlparse
 from dateutil import tz
 
 from conary import versions
@@ -113,25 +115,78 @@ class Zone(modellib.XObjIdModel):
     description = models.CharField(max_length=8092, null=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
+class SystemState(modellib.XObjIdModel):
+    serialize_accessors = False
+    class Meta:
+        db_table = 'inventory_system_state'
+        
+    _xobj = xobj.XObjMetadata(
+                tag = 'currentState',
+                attributes = {'id':str})
+
+    UNMANAGED = "unmanaged"
+    UNMANAGED_DESC = "Unmanaged"
+    
+    REGISTERED = "registered"
+    REGISTERED_DESC = "Polling"
+    
+    RESPONSIVE = "responsive"
+    RESPONSIVE_DESC = "Online"
+    
+    NONRESPONSIVE = "non-responsive-unknown"
+    NONRESPONSIVE_DESC = "Not responding: unknown"
+    
+    NONRESPONSIVE_NET = "non-responsive-net"
+    NONRESPONSIVE_NET_DESC = "Not responding: network unreachable"
+    
+    NONRESPONSIVE_HOST = "non-responsive-host"
+    NONRESPONSIVE_HOST_DESC = "Not responding: host unreachable"
+    
+    NONRESPONSIVE_SHUTDOWN = "non-responsive-shutdown"
+    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: shutdown"
+    
+    NONRESPONSIVE_SUSPENDED = "non-responsive-suspended"
+    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: suspended"
+    
+    DEAD = "dead"
+    DEAD_DESC = "Stale"
+    
+    MOTHBALLED = "mothballed"
+    MOTHBALLED_DESC = "Retired"
+
+    STATE_CHOICES = (
+        (UNMANAGED, UNMANAGED_DESC),
+        (REGISTERED, REGISTERED_DESC),
+        (RESPONSIVE, RESPONSIVE_DESC),
+        (NONRESPONSIVE, NONRESPONSIVE_DESC),
+        (NONRESPONSIVE_NET, NONRESPONSIVE_NET_DESC),
+        (NONRESPONSIVE_HOST, NONRESPONSIVE_HOST_DESC),
+        (NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SHUTDOWN_DESC),
+        (NONRESPONSIVE_SUSPENDED, NONRESPONSIVE_SUSPENDED_DESC),
+        (DEAD, DEAD_DESC),
+        (MOTHBALLED, MOTHBALLED_DESC),
+    )
+
+    system_state_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=8092, unique=True,
+        choices=STATE_CHOICES)
+    description = models.CharField(max_length=8092)
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
+
 class System(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
+    # XXX this is hopefully a temporary solution to not serialize the FK
+    # part of a many-to-many relationship
+    _xobj_hidden_accessors = set(['systemjob_set'])
+    _xobj_hidden_m2m = set(['system_jobs'])
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
                 attributes = {'id':str},
-                elements = ['networks'])
+                elements = ['networks', ])
     
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
-    
-    UNMANAGED = "unmanaged"
-    REGISTERED = "registered"
-    RESPONSIVE = "responsive"
-    SHUTDOWN = "shutdown"
-    NONRESPONSIVE = "non-responsive"
-    DEAD = "dead"
-    MOTHBALLED = "mothballed"
-    
     system_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092)
     description = models.CharField(max_length=8092, null=True)
@@ -149,36 +204,34 @@ class System(modellib.XObjIdModel):
     registration_date = modellib.DateTimeUtcField(null=True)
     generated_uuid = models.CharField(max_length=64, unique=True, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
-    ssl_client_certificate = models.CharField(max_length=8092, null=True)
-    ssl_client_key = models.CharField(max_length=8092, null=True)
+    ssl_client_certificate = modellib.XObjHiddenCharField(max_length=8092, null=True)
+    ssl_client_key = modellib.XObjHiddenCharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
     scheduled_event_start_date = modellib.DateTimeUtcField(null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.NullBooleanField()
     registered = models.NullBooleanField()
-    STATE_CHOICES = (
-        (UNMANAGED, UNMANAGED),
-        (REGISTERED, REGISTERED),
-        (RESPONSIVE, RESPONSIVE),
-        (SHUTDOWN, SHUTDOWN),
-        (NONRESPONSIVE, NONRESPONSIVE),
-        (DEAD, DEAD),
-        (MOTHBALLED, MOTHBALLED),
-    )
-    current_state = models.CharField(max_length=32, choices=STATE_CHOICES, null=True)
+    current_state = modellib.SerializedForeignKey(SystemState, null=True, related_name='systems')
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
+    #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
-    systemJobs = models.ManyToManyField("Job", through="SystemJob")
+    system_jobs = models.ManyToManyField("Job", through="SystemJob")
+    event_uuid = modellib.SyntheticField()
 
     load_fields = [local_uuid]
 
     new_versions = []
-    
+    lastJob = None
+
     def save(self, *args, **kw):
-        if not self.current_state:
-            self.current_state = System.UNMANAGED
+        if self.current_state_id is None:
+            self.current_state = SystemState.objects.get(
+                name = SystemState.UNMANAGED)
+        if not self.name:
+            self.name = self.hostname and self.hostname or ''
         modellib.XObjIdModel.save(self, *args, **kw)
+        self.createLog()
 
     def addJobs(self):
         return
@@ -196,7 +249,13 @@ class System(modellib.XObjIdModel):
 
             # add it to the system
             pass
-        
+
+    def createLog(self):
+        system_log, created = SystemLog.objects.get_or_create(system=self)
+        if created:
+            system_log.save()
+        return system_log
+
 class ManagementNode(System):
     class Meta:
         db_table = 'inventory_zone_management_node'
@@ -205,6 +264,7 @@ class ManagementNode(System):
                 attributes = {'id':str})
     local = models.NullBooleanField()
     zone = models.ForeignKey(Zone, related_name='managementNodes')
+    node_jid = models.CharField(max_length=64, null=True)
     
     # ignore auto generated ptr from inheritance
     load_ignore_fields = ["system_ptr"]
@@ -227,7 +287,8 @@ class InstalledSoftware(modellib.XObjModel):
 class EventType(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_event_type'
-        
+    _xobj = xobj.XObjMetadata(tag='event_type')
+
     # on-demand events need to be > 100 to be dispatched immediately
     # DO NOT CHANGE POLL PRIORITIES HERE WITHOUT CHANGING IN schema.py also
     ON_DEMAND_BASE = 100
@@ -237,30 +298,69 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_POLL_DESC = "standard system polling event"
     
     SYSTEM_POLL_IMMEDIATE = "immediate system poll"
-    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE +5
+    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_POLL_IMMEDIATE_DESC = "on-demand system polling event"
     
     SYSTEM_REGISTRATION = "system registration"
-    SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE +10
+    SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE + 10
     SYSTEM_REGISTRATION_DESC = "on-demand system registration event"
+
+    SYSTEM_APPLY_UPDATE = 'system apply update'
+    SYSTEM_APPLY_UPDATE_PRIORITY = 50
+    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'apply an update to a system'
+        
+    SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
+    SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
+    SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
+        'on-demand apply an update to a system'
         
     event_type_id = models.AutoField(primary_key=True)
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
         (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
         (SYSTEM_POLL, SYSTEM_POLL_DESC),
+        (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
+        (SYSTEM_APPLY_UPDATE_IMMEDIATE,
+         SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION),
     )
-    name = models.CharField(max_length=8092, db_index=True, choices=EVENT_TYPES)
+    name = models.CharField(max_length=8092, unique=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
+
+class JobState(modellib.XObjModel):
+    class Meta:
+        db_table = "inventory_job_state"
+    QUEUED = "Queued"
+    RUNNING = "Running"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
+    choices = (
+        (QUEUED, QUEUED),
+        (RUNNING, RUNNING),
+        (COMPLETED, COMPLETED),
+        (FAILED, FAILED),
+    )
+    _xobj = xobj.XObjMetadata(tag='job_state')
+
+    job_state_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=64, unique=True, choices=choices)
+
+    load_fields = [ name ]
 
 class Job(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_job'
+    _xobj = xobj.XObjMetadata(tag='job')
+    objects = modellib.JobManager()
+
     job_id = models.AutoField(primary_key=True)
-    job_uuid = models.CharField(max_length=64)
-    event_type = models.ForeignKey(EventType)
+    job_uuid = models.CharField(max_length=64, unique=True)
+    job_state = modellib.InlinedForeignKey(JobState, visible='name')
+    event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, visible='name')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
+    time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
+
+    load_fields = [ job_uuid ]
 
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
@@ -278,7 +378,8 @@ class SystemEvent(modellib.XObjIdModel):
     time_enabled = modellib.DateTimeUtcField(
         default=datetime.datetime.now(tz.tzutc()), db_index=True)
     priority = models.SmallIntegerField(db_index=True)
-    
+    event_data = models.TextField(null=True)
+
     def dispatchImmediately(self):
         return self.event_type.priority >= EventType.ON_DEMAND_BASE
 
@@ -358,10 +459,12 @@ class SystemLogEntry(modellib.XObjModel):
     entry = models.CharField(max_length=8092, choices=choices)
     entry_date = modellib.DateTimeUtcField(auto_now_add=True)
 
-class Trove(modellib.XObjModel):
+class Trove(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_trove'
         unique_together = (('name', 'version', 'flavor'),)
+
+    objects = modellib.TroveManager()
 
     _xobj = xobj.XObjMetadata(tag='trove')
     trove_id = models.AutoField(primary_key=True)
@@ -370,11 +473,30 @@ class Trove(modellib.XObjModel):
     flavor = models.TextField()
     is_top_level = models.BooleanField()
     last_available_update_refresh = modellib.DateTimeUtcField(
-        auto_now_add=True)
+        null=True)
     available_updates = models.ManyToManyField('Version',
         related_name='available_updates')
 
     load_fields = [ name, version, flavor ]
+
+    def get_absolute_url(self, request):
+        # Build an id to crest
+        conary_version = self.version.conaryVersion
+        label = conary_version.trailingLabel()
+        revision = conary_version.trailingRevision()
+        shortname = label.getHost().split('.')[0]
+        path = "repos/%s/api/trove/%s=/%s/%s[%s]" % \
+            (shortname, self.name, label.asString(),
+             revision.asString(), self.flavor)
+        path = urllib.quote(path)
+
+        if request:
+            scheme, netloc = urlparse.urlparse(
+                request.build_absolute_uri())[0:2]
+            url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
+            return url
+        else:
+            return path
 
     def _is_top_level_group(self):
         return self.name.startswith('group-') and \
@@ -382,12 +504,22 @@ class Trove(modellib.XObjModel):
 
     def save(self, *args, **kw):
         self.is_top_level = self._is_top_level_group()
+        if self.flavor is None:
+            self.flavor = ''
         modellib.XObjModel.save(self, *args, **kw)
 
     def getFlavor(self):
         if not self.flavor:
             return None
         return deps.parseFlavor(self.flavor)
+
+    def getLabel(self):
+        if not self.version.label:
+            return None
+        return versions.Label(self.version.label)
+
+    def getVersion(self):
+        return self.version.conaryVersion
 
     def getNVF(self):
         return self.name, self.version.conaryVersion, self.getFlavor()
@@ -397,6 +529,11 @@ class Version(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_version'
         unique_together = [ ('full', 'ordering', 'flavor'), ]
+
+    objects = modellib.VersionManager()
+
+    _xobj = xobj.XObjMetadata(tag='version')
+
     version_id = models.AutoField(primary_key=True)
     full = models.TextField()
     label = models.TextField()
@@ -423,14 +560,29 @@ class Version(modellib.XObjModel):
         if not self.label or not self.revision:
             v = self.conaryVersion
             self.fromConaryVersion(v)
-        return super(self.__class__, self).save(self, *args, **kwargs)
+        if self.flavor is None:
+            self.flavor = ''
+        return super(Version, self).save(*args, **kwargs)
+
+class SystemJobs(modellib.XObjModel):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(
+                tag = 'system_jobs')
+    list_fields = ['job']
+    job = []
 
 class SystemJob(modellib.XObjModel):
     class Meta:
         db_table = 'inventory_system_job'
+    # XXX This class should never be serialized directly, but unless an _xobj
+    # field is added, we have no access to it from modellib
+    _xobj = xobj.XObjMetadata(tag='__systemJob')
     system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
-    job = modellib.DeferredForeignKey(Job)
+    job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')
+    event_uuid = modellib.XObjHiddenCharField(max_length=64, unique=True)
 
 class ErrorResponse(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(

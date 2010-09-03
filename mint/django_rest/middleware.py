@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import logging
 from django.contrib.auth import authenticate
 from django.http import HttpResponseBadRequest
 
@@ -11,13 +12,21 @@ import libxml2
 import libxslt
 
 from mint import config
-from mint.django_rest import logger
 from mint.django_rest.rbuilder import auth
+from mint.lib import mintutils
+
+log = logging.getLogger(__name__)
+
 
 class ExceptionLoggerMiddleware(object):
 
+    def process_request(self, request):
+        mintutils.setupLogging(consoleLevel=logging.INFO,
+                consoleFormat='apache')
+        return None
+
     def process_exception(self, request, exception):
-        logger.exception(exception)
+        log.exception("Unhandled error in django handler:\n")
         return None
 
 class SetMethodRequestMiddleware(object):
@@ -89,3 +98,4 @@ class AddCommentsMiddleware(object):
                 pass
 
         return response 
+
