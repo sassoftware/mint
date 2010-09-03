@@ -968,10 +968,10 @@ class SystemStateTestCase(XMLTestCase):
         REGISTERED = models.SystemState.REGISTERED
         RESPONSIVE = models.SystemState.RESPONSIVE
         NONRESPONSIVE = models.SystemState.NONRESPONSIVE
-        NONRESPONSIVE_NET = models.SystemState.NONRESPONSIVE_NET
-        NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
+        # TODO NONRESPONSIVE_NET = models.SystemState.NONRESPONSIVE_NET
+        # TODO NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
         NONRESPONSIVE_SHUTDOWN = models.SystemState.NONRESPONSIVE_SHUTDOWN
-        NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
+        # TODO NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
         DEAD = models.SystemState.DEAD
         MOTHBALLED = models.SystemState.MOTHBALLED
 
