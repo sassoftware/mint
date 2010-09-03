@@ -156,7 +156,12 @@ management_nodes_xml = """\
     <zone href="http://testserver/api/inventory/zones/2/"/>
     <systemPtr href="http://testserver/api/inventory/systems/1"/>
     <localUuid>test management node luuid</localUuid>
-    <currentState>registered</currentState>
+    <currentState>
+      <createdDate>%s</createdDate>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </managementNode>
@@ -208,7 +213,12 @@ management_node_xml = """\
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <createdDate>%s</createdDate>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </managementNode>"""
@@ -249,7 +259,6 @@ management_node_post_xml = """\
   <description>test management node desc</description>
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>registered</currentState>
   <osType/>
 </managementNode>"""
 
@@ -298,7 +307,12 @@ management_node_post_response_xml = """\
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <createdDate>%s</createdDate>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </managementNode>"""
@@ -311,7 +325,11 @@ systems_xml = """\
     <registrationDate/>
     <available/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
-    <currentState>unmanaged</currentState>
+    <currentState>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <systemStateId>1</systemStateId>
+    </currentState>
     <description>Local rPath Update Service</description>
     <generatedUuid/>
     <hostname/>
@@ -354,7 +372,11 @@ systems_xml = """\
     <registrationDate/>
     <available/>
     <createdDate>%s</createdDate>
-    <currentState>registered</currentState>
+      <currentState>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <description>testsystemdescription</description>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
     <hostname/>
@@ -431,7 +453,11 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
-    <currentState>registered</currentState>
+    <currentState>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </system>
@@ -468,7 +494,11 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystem2localuuid</localUuid>
-    <currentState>registered</currentState>
+    <currentState>
+      <description>Polling</description>
+      <name>registered</name>
+      <systemStateId>2</systemStateId>
+    </currentState>
     <createdDate>%s</createdDate>
     <osType/>
   </system>
@@ -515,7 +545,11 @@ system_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
@@ -552,7 +586,6 @@ system_post_xml = """\
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
   <osType/>
 </system>"""
 
@@ -597,7 +630,11 @@ system_post_xml_response = """\
   <name>testsystemname</name>
   <target/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>"""
@@ -634,13 +671,12 @@ system_post_xml_dup = """\
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>dead</currentState>
   <osType/>
 </system>"""
 
 system_post_xml_dup2 = system_post_xml_dup.replace(
-    '<currentState>dead</currentState>', 
-    '<currentState>mothballed</currentState>')
+    '<name>testsystemname</name>', 
+    '<name>testsystemnameChanged</name>')
 
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -683,7 +719,11 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%s</createdDate>
   <osType/>
 </system>
@@ -929,7 +969,11 @@ system_version_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>%%s</createdDate>
   <osType/>
 </system>
@@ -1058,7 +1102,11 @@ system_version_put_response_xml = """\
   <target/>
   <name/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>2010-08-23T21:41:31.278455+00:00</createdDate>
   <osType/>
 </system>
@@ -1155,7 +1203,11 @@ system_available_updates_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>registered</currentState>
+  <currentState>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
   <createdDate>2010-08-27T12:21:59.800269+00:00</createdDate>
   <osType/>
 </system>

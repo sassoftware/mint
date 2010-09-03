@@ -71,34 +71,46 @@
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
         <field type="NullBooleanField" name="required"><None></None></field>
-    </object>
+  </object>
   <object pk="1" model="inventory.systemstate">
     <field type="CharField" name="name">unmanaged</field>
-    <field type="CharField" name="description">unmanaged</field>
+    <field type="CharField" name="description">Unmanaged</field>
   </object>
   <object pk="2" model="inventory.systemstate">
     <field type="CharField" name="name">registered</field>
-    <field type="CharField" name="description">registered</field>
+    <field type="CharField" name="description">Polling</field>
   </object>
   <object pk="3" model="inventory.systemstate">
     <field type="CharField" name="name">responsive</field>
-    <field type="CharField" name="description">responsive</field>
+    <field type="CharField" name="description">Online</field>
   </object>
   <object pk="4" model="inventory.systemstate">
-    <field type="CharField" name="name">shut down</field>
-    <field type="CharField" name="description">shut down</field>
+    <field type="CharField" name="name">non-responsive-unknown</field>
+    <field type="CharField" name="description">Not responding: unknown</field>
   </object>
   <object pk="5" model="inventory.systemstate">
-    <field type="CharField" name="name">non-responsive</field>
-    <field type="CharField" name="description">non-responsive</field>
+    <field type="CharField" name="name">non-responsive-net</field>
+    <field type="CharField" name="description">Not responding: network unreachable</field>
   </object>
   <object pk="6" model="inventory.systemstate">
-    <field type="CharField" name="name">mothballed</field>
-    <field type="CharField" name="description">mothballed</field>
+    <field type="CharField" name="name">non-responsive-host</field>
+    <field type="CharField" name="description">Not responding: host unreachable</field>
   </object>
   <object pk="7" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-shutdown</field>
+    <field type="CharField" name="description">Not responding: shutdown</field>
+  </object>
+  <object pk="8" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-suspended</field>
+    <field type="CharField" name="description">Not responding: suspended</field>
+  </object>
+  <object pk="9" model="inventory.systemstate">
     <field type="CharField" name="name">dead</field>
-    <field type="CharField" name="description">dead</field>
+    <field type="CharField" name="description">Stale</field>
+  </object>
+  <object pk="10" model="inventory.systemstate">
+    <field type="CharField" name="name">mothballed</field>
+    <field type="CharField" name="description">Retired</field>
   </object>
   <object pk="1" model="inventory.jobstate">
     <field type="CharField" name="name">Queued</field>

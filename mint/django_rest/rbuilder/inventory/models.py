@@ -116,31 +116,62 @@ class Zone(modellib.XObjIdModel):
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
 class SystemState(modellib.XObjIdModel):
+    serialize_accessors = False
     class Meta:
         db_table = 'inventory_system_state'
+        
+    _xobj = xobj.XObjMetadata(
+                tag = 'currentState',
+                attributes = {'id':str})
 
     UNMANAGED = "unmanaged"
+    UNMANAGED_DESC = "Unmanaged"
+    
     REGISTERED = "registered"
+    REGISTERED_DESC = "Polling"
+    
     RESPONSIVE = "responsive"
-    SHUTDOWN = "shut down"
-    NONRESPONSIVE = "non-responsive"
-    MOTHBALLED = "mothballed"
+    RESPONSIVE_DESC = "Online"
+    
+    NONRESPONSIVE = "non-responsive-unknown"
+    NONRESPONSIVE_DESC = "Not responding: unknown"
+    
+    NONRESPONSIVE_NET = "non-responsive-net"
+    NONRESPONSIVE_NET_DESC = "Not responding: network unreachable"
+    
+    NONRESPONSIVE_HOST = "non-responsive-host"
+    NONRESPONSIVE_HOST_DESC = "Not responding: host unreachable"
+    
+    NONRESPONSIVE_SHUTDOWN = "non-responsive-shutdown"
+    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: shutdown"
+    
+    NONRESPONSIVE_SUSPENDED = "non-responsive-suspended"
+    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: suspended"
+    
     DEAD = "dead"
+    DEAD_DESC = "Stale"
+    
+    MOTHBALLED = "mothballed"
+    MOTHBALLED_DESC = "Retired"
 
     STATE_CHOICES = (
-        (UNMANAGED, UNMANAGED),
-        (REGISTERED, REGISTERED),
-        (RESPONSIVE, RESPONSIVE),
-        (SHUTDOWN, SHUTDOWN),
-        (NONRESPONSIVE, NONRESPONSIVE),
-        (DEAD, DEAD),
-        (MOTHBALLED, MOTHBALLED),
+        (UNMANAGED, UNMANAGED_DESC),
+        (REGISTERED, REGISTERED_DESC),
+        (RESPONSIVE, RESPONSIVE_DESC),
+        (NONRESPONSIVE, NONRESPONSIVE_DESC),
+        (NONRESPONSIVE_NET, NONRESPONSIVE_NET_DESC),
+        (NONRESPONSIVE_HOST, NONRESPONSIVE_HOST_DESC),
+        (NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SHUTDOWN_DESC),
+        (NONRESPONSIVE_SUSPENDED, NONRESPONSIVE_SUSPENDED_DESC),
+        (DEAD, DEAD_DESC),
+        (MOTHBALLED, MOTHBALLED_DESC),
     )
 
     system_state_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092, unique=True,
         choices=STATE_CHOICES)
     description = models.CharField(max_length=8092)
+    created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
 class System(modellib.XObjIdModel):
     class Meta:
@@ -180,8 +211,7 @@ class System(modellib.XObjIdModel):
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     available = models.NullBooleanField()
     registered = models.NullBooleanField()
-    current_state = modellib.APIReadOnlyInlinedForeignKey(SystemState, null=False,
-        visible="name")
+    current_state = modellib.SerializedForeignKey(SystemState, null=True, related_name='systems')
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
     #TO-DO should this ever be nullable?

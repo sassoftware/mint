@@ -1098,21 +1098,12 @@ class MigrateTo_50(SchemaMigration):
                 CREATE TABLE "inventory_system_state" (
                     "system_state_id" %(PRIMARYKEY)s,
                     "name" varchar(8092) NOT NULL UNIQUE,
-                    "description" varchar(8092) NOT NULL
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_state'] = []
             changed = True
-
-        changed |= schema._addTableRows(db, 'inventory_system_state', 'name',
-                [
-                    dict(name="unmanaged", description="unmanaged"),
-                    dict(name="registered", description="registered"),
-                    dict(name="responsive", description="responsive"),
-                    dict(name="shut down", description="shut down"),
-                    dict(name="non-responsive", description="non-responsive"),
-                    dict(name="mothballed", description="mothballed"),
-                    dict(name="dead", description="dead")
-                ])
+            changed |= schema._addSystemStates(db, self.cfg)
 
         if 'inventory_system' not in db.tables:
             cu.execute("""

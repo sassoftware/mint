@@ -341,15 +341,18 @@ class ManagementNodesTestCase(XMLTestCase):
         response = self.client.get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(), management_node.created_date.isoformat()))
+            testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(),
+                                             management_node.current_state.created_date.isoformat(),
+                                             management_node.created_date.isoformat()))
 
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
-        management_node.save();
         response = self.client.get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
-            testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(), management_node.created_date.isoformat()))
+            testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(),
+                                            management_node.current_state.created_date.isoformat(), 
+                                            management_node.created_date.isoformat()))
         
     def testAddManagementNodeNull(self):
         
@@ -388,7 +391,9 @@ class ManagementNodesTestCase(XMLTestCase):
             '<registrationDate>%s</registrationDate>' % \
             (management_node.registration_date.isoformat()))
         self.assertXMLEquals(response.content, management_node_xml % \
-            (management_node.networks.all()[0].created_date.isoformat(), management_node.created_date.isoformat()))
+            (management_node.networks.all()[0].created_date.isoformat(), 
+             management_node.current_state.created_date.isoformat(),
+             management_node.created_date.isoformat()))
 
 class NetworksTestCase(XMLTestCase):
 
@@ -610,16 +615,16 @@ class SystemsTestCase(XMLTestCase):
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
-        self.failUnlessEqual(system.current_state.name, "unmanaged")
+        self.failUnlessEqual(system.name, "testsystemname")
         
-        # add it with same uuids but with different current state to make sure
-        # we get back same system with update prop
+        # add it with same uuids but with different name to make sure
+        # we get back same system with updated prop
         system_xml = testsxml.system_post_xml_dup2
         response = self.client.post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=1)
-        self.failUnlessEqual(this_system.current_state.name, "unmanaged")
+        self.failUnlessEqual(this_system.name, "testsystemnameChanged")
 
     def testGetSystemLog(self):
         models.System.objects.all().delete()
@@ -719,9 +724,9 @@ class SystemsTestCase(XMLTestCase):
         # overwritten
         #self.failUnlessEqual(model.name, 'blippy')
 
-    def testIgnoreCurrentStateUpdate(self):
-        # Per discussion with sed, current state field should not be
-        # writable through the API
+    def testCurrentStateUpdateApi(self):
+        # Make sure current state can be updated via the API.  This allows
+        # users to mothball systems at any point in time, etc.
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
 
@@ -734,7 +739,11 @@ class SystemsTestCase(XMLTestCase):
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <current_state>defrobinated</current_state>
+  <currentState>
+    <description>Retired</description>
+    <name>mothballed</name>
+    <systemStateId>10</systemStateId>
+  </currentState>
 </system>
 """ % params
 
@@ -958,8 +967,11 @@ class SystemStateTestCase(XMLTestCase):
         UNMANAGED = models.SystemState.UNMANAGED
         REGISTERED = models.SystemState.REGISTERED
         RESPONSIVE = models.SystemState.RESPONSIVE
-        SHUTDOWN = models.SystemState.SHUTDOWN
         NONRESPONSIVE = models.SystemState.NONRESPONSIVE
+        NONRESPONSIVE_NET = models.SystemState.NONRESPONSIVE_NET
+        NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
+        NONRESPONSIVE_SHUTDOWN = models.SystemState.NONRESPONSIVE_SHUTDOWN
+        NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
         DEAD = models.SystemState.DEAD
         MOTHBALLED = models.SystemState.MOTHBALLED
 
@@ -967,7 +979,7 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateCompleted, UNMANAGED, None),
             (job1, stateCompleted, REGISTERED, None),
             (job1, stateCompleted, RESPONSIVE, None),
-            (job1, stateCompleted, SHUTDOWN, None),
+            (job1, stateCompleted, NONRESPONSIVE_SHUTDOWN, None),
             (job1, stateCompleted, NONRESPONSIVE, None),
             (job1, stateCompleted, DEAD, None),
             (job1, stateCompleted, MOTHBALLED, None),
@@ -975,7 +987,7 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateFailed, UNMANAGED, None),
             (job1, stateFailed, REGISTERED, None),
             (job1, stateFailed, RESPONSIVE, None),
-            (job1, stateFailed, SHUTDOWN, None),
+            (job1, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
             (job1, stateFailed, NONRESPONSIVE, None),
             (job1, stateFailed, DEAD, None),
             (job1, stateFailed, MOTHBALLED, None),
@@ -983,7 +995,7 @@ class SystemStateTestCase(XMLTestCase):
             (job2, stateCompleted, UNMANAGED, RESPONSIVE),
             (job2, stateCompleted, REGISTERED, RESPONSIVE),
             (job2, stateCompleted, RESPONSIVE, RESPONSIVE),
-            (job2, stateCompleted, SHUTDOWN, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
             (job2, stateCompleted, NONRESPONSIVE, RESPONSIVE),
             (job2, stateCompleted, DEAD, RESPONSIVE),
             (job2, stateCompleted, MOTHBALLED, RESPONSIVE),
@@ -991,7 +1003,7 @@ class SystemStateTestCase(XMLTestCase):
             (job2, stateFailed, UNMANAGED, None),
             (job2, stateFailed, REGISTERED, NONRESPONSIVE),
             (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job2, stateFailed, SHUTDOWN, None),
+            (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
             (job2, stateFailed, NONRESPONSIVE, None),
             (job2, stateFailed, DEAD, None),
             (job2, stateFailed, MOTHBALLED, None),
@@ -999,7 +1011,7 @@ class SystemStateTestCase(XMLTestCase):
             (job3, stateCompleted, UNMANAGED, RESPONSIVE),
             (job3, stateCompleted, REGISTERED, RESPONSIVE),
             (job3, stateCompleted, RESPONSIVE, RESPONSIVE),
-            (job3, stateCompleted, SHUTDOWN, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
             (job3, stateCompleted, NONRESPONSIVE, RESPONSIVE),
             (job3, stateCompleted, DEAD, RESPONSIVE),
             (job3, stateCompleted, MOTHBALLED, RESPONSIVE),
@@ -1007,7 +1019,7 @@ class SystemStateTestCase(XMLTestCase):
             (job3, stateFailed, UNMANAGED, None),
             (job3, stateFailed, REGISTERED, NONRESPONSIVE),
             (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job3, stateFailed, SHUTDOWN, None),
+            (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
             (job3, stateFailed, NONRESPONSIVE, None),
             (job3, stateFailed, DEAD, None),
             (job3, stateFailed, MOTHBALLED, None),

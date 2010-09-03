@@ -242,10 +242,13 @@ class SystemManager(base.BaseManager):
             currentStateName = system.current_state.name
             # Simple cases first.
             if currentStateName in [models.SystemState.UNMANAGED,
-                    models.SystemState.SHUTDOWN,
                     models.SystemState.DEAD,
                     models.SystemState.MOTHBALLED,
-                    models.SystemState.NONRESPONSIVE]:
+                    models.SystemState.NONRESPONSIVE,
+                    models.SystemState.NONRESPONSIVE_NET,
+                    models.SystemState.NONRESPONSIVE_HOST,
+                    models.SystemState.NONRESPONSIVE_SHUTDOWN,
+                    models.SystemState.NONRESPONSIVE_SUSPENDED]:
                 # No changes in this case
                 return None
             if eventTypeName not in self.PollEvents:

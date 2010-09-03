@@ -1076,21 +1076,12 @@ def _createInventorySchema(db, cfg):
             CREATE TABLE "inventory_system_state" (
                 "system_state_id" %(PRIMARYKEY)s,
                 "name" varchar(8092) NOT NULL UNIQUE,
-                "description" varchar(8092) NOT NULL
+                "description" varchar(8092) NOT NULL,
+                "created_date" timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_state'] = []
         changed = True
-
-    changed |= _addTableRows(db, 'inventory_system_state', 'name',
-            [
-                dict(name="unmanaged", description="unmanaged"),
-                dict(name="registered", description="registered"),
-                dict(name="responsive", description="responsive"),
-                dict(name="shut down", description="shut down"),
-                dict(name="non-responsive", description="non-responsive"),
-                dict(name="mothballed", description="mothballed"),
-                dict(name="dead", description="dead")
-            ])
+        changed |= _addSystemStates(db, cfg)
 
     if 'inventory_system' not in db.tables:
         cu.execute("""
@@ -1351,6 +1342,24 @@ def _createInventorySchema(db, cfg):
                 UNIQUE ("system_id", "trove_id")
             )"""  % db.keywords)
 
+    return changed
+
+def _addSystemStates(db, cfg):
+    changed = False
+    changed |= _addTableRows(db, 'inventory_system_state', 'name',
+            [
+                dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="registered", description="Polling", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-unknown", description="Not responding: unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-net", description="Not responding: network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-host", description="Not responding: host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-shutdown", description="Not responding: shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-suspended", description="Not responding: suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
+            ])
+    
     return changed
 
 def _addManagementZone(db, cfg):
