@@ -311,6 +311,20 @@ class ZonesTestCase(XMLTestCase):
         zone = models.Zone.objects.get(pk=1)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
             (zone.created_date.isoformat()))
+        
+class SystemStatesTestCase(XMLTestCase):
+
+    def testGetSystemStates(self):
+        response = self.client.get('/api/inventory/systemStates/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.system_states_xml, 
+            ignoreNodes = [ 'createdDate' ])
+
+    def testGetSystemState(self):
+        response = self.client.get('/api/inventory/systemStates/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.system_state_xml, 
+            ignoreNodes = [ 'createdDate' ])
 
 class ManagementNodesTestCase(XMLTestCase):
 

@@ -24,13 +24,14 @@ class Inventory(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory',
-                elements = ['zones', 'systems', 'log', "eventTypes"])
+                elements = ['zones', 'systems', 'log', "eventTypes", "systemStates"])
 
     def __init__(self):
         self.zones = modellib.XObjHrefModel('zones/')
         self.systems = modellib.XObjHrefModel('systems/')
         self.log = modellib.XObjHrefModel('log/')
         self.eventTypes = modellib.XObjHrefModel('eventTypes/')
+        self.systemStates = modellib.XObjHrefModel('systemStates/')
 
 class Systems(modellib.XObjModel):
     class Meta:
@@ -43,6 +44,18 @@ class Systems(modellib.XObjModel):
 
     def save(self):
         return [s.save() for s in self.system]
+    
+class SystemStates(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'systemStates',
+                elements=['systemState'])
+    list_fields = ['systemState']
+    systemState = []
+
+    def save(self):
+        return [s.save() for s in self.systemState]
     
 class ManagementNodes(modellib.XObjModel):
     class Meta:

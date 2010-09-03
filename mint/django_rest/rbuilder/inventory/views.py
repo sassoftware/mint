@@ -57,6 +57,17 @@ class InventoryLogService(AbstractInventoryService):
     def read(self, request):
         return self.mgr.getSystemsLog()
     
+class InventorySystemStateService(AbstractInventoryService):
+    @return_xml
+    def read(self, request, system_state_id=None):
+        return self.get(system_state_id)
+    
+    def get(self, system_state_id=None):
+        if system_state_id:
+            return self.mgr.getSystemState(system_state_id)
+        else:
+            return self.mgr.getSystemStates()
+    
 class InventoryZoneService(AbstractInventoryService):
     
     @return_xml

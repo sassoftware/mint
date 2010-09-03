@@ -112,6 +112,17 @@ class SystemManager(base.BaseManager):
         ManagementNodes.managementNode = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
 
+    @base.exposed
+    def getSystemState(self, system_state_id):
+        systemState = models.SystemState.objects.get(pk=system_state_id)
+        return systemState
+
+    @base.exposed
+    def getSystemStates(self):
+        SystemStates = models.SystemStates()
+        SystemStates.systemState = list(models.SystemState.objects.all())
+        return SystemStates
+
     @classmethod
     def systemState(cls, stateName):
         return models.SystemState.objects.get(name = stateName)

@@ -7,6 +7,7 @@ inventory_xml = """\
   <log href="http://testserver/api/inventory/log/"/>
   <zones href="http://testserver/api/inventory/zones/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
+  <systemStates href="http://testserver/api/inventory/systemStates/"/>
 </inventory>"""
 
 event_type_xml="""\
@@ -98,6 +99,80 @@ zone_post_xml = """\
 </zone>
 """
 
+system_states_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systemStates>
+  <systemState id="http://testserver/api/inventory/systemStates/1/">
+    <systemStateId>1</systemStateId>
+    <description>Unmanaged</description>
+    <name>unmanaged</name>
+    <createdDate>2010-09-03T18:23:42.656549+00:00</createdDate>
+  </systemState>
+  <systemState id="http://testserver/api/inventory/systemStates/2/">
+    <systemStateId>2</systemStateId>
+    <description>Polling</description>
+    <name>registered</name>
+    <createdDate>2010-09-03T18:23:42.658249+00:00</createdDate>
+  </systemState>
+  <systemState id="http://testserver/api/inventory/systemStates/3/">
+    <systemStateId>3</systemStateId>
+    <description>Online</description>
+    <name>responsive</name>
+    <createdDate>2010-09-03T18:23:42.659883+00:00</createdDate>
+  </systemState>
+  <systemState id="http://testserver/api/inventory/systemStates/4/">
+    <systemStateId>4</systemStateId>
+    <description>Not responding: unknown</description>
+    <name>non-responsive-unknown</name>
+    <createdDate>2010-09-03T18:23:42.661629+00:00</createdDate>
+  </systemState>
+  <systemState id="http://testserver/api/inventory/systemStates/5/">
+    <systemStateId>5</systemStateId>
+    <description>Not responding: network unreachable</description>
+    <name>non-responsive-net</name>
+    <createdDate>2010-09-03T18:23:42.663290+00:00</createdDate>
+  </systemState>
+  <systemState id="http://testserver/api/inventory/systemStates/6/">
+    <systemStateId>6</systemStateId>
+    <description>Not responding: host unreachable</description>
+    <name>non-responsive-host</name>
+    <createdDate>2010-09-03T18:23:42.664943+00:00</createdDate>
+    </systemState>
+    <systemState id="http://testserver/api/inventory/systemStates/7/">
+      <systemStateId>7</systemStateId>
+      <description>Not responding: shutdown</description>
+      <name>non-responsive-shutdown</name>
+      <createdDate>2010-09-03T18:23:42.666612+00:00</createdDate>
+    </systemState>
+    <systemState id="http://testserver/api/inventory/systemStates/8/">
+      <systemStateId>8</systemStateId>
+      <description>Not responding: suspended</description>
+      <name>non-responsive-suspended</name>
+      <createdDate>2010-09-03T18:23:42.668266+00:00</createdDate>
+    </systemState>
+    <systemState id="http://testserver/api/inventory/systemStates/9/">
+      <systemStateId>9</systemStateId>
+      <description>Stale</description>
+      <name>dead</name>
+      <createdDate>2010-09-03T18:23:42.669899+00:00</createdDate>
+    </systemState>
+    <systemState id="http://testserver/api/inventory/systemStates/10/">
+      <systemStateId>10</systemStateId>
+      <description>Retired</description>
+      <name>mothballed</name>
+      <createdDate>2010-09-03T18:23:42.671647+00:00</createdDate>
+    </systemState>
+</systemStates>"""
+
+system_state_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<systemState id="http://testserver/api/inventory/systemStates/1/">
+  <systemStateId>1</systemStateId>
+  <description>Unmanaged</description>
+  <name>unmanaged</name>
+  <createdDate>2010-09-03T18:23:42.656549+00:00</createdDate>
+</systemState>"""
+
 zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/1/">
@@ -156,7 +231,7 @@ management_nodes_xml = """\
     <zone href="http://testserver/api/inventory/zones/2/"/>
     <systemPtr href="http://testserver/api/inventory/systems/1"/>
     <localUuid>test management node luuid</localUuid>
-    <currentState>
+    <currentState id="http://testserver/api/inventory/systemStates/2/">
       <createdDate>%s</createdDate>
       <description>Polling</description>
       <name>registered</name>
@@ -213,7 +288,7 @@ management_node_xml = """\
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <createdDate>%s</createdDate>
     <description>Polling</description>
     <name>registered</name>
@@ -307,7 +382,7 @@ management_node_post_response_xml = """\
   <zone href="http://testserver/api/inventory/zones/2/"/>
   <systemPtr href="http://testserver/api/inventory/systems/1"/>
   <localUuid>test management node luuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <createdDate>%s</createdDate>
     <description>Polling</description>
     <name>registered</name>
@@ -325,7 +400,7 @@ systems_xml = """\
     <registrationDate/>
     <available/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
-    <currentState>
+    <currentState id="http://testserver/api/inventory/systemStates/1/">
       <description>Unmanaged</description>
       <name>unmanaged</name>
       <systemStateId>1</systemStateId>
@@ -372,7 +447,7 @@ systems_xml = """\
     <registrationDate/>
     <available/>
     <createdDate>%s</createdDate>
-      <currentState>
+    <currentState id="http://testserver/api/inventory/systemStates/2/">
       <description>Polling</description>
       <name>registered</name>
       <systemStateId>2</systemStateId>
@@ -453,7 +528,7 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystemlocaluuid</localUuid>
-    <currentState>
+    <currentState id="http://testserver/api/inventory/systemStates/2/">
       <description>Polling</description>
       <name>registered</name>
       <systemStateId>2</systemStateId>
@@ -494,7 +569,7 @@ systems_put_xml = """\
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <name>testsystemname</name>
     <localUuid>testsystem2localuuid</localUuid>
-    <currentState>
+    <currentState id="http://testserver/api/inventory/systemStates/2/">
       <description>Polling</description>
       <name>registered</name>
       <systemStateId>2</systemStateId>
@@ -545,7 +620,7 @@ system_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <description>Polling</description>
     <name>registered</name>
     <systemStateId>2</systemStateId>
@@ -630,7 +705,7 @@ system_post_xml_response = """\
   <name>testsystemname</name>
   <target/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <description>Polling</description>
     <name>registered</name>
     <systemStateId>2</systemStateId>
@@ -719,7 +794,7 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <description>Polling</description>
     <name>registered</name>
     <systemStateId>2</systemStateId>
@@ -969,7 +1044,7 @@ system_version_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <description>Polling</description>
     <name>registered</name>
     <systemStateId>2</systemStateId>
@@ -1102,7 +1177,7 @@ system_version_put_response_xml = """\
   <target/>
   <name/>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <description>Polling</description>
     <name>registered</name>
     <systemStateId>2</systemStateId>
@@ -1203,7 +1278,7 @@ system_available_updates_xml = """\
   <target/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
-  <currentState>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
     <description>Polling</description>
     <name>registered</name>
     <systemStateId>2</systemStateId>
