@@ -254,9 +254,9 @@ class MintConfig(ConfigFile):
                                 "until further notice")
     
     # inventory
-    systemPollCount = (CfgInt, 1,
-                          "The number of systems to poll at a time")
-    systemEventDelay = (CfgInt, 5,
+    systemEventsNumToProcess = (CfgInt, 100,
+                          "The number of asynchronous system events to dispatch at a time")
+    systemEventsPollDelay = (CfgInt, 720,
                           "The number of minutes to wait before enabling a systems next polling task")
 
 

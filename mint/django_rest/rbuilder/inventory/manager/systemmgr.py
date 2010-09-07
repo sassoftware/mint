@@ -362,7 +362,7 @@ class SystemManager(base.BaseManager):
         if systemEvent.dispatchImmediately():
             enable_time = self.now()
         else:
-            enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+            enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventsPollDelay)
             
         self.logSystemEvent(systemEvent, enable_time)
         
@@ -376,7 +376,7 @@ class SystemManager(base.BaseManager):
         try:
             # get events in order based on whether or not they are enabled and what their priority is (descending)
             current_time = self.now()
-            events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemPollCount].all()
+            events = models.SystemEvent.objects.filter(time_enabled__lte=current_time).order_by('-priority')[0:self.cfg.systemEventsNumToProcess].all()
         except models.SystemEvent.DoesNotExist:
             pass
         
@@ -556,7 +556,7 @@ class SystemManager(base.BaseManager):
         # do not create events for systems that we cannot possibly contact
         if self.getSystemHasHostInfo(system):
             if not enable_time:
-                enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventDelay)
+                enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventsPollDelay)
             pickledData = cPickle.dumps(data)
             event = models.SystemEvent(system=system, event_type=event_type, 
                 priority=event_type.priority, time_enabled=enable_time,

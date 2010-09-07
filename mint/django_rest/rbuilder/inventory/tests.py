@@ -1496,7 +1496,10 @@ class SystemEventProcessingTestCase(XMLTestCase):
         return None
 
     def testGetSystemEventsForProcessing(self):
-        
+
+        # set default processing size to 1
+        self.mintConfig.systemEventsNumToProcess = 1
+                
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         
         # ensure we got our registration event back since it is the highest priority
@@ -1535,12 +1538,15 @@ class SystemEventProcessingTestCase(XMLTestCase):
             new_poll_event.system_event_id)
         
     def testGetSystemEventsForProcessingPollCount(self):
-        self.mintConfig.systemPollCount = 3
+        self.mintConfig.systemEventsNumToProcess = 3
         
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         self.failUnlessEqual(len(events), 3)
         
     def testProcessSystemEvents(self):
+        
+        # set default processing size to 1
+        self.mintConfig.systemEventsNumToProcess = 1
         
         #remove the registration event so we handle the poll now event
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
