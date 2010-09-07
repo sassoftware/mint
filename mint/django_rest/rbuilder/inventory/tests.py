@@ -986,10 +986,10 @@ class SystemStateTestCase(XMLTestCase):
         REGISTERED = models.SystemState.REGISTERED
         RESPONSIVE = models.SystemState.RESPONSIVE
         NONRESPONSIVE = models.SystemState.NONRESPONSIVE
-        # TODO NONRESPONSIVE_NET = models.SystemState.NONRESPONSIVE_NET
-        # TODO NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
+        NONRESPONSIVE_NET = models.SystemState.NONRESPONSIVE_NET
+        NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
         NONRESPONSIVE_SHUTDOWN = models.SystemState.NONRESPONSIVE_SHUTDOWN
-        # TODO NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
+        NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
         DEAD = models.SystemState.DEAD
         MOTHBALLED = models.SystemState.MOTHBALLED
 
@@ -997,7 +997,10 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateCompleted, UNMANAGED, None),
             (job1, stateCompleted, REGISTERED, None),
             (job1, stateCompleted, RESPONSIVE, None),
+            (job1, stateCompleted, NONRESPONSIVE_HOST, None),
+            (job1, stateCompleted, NONRESPONSIVE_NET, None),
             (job1, stateCompleted, NONRESPONSIVE_SHUTDOWN, None),
+            (job1, stateCompleted, NONRESPONSIVE_SUSPENDED, None),
             (job1, stateCompleted, NONRESPONSIVE, None),
             (job1, stateCompleted, DEAD, None),
             (job1, stateCompleted, MOTHBALLED, None),
@@ -1005,7 +1008,10 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateFailed, UNMANAGED, None),
             (job1, stateFailed, REGISTERED, None),
             (job1, stateFailed, RESPONSIVE, None),
+            (job1, stateFailed, NONRESPONSIVE_HOST, None),
+            (job1, stateFailed, NONRESPONSIVE_NET, None),
             (job1, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
+            (job1, stateFailed, NONRESPONSIVE_SUSPENDED, None),
             (job1, stateFailed, NONRESPONSIVE, None),
             (job1, stateFailed, DEAD, None),
             (job1, stateFailed, MOTHBALLED, None),
@@ -1013,7 +1019,10 @@ class SystemStateTestCase(XMLTestCase):
             (job2, stateCompleted, UNMANAGED, RESPONSIVE),
             (job2, stateCompleted, REGISTERED, RESPONSIVE),
             (job2, stateCompleted, RESPONSIVE, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
             (job2, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
             (job2, stateCompleted, NONRESPONSIVE, RESPONSIVE),
             (job2, stateCompleted, DEAD, RESPONSIVE),
             (job2, stateCompleted, MOTHBALLED, RESPONSIVE),
@@ -1021,7 +1030,10 @@ class SystemStateTestCase(XMLTestCase):
             (job2, stateFailed, UNMANAGED, None),
             (job2, stateFailed, REGISTERED, NONRESPONSIVE),
             (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job2, stateFailed, NONRESPONSIVE_HOST, None),
+            (job2, stateFailed, NONRESPONSIVE_NET, None),
             (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
+            (job2, stateFailed, NONRESPONSIVE_SUSPENDED, None),
             (job2, stateFailed, NONRESPONSIVE, None),
             (job2, stateFailed, DEAD, None),
             (job2, stateFailed, MOTHBALLED, None),
@@ -1029,7 +1041,10 @@ class SystemStateTestCase(XMLTestCase):
             (job3, stateCompleted, UNMANAGED, RESPONSIVE),
             (job3, stateCompleted, REGISTERED, RESPONSIVE),
             (job3, stateCompleted, RESPONSIVE, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
             (job3, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
             (job3, stateCompleted, NONRESPONSIVE, RESPONSIVE),
             (job3, stateCompleted, DEAD, RESPONSIVE),
             (job3, stateCompleted, MOTHBALLED, RESPONSIVE),
@@ -1037,7 +1052,10 @@ class SystemStateTestCase(XMLTestCase):
             (job3, stateFailed, UNMANAGED, None),
             (job3, stateFailed, REGISTERED, NONRESPONSIVE),
             (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job3, stateFailed, NONRESPONSIVE_HOST, None),
+            (job3, stateFailed, NONRESPONSIVE_NET, None),
             (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
+            (job3, stateFailed, NONRESPONSIVE_SUSPENDED, None),
             (job3, stateFailed, NONRESPONSIVE, None),
             (job3, stateFailed, DEAD, None),
             (job3, stateFailed, MOTHBALLED, None),
