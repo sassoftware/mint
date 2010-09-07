@@ -12,6 +12,7 @@
 # full details.
 #
 
+SUBDIRS =	manager
 python_files =	$(wildcard *.py)
 
 dist_files = Makefile $(python_files)

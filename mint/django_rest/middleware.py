@@ -4,17 +4,29 @@
 # All Rights Reserved
 #
 
+import logging
 from django.contrib.auth import authenticate
 from django.http import HttpResponseBadRequest
 
+import libxml2
+import libxslt
+
 from mint import config
-from mint.django_rest import logger
 from mint.django_rest.rbuilder import auth
+from mint.lib import mintutils
+
+log = logging.getLogger(__name__)
+
 
 class ExceptionLoggerMiddleware(object):
 
+    def process_request(self, request):
+        mintutils.setupLogging(consoleLevel=logging.INFO,
+                consoleFormat='apache')
+        return None
+
     def process_exception(self, request, exception):
-        logger.exception(exception)
+        log.exception("Unhandled error in django handler:\n")
         return None
 
 class SetMethodRequestMiddleware(object):
@@ -58,3 +70,32 @@ class SetMintConfigMiddleware(object):
             request.cfg = cfg
 
         return None
+
+class AddCommentsMiddleware(object):
+   
+    useXForm = True
+    
+    def __init__(self):
+        try:
+            styledoc = libxml2.parseFile(__file__[0:__file__.index('.py')].replace(
+                    'middleware', 'templates/comments.xsl'))
+            self.style = libxslt.parseStylesheetDoc(styledoc)
+        except libxml2.parserError:
+            self.useXForm = False 
+
+    def process_response(self, request, response):
+
+        if self.useXForm and response.content and  \
+            response.status_code in (200, 201, 206, 207):
+
+            try: 
+                xmldoc = libxml2.parseDoc(response.content)
+                result = self.style.applyStylesheet(xmldoc, None)
+                response.content = result.serialize()
+                xmldoc.freeDoc()
+                result.freeDoc()
+            except:
+                pass
+
+        return response 
+

@@ -92,10 +92,11 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute("""
             SELECT Targets.targetName,
-                   TargetUserCredentials.credentials
+                   TargetCredentials.credentials
               FROM Targets
-         LEFT JOIN TargetUserCredentials USING (targetId)
+              JOIN TargetUserCredentials USING (targetId)
               JOIN Users USING (userId)
+              JOIN TargetCredentials USING (targetCredentialsId)
              WHERE Targets.targetType = ?
                AND Users.username = ?
         """, targetType, userName)
@@ -107,6 +108,46 @@ class TargetManager(manager.Manager):
         for targetName, cfg in sorted(targetConfig.items()):
             ret.append((targetName, cfg, userCreds.get(targetName, {})))
         return ret
+
+    def getTargetsForUsers(self, targetType):
+        targetConfigs = self.getConfiguredTargetsByType(targetType)
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT Targets.targetName,
+                   TargetCredentials.credentials,
+                   TargetCredentials.targetCredentialsId,
+                   Users.username,
+                   Users.userId
+              FROM Targets
+              JOIN TargetUserCredentials USING (targetId)
+              JOIN Users USING (userId)
+              JOIN TargetCredentials USING (targetCredentialsId)
+             WHERE Targets.targetType = ?
+             ORDER BY Users.userId, targetName
+        """, targetType)
+        ret = []
+        for targetName, creds, credsId, userName, userId in cu:
+            userCredentials = mintdata.unmarshalTargetUserCredentials(creds)
+            targetCfg = targetConfigs.get(targetName)
+            if targetCfg is None:
+                continue
+            ret.append((userId, userName, targetName, credsId, targetCfg,
+                userCredentials))
+        return ret
+
+    def getUniqueTargetsForUsers(self, targetType):
+        """
+        From all configured targets (of this type), for all users that have
+        added credentials for them, return just one representative user
+        Return list of
+            (userId, userName, targetName, userCredsId, cfg, userCredentials)
+        """
+        cmap = {}
+        data = self.getTargetsForUsers(targetType)
+        for ent in data:
+            (uId, uName, tName, uCredsId, cfg, uCredentials) = ent
+            cmap[(tName, uCredsId)] = ent
+        return sorted(cmap.values())
 
     def setTargetCredentialsForUser(self, targetType, targetName, userName,
                                     credentials):
@@ -125,21 +166,49 @@ class TargetManager(manager.Manager):
                     targetName, targetType)
         return self._setTargetCredentialsForUser(targetId, userId, credentials)
 
+    @classmethod
+    def _getCredentialsId(cls, cu, credentials):
+        cu.execute("""
+            SELECT targetCredentialsId
+              FROM TargetCredentials
+             WHERE credentials = ?""", credentials)
+        row = cu.fetchone()
+        if row:
+            return row[0]
+        return None
+
+    @classmethod
+    def _pruneTargetCredentials(cls, cu):
+        cu.execute("""
+            DELETE FROM TargetCredentials
+             WHERE targetCredentialsId not in (
+                SELECT targetCredentialsId
+                  FROM TargetUserCredentials)
+        """)
+
     def _setTargetCredentialsForUser(self, targetId, userId, credentials):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
         # Newline-separated credential fields
         data = mintdata.marshalTargetUserCredentials(credentials)
+        targetCredentialsId = self._getCredentialsId(cu, data)
+        if targetCredentialsId is None:
+            cu.execute("INSERT INTO TargetCredentials (credentials) VALUES (?)",
+                data)
+            targetCredentialsId = self._getCredentialsId(cu, data)
         cu.execute("""
-            INSERT INTO TargetUserCredentials (targetId, userId, credentials)
-            VALUES (?, ?, ?)""", targetId, userId, data)
+            INSERT INTO TargetUserCredentials
+                (targetId, userId, targetCredentialsId)
+            VALUES (?, ?, ?)""", targetId, userId, targetCredentialsId)
+        self._pruneTargetCredentials(cu)
 
     def getTargetCredentialsForUser(self, targetType, targetName, userName):
         cu = self.db.cursor()
         cu.execute("""
             SELECT creds.credentials
               FROM Users
-              JOIN TargetUserCredentials AS creds USING (userId)
+              JOIN TargetUserCredentials USING (userId)
+              JOIN TargetCredentials AS creds USING (targetCredentialsId)
               JOIN Targets USING (targetId)
              WHERE Targets.targetType = ?
                AND Targets.targetName = ?
@@ -151,11 +220,12 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute("""
             SELECT creds.credentials
-              FROM TargetUserCredentials AS creds
+              FROM TargetCredentials AS creds
+              JOIN TargetUserCredentials AS uc USING (targetCredentialsId)
               JOIN Targets USING (targetId)
              WHERE Targets.targetType = ?
                AND Targets.targetName = ?
-               AND creds.userId = ?
+               AND uc.userId = ?
         """, targetType, targetName, userId)
         return self._extractUserCredentialsFromCursor(cu)
 
@@ -170,6 +240,7 @@ class TargetManager(manager.Manager):
         cu.execute(
             "DELETE FROM TargetUserCredentials WHERE targetId=? AND userId=?",
             targetId, userId)
+        self._pruneTargetCredentials(cu)
 
     def deleteTargetCredentialsForUserId(self, targetType, targetName, userId):
         targetId = self.getTargetId(targetType, targetName)

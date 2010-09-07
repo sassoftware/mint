@@ -21,18 +21,33 @@ L{migrate<mint.migrate>} module.
 '''
 
 import logging
+import datetime
+from dateutil import tz
 from conary.dbstore import sqlerrors, sqllib
 
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(49, 7)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 0)
 
 
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
     retUpdate = db.createTrigger(table, column, "UPDATE")
     return retInsert or retUpdate
+
+
+def createTable(db, name, definition):
+    """Helper for creating a table if it doesn't already exist.
+
+    Pass C{None} as C{name} to force creation.
+    """
+    if name and name in db.tables:
+        return False
+    cu = db.cursor()
+    cu.execute(definition % db.keywords)
+    db.tables[name] = []
+    return True
 
 
 def _createUsers(db):
@@ -729,18 +744,22 @@ def _createTargets(db):
         db.tables['TargetData'] = []
         changed = True
 
-    if 'TargetUserCredentials' not in db.tables:
-        cu.execute("""
+    changed |= createTable(db, 'TargetCredentials', """
+            CREATE TABLE TargetCredentials (
+                targetCredentialsId     %(PRIMARYKEY)s,
+                credentials             text NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""")
+
+    changed |= createTable(db, 'TargetUserCredentials', """
             CREATE TABLE TargetUserCredentials (
                 targetId        integer             NOT NULL
                     REFERENCES Targets ON DELETE CASCADE,
                 userId          integer             NOT NULL
                     REFERENCES Users ON DELETE CASCADE,
-                credentials     text,
+                targetCredentialsId integer         NOT NULL
+                    REFERENCES TargetCredentials ON DELETE CASCADE,
                 PRIMARY KEY ( targetId, userId )
-            ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['TargetUserCredentials'] = []
-        changed = True
+            ) %(TABLEOPTS)s""")
 
     return changed
 
@@ -1041,186 +1060,360 @@ def _createRepositoryLogSchema(db):
 
     return changed
 
-def _createInventorySchema(db):
+def _createInventorySchema(db, cfg):
     cu = db.cursor()
     changed = False
-    if 'inventory_managed_system' not in db.tables:
+    
+    if 'inventory_zone' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_managed_system" (
-                "id" %(PRIMARYKEY)s,
-                "registration_date" timestamp with time zone NOT NULL,
-                "generated_uuid" varchar(64),
+            CREATE TABLE "inventory_zone" (
+                "zone_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL,
+                "description" varchar(8092),
+                "created_date" timestamp with time zone NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_zone'] = []
+        changed = True
+
+    if 'inventory_system_state' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_state" (
+                "system_state_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL UNIQUE,
+                "description" varchar(8092) NOT NULL,
+                "created_date" timestamp with time zone NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_state'] = []
+        changed = True
+        changed |= _addSystemStates(db, cfg)
+
+    if 'inventory_system' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system" (
+                "system_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL,
+                "description" varchar(8092),
+                "created_date" timestamp with time zone NOT NULL,
+                "hostname" varchar(8092),
+                "launch_date" timestamp with time zone,
+                "target_id" integer REFERENCES "targets" ("targetid"),
+                "target_system_id" varchar(255),
+                "target_system_name" varchar(255),
+                "target_system_description" varchar(255),
+                "target_system_state" varchar(64),
+                "os_type" varchar(64),
+                "os_major_version" varchar(32),
+                "os_minor_version" varchar(32),
+                "registration_date" timestamp with time zone,
+                "generated_uuid" varchar(64) UNIQUE,
                 "local_uuid" varchar(64),
                 "ssl_client_certificate" varchar(8092),
                 "ssl_client_key" varchar(8092),
                 "ssl_server_certificate" varchar(8092),
-                "launching_user_id" integer REFERENCES "users" ("userid")
+                "scheduled_event_start_date" timestamp with time zone,
+                "launching_user_id" integer REFERENCES "users" ("userid"),
+                "available" bool,
+                "registered" bool,
+                "current_state_id" integer NOT NULL
+                    REFERENCES "inventory_system_state" ("system_state_id"),
+                "management_node" bool,
+                "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_managed_system'] = []
+        db.tables['inventory_system'] = []
+        changed = True
+        changed |= db.createIndex("inventory_system",
+            "inventory_system_target_id_idx", "target_id")
+        
+    if 'inventory_zone_management_node' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_zone_management_node" (
+                "system_ptr_id" integer NOT NULL PRIMARY KEY 
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "local" bool,
+                "zone_id" integer NOT NULL REFERENCES "inventory_zone" ("zone_id"),
+                "node_jid" varchar(64)
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_zone_management_node'] = []
         changed = True
 
-    if 'inventory_system_target' not in db.tables:
+    if 'inventory_system_network' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_system_target" (
-                "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer 
-                    REFERENCES "inventory_managed_system" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED,
-                "target_id" integer 
-                    REFERENCES "targets" ("targetid") 
-                    ON DELETE SET NULL
-                    DEFERRABLE INITIALLY DEFERRED,
-                "target_system_id" varchar(256)
-            ) %(TABLEOPTS)s""" % db.keywords)
-        cu.execute("""
-        CREATE INDEX "inventory_system_target_managed_system_id" 
-            ON "inventory_system_target" ("managed_system_id");
-        """)
-        cu.execute("""
-        CREATE INDEX "inventory_system_target_target_id" 
-            ON "inventory_system_target" ("target_id");
-        """)
-        db.tables['inventory_system_target'] = []
-        changed = True
-
-    if 'inventory_software_version' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_software_version" (
-                "id" %(PRIMARYKEY)s,
-                "name" text NOT NULL,
-                "version" text NOT NULL,
-                "flavor" text NOT NULL,
-                UNIQUE ("name", "version", "flavor")
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_software_version'] = []
-        changed = True
-
-    if 'inventory_system_software_version' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system_software_version" (
-                "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
-                    REFERENCES "inventory_managed_system" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED,
-                "software_version_id" integer NOT NULL 
-                    REFERENCES "inventory_software_version" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED,
-                UNIQUE ("managed_system_id", "software_version_id")
-            ) %(TABLEOPTS)s""" % db.keywords)
-        cu.execute("""
-        CREATE INDEX "inventory_system_software_version_managed_system_id" 
-            ON "inventory_system_software_version" ("managed_system_id");
-        """)
-        cu.execute("""
-        CREATE INDEX "inventory_system_software_version_software_version_id" 
-            ON "inventory_system_software_version" ("software_version_id");
-        """)
-        db.tables['inventory_system_software_version'] = []
-        changed = True
-
-    if 'inventory_system_information' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_system_information" (
-                "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
-                    REFERENCES "inventory_managed_system" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED,
-                "system_name" varchar(64),
-                "memory" integer,
-                "os_type" varchar(64),
-                "os_major_version" varchar(32),
-                "os_minor_version" varchar(32),
-                "system_type" varchar(32)
-            ) %(TABLEOPTS)s""" % db.keywords)
-        cu.execute("""
-        CREATE INDEX "inventory_system_information_managed_system_id" 
-            ON "inventory_system_information" ("managed_system_id");
-        """)
-        db.tables['inventory_system_information'] = []
-        changed = True
-
-    if 'inventory_network_information' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_network_information" (
-                "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
-                    REFERENCES "inventory_managed_system" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED,
-                "interface_name" varchar(32),
+            CREATE TABLE "inventory_system_network" (
+                "network_id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL 
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "created_date" timestamp with time zone NOT NULL,
                 "ip_address" varchar(15),
+                "ipv6_address" varchar(32),
+                "device_name" varchar(255),
+                "dns_name" varchar(255) NOT NULL,
                 "netmask" varchar(20),
-                "port_type" varchar(32)
+                "port_type" varchar(32),
+                "active" bool,
+                "required" bool,
+                UNIQUE ("system_id", "dns_name"),
+                UNIQUE ("system_id", "ip_address"),
+                UNIQUE ("system_id", "ipv6_address")
             ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_network'] = []
+        changed = True
+        changed |= db.createIndex("inventory_system_network",
+            "inventory_system_network_system_id_idx", "system_id")
+        changed |= db.createIndex("inventory_system_network",
+            "inventory_system_network_dns_name_idx", "dns_name")
+        
+    # add local management zone.  must be done after inventory_system and 
+    # inventory_system_network are added
+    changed |= _addManagementZone(db, cfg)
+
+    if 'inventory_system_log' not in db.tables:
         cu.execute("""
-        CREATE INDEX "inventory_network_information_managed_system_id" 
-            ON "inventory_network_information" ("managed_system_id");
-        """)
-        db.tables['inventory_network_information'] = []
+            CREATE TABLE "inventory_system_log" (
+                "system_log_id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL 
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_log'] = []
+        changed = True
+        changed |= db.createIndex("inventory_system_log",
+            "inventory_system_log_system_id_idx", "system_id")
+
+    if 'inventory_system_log_entry' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_log_entry" (
+                "system_log_entry_id" %(PRIMARYKEY)s,
+                "system_log_id" integer NOT NULL
+                    REFERENCES "inventory_system_log" ("system_log_id")
+                    ON DELETE CASCADE,
+                "entry" VARCHAR(8092),
+                "entry_date" timestamp with time zone NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_log_entry'] = []
         changed = True
 
-    if 'inventory_storage_volume' not in db.tables:
+    if 'inventory_version' not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_storage_volume" (
-                "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
-                    REFERENCES "inventory_managed_system" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED,
-                "size" integer,
-                "storage_type" varchar(32),
-                "storage_name" varchar(32)
+            CREATE TABLE "inventory_version" (
+                "version_id" %(PRIMARYKEY)s,
+                "full" TEXT NOT NULL,
+                "label" TEXT NOT NULL,
+                "revision" TEXT NOT NULL,
+                "ordering" TEXT NOT NULL,
+                "flavor" TEXT NOT NULL,
+                UNIQUE("full", "ordering", "flavor")
             ) %(TABLEOPTS)s""" % db.keywords)
-        cu.execute("""
-        CREATE INDEX "inventory_storage_volume_managed_system_id" 
-            ON "inventory_storage_volume" ("managed_system_id");
-        """)
-        db.tables['inventory_storage_volume'] = []
+        db.tables['inventory_version'] = []
         changed = True
 
-    if 'inventory_cpu' not in db.tables:
+    tableName = 'inventory_event_type'
+    if tableName not in db.tables:
         cu.execute("""
-            CREATE TABLE "inventory_cpu" (
-                "id" %(PRIMARYKEY)s,
-                "managed_system_id" integer NOT NULL 
-                    REFERENCES "inventory_managed_system" ("id") 
-                    DEFERRABLE INITIALLY DEFERRED,
-                "cpu_type" varchar(64),
-                "cpu_count" integer,
-                "cores" integer,
-                "speed" integer,
-                "enabled" boolean
+            CREATE TABLE "inventory_event_type" (
+                "event_type_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL UNIQUE,
+                "description" varchar(8092) NOT NULL,
+                "priority" smallint NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
-        cu.execute("""
-        CREATE INDEX "inventory_cpu_managed_system_id" 
-            ON "inventory_cpu" ("managed_system_id");
-        """)
-        db.tables['inventory_cpu'] = []
+        db.tables[tableName] = []
         changed = True
+        changed |= _addTableRows(db, tableName, 'name',
+            [dict(name="system registration",
+                  description='on-demand system registration event', 
+                  priority=110),
+             dict(name="system poll",
+                  description='standard system polling event', 
+                  priority=50),
+             dict(name="immediate system poll",
+                  description='on-demand system polling event', 
+                  priority=105),
+             dict(name="system apply update",
+                  description='apply an update to a system', priority=50),
+             dict(name="immediate system apply update",
+                  description='on-demand apply an update to a system', 
+                  priority=105)
+            ])
+        
+    if 'inventory_system_event' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_event" (
+                "system_event_id" %(PRIMARYKEY)s,
+                "system_id" integer NOT NULL 
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "event_type_id" integer NOT NULL
+                    REFERENCES "inventory_event_type",
+                "time_created" timestamp with time zone NOT NULL,
+                "time_enabled" timestamp with time zone NOT NULL,
+                "priority" smallint NOT NULL,
+                "event_data" varchar
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_event'] = []
+        changed |= db.createIndex("inventory_system_event",
+            "inventory_system_event_system_id", "system_id")
+        changed |= db.createIndex("inventory_system_event",
+            "inventory_system_event_event_type_id", "event_type_id")
+        changed |= db.createIndex("inventory_system_event",
+            "inventory_system_event_time_enabled", "time_enabled")
+        changed |= db.createIndex("inventory_system_event",
+            "inventory_system_event_priority", "priority")
+        changed = True
+
+    if 'inventory_job_state' not in db.tables:
+        cu.execute("""
+            CREATE TABLE inventory_job_state
+            (
+                job_state_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_job_state'] = []
+        changed = True
+    changed |= _addTableRows(db, 'inventory_job_state', 'name',
+        [
+            dict(name='Queued'), dict(name='Running'),
+            dict(name='Completed'), dict(name='Failed'), ])
+
+    tableName = 'inventory_job'
+    if tableName not in db.tables:
+        cu.execute("""
+            CREATE TABLE inventory_job (
+                job_id %(PRIMARYKEY)s,
+                job_uuid varchar(64) NOT NULL UNIQUE,
+                job_state_id integer NOT NULL
+                    REFERENCES inventory_job_state,
+                event_type_id integer NOT NULL
+                    REFERENCES inventory_event_type,
+                time_created timestamp with time zone NOT NULL,
+                time_updated timestamp with time zone NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+
+    tableName = "inventory_system_job"
+    if 'inventory_system_job' not in db.tables:
+        # The same job cannot be attached to multiple systems
+        # This may change in the future
+        cu.execute("""
+            CREATE TABLE inventory_system_job (
+                system_job_id %(PRIMARYKEY)s,
+                job_id integer NOT NULL UNIQUE
+                    REFERENCES inventory_job
+                    ON DELETE CASCADE,
+                system_id integer NOT NULL
+                    REFERENCES inventory_system
+                    ON DELETE CASCADE,
+                event_uuid varchar(64) NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables[tableName] = []
+        changed = True
+
+    if 'inventory_trove_available_updates' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_trove_available_updates" (
+                "id" %(PRIMARYKEY)s,
+                "trove_id" INTEGER NOT NULL,
+                "version_id" INTEGER NOT NULL,
+                UNIQUE ("trove_id", "version_id")
+            )""" % db.keywords)
+        db.tables['inventory_trove_available_updates'] = []
+        changed = True
+
+    if 'inventory_trove' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_trove" (
+                "trove_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "version_id" INTEGER NOT NULL
+                    REFERENCES "inventory_version" ("version_id"),
+                "flavor" text NOT NULL,
+                "is_top_level" BOOL NOT NULL,
+                "last_available_update_refresh" timestamp with time zone,
+                UNIQUE ("name", "version_id", "flavor")
+            )""" % db.keywords)
+
+        db.tables['inventory_trove'] = []
+        changed = True
+
+    if 'inventory_system_installed_software' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_installed_software" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL 
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "trove_id" INTEGER NOT NULL
+                    REFERENCES "inventory_trove" ("trove_id"),
+                UNIQUE ("system_id", "trove_id")
+            )"""  % db.keywords)
 
     return changed
 
-def _createInventoryUpdateSchema(db):
-    cu = db.cursor()
+def _addSystemStates(db, cfg):
     changed = False
-    if 'inventory_software_version_update' not in db.tables:
-        cu.execute("""
-            CREATE TABLE "inventory_software_version_update" (
-                "id" %(PRIMARYKEY)s,
-                "software_version_id" integer NOT NULL 
-                    REFERENCES "inventory_software_version" ("id"),
-                "available_update_id" integer 
-                    REFERENCES "inventory_software_version" ("id"),
-                "last_refreshed" timestamp with time zone NOT NULL,
-                UNIQUE ("software_version_id", "available_update_id")
-        ) %(TABLEOPTS)s """ % db.keywords)
-        cu.execute("""
-            CREATE INDEX "inventory_software_version_update_software_version_id" 
-                ON "inventory_software_version_update" ("software_version_id")
-        """)
-        db.tables['inventory_software_version_update'] = []
-        changed = True
-
+    changed |= _addTableRows(db, 'inventory_system_state', 'name',
+            [
+                dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="registered", description="Polling", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-unknown", description="Not responding: unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-net", description="Not responding: network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-host", description="Not responding: host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-shutdown", description="Not responding: shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-suspended", description="Not responding: suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
+            ])
+    
     return changed
 
+def _addManagementZone(db, cfg):
+    changed = False
+    
+    # add the zone
+    changed |= _addTableRows(db, 'inventory_zone', 'name',
+            [dict(name="Local rBuilder", 
+                  description='Local rBuilder management zone',
+                  created_date=str(datetime.datetime.now(tz.tzutc())))])
+    
+    # get the zone id
+    cu = db.cursor()
+    cu.execute("SELECT zone_id from inventory_zone where name='Local rBuilder'")
+    ids = cu.fetchall()
+    if len(ids) == 1:
+        zoneId = ids[0][0]
+    
+        cu.execute("SELECT system_state_id FROM inventory_system_state WHERE name = 'unmanaged'")
+        stateId = cu.fetchone()[0]
+        # add the system
+        changed |= _addTableRows(db, 'inventory_system', 'name',
+                [dict(name="rPath Update Service", 
+                      description='Local rPath Update Service',
+                      management_node='true',
+                      current_state_id=stateId,
+                      managing_zone_id=zoneId,
+                      created_date=str(datetime.datetime.now(tz.tzutc())))])
+        
+        # get the system id
+        cu = db.cursor()
+        cu.execute("SELECT system_id from inventory_system where name='rPath Update Service'")
+        ids = cu.fetchall()
+        if len(ids) == 1:
+            systemId = ids[0][0]
+            # add the network
+            changed |= _addTableRows(db, 'inventory_system_network', 'dns_name',
+                [dict(system_id=systemId, 
+                      dns_name='127.0.0.1', 
+                      active=True,
+                      created_date=str(datetime.datetime.now(tz.tzutc())))])
+            # add the management node
+            changed |= _addTableRows(db, 'inventory_zone_management_node', 'system_ptr_id',
+                    [dict(system_ptr_id=systemId, 
+                          local='true', 
+                          zone_id=zoneId)])
+    
+    return changed
 
 def _addTableRows(db, table, uniqueKey, rows):
     """
@@ -1353,22 +1546,48 @@ def _createJobsSchema(db):
         db.tables['job_target'] = []
         changed = True
 
-    if 'job_managed_system' not in db.tables:
-        cu.execute("""
-            CREATE TABLE job_managed_system
-            (
-                job_id      INTEGER NOT NULL
-                    REFERENCES jobs ON DELETE CASCADE,
-                managed_system_id  INTEGER NOT NULL
-                    REFERENCES inventory_managed_system ON DELETE CASCADE
-            ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['job_managed_system'] = []
-        changed = True
+    # <murf> removed since inventory_managed_system table no longer exists.
+    # do we need to fix this? 
+    #if 'job_managed_system' not in db.tables:
+    #    cu.execute("""
+    #        CREATE TABLE job_managed_system
+    #        (
+    #            job_id      INTEGER NOT NULL
+    #                REFERENCES jobs ON DELETE CASCADE,
+    #            managed_system_id  INTEGER NOT NULL
+    #                REFERENCES inventory_managed_system ON DELETE CASCADE
+    #        ) %(TABLEOPTS)s""" % db.keywords)
+    #    db.tables['job_managed_system'] = []
+    #    changed = True
 
     return changed
 
+
+def _createPKI(db):
+    """Public key infrastructure tables"""
+    changed = False
+
+    changed |= createTable(db, 'pki_certificates', """
+        CREATE TABLE pki_certificates (
+            fingerprint             text PRIMARY KEY,
+            purpose                 text NOT NULL,
+            is_ca                   boolean NOT NULL DEFAULT false,
+            x509_pem                text NOT NULL,
+            pkey_pem                text NOT NULL,
+            issuer_fingerprint      text
+                REFERENCES pki_certificates ( fingerprint )
+                ON DELETE SET NULL,
+            ca_serial_index         integer,
+            time_issued             timestamptz NOT NULL,
+            time_expired            timestamptz NOT NULL,
+            UNIQUE ( fingerprint, ca_serial_index )
+        )""")
+
+    return changed
+
+
 # create the (permanent) server repository schema
-def createSchema(db, doCommit=True):
+def createSchema(db, doCommit=True, cfg=None):
     if not hasattr(db, "tables"):
         db.loadSchema()
 
@@ -1394,10 +1613,10 @@ def createSchema(db, doCommit=True):
     changed |= _createPlatforms(db)
     changed |= _createCapsuleIndexerSchema(db)
     changed |= _createRepositoryLogSchema(db)
-    changed |= _createInventorySchema(db)
-    changed |= _createInventoryUpdateSchema(db)
+    changed |= _createInventorySchema(db, cfg)
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
+    changed |= _createPKI(db)
 
     if doCommit:
         db.commit()
@@ -1451,7 +1670,7 @@ def loadSchema(db, cfg=None, should_migrate=False):
     if version == 0:
         log.info("Creating new mint database schema with version %s",
                 RBUILDER_DB_VERSION)
-        createSchema(db)
+        createSchema(db, cfg=cfg)
         setVer = migrate.majorMinor(RBUILDER_DB_VERSION.major)
         return db.setVersion(setVer)
 

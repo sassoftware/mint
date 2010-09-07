@@ -1,0 +1,210 @@
+<sm>
+  <id>rbuilder.rpath</id>
+  <pidfile>/var/lib/jabberd/pid/sm.pid</pidfile>
+
+  <router>
+    <ip>127.0.0.1</ip>            <!-- default: 127.0.0.1 -->
+    <port>5347</port>             <!-- default: 5347 -->
+    <user>jabberd</user>          <!-- default: jabberd -->
+    <pass>f761434d1c9a6f91d1ab3cb240afff0c863c559e</pass>           <!-- default: secret -->
+    <retry>
+      <init>-1</init>
+      <lost>-1</lost>
+      <sleep>2</sleep>
+    </retry>
+  </router>
+
+  <log type='syslog'>
+    <ident>jabberd/sm</ident>
+    <facility>local3</facility>
+  </log>
+
+  <storage>
+    <path>/usr/lib64/jabberd</path>
+    <driver>pgsql</driver>
+    <pgsql>
+      <conninfo>dbname=jabberd user=jabberd port=5439</conninfo>
+    </pgsql>
+  </storage>
+
+  <aci />
+
+  <modules>
+    <path>/usr/lib64/jabberd</path>
+
+    <!-- sess-start. The modules in this chain are called when a session
+         is first started (usually on request by c2s as part of the
+         authentication process). This is normally used to load
+         per-session data. -->
+    <chain id='sess-start'>
+      <module>status</module>           <!-- record status information -->
+    </chain>
+
+    <!-- sess-end. The modules in this chain are called just before a
+         session is destroyed (after the client has disconnected). -->
+    <chain id='sess-end'>
+      <module>status</module>           <!-- update status information -->
+      <module>iq-last</module>          <!-- update logout time -->
+    </chain>
+
+    <!-- in-sess. The modules in this chain are called when a packet
+         arrives from an active user session. Note that this chain is
+         also responsible for delivering packets to their destinations -
+         this is usually handled by the "deliver" module. -->
+    <chain id='in-sess'>
+      <module>validate</module>         <!-- validate packet type -->
+      <module>status</module>           <!-- update status information -->
+      <module>privacy</module>          <!-- manage privacy lists -->
+      <module>roster</module>           <!-- handle roster get/sets and s10ns -->
+      <module>iq-vcard</module>         <!-- store and retrieve the user's vcard -->
+      <module>iq-ping</module>          <!-- return the server ping -->
+      <module>iq-private</module>       <!-- manage the user's private data store -->
+      <module>disco</module>            <!-- respond to agents requests from sessions -->
+      <module>amp</module>              <!-- advanced message processing -->
+      <module>announce</module>         <!-- deliver motd -->
+      <module>presence</module>         <!-- process and distribute presence updates -->
+      <module>deliver</module>          <!-- deliver packets with full jids directly -->
+    </chain>
+
+    <!-- out-sess. The modules in this chain are called just before a
+         packet is delivered to an active user session. -->
+    <chain id='out-sess'/>
+
+    <!-- in-router. The modules in this chain are called when a packet
+         arrives from the router (ie another component or s2s), but
+         before any processing is done. This is a good place to filter
+         incoming packets. -->
+    <chain id='in-router'>
+      <module>session</module>          <!-- perform session actions as required by c2s -->
+      <module>validate</module>         <!-- validate packet type -->
+      <module>presence</module>         <!-- drop incoming presence if user not online -->
+      <module>privacy</module>          <!-- filter incoming packets based on privacy rules -->
+    </chain>
+
+    <!-- out-router. The modules in this chain are called just before a
+         packet is delivered to the router (destined for another
+         component or s2s). This is a good place to filter outgoing
+         packets. -->
+    <chain id='out-router'>
+      <module>privacy</module>          <!-- filter outgoing packets based on privacy rules -->
+    </chain>
+
+    <!-- pkt-sm. The modules in this chain are called when a packet
+         arrives that is addressed to the session manager itself (ie the
+         to JID has no node part). This is normally used to provide
+         session-manager-wide services (like service discovery). -->
+    <chain id='pkt-sm'>
+      <module>iq-last</module>          <!-- return the server uptime -->
+      <module>iq-ping</module>          <!-- return the server ping -->
+      <module>iq-time</module>          <!-- return the current server time -->
+      <module>iq-version</module>       <!-- return the server name and version -->
+      <module>amp</module>              <!-- advanced message processing -->
+      <module>disco</module>            <!-- build the disco list; respond to disco queries -->
+      <module>announce</module>         <!-- send broadcast messages (announce, motd, etc) -->
+      <module>help</module>             <!-- resend sm messages to administrators -->
+      <module>echo</module>             <!-- echo messages sent to /echo -->
+      <module>status</module>           <!-- track status information -->
+      <module>presence</module>         <!-- proces server presence subscriptions -->
+    </chain>
+
+    <!-- pkt-user. The modules in this chain are called when a packet
+         arrives that is address to a specific user. Note that this
+         chain is also responsible for delivering packets to user
+         sessions as appropriate - this is usually handled by the
+         "deliver" module. -->
+    <chain id='pkt-user'>
+      <module>roster</module>           <!-- handle s10n responses -->
+      <module>presence</module>         <!-- process and distribute incoming presence from external entities -->
+      <module>iq-vcard</module>         <!-- grab user vcards -->
+      <module>amp</module>              <!-- advanced message processing -->
+      <module>deliver</module>          <!-- deliver the packet to an active session if we can -->
+      <module>disco-publish</module>    <!-- handle disco publishes; return information about user sessions -->
+      <module>iq-last</module>          <!-- return time since last logout -->
+    </chain>
+
+    <!-- pkt-router. The modules in this chain are called when a
+         special-purpose packet arrives from the router (eg domain
+         advertisements). -->
+    <chain id='pkt-router'>
+      <module>session</module>          <!-- take sessions offline if their c2s disappears -->
+      <module>disco</module>            <!-- query new components for service information -->
+    </chain>
+
+    <!-- user-load. The modules in this chain are called to load
+         per-user data. This will happen before a user can be used (ie
+         before a session is created). -->
+    <chain id='user-load'>
+      <module>active</module>           <!-- get active status -->
+      <module>roster</module>           <!-- load the roster and trust list -->
+      <module>roster-publish</module>   <!-- load the published roster -->
+      <module>privacy</module>          <!-- load privacy lists -->
+      <module>disco-publish</module>    <!-- load published information -->
+    </chain>
+
+    <!-- user-create. The modules in this chain are called when a user
+         creation request is received (usually from c2s as part of a
+         registration request). This initialises any per-user data. -->
+    <chain id='user-create'>
+      <module>active</module>           <!-- activate new users -->
+      <module>template-roster</module>  <!-- populate roster from template -->
+    </chain>
+
+    <!-- user-delete. The modules in this chain are called when a user
+         deletion request is received (usually from c2s as part of a
+         registration removal request). This deletes all data that may
+         have been previously created for the user during normal
+         operation. -->
+    <chain id='user-delete'>
+      <module>active</module>           <!-- deactivate users -->
+      <module>announce</module>         <!-- delete motd data -->
+      <module>disco-publish</module>    <!-- delete published information -->
+      <module>privacy</module>          <!-- delete privacy lists -->
+      <module>roster</module>           <!-- delete roster -->
+      <module>status</module>           <!-- delete status information -->
+      <module>iq-last</module>          <!-- delete last logout time -->
+      <module>iq-private</module>       <!-- delete private data -->
+      <module>iq-vcard</module>         <!-- delete vcard -->
+    </chain>
+
+    <!-- disco-extend. The modules in this chain are called when a disco
+         info request is send to session manager. It implements XEP-0128
+	 Service Discovery Extensions mechanizm to add additional
+	 information to disco#info reply. -->
+    <chain id='disco-extend'>
+      <module>iq-version</module>       <!-- add XEP-xxxx Software Information -->
+      <module>help</module>             <!-- add XEP-0157 Contact Addresses -->
+    </chain>
+
+  </modules>
+
+  <discovery>
+    <identity>
+      <category>server</category>
+      <type>im</type>
+      <name>rBuilder Appliance XMPP Router</name>
+    </identity>
+    <items />
+  </discovery>
+
+  <user>
+    <template>
+      <active-cache-ttl>60</active-cache-ttl>
+    </template>
+  </user>
+
+  <amp>
+    <offlinestoragedisabled/>
+  </amp>
+
+  <offline>
+    <dropmessages/>
+    <dropsubscriptions/>
+  </offline>
+
+  <roster />
+  <status />
+
+</sm>
+<!--
+  vim: syntax=xml
+-->

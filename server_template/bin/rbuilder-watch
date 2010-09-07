@@ -102,6 +102,7 @@ def process_command(path, char):
 def main(argv):
     print "Please ensure sendmail is running."
     os.environ['RBUILDER_NOSUDO'] = '1'
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings_local'
     path = sys.argv[1]
     find_httpd(path)
     restart_httpd(path)
