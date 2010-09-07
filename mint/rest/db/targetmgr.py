@@ -125,7 +125,6 @@ class TargetManager(manager.Manager):
              WHERE Targets.targetType = ?
              ORDER BY Users.userId, targetName
         """, targetType)
-        userCreds = {}
         ret = []
         for targetName, creds, credsId, userName, userId in cu:
             userCredentials = mintdata.unmarshalTargetUserCredentials(creds)
