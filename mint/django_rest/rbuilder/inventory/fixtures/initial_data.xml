@@ -32,7 +32,6 @@
         <field type="DateTimeField" name="launch_date"><None></None></field>
         <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
         <field type="CharField" name="target_system_id"><None></None></field>
-        <field type="CharField" name="reservation_id"><None></None></field>
         <field type="CharField" name="os_type"><None></None></field>
         <field type="CharField" name="os_major_version"><None></None></field>
         <field type="CharField" name="os_minor_version"><None></None></field>

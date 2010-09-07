@@ -732,9 +732,10 @@ class ProjectUsersTable(database.DatabaseTable):
         cu = self.db.cursor()
         cu.execute("""
             SELECT CASE WHEN pu.level <= 1 THEN 1 ELSE 0 END AS isWriter,
-                tuc.credentials AS creds
+                tc.credentials AS creds
               FROM projectUsers AS pu
               JOIN TargetUserCredentials AS tuc USING (userId)
+              JOIN TargetCredentials AS tc USING (targetCredentialsId)
               JOIN Targets USING (targetId)
              WHERE pu.projectId = ?
                AND Targets.targetType = ?

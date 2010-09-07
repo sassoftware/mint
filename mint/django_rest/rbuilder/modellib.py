@@ -890,6 +890,9 @@ class DateTimeUtcField(models.DateTimeField):
 class XObjHiddenCharField(models.CharField, XObjHiddenMixIn):
     pass
 
+class APIReadOnlyCharField(models.CharField, APIReadOnlyMixIn):
+    pass
+
 class APIReadOnlyForeignKey(models.ForeignKey, APIReadOnlyMixIn):
     pass
 

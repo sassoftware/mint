@@ -88,14 +88,22 @@ class Script(scriptlibrary.SingletonScript):
         #targets = [ (1, "admin", "vsphere.eng.rpath.com", {}, {})]
         for driverClass in self.loadTargetDriverClasses():
             targetType = driverClass.cloudType
-            targets = restdb.targetMgr.getTargetsForUsers(targetType)
-            for userId, userName, targetName, _, _ in targets:
+            targets = restdb.targetMgr.getUniqueTargetsForUsers(targetType)
+            for ent in targets:
+                userId, userName, targetName = ent[:3]
                 driver = driverClass(storageConfig, targetType,
                     cloudName=targetName, userId=userName, db=restdb)
                 if not driver.isDriverFunctional():
                     continue
                 driver._nodeFactory.baseUrl = "https://localhost"
                 yield driver
+
+    def _uniqueCredentials(self, targets):
+        # We only need one user per set of credentials for a specific target
+        cmap = {}
+        for userId, userName, targetName, credentialsId, _, _ in targets:
+            cmap[(targetName, credentialsId)] = (userId, userName)
+        return sorted((v[0], v[1], k[0]) for (k, v) in cmap.items())
 
     def usage(self):
         print >> sys.stderr, "Usage: %s [useLocalSettings]" % \

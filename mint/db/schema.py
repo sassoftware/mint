@@ -744,18 +744,22 @@ def _createTargets(db):
         db.tables['TargetData'] = []
         changed = True
 
-    if 'TargetUserCredentials' not in db.tables:
-        cu.execute("""
+    changed |= createTable(db, 'TargetCredentials', """
+            CREATE TABLE TargetCredentials (
+                targetCredentialsId     %(PRIMARYKEY)s,
+                credentials             text NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""")
+
+    changed |= createTable(db, 'TargetUserCredentials', """
             CREATE TABLE TargetUserCredentials (
                 targetId        integer             NOT NULL
                     REFERENCES Targets ON DELETE CASCADE,
                 userId          integer             NOT NULL
                     REFERENCES Users ON DELETE CASCADE,
-                credentials     text,
+                targetCredentialsId integer         NOT NULL
+                    REFERENCES TargetCredentials ON DELETE CASCADE,
                 PRIMARY KEY ( targetId, userId )
-            ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['TargetUserCredentials'] = []
-        changed = True
+            ) %(TABLEOPTS)s""")
 
     return changed
 
@@ -1094,7 +1098,9 @@ def _createInventorySchema(db, cfg):
                 "launch_date" timestamp with time zone,
                 "target_id" integer REFERENCES "targets" ("targetid"),
                 "target_system_id" varchar(255),
-                "reservation_id" varchar(255),
+                "target_system_name" varchar(255),
+                "target_system_description" varchar(255),
+                "target_system_state" varchar(64),
                 "os_type" varchar(64),
                 "os_major_version" varchar(32),
                 "os_minor_version" varchar(32),

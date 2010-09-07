@@ -195,7 +195,6 @@ management_nodes_xml = """\
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
-    <reservationId/>
     <networks>
       <network>
         <active/>
@@ -226,6 +225,9 @@ management_nodes_xml = """\
     <description>test management node desc</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
+    <targetSystemName/>
+    <targetSystemDescription/>
+    <targetSystemState/>
     <osMinorVersion/>
     <target/>
     <zone href="http://testserver/api/inventory/zones/2/"/>
@@ -252,7 +254,6 @@ management_node_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active/>
@@ -283,6 +284,9 @@ management_node_xml = """\
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2/"/>
@@ -307,7 +311,6 @@ management_node_post_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active/>
@@ -346,7 +349,6 @@ management_node_post_response_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active>False</active>
@@ -377,6 +379,9 @@ management_node_post_response_xml = """\
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2/"/>
@@ -433,7 +438,6 @@ systems_xml = """\
     <osMajorVersion/>
     <osMinorVersion/>
     <osType/>
-    <reservationId/>
     <scheduledEventStartDate/>
     <sslServerCertificate/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
@@ -441,6 +445,9 @@ systems_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <target/>
     <targetSystemId/>
+    <targetSystemName/>
+    <targetSystemDescription/>
+    <targetSystemState/>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
     <registered>True</registered>
@@ -480,7 +487,6 @@ systems_xml = """\
     <osMajorVersion/>
     <osMinorVersion/>
     <osType/>
-    <reservationId/>
     <scheduledEventStartDate/>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
@@ -488,6 +494,9 @@ systems_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
     <target/>
     <targetSystemId/>
+    <targetSystemName/>
+    <targetSystemDescription/>
+    <targetSystemState/>
   </system>
 </systems>
 """
@@ -501,7 +510,6 @@ systems_put_xml = """\
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
-    <reservationId/>
     <networks>
       <network>
         <active/>
@@ -523,6 +531,9 @@ systems_put_xml = """\
     <description>testsystemdescription</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
+    <targetSystemName/>
+    <targetSystemDescription/>
+    <targetSystemState/>
     <osMinorVersion/>
     <managementNode/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
@@ -542,7 +553,6 @@ systems_put_xml = """\
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>testsystem2generateduuid</generatedUuid>
-    <reservationId/>
     <networks>
       <network>
         <active/>
@@ -564,6 +574,9 @@ systems_put_xml = """\
     <description>testsystemdescription</description>
     <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <targetSystemId/>
+    <targetSystemName/>
+    <targetSystemDescription/>
+    <targetSystemState/>
     <osMinorVersion/>
     <managementNode/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
@@ -588,7 +601,6 @@ system_xml = """\
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
-  <reservationId/>
   <hostname/>
   <networks>
     <network>
@@ -614,6 +626,9 @@ system_xml = """\
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <managementNode/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
@@ -637,7 +652,6 @@ system_post_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active/>
@@ -658,6 +672,9 @@ system_post_xml = """\
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -673,7 +690,6 @@ system_post_xml_response = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active>False</active>
@@ -701,6 +717,9 @@ system_post_xml_response = """\
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <name>testsystemname</name>
   <target/>
@@ -722,7 +741,6 @@ system_post_xml_dup = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active/>
@@ -743,6 +761,9 @@ system_post_xml_dup = """\
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <name>testsystemname</name>
   <localUuid>testsystemlocaluuid</localUuid>
@@ -762,7 +783,6 @@ system_target_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active/>
@@ -790,6 +810,9 @@ system_target_xml = """\
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
@@ -1012,7 +1035,6 @@ system_version_xml = """\
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
-  <reservationId/>
   <hostname/>
   <networks>
     <network>
@@ -1038,6 +1060,9 @@ system_version_xml = """\
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <managementNode/>
   <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
@@ -1147,7 +1172,6 @@ system_version_put_response_xml = """\
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
-  <reservationId/>
   <networks>
     <network>
       <active/>
@@ -1172,6 +1196,9 @@ system_version_put_response_xml = """\
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <managementNode/>
   <target/>
@@ -1244,7 +1271,6 @@ system_available_updates_xml = """\
   <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
   <osMajorVersion/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
-  <reservationId/>
   <networks>
     <network>
       <active/>
@@ -1274,6 +1300,9 @@ system_available_updates_xml = """\
   <description>testsystemdescription</description>
   <registered>True</registered>
   <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
   <osMinorVersion/>
   <target/>
   <name>testsystemname</name>

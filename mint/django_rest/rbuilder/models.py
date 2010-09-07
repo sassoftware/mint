@@ -14,6 +14,13 @@ from django.conf import settings
 
 from mint.django_rest.rbuilder import modellib
 
+class DatabaseVersion(modellib.XObjModel):
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = u'databaseversion'
+    version = models.SmallIntegerField(null=True)
+    minor = models.SmallIntegerField(null=True)
+
 class UserGroups(modellib.XObjModel):
     usergroupid = models.AutoField(primary_key=True)
     usergroup = models.CharField(unique=True, max_length=128)
@@ -193,10 +200,28 @@ class Targets(modellib.XObjModel):
         parts[4] = ''
         return urlparse.urlunparse(parts)
 
+class TargetData(modellib.XObjModel):
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = u'targetdata'
+    targetid = models.ForeignKey(Targets, db_column="targetid")
+    name = models.CharField(max_length=255, null=False)
+    value = models.TextField()
+    # Uhm. django does not support multi-column PKs.
+
+class TargetCredentials(modellib.XObjModel):
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = u'targetcredentials'
+    targetcredentialsid = models.AutoField(primary_key=True,
+        db_column="targetCredentialsId")
+    credentials = models.TextField(null=False, unique=True)
+
 class TargetUserCredentials(modellib.XObjModel):
     targetid = models.ForeignKey(Targets, db_column="targetid")
     userid = models.ForeignKey(Users, db_column="userid")
-    credentials = models.TextField()
+    targetcredentialsid = models.ForeignKey(TargetCredentials,
+        db_column="targetcredentialsid")
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetusercredentials'
