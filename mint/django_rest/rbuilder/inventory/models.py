@@ -186,6 +186,8 @@ class SystemState(modellib.XObjIdModel):
     description = models.CharField(max_length=8092)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
+    load_fields = [ name ]
+
 class System(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
