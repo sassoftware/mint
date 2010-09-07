@@ -257,7 +257,7 @@ class MintConfig(ConfigFile):
     systemEventsNumToProcess = (CfgInt, 100,
                           "The number of asynchronous system events to dispatch at a time")
     systemEventsPollDelay = (CfgInt, 720,
-                          "The number of minutes to wait before enabling a systems next polling task")
+                          "The number of minutes to wait before enabling a system's next polling task")
 
 
     # *** BEGIN DEPRECATED VALUES ***

@@ -1374,6 +1374,42 @@ class MigrateTo_50(SchemaMigration):
                 UNIQUE ( fingerprint, ca_serial_index )
             )""")
 
+        changed |= createTable(db, 'TargetCredentials', """
+                CREATE TABLE TargetCredentials (
+                    targetCredentialsId     %(PRIMARYKEY)s,
+                    credentials             text NOT NULL UNIQUE
+                ) %(TABLEOPTS)s""")
+
+        self._migrateTargetUserCredentials(cu)
+        return True
+
+    def _migrateTargetUserCredentials(self, cu):
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ADD COLUMN targetCredentialsId  INTEGER
+                    REFERENCES TargetCredentials
+                        ON DELETE CASCADE
+        """)
+        cu.execute("""
+            INSERT INTO TargetCredentials (credentials)
+                SELECT DISTINCT credentials FROM TargetUserCredentials
+        """)
+        cu.execute("""
+            UPDATE TargetUserCredentials AS a
+            SET targetCredentialsId = (
+                SELECT targetCredentialsId
+                  FROM TargetUserCredentials
+                 WHERE credentials = a.credentials)
+        """)
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ALTER COLUMN targetCredentialsId SET NOT NULL
+        """)
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                DROP COLUMN credentials
+        """)
+
         return True
 
 
