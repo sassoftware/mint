@@ -1546,22 +1546,7 @@ def _createJobsSchema(db):
         db.tables['job_target'] = []
         changed = True
 
-    # <murf> removed since inventory_managed_system table no longer exists.
-    # do we need to fix this? 
-    #if 'job_managed_system' not in db.tables:
-    #    cu.execute("""
-    #        CREATE TABLE job_managed_system
-    #        (
-    #            job_id      INTEGER NOT NULL
-    #                REFERENCES jobs ON DELETE CASCADE,
-    #            managed_system_id  INTEGER NOT NULL
-    #                REFERENCES inventory_managed_system ON DELETE CASCADE
-    #        ) %(TABLEOPTS)s""" % db.keywords)
-    #    db.tables['job_managed_system'] = []
-    #    changed = True
-
     return changed
-
 
 def _createPKI(db):
     """Public key infrastructure tables"""
