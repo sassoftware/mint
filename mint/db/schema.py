@@ -1355,12 +1355,10 @@ def _createInventorySchema(db, cfg):
                 "system_id" INTEGER NOT NULL
                     REFERENCES "inventory_system" ("system_id"),
                 "credentials_id" INTEGER NOT NULL
-                    REFERENCES "TargetCredentials" ("targetCredentialsId")
+                    REFERENCES TargetCredentials (targetCredentialsId),
+                UNIQUE ("system_id", "credentials_id")
             )""" % db.keywords)
         db.tables['inventory_system_target_credentials'] = []
-        changed = db.createIndex(
-            'inventory_system_target_credentials_system_id_credentials_uq',
-            'system_id', 'credentials_id', unique=True)
         changed = True
 
     return changed
