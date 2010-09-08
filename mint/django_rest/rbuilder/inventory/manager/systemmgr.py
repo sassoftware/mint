@@ -16,7 +16,6 @@ from dateutil import tz
 from django.db import connection
 
 from conary import versions as cnyver
-from conary.deps import deps
 
 from mint.lib import uuid, x509
 from mint.django_rest.rbuilder import models as rbuildermodels
