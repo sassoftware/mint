@@ -154,8 +154,8 @@ class BaseManager(models.Manager):
             elif isinstance(field, related.RelatedField):
                 val = field.related.parent_model.objects.load_from_href(
                     getattr(val, 'href', None))
-            elif isinstance(field, djangofields.BooleanField) or \
-                 isinstance(field, djangofields.NullBooleanField):
+            elif isinstance(field, (djangofields.BooleanField,
+                                    djangofields.NullBooleanField)):
                 val = str(val)
                 val = (val.lower() == str(True).lower())
             elif isinstance(field, DateTimeUtcField):
@@ -618,6 +618,9 @@ class XObjModel(models.Model):
                 elif isinstance(field, models.DateTimeField):
                     val = val.replace(tzinfo=tz.tzutc())
                     val = val.isoformat()
+                elif isinstance(field, (djangofields.BooleanField,
+                                        djangofields.NullBooleanField)):
+                    val = str(val).lower()
                 setattr(xobj_model, key, val)
             # TODO: is this still needed, we already called serialize_hrefs.?
             elif isinstance(val, XObjHrefModel):

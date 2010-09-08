@@ -918,6 +918,17 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(model.ssl_client_certificate, sslClientCert)
         self.failUnlessEqual(model.ssl_client_key, sslClientKey)
 
+    def testBooleanFieldSerialization(self):
+        # XML schema sez lowercase true or false for boolean fields
+        system = models.System(name = 'blippy')
+        system.save()
+        network = models.Network(dns_name="foo3.com", ip_address='1.2.3.4',
+            active=False, required=True, system=system)
+        network.save()
+        xml = network.to_xml()
+        self.failUnlessIn("<active>false</active>", xml)
+        self.failUnlessIn("<required>true</required>", xml)
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = models.System(local_uuid="localuuid001",
