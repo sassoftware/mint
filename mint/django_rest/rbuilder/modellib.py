@@ -144,8 +144,11 @@ class BaseManager(models.Manager):
             if getattr(field, 'APIReadOnly', None):
                 # Ignore APIReadOnly fields
                 continue
+            if val == '' and not val._xobj.elements \
+                and not val._xobj.attributes:
+                val = None
             # Special case for FK fields which should be hrefs.
-            if isinstance(field, SerializedForeignKey):
+            elif isinstance(field, SerializedForeignKey):
                 val = field.related.parent_model.objects.load_from_object(val, request, save=save)
             elif isinstance(field, InlinedForeignKey):
                 lookup = { field.visible : str(val) }
