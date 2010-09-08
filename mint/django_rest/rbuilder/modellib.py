@@ -131,6 +131,7 @@ class BaseManager(models.Manager):
         model, set the attribute's value on model.
         """
         fields = model.get_field_dict()
+        set_fields = []
 
         for key, val in obj.__dict__.items():
             field = fields.get(key, None)
@@ -173,7 +174,21 @@ class BaseManager(models.Manager):
             else:
                 val = None
 
+            set_fields.append(key)
             setattr(model, key, val)
+
+        # Preserves values that might already be in the db when we load an
+        # object.  We don't want the default values for fields being set on
+        # model.
+        for field in model._meta.fields:
+            try:
+                value = getattr(model, field.name, None)
+            except exceptions.ObjectDoesNotExist:
+                continue
+            if value is not None and field.name not in set_fields:
+                default_val = field.get_default()
+                if default_val == '' and not hasattr(obj, field.name):
+                    setattr(model, field.name, None)
 
         return model
 
