@@ -16,6 +16,8 @@ from mint.django_rest.rbuilder.inventory import models
 
 from mint.django_rest.rbuilder.inventory import testsxml
 
+from testrunner import testcase
+
 class XML(object):
     class OrderedDict(dict):
         def items(self):
@@ -107,7 +109,11 @@ class XML(object):
             return False
         return (node1.text, node2.text)
 
-class XMLTestCase(TestCase):
+class XMLTestCase(TestCase, testcase.MockMixIn):
+    def tearDown(self):
+        TestCase.tearDown(self)
+        self.unmock()
+
     def failUnlessIn(self, needle, haystack):
         self.failUnless(needle in haystack, "%s not in %s" % (needle,
             haystack))
