@@ -12,7 +12,6 @@ from django import http
 from xobj import xobj
 
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.inventory import models 
 
 def str_to_underscore(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
@@ -70,6 +69,33 @@ def requires(model_name, save=True):
 
         return inner
     return decorate
+
+def authErrorResponse():
+    return http.HttpResponse(status=401)
+
+def requires_admin(function):
+    """
+    Decorator that enforces admin access
+    """
+    def inner(*args, **kw):
+        request = args[1]
+        if not request._is_admin:
+            return authErrorResponse()
+        return function(*args, **kw)
+
+    return inner
+
+def requires_auth(function):
+    """
+    Decorator that enforces authenticated access
+    """
+    def inner(*args, **kw):
+        request = args[1]
+        if not request._is_authenticated:
+            return authErrorResponse()
+        return function(*args, **kw)
+
+    return inner
 
 def return_xml(function):
     """

@@ -79,7 +79,7 @@ class InventoryZoneService(AbstractInventoryService):
             return self.mgr.getZone(zone_id)
         else:
             return self.mgr.getZones()
-        
+
     @requires('zone')
     @return_xml
     def create(self, request, zone):
