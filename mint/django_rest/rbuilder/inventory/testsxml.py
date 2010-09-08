@@ -1156,7 +1156,6 @@ system_version_put_xml = """\
   %s
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <localUuid>testsystemlocaluuid</localUuid>
-  <name>somesystem</name>
   <eventUuid>testeventuuid</eventUuid>
 </system>
 """ % installed_software_post_xml

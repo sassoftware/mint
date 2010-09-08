@@ -1272,7 +1272,10 @@ class SystemVersionsTestCase(XMLTestCase):
         response = self.client.put(url,
             data=data,
             content_type="application/xml")
+        self.failUnlessEqual(response.status_code, 200)
 
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system.name, "testsystemname")
 
 class EventTypeTestCase(XMLTestCase):
 
