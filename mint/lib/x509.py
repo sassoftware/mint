@@ -71,8 +71,13 @@ class X509(object):
             self.load_pkey(pemPkey, callback=callback)
 
     @property
-    def hash(self):
+    def hash_issuer(self):
         certHash = "%08x" % self.x509.get_issuer().as_hash()
+        return certHash
+
+    @property
+    def hash(self):
+        certHash = "%08x" % self.x509.get_subject().as_hash()
         return certHash
 
     @property

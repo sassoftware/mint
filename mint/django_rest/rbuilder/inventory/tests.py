@@ -951,8 +951,14 @@ class SystemCertificateTestCase(XMLTestCase):
         # Test some of the other functions, while we're at it
         fingerprint = crt.fingerprint
         self.failUnlessEqual(len(fingerprint), 40)
+
         certHash = crt.hash
+        # This always changes, so no point in comparing anything other than
+        # length
         self.failUnlessEqual(len(certHash), 8)
+
+        # The issuer hash is always known, since it's our LG CA
+        self.failUnlessEqual(crt.hash_issuer, '6d8bb0a1')
 
         # Try again, we should not re-generate the cert
         self.mgr.sysMgr.generateSystemCertificates(system)
