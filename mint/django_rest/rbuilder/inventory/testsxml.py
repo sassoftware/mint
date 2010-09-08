@@ -211,6 +211,7 @@ management_nodes_xml = """\
       </network>
     </networks>
     <nodeJid/>
+    <sslClientCertificate>test management node client cert</sslClientCertificate>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <managingZone/>
     <hostname/>
@@ -270,6 +271,7 @@ management_node_xml = """\
     </network>
   </networks>
   <nodeJid/>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -325,6 +327,7 @@ management_node_post_xml = """\
     </network>
   </networks>
   <nodeJid>abcd</nodeJid>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
@@ -365,6 +368,7 @@ management_node_post_response_xml = """\
     </network>
   </networks>
   <nodeJid>abcd</nodeJid>
+  <sslClientCertificate/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
@@ -439,6 +443,7 @@ systems_xml = """\
     <osMinorVersion/>
     <osType/>
     <scheduledEventStartDate/>
+    <sslClientCertificate/>
     <sslServerCertificate/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <systemId>2</systemId>
@@ -488,6 +493,7 @@ systems_xml = """\
     <osMinorVersion/>
     <osType/>
     <scheduledEventStartDate/>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
     <systemId>3</systemId>
@@ -523,6 +529,7 @@ systems_put_xml = """\
         <required/>
       </network>
     </networks>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -566,6 +573,7 @@ systems_put_xml = """\
         <required/>
       </network>
     </networks>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -617,6 +625,7 @@ system_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>1</systemId>
   <launchingUser/>
@@ -664,6 +673,7 @@ system_post_xml = """\
       <required/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <scheduledEventStartDate/>
   <launchDate/>
@@ -705,6 +715,7 @@ system_post_xml_response = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -753,6 +764,7 @@ system_post_xml_dup = """\
       <required/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <scheduledEventStartDate/>
   <launchDate/>
@@ -798,6 +810,7 @@ system_target_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -1051,6 +1064,7 @@ system_version_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>3</systemId>
   <launchingUser/>
@@ -1185,6 +1199,7 @@ system_version_put_response_xml = """\
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -1285,6 +1300,7 @@ system_available_updates_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>

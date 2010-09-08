@@ -221,7 +221,7 @@ class System(modellib.XObjIdModel):
     registration_date = modellib.DateTimeUtcField(null=True)
     generated_uuid = models.CharField(max_length=64, unique=True, null=True)
     local_uuid = models.CharField(max_length=64, null=True)
-    ssl_client_certificate = modellib.XObjHiddenCharField(max_length=8092, null=True)
+    ssl_client_certificate = modellib.APIReadOnlyCharField(max_length=8092, null=True)
     ssl_client_key = modellib.XObjHiddenCharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
     scheduled_event_start_date = modellib.DateTimeUtcField(null=True)

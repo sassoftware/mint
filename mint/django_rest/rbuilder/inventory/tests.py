@@ -9,6 +9,7 @@ from xobj import xobj
 from conary import versions
 from django.test import TestCase
 from django.test.client import Client
+from mint.lib import x509
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import manager
@@ -480,7 +481,7 @@ class SystemsTestCase(XMLTestCase):
         self.mock_scheduleSystemPollEvent_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
-        
+
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
         
@@ -629,8 +630,16 @@ class SystemsTestCase(XMLTestCase):
             (system.registration_date.isoformat()))
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
-        
+            ignoreNodes = [ 'createdDate', 'sslClientCertificate' ])
+        # Unfortunately, we can't mock modules since we don't control Django's
+        # class loading. So we ignore the cert in the previous step and we
+        # test it with xobj (it is different every time)
+        obj = xobj.parse(response.content)
+        xobjmodel = obj.system
+        self.failUnless(xobjmodel.sslClientCertificate.startswith(
+            '-----BEGIN CERTIFICATE-----'),
+            repr(xobjmodel.sslClientCertificate))
+
     def testPostSystemDupUuid(self):
         # add the first system
         models.System.objects.all().delete()
@@ -877,6 +886,67 @@ class SystemsTestCase(XMLTestCase):
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
         self.failUnlessEqual(model.lastJob.pk, job.pk)
+
+    def testLoadFromObjectHiddenFields(self):
+        # Make sure one can't overwrite hidden fields (sslClientKey is hidden)
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        sslClientCert = 'sslClientCert'
+        sslClientKey = 'sslClientKey'
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+
+        system = models.System(name='blippy', local_uuid=localUuid,
+            generated_uuid=generatedUuid,
+            ssl_client_certificate=sslClientCert,
+            ssl_client_key=sslClientKey)
+        system.save()
+
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <sslClientCertificate>thou shalt not change me</sslClientCertificate>
+  <sslClientKey>thou shalt not change me</sslClientKey>
+</system>
+""" % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.local_uuid, localUuid)
+        self.failUnlessEqual(model.generated_uuid, generatedUuid)
+        self.failUnlessEqual(model.ssl_client_certificate, sslClientCert)
+        self.failUnlessEqual(model.ssl_client_key, sslClientKey)
+
+class SystemCertificateTestCase(XMLTestCase):
+    def testGenerateSystemCertificates(self):
+        system = models.System(local_uuid="localuuid001",
+            generated_uuid="generateduuid001")
+        system.save()
+        self.failUnlessEqual(system.ssl_client_certificate, None)
+        self.failUnlessEqual(system.ssl_client_key, None)
+        self.mgr.sysMgr.generateSystemCertificates(system)
+
+        clientCert = system.ssl_client_certificate
+        clientKey = system.ssl_client_key
+
+        crt = x509.X509(None, None)
+        crt.load_from_strings(clientCert, clientKey)
+        self.failUnlessEqual(crt.x509.get_subject().as_text(),
+            'O=rPath rBuilder, OU=http://rpath.com, CN=local_uuid:localuuid001 generated_uuid:generateduuid001 serial:0')
+        # Make sure the cert is signed with the low grade CA
+        self.failUnlessEqual(crt.x509.get_issuer().as_text(),
+            'O=rBuilder Low-Grade Certificate Authority, OU=Created at 2010-09-02 11:18:53-0400')
+        # Test some of the other functions, while we're at it
+        fingerprint = crt.fingerprint
+        self.failUnlessEqual(len(fingerprint), 40)
+        certHash = crt.hash
+        self.failUnlessEqual(len(certHash), 8)
+
+        # Try again, we should not re-generate the cert
+        self.mgr.sysMgr.generateSystemCertificates(system)
+        self.failUnlessEqual(system.ssl_client_certificate, clientCert)
+        self.failUnlessEqual(system.ssl_client_key, clientKey)
 
 class SystemStateTestCase(XMLTestCase):
     def _newJob(self, system, eventUuid, jobUuid, jobType, jobState=None):
