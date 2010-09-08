@@ -3,8 +3,6 @@
 #
 "Simple module for generating x509 certificates"
 
-import os
-import tempfile
 from conary.lib import digestlib
 from rmake.lib import gencert
 
