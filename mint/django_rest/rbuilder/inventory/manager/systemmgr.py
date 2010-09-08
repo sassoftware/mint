@@ -13,7 +13,6 @@ import time
 import traceback
 
 from dateutil import tz
-
 from django.db import connection
 
 from conary import versions as cnyver

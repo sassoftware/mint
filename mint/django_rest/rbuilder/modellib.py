@@ -422,10 +422,22 @@ class SystemManager(BaseManager):
         # Save the job so we know to update the system state
         system.lastJob = job
 
+    def add_accessors(self, model, accessors):
+        """
+        Overridden here, b/c we always clear out the existing networks before
+        setting new ones.
+        """
+        for key, val in accessors.items():
+            if key == 'networks':
+                model.networks.all().delete()
+            for v in val:
+                getattr(model, key).add(v)
+        return model
+
 class ManagementNodeManager(SystemManager):
     """
-    Overridden because management nodes have several checks required to determine 
-    if the system already exists.
+    Overridden because management nodes have several checks required to
+    determine if the system already exists.
     """
 
 class XObjModel(models.Model):

@@ -1357,6 +1357,20 @@ class MigrateTo_50(SchemaMigration):
                     UNIQUE ("system_id", "trove_id")
                 )"""  % db.keywords)
 
+        if 'inventory_system_target_credentials' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_target_credentials" (
+                    "id" %(PRIMARYKEY)s,
+                    "system_id" INTEGER NOT NULL
+                        REFERENCES "inventory_system" ("system_id"),
+                    "credentials_id" INTEGER NOT NULL
+                        REFERENCES "TargetCredentials" ("targetCredentialsId")
+                )""" % db.keywords)
+            db.tables['inventory_system_target_credentials'] = []
+            changed = db.createIndex(
+                'inventory_system_target_credentials_system_id_credentials_uq',
+                'system_id', 'credentials_id', unique=True)
+            changed = True
 
         createTable(db, """
             CREATE TABLE pki_certificates (

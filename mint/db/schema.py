@@ -1348,6 +1348,19 @@ def _createInventorySchema(db, cfg):
                 UNIQUE ("system_id", "trove_id")
             )"""  % db.keywords)
 
+    if 'inventory_system_target_credentials' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_target_credentials" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_system" ("system_id"),
+                "credentials_id" INTEGER NOT NULL
+                    REFERENCES TargetCredentials (targetCredentialsId),
+                UNIQUE ("system_id", "credentials_id")
+            )""" % db.keywords)
+        db.tables['inventory_system_target_credentials'] = []
+        changed = True
+
     return changed
 
 def _addSystemStates(db, cfg):
@@ -1546,22 +1559,7 @@ def _createJobsSchema(db):
         db.tables['job_target'] = []
         changed = True
 
-    # <murf> removed since inventory_managed_system table no longer exists.
-    # do we need to fix this? 
-    #if 'job_managed_system' not in db.tables:
-    #    cu.execute("""
-    #        CREATE TABLE job_managed_system
-    #        (
-    #            job_id      INTEGER NOT NULL
-    #                REFERENCES jobs ON DELETE CASCADE,
-    #            managed_system_id  INTEGER NOT NULL
-    #                REFERENCES inventory_managed_system ON DELETE CASCADE
-    #        ) %(TABLEOPTS)s""" % db.keywords)
-    #    db.tables['job_managed_system'] = []
-    #    changed = True
-
     return changed
-
 
 def _createPKI(db):
     """Public key infrastructure tables"""
