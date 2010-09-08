@@ -1314,7 +1314,9 @@ def _createInventorySchema(db, cfg):
             CREATE TABLE "inventory_trove_available_updates" (
                 "id" %(PRIMARYKEY)s,
                 "trove_id" INTEGER NOT NULL,
-                "version_id" INTEGER NOT NULL,
+                "version_id" INTEGER NOT NULL
+                    REFERENCES "inventory_version" ("version_id")
+                    ON DELETE CASCADE,
                 UNIQUE ("trove_id", "version_id")
             )""" % db.keywords)
         db.tables['inventory_trove_available_updates'] = []
@@ -1326,7 +1328,8 @@ def _createInventorySchema(db, cfg):
                 "trove_id" %(PRIMARYKEY)s,
                 "name" TEXT NOT NULL,
                 "version_id" INTEGER NOT NULL
-                    REFERENCES "inventory_version" ("version_id"),
+                    REFERENCES "inventory_version" ("version_id")
+                    ON DELETE CASCADE,
                 "flavor" text NOT NULL,
                 "is_top_level" BOOL NOT NULL,
                 "last_available_update_refresh" timestamp with time zone,
