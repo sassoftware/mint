@@ -65,7 +65,6 @@ class SetMintAdminMiddleware(object):
     Set a flag on the request indicating whether or not the user is an admin
     """
     def process_request(self, request):
-        request._is_admin = False
         request._is_admin = auth.isAdmin(request._authUser)
         return None
     
@@ -74,7 +73,6 @@ class SetMintAuthenticatedMiddleware(object):
     Set a flag on the request indicating whether or not the user is authenticated
     """
     def process_request(self, request):
-        request._is_authenticated = False
         request._is_authenticated = auth.isAuthenticated(request._authUser)
         return None
        
