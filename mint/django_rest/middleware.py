@@ -49,16 +49,33 @@ class SetMethodRequestMiddleware(object):
                 return response
 
         return None
+    
+class SetMintAuthMiddleware(object):
+    """
+    Set the authentication information on the request
+    """
+    def process_request(self, request):
+        request._auth = auth.getAuth(request)
+        username, password = request._auth
+        request._authUser = authenticate(username = username, password = password)
+        return None
 
 class SetMintAdminMiddleware(object):
-
+    """
+    Set a flag on the request indicating whether or not the user is an admin
+    """
     def process_request(self, request):
-         # Mark the request as from an admin
-        request._is_admin = False        
-        username, password = auth.getAuth(request)
-        if username:
-            user = authenticate(username = username, password = password)
-            request._is_admin = auth.isAdmin(user)
+        request._is_admin = False
+        request._is_admin = auth.isAdmin(request._authUser)
+        return None
+    
+class SetMintAuthenticatedMiddleware(object):
+    """
+    Set a flag on the request indicating whether or not the user is authenticated
+    """
+    def process_request(self, request):
+        request._is_authenticated = False
+        request._is_authenticated = auth.isAuthenticated(request._authUser)
         return None
        
 class SetMintConfigMiddleware(object):

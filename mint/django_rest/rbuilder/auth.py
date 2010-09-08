@@ -62,6 +62,11 @@ def isAdmin(user):
          if admingroup in groups:
              return True
      return False
+ 
+def isAuthenticated(user):
+     if user is not None and isinstance(user, Users):
+         return True
+     return False
 
 class rBuilderBackend:
 
