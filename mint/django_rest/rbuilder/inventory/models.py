@@ -186,12 +186,14 @@ class SystemState(modellib.XObjIdModel):
     description = models.CharField(max_length=8092)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 
+    load_fields = [ name ]
+
 class System(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system'
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
-    _xobj_hidden_accessors = set(['systemjob_set'])
+    _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials', ])
     _xobj_hidden_m2m = set(['system_jobs'])
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
@@ -209,8 +211,10 @@ class System(modellib.XObjIdModel):
     # physical target, we may not.
     launch_date = modellib.DateTimeUtcField(null=True)
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
-    target_system_id = models.CharField(max_length=255, null=True)
-    reservation_id = models.CharField(max_length=255, null=True)
+    target_system_id = modellib.APIReadOnlyCharField(max_length=255, null=True)
+    target_system_name = modellib.APIReadOnlyCharField(max_length=255, null=True)
+    target_system_description = modellib.APIReadOnlyCharField(max_length=255, null=True)
+    target_system_state = modellib.APIReadOnlyCharField(max_length=64, null=True)
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)
     os_minor_version = models.CharField(max_length=32, null=True)
@@ -288,6 +292,16 @@ class ManagementNode(System):
     def save(self, *args, **kw):
         self.management_node = True
         System.save(self, *args, **kw)
+
+class SystemTargetCredentials(modellib.XObjModel):
+    class Meta:
+        db_table = 'inventory_system_target_credentials'
+        unique_together = [ ('system', 'credentials') ]
+
+    system = models.ForeignKey(System, null=False,
+        related_name = 'target_credentials')
+    credentials = models.ForeignKey(rbuildermodels.TargetCredentials,
+        null=False, related_name = 'systems')
 
 class InstalledSoftware(modellib.XObjModel):
     class Meta:

@@ -156,9 +156,13 @@ class TargetConversion(object):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
         data = mintdata.marshalTargetUserCredentials(credentials)
+        cu.execute("""INSERT INTO TargetCredentials (credentials) VALUES (?)""",
+            data)
+        targetCredentialsId = cu.lastid()
         cu.execute("""
-            INSERT INTO TargetUserCredentials (targetId, userId, credentials)
-            VALUES (?, ?, ?)""", targetId, userId, data)
+            INSERT INTO TargetUserCredentials
+                (targetId, userId, targetCredentialsId)
+            VALUES (?, ?, ?)""", targetId, userId, targetCredentialsId)
 
     def _addTarget(self, targetType, targetName):
         cu = self.db.cursor()

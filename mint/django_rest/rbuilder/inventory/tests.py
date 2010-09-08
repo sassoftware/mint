@@ -108,6 +108,10 @@ class XML(object):
         return (node1.text, node2.text)
 
 class XMLTestCase(TestCase):
+    def failUnlessIn(self, needle, haystack):
+        self.failUnless(needle in haystack, "%s not in %s" % (needle,
+            haystack))
+
     def assertXMLEquals(self, first, second, ignoreNodes=None):
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
@@ -982,10 +986,10 @@ class SystemStateTestCase(XMLTestCase):
         REGISTERED = models.SystemState.REGISTERED
         RESPONSIVE = models.SystemState.RESPONSIVE
         NONRESPONSIVE = models.SystemState.NONRESPONSIVE
-        # TODO NONRESPONSIVE_NET = models.SystemState.NONRESPONSIVE_NET
-        # TODO NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
+        NONRESPONSIVE_NET = models.SystemState.NONRESPONSIVE_NET
+        NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
         NONRESPONSIVE_SHUTDOWN = models.SystemState.NONRESPONSIVE_SHUTDOWN
-        # TODO NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
+        NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
         DEAD = models.SystemState.DEAD
         MOTHBALLED = models.SystemState.MOTHBALLED
 
@@ -993,7 +997,10 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateCompleted, UNMANAGED, None),
             (job1, stateCompleted, REGISTERED, None),
             (job1, stateCompleted, RESPONSIVE, None),
+            (job1, stateCompleted, NONRESPONSIVE_HOST, None),
+            (job1, stateCompleted, NONRESPONSIVE_NET, None),
             (job1, stateCompleted, NONRESPONSIVE_SHUTDOWN, None),
+            (job1, stateCompleted, NONRESPONSIVE_SUSPENDED, None),
             (job1, stateCompleted, NONRESPONSIVE, None),
             (job1, stateCompleted, DEAD, None),
             (job1, stateCompleted, MOTHBALLED, None),
@@ -1001,7 +1008,10 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateFailed, UNMANAGED, None),
             (job1, stateFailed, REGISTERED, None),
             (job1, stateFailed, RESPONSIVE, None),
+            (job1, stateFailed, NONRESPONSIVE_HOST, None),
+            (job1, stateFailed, NONRESPONSIVE_NET, None),
             (job1, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
+            (job1, stateFailed, NONRESPONSIVE_SUSPENDED, None),
             (job1, stateFailed, NONRESPONSIVE, None),
             (job1, stateFailed, DEAD, None),
             (job1, stateFailed, MOTHBALLED, None),
@@ -1009,7 +1019,10 @@ class SystemStateTestCase(XMLTestCase):
             (job2, stateCompleted, UNMANAGED, RESPONSIVE),
             (job2, stateCompleted, REGISTERED, RESPONSIVE),
             (job2, stateCompleted, RESPONSIVE, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
             (job2, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
+            (job2, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
             (job2, stateCompleted, NONRESPONSIVE, RESPONSIVE),
             (job2, stateCompleted, DEAD, RESPONSIVE),
             (job2, stateCompleted, MOTHBALLED, RESPONSIVE),
@@ -1017,7 +1030,10 @@ class SystemStateTestCase(XMLTestCase):
             (job2, stateFailed, UNMANAGED, None),
             (job2, stateFailed, REGISTERED, NONRESPONSIVE),
             (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job2, stateFailed, NONRESPONSIVE_HOST, None),
+            (job2, stateFailed, NONRESPONSIVE_NET, None),
             (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
+            (job2, stateFailed, NONRESPONSIVE_SUSPENDED, None),
             (job2, stateFailed, NONRESPONSIVE, None),
             (job2, stateFailed, DEAD, None),
             (job2, stateFailed, MOTHBALLED, None),
@@ -1025,7 +1041,10 @@ class SystemStateTestCase(XMLTestCase):
             (job3, stateCompleted, UNMANAGED, RESPONSIVE),
             (job3, stateCompleted, REGISTERED, RESPONSIVE),
             (job3, stateCompleted, RESPONSIVE, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
             (job3, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
+            (job3, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
             (job3, stateCompleted, NONRESPONSIVE, RESPONSIVE),
             (job3, stateCompleted, DEAD, RESPONSIVE),
             (job3, stateCompleted, MOTHBALLED, RESPONSIVE),
@@ -1033,7 +1052,10 @@ class SystemStateTestCase(XMLTestCase):
             (job3, stateFailed, UNMANAGED, None),
             (job3, stateFailed, REGISTERED, NONRESPONSIVE),
             (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job3, stateFailed, NONRESPONSIVE_HOST, None),
+            (job3, stateFailed, NONRESPONSIVE_NET, None),
             (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
+            (job3, stateFailed, NONRESPONSIVE_SUSPENDED, None),
             (job3, stateFailed, NONRESPONSIVE, None),
             (job3, stateFailed, DEAD, None),
             (job3, stateFailed, MOTHBALLED, None),
@@ -1250,7 +1272,10 @@ class SystemVersionsTestCase(XMLTestCase):
         response = self.client.put(url,
             data=data,
             content_type="application/xml")
+        self.failUnlessEqual(response.status_code, 200)
 
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system.name, "testsystemname")
 
 class EventTypeTestCase(XMLTestCase):
 
@@ -1771,3 +1796,192 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.failUnlessEqual(
             [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
             [ 'really-unique-id' ])
+
+class TargetSystemImportTest(XMLTestCase):
+    fixtures = ['users', 'targets']
+
+    class Driver(object):
+        def __init__(self, cloudType, cloudName, userId, instances):
+            self.cloudType = cloudType
+            self.cloudName = cloudName
+            self.instances = instances
+            self.userId = userId
+
+        def getAllInstances(self):
+            return self.instances
+
+    class TargetInstance(object):
+        class _X(object):
+            def __init__(self, data):
+                self.data = data
+            def getText(self):
+                return self.data
+
+        def __init__(self, instanceId, instanceName, instanceDescription,
+                     dnsName, state):
+            self.instanceId = self._X(instanceId)
+            self.instanceName = self._X(instanceName)
+            self.instanceDescription = self._X(instanceDescription)
+            self.state = self._X(state)
+            self.dnsName = self._X(dnsName)
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+
+        TI = self.TargetInstance
+
+        self.vsphere1_001 = TI('vsphere1-001', 'Instance 1', 'Instance desc 1',
+                    'dnsName1-001', 'running', )
+        self.vsphere1_003 = TI('vsphere1-003', 'Instance 3', 'Instance desc 3',
+                    'dnsName1-003', 'shutdown', )
+        self.vsphere1_004 = TI('vsphere1-004', 'Instance 4', 'Instance desc 4',
+                    'dnsName1-004', 'suspended', )
+
+        self.vsphere2_001 = TI('vsphere2-001', 'Instance 1', 'Instance desc 1',
+                    'dnsName2-001', 'running', )
+        self.vsphere2_003 = TI('vsphere2-003', 'Instance 3', 'Instance desc 3',
+                    'dnsName2-003', 'shutdown', )
+        self.vsphere2_004 = TI('vsphere2-004', 'Instance 4', 'Instance desc 4',
+                    'dnsName2-004', 'suspended', )
+
+        self.ec2_001 = TI('ec2aws-001', 'Instance 1', 'Instance desc 1',
+                    'dnsName1-001', 'running', )
+        self.ec2_003 = TI('ec2aws-003', 'Instance 3', 'Instance desc 3',
+                    'dnsName1-003', 'shutdown', )
+        self.ec2_004 = TI('ec2aws-004', 'Instance 4', 'Instance desc 4',
+                    'dnsName1-004', 'suspended', )
+
+        self._targets = [
+            ('vmware', 'vsphere1.eng.rpath.com', 'JeanValjean1', [
+                self.vsphere1_001,
+                self.vsphere1_003,
+                self.vsphere1_004,
+            ]),
+            ('vmware', 'vsphere2.eng.rpath.com', 'JeanValjean2', [
+                self.vsphere2_001,
+                self.vsphere2_003,
+            ]),
+            ('vmware', 'vsphere2.eng.rpath.com', 'JeanValjean3', [
+                self.vsphere2_001,
+                self.vsphere2_004,
+            ]),
+            ('ec2', 'aws', 'JeanValjean1', [
+                self.ec2_001,
+                self.ec2_003,
+                self.ec2_004,
+            ]),
+        ]
+
+        self.drivers = []
+
+        for (targetType, targetName, userName, systems) in self._targets:
+            self.drivers.append(self.Driver(targetType, targetName, userName,
+                systems))
+        # Set the db version
+        from mint.db import schema
+        v = rbuildermodels.DatabaseVersion(
+            version=schema.RBUILDER_DB_VERSION.major,
+            minor=schema.RBUILDER_DB_VERSION.minor)
+        v.save()
+
+        # Create some dummy systems
+        self.tgt1 = rbuildermodels.Targets.objects.get(pk=1) # vsphere1
+        self.tgt2 = rbuildermodels.Targets.objects.get(pk=2) # vsphere2
+        self.tgt3 = rbuildermodels.Targets.objects.get(pk=3) # ec2
+        c1 = rbuildermodels.TargetCredentials.objects.get(pk=1)
+        c2 = rbuildermodels.TargetCredentials.objects.get(pk=2)
+        c3 = rbuildermodels.TargetCredentials.objects.get(pk=3)
+        systems = [
+            ('vsphere1-001', 'vsphere1 001', self.tgt1, [c2]),
+            ('vsphere1-002', 'vsphere1 002', self.tgt1, [c1, c2]),
+
+            ('vsphere2-001', 'vsphere1 001', self.tgt2, [c1]),
+            ('vsphere2-002', 'vsphere1 002', self.tgt2, [c3]),
+            ('vsphere2-003', 'vsphere1 003', self.tgt2, []),
+
+            ('ec2aws-001', 'ec2aws 001', self.tgt3, [c1]),
+            ('ec2aws-002', 'ec2aws 002', self.tgt3, [c3]),
+        ]
+        for (systemId, systemName, target, credList) in systems:
+            sy = models.System(name=systemName, target_system_id=systemId,
+                target=target)
+            sy.save()
+            nw = models.Network(system=sy, dns_name=systemId)
+            nw.save()
+            for cred in credList:
+                stc = models.SystemTargetCredentials(system=sy, credentials=cred)
+                stc.save()
+        # Modify the network for one of the systems to look real
+        sy = models.System.objects.get(target_system_id='vsphere1-001')
+        nw = sy.networks.all()[0]
+        nw.dns_name = 'dnsName1-001'
+        nw.save()
+
+    def testImportTargetSystems(self):
+        self.mgr.sysMgr.importTargetSystems(self.drivers)
+        # Make sure these systems have lost their target
+        self.failUnlessEqual(models.System.objects.get(
+            target_system_id='vsphere1-002').target, None)
+        self.failUnlessEqual(models.System.objects.get(
+            target_system_id='ec2aws-002').target, None)
+
+        for (targetType, targetName, userName, tsystems) in self._targets:
+            tgt = rbuildermodels.Targets.objects.get(targettype=targetType,
+                targetname=targetName)
+            for tsystem in tsystems:
+                # Make sure we linked this system to the target
+                system = models.System.objects.get(target=tgt,
+                    target_system_id=tsystem.instanceId.getText())
+                # Make sure we linked it to the user too
+                cred_ids = set(x.credentials_id
+                    for x in system.target_credentials.all())
+                try:
+                    tuc = rbuildermodels.TargetUserCredentials.objects.get(
+                        targetid=tgt, userid__username = userName)
+                except rbuildermodels.TargetUserCredentials.DoesNotExist:
+                    self.fail("System %s not linked to user %s" % (
+                        system.target_system_id, userName))
+                self.failUnlessIn(
+                    tuc.targetcredentialsid.targetcredentialsid,
+                    cred_ids)
+                self.failUnlessEqual([
+                    x.dns_name for x in system.networks.all() ],
+                    [ tsystem.dnsName.getText() ])
+
+        # Make sure we can re-run
+        self.mgr.sysMgr.importTargetSystems(self.drivers)
+
+        # Use the API, make sure the fields come out right
+        system = models.System.objects.get(target_system_id='vsphere1-001')
+        # Fetch XML
+        response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        xobjmodel = obj.system
+        self.failUnlessEqual(xobjmodel.name, 'vsphere1 001')
+        self.failUnlessEqual(xobjmodel.targetSystemId, 'vsphere1-001')
+        self.failUnlessEqual(xobjmodel.targetSystemName, 'Instance 1')
+        self.failUnlessEqual(xobjmodel.targetSystemDescription,
+            'Instance desc 1')
+        self.failUnlessEqual(xobjmodel.targetSystemState, 'running')
+        self.failUnlessEqual(xobjmodel.networks.network.dnsName, 'dnsName1-001')
+
+        # Check system log entries
+        system = models.System.objects.get(target_system_id='vsphere2-003')
+        entries = self.mgr.getSystemLogEntries(system)
+        self.failUnlessEqual(
+            [ x.entry for x in entries ],
+            [
+                'vsphere2.eng.rpath.com (vmware): using dnsName2-003 as primary contact address',
+                'vsphere2.eng.rpath.com (vmware): removing stale network information vsphere2-003 (ip unset)',
+            ])
+
+        system = models.System.objects.get(target_system_id='vsphere1-004')
+        entries = self.mgr.getSystemLogEntries(system)
+        self.failUnlessEqual(
+            [ x.entry for x in entries[1:] ],
+            [
+                'vsphere1.eng.rpath.com (vmware): using dnsName1-004 as primary contact address',
+                'System added as part of target vsphere1.eng.rpath.com (vmware)',
+            ])
+        self.failUnless(entries[0].entry.startswith("Event type 'system registration' registered and will be enabled on "))

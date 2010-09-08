@@ -1357,6 +1357,20 @@ class MigrateTo_50(SchemaMigration):
                     UNIQUE ("system_id", "trove_id")
                 )"""  % db.keywords)
 
+        if 'inventory_system_target_credentials' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_target_credentials" (
+                    "id" %(PRIMARYKEY)s,
+                    "system_id" INTEGER NOT NULL
+                        REFERENCES "inventory_system" ("system_id"),
+                    "credentials_id" INTEGER NOT NULL
+                        REFERENCES "TargetCredentials" ("targetCredentialsId")
+                )""" % db.keywords)
+            db.tables['inventory_system_target_credentials'] = []
+            changed = db.createIndex(
+                'inventory_system_target_credentials_system_id_credentials_uq',
+                'system_id', 'credentials_id', unique=True)
+            changed = True
 
         createTable(db, """
             CREATE TABLE pki_certificates (
@@ -1373,6 +1387,42 @@ class MigrateTo_50(SchemaMigration):
                 time_expired            timestamptz NOT NULL,
                 UNIQUE ( fingerprint, ca_serial_index )
             )""")
+
+        changed |= createTable(db, 'TargetCredentials', """
+                CREATE TABLE TargetCredentials (
+                    targetCredentialsId     %(PRIMARYKEY)s,
+                    credentials             text NOT NULL UNIQUE
+                ) %(TABLEOPTS)s""")
+
+        self._migrateTargetUserCredentials(cu)
+        return True
+
+    def _migrateTargetUserCredentials(self, cu):
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ADD COLUMN targetCredentialsId  INTEGER
+                    REFERENCES TargetCredentials
+                        ON DELETE CASCADE
+        """)
+        cu.execute("""
+            INSERT INTO TargetCredentials (credentials)
+                SELECT DISTINCT credentials FROM TargetUserCredentials
+        """)
+        cu.execute("""
+            UPDATE TargetUserCredentials AS a
+            SET targetCredentialsId = (
+                SELECT targetCredentialsId
+                  FROM TargetUserCredentials
+                 WHERE credentials = a.credentials)
+        """)
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ALTER COLUMN targetCredentialsId SET NOT NULL
+        """)
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                DROP COLUMN credentials
+        """)
 
         return True
 

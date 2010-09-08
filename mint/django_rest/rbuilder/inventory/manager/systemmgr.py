@@ -13,7 +13,6 @@ import time
 import traceback
 
 from dateutil import tz
-
 from django.db import connection
 
 from conary import versions as cnyver
@@ -271,14 +270,16 @@ class SystemManager(base.BaseManager):
         # Some other job state, do nothing
         return None
 
+    def lookupTarget(self, targetType, targetName):
+        return rbuildermodels.Targets.objects.get(
+            targettype=targetType, targetname=targetName)
+
     def launchSystem(self, system):
         managedSystem = models.managed_system.factoryParser(system)
         managedSystem.launching_user = self.user
         managedSystem.launch_date = int(time.time())
         managedSystem.save()
-        target = rbuildermodels.Targets.objects.get(
-                    targettype=system.target_type,
-                    targetname=system.target_name)
+        target = self.lookupTarget(system.target_type, system.target_name)
         systemTarget = models.system_target(managed_system=managedSystem,
             target=target, target_system_id=system.target_system_id)
         systemTarget.save()
@@ -318,6 +319,12 @@ class SystemManager(base.BaseManager):
             return systemLog[0]
         else:
             models.SystemLog()
+
+    @base.exposed
+    def getSystemLogEntries(self, system):
+        systemLog = self.getSystemLog(system)
+        logEntries = systemLog.system_log_entries.order_by('-entry_date')
+        return logEntries
 
     @base.exposed
     def getSystemEvent(self, event_id):
@@ -585,51 +592,233 @@ class SystemManager(base.BaseManager):
                     break
                 
         return hasInfo
-        
+
     def importTargetSystems(self, targetDrivers):
         if not targetDrivers:
             log.info("No targets found, nothing to import")
             return
-        
+
+        targetsData = self.collectTargetsData(targetDrivers)
+        inventoryData = self.collectInventoryTargetsData()
+        todelete, toupdate = targetsData.deltaSystems(inventoryData)
+        self._disassociateFromTargets(todelete)
+        self._addSystemsToTargets(toupdate)
+
+    def _disassociateFromTargets(self, objList):
+        for (targetType, targetName), systemMap in objList:
+            target = self.lookupTarget(targetType, targetName)
+            for targetSystemId in systemMap:
+                system = models.System.objects.get(target=target,
+                    target_system_id=targetSystemId)
+                self.log_system(system, "Disassociating from target %s (%s)"
+                    % (targetName, targetType))
+                system.target = None
+                system.save()
+                models.SystemTargetCredentials.objects.filter(system=system).delete()
+
+    def _addSystemsToTargets(self, objList):
+        for (targetType, targetName), systemMap in objList:
+            target = self.lookupTarget(targetType, targetName)
+
+            log.info("Importing %d systems from target %s (%s)" % (
+                len(systemMap), targetName, targetType))
+            for targetSystemId, tSystem in systemMap.items():
+                self._addSystemToTarget(target, targetSystemId, tSystem)
+
+    def _addSystemToTarget(self, target, targetSystemId, targetSystem):
+        system, created = models.System.objects.get_or_create(target=target,
+            target_system_id=targetSystemId)
+        if created:
+            self.log_system(system, "System added as part of target %s (%s)" %
+                (target.targetname, target.targettype))
+        system.target_system_name = targetSystem.instanceName
+        system.target_system_description = targetSystem.instanceDescription
+        self._addTargetSystemNetwork(system, target, targetSystem)
+        system.target_system_state = targetSystem.state
+        system.save()
+        self._setSystemTargetCredentials(system, target,
+            targetSystem.userNames)
+        if created:
+            self.scheduleSystemRegistrationEvent(system)
+
+    def _addTargetSystemNetwork(self, system, target, tsystem):
+        dnsName = tsystem.dnsName
+        if dnsName is None:
+            return
+        nws = system.networks.all()
+        for nw in nws:
+            if dnsName in [ nw.dns_name, nw.ip_address ]:
+                return
+        # Remove the other networks, they're probably stale
+        for nw in nws:
+            ipAddress = nw.ip_address and nw.ip_address or "ip unset"
+            self.log_system(system,
+                "%s (%s): removing stale network information %s (%s)" %
+                (target.targetname, target.targettype, nw.dns_name,
+                ipAddress))
+            nw.delete()
+        self.log_system(system, "%s (%s): using %s as primary contact address" %
+            (target.targetname, target.targettype, dnsName))
+        nw = models.Network(system=system, dns_name=dnsName)
+        nw.save()
+
+    def _setSystemTargetCredentials(self, system, target, userNames):
+        existingCredsMap = dict((x.credentials_id, x)
+            for x in system.target_credentials.all())
+        desiredCredsMap = dict()
+        for userName in userNames:
+            desiredCredsMap.update((x.targetcredentialsid.targetcredentialsid,
+                    x.targetcredentialsid)
+                for x in rbuildermodels.TargetUserCredentials.objects.filter(
+                    targetid=target, userid__username=userName))
+        existingCredsSet = set(existingCredsMap)
+        desiredCredsSet = set(desiredCredsMap)
+
+        for credId in existingCredsSet - desiredCredsSet:
+            existingCredsMap[credId].delete()
+        for credId in desiredCredsSet - existingCredsSet:
+            stc = models.SystemTargetCredentials(system=system,
+                credentials=desiredCredsMap[credId])
+            stc.save()
+
+    def collectInventoryTargetsData(self):
+        targetsData = self.TargetsData()
+        systems = models.System.objects.filter(target__isnull = False)
+        for system in systems:
+            target = system.target
+            # Grab credentials used when importing this system
+            credentials = system.target_credentials.all()
+            userNames = []
+            for cred in credentials:
+                tucs = rbuildermodels.TargetUserCredentials.objects.filter(
+                    targetid=target, targetcredentialsid=cred)
+                userNames.extend(x.userid.username for x in tucs)
+            if not userNames:
+                userNames = [ None ]
+            for userName in userNames:
+                # We don't care about dnsName and system, they're not used for
+                # determining uniqueness
+                targetsData.addSystem(target.targettype, target.targetname,
+                    userName, system.target_system_id,
+                    system.target_system_name,
+                    system.target_system_description, None, None)
+        return targetsData
+
+    class TargetsData(object):
+        "Handy class to collect information about systems from all targets"
+        class System(object):
+            def __init__(self, instanceName, instanceDescription, dnsName,
+                    state):
+                self.userNames = []
+                self.instanceName = instanceName
+                self.instanceDescription = instanceDescription
+                self.state = state
+                self.dnsName = dnsName
+            def addUser(self, userName):
+                self.userNames.append(userName)
+            def __repr__(self):
+                return "<System instance; instanceName='%s'>" % (
+                    self.instanceName, )
+
+        def __init__(self):
+            self._systemsMap = {}
+
+        def addSystem(self, targetType, targetName, userName, instanceId,
+                instanceName, instanceDescription, dnsName, state):
+            # We key by (targetType, targetName). The value is another
+            # dictionary keyed on instanceId (since within a single target,
+            # the instance id is unique). The same system may be available to
+            # multiple users.
+            targetSystems = self._systemsMap.setdefault((targetType, targetName),
+                {})
+            system = targetSystems.setdefault(instanceId, self.System(
+                instanceName, instanceDescription, dnsName, state))
+            # weak attempt to enforce uniqueness of instanceId
+            if (system.instanceName != instanceName or
+                    system.instanceDescription != instanceDescription):
+                raise Exception("Same instanceId for different systems: "
+                    "Target type: %s; target name: %s; instanceId: %s; "
+                    "names: (%s, %s); descriptions:  (%s, %s)" %
+                    (targetType, targetName, instanceId,
+                    instanceName, system.instanceName,
+                    instanceDescription, system.instanceDescription))
+            if userName is not None:
+                system.addUser(userName)
+
+        def iterSystems(self):
+            """
+            Returns list of:
+                (targetName, targetType), { instanceId : System, ... })
+            """
+            return self._systemsMap.iteritems()
+
+        def deltaSystems(self, other):
+            if not isinstance(other, self.__class__):
+                return [], []
+            todelete = []
+            toupdate = []
+            # Grab targets we don't know about
+            selfTargets = set(self._systemsMap)
+            otherTargets = set(other._systemsMap)
+
+            todeleteSet = otherTargets - selfTargets
+            toaddSet = selfTargets - otherTargets
+            toupdateSet = selfTargets.intersection(otherTargets)
+            todelete = [ (x, other._systemsMap[x]) for x in todeleteSet ]
+
+            # Unconditionally add the new targets
+            toupdate = [ (x, self._systemsMap[x]) for x in toaddSet ]
+            # We still have to delete systems that disappeared, so go through
+            # the update list
+            for k in toupdateSet:
+                todel, toup = self._deltaTargetSystems(
+                    self._systemsMap[k],
+                    other._systemsMap[k])
+                if todel:
+                    todelete.append((k, todel))
+                if toup:
+                    toupdate.append((k, toup))
+
+            return todelete, toupdate
+
+        def _deltaTargetSystems(self, selfSystems, otherSystems):
+            selfSet = set(selfSystems)
+            otherSet = set(otherSystems)
+            todeleteSet = otherSet - selfSet
+            toupdateSet = selfSet - todeleteSet
+            # These are systems we need to delete
+            todelMap = dict((x, otherSystems[x]) for x in todeleteSet)
+            toupMap = dict((x, selfSystems[x]) for x in toupdateSet)
+
+            return todelMap, toupMap
+
+    def collectTargetsData(self, targetDrivers):
+        targetsData = self.TargetsData()
         for driver in targetDrivers:
             try:
-                self.importTargetSystem(driver)
+                self.collectOneTargetData(driver, targetsData)
             except Exception, e:
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
                 log.error("Failed importing systems from target %s: %s" % (driver.cloudType, e))
-        
-    def importTargetSystem(self, driver):
-        log.info("Processing target %s (%s) as user %s" % (driver.cloudName, 
-            driver.cloudType, driver.userId))
-        systems = driver.getAllInstances()
-        systemsAdded = 0
-        if systems:
-            log.info("Importing %d systems from target %s (%s) as user %s" % (len(systems), 
-                driver.cloudName, driver.cloudType, driver.userId))
-            target = rbuildermodels.Targets.objects.filter(targetname=driver.cloudName).get()
-            for sys in systems:
-                db_system = models.System(name=sys.instanceName.getText(),
-                    description=sys.instanceDescription.getText(), target=target)
-                db_system.name = sys.instanceName.getText()
-                db_system.description = sys.instanceDescription.getText()
-                db_system.target_system_id = sys.instanceId.getText()
-                dnsName = sys.dnsName and sys.dnsName.getText() or None
-                
-                state = sys.state and sys.state.getText() or "unknown"
-                systemsAdded = systemsAdded +1
-                log.info("Adding system %s (%s, state %s)" % (db_system.name, dnsName and dnsName or "no host info", state))
-                db_system.save()
-                if dnsName:
-                    network = models.Network(system=db_system, dns_name=dnsName, active=True)
-                    network.save()
-                else:
-                    log.info("No public dns information found for system %s (state %s)" % (db_system.name, state))
-                
-                # now add it
-                self.addSystem(db_system)
-            log.info("Added %d systems from target %s (%s) as user %s" % (systemsAdded, 
-                driver.cloudName, driver.cloudType, driver.userId))
+        return targetsData
+
+    def collectOneTargetData(self, driver, targetsData):
+        log.info("Enumerating systems for target %s (%s) as user %s" %
+            (driver.cloudName, driver.cloudType, driver.userId))
+        targetType = driver.cloudType
+        targetName = driver.cloudName
+        userName = driver.userId
+        tsystems = driver.getAllInstances()
+        for tsys in tsystems:
+            instanceId = tsys.instanceId.getText()
+            instanceName = tsys.instanceName.getText()
+            instanceDescription = tsys.instanceDescription.getText()
+            dnsName = (tsys.dnsName and tsys.dnsName.getText()) or None
+            state = (tsys.state and tsys.state.getText()) or "unknown"
+            targetsData.addSystem(targetType, targetName, userName,
+                instanceId, instanceName, instanceDescription, dnsName,
+                state)
 
     @base.exposed
     def getSystemsLog(self):

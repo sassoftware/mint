@@ -744,18 +744,22 @@ def _createTargets(db):
         db.tables['TargetData'] = []
         changed = True
 
-    if 'TargetUserCredentials' not in db.tables:
-        cu.execute("""
+    changed |= createTable(db, 'TargetCredentials', """
+            CREATE TABLE TargetCredentials (
+                targetCredentialsId     %(PRIMARYKEY)s,
+                credentials             text NOT NULL UNIQUE
+            ) %(TABLEOPTS)s""")
+
+    changed |= createTable(db, 'TargetUserCredentials', """
             CREATE TABLE TargetUserCredentials (
                 targetId        integer             NOT NULL
                     REFERENCES Targets ON DELETE CASCADE,
                 userId          integer             NOT NULL
                     REFERENCES Users ON DELETE CASCADE,
-                credentials     text,
+                targetCredentialsId integer         NOT NULL
+                    REFERENCES TargetCredentials ON DELETE CASCADE,
                 PRIMARY KEY ( targetId, userId )
-            ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['TargetUserCredentials'] = []
-        changed = True
+            ) %(TABLEOPTS)s""")
 
     return changed
 
@@ -1094,7 +1098,9 @@ def _createInventorySchema(db, cfg):
                 "launch_date" timestamp with time zone,
                 "target_id" integer REFERENCES "targets" ("targetid"),
                 "target_system_id" varchar(255),
-                "reservation_id" varchar(255),
+                "target_system_name" varchar(255),
+                "target_system_description" varchar(255),
+                "target_system_state" varchar(64),
                 "os_type" varchar(64),
                 "os_major_version" varchar(32),
                 "os_minor_version" varchar(32),
@@ -1342,6 +1348,19 @@ def _createInventorySchema(db, cfg):
                 UNIQUE ("system_id", "trove_id")
             )"""  % db.keywords)
 
+    if 'inventory_system_target_credentials' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_target_credentials" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_system" ("system_id"),
+                "credentials_id" INTEGER NOT NULL
+                    REFERENCES TargetCredentials (targetCredentialsId),
+                UNIQUE ("system_id", "credentials_id")
+            )""" % db.keywords)
+        db.tables['inventory_system_target_credentials'] = []
+        changed = True
+
     return changed
 
 def _addSystemStates(db, cfg):
@@ -1540,22 +1559,7 @@ def _createJobsSchema(db):
         db.tables['job_target'] = []
         changed = True
 
-    # <murf> removed since inventory_managed_system table no longer exists.
-    # do we need to fix this? 
-    #if 'job_managed_system' not in db.tables:
-    #    cu.execute("""
-    #        CREATE TABLE job_managed_system
-    #        (
-    #            job_id      INTEGER NOT NULL
-    #                REFERENCES jobs ON DELETE CASCADE,
-    #            managed_system_id  INTEGER NOT NULL
-    #                REFERENCES inventory_managed_system ON DELETE CASCADE
-    #        ) %(TABLEOPTS)s""" % db.keywords)
-    #    db.tables['job_managed_system'] = []
-    #    changed = True
-
     return changed
-
 
 def _createPKI(db):
     """Public key infrastructure tables"""

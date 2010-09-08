@@ -131,6 +131,7 @@ class BaseManager(models.Manager):
         model, set the attribute's value on model.
         """
         fields = model.get_field_dict()
+        set_fields = []
 
         for key, val in obj.__dict__.items():
             field = fields.get(key, None)
@@ -173,7 +174,21 @@ class BaseManager(models.Manager):
             else:
                 val = None
 
+            set_fields.append(key)
             setattr(model, key, val)
+
+        # Preserves values that might already be in the db when we load an
+        # object.  We don't want the default values for fields being set on
+        # model.
+        for field in model._meta.fields:
+            try:
+                value = getattr(model, field.name, None)
+            except exceptions.ObjectDoesNotExist:
+                continue
+            if value is not None and field.name not in set_fields:
+                default_val = field.get_default()
+                if default_val == '' and not hasattr(obj, field.name):
+                    setattr(model, field.name, None)
 
         return model
 
@@ -422,10 +437,22 @@ class SystemManager(BaseManager):
         # Save the job so we know to update the system state
         system.lastJob = job
 
+    def add_accessors(self, model, accessors):
+        """
+        Overridden here, b/c we always clear out the existing networks before
+        setting new ones.
+        """
+        for key, val in accessors.items():
+            if key == 'networks':
+                model.networks.all().delete()
+            for v in val:
+                getattr(model, key).add(v)
+        return model
+
 class ManagementNodeManager(SystemManager):
     """
-    Overridden because management nodes have several checks required to determine 
-    if the system already exists.
+    Overridden because management nodes have several checks required to
+    determine if the system already exists.
     """
 
 class XObjModel(models.Model):
@@ -888,6 +915,9 @@ class DateTimeUtcField(models.DateTimeField):
             return python_value
 
 class XObjHiddenCharField(models.CharField, XObjHiddenMixIn):
+    pass
+
+class APIReadOnlyCharField(models.CharField, APIReadOnlyMixIn):
     pass
 
 class APIReadOnlyForeignKey(models.ForeignKey, APIReadOnlyMixIn):
