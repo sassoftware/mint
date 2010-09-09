@@ -731,15 +731,14 @@ class XObjModel(models.Model):
         for m2m_accessor in m2m_accessors:
             if m2m_accessor in hidden:
                 continue
+            m2model = m2m_accessors[m2m_accessor].model
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
-            if hasattr(m2m_accessors[m2m_accessor].model, '_xobj') and \
-               m2m_accessors[m2m_accessor].model._xobj.tag:
-                    var_name = m2m_accessors[m2m_accessor].model._xobj.tag
+            if hasattr(m2model, '_xobj') and m2model._xobj.tag:
+                    var_name = m2model._xobj.tag
             else:
-                var_name = \
-                    m2m_accessors[m2m_accessor].model._meta.verbose_name
+                var_name = m2model._meta.verbose_name
 
             # Simple object to create for our m2m_accessor
             m2m_accessor_model = type(m2m_accessor, (object,), {})()
