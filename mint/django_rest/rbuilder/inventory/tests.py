@@ -8,7 +8,7 @@ from xobj import xobj
 
 from conary import versions
 from django.test import TestCase
-from django.test.client import Client
+from django.test.client import Client, MULTIPART_CONTENT
 from mint.lib import x509
 
 from mint.django_rest.rbuilder import models as rbuildermodels
