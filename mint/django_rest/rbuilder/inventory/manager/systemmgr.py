@@ -152,6 +152,26 @@ class SystemManager(base.BaseManager):
         
         return managementNode
 
+    def _getProductVersionAndStage(self, nvf):
+        name, version, flavor = nvf
+        label = version.trailingLabel()
+        hostname = label.getHost().split('.')[0]
+        try:
+            product = self.db.getProduct(hostname)
+            prodVersions = self.db.listProductVersions(product.hostname)
+        except mint_rest_errors.ProductNotFound:
+            # Not a product that lives on this rba
+            return None, None
+
+        for version in prodVersions.versions:
+            stages = self.db.getProductVersionStages(product.hostname, version.name)
+            for stage in stages.stages:
+                if stage.label == label.asString():
+                    return version, stage
+
+        return None, None
+
+
     def log_system(self, system, log_msg):
         system_log = system.createLog()
         system_log_entry = models.SystemLogEntry(system_log=system_log,
