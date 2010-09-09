@@ -350,12 +350,20 @@ class TroveManager(BaseManager):
             return
         return BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
 
+    def add_fields(self, model, obj, request, save=True):
+        nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
+        if nmodel.flavor is None:
+            nmodel.flavor = ''
+        return nmodel
+
 class VersionManager(BaseManager):
     def add_fields(self, model, obj, request, save=True):
         # Fix up label and revision
         nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
         v = nmodel.conaryVersion
         nmodel.fromConaryVersion(v)
+        if nmodel.flavor is None:
+            nmodel.flavor = ''
         return nmodel
 
 class JobManager(BaseManager):
