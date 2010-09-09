@@ -13,11 +13,11 @@ inventory_xml = """\
 event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <eventType id="http://testserver/api/inventory/eventTypes/1/">
-  <systemEvents href="http://testserver/api/inventory/systemEventsByType/1/"/>
   <description>on-demand registration event</description><priority>110</priority>
   <jobSet/>
   <eventTypeId>1</eventTypeId>
   <name>system registration</name>
+  <systemEvents/>
 </eventType>"""
 
 event_types_xml="""\
@@ -25,27 +25,27 @@ event_types_xml="""\
 <eventTypes>
   <eventType id="http://testserver/api/inventory/eventTypes/1/">
     <name>system registration</name>
-    <systemEvents href="http://testserver/api/inventory/systemEventsByType/1/"/>
     <priority>110</priority>
     <jobSet/>
     <eventTypeId>1</eventTypeId>
     <description>on-demand registration event</description>
+    <systemEvents/>
   </eventType>
   <eventType id="http://testserver/api/inventory/eventTypes/2/">
     <name>immediate system poll</name>
-    <systemEvents href="http://testserver/api/inventory/systemEventsByType/2/"/>
     <priority>105</priority>
     <jobSet/>
     <eventTypeId>2</eventTypeId>
     <description>on-demand polling event</description>
+    <systemEvents/>
   </eventType>
   <eventType id="http://testserver/api/inventory/eventTypes/3/">
     <name>system poll</name>
-    <systemEvents href="http://testserver/api/inventory/systemEventsByType/3/"/>
     <priority>50</priority>
     <jobSet/>
     <eventTypeId>3</eventTypeId>
     <description>standard polling event</description>
+    <systemEvents/>
   </eventType>
   <eventType id="http://testserver/api/inventory/eventTypes/4/">
     <description>apply an update to a system</description>
@@ -53,7 +53,7 @@ event_types_xml="""\
     <jobSet/>
     <name>system apply update</name>
     <priority>50</priority>
-    <systemEvents href="http://testserver/api/inventory/systemEventsByType/4/"/>
+    <systemEvents/>
   </eventType>
   <eventType id="http://testserver/api/inventory/eventTypes/5/">
     <description>on-demand apply an update to a system</description>
@@ -61,7 +61,7 @@ event_types_xml="""\
     <jobSet/>
     <name>immediate system apply update</name>
     <priority>105</priority>
-    <systemEvents href="http://testserver/api/inventory/systemEventsByType/5/"/>
+    <systemEvents/>
   </eventType>
 </eventTypes>"""
 

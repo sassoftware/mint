@@ -293,6 +293,17 @@ class InventoryTestCase(XMLTestCase):
 
 class LogTestCase(XMLTestCase):
 
+    def testGetLogAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        response = self._get('/api/inventory/log/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/log/', username="testuser", 
+            password="password")
+        self.assertEquals(response.status_code, 200)
+
     def testGetLog(self):
         system = models.System(name="mgoblue",
             description="best appliance ever")
@@ -303,7 +314,8 @@ class LogTestCase(XMLTestCase):
         system = models.System(name="mgoblue3",
             description="best appliance ever3")
         self.mgr.addSystem(system)
-        response = self._get('/api/inventory/log/')
+        response = self._get('/api/inventory/log/', username="testuser", 
+            password="password")
         # Just remove lines with dates in them, it's easier to test for now.
         content = []
         for line in response.content.split('\n'):
@@ -320,14 +332,28 @@ class ZonesTestCase(XMLTestCase):
     def testGetZones(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._get('/api/inventory/zones/')
+        response = self._get('/api/inventory/zones/', 
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.zones_xml % (zone.created_date.isoformat()))
 
+    def testGetZoneAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        self._saveZone()
+        response = self._get('/api/inventory/zones/2/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/zones/2/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
     def testGetZone(self):
         zone = self._saveZone()
-        response = self._get('/api/inventory/zones/2/')
+        response = self._get('/api/inventory/zones/2/',
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.zone_xml % (zone.created_date.isoformat()))
@@ -344,11 +370,24 @@ class ZonesTestCase(XMLTestCase):
         new_zone = self.mgr.addZone(zone)
         assert(new_zone is not None)
         
+    def testPostZoneAuth(self):
+        """
+        Ensure we require admin to post zones
+        """
+        response = self._post('/api/inventory/zones/', 
+            data= testsxml.zone_post_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._post('/api/inventory/zones/', 
+            data=testsxml.zone_post_xml, content_type='text/xml',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
     def testPostZone(self):
         models.Zone.objects.all().delete()
         xml = testsxml.zone_post_xml
         response = self._post('/api/inventory/zones/', 
-            data=xml, content_type='text/xml')
+            data=xml, content_type='text/xml', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
@@ -394,16 +433,30 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id)
+        response = self._get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id,
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(),
                                              management_node.current_state.created_date.isoformat(),
                                              management_node.created_date.isoformat()))
 
-    def testGetManagementNode(self):
+    def testGetManagementNodeAuth(self):
+        """
+        Ensure quires auth but not admin
+        """
         management_node = self._saveManagementNode()
         response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
+    def testGetManagementNode(self):
+        management_node = self._saveManagementNode()
+        response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id,
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(),
@@ -434,12 +487,32 @@ class ManagementNodesTestCase(XMLTestCase):
         management_node.save()
         assert(management_node.management_node)
         
+    def testPostManagementNodeAuth(self):
+        """
+        Ensure requires admin
+        """
+        models.ManagementNode.objects.all().delete()
+        zone = self._saveZone()
+        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+            data=testsxml.management_node_post_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+            data=testsxml.management_node_post_xml, content_type='text/xml',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+            data=testsxml.management_node_post_xml, content_type='text/xml',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        
     def testPostManagementNode(self):
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
         xml = testsxml.management_node_post_xml
         response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
-            data=xml, content_type='text/xml')
+            data=xml, content_type='text/xml', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
         management_node_xml = testsxml.management_node_post_response_xml.replace(
@@ -613,16 +686,29 @@ class SystemsTestCase(XMLTestCase):
         
     def testGetSystems(self):
         system = self._saveSystem()
-        response = self._get('/api/inventory/systems/')
+        response = self._get('/api/inventory/systems/', username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'createdDate' ])
 
+    def testGetSystemAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        system = self._saveSystem()
+        response = self._get('/api/inventory/systems/%d/' % system.system_id)
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
     def testGetSystem(self):
         models.System.objects.all().delete()
         system = self._saveSystem()
-        response = self._get('/api/inventory/systems/%d/' % system.system_id)
+        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
@@ -636,22 +722,21 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         system.target = target
         system.save()
-        response = self._get('/api/inventory/systems/%d/' % system.system_id)
+        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'createdDate' ])
-
-    def XXXtestPutSystems(self):
+        
+    def testPostSystemAuth(self):
         """
-        Disable this test for now, puts don't seem to work with django 1.1
+        Ensure wide open for rpath-tools usage
         """
-        systems_xml = testsxml.systems_put_xml % ('', '')
-        response = self._put('/api/inventory/systems/', 
-            data=systems_xml, content_type='text/xml')
+        system_xml = testsxml.system_post_xml
+        response = self._post('/api/inventory/systems/', 
+            data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        systems = models.System.objects.all()
-        assert(len(systems) == 3)
         
     def testPostSystem(self):
         models.System.objects.all().delete()
@@ -694,12 +779,30 @@ class SystemsTestCase(XMLTestCase):
         this_system = models.System.objects.get(pk=1)
         self.failUnlessEqual(this_system.name, "testsystemnameChanged")
 
+    def testGetSystemLogAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        models.System.objects.all().delete()
+        response = self._post('/api/inventory/systems/', 
+            data=testsxml.system_post_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 200)
+        
+        response = self._get('/api/inventory/systems/1/systemLog/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/systems/1/systemLog/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+
     def testGetSystemLog(self):
         models.System.objects.all().delete()
         response = self._post('/api/inventory/systems/', 
             data=testsxml.system_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        response = self._get('/api/inventory/systems/1/systemLog/')
+        response = self._get('/api/inventory/systems/1/systemLog/',
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         content = []
         # Just remove lines with dates in them, it's easier to test for now.
@@ -1279,7 +1382,8 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove)
         system.installed_software.add(self.trove2)
         system.save()
-        response = self._get('/api/inventory/systems/%s/' % system.pk)
+        response = self._get('/api/inventory/systems/%s/' % system.pk,
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_version_xml % \
@@ -1296,7 +1400,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
         url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
-        response = self._get(url)
+        response = self._get(url, username="testuser", password="password")
         self.assertXMLEquals(response.content,
             testsxml.get_installed_software_xml %(
                 self.trove.last_available_update_refresh.isoformat(),
@@ -1324,7 +1428,8 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
 
-        response = self._get('/api/inventory/systems/%s' % system.pk)
+        response = self._get('/api/inventory/systems/%s' % system.pk,
+            username="testuser", password="password")
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
             ignoreNodes=['createdDate', 'lastAvailableUpdateRefresh'])
@@ -1447,18 +1552,34 @@ class SystemEventTestCase(XMLTestCase):
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
-        response = self._get('/api/inventory/systemEvents/')
+        response = self._get('/api/inventory/systemEvents/',
+           username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_events_xml % \
                 (event1.time_created.isoformat(), event1.time_enabled.isoformat(),
                  event2.time_created.isoformat(), event2.time_enabled.isoformat()))
 
-    def testGetSystemEventRest(self):
+    def testGetSystemEventRestAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
         poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         response = self._get('/api/inventory/systemEvents/%d/' % event.system_event_id)
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/systemEvents/%d/' % event.system_event_id,
+           username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
+    def testGetSystemEventRest(self):
+        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
+        event.save()
+        response = self._get('/api/inventory/systemEvents/%d/' % event.system_event_id,
+           username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_event_xml % (event.time_created.isoformat(), event.time_enabled.isoformat()))
@@ -1605,11 +1726,27 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called == False)
         
-    def testPostSystemEvent(self):
+    def testPostSystemEventAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
         url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
         response = self._post(url,
             data=system_event_post_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._post(url,
+            data=system_event_post_xml, content_type='text/xml',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+    def testPostSystemEvent(self):
+        url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
+        system_event_post_xml = testsxml.system_event_post_xml
+        response = self._post(url,
+            data=system_event_post_xml, content_type='text/xml',
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         system_event = models.SystemEvent.objects.get(pk=1)
         system_event_xml = testsxml.system_event_xml % \
@@ -2082,7 +2219,8 @@ class TargetSystemImportTest(XMLTestCase):
         # Use the API, make sure the fields come out right
         system = models.System.objects.get(target_system_id='vsphere1-001')
         # Fetch XML
-        response = self._get('/api/inventory/systems/%d/' % system.system_id)
+        response = self._get('/api/inventory/systems/%d/' % system.system_id,
+            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         xobjmodel = obj.system
