@@ -45,11 +45,12 @@ class BaseManager(models.Manager):
         """
         try:
             loaded_model = self.get(**model_inst.load_fields_dict())
-            return loaded_model
+            oldModel = loaded_model.serialize()
+            return oldModel, loaded_model
         except exceptions.ObjectDoesNotExist:
-            return None
+            return None, None
         except exceptions.MultipleObjectsReturned:
-            return None
+            return None, None
 
     def load(self, model_inst, accessors=None):
         """
@@ -62,7 +63,7 @@ class BaseManager(models.Manager):
         model_inst.
         """
 
-        loaded_model = self.load_from_db(model_inst, accessors)
+        oldModel, loaded_model = self.load_from_db(model_inst, accessors)
 
         # For each field on loaded_model, see if that field is defined on
         # model_inst, if it is and the value is different, update the value on
@@ -84,21 +85,18 @@ class BaseManager(models.Manager):
                 oldFieldVal = getattr(loaded_model, field.name)
                 if newFieldVal != oldFieldVal:
                     setattr(loaded_model, field.name, newFieldVal)
-            return loaded_model
+            return oldModel, loaded_model
 
-        return loaded_model
+        return oldModel, loaded_model
 
     def load_or_create(self, model_inst, accessors=None):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
         """
-        oldModel = None
         # Load the model from the db.
-        loaded_model = self.load(model_inst, accessors)
-        if loaded_model:
-            oldModel = loaded_model.serialize()
-        else:
+        oldModel, loaded_model = self.load(model_inst, accessors)
+        if not loaded_model:
             # No matching model was found. We need to save.  This scenario
             # means we must be creating something new (POST), so it's safe to
             # go ahead and save here, if something goes wrong later, this will
@@ -316,11 +314,10 @@ class BaseManager(models.Manager):
         model = self.add_synthetic_fields(model, obj)
         model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
-        oldModel = None
         if save:
             oldModel, model = self.load_or_create(model, accessors)
         else:
-            dbmodel = self.load(model, accessors)
+            oldModel, dbmodel = self.load(model, accessors)
             if dbmodel:
                 model = dbmodel
         # Copy the synthetic fields again - this is unfortunate
@@ -371,9 +368,9 @@ class VersionManager(BaseManager):
 
 class JobManager(BaseManager):
     def load_from_db(self, model_inst, accessors):
-        loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
         if loaded_model:
-            return loaded_model
+            return oldModel, loaded_model
         # We could not find the job. Create one just because we need to
         # populate some of the required fields
         model = self.model()
@@ -381,7 +378,7 @@ class JobManager(BaseManager):
         model.job_state = mclass.objects.get(name=mclass.QUEUED)
         mclass = type_map['event_type']
         model.event_type = mclass.objects.get(name=mclass.SYSTEM_REGISTRATION)
-        return model
+        return oldModel, model
 
 class SystemManager(BaseManager):
     
@@ -397,16 +394,17 @@ class SystemManager(BaseManager):
                 generated_uuid=model_inst.generated_uuid))
             if loaded_model:
                 # a system matching (local_uuid, generated_uuid) was found)
-                return loaded_model
+                return loaded_model.serialize(), loaded_model
         if model_inst.event_uuid:
             # Look up systems by event_uuid
             systems = [ x.system
                 for x in type_map['__systemJob'].objects.filter(
                     event_uuid = model_inst.event_uuid) ]
             if systems:
-                return systems[0]
+                system = systems[0]
+                return system.serialize(), system
 
-        return None
+        return None, None
 
     def tryLoad(self, loadDict):
         try:

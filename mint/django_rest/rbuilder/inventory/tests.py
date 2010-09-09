@@ -18,6 +18,7 @@ from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
 
 from testrunner import testcase
+from testutils import mock
 
 class XML(object):
     class OrderedDict(dict):
@@ -788,9 +789,7 @@ class SystemsTestCase(XMLTestCase):
         model = models.System.objects.load_from_object(xobjmodel, request=None)
         # We should have loaded the old one
         self.failUnlessEqual(system.pk, model.pk)
-        # XXX this fails although the old field's name shouldn't have been
-        # overwritten
-        #self.failUnlessEqual(model.name, 'blippy')
+        self.failUnlessEqual(model.name, 'blippy')
 
     def testCurrentStateUpdateApi(self):
         # Make sure current state can be updated via the API.  This allows
@@ -963,6 +962,46 @@ class SystemsTestCase(XMLTestCase):
         xml = network.to_xml()
         self.failUnlessIn("<active>false</active>", xml)
         self.failUnlessIn("<required>true</required>", xml)
+
+    def testScheduleImmediatePollAfterRegistration(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
+</system>
+""" % params
+
+        # Create a system with just a name
+        system = models.System(name = 'blippy')
+        system.save()
+        # Create a job
+        eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
+        job.save()
+        systemJob = models.SystemJob(system=system, job=job,
+            event_uuid=eventUuid)
+        systemJob.save()
+
+        response = self.client.post('/api/inventory/systems',
+            data=xml, content_type='text/xml')
+        self.failUnlessEqual(response.status_code, 200)
+
+        # Look up log entries
+        entries = self.mgr.getSystemLogEntries(system)
+        self.failUnlessEqual(
+            [ x.entry for x in entries ],
+            [
+                "Unable to register event 'immediate system poll': no networking information",
+                "Unable to register event 'system poll': no networking information",
+            ])
+
 
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):

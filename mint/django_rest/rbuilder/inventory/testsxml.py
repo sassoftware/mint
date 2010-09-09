@@ -878,6 +878,10 @@ system_log_xml = """\
       <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
       <systemLogEntryId>3</systemLogEntryId>
     </systemLogEntry>
+    <systemLogEntry>
+      <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+      <systemLogEntryId>4</systemLogEntryId>
+    </systemLogEntry>
   </systemLogEntries>
   <systemLogId>1</systemLogId>
   <system href="http://testserver/api/inventory/systems/1"/>
@@ -892,15 +896,30 @@ systems_log_xml = """\
     <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
     <systemLogEntryId>1</systemLogEntryId>
   </systemLogEntry>
-  <systemLogEntry>
-    <entry>System added to inventory</entry>
+   <systemLogEntry>
+    <entry>Unable to register event 'system registration': no networking information</entry>
+    <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
+     <systemLogEntryId>2</systemLogEntryId>
+   </systemLogEntry>
+   <systemLogEntry>
+     <entry>System added to inventory</entry>
     <systemLog href="http://testserver/api/inventory/systems/4/systemLog/"/>
-    <systemLogEntryId>2</systemLogEntryId>
+     <systemLogEntryId>3</systemLogEntryId>
+   </systemLogEntry>
+  <systemLogEntry>
+    <entry>Unable to register event 'system registration': no networking information</entry>
+    <systemLog href="http://testserver/api/inventory/systems/4/systemLog/"/>
+    <systemLogEntryId>4</systemLogEntryId>
   </systemLogEntry>
   <systemLogEntry>
     <entry>System added to inventory</entry>
     <systemLog href="http://testserver/api/inventory/systems/5/systemLog/"/>
-    <systemLogEntryId>3</systemLogEntryId>
+    <systemLogEntryId>5</systemLogEntryId>
+  </systemLogEntry>
+  <systemLogEntry>
+    <entry>Unable to register event 'system registration': no networking information</entry>
+    <systemLog href="http://testserver/api/inventory/systems/5/systemLog/"/>
+    <systemLogEntryId>6</systemLogEntryId>
   </systemLogEntry>
 </systemsLog>
 """

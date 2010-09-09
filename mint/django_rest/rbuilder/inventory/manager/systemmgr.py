@@ -173,7 +173,26 @@ class SystemManager(base.BaseManager):
         if generateCertificates:
             self.generateSystemCertificates(system)
 
+        if system.event_uuid:
+            self.postprocessEvent(system)
+
         return system
+
+    def postprocessEvent(self, system):
+        # This code is kept here just as an example of how one can react to
+        # events
+        """
+        # Look up the job associated with this event
+        sjobs = models.SystemJob.objects.filter(system__system_id=system.pk,
+            event_uuid=system.event_uuid)
+        if not sjobs:
+            return
+        job = sjobs[0].job
+        if job.event_type.name != job.event_type.SYSTEM_REGISTRATION:
+            return
+        # We came back from a registration. Schedule an immediate system poll.
+        self.scheduleSystemPollNowEvent(system)
+        """
 
     def setSystemState(self, system):
         if system.oldModel is None:
@@ -183,9 +202,15 @@ class SystemManager(base.BaseManager):
             system.registration_date = self.now()
             system.current_state = registeredState
             system.save()
-            self.log_system(system, models.SystemLogEntry.REGISTERED)
+            if system.oldModel is None:
+                # We really see this system the first time with its proper
+                # uuids. We'll assume it's been registered with rpath-register
+                self.log_system(system, models.SystemLogEntry.REGISTERED)
             if not system.management_node:
+                # Schedule a poll event in the future
                 self.scheduleSystemPollEvent(system)
+                # And schedule one immediately
+                self.scheduleSystemPollNowEvent(system)
         elif system.isRegistered:
             if system.current_state.system_state_id != registeredState.system_state_id:
                 system.current_state = registeredState
@@ -236,12 +261,16 @@ class SystemManager(base.BaseManager):
         system.save()
 
     def check_system_last_job(self, system):
+        # This is not the place to schedule an event, since rpath-tools may
+        # not have come back yet. Leaving the code commented out as an example
+        """"
         last_job = getattr(system, 'lastJob', None)
         if last_job and last_job.job_state.name == models.JobState.COMPLETED:
             if last_job.event_type.name in \
                (models.EventType.SYSTEM_APPLY_UPDATE,
                 models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE):
                 self.scheduleSystemPollNowEvent(system)
+        """
 
     def check_system_versions(self, system):
         # TODO: check for system.event_uuid
@@ -609,9 +638,11 @@ class SystemManager(base.BaseManager):
                 self.dispatchSystemEvent(event)
         else:
             log.info("System %s %s event cannot be registered because there is no host information" % (system.name, event_type.name))
-        
+            self.log_system(system,
+                "Unable to register event '%s': no networking information" % event_type.name)
+
         return event
-    
+
     def logSystemEvent(self, event, enable_time):
         msg = "Event type '%s' registered and will be enabled on %s" % (event.event_type.name, enable_time)
         self.log_system(event.system, msg)

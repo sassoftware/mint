@@ -291,7 +291,8 @@ class System(modellib.XObjIdModel):
         om = self.oldModel
         if om is None:
             return True
-        if om.local_uuid is None or om.generated_uuid is None:
+        # This should also cover the empty string case
+        if not om.local_uuid or not om.generated_uuid:
             return True
         return False
 
