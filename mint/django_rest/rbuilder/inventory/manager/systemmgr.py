@@ -637,7 +637,8 @@ class SystemManager(base.BaseManager):
             if event.dispatchImmediately():
                 self.dispatchSystemEvent(event)
         else:
-            log.info("System %s (%s) '%s' cannot be registered because there is no host information" % (system.pk, system.name, event_type.name))
+            systemName = system.name or system.hostname or system.target_system_name
+            log.info("System %s (%s) '%s' cannot be registered because there is no host information" % (system.pk, systemName, event_type.name))
             self.log_system(system,
                 "Unable to register event '%s': no networking information" % event_type.name)
 
