@@ -752,13 +752,14 @@ def _createTargets(db):
 
     changed |= createTable(db, 'TargetUserCredentials', """
             CREATE TABLE TargetUserCredentials (
+                id              %(PRIMARYKEY)s,
                 targetId        integer             NOT NULL
                     REFERENCES Targets ON DELETE CASCADE,
                 userId          integer             NOT NULL
                     REFERENCES Users ON DELETE CASCADE,
                 targetCredentialsId integer         NOT NULL
                     REFERENCES TargetCredentials ON DELETE CASCADE,
-                PRIMARY KEY ( targetId, userId )
+                UNIQUE ( targetId, userId )
             ) %(TABLEOPTS)s""")
 
     return changed
@@ -1099,7 +1100,7 @@ def _createInventorySchema(db, cfg):
                 "target_id" integer REFERENCES "targets" ("targetid"),
                 "target_system_id" varchar(255),
                 "target_system_name" varchar(255),
-                "target_system_description" varchar(255),
+                "target_system_description" varchar(1024),
                 "target_system_state" varchar(64),
                 "os_type" varchar(64),
                 "os_major_version" varchar(32),

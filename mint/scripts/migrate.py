@@ -1116,7 +1116,9 @@ class MigrateTo_50(SchemaMigration):
                     "launch_date" timestamp with time zone,
                     "target_id" integer REFERENCES "targets" ("targetid"),
                     "target_system_id" varchar(255),
-                    "reservation_id" varchar(255),
+                    "target_system_name" varchar(255),
+                    "target_system_description" varchar(1024),
+                    "target_system_state" varchar(64),
                     "os_type" varchar(64),
                     "os_major_version" varchar(32),
                     "os_minor_version" varchar(32),
@@ -1399,6 +1401,16 @@ class MigrateTo_50(SchemaMigration):
         return True
 
     def _migrateTargetUserCredentials(self, cu):
+        # Add a serial primary key, drop the old pk, add it as unique
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                DROP CONSTRAINT targetusercredentials_pkey""")
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ADD COLUMN id SERIAL PRIMARY KEY""")
+        cu.execute("""
+            ALTER TABLE TargetUserCredentials
+                ADD UNIQUE(targetid, userid)""")
         cu.execute("""
             ALTER TABLE TargetUserCredentials
                 ADD COLUMN targetCredentialsId  INTEGER

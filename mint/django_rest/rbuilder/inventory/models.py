@@ -213,7 +213,7 @@ class System(modellib.XObjIdModel):
     target = models.ForeignKey(rbuildermodels.Targets, null=True)
     target_system_id = modellib.APIReadOnlyCharField(max_length=255, null=True)
     target_system_name = modellib.APIReadOnlyCharField(max_length=255, null=True)
-    target_system_description = modellib.APIReadOnlyCharField(max_length=255, null=True)
+    target_system_description = modellib.APIReadOnlyCharField(max_length=1024, null=True)
     target_system_state = modellib.APIReadOnlyCharField(max_length=64, null=True)
     os_type = models.CharField(max_length=64, null=True)
     os_major_version = models.CharField(max_length=32, null=True)

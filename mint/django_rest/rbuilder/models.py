@@ -214,7 +214,7 @@ class TargetCredentials(modellib.XObjModel):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetcredentials'
     targetcredentialsid = models.AutoField(primary_key=True,
-        db_column="targetCredentialsId")
+        db_column="targetcredentialsid")
     credentials = models.TextField(null=False, unique=True)
 
 class TargetUserCredentials(modellib.XObjModel):
