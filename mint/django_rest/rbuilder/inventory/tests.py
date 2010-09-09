@@ -8,7 +8,7 @@ from xobj import xobj
 
 from conary import versions
 from django.test import TestCase
-from django.test.client import Client
+from django.test.client import Client, MULTIPART_CONTENT
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import manager
@@ -128,6 +128,37 @@ class XMLTestCase(TestCase):
             if 0:
                 diff += "\nNode diff: %s" % (nd, )
             self.fail(diff)
+            
+    def _addRequestAuth(self, username=None, password=None, **extra):
+        if username:
+            if not extra:
+                extra = {}
+            type, password = self._authHeader(username, password)
+            extra[type] = password
+            
+        return extra
+            
+    def _get(self, path, data={}, username=None, password=None, follow=False, **extra):
+        extra = self._addRequestAuth(username, password, **extra)
+        return self.client.get(path, data, follow, **extra)
+       
+    def _post(self, path, data={}, content_type=MULTIPART_CONTENT,
+             username=None, password=None, follow=False, **extra):
+        extra = self._addRequestAuth(username, password, **extra)
+        return self.client.post(path, data, content_type, follow, **extra)
+    
+    def _put(self, path, data={}, content_type=MULTIPART_CONTENT,
+            username=None, password=None, follow=False, **extra):
+        extra = self._addRequestAuth(username, password, **extra)
+        return self.client.put(path, data, content_type, follow, **extra)
+    
+    def _delete(self, path, data={}, follow=False, username=None, password=None, **extra):
+        extra = self._addRequestAuth(username, password, **extra)
+        return self.client.delete(path, data, follow, **extra)
+            
+    def _authHeader(self, username, password):
+        authStr = "%s:%s" % (username, password)
+        return ("Authorization", "Basic %s" % authStr.encode("base64"))
 
     def _saveZone(self):
         zone = models.Zone()
@@ -232,24 +263,24 @@ class XMLTestCase(TestCase):
 class InventoryTestCase(XMLTestCase):
 
     def testGetTypes(self):
-        response = self.client.get('/api/inventory/')
+        response = self._get('/api/inventory/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
         
-        response = self.client.post('/api/inventory/?_method=GET')
+        response = self._post('/api/inventory/?_method=GET')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.inventory_xml)
         
     def testPostTypes(self):
-        response = self.client.post('/api/inventory/')
+        response = self._post('/api/inventory/')
         self.assertEquals(response.status_code, 405)
         
     def notestPutTypes(self):
-        response = self.client.put('/api/inventory/')
+        response = self._put('/api/inventory/')
         self.assertEquals(response.status_code, 405)
         
     def testDeleteTypes(self):
-        response = self.client.delete('/api/inventory/')
+        response = self._delete('/api/inventory/')
         self.assertEquals(response.status_code, 405)
        
 
@@ -265,7 +296,7 @@ class LogTestCase(XMLTestCase):
         system = models.System(name="mgoblue3", 
             description="best appliance ever3", registered=False)
         self.mgr.addSystem(system)
-        response = self.client.get('/api/inventory/log/')
+        response = self._get('/api/inventory/log/')
         # Just remove lines with dates in them, it's easier to test for now.
         content = []
         for line in response.content.split('\n'):
@@ -282,14 +313,14 @@ class ZonesTestCase(XMLTestCase):
     def testGetZones(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self.client.get('/api/inventory/zones/')
+        response = self._get('/api/inventory/zones/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.zones_xml % (zone.created_date.isoformat()))
 
     def testGetZone(self):
         zone = self._saveZone()
-        response = self.client.get('/api/inventory/zones/2/')
+        response = self._get('/api/inventory/zones/2/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.zone_xml % (zone.created_date.isoformat()))
@@ -309,7 +340,7 @@ class ZonesTestCase(XMLTestCase):
     def testPostZone(self):
         models.Zone.objects.all().delete()
         xml = testsxml.zone_post_xml
-        response = self.client.post('/api/inventory/zones/', 
+        response = self._post('/api/inventory/zones/', 
             data=xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
@@ -319,13 +350,13 @@ class ZonesTestCase(XMLTestCase):
 class SystemStatesTestCase(XMLTestCase):
 
     def testGetSystemStates(self):
-        response = self.client.get('/api/inventory/systemStates/')
+        response = self._get('/api/inventory/systemStates/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_states_xml, 
             ignoreNodes = [ 'createdDate' ])
 
     def testGetSystemState(self):
-        response = self.client.get('/api/inventory/systemStates/1/')
+        response = self._get('/api/inventory/systemStates/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_state_xml, 
             ignoreNodes = [ 'createdDate' ])
@@ -356,7 +387,7 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
-        response = self.client.get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id)
+        response = self._get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(),
@@ -365,7 +396,7 @@ class ManagementNodesTestCase(XMLTestCase):
 
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
-        response = self.client.get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
+        response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(),
@@ -400,7 +431,7 @@ class ManagementNodesTestCase(XMLTestCase):
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
         xml = testsxml.management_node_post_xml
-        response = self.client.post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
             data=xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
@@ -571,7 +602,7 @@ class SystemsTestCase(XMLTestCase):
         
     def testGetSystems(self):
         system = self._saveSystem()
-        response = self.client.get('/api/inventory/systems/')
+        response = self._get('/api/inventory/systems/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
@@ -580,7 +611,7 @@ class SystemsTestCase(XMLTestCase):
     def testGetSystem(self):
         models.System.objects.all().delete()
         system = self._saveSystem()
-        response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
+        response = self._get('/api/inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
@@ -594,7 +625,7 @@ class SystemsTestCase(XMLTestCase):
         system = self._saveSystem()
         system.target = target
         system.save()
-        response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
+        response = self._get('/api/inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
@@ -605,7 +636,7 @@ class SystemsTestCase(XMLTestCase):
         Disable this test for now, puts don't seem to work with django 1.1
         """
         systems_xml = testsxml.systems_put_xml % ('', '')
-        response = self.client.put('/api/inventory/systems/', 
+        response = self._put('/api/inventory/systems/', 
             data=systems_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         systems = models.System.objects.all()
@@ -614,7 +645,7 @@ class SystemsTestCase(XMLTestCase):
     def testPostSystem(self):
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml
-        response = self.client.post('/api/inventory/systems/', 
+        response = self._post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
@@ -629,7 +660,7 @@ class SystemsTestCase(XMLTestCase):
         # add the first system
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml_dup
-        response = self.client.post('/api/inventory/systems/', 
+        response = self._post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
@@ -638,7 +669,7 @@ class SystemsTestCase(XMLTestCase):
         # add it with same uuids but with different name to make sure
         # we get back same system with updated prop
         system_xml = testsxml.system_post_xml_dup2
-        response = self.client.post('/api/inventory/systems/', 
+        response = self._post('/api/inventory/systems/', 
             data=system_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=1)
@@ -646,10 +677,10 @@ class SystemsTestCase(XMLTestCase):
 
     def testGetSystemLog(self):
         models.System.objects.all().delete()
-        response = self.client.post('/api/inventory/systems/', 
+        response = self._post('/api/inventory/systems/', 
             data=testsxml.system_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get('/api/inventory/systems/1/systemLog/')
+        response = self._get('/api/inventory/systems/1/systemLog/')
         self.assertEquals(response.status_code, 200)
         content = []
         # Just remove lines with dates in them, it's easier to test for now.
@@ -916,7 +947,7 @@ class SystemStateTestCase(XMLTestCase):
 """
         xml = xmlTempl % params
 
-        response = self.client.put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('/api/inventory/systems/%s' % system.pk,
             data=xml, content_type='application/xml')
         self.failUnlessEqual(response.status_code, 200)
 
@@ -941,7 +972,7 @@ class SystemStateTestCase(XMLTestCase):
 
         xml = xmlTempl % params
 
-        response = self.client.put('/api/inventory/systems/%s' % system.pk,
+        response = self._put('/api/inventory/systems/%s' % system.pk,
             data=xml, content_type='application/xml')
         self.failUnlessEqual(response.status_code, 200)
 
@@ -1151,7 +1182,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove)
         system.installed_software.add(self.trove2)
         system.save()
-        response = self.client.get('/api/inventory/systems/%s/' % system.pk)
+        response = self._get('/api/inventory/systems/%s/' % system.pk)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_version_xml % \
@@ -1168,7 +1199,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
         url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
-        response = self.client.get(url)
+        response = self._get(url)
         self.assertXMLEquals(response.content,
             testsxml.get_installed_software_xml %(
                 self.trove.last_available_update_refresh.isoformat(),
@@ -1182,7 +1213,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.save()
 
         url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
-        response = self.client.post(url,
+        response = self._post(url,
             data=testsxml.installed_software_post_xml,
             content_type="application/xml")
         self.assertXMLEquals(response.content,
@@ -1196,7 +1227,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
 
-        response = self.client.get('/api/inventory/systems/%s' % system.pk)
+        response = self._get('/api/inventory/systems/%s' % system.pk)
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
             ignoreNodes=['createdDate', 'lastAvailableUpdateRefresh'])
@@ -1232,7 +1263,7 @@ class SystemVersionsTestCase(XMLTestCase):
         data = testsxml.system_version_put_xml
 
         url = '/api/inventory/systems/%s/' % system.pk
-        response = self.client.put(url,
+        response = self._put(url,
             data=data,
             content_type="application/xml")
         # Weak attempt to see if the response is XML
@@ -1269,7 +1300,7 @@ class SystemVersionsTestCase(XMLTestCase):
             ])
 
         # Try it again
-        response = self.client.put(url,
+        response = self._put(url,
             data=data,
             content_type="application/xml")
         self.failUnlessEqual(response.status_code, 200)
@@ -1280,12 +1311,12 @@ class SystemVersionsTestCase(XMLTestCase):
 class EventTypeTestCase(XMLTestCase):
 
     def testGetEventTypes(self):
-        response = self.client.get('/api/inventory/eventTypes/')
+        response = self._get('/api/inventory/eventTypes/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_types_xml)
 
     def testGetEventType(self):
-        response = self.client.get('/api/inventory/eventTypes/1/')
+        response = self._get('/api/inventory/eventTypes/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_type_xml)
 
@@ -1319,7 +1350,7 @@ class SystemEventTestCase(XMLTestCase):
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
-        response = self.client.get('/api/inventory/systemEvents/')
+        response = self._get('/api/inventory/systemEvents/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_events_xml % \
@@ -1330,7 +1361,7 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        response = self.client.get('/api/inventory/systemEvents/%d/' % event.system_event_id)
+        response = self._get('/api/inventory/systemEvents/%d/' % event.system_event_id)
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_event_xml % (event.time_created.isoformat(), event.time_enabled.isoformat()))
@@ -1480,7 +1511,7 @@ class SystemEventTestCase(XMLTestCase):
     def testPostSystemEvent(self):
         url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
-        response = self.client.post(url,
+        response = self._post(url,
             data=system_event_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 200)
         system_event = models.SystemEvent.objects.get(pk=1)
@@ -1954,7 +1985,7 @@ class TargetSystemImportTest(XMLTestCase):
         # Use the API, make sure the fields come out right
         system = models.System.objects.get(target_system_id='vsphere1-001')
         # Fetch XML
-        response = self.client.get('/api/inventory/systems/%d/' % system.system_id)
+        response = self._get('/api/inventory/systems/%d/' % system.system_id)
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         xobjmodel = obj.system
