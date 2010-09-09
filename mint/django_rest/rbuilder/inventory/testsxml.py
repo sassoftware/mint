@@ -191,7 +191,7 @@ management_nodes_xml = """\
   <managementNode>
     <available/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-    <registered>True</registered>
+    <registered>true</registered>
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
@@ -211,16 +211,17 @@ management_nodes_xml = """\
       </network>
     </networks>
     <nodeJid/>
+    <sslClientCertificate>test management node client cert</sslClientCertificate>
     <sslServerCertificate>test management node server cert</sslServerCertificate>
     <managingZone/>
     <hostname/>
     <name>test management node</name>
     <systemId>1</systemId>
     <launchingUser/>
-    <managementNode>True</managementNode>
+    <managementNode>true</managementNode>
     <scheduledEventStartDate/>
     <launchDate/>
-    <local>True</local>
+    <local>true</local>
     <installedSoftware/>
     <description>test management node desc</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -250,7 +251,7 @@ management_node_xml = """\
 <managementNode>
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>True</registered>
+  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
@@ -270,16 +271,17 @@ management_node_xml = """\
     </network>
   </networks>
   <nodeJid/>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname/>
   <name>test management node</name>
   <systemId>1</systemId>
   <launchingUser/>
-  <managementNode>True</managementNode>
+  <managementNode>true</managementNode>
   <scheduledEventStartDate/>
   <launchDate/>
-  <local>True</local>
+  <local>true</local>
   <installedSoftware/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -325,6 +327,7 @@ management_node_post_xml = """\
     </network>
   </networks>
   <nodeJid>abcd</nodeJid>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
@@ -343,15 +346,15 @@ management_node_post_xml = """\
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode>
-  <available>False</available>
+  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>True</registered>
+  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <networks>
     <network>
-      <active>False</active>
+      <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -360,21 +363,22 @@ management_node_post_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <required>False</required>
+      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
   <nodeJid>abcd</nodeJid>
+  <sslClientCertificate/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <systemId>1</systemId>
   <launchingUser/>
-  <managementNode>True</managementNode>
+  <managementNode>true</managementNode>
   <scheduledEventStartDate/>
   <launchDate/>
-  <local>True</local>
+  <local>true</local>
   <installedSoftware/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -417,7 +421,7 @@ systems_xml = """\
     <launchDate/>
     <launchingUser/>
     <localUuid/>
-    <managementNode>True</managementNode>
+    <managementNode>true</managementNode>
     <managingZone href="http://testserver/api/inventory/zones/1/"/>
     <name>rPath Update Service</name>
     <networks>
@@ -439,6 +443,7 @@ systems_xml = """\
     <osMinorVersion/>
     <osType/>
     <scheduledEventStartDate/>
+    <sslClientCertificate/>
     <sslServerCertificate/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
     <systemId>2</systemId>
@@ -450,7 +455,7 @@ systems_xml = """\
     <targetSystemState/>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
-    <registered>True</registered>
+    <registered>true</registered>
     <registrationDate/>
     <available/>
     <createdDate>%s</createdDate>
@@ -488,6 +493,7 @@ systems_xml = """\
     <osMinorVersion/>
     <osType/>
     <scheduledEventStartDate/>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
     <systemId>3</systemId>
@@ -523,6 +529,7 @@ systems_put_xml = """\
         <required/>
       </network>
     </networks>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -566,6 +573,7 @@ systems_put_xml = """\
         <required/>
       </network>
     </networks>
+    <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <scheduledEventStartDate/>
     <launchDate/>
@@ -596,7 +604,7 @@ system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <installedSoftware/>
-  <registered>True</registered>
+  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -617,6 +625,7 @@ system_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>1</systemId>
   <launchingUser/>
@@ -664,6 +673,7 @@ system_post_xml = """\
       <required/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <scheduledEventStartDate/>
   <launchDate/>
@@ -684,15 +694,15 @@ system_post_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <available>False</available>
+  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>True</registered>
+  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <networks>
     <network>
-      <active>False</active>
+      <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -701,10 +711,11 @@ system_post_xml_response = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <required>False</required>
+      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -753,6 +764,7 @@ system_post_xml_dup = """\
       <required/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <scheduledEventStartDate/>
   <launchDate/>
@@ -779,7 +791,7 @@ system_target_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>True</registered>
+  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -798,6 +810,7 @@ system_target_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -940,7 +953,7 @@ get_installed_software_xml = """\
         </version>
       </availableUpdates>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
-      <isTopLevel>True</isTopLevel>
+      <isTopLevel>true</isTopLevel>
       <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
       <name>group-clover-appliance</name>
       <troveId>1</troveId>
@@ -956,7 +969,7 @@ get_installed_software_xml = """\
     <trove id="http://testserver/repos/contrib/api/trove/emacs%%3D/contrib.rpath.org%%40rpl%%3A2/23.0.60cvs20080523-1-0.1%%5Bdesktop%%20is%%3A%%20x86_64%%5D">
       <availableUpdates/>
       <flavor>desktop is: x86_64</flavor>
-      <isTopLevel>False</isTopLevel>
+      <isTopLevel>false</isTopLevel>
       <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
       <name>emacs</name>
       <troveId>2</troveId>
@@ -994,7 +1007,7 @@ installed_software_xml = """\
         </version>
       </availableUpdates>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
-      <isTopLevel>True</isTopLevel>
+      <isTopLevel>true</isTopLevel>
       <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
       <name>group-clover-appliance</name>
       <troveId>1</troveId>
@@ -1010,7 +1023,7 @@ installed_software_xml = """\
     <trove>
       <availableUpdates/>
       <flavor>desktop is: x86_64</flavor>
-      <isTopLevel>False</isTopLevel>
+      <isTopLevel>false</isTopLevel>
       <lastAvailableUpdateRefresh>%s</lastAvailableUpdateRefresh>
       <name>emacs</name>
       <troveId>2</troveId>
@@ -1030,7 +1043,7 @@ system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   %s
-  <registered>True</registered>
+  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -1051,6 +1064,7 @@ system_version_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>3</systemId>
   <launchingUser/>
@@ -1185,6 +1199,7 @@ system_version_put_response_xml = """\
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
@@ -1247,7 +1262,7 @@ system_available_updates_xml = """\
         <versionId>1</versionId>
       </version>
       <lastAvailableUpdateRefresh>2010-08-27T12:21:59.802463+00:00</lastAvailableUpdateRefresh>
-      <isTopLevel>True</isTopLevel>
+      <isTopLevel>true</isTopLevel>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/emacs%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
@@ -1263,7 +1278,7 @@ system_available_updates_xml = """\
         <versionId>4</versionId>
       </version>
       <lastAvailableUpdateRefresh>2010-08-27T12:21:59.815100+00:00</lastAvailableUpdateRefresh>
-      <isTopLevel>False</isTopLevel>
+      <isTopLevel>false</isTopLevel>
       <flavor>desktop is: x86_64</flavor>
     </trove>
   </installedSoftware>
@@ -1285,6 +1300,7 @@ system_available_updates_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <managingZone/>
   <hostname/>
@@ -1297,7 +1313,7 @@ system_available_updates_xml = """\
   <available/>
   <registrationDate/>
   <description>testsystemdescription</description>
-  <registered>True</registered>
+  <registered>true</registered>
   <targetSystemId/>
   <targetSystemName/>
   <targetSystemDescription/>

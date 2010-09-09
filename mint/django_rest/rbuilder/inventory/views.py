@@ -116,7 +116,7 @@ class InventorySystemsService(AbstractInventoryService):
     @requires('system')
     @return_xml
     def create(self, request, system):
-        system = self.mgr.addSystem(system)
+        system = self.mgr.addSystem(system, generateCertificates=True)
         return system
     
     @requires('systems')

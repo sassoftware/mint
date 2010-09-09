@@ -16,9 +16,8 @@ from dateutil import tz
 from django.db import connection
 
 from conary import versions as cnyver
-from conary.deps import deps
 
-from mint.lib import uuid
+from mint.lib import uuid, x509
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
@@ -37,6 +36,7 @@ class SystemManager(base.BaseManager):
     ])
 
     TZ = tz.tzutc()
+    X509 = x509.X509
 
     @classmethod
     def now(cls):
@@ -167,7 +167,7 @@ class SystemManager(base.BaseManager):
             self.addSystem(system)
 
     @base.exposed
-    def addSystem(self, system):
+    def addSystem(self, system, generateCertificates=False):
         '''Add a new system to inventory'''
 
         if not system:
@@ -191,7 +191,41 @@ class SystemManager(base.BaseManager):
             # mark the system as needing registration
             self.scheduleSystemRegistrationEvent(system)
 
+        if generateCertificates:
+            self.generateSystemCertificates(system)
+
         return system
+
+    def generateSystemCertificates(self, system):
+        if system.ssl_client_certificate is not None and \
+                system.ssl_client_key is not None:
+            # Certs are already generated. We may want to re-generate them at
+            # some point, but not now
+            return
+        if system.local_uuid is None or system.generated_uuid is None:
+            # No point in trying to generate certificates if the system hasn't
+            # registered yet
+            return
+        # Grab the low grade cert
+        lg_cas = rbuildermodels.PkiCertificates.objects.filter(
+            purpose="lg_ca").order_by('-time_issued')
+        if not lg_cas:
+            raise Exception("Unable to find suitable low-grade CA")
+        lg_ca = lg_cas[0]
+        ca_crt = self.X509(None, None)
+        ca_crt.load_from_strings(lg_ca.x509_pem, lg_ca.pkey_pem)
+        # When we get around to re-generate certs, bump the serial here
+        serial = 0
+        rbuilderIdent = "http://%s" % (self.cfg.siteHost, )
+        cn = "local_uuid:%s generated_uuid:%s serial:%d" % (
+            system.local_uuid, system.generated_uuid, serial)
+        subject = self.X509.Subject(O="rPath rBuilder", OU=rbuilderIdent, CN=cn)
+        crt = self.X509.new(subject=subject, serial=serial,
+            issuer_x509=ca_crt.x509, issuer_pkey=ca_crt.pkey)
+        del ca_crt
+        system.ssl_client_certificate = crt.x509.as_pem()
+        system.ssl_client_key = crt.pkey.as_pem(None)
+        system.save()
 
     @base.exposed
     def updateSystem(self, system):

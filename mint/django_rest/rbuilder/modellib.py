@@ -144,8 +144,11 @@ class BaseManager(models.Manager):
             if getattr(field, 'APIReadOnly', None):
                 # Ignore APIReadOnly fields
                 continue
+            if val == '' and not val._xobj.elements \
+                and not val._xobj.attributes:
+                val = None
             # Special case for FK fields which should be hrefs.
-            if isinstance(field, SerializedForeignKey):
+            elif isinstance(field, SerializedForeignKey):
                 val = field.related.parent_model.objects.load_from_object(val, request, save=save)
             elif isinstance(field, InlinedForeignKey):
                 lookup = { field.visible : str(val) }
@@ -154,8 +157,8 @@ class BaseManager(models.Manager):
             elif isinstance(field, related.RelatedField):
                 val = field.related.parent_model.objects.load_from_href(
                     getattr(val, 'href', None))
-            elif isinstance(field, djangofields.BooleanField) or \
-                 isinstance(field, djangofields.NullBooleanField):
+            elif isinstance(field, (djangofields.BooleanField,
+                                    djangofields.NullBooleanField)):
                 val = str(val)
                 val = (val.lower() == str(True).lower())
             elif isinstance(field, DateTimeUtcField):
@@ -347,12 +350,20 @@ class TroveManager(BaseManager):
             return
         return BaseManager.set_m2m_accessor(self, model, m2m_accessor, rel_mod)
 
+    def add_fields(self, model, obj, request, save=True):
+        nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
+        if nmodel.flavor is None:
+            nmodel.flavor = ''
+        return nmodel
+
 class VersionManager(BaseManager):
     def add_fields(self, model, obj, request, save=True):
         # Fix up label and revision
         nmodel = BaseManager.add_fields(self, model, obj, request, save=save)
         v = nmodel.conaryVersion
         nmodel.fromConaryVersion(v)
+        if nmodel.flavor is None:
+            nmodel.flavor = ''
         return nmodel
 
 class JobManager(BaseManager):
@@ -618,6 +629,9 @@ class XObjModel(models.Model):
                 elif isinstance(field, models.DateTimeField):
                     val = val.replace(tzinfo=tz.tzutc())
                     val = val.isoformat()
+                elif isinstance(field, (djangofields.BooleanField,
+                                        djangofields.NullBooleanField)):
+                    val = str(val).lower()
                 setattr(xobj_model, key, val)
             # TODO: is this still needed, we already called serialize_hrefs.?
             elif isinstance(val, XObjHrefModel):
@@ -717,15 +731,14 @@ class XObjModel(models.Model):
         for m2m_accessor in m2m_accessors:
             if m2m_accessor in hidden:
                 continue
+            m2model = m2m_accessors[m2m_accessor].model
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
-            if hasattr(m2m_accessors[m2m_accessor].model, '_xobj') and \
-               m2m_accessors[m2m_accessor].model._xobj.tag:
-                    var_name = m2m_accessors[m2m_accessor].model._xobj.tag
+            if hasattr(m2model, '_xobj') and m2model._xobj.tag:
+                    var_name = m2model._xobj.tag
             else:
-                var_name = \
-                    m2m_accessors[m2m_accessor].model._meta.verbose_name
+                var_name = m2model._meta.verbose_name
 
             # Simple object to create for our m2m_accessor
             m2m_accessor_model = type(m2m_accessor, (object,), {})()
