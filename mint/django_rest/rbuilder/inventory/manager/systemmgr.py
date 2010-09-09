@@ -778,7 +778,9 @@ class SystemManager(base.BaseManager):
                 self.userNames = []
                 self.instanceName = instanceName
                 self.instanceDescription = instanceDescription
-                self.state = state.encode('ascii')
+                if state is not None:
+                    state = state.encode('ascii')
+                self.state = state
                 self.dnsName = dnsName
             def addUser(self, userName):
                 self.userNames.append(userName)
