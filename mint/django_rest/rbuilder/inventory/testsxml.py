@@ -346,7 +346,7 @@ management_node_post_xml = """\
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode>
-  <available>false</available>
+  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>true</registered>
   <osMajorVersion/>
@@ -354,7 +354,7 @@ management_node_post_response_xml = """\
   <generatedUuid>test management node guuid</generatedUuid>
   <networks>
     <network>
-      <active>false</active>
+      <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -363,7 +363,7 @@ management_node_post_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <required>false</required>
+      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
@@ -694,7 +694,7 @@ system_post_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <available>false</available>
+  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <registered>true</registered>
   <osMajorVersion/>
@@ -702,7 +702,7 @@ system_post_xml_response = """\
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <networks>
     <network>
-      <active>false</active>
+      <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -711,7 +711,7 @@ system_post_xml_response = """\
       <netmask>255.255.255.0</netmask>
       <networkId>1</networkId>
       <portType>lan</portType>
-      <required>false</required>
+      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
