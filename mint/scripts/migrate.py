@@ -1365,9 +1365,11 @@ class MigrateTo_50(SchemaMigration):
                 CREATE TABLE "inventory_system_target_credentials" (
                     "id" %(PRIMARYKEY)s,
                     "system_id" INTEGER NOT NULL
-                        REFERENCES "inventory_system" ("system_id"),
+                        REFERENCES "inventory_system" ("system_id")
+                        ON DELETE CASCADE,
                     "credentials_id" INTEGER NOT NULL
-                        REFERENCES "TargetCredentials" ("targetCredentialsId")
+                        REFERENCES TargetCredentials (targetCredentialsId)
+                        ON DELETE CASCADE,
                 )""" % db.keywords)
             db.tables['inventory_system_target_credentials'] = []
             changed = db.createIndex(
