@@ -692,6 +692,9 @@ class SystemManager(base.BaseManager):
                 self._addSystemToTarget(target, targetSystemId, tSystem)
 
     def _addSystemToTarget(self, target, targetSystemId, targetSystem):
+        t0 = time.time()
+        log.info("  Importing system %s (%s)" % (targetSystemId,
+            targetSystem.instanceName))
         system, created = models.System.objects.get_or_create(target=target,
             target_system_id=targetSystemId)
         if created:
@@ -705,7 +708,12 @@ class SystemManager(base.BaseManager):
         self._setSystemTargetCredentials(system, target,
             targetSystem.userNames)
         if created:
+            t1 = time.time()
             self.scheduleSystemRegistrationEvent(system)
+            log.info("    Scheduling action completed in %.2d seconds" %
+                (time.time() - t1, ))
+        log.info("  Importing system %s (%s) completed in %.2d seconds" %
+            (targetSystemId, targetSystem.instanceName, time.time() - t0))
 
     def _addTargetSystemNetwork(self, system, target, tsystem):
         dnsName = tsystem.dnsName
