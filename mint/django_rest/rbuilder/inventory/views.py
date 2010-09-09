@@ -10,7 +10,7 @@ import time
 from django.http import HttpResponse
 from django_restapi import resource
 
-from mint.django_rest.deco import requires, return_xml
+from mint.django_rest.deco import requires, return_xml, requires_auth, requires_admin
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import manager
@@ -53,11 +53,13 @@ class InventoryService(AbstractInventoryService):
 
 class InventoryLogService(AbstractInventoryService):
     
+    @requires_auth
     @return_xml
     def read(self, request):
         return self.mgr.getSystemsLog()
     
 class InventorySystemStateService(AbstractInventoryService):
+    
     @return_xml
     def read(self, request, system_state_id=None):
         return self.get(system_state_id)
@@ -70,6 +72,7 @@ class InventorySystemStateService(AbstractInventoryService):
     
 class InventoryZoneService(AbstractInventoryService):
     
+    @requires_auth
     @return_xml
     def read(self, request, zone_id=None):
         return self.get(zone_id)
@@ -80,6 +83,7 @@ class InventoryZoneService(AbstractInventoryService):
         else:
             return self.mgr.getZones()
 
+    @requires_admin
     @requires('zone')
     @return_xml
     def create(self, request, zone):
@@ -88,6 +92,7 @@ class InventoryZoneService(AbstractInventoryService):
     
 class InventoryManagementNodeService(AbstractInventoryService):
     
+    @requires_auth
     @return_xml
     def read(self, request, zone_id, management_node_id=None):
         return self.get(zone_id, management_node_id)
@@ -98,6 +103,7 @@ class InventoryManagementNodeService(AbstractInventoryService):
         else:
             return self.mgr.getManagementNodes(zone_id)
         
+    @requires_admin
     @requires('managementNode')
     @return_xml
     def create(self, request, zone_id, managementNode):
@@ -106,6 +112,7 @@ class InventoryManagementNodeService(AbstractInventoryService):
 
 class InventorySystemsService(AbstractInventoryService):
 
+    @requires_auth
     @return_xml
     def read(self, request):
         return self.get()
@@ -113,12 +120,14 @@ class InventorySystemsService(AbstractInventoryService):
     def get(self):
         return self.mgr.getSystems()
 
+    # this must remain public for rpath-tools
     @requires('system')
     @return_xml
     def create(self, request, system):
         system = self.mgr.addSystem(system, generateCertificates=True)
         return system
     
+    # this must remain public for rpath-tools
     @requires('systems')
     @return_xml
     def update(self, request, systems):
@@ -129,6 +138,8 @@ class InventorySystemsService(AbstractInventoryService):
         return self.mgr.launchSystem(instanceId, targetType, targetName)
 
 class InventorySystemsSystemService(AbstractInventoryService):
+    
+    @requires_auth
     @return_xml
     def read(self, request, system_id):
         return self.get(system_id)
@@ -146,13 +157,15 @@ class InventorySystemsSystemService(AbstractInventoryService):
         self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)
 
+    @requires_admin
     def delete(self, request, system_id):
-        system = self.mgr.deleteSystem(system_id)
+        self.mgr.deleteSystem(system_id)
         response = HttpResponse(status=204)
         return response
 
 class InventorySystemsSystemEventService(AbstractInventoryService):
     
+    @requires_auth
     @return_xml
     def read(self, request, system_id, system_event_id=None):
         return self.get(system_id)
@@ -163,6 +176,7 @@ class InventorySystemsSystemEventService(AbstractInventoryService):
         else:
             return self.mgr.getSystemSystemEvents(system_id)
         
+    @requires_auth
     @requires('systemEvent')
     @return_xml
     def create(self, request, system_id, systemEvent):
@@ -171,6 +185,7 @@ class InventorySystemsSystemEventService(AbstractInventoryService):
 
 class InventorySystemsSystemLogService(AbstractInventoryService):
 
+    @requires_auth
     def read(self, request, system, format='xml'):
         managedSystem = self.mgr.getSystem(system)
         systemLog = self.mgr.getSystemLog(managedSystem)
@@ -196,18 +211,15 @@ class InventorySystemsSystemLogService(AbstractInventoryService):
             pass
 
 class InventoryUsersService(AbstractInventoryService):
-    
-    def read(self, request, user):
-        response = HttpResponse()
-        response.write('<html>%s</html>' % user)
-        return response
 
+    # used by modeelib
     def get(self, user):
         user = rbuildermodels.Users.objects.get(username=user)
         return user
 
 class InventorySystemEventsService(AbstractInventoryService):
     
+    @requires_auth
     @return_xml
     def read(self, request, system_event_id=None):
         return self.get(system_event_id)
@@ -218,28 +230,12 @@ class InventorySystemEventsService(AbstractInventoryService):
         else:
             return self.mgr.getSystemEvents()
 
-class InventorySystemEventsByTypeService(AbstractInventoryService):
-
-    @return_xml
-    def read(self, request, event_type):
-        # TODO, something for real
-        return None
-
 class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
+    
+    @requires_auth
     @return_xml
     def read(self, request, system_id):
         system = self.mgr.getSystem(system_id)
-        installedSoftware = models.InstalledSoftware()
-        installedSoftware.trove = system.installed_software.all()
-        return installedSoftware
-
-    @requires('installedSoftware')
-    @return_xml
-    def XXXcreate(self, request, system_id, installedSoftware):
-        # Disabling this, we will set the installed software by posting to the
-        # system itself
-        system = self.mgr.getSystem(system_id)
-        self.mgr.setInstalledSoftware(system, installedSoftware.trove)
         installedSoftware = models.InstalledSoftware()
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
@@ -258,6 +254,7 @@ class InventoryEventTypesService(AbstractInventoryService):
 
 class InventoryJobsService(AbstractInventoryService):
     
+    @requires_auth
     @return_xml
     def read(self, request, system, job_uuid=None):
         return self.mgr.getSystemJobs(system, job_uuid)
