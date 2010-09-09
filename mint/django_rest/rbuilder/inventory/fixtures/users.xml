@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
-  <object pk="1" model="rbuilder.users">
-    <field type="CharField" name="username">admin</field>
-    <field type="CharField" name="fullname">Administrator</field>
-    <field type="TextField" name="salt">\\017\\013?\\320</field>
-    <field type="CharField" name="passwd">2b26a8023fd0ddbfb071af2cdad11dd1</field>
-    <field type="CharField" name="email">murf@rpath.com</field>
-    <field type="TextField" name="displayemail"/>
-    <field type="DecimalField" name="timecreated">1283523987.852</field>
-    <field type="DecimalField" name="timeaccessed">1283530322.491</field>
-    <field type="SmallIntegerField" name="active">1</field>
-    <field type="TextField" name="blurb"/>
-  </object>
   <object pk="2" model="rbuilder.users">
     <field type="CharField" name="username">JeanValjean1</field>
     <field type="CharField" name="fullname"/>
@@ -48,32 +36,25 @@
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
   </object>
-  <object pk="1" model="rbuilder.usergroups">
-    <field type="CharField" name="usergroup">admin</field>
-  </object>
-  <object pk="2" model="rbuilder.usergroups">
+  <object pk="3" model="rbuilder.usergroups">
     <field type="CharField" name="usergroup">JeanValjean1</field>
   </object>
-  <object pk="3" model="rbuilder.usergroups">
+  <object pk="4" model="rbuilder.usergroups">
     <field type="CharField" name="usergroup">JeanValjean2</field>
   </object>
-  <object pk="4" model="rbuilder.usergroups">
+  <object pk="5" model="rbuilder.usergroups">
     <field type="CharField" name="usergroup">JeanValjean3</field>
   </object>
-  <object pk="1" model="rbuilder.usergroupmembers">
-    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">1</field>
-    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
-  </object>
   <object pk="2" model="rbuilder.usergroupmembers">
-    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2</field>
+    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">3</field>
     <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2</field>
   </object>
   <object pk="3" model="rbuilder.usergroupmembers">
-    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">3</field>
+    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">4</field>
     <field to="rbuilder.users" name="userid" rel="ManyToOneRel">3</field>
   </object>
   <object pk="4" model="rbuilder.usergroupmembers">
-    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">4</field>
+    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">5</field>
     <field to="rbuilder.users" name="userid" rel="ManyToOneRel">4</field>
   </object>
 </django-objects>
