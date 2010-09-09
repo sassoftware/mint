@@ -637,7 +637,7 @@ class SystemManager(base.BaseManager):
             if event.dispatchImmediately():
                 self.dispatchSystemEvent(event)
         else:
-            log.info("System %s %s event cannot be registered because there is no host information" % (system.name, event_type.name))
+            log.info("System %s (%s) '%s' cannot be registered because there is no host information" % (system.pk, system.name, event_type.name))
             self.log_system(system,
                 "Unable to register event '%s': no networking information" % event_type.name)
 
@@ -710,9 +710,9 @@ class SystemManager(base.BaseManager):
         if created:
             t1 = time.time()
             self.scheduleSystemRegistrationEvent(system)
-            log.info("    Scheduling action completed in %.2d seconds" %
+            log.info("    Scheduling action completed in %.2f seconds" %
                 (time.time() - t1, ))
-        log.info("  Importing system %s (%s) completed in %.2d seconds" %
+        log.info("  Importing system %s (%s) completed in %.2f seconds" %
             (targetSystemId, targetSystem.instanceName, time.time() - t0))
 
     def _addTargetSystemNetwork(self, system, target, tsystem):
