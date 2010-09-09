@@ -93,19 +93,20 @@ class BaseManager(models.Manager):
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
         """
-        created = False
+        oldModel = None
         # Load the model from the db.
         loaded_model = self.load(model_inst, accessors)
-        if not loaded_model:
+        if loaded_model:
+            oldModel = loaded_model.serialize()
+        else:
             # No matching model was found. We need to save.  This scenario
             # means we must be creating something new (POST), so it's safe to
             # go ahead and save here, if something goes wrong later, this will
             # be automatically rolled back.
             model_inst.save()
-            created = True
             loaded_model = model_inst
 
-        return created, loaded_model
+        return oldModel, loaded_model
 
     def load_from_href(self, href):
         """
@@ -315,8 +316,9 @@ class BaseManager(models.Manager):
         model = self.add_synthetic_fields(model, obj)
         model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
+        oldModel = None
         if save:
-            created, model = self.load_or_create(model, accessors)
+            oldModel, model = self.load_or_create(model, accessors)
         else:
             dbmodel = self.load(model, accessors)
             if dbmodel:
@@ -327,6 +329,7 @@ class BaseManager(models.Manager):
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
+        model.oldModel = oldModel
 
         return model
 

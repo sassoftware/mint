@@ -136,20 +136,9 @@ class SystemManager(base.BaseManager):
         zone = models.Zone.objects.get(pk=zone_id)
         managementNode.zone = zone;
         managementNode.save()
-        self.log_system(managementNode, models.SystemLogEntry.ADDED)
-        
-        if managementNode.registered:
-            managementNode.registration_date = self.now()
-            managementNode.current_state = self.systemState(
-                models.SystemState.REGISTERED)
-            #TO-DO Need to add the JID to the models.ManagementNode object
-            managementNode.save()
-            self.log_system(managementNode, models.SystemLogEntry.REGISTERED)
-        else:
-            managementNode.current_state = self.systemState(
-                models.SystemState.UNMANAGED)
-            managementNode.save()
-        
+
+        self.setSystemState(managementNode)
+        #TO-DO Need to add the JID to the models.ManagementNode object
         return managementNode
 
     def log_system(self, system, log_msg):
@@ -178,23 +167,34 @@ class SystemManager(base.BaseManager):
 
         # add the system
         system.save()
-        self.log_system(system, models.SystemLogEntry.ADDED)
 
-        if system.registered:
-            system.registration_date = self.now()
-            system.current_state = self.systemState(
-                models.SystemState.REGISTERED)
-            system.save()
-            self.log_system(system, models.SystemLogEntry.REGISTERED)
-            self.scheduleSystemPollEvent(system)
-        else:
-            # mark the system as needing registration
-            self.scheduleSystemRegistrationEvent(system)
+        self.setSystemState(system)
 
         if generateCertificates:
             self.generateSystemCertificates(system)
 
         return system
+
+    def setSystemState(self, system):
+        if system.oldModel is None:
+            self.log_system(system, models.SystemLogEntry.ADDED)
+        registeredState = self.systemState(models.SystemState.REGISTERED)
+        if system.isNewRegistration:
+            system.registration_date = self.now()
+            system.current_state = registeredState
+            system.save()
+            self.log_system(system, models.SystemLogEntry.REGISTERED)
+            if not system.management_node:
+                self.scheduleSystemPollEvent(system)
+        elif system.isRegistered:
+            if system.current_state.system_state_id != registeredState.system_state_id:
+                system.current_state = registeredState
+                system.save()
+                self.log_system(system, models.SystemLogEntry.REGISTERED)
+        else:
+            # mark the system as needing registration
+            self.scheduleSystemRegistrationEvent(system)
+
 
     def generateSystemCertificates(self, system):
         if system.ssl_client_certificate is not None and \
@@ -231,7 +231,7 @@ class SystemManager(base.BaseManager):
     def updateSystem(self, system):
         # XXX This will have to change and be done in modellib, most likely.
         self.check_system_versions(system)
-        self.setSystemState(system)
+        self.setSystemStateFromJob(system)
         self.check_system_last_job(system)
         system.save()
 
@@ -253,7 +253,7 @@ class SystemManager(base.BaseManager):
         else:
             self.mgr.updateInstalledSoftware(system, system.new_versions)
 
-    def setSystemState(self, system):
+    def setSystemStateFromJob(self, system):
         job = system.lastJob
         if job is None:
             # This update did not come in as a result of a job

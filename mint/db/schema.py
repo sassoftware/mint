@@ -1112,8 +1112,6 @@ def _createInventorySchema(db, cfg):
                 "ssl_server_certificate" varchar(8092),
                 "scheduled_event_start_date" timestamp with time zone,
                 "launching_user_id" integer REFERENCES "users" ("userid"),
-                "available" bool,
-                "registered" bool,
                 "current_state_id" integer NOT NULL
                     REFERENCES "inventory_system_state" ("system_state_id"),
                 "management_node" bool,

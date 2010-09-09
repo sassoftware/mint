@@ -294,14 +294,14 @@ class InventoryTestCase(XMLTestCase):
 class LogTestCase(XMLTestCase):
 
     def testGetLog(self):
-        system = models.System(name="mgoblue", 
-            description="best appliance ever", registered=False)
+        system = models.System(name="mgoblue",
+            description="best appliance ever")
         self.mgr.addSystem(system)
-        system = models.System(name="mgoblue2", 
-            description="best appliance ever2", registered=False)
+        system = models.System(name="mgoblue2",
+            description="best appliance ever2")
         self.mgr.addSystem(system)
-        system = models.System(name="mgoblue3", 
-            description="best appliance ever3", registered=False)
+        system = models.System(name="mgoblue3",
+            description="best appliance ever3")
         self.mgr.addSystem(system)
         response = self._get('/api/inventory/log/')
         # Just remove lines with dates in them, it's easier to test for now.
@@ -564,8 +564,8 @@ class SystemsTestCase(XMLTestCase):
         
     def testAddSystem(self):
         # create the system
-        system = models.System(name="mgoblue", 
-            description="best appliance ever", registered=False)
+        system = models.System(name="mgoblue",
+            description="best appliance ever")
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
@@ -576,7 +576,9 @@ class SystemsTestCase(XMLTestCase):
         
     def testAddRegisteredSystem(self):
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever", registered=True)
+        system = models.System(name="mgoblue",
+            description="best appliance ever",
+            local_uuid='123', generated_uuid='456')
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
@@ -592,8 +594,10 @@ class SystemsTestCase(XMLTestCase):
     def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
         # create the system
-        system = models.System(name="mgoblue", description="best appliance ever", registered=True,
-            management_node=True)
+        system = models.System(name="mgoblue",
+            description="best appliance ever",
+            management_node=True,
+            local_uuid='123', generated_uuid='456')
         system.zone = zone
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)

@@ -189,9 +189,7 @@ management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNodes>
   <managementNode>
-    <available/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-    <registered>true</registered>
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
@@ -249,9 +247,7 @@ management_nodes_xml = """\
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode>
-  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
@@ -307,8 +303,6 @@ management_node_xml = """\
 management_node_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode>
-  <available/>
-  <registered>True</registered>
   <sslClientKey>test management node client key</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
@@ -346,9 +340,7 @@ management_node_post_xml = """\
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode>
-  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
@@ -405,9 +397,7 @@ systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/inventory/systems/2">
-    <registered/>
     <registrationDate/>
-    <available/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
     <currentState id="http://testserver/api/inventory/systemStates/1/">
       <description>Unmanaged</description>
@@ -455,9 +445,7 @@ systems_xml = """\
     <targetSystemState/>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
-    <registered>true</registered>
     <registrationDate/>
-    <available/>
     <createdDate>%s</createdDate>
     <currentState id="http://testserver/api/inventory/systemStates/2/">
       <description>Polling</description>
@@ -511,7 +499,6 @@ systems_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/inventory/systems/1">
-    <registered>True</registered>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
     <registrationDate/>
@@ -534,7 +521,6 @@ systems_put_xml = """\
     <scheduledEventStartDate/>
     <launchDate/>
     <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-    <available/>
     <description>testsystemdescription</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
@@ -555,7 +541,6 @@ systems_put_xml = """\
     <osType/>
   </system>
   <system id="http://testserver/api/inventory/systems/2">
-    <registered>True</registered>
     <sslClientKey>testsystemsslclientkey</sslClientKey>
     <osMajorVersion/>
     <registrationDate/>
@@ -578,7 +563,6 @@ systems_put_xml = """\
     <scheduledEventStartDate/>
     <launchDate/>
     <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-    <available/>
     <description>testsystemdescription</description>
     <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
     <targetSystemId/>
@@ -604,7 +588,6 @@ system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <installedSoftware/>
-  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -631,7 +614,6 @@ system_xml = """\
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -656,7 +638,6 @@ system_xml = """\
 system_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
-  <registered>True</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
@@ -678,7 +659,6 @@ system_post_xml = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-  <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -694,9 +674,7 @@ system_post_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -747,7 +725,6 @@ system_post_xml_response = """\
 system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
-  <registered>False</registered>
   <sslClientKey>testsystemsslclientkey</sslClientKey>
   <osMajorVersion/>
   <registrationDate/>
@@ -769,7 +746,6 @@ system_post_xml_dup = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-  <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -789,9 +765,7 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <available/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
-  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -1043,7 +1017,6 @@ system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   %s
-  <registered>true</registered>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -1070,7 +1043,6 @@ system_version_xml = """\
   <launchingUser/>
   <scheduledEventStartDate/>
   <launchDate/>
-  <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
   <targetSystemId/>
@@ -1206,7 +1178,6 @@ system_version_put_response_xml = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
-  <available/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/2/systemLog/"/>
   <targetSystemId/>
@@ -1310,10 +1281,8 @@ system_available_updates_xml = """\
   <scheduledEventStartDate/>
   <launchDate/>
   <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
-  <available/>
   <registrationDate/>
   <description>testsystemdescription</description>
-  <registered>true</registered>
   <targetSystemId/>
   <targetSystemName/>
   <targetSystemDescription/>

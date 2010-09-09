@@ -226,8 +226,6 @@ class System(modellib.XObjIdModel):
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
     scheduled_event_start_date = modellib.DateTimeUtcField(null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
-    available = models.NullBooleanField()
-    registered = models.NullBooleanField()
     current_state = modellib.SerializedForeignKey(SystemState, null=True, related_name='systems')
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
@@ -240,6 +238,7 @@ class System(modellib.XObjIdModel):
 
     new_versions = []
     lastJob = None
+    oldModel = None
 
     def save(self, *args, **kw):
         if self.current_state_id is None:
@@ -272,6 +271,29 @@ class System(modellib.XObjIdModel):
         if created:
             system_log.save()
         return system_log
+
+    @property
+    def isRegistered(self):
+        """
+        Return True is the system is registered
+        """
+        return (self.local_uuid is not None and self.generated_uuid is not None)
+
+    @property
+    def isNewRegistration(self):
+        """
+        Return True if this object is a new registration.
+        Relies on the presence of oldModel, which is set when we de-serialize
+        the XML from clients.
+        """
+        if not self.isRegistered:
+            return False
+        om = self.oldModel
+        if om is None:
+            return True
+        if om.local_uuid is None or om.generated_uuid is None:
+            return True
+        return False
 
 class ManagementNode(System):
     class Meta:
