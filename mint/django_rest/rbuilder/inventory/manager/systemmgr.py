@@ -658,6 +658,7 @@ class SystemManager(base.BaseManager):
                 
         return hasInfo
 
+    @base.exposed
     def importTargetSystems(self, targetDrivers):
         if not targetDrivers:
             log.info("No targets found, nothing to import")
