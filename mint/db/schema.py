@@ -1069,7 +1069,7 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "inventory_zone" (
                 "zone_id" %(PRIMARYKEY)s,
-                "name" varchar(8092) NOT NULL,
+                "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092),
                 "created_date" timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
@@ -1389,14 +1389,16 @@ def _addManagementZone(db, cfg):
     changed = False
     
     # add the zone
+    zoneName = "Local rBuilder"
+    zoneDescription = 'Local rBuilder management zone'
     changed |= _addTableRows(db, 'inventory_zone', 'name',
-            [dict(name="Local rBuilder", 
-                  description='Local rBuilder management zone',
+            [dict(name=zoneName,
+                  description=zoneDescription,
                   created_date=str(datetime.datetime.now(tz.tzutc())))])
     
     # get the zone id
     cu = db.cursor()
-    cu.execute("SELECT zone_id from inventory_zone where name='Local rBuilder'")
+    cu.execute("SELECT zone_id from inventory_zone where name=?", zoneName)
     ids = cu.fetchall()
     if len(ids) == 1:
         zoneId = ids[0][0]

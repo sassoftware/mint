@@ -122,9 +122,9 @@ class Zone(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'zone',
                 attributes = {'id':str})
-    
+
     zone_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=8092)
+    name = models.CharField(max_length=8092, unique=True)
     description = models.CharField(max_length=8092, null=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
 

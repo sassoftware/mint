@@ -1086,7 +1086,7 @@ class MigrateTo_50(SchemaMigration):
             cu.execute("""
                 CREATE TABLE "inventory_zone" (
                     "zone_id" %(PRIMARYKEY)s,
-                    "name" varchar(8092) NOT NULL,
+                    "name" varchar(8092) NOT NULL UNIQUE,
                     "description" varchar(8092),
                     "created_date" timestamp with time zone NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
