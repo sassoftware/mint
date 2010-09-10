@@ -191,14 +191,17 @@ class Targets(modellib.XObjModel):
         db_table = u'targets'
 
     def get_absolute_url(self, request):
-        uri = request.build_absolute_uri()
-        parts = urlparse.urlparse(uri)
         path = '/catalog/clouds/%s/instances/%s' % \
             (self.targettype, self.targetname)
-        parts = list(parts)
-        parts[2] = path
-        parts[4] = ''
-        return urlparse.urlunparse(parts)
+        if request:
+            uri = request.build_absolute_uri()
+            parts = urlparse.urlparse(uri)
+            parts = list(parts)
+            parts[2] = path
+            parts[4] = ''
+            return urlparse.urlunparse(parts)
+        else:
+            return path
 
 class TargetData(modellib.XObjModel):
     class Meta:
