@@ -21,6 +21,7 @@ from mint.lib import uuid, x509
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
+from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
 
