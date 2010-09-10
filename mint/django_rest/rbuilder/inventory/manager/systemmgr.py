@@ -665,11 +665,14 @@ class SystemManager(base.BaseManager):
             log.info("No targets found, nothing to import")
             return
 
+        t0 = time.time()
         targetsData = self.collectTargetsData(targetDrivers)
         inventoryData = self.collectInventoryTargetsData()
         todelete, toupdate = targetsData.deltaSystems(inventoryData)
         self._disassociateFromTargets(todelete)
         self._addSystemsToTargets(toupdate)
+        log.info("Import of systems from all targets completed in %.2f seconds" % (
+            time.time() - t0))
 
     def _disassociateFromTargets(self, objList):
         for (targetType, targetName), systemMap in objList:
@@ -685,12 +688,15 @@ class SystemManager(base.BaseManager):
 
     def _addSystemsToTargets(self, objList):
         for (targetType, targetName), systemMap in objList:
+            t0 = time.time()
             target = self.lookupTarget(targetType, targetName)
 
             log.info("Importing %d systems from target %s (%s)" % (
                 len(systemMap), targetName, targetType))
             for targetSystemId, tSystem in systemMap.items():
                 self._addSystemToTarget(target, targetSystemId, tSystem)
+            log.info("Target %s (%s) import of %d systems completed in %.2f seconds" % (
+                targetName, targetType, len(systemMap), time.time() - t0))
 
     def _addSystemToTarget(self, target, targetSystemId, targetSystem):
         t0 = time.time()
@@ -701,6 +707,9 @@ class SystemManager(base.BaseManager):
         if created:
             self.log_system(system, "System added as part of target %s (%s)" %
                 (target.targetname, target.targettype))
+            # Having nothing else available, we copy the target's name
+            system.name = targetSystem.instanceName
+            system.description = targetSystem.instanceDescription
         system.target_system_name = targetSystem.instanceName
         system.target_system_description = targetSystem.instanceDescription
         self._addTargetSystemNetwork(system, target, targetSystem)
@@ -870,6 +879,7 @@ class SystemManager(base.BaseManager):
             return todelMap, toupMap
 
     def collectTargetsData(self, targetDrivers):
+        t0 = time.time()
         targetsData = self.TargetsData()
         for driver in targetDrivers:
             try:
@@ -878,9 +888,11 @@ class SystemManager(base.BaseManager):
                 tb = sys.exc_info()[2]
                 traceback.print_tb(tb)
                 log.error("Failed importing systems from target %s: %s" % (driver.cloudType, e))
+        log.info("Target data collected in %.2f seconds" % (time.time() - t0))
         return targetsData
 
     def collectOneTargetData(self, driver, targetsData):
+        t0 = time.time()
         log.info("Enumerating systems for target %s (%s) as user %s" %
             (driver.cloudName, driver.cloudType, driver.userId))
         targetType = driver.cloudType
@@ -896,6 +908,9 @@ class SystemManager(base.BaseManager):
             targetsData.addSystem(targetType, targetName, userName,
                 instanceId, instanceName, instanceDescription, dnsName,
                 state)
+        log.info("Target %s (%s) as user %s enumerated in %.2f seconds" %
+            (driver.cloudName, driver.cloudType, driver.userId,
+                time.time() - t0))
 
     @base.exposed
     def getSystemsLog(self):
