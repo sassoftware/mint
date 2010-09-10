@@ -59,6 +59,12 @@ class SystemManager(base.BaseManager):
         return zone
 
     @base.exposed
+    def getLocalZone(self):
+        "Return the zone for this rBuilder"
+        zone = models.Zone.objects.get(name='Local rBuilder')
+        return zone
+
+    @base.exposed
     def getZoneByJID(self, node_jid):
         zone = models.ManagementNode.objects.get(node_jid=node_jid).zone
         return zone
@@ -710,6 +716,7 @@ class SystemManager(base.BaseManager):
             # Having nothing else available, we copy the target's name
             system.name = targetSystem.instanceName
             system.description = targetSystem.instanceDescription
+            system.managing_zone = self.getLocalZone()
         system.target_system_name = targetSystem.instanceName
         system.target_system_description = targetSystem.instanceDescription
         self._addTargetSystemNetwork(system, target, targetSystem)

@@ -2198,16 +2198,17 @@ class TargetSystemImportTest(XMLTestCase):
             ('vsphere1-001', 'vsphere1 001', self.tgt1, [c2]),
             ('vsphere1-002', 'vsphere1 002', self.tgt1, [c1, c2]),
 
-            ('vsphere2-001', 'vsphere1 001', self.tgt2, [c1]),
-            ('vsphere2-002', 'vsphere1 002', self.tgt2, [c3]),
-            ('vsphere2-003', 'vsphere1 003', self.tgt2, []),
+            ('vsphere2-001', 'vsphere2 001', self.tgt2, [c1]),
+            ('vsphere2-002', 'vsphere2 002', self.tgt2, [c3]),
+            ('vsphere2-003', 'vsphere2 003', self.tgt2, []),
 
             ('ec2aws-001', 'ec2aws 001', self.tgt3, [c1]),
             ('ec2aws-002', 'ec2aws 002', self.tgt3, [c3]),
         ]
         for (systemId, systemName, target, credList) in systems:
+            description = systemName + " description"
             sy = models.System(name=systemName, target_system_id=systemId,
-                target=target)
+                target=target, description=description)
             sy.save()
             nw = models.Network(system=sy, dns_name=systemId)
             nw.save()
@@ -2279,6 +2280,9 @@ class TargetSystemImportTest(XMLTestCase):
                 'vsphere2.eng.rpath.com (vmware): using dnsName2-003 as primary contact address',
                 'vsphere2.eng.rpath.com (vmware): removing stale network information vsphere2-003 (ip unset)',
             ])
+        # Make sure we didn't overwrite the name with the one coming from the
+        # target
+        self.failUnlessEqual(system.name, "vsphere2 003")
 
         system = models.System.objects.get(target_system_id='vsphere1-004')
         entries = self.mgr.getSystemLogEntries(system)
@@ -2289,3 +2293,8 @@ class TargetSystemImportTest(XMLTestCase):
                 'System added as part of target vsphere1.eng.rpath.com (vmware)',
             ])
         self.failUnless(entries[0].entry.startswith("Event type 'system registration' registered and will be enabled on "))
+        # Make sure the zone is set
+        self.failUnlessEqual(system.managing_zone.name, 'Local rBuilder')
+        # Make sure we did set name, description etc
+        self.failUnlessEqual(system.name, system.target_system_name)
+        self.failUnlessEqual(system.description, system.target_system_description)
