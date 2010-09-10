@@ -279,10 +279,11 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def updateSystem(self, system):
         # XXX This will have to change and be done in modellib, most likely.
+        if self.checkAndApplyShutdown(system):
+            return
         self.check_system_versions(system)
         self.setSystemStateFromJob(system)
         self.check_system_last_job(system)
-        self.checkStateTransitions(system)
         system.save()
 
     def check_system_last_job(self, system):
@@ -307,10 +308,13 @@ class SystemManager(base.BaseManager):
         else:
             self.mgr.updateInstalledSoftware(system, system.new_versions)
 
-    def checkStateTransitions(self, system):
+    def checkAndApplyShutdown(self, system):
         currentStateName = system.current_state.name
         if currentStateName == models.SystemState.NONRESPONSIVE_SHUTDOWN:
             self.scheduleSystemShutdownEvent(system)
+            return True
+        else:
+            return False
 
     def setSystemStateFromJob(self, system):
         job = system.lastJob
