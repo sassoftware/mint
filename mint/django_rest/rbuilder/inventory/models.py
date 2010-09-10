@@ -363,6 +363,15 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
         'on-demand apply an update to a system'
+
+    SYSTEM_SHUTDOWN = 'system shutdown'
+    SYSTEM_SHUTDOWN_PRIORITY = 50
+    SYSTEM_SHUTDOWN_DESCRIPTION = 'shutdown a system'
+
+    SYSTEM_SHUTDOWN_IMMEDIATE = 'immediate system shutdown'
+    SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
+    SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
+        'on-demand shutdown a system'
         
     event_type_id = models.AutoField(primary_key=True)
     EVENT_TYPES = (
@@ -372,6 +381,10 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
         (SYSTEM_APPLY_UPDATE_IMMEDIATE,
          SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION),
+        (SYSTEM_SHUTDOWN,
+         SYSTEM_SHUTDOWN_DESCRIPTION),
+        (SYSTEM_SHUTDOWN_IMMEDIATE,
+         SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION),
     )
     name = models.CharField(max_length=8092, unique=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)

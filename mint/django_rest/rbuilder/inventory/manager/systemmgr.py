@@ -34,6 +34,10 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_APPLY_UPDATE,
         models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
     ])
+    ShutdownEvents = set([
+        models.EventType.SYSTEM_SHUTDOWN,
+        models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
+    ])
 
     TZ = tz.tzutc()
     X509 = x509.X509
@@ -146,6 +150,26 @@ class SystemManager(base.BaseManager):
         self.setSystemState(managementNode)
         #TO-DO Need to add the JID to the models.ManagementNode object
         return managementNode
+
+    def _getProductVersionAndStage(self, nvf):
+        name, version, flavor = nvf
+        label = version.trailingLabel()
+        hostname = label.getHost().split('.')[0]
+        try:
+            product = self.db.getProduct(hostname)
+            prodVersions = self.db.listProductVersions(product.hostname)
+        except mint_rest_errors.ProductNotFound:
+            # Not a product that lives on this rba
+            return None, None
+
+        for version in prodVersions.versions:
+            stages = self.db.getProductVersionStages(product.hostname, version.name)
+            for stage in stages.stages:
+                if stage.label == label.asString():
+                    return version, stage
+
+        return None, None
+
 
     def log_system(self, system, log_msg):
         system_log = system.createLog()
@@ -261,6 +285,8 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def updateSystem(self, system):
         # XXX This will have to change and be done in modellib, most likely.
+        if self.checkAndApplyShutdown(system):
+            return
         self.check_system_versions(system)
         self.setSystemStateFromJob(system)
         self.check_system_last_job(system)
@@ -287,6 +313,14 @@ class SystemManager(base.BaseManager):
             self.mgr.setInstalledSoftware(system, system.new_versions)
         else:
             self.mgr.updateInstalledSoftware(system, system.new_versions)
+
+    def checkAndApplyShutdown(self, system):
+        currentStateName = system.current_state.name
+        if currentStateName == models.SystemState.NONRESPONSIVE_SHUTDOWN:
+            self.scheduleSystemShutdownEvent(system)
+            return True
+        else:
+            return False
 
     def setSystemStateFromJob(self, system):
         job = system.lastJob
@@ -528,6 +562,9 @@ class SystemManager(base.BaseManager):
             data = cPickle.loads(event.event_data)
             self._runSystemEvent(event, repClient.update, cimParams,
                 resultsLocation, zone=zone, sources=data)
+        elif eventType in self.ShutdownEvents:
+            self._runSystemEvent(event, repClient.shutdown,
+                cimParams, resultsLocation, zone=zone)
         else:
             log.error("Unknown event type %s" % eventType)
 
@@ -624,6 +661,13 @@ class SystemManager(base.BaseManager):
         apply_update_event_type = models.EventType.objects.get(
             name=models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
         self.createSystemEvent(system, apply_update_event_type, data=sources)
+
+    @base.exposed
+    def scheduleSystemShutdownEvent(self, system):
+        '''Schedule an event to shutdown the system.'''
+        shutdown_event_type = models.EventType.objects.get(
+            name=models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
+        self.createSystemEvent(system, shutdown_event_type)
 
     @base.exposed
     def createSystemEvent(self, system, event_type, enable_time=None, 
