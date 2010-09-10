@@ -1235,17 +1235,22 @@ class MigrateTo_50(SchemaMigration):
             db.tables[tableName] = []
             changed = True
             changed |= schema._addTableRows(db, tableName, 'name',
-                [ dict(name="system registration",
-                       description='on-demand system registration event', priority=110),
-                  dict(name="system poll",
-                       description='standard system polling event', priority=50),
-                  dict(name="immediate system poll",
-                       description='on-demand system polling event', priority=105),
-                  dict(name="system apply update",
-                       description='apply an update to a system',
-                       priority=50),
-                  dict(name="immediate system apply update",
-                       description='on-demand apply an update to a system', priority=105)
+                [dict(name="system registration",
+                      description='on-demand system registration event', priority=110),
+                 dict(name="system poll",
+                      description='standard system polling event', priority=50),
+                 dict(name="immediate system poll",
+                      description='on-demand system polling event', priority=105),
+                 dict(name="system apply update",
+                      description='apply an update to a system',
+                      priority=50),
+                 dict(name="immediate system apply update",
+                      description='on-demand apply an update to a system', priority=105),
+                 dict(name="system shutdown",
+                      description='shutdown a system', priority=50),
+                 dict(name="immediate system shutdown", 
+                      description='on-demand shutdown a system', 
+                      priority=105),
                 ])
 
         if 'inventory_system_event' not in db.tables:

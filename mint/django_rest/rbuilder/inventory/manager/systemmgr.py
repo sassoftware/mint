@@ -34,6 +34,10 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_APPLY_UPDATE,
         models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
     ])
+    ShutdownEvents = set([
+        models.EventType.SYSTEM_SHUTDOWN,
+        models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
+    ])
 
     TZ = tz.tzutc()
     X509 = x509.X509
@@ -278,6 +282,7 @@ class SystemManager(base.BaseManager):
         self.check_system_versions(system)
         self.setSystemStateFromJob(system)
         self.check_system_last_job(system)
+        self.checkStateTransitions(system)
         system.save()
 
     def check_system_last_job(self, system):
@@ -301,6 +306,11 @@ class SystemManager(base.BaseManager):
             self.mgr.setInstalledSoftware(system, system.new_versions)
         else:
             self.mgr.updateInstalledSoftware(system, system.new_versions)
+
+    def checkStateTransitions(self, system):
+        currentStateName = system.current_state.name
+        if currentStateName == models.SystemState.NONRESPONSIVE_SHUTDOWN:
+            self.scheduleSystemShutdownEvent(system)
 
     def setSystemStateFromJob(self, system):
         job = system.lastJob
@@ -542,6 +552,9 @@ class SystemManager(base.BaseManager):
             data = cPickle.loads(event.event_data)
             self._runSystemEvent(event, repClient.update, cimParams,
                 resultsLocation, zone=zone, sources=data)
+        elif eventType in self.ShutdownEvents:
+            self._runSystemEvent(event, repClient.shutdown,
+                cimParams, resultsLocation, zone=zone)
         else:
             log.error("Unknown event type %s" % eventType)
 
@@ -638,6 +651,13 @@ class SystemManager(base.BaseManager):
         apply_update_event_type = models.EventType.objects.get(
             name=models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
         self.createSystemEvent(system, apply_update_event_type, data=sources)
+
+    @base.exposed
+    def scheduleSystemShutdownEvent(self, system):
+        '''Schedule an event to shutdown the system.'''
+        shutdown_event_type = models.EventType.objects.get(
+            name=models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
+        self.createSystemEvent(system, shutdown_event_type)
 
     @base.exposed
     def createSystemEvent(self, system, event_type, enable_time=None, 

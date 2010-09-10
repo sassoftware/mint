@@ -1232,7 +1232,12 @@ def _createInventorySchema(db, cfg):
                   description='apply an update to a system', priority=50),
              dict(name="immediate system apply update",
                   description='on-demand apply an update to a system', 
-                  priority=105)
+                  priority=105),
+             dict(name="system shutdown",
+                  description='shutdown a system', priority=50),
+             dict(name="immediate system shutdown", 
+                  description='on-demand shutdown a system', 
+                  priority=105),
             ])
         
     if 'inventory_system_event' not in db.tables:
