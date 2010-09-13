@@ -35,6 +35,7 @@ class VersionManager(base.BaseManager):
 
         # Do the delta
         toAdd = []
+        newInstalled = []
         for new_version in new_versions:
             if isinstance(new_version, basestring):
                 trove = self.trove_from_nvf(new_version)
@@ -44,12 +45,14 @@ class VersionManager(base.BaseManager):
             isInst = oldInstalled.pop(nvf, None)
             if isInst is None:
                 toAdd.append(trove)
+            newInstalled.append(nvf)
 
-        return oldInstalled, toAdd
+        return oldInstalled, newInstalled, toAdd
 
     @base.exposed
     def setInstalledSoftware(self, system, new_versions):
-        oldInstalled, toAdd = self._diffVersions(system, new_versions)
+        oldInstalled, newInstalled, toAdd = \
+            self._diffVersions(system, new_versions)
         for trove in oldInstalled.itervalues():
             system.installed_software.remove(trove)
         for trove in toAdd:
@@ -60,13 +63,11 @@ class VersionManager(base.BaseManager):
 
     @base.exposed
     def updateInstalledSoftware(self, system, new_versions):
-        oldInstalled, toAdd = self._diffVersions(system, new_versions)
+        oldInstalled, newInstalled, toAdd = \
+            self._diffVersions(system, new_versions)
         sources = []
-        for nvf in oldInstalled.keys():
+        for nvf in newInstalled:
             n, v, f = nvf
-            sources.append("%s=%s[%s]" % (n, str(v), str(f)))
-        for new_version in new_versions:
-            n, v, f = new_version.getNVF()
             sources.append("%s=%s[%s]" % (n, str(v), str(f)))
         self.mgr.scheduleSystemApplyUpdateEvent(system, sources)
 
