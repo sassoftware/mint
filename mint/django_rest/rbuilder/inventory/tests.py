@@ -354,8 +354,9 @@ class ZonesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
     def testGetZone(self):
+        models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._get('/api/inventory/zones/2/',
+        response = self._get('/api/inventory/zones/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 

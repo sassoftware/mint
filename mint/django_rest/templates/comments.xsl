@@ -43,20 +43,67 @@ Attributes:
 <xsl:comment>
 <![CDATA[
 Description:
-  List the entry points into the inventory API
-  
+  A node listing the entry points into the inventory API
+
+Properties:
+  log - entry point into inventory logging
+  systemStates - entry point into the inventory system states collection
+  systems - entry point into the inventory systems collection
+  zones - entry point into inventory management zones collection
+
 Methods: 
   GET:
     Authentication: none
-    Result:
+    Format:
       <inventory>
-        <eventTypes href="https://hostname/api/inventory/eventTypes/"/>
-        <log href="https://hostname/api/inventory/log/"/>
-        <systemStates href="https://hostname/api/inventory/systemStates/"/>
-        <systems href="https://hostname/api/inventory/systems/"/>
-        <zones href="https://hostname/api/inventory/zones/"/>
+        <eventTypes href="http://hostname/api/inventory/eventTypes/"/>
+        <log href="http://hostname/api/inventory/log/"/>
+        <systemStates href="http://hostname/api/inventory/systemStates/"/>
+        <systems href="http://hostname/api/inventory/systems/"/>
+        <zones href="http://hostname/api/inventory/zones/"/>
       </inventory>
 
+  POST:
+    not supported
+    
+  PUT:
+    not supported
+    
+  DELETE:
+    not supported
+]]>
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/zones">
+<xsl:comment>
+<![CDATA[
+Description:
+  A collection of management zones available to inventory systems
+  
+Properties:
+  zone - a management zone resource
+    name - the zone name
+    description - the zone description
+    zoneId - the database id for the zone
+    createdDate - the date the zone was created in UTC
+    managementNodes - an entry point into the management nodes collection for this zone
+    systems - an entry point into the collection of systems managed by this zone
+  
+Methods: 
+  GET:
+    Authentication: user
+    Format:
+      <zones>
+        <zone id="http://hostname/api/inventory/zones/1/">
+          ...
+        </zone>
+        <zone id="http://hostname/api/inventory/zones/2/">
+          ...
+        </zone>
+      </zones>
+      
   POST:
     not supported
     
@@ -74,55 +121,29 @@ Methods:
 <xsl:comment>
 <![CDATA[
 Description:
-  List the types of events that can be performed on systems
+  A collection of event types applicable to systems in inventory
+  
+Properties:
+  eventType - a system event type resource
+    name - the event type name
+    description - the event type description
+    priority - the event type priority where > priority wins
+    eventTypeId - the database id of the event type
+    systemEvents - an entry point into a collection of all system events of this type
   
 Methods: 
   GET:
     Authentication: none
-    Result:
+    Format:
       <eventTypes>
         <eventType id="http://hostname/api/inventory/eventTypes/1/">
-          <name>system registration</name>
-          <systemEvents/>
-          <priority>110</priority>
-          <jobSet/>
-          <eventTypeId>1</eventTypeId>
-          <description>on-demand registration event</description>
+          ...
         </eventType>
         <eventType id="http://hostname/api/inventory/eventTypes/2/">
-          <name>immediate system poll</name>
-          <systemEvents/>
-          <priority>105</priority>
-          <jobSet/>
-          <eventTypeId>2</eventTypeId>
-          <description>on-demand polling event</description>
-        </eventType>
-        <eventType id="http://hostname/api/inventory/eventTypes/3/">
-          <name>system poll</name>
-          <systemEvents/>
-          <priority>50</priority>
-          <jobSet/>
-          <eventTypeId>3</eventTypeId>
-          <description>standard polling event</description>
-        </eventType>
-        <eventType id="http://hostname/api/inventory/eventTypes/4/">
-          <name>system apply update</name>
-          <systemEvents/>
-          <priority>50</priority>
-          <jobSet/>
-          <eventTypeId>4</eventTypeId>
-          <description>apply an update to a system</description>
-        </eventType>
-        <eventType id="http://hostname/api/inventory/eventTypes/5/">
-          <name>immediate system apply update</name>
-          <systemEvents/>
-          <priority>105</priority>
-          <jobSet/>
-          <eventTypeId>5</eventTypeId>
-          <description>on-demand apply an update to a system</description>
+          ...
         </eventType>
       </eventTypes>
-
+      
   POST:
     not supported
     
@@ -140,73 +161,26 @@ Methods:
 <xsl:comment>
 <![CDATA[
 Description:
-  List the the valid states systems can be in
+  A collection of states applicable to systems in inventory
+  
+Properties:
+  systemState - a system state resource
+    name - the state name
+    description - the state description
+    systemStateId - the database id for the state
+    createdDate - the date the state was created in UTC
   
 Methods: 
   GET:
     Authentication: none
-    Result:
+    Format:
       <systemStates> 
-        <systemState id="http://hostname/api/inventory/systemStates/1/"> 
-          <systemStateId>1</systemStateId> 
-          <description>Unmanaged</description> 
-          <name>unmanaged</name> 
-          <createdDate>2010-09-10T14:54:01.949475+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/2/"> 
-          <systemStateId>2</systemStateId> 
-          <description>Polling</description> 
-          <name>registered</name> 
-          <createdDate>2010-09-10T14:54:01.951945+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/3/"> 
-          <systemStateId>3</systemStateId> 
-          <description>Online</description> 
-          <name>responsive</name> 
-          <createdDate>2010-09-10T14:54:01.954141+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/4/"> 
-          <systemStateId>4</systemStateId> 
-          <description>Not responding: unknown</description> 
-          <name>non-responsive-unknown</name> 
-          <createdDate>2010-09-10T14:54:01.956562+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/5/"> 
-          <systemStateId>5</systemStateId> 
-          <description>Not responding: network unreachable</description> 
-          <name>non-responsive-net</name> 
-          <createdDate>2010-09-10T14:54:01.958771+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/6/"> 
-          <systemStateId>6</systemStateId> 
-          <description>Not responding: host unreachable</description> 
-          <name>non-responsive-host</name> 
-          <createdDate>2010-09-10T14:54:01.961157+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/7/"> 
-          <systemStateId>7</systemStateId> 
-          <description>Not responding: shutdown</description> 
-          <name>non-responsive-shutdown</name> 
-          <createdDate>2010-09-10T14:54:01.963304+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/8/"> 
-          <systemStateId>8</systemStateId> 
-          <description>Not responding: suspended</description> 
-          <name>non-responsive-suspended</name> 
-          <createdDate>2010-09-10T14:54:01.966109+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/9/"> 
-          <systemStateId>9</systemStateId> 
-          <description>Stale</description> 
-          <name>dead</name> 
-          <createdDate>2010-09-10T14:54:01.968931+00:00</createdDate> 
-        </systemState> 
-        <systemState id="http://hostname/api/inventory/systemStates/10/"> 
-          <systemStateId>10</systemStateId> 
-          <description>Retired</description> 
-          <name>mothballed</name> 
-          <createdDate>2010-09-10T14:54:01.970909+00:00</createdDate> 
-        </systemState> 
+        <systemState id="http://hostname/api/inventory/systemStates/1/">
+          ...
+        </systemState>
+        <systemState id="http://hostname/api/inventory/systemStates/2/">
+          ...
+        </systemState>
       </systemStates>
 
   POST:
