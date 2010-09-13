@@ -2552,7 +2552,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         # CA certificates for rpath-tools.
         hg_ca, lg_ca = self.restDb.getCACertificates()
-        pki = r['pki'] = {
+        r['pki'] = {
                 'hg_ca': hg_ca or '',
                 'lg_ca': lg_ca or '',
                 }
