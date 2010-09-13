@@ -24,6 +24,7 @@ from mint.rest.db import capsulemgr
 from mint.rest.db import emailnotifier
 from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
+from mint.rest.db import pkimgr
 from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
@@ -132,6 +133,7 @@ class Database(DBInterface):
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
         self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
         self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
+        self.pkiMgr = pkimgr.PKIManager(cfg, self, auth)
         self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
         if subscribers is None:
             subscribers = []
@@ -828,3 +830,7 @@ class Database(DBInterface):
         if self.siteAuth.isValid():
             self.auth.requireAdmin()
         return self.siteAuth.getForm()
+
+    @readonly
+    def getCACertificates(self):
+        return self.pkiMgr.getCACertificates()

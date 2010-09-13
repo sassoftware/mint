@@ -2550,6 +2550,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
         #Set up the http/https proxy
         r['proxy'] = dict(self.cfg.proxy)
 
+        # CA certificates for rpath-tools.
+        hg_ca, lg_ca = self.restDb.getCACertificates()
+        pki = r['pki'] = {
+                'hg_ca': hg_ca or '',
+                'lg_ca': lg_ca or '',
+                }
+        if not hg_ca:
+            log.warning("High-grade CA certificate is missing. Images will "
+                    "not be registerable.")
+        if not lg_ca:
+            log.warning("Low-grade CA certificate is missing. Images will "
+                    "not be remote-registerable.")
+
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
 
