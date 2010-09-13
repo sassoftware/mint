@@ -1394,8 +1394,7 @@ class MigrateTo_50(SchemaMigration):
                     ON DELETE SET NULL,
                 ca_serial_index         integer,
                 time_issued             timestamptz NOT NULL,
-                time_expired            timestamptz NOT NULL,
-                UNIQUE ( fingerprint, ca_serial_index )
+                time_expired            timestamptz NOT NULL
             )""")
 
         changed |= createTable(db, 'TargetCredentials', """
