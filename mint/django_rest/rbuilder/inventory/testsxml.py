@@ -396,6 +396,7 @@ management_node_post_response_xml = """\
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
+  <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <system id="http://testserver/api/inventory/systems/2">
     <registrationDate/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>

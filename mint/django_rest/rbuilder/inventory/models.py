@@ -38,9 +38,12 @@ class Systems(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'systems',
-                elements=['system'])
+                elements=['system', 'eventTypes'])
     list_fields = ['system']
     system = []
+    
+    def __init__(self):
+        self.eventTypes = modellib.XObjHrefModel('../eventTypes/')
 
     def save(self):
         return [s.save() for s in self.system]
