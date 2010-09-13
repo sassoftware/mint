@@ -240,7 +240,7 @@ class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
 
-class InventoryEventTypesService(AbstractInventoryService):
+class InventorySystemEventTypesService(AbstractInventoryService):
     
     @return_xml
     def read(self, request, event_type_id=None):

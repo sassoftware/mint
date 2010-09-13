@@ -50,7 +50,6 @@ Methods:
     Authentication: none
     Result:
       <inventory>
-        <eventTypes href="https://hostname/api/inventory/eventTypes/"/>
         <log href="https://hostname/api/inventory/log/"/>
         <systemStates href="https://hostname/api/inventory/systemStates/"/>
         <systems href="https://hostname/api/inventory/systems/"/>
@@ -81,7 +80,7 @@ Methods:
     Authentication: none
     Result:
       <eventTypes>
-        <eventType id="http://hostname/api/inventory/eventTypes/1/">
+        <eventType id="http://hostname/api/inventory/systems/eventTypes/1/">
           <name>system registration</name>
           <systemEvents/>
           <priority>110</priority>
@@ -89,7 +88,7 @@ Methods:
           <eventTypeId>1</eventTypeId>
           <description>on-demand registration event</description>
         </eventType>
-        <eventType id="http://hostname/api/inventory/eventTypes/2/">
+        <eventType id="http://hostname/api/inventory/systems/eventTypes/2/">
           <name>immediate system poll</name>
           <systemEvents/>
           <priority>105</priority>
@@ -97,7 +96,7 @@ Methods:
           <eventTypeId>2</eventTypeId>
           <description>on-demand polling event</description>
         </eventType>
-        <eventType id="http://hostname/api/inventory/eventTypes/3/">
+        <eventType id="http://hostname/api/inventory/systems/eventTypes/3/">
           <name>system poll</name>
           <systemEvents/>
           <priority>50</priority>
@@ -105,7 +104,7 @@ Methods:
           <eventTypeId>3</eventTypeId>
           <description>standard polling event</description>
         </eventType>
-        <eventType id="http://hostname/api/inventory/eventTypes/4/">
+        <eventType id="http://hostname/api/inventory/systems/eventTypes/4/">
           <name>system apply update</name>
           <systemEvents/>
           <priority>50</priority>
@@ -113,7 +112,7 @@ Methods:
           <eventTypeId>4</eventTypeId>
           <description>apply an update to a system</description>
         </eventType>
-        <eventType id="http://hostname/api/inventory/eventTypes/5/">
+        <eventType id="http://hostname/api/inventory/systems/eventTypes/5/">
           <name>immediate system apply update</name>
           <systemEvents/>
           <priority>105</priority>
