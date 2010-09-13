@@ -3,6 +3,7 @@
 inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
+  <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <log href="http://testserver/api/inventory/log/"/>
   <zones href="http://testserver/api/inventory/zones/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
@@ -11,7 +12,7 @@ inventory_xml = """\
 
 event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<eventType id="http://testserver/api/inventory/systems/eventTypes/1/">
+<eventType id="http://testserver/api/inventory/eventTypes/1/">
   <description>on-demand registration event</description><priority>110</priority>
   <jobSet/>
   <eventTypeId>1</eventTypeId>
@@ -22,7 +23,7 @@ event_type_xml="""\
 event_types_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <eventTypes>
-  <eventType id="http://testserver/api/inventory/systems/eventTypes/1/">
+  <eventType id="http://testserver/api/inventory/eventTypes/1/">
     <name>system registration</name>
     <priority>110</priority>
     <jobSet/>
@@ -30,7 +31,7 @@ event_types_xml="""\
     <description>on-demand registration event</description>
     <systemEvents/>
   </eventType>
-  <eventType id="http://testserver/api/inventory/systems/eventTypes/2/">
+  <eventType id="http://testserver/api/inventory/eventTypes/2/">
     <name>immediate system poll</name>
     <priority>105</priority>
     <jobSet/>
@@ -38,7 +39,7 @@ event_types_xml="""\
     <description>on-demand polling event</description>
     <systemEvents/>
   </eventType>
-  <eventType id="http://testserver/api/inventory/systems/eventTypes/3/">
+  <eventType id="http://testserver/api/inventory/eventTypes/3/">
     <name>system poll</name>
     <priority>50</priority>
     <jobSet/>
@@ -46,7 +47,7 @@ event_types_xml="""\
     <description>standard polling event</description>
     <systemEvents/>
   </eventType>
-  <eventType id="http://testserver/api/inventory/systems/eventTypes/4/">
+  <eventType id="http://testserver/api/inventory/eventTypes/4/">
     <description>apply an update to a system</description>
     <eventTypeId>4</eventTypeId>
     <jobSet/>
@@ -54,7 +55,7 @@ event_types_xml="""\
     <priority>50</priority>
     <systemEvents/>
   </eventType>
-  <eventType id="http://testserver/api/inventory/systems/eventTypes/5/">
+  <eventType id="http://testserver/api/inventory/eventTypes/5/">
     <description>on-demand apply an update to a system</description>
     <eventTypeId>5</eventTypeId>
     <jobSet/>
@@ -392,7 +393,7 @@ management_node_post_response_xml = """\
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
-  <eventTypes href="http://testserver/api/inventory/systems/eventTypes/"/>
+  <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <system id="http://testserver/api/inventory/systems/2">
     <registrationDate/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
@@ -816,7 +817,7 @@ system_events_xml = """\
 <systemEvents>
     <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
         <eventData/>
-        <eventType href="http://testserver/api/inventory/systems/eventTypes/3/"/>
+        <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
         <priority>50</priority>
@@ -825,7 +826,7 @@ system_events_xml = """\
     </systemEvent>
     <systemEvent id="http://testserver/api/inventory/systemEvents/2/">
         <eventData/>
-        <eventType href="http://testserver/api/inventory/systems/eventTypes/1/"/>
+        <eventType href="http://testserver/api/inventory/eventTypes/1/"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <timeCreated>%s</timeCreated>
         <priority>110</priority>
@@ -839,7 +840,7 @@ system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent id="http://testserver/api/inventory/systemEvents/1/">
     <eventData/>
-    <eventType href="http://testserver/api/inventory/systems/eventTypes/3/"/>
+    <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
     <system href="http://testserver/api/inventory/systems/3"/>
     <timeCreated>%s</timeCreated>
     <priority>50</priority>
@@ -851,7 +852,7 @@ system_event_xml = """\
 system_event_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemEvent>
-    <eventType href="http://testserver/api/inventory/systems/eventTypes/3/"/>
+    <eventType href="http://testserver/api/inventory/eventTypes/3/"/>
     <system href="http://testserver/api/inventory/systems/2"/>
     <priority>50</priority>
 </systemEvent>

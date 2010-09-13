@@ -1554,12 +1554,12 @@ class SystemVersionsTestCase(XMLTestCase):
 class EventTypeTestCase(XMLTestCase):
 
     def testGetEventTypes(self):
-        response = self._get('/api/inventory/systems/eventTypes/')
+        response = self._get('/api/inventory/eventTypes/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_types_xml)
 
     def testGetEventType(self):
-        response = self._get('/api/inventory/systems/eventTypes/1/')
+        response = self._get('/api/inventory/eventTypes/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_type_xml)
 
