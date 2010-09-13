@@ -90,6 +90,24 @@ class InventoryZoneService(AbstractInventoryService):
         zone = self.mgr.addZone(zone)
         return zone
     
+    @requires_admin
+    @requires('zone')
+    @return_xml
+    def update(self, request, zone_id, zone):
+        oldZone = self.mgr.getZone(zone_id)
+        if not oldZone:
+            return HttpResponse(status=404)
+        self.mgr.updateZone(zone)
+        return self.mgr.getZone(zone_id)
+    
+    @requires_admin
+    def delete(self, request, zone_id):
+        zone = self.get(zone_id)
+        if zone:
+            self.mgr.deleteZone(zone)
+        response = HttpResponse(status=204)
+        return response
+    
 class InventoryManagementNodeService(AbstractInventoryService):
     
     @requires_auth

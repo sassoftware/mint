@@ -54,7 +54,7 @@ Properties:
 Methods: 
   GET:
     Authentication: none
-    Format:
+    Response Format:
       <inventory>
         <eventTypes href="http://hostname/api/inventory/eventTypes/"/>
         <log href="http://hostname/api/inventory/log/"/>
@@ -94,7 +94,7 @@ Properties:
 Methods: 
   GET:
     Authentication: user
-    Format:
+    Response Format:
       <zones>
         <zone id="http://hostname/api/inventory/zones/1/">
           ...
@@ -105,13 +105,20 @@ Methods:
       </zones>
       
   POST:
-    not supported
+    Authentication: admin
+    Required Fields:
+      name
+    Example:
+      <zone>
+        <name>East Datacenter</name>
+        <description>Management zone for east datacenter</description>
+      </zone>
     
   PUT:
-    not supported
+    Authentication: admin
     
   DELETE:
-    not supported
+    Authentication: admin
 ]]>
 </xsl:comment>
 <xsl:copy-of select="/"/>
@@ -134,7 +141,7 @@ Properties:
 Methods: 
   GET:
     Authentication: none
-    Format:
+    Response Format:
       <eventTypes>
         <eventType id="http://hostname/api/inventory/eventTypes/1/">
           ...
@@ -173,7 +180,7 @@ Properties:
 Methods: 
   GET:
     Authentication: none
-    Format:
+    Response Format:
       <systemStates> 
         <systemState id="http://hostname/api/inventory/systemStates/1/">
           ...

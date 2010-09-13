@@ -7,6 +7,9 @@ from dateutil import tz
 from xobj import xobj
 
 from conary import versions
+
+from django.template import TemplateDoesNotExist
+
 from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
 from mint.lib import x509
@@ -396,6 +399,69 @@ class ZonesTestCase(XMLTestCase):
         zone = models.Zone.objects.get(pk=1)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
             (zone.created_date.isoformat()))
+        
+    def testPutZoneAuth(self):
+        """
+        Ensure we require admin to put zones
+        """
+        response = self._put('/api/inventory/zones/1/', 
+            data= testsxml.zone_put_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._put('/api/inventory/zones/1/', 
+            data=testsxml.zone_put_xml, content_type='text/xml',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+    def testPutZoneNotFound(self):
+        """
+        Ensure we return 404 if we update zone that doesn't exist
+        """
+        try:
+            response = self._put('/api/inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/', 
+                data=testsxml.zone_put_xml, content_type='text/xml',
+                username="testuser", password="password")
+            self.assertEquals(response.status_code, 404)
+        except TemplateDoesNotExist, e:
+            # might not have template, so check for 404 in error
+            self.assertTrue("404" in str(e))
+        
+    def testPutZone(self):
+        models.Zone.objects.all().delete()
+        zone = self._saveZone()
+        response = self._put('/api/inventory/zones/%d/' % zone.zone_id, 
+            data=testsxml.zone_put_xml, content_type='text/xml', username="admin", 
+            password="password")
+        self.assertEquals(response.status_code, 200)
+        zone = models.Zone.objects.get(pk=1)
+        self.assertTrue(zone.name == "zoneputname")
+        self.assertTrue(zone.description == "zoneputdesc")
+        
+    def testDeleteZoneAuth(self):
+        """
+        Ensure we require admin to delete zones
+        """
+        response = self._delete('/api/inventory/zones/1/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._put('/api/inventory/zones/1/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+    def testDeleteZone(self):
+        """
+        Ensure we can delete zones
+        """
+        models.Zone.objects.all().delete()
+        self._saveZone()
+        response = self._delete('/api/inventory/zones/1/',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 204)
+        try:
+            models.Zone.objects.get(pk=1)
+            self.fail("Lookup should have failed due to deletion")
+        except models.Zone.DoesNotExist:
+            pass # what we expect
         
 class SystemStatesTestCase(XMLTestCase):
 

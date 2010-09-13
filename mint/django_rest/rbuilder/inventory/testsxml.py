@@ -111,6 +111,14 @@ zone_post_response_xml = """\
 </zone>
 """
 
+zone_put_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone id="http://testserver/api/inventory/zones/1/">
+  <description>zoneputdesc</description>
+  <name>zoneputname</name>
+</zone>
+"""
+
 system_states_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemStates>

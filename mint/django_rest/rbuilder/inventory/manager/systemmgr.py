@@ -89,6 +89,27 @@ class SystemManager(base.BaseManager):
 
         zone.save()
         return zone
+    
+    @base.exposed
+    def updateZone(self, zone):
+        """Update a zone"""
+
+        if not zone:
+            return
+
+        zone.save()
+        return zone
+    
+    @base.exposed
+    def deleteZone(self, zone):
+        """Update a zone"""
+
+        if not zone:
+            return
+
+        zone.delete()
+        
+        return
 
     @base.exposed
     def getSystem(self, system_id):
