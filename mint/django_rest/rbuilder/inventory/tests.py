@@ -332,10 +332,13 @@ class ZonesTestCase(XMLTestCase):
     def testGetZones(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._get('/api/inventory/zones/', 
+        # Create a system, just for kicks
+        system = models.System(name="foo", managing_zone=zone)
+        system.save()
+        response = self._get('/api/inventory/zones/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
+        self.assertXMLEquals(response.content,
             testsxml.zones_xml % (zone.created_date.isoformat()))
 
     def testGetZoneAuth(self):

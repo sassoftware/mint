@@ -68,7 +68,6 @@ zones_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zones>
   <zone id="http://testserver/api/inventory/zones/1/">
-    <systems/>
     <description>Some local zone</description>
     <createdDate>%s</createdDate>
     <name>Local Zone</name>
@@ -81,7 +80,6 @@ zones_xml = """\
 zone_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/2/">
-  <systems/>
   <description>Some local zone</description>
   <createdDate>%s</createdDate>
   <name>Local Zone</name>
@@ -175,7 +173,6 @@ system_state_xml = """\
 zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/1/">
-  <systems/>
   <description>Some local zone</description>
   <createdDate>%s</createdDate>
   <name>Local Zone</name>

@@ -124,6 +124,9 @@ class Zone(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'zone',
                 attributes = {'id':str})
+    # We really don't need to display all systems associated with a zone at
+    # this level. We may want to do it in another view.
+    _xobj_hidden_accessors = set(['systems', ])
 
     zone_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092, unique=True)
