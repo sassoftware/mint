@@ -125,9 +125,6 @@ class Zone(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'zone',
                 attributes = {'id':str})
-    # We really don't need to display all systems associated with a zone at
-    # this level. We may want to do it in another view.
-    _xobj_hidden_accessors = set(['systems', ])
 
     zone_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092, unique=True)
@@ -236,7 +233,7 @@ class System(modellib.XObjIdModel):
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
     #TO-DO should this ever be nullable?
-    managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
+    managing_zone = models.ForeignKey(Zone, null=True, related_name='systems')
     jobs = models.ManyToManyField("Job", through="SystemJob")
     event_uuid = modellib.SyntheticField()
 

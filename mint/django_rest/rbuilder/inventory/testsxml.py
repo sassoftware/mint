@@ -72,6 +72,43 @@ zones_xml = """\
     <description>Some local zone</description>
     <createdDate>%s</createdDate>
     <name>Local Zone</name>
+    <systems>
+      <system id="http://testserver/api/inventory/systems/1">
+        <createdDate>2010-09-14T14:58:55.554533+00:00</createdDate>
+        <currentState id="http://testserver/api/inventory/systemStates/1/">
+          <createdDate>2010-09-14T14:58:40.939184+00:00</createdDate>
+          <description>Unmanaged</description>
+          <name>unmanaged</name>
+          <systemStateId>1</systemStateId>
+        </currentState>
+        <description/>
+        <generatedUuid/>
+        <hostname/>
+        <installedSoftware/>
+        <launchDate/>
+        <launchingUser/>
+        <localUuid/>
+        <managementNode/>
+        <managingZone href="http://testserver/api/inventory/zones/1/"/>
+        <name>foo</name>
+        <networks/>
+        <osMajorVersion/>
+        <osMinorVersion/>
+        <osType/>
+        <registrationDate/>
+        <scheduledEventStartDate/>
+        <sslClientCertificate/>
+        <sslServerCertificate/>
+        <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
+        <systemId>1</systemId>
+        <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+        <target/>
+        <targetSystemDescription/>
+        <targetSystemId/>
+        <targetSystemName/>
+        <targetSystemState/>
+      </system>
+    </systems>
     <managementNodes/>
     <zoneId>1</zoneId>
   </zone>
@@ -80,12 +117,13 @@ zones_xml = """\
 
 zone_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/inventory/zones/2/">
+<zone id="http://testserver/api/inventory/zones/1/">
   <description>Some local zone</description>
   <createdDate>%s</createdDate>
   <name>Local Zone</name>
+  <systems/>
   <managementNodes/>
-  <zoneId>2</zoneId>
+  <zoneId>1</zoneId>
 </zone>
 """
 
@@ -94,6 +132,26 @@ zone_post_xml = """\
 <zone>
   <description>Some local zone</description>
   <name>Local Zone</name>
+</zone>
+"""
+
+zone_post_response_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone id="http://testserver/api/inventory/zones/1/">
+  <description>Some local zone</description>
+  <createdDate>%s</createdDate>
+  <name>Local Zone</name>
+  <managementNodes/>
+  <zoneId>1</zoneId>
+  <systems/>
+</zone>
+"""
+
+zone_put_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone id="http://testserver/api/inventory/zones/1/">
+  <description>zoneputdesc</description>
+  <name>zoneputname</name>
 </zone>
 """
 
@@ -170,17 +228,6 @@ system_state_xml = """\
   <name>unmanaged</name>
   <createdDate>2010-09-03T18:23:42.656549+00:00</createdDate>
 </systemState>"""
-
-zone_post_response_xml = """\
-<?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/inventory/zones/1/">
-  <description>Some local zone</description>
-  <createdDate>%s</createdDate>
-  <name>Local Zone</name>
-  <managementNodes/>
-  <zoneId>1</zoneId>
-</zone>
-"""
 
 management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>

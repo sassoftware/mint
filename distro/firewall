@@ -22,6 +22,8 @@
 # HTTP/S for rBuilder
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
+# HTTP/S for management nodes/repeater
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8443 -j ACCEPT
 # HTTP/S for rAPA
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 8003 -j ACCEPT
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 8004 -j ACCEPT
