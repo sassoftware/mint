@@ -16,7 +16,6 @@
         <field type="CharField" name="ssl_client_certificate"><None></None></field>
         <field type="CharField" name="ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
-        <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
@@ -38,7 +37,6 @@
         <field type="CharField" name="ssl_client_certificate"><None></None></field>
         <field type="CharField" name="ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
-        <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>
@@ -60,7 +58,6 @@
         <field type="CharField" name="ssl_client_certificate"><None></None></field>
         <field type="CharField" name="ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
-        <field type="DateTimeField" name="scheduled_event_start_date"><None></None></field>
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel"><None></None></field>

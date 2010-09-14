@@ -1128,7 +1128,6 @@ class MigrateTo_50(SchemaMigration):
                     "ssl_client_certificate" varchar(8092),
                     "ssl_client_key" varchar(8092),
                     "ssl_server_certificate" varchar(8092),
-                    "scheduled_event_start_date" timestamp with time zone,
                     "launching_user_id" integer REFERENCES "users" ("userid"),
                     "current_state_id" integer NOT NULL
                         REFERENCES "inventory_system_state" ("system_state_id"),

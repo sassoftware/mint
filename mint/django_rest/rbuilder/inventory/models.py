@@ -227,7 +227,6 @@ class System(modellib.XObjIdModel):
     ssl_client_certificate = modellib.APIReadOnlyCharField(max_length=8092, null=True)
     ssl_client_key = modellib.XObjHiddenCharField(max_length=8092, null=True)
     ssl_server_certificate = models.CharField(max_length=8092, null=True)
-    scheduled_event_start_date = modellib.DateTimeUtcField(null=True)
     launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
     current_state = modellib.SerializedForeignKey(SystemState, null=True, related_name='systems')
     installed_software = models.ManyToManyField('Trove', null=True)
