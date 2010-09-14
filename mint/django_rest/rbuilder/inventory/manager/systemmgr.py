@@ -114,7 +114,6 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        system.addJobs()
         return system
 
     @base.exposed
@@ -126,8 +125,6 @@ class SystemManager(base.BaseManager):
     def getSystems(self):
         Systems = models.Systems()
         Systems.system = list(models.System.objects.all())
-        for s in Systems.system:
-            s.addJobs()
         return Systems
 
     @base.exposed

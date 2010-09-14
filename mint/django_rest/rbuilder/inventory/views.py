@@ -270,9 +270,49 @@ class InventoryEventTypesService(AbstractInventoryService):
         else:
             return self.mgr.getEventTypes()
 
+class InventorySystemJobsService(AbstractInventoryService):
+    
+    @requires_auth
+    @return_xml
+    def read(self, request, system):
+        return self.get(system)
+
+    def get(self, system):
+        return self.mgr.getSystemJobs(system)
+
 class InventoryJobsService(AbstractInventoryService):
     
     @requires_auth
     @return_xml
-    def read(self, request, system, job_uuid=None):
-        return self.mgr.getSystemJobs(system, job_uuid)
+    def read(self, request, job_id=None):
+        return self.get(job_id)
+
+    def get(self, job_id):
+        if job_id:
+            return self.mgr.getJob(job_id)
+        else:
+            return self.mgr.getJobs()
+
+class InventoryJobStatesService(AbstractInventoryService):
+
+    @requires_auth
+    @return_xml
+    def read(self, request, job_state=None):
+        return self.get(job_state)
+
+    def get(self, job_state):
+        if job_state:
+            return self.mgr.getJobState(job_state)
+        else:
+            return self.mgr.getJobStates()
+
+class InventoryJobStatesJobsService(AbstractInventoryService):
+
+    @requires_auth
+    @return_xml
+    def read(self, request, job_state):
+        return self.get(job_state)
+
+    def get(self, job_state):
+        return self.mgr.getJobsByJobState(job_state)
+

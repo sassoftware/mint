@@ -32,6 +32,7 @@ class Inventory(modellib.XObjModel):
         self.log = modellib.XObjHrefModel('log/')
         self.eventTypes = modellib.XObjHrefModel('eventTypes/')
         self.systemStates = modellib.XObjHrefModel('systemStates/')
+        self.jobStates = modellib.XObjHrefModel('jobStates/')
 
 class Systems(modellib.XObjModel):
     class Meta:
@@ -376,6 +377,15 @@ class EventType(modellib.XObjIdModel):
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 
+class JobStates(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'job_states',
+                elements=['job_state'])
+    list_fields = ['job_state']
+    job_state = []
+
 class JobState(modellib.XObjModel):
     class Meta:
         db_table = "inventory_job_state"
@@ -396,6 +406,15 @@ class JobState(modellib.XObjModel):
 
     load_fields = [ name ]
 
+class Jobs(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'jobs',
+                elements=['job'])
+    list_fields = ['job']
+    job = []
+    
 class Job(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_job'
@@ -407,7 +426,7 @@ class Job(modellib.XObjIdModel):
 
     job_id = models.AutoField(primary_key=True)
     job_uuid = models.CharField(max_length=64, unique=True)
-    job_state = modellib.InlinedForeignKey(JobState, visible='name')
+    job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name')
     event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, visible='name')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
@@ -431,9 +450,10 @@ class Job(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         rmakeJob = self.getRmakeJob()
         if rmakeJob:
-            pass
+            xobj_model.job_log = rmakeJob.status.text
+        xobj_model.job_type = self.event_type.name
+        xobj_model.event_type = None
         return xobj_model
-
 
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
