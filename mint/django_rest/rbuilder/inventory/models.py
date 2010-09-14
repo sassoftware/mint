@@ -233,7 +233,7 @@ class System(modellib.XObjIdModel):
     installed_software = models.ManyToManyField('Trove', null=True)
     management_node = models.NullBooleanField()
     #TO-DO should this ever be nullable?
-    managing_zone = modellib.DeferredForeignKey(Zone, null=True, related_name='systems')
+    managing_zone = models.ForeignKey(Zone, null=True, related_name='systems')
     system_jobs = models.ManyToManyField("Job", through="SystemJob")
     event_uuid = modellib.SyntheticField()
 
@@ -306,7 +306,7 @@ class ManagementNode(System):
                 tag = 'managementNode',
                 attributes = {'id':str})
     local = models.NullBooleanField()
-    zone = modellib.DeferredForeignKey(Zone, related_name='managementNodes')
+    zone = models.ForeignKey(Zone, related_name='managementNodes')
     node_jid = models.CharField(max_length=64, null=True)
     
     # ignore auto generated ptr from inheritance

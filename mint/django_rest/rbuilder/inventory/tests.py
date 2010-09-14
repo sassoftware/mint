@@ -342,7 +342,8 @@ class ZonesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.zones_xml % (zone.created_date.isoformat()))
+            testsxml.zones_xml % (zone.created_date.isoformat()),
+            ignoreNodes = [ 'createdDate' ])
 
     def testGetZoneAuth(self):
         """
@@ -362,8 +363,9 @@ class ZonesTestCase(XMLTestCase):
         response = self._get('/api/inventory/zones/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
-            testsxml.zone_xml % (zone.created_date.isoformat()))
+        self.assertXMLEquals(response.content,
+            testsxml.zone_xml % (zone.created_date.isoformat()),
+            ignoreNodes = [ 'createdDate' ])
         
     def testAddZoneNodeNull(self):
         

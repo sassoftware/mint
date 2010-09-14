@@ -72,7 +72,43 @@ zones_xml = """\
     <description>Some local zone</description>
     <createdDate>%s</createdDate>
     <name>Local Zone</name>
-    <systems href="http://testserver/api/inventory/systems/1"/>
+    <systems>
+      <system id="http://testserver/api/inventory/systems/1">
+        <createdDate>2010-09-14T14:58:55.554533+00:00</createdDate>
+        <currentState id="http://testserver/api/inventory/systemStates/1/">
+          <createdDate>2010-09-14T14:58:40.939184+00:00</createdDate>
+          <description>Unmanaged</description>
+          <name>unmanaged</name>
+          <systemStateId>1</systemStateId>
+        </currentState>
+        <description/>
+        <generatedUuid/>
+        <hostname/>
+        <installedSoftware/>
+        <launchDate/>
+        <launchingUser/>
+        <localUuid/>
+        <managementNode/>
+        <managingZone href="http://testserver/api/inventory/zones/1/"/>
+        <name>foo</name>
+        <networks/>
+        <osMajorVersion/>
+        <osMinorVersion/>
+        <osType/>
+        <registrationDate/>
+        <scheduledEventStartDate/>
+        <sslClientCertificate/>
+        <sslServerCertificate/>
+        <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
+        <systemId>1</systemId>
+        <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+        <target/>
+        <targetSystemDescription/>
+        <targetSystemId/>
+        <targetSystemName/>
+        <targetSystemState/>
+      </system>
+    </systems>
     <managementNodes/>
     <zoneId>1</zoneId>
   </zone>
@@ -85,7 +121,7 @@ zone_xml = """\
   <description>Some local zone</description>
   <createdDate>%s</createdDate>
   <name>Local Zone</name>
-  <systems href="http://testserver/api/inventory/systems/1"/>
+  <systems/>
   <managementNodes/>
   <zoneId>1</zoneId>
 </zone>
@@ -107,7 +143,7 @@ zone_post_response_xml = """\
   <name>Local Zone</name>
   <managementNodes/>
   <zoneId>1</zoneId>
-  <systems href="http://testserver/api/inventory/systems/1"/>
+  <systems/>
 </zone>
 """
 

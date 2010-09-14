@@ -88,8 +88,8 @@ Properties:
     description - the zone description
     zoneId - the database id for the zone
     createdDate - the date the zone was created in UTC
-    managementNodes - an entry point into the management nodes collection for this zone
-    systems - an entry point into the collection of systems managed by this zone
+    managementNodes - a collection of management nodes in this zone
+    systems - a collection of systems that are managed by this zone
   
 Methods: 
   GET:
