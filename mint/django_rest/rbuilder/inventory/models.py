@@ -237,7 +237,7 @@ class System(modellib.XObjIdModel):
     management_node = models.NullBooleanField()
     #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey('Zone', null=True, related_name='systems')
-    system_jobs = models.ManyToManyField("Job", through="SystemJob")
+    jobs = models.ManyToManyField("Job", through="SystemJob")
     event_uuid = modellib.SyntheticField()
 
     load_fields = [local_uuid]
@@ -254,23 +254,6 @@ class System(modellib.XObjIdModel):
             self.name = self.hostname and self.hostname or ''
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
-
-    def addJobs(self):
-        return
-        # Put these imports here for now so they don't break anything
-        # globally.
-        from rmake3 import client
-        RMAKE_ADDRESS = 'http://localhost:9998'
-        rmake_client = client.RmakeClient(RMAKE_ADDRESS)
-
-        job_uuids = [sj.job_uuid for sj in self.system_jobs.all()]
-        rmake_jobs = rmake_client.getJobs(job_uuids)
-
-        for rmake_job in rmake_jobs:
-            # TODO, make a models.Job instance
-
-            # add it to the system
-            pass
 
     def createLog(self):
         system_log, created = SystemLog.objects.get_or_create(system=self)
@@ -416,10 +399,13 @@ class JobState(modellib.XObjModel):
 
     load_fields = [ name ]
 
-class Job(modellib.XObjModel):
+class Job(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_job'
-    _xobj = xobj.XObjMetadata(tag='job')
+    _xobj = xobj.XObjMetadata(
+                tag = 'job',
+                attributes = {'id':str})
+
     objects = modellib.JobManager()
 
     job_id = models.AutoField(primary_key=True)
@@ -430,6 +416,27 @@ class Job(modellib.XObjModel):
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
 
     load_fields = [ job_uuid ]
+
+    def getRmakeJob(self):  
+        if not self.job_uuid:
+            return None
+        else:
+            from rmake3 import client
+            RMAKE_ADDRESS = 'http://localhost:9998'
+            rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
+            rmakeJobs = rmakeClient.getJobs([self.job_uuid])
+            if rmakeJobs:
+                return rmakeJobs[0]
+            else:
+                return None
+
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        rmakeJob = self.getRmakeJob()
+        if rmakeJob:
+            pass
+        return xobj_model
+
 
 class SystemEvent(modellib.XObjIdModel):
     class Meta:

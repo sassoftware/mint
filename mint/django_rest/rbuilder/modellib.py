@@ -613,7 +613,7 @@ class XObjModel(models.Model):
     def serialize_fields(self, xobj_model, fields, request):
         """
         For each attribute on self (the model), see if it's a field, if so,
-        set the value on xobj_model.  Then, remove it from fields, we don't
+        set the value on xobj_model.  Then, remove it from fields, as don't
         want to try to serialize it later.
         """
         for key, val in self.__dict__.items():

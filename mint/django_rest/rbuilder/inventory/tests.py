@@ -586,8 +586,13 @@ class SystemsTestCase(XMLTestCase):
         XMLTestCase.setUp(self)
         self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
+        self.mockGetRmakeJob_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
+        models.Job.getRmakeJob = self.mockGetRmakeJob
+
+    def tearDown(self):
+        XMLTestCase.tearDown(self)
 
     def mock_scheduleSystemRegistrationEvent(self, system):
         self.mock_scheduleSystemRegistrationEvent_called = True
@@ -595,6 +600,9 @@ class SystemsTestCase(XMLTestCase):
     def mock_scheduleSystemPollEvent(self, system):
         self.mock_scheduleSystemPollEvent_called = True
         
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
+
     def testAddSystemNull(self):
         
         try:
@@ -710,6 +718,8 @@ class SystemsTestCase(XMLTestCase):
     def testGetSystem(self):
         models.System.objects.all().delete()
         system = self._saveSystem()
+        import epdb; epdb.st()  
+        system.to_xml()
         response = self._get('/api/inventory/systems/%d/' % system.system_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
