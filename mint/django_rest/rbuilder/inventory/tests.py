@@ -1194,8 +1194,11 @@ class SystemCertificateTestCase(XMLTestCase):
         self.failUnlessEqual(crt.x509.get_subject().as_text(),
             'O=rPath rBuilder, OU=http://rpath.com, CN=local_uuid:localuuid001 generated_uuid:generateduuid001 serial:0')
         # Make sure the cert is signed with the low grade CA
-        self.failUnlessEqual(crt.x509.get_issuer().as_text(),
-            'O=rBuilder Low-Grade Certificate Authority, OU=Created at 2010-09-02 11:18:53-0400')
+        issuer = 'O=rBuilder Low-Grade Certificate Authority, OU=Created at 2010-09-02 11:18:53-0400'
+        # We're using self-signed certs
+        issuer = 'O=rPath rBuilder, OU=http://rpath.com, CN=local_uuid:localuuid001 generated_uuid:generateduuid001 serial:0'
+
+        self.failUnlessEqual(crt.x509.get_issuer().as_text(), issuer)
         # Test some of the other functions, while we're at it
         fingerprint = crt.fingerprint
         self.failUnlessEqual(len(fingerprint), 40)
@@ -1206,7 +1209,8 @@ class SystemCertificateTestCase(XMLTestCase):
         self.failUnlessEqual(len(certHash), 8)
 
         # The issuer hash is always known, since it's our LG CA
-        self.failUnlessEqual(crt.hash_issuer, '6d8bb0a1')
+        #self.failUnlessEqual(crt.hash_issuer, '6d8bb0a1')
+        self.failUnlessEqual(crt.hash_issuer, certHash)
 
         # Try again, we should not re-generate the cert
         self.mgr.sysMgr.generateSystemCertificates(system)

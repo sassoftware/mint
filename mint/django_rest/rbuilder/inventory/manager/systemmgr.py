@@ -283,14 +283,22 @@ class SystemManager(base.BaseManager):
             # No point in trying to generate certificates if the system hasn't
             # registered yet
             return
-        # Grab the low grade cert
-        lg_cas = rbuildermodels.PkiCertificates.objects.filter(
-            purpose="lg_ca").order_by('-time_issued')
-        if not lg_cas:
-            raise Exception("Unable to find suitable low-grade CA")
-        lg_ca = lg_cas[0]
-        ca_crt = self.X509(None, None)
-        ca_crt.load_from_strings(lg_ca.x509_pem, lg_ca.pkey_pem)
+        # We won't sign the certificate, because validation requires
+        # that the lgca is present, and that totally defeats the purpose
+        # of locking down security. We'll go with self-signed certs for now
+        if 0:
+            # Grab the low grade cert
+            lg_cas = rbuildermodels.PkiCertificates.objects.filter(
+                purpose="lg_ca").order_by('-time_issued')
+            if not lg_cas:
+                raise Exception("Unable to find suitable low-grade CA")
+            lg_ca = lg_cas[0]
+            ca_crt = self.X509(None, None)
+            ca_crt.load_from_strings(lg_ca.x509_pem, lg_ca.pkey_pem)
+            issuer_x509 = ca_crt.x509
+            issuer_pkey = ca_crt.pkey
+        else:
+            issuer_pkey = issuer_x509 = None
         # When we get around to re-generate certs, bump the serial here
         serial = 0
         rbuilderIdent = "http://%s" % (self.cfg.siteHost, )
@@ -298,8 +306,9 @@ class SystemManager(base.BaseManager):
             system.local_uuid, system.generated_uuid, serial)
         subject = self.X509.Subject(O="rPath rBuilder", OU=rbuilderIdent, CN=cn)
         crt = self.X509.new(subject=subject, serial=serial,
-            issuer_x509=ca_crt.x509, issuer_pkey=ca_crt.pkey)
-        del ca_crt
+            issuer_x509=issuer_x509, issuer_pkey=issuer_pkey)
+        if 0:
+            del ca_crt
         system.ssl_client_certificate = crt.x509.as_pem()
         system.ssl_client_key = crt.pkey.as_pem(None)
         system.save()

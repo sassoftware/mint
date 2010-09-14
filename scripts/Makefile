@@ -5,6 +5,7 @@
 #
 
 static_files =				\
+	add-lvm-disk			\
 	amazon-s3-processor		\
 	apply-proxy-settings		\
 	auth-generate			\
