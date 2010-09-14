@@ -220,6 +220,9 @@ class SystemManager(base.BaseManager):
         # add the system
         system.save()
 
+        # setSystemState will generate a CIM call; if it's a new registration,
+        # it will be using the outbound certificate signed by the low-grade
+        # CA. The personalized pair is not stored on the disk yet
         self.setSystemState(system)
 
         if generateCertificates:
