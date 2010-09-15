@@ -32,6 +32,7 @@ class Inventory(modellib.XObjModel):
         self.log = modellib.XObjHrefModel('log/')
         self.eventTypes = modellib.XObjHrefModel('eventTypes/')
         self.systemStates = modellib.XObjHrefModel('systemStates/')
+        self.jobStates = modellib.XObjHrefModel('jobStates/')
 
 class Systems(modellib.XObjModel):
     class Meta:
@@ -233,7 +234,7 @@ class System(modellib.XObjIdModel):
     management_node = models.NullBooleanField()
     #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey(Zone, null=True, related_name='systems')
-    system_jobs = models.ManyToManyField("Job", through="SystemJob")
+    jobs = models.ManyToManyField("Job", through="SystemJob")
     event_uuid = modellib.SyntheticField()
 
     load_fields = [local_uuid]
@@ -250,23 +251,6 @@ class System(modellib.XObjIdModel):
             self.name = self.hostname and self.hostname or ''
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
-
-    def addJobs(self):
-        return
-        # Put these imports here for now so they don't break anything
-        # globally.
-        from rmake3 import client
-        RMAKE_ADDRESS = 'http://localhost:9998'
-        rmake_client = client.RmakeClient(RMAKE_ADDRESS)
-
-        job_uuids = [sj.job_uuid for sj in self.system_jobs.all()]
-        rmake_jobs = rmake_client.getJobs(job_uuids)
-
-        for rmake_job in rmake_jobs:
-            # TODO, make a models.Job instance
-
-            # add it to the system
-            pass
 
     def createLog(self):
         system_log, created = SystemLog.objects.get_or_create(system=self)
@@ -392,7 +376,16 @@ class EventType(modellib.XObjIdModel):
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 
-class JobState(modellib.XObjModel):
+class JobStates(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'job_states',
+                elements=['job_state'])
+    list_fields = ['job_state']
+    job_state = []
+
+class JobState(modellib.XObjIdModel):
     class Meta:
         db_table = "inventory_job_state"
     QUEUED = "Queued"
@@ -405,27 +398,62 @@ class JobState(modellib.XObjModel):
         (COMPLETED, COMPLETED),
         (FAILED, FAILED),
     )
-    _xobj = xobj.XObjMetadata(tag='job_state')
+    _xobj = xobj.XObjMetadata(tag='job_state',
+                attributes = {'id':str})
 
     job_state_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=64, unique=True, choices=choices)
 
     load_fields = [ name ]
 
-class Job(modellib.XObjModel):
+class Jobs(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'jobs',
+                elements=['job'])
+    list_fields = ['job']
+    job = []
+    
+class Job(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_job'
-    _xobj = xobj.XObjMetadata(tag='job')
+    _xobj = xobj.XObjMetadata(
+                tag = 'job',
+                attributes = {'id':str})
+
     objects = modellib.JobManager()
 
     job_id = models.AutoField(primary_key=True)
     job_uuid = models.CharField(max_length=64, unique=True)
-    job_state = modellib.InlinedForeignKey(JobState, visible='name')
+    job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name')
     event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, visible='name')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
 
     load_fields = [ job_uuid ]
+
+    def getRmakeJob(self):  
+        if not self.job_uuid:
+            return None
+        else:
+            from rmake3 import client
+            RMAKE_ADDRESS = 'http://localhost:9998'
+            rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
+            rmakeJobs = rmakeClient.getJobs([self.job_uuid])
+            if rmakeJobs:
+                return rmakeJobs[0]
+            else:
+                return None
+
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        rmakeJob = self.getRmakeJob()
+        if rmakeJob:
+            xobj_model.job_log = rmakeJob.status.text
+        xobj_model.job_type = self.event_type.name
+        xobj_model.event_type = None
+        return xobj_model
 
 class SystemEvent(modellib.XObjIdModel):
     class Meta:

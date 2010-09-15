@@ -14,6 +14,7 @@ from mint.rest.db.database import Database as RestDatabase
 from mint.django_rest.rbuilder.inventory.manager import systemmgr
 from mint.django_rest.rbuilder.inventory.manager import versionmgr
 from mint.django_rest.rbuilder.inventory.manager import repeatermgr
+from mint.django_rest.rbuilder.inventory.manager import jobmgr
 
 class Manager(rbuilder_manager.RbuilderDjangoManager):
     def __init__(self, cfg=None, userName=None):
@@ -21,11 +22,12 @@ class Manager(rbuilder_manager.RbuilderDjangoManager):
         self.sysMgr = systemmgr.SystemManager(weakref.proxy(self))
         self.versionMgr = versionmgr.VersionManager(weakref.proxy(self))
         self.repeaterMgr = repeatermgr.RepeaterManager(weakref.proxy(self))
+        self.jobMgr = jobmgr.JobManager(weakref.proxy(self))
         # We instantiate _rest_db lazily
         self._rest_db = None
 
         # Methods we simply copy
-        for subMgr in [ self.sysMgr, self.versionMgr ]:
+        for subMgr in [ self.sysMgr, self.versionMgr, self.jobMgr ]:
             for objName in subMgr.__class__.__dict__:
                 obj = getattr(subMgr, objName, None)
                 if getattr(obj, 'exposed', None):

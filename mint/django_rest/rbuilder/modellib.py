@@ -27,6 +27,14 @@ class APIReadOnlyMixIn(object):
     """
     APIReadOnly = True
 
+class DeferredForeignKeyMixIn(object):
+    """
+    Foreign Key that is deferred.  That means that as we enconter instances of
+    this foreign key during serialization, we will create an href for the
+    model instead of a full xml representation of the model.
+    """
+    Deferred = True
+
 type_map = {}
 
 class BaseManager(models.Manager):
@@ -613,7 +621,7 @@ class XObjModel(models.Model):
     def serialize_fields(self, xobj_model, fields, request):
         """
         For each attribute on self (the model), see if it's a field, if so,
-        set the value on xobj_model.  Then, remove it from fields, we don't
+        set the value on xobj_model.  Then, remove it from fields, as don't
         want to try to serialize it later.
         """
         for key, val in self.__dict__.items():
@@ -691,7 +699,7 @@ class XObjModel(models.Model):
             # Simple object to create for our accessor
             accessor_model = type(accessorName, (object,), {})()
 
-            if getattr(accessor.field, 'deferred', False):
+            if getattr(accessor.field, 'Deferred', False):
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
                 rel_mod = getattr(self, accessorName).model()
@@ -846,16 +854,6 @@ class XObjHrefModel(XObjModel):
     def serialize(self, request=None):
         self.href = request.build_absolute_uri(self.href)
 
-class DeferredForeignKey(models.ForeignKey):
-    """
-    Foreign Key that is deferred.  That means that as we enconter instances of
-    this foreign key during serialization, we will create an href for the
-    model instead of a full xml representation of the model.
-    """
-    def __init__(self, *args, **kwargs):
-        self.deferred = True
-        super(DeferredForeignKey, self).__init__(*args, **kwargs)
-
 class SerializedForeignKey(models.ForeignKey):
     """
     By default, Foreign Keys serialize to hrefs. Use this field class if you
@@ -938,4 +936,10 @@ class APIReadOnlyForeignKey(models.ForeignKey, APIReadOnlyMixIn):
     pass
 
 class APIReadOnlyInlinedForeignKey(InlinedForeignKey, APIReadOnlyMixIn):
+    pass
+
+class DeferredForeignKey(models.ForeignKey, DeferredForeignKeyMixIn):
+    pass
+
+class InlinedDeferredForeignKey(InlinedForeignKey, DeferredForeignKeyMixIn):
     pass

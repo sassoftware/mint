@@ -114,7 +114,6 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        system.addJobs()
         return system
 
     @base.exposed
@@ -126,8 +125,6 @@ class SystemManager(base.BaseManager):
     def getSystems(self):
         Systems = models.Systems()
         Systems.system = list(models.System.objects.all())
-        for s in Systems.system:
-            s.addJobs()
         return Systems
 
     @base.exposed
@@ -1005,10 +1002,6 @@ class SystemManager(base.BaseManager):
         systemsLog.systemLogEntry = list(systemLogEntries)
         return systemsLog
 
-    @base.exposed
-    def getSystemJobs(self, system, job_uuid):
-        return None
-    
     def resolveSystems(self):
         '''Used to resolve system dups and possibly other issues'''
         log.info("Resolving system inventory records")
