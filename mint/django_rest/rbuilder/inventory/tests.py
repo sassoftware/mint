@@ -1,4 +1,4 @@
-import collections
+import base64
 import datetime
 import os
 import shutil
@@ -138,37 +138,39 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             if 0:
                 diff += "\nNode diff: %s" % (nd, )
             self.fail(diff)
-            
+
     def _addRequestAuth(self, username=None, password=None, **extra):
         if username:
-            if not extra:
-                extra = {}
             type, password = self._authHeader(username, password)
             extra[type] = password
-            
+
         return extra
-            
-    def _get(self, path, data={}, username=None, password=None, follow=False, **extra):
-        extra = self._addRequestAuth(username, password, **extra)
+
+    def _get(self, path, data={}, username=None, password=None, follow=False, headers=None):
+        extra = self._addRequestAuth(username, password)
+        extra.update(headers or {})
         return self.client.get(path, data, follow, **extra)
-       
-    def _post(self, path, data={}, content_type=MULTIPART_CONTENT,
-             username=None, password=None, follow=False, **extra):
-        extra = self._addRequestAuth(username, password, **extra)
+
+    def _post(self, path, data={}, content_type='application/xml',
+             username=None, password=None, follow=False, headers=None):
+        extra = self._addRequestAuth(username, password)
+        extra.update(headers or {})
         return self.client.post(path, data, content_type, follow, **extra)
-    
-    def _put(self, path, data={}, content_type=MULTIPART_CONTENT,
-            username=None, password=None, follow=False, **extra):
-        extra = self._addRequestAuth(username, password, **extra)
+
+    def _put(self, path, data={}, content_type='application/xml',
+            username=None, password=None, follow=False, headers=None):
+        extra = self._addRequestAuth(username, password)
+        extra.update(headers or {})
         return self.client.put(path, data, content_type, follow, **extra)
-    
-    def _delete(self, path, data={}, follow=False, username=None, password=None, **extra):
-        extra = self._addRequestAuth(username, password, **extra)
+
+    def _delete(self, path, data={}, follow=False, username=None, password=None, headers=None):
+        extra = self._addRequestAuth(username, password)
+        extra.update(headers or {})
         return self.client.delete(path, data, follow, **extra)
-            
+
     def _authHeader(self, username, password):
         authStr = "%s:%s" % (username, password)
-        return ("Authorization", "Basic %s" % authStr.encode("base64"))
+        return ("Authorization", "Basic %s" % base64.b64encode(authStr))
 
     def _saveZone(self):
         zone = models.Zone()
@@ -257,6 +259,19 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         network.save()
 
         return system
+
+    def _newJob(self, system, eventUuid, jobUuid, jobType, jobState=None):
+        eventType = self.mgr.sysMgr.eventType(jobType)
+        if jobState is None:
+            jobState = models.JobState.RUNNING
+        jobState = self.mgr.sysMgr.jobState(jobState)
+        job = models.Job(job_uuid=jobUuid, event_type=eventType,
+            job_state=jobState)
+        job.save()
+        systemJob = models.SystemJob(system=system, job=job,
+            event_uuid=eventUuid)
+        systemJob.save()
+        return job
 
     def setUp(self):
         self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
@@ -383,20 +398,20 @@ class ZonesTestCase(XMLTestCase):
         """
         Ensure we require admin to post zones
         """
-        response = self._post('/api/inventory/zones/', 
-            data= testsxml.zone_post_xml, content_type='text/xml')
+        response = self._post('/api/inventory/zones/',
+            data= testsxml.zone_post_xml)
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/zones/', 
-            data=testsxml.zone_post_xml, content_type='text/xml',
+        response = self._post('/api/inventory/zones/',
+            data=testsxml.zone_post_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
     def testPostZone(self):
         models.Zone.objects.all().delete()
         xml = testsxml.zone_post_xml
-        response = self._post('/api/inventory/zones/', 
-            data=xml, content_type='text/xml', username="admin", password="password")
+        response = self._post('/api/inventory/zones/',
+            data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
@@ -407,11 +422,11 @@ class ZonesTestCase(XMLTestCase):
         Ensure we require admin to put zones
         """
         response = self._put('/api/inventory/zones/1/', 
-            data= testsxml.zone_put_xml, content_type='text/xml')
+            data= testsxml.zone_put_xml)
         self.assertEquals(response.status_code, 401)
         
         response = self._put('/api/inventory/zones/1/', 
-            data=testsxml.zone_put_xml, content_type='text/xml',
+            data=testsxml.zone_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
@@ -421,7 +436,7 @@ class ZonesTestCase(XMLTestCase):
         """
         try:
             response = self._put('/api/inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/', 
-                data=testsxml.zone_put_xml, content_type='text/xml',
+                data=testsxml.zone_put_xml,
                 username="testuser", password="password")
             self.assertEquals(response.status_code, 404)
         except TemplateDoesNotExist, e:
@@ -431,9 +446,8 @@ class ZonesTestCase(XMLTestCase):
     def testPutZone(self):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
-        response = self._put('/api/inventory/zones/%d/' % zone.zone_id, 
-            data=testsxml.zone_put_xml, content_type='text/xml', username="admin", 
-            password="password")
+        response = self._put('/api/inventory/zones/%d/' % zone.zone_id,
+            data=testsxml.zone_put_xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
         self.assertTrue(zone.name == "zoneputname")
@@ -446,7 +460,7 @@ class ZonesTestCase(XMLTestCase):
         response = self._delete('/api/inventory/zones/1/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/zones/1/',
+        response = self._delete('/api/inventory/zones/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
@@ -661,7 +675,7 @@ class ManagementNodesTestCase(XMLTestCase):
         zone = self._saveZone()
         xml = testsxml.management_node_zone_post_xml
         response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
-            data=xml, content_type='text/xml', username="admin", password="password")
+            data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
         management_node_xml = testsxml.management_node_zone_post_response_xml.replace(
@@ -757,7 +771,71 @@ class SystemsTestCase(XMLTestCase):
             self.mgr.addSystem(system)
         except:
             assert(False) # should not throw exception
-            
+
+    def testSystemPutAuth(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid)
+
+        system = models.System(name="blah")
+        system.save()
+
+        system2 = models.System(name="blip")
+        system2.save()
+
+        self._newJob(system, eventUuid, 'rmakejob007',
+            models.EventType.SYSTEM_REGISTRATION)
+
+        xmlTempl = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
+</system>
+"""
+        # No event uuid, no auth; this fails
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xmlTempl % params)
+        self.failUnlessEqual(response.status_code, 401)
+
+        # Bad event uuid; this fails
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xmlTempl % params,
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid + '-bogus'})
+        self.failUnlessEqual(response.status_code, 401)
+
+        # Good uuid, bad system
+        response = self._put('/api/inventory/systems/%s' % system2.pk,
+            data=xmlTempl % params,
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
+        self.failUnlessEqual(response.status_code, 401)
+
+        # uuid validation, this works
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xmlTempl % params,
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
+        self.failUnlessEqual(response.status_code, 200)
+
+        # user/pass auth, this works
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xmlTempl % params, username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+
+        # uuid valid, bad auth - this fails
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xmlTempl % params, username='testuser', password='bogus',
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
+        self.failUnlessEqual(response.status_code, 401)
+
+        # uuid bad, goodauth - this fails
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xmlTempl % params, username='testuser', password='password',
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid + '-bogus' })
+        self.failUnlessEqual(response.status_code, 401)
+
+
     def testSystemSave(self):
         # make sure state gets set to unmanaged
         system = models.System(name="mgoblue", 
@@ -870,7 +948,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'createdDate', 'timeCreated', 'timeUpdated' ])
 
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
@@ -885,22 +963,20 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'createdDate', 'timeCreated', 'timeUpdated' ])
         
     def testPostSystemAuth(self):
         """
         Ensure wide open for rpath-tools usage
         """
         system_xml = testsxml.system_post_xml
-        response = self._post('/api/inventory/systems/', 
-            data=system_xml, content_type='text/xml')
+        response = self._post('/api/inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         
     def testPostSystem(self):
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml
-        response = self._post('/api/inventory/systems/', 
-            data=system_xml, content_type='text/xml')
+        response = self._post('/api/inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
         system_xml = testsxml.system_post_xml_response.replace('<registrationDate/>',
@@ -908,7 +984,8 @@ class SystemsTestCase(XMLTestCase):
             (system.registration_date.isoformat()))
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate', 'sslClientCertificate' ])
+            ignoreNodes = [ 'createdDate', 'sslClientCertificate',
+                            'timeCreated', 'timeUpdated'])
         # Unfortunately, we can't mock modules since we don't control Django's
         # class loading. So we ignore the cert in the previous step and we
         # test it with xobj (it is different every time)
@@ -922,8 +999,7 @@ class SystemsTestCase(XMLTestCase):
         # add the first system
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_xml_dup
-        response = self._post('/api/inventory/systems/', 
-            data=system_xml, content_type='text/xml')
+        response = self._post('/api/inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
         self.failUnlessEqual(system.name, "testsystemname")
@@ -931,8 +1007,7 @@ class SystemsTestCase(XMLTestCase):
         # add it with same uuids but with different name to make sure
         # we get back same system with updated prop
         system_xml = testsxml.system_post_xml_dup2
-        response = self._post('/api/inventory/systems/', 
-            data=system_xml, content_type='text/xml')
+        response = self._post('/api/inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         this_system = models.System.objects.get(pk=1)
         self.failUnlessEqual(this_system.name, "testsystemnameChanged")
@@ -942,8 +1017,8 @@ class SystemsTestCase(XMLTestCase):
         Ensure requires auth but not admin
         """
         models.System.objects.all().delete()
-        response = self._post('/api/inventory/systems/', 
-            data=testsxml.system_post_xml, content_type='text/xml')
+        response = self._post('/api/inventory/systems/',
+            data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         
         response = self._get('/api/inventory/systems/1/systemLog/')
@@ -957,7 +1032,7 @@ class SystemsTestCase(XMLTestCase):
     def testGetSystemLog(self):
         models.System.objects.all().delete()
         response = self._post('/api/inventory/systems/', 
-            data=testsxml.system_post_xml, content_type='text/xml')
+            data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         response = self._get('/api/inventory/systems/1/systemLog/',
             username="testuser", password="password")
@@ -1179,12 +1254,12 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <system_jobs>
+  <jobs>
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-  </system_jobs>
+  </jobs>
 </system>
 """
         xml = xmlTempl % params
@@ -1228,12 +1303,12 @@ class SystemsTestCase(XMLTestCase):
         xmlTempl = """\
 <system>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <system_jobs>
+  <jobs>
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-  </system_jobs>
+  </jobs>
 </system>
 """
         jobState = 'Failed'
@@ -1317,8 +1392,7 @@ class SystemsTestCase(XMLTestCase):
             event_uuid=eventUuid)
         systemJob.save()
 
-        response = self.client.post('/api/inventory/systems',
-            data=xml, content_type='text/xml')
+        response = self._post('/api/inventory/systems', data=xml)
         self.failUnlessEqual(response.status_code, 200)
 
         # Look up log entries
@@ -1372,18 +1446,12 @@ class SystemCertificateTestCase(XMLTestCase):
         self.failUnlessEqual(system.ssl_client_key, clientKey)
 
 class SystemStateTestCase(XMLTestCase):
-    def _newJob(self, system, eventUuid, jobUuid, jobType, jobState=None):
-        eventType = self.mgr.sysMgr.eventType(jobType)
-        if jobState is None:
-            jobState = models.JobState.RUNNING
-        jobState = self.mgr.sysMgr.jobState(jobState)
-        job = models.Job(job_uuid=jobUuid, event_type=eventType,
-            job_state=jobState)
-        job.save()
-        systemJob = models.SystemJob(system=system, job=job,
-            event_uuid=eventUuid)
-        systemJob.save()
-        return job
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        models.Job.getRmakeJob = self.mockGetRmakeJob
+    
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
 
     def testSetCurrentState(self):
         localUuid = 'localuuid001'
@@ -1405,18 +1473,18 @@ class SystemStateTestCase(XMLTestCase):
         xmlTempl = """\
 <system>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <system_jobs>
+  <jobs>
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-  </system_jobs>
+  </jobs>
 </system>
 """
         xml = xmlTempl % params
 
         response = self._put('/api/inventory/systems/%s' % system.pk,
-            data=xml, content_type='application/xml')
+            data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 })
         self.failUnlessEqual(response.status_code, 200)
 
         system2 = models.System.objects.get(pk=system.pk)
@@ -1441,7 +1509,7 @@ class SystemStateTestCase(XMLTestCase):
         xml = xmlTempl % params
 
         response = self._put('/api/inventory/systems/%s' % system.pk,
-            data=xml, content_type='application/xml')
+            data=xml, headers = { 'X-rBuilder-Event-UUID' : eventUuid1 })
         self.failUnlessEqual(response.status_code, 200)
 
         system2 = models.System.objects.get(pk=system.pk)
@@ -1582,7 +1650,11 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
         manager.versionmgr.VersionManager.set_available_updates = \
             self.mock_set_available_updates
+        models.Job.getRmakeJob = self.mockGetRmakeJob
         
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
+
     def mock_set_available_updates(self, trove, *args, **kwargs):
         self.mock_set_available_updates_called = True
 
@@ -1683,8 +1755,7 @@ class SystemVersionsTestCase(XMLTestCase):
 
         url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
         response = self._post(url,
-            data=testsxml.installed_software_post_xml,
-            content_type="application/xml")
+            data=testsxml.installed_software_post_xml)
         self.assertXMLEquals(response.content,
             testsxml.installed_software_response_xml,
             ignoreNodes = ['lastAvailableUpdateRefresh'])
@@ -1708,6 +1779,10 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove)
         system.installed_software.add(self.trove2)
         system.save()
+
+        eventUuid = 'eventuuid007'
+        jobUuid = 'rmakejob007'
+        self._newJob(system, eventUuid, jobUuid, models.EventType.SYSTEM_POLL)
 
         self.failUnlessEqual(
             [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
@@ -1733,9 +1808,8 @@ class SystemVersionsTestCase(XMLTestCase):
         data = testsxml.system_version_put_xml
 
         url = '/api/inventory/systems/%s/' % system.pk
-        response = self._put(url,
-            data=data,
-            content_type="application/xml")
+        response = self._put(url, data=data,
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         # Weak attempt to see if the response is XML
         exp = '<system id="http://testserver/api/inventory/systems/%s">' % system.pk
         self.failUnless(exp in response.content)
@@ -1770,9 +1844,8 @@ class SystemVersionsTestCase(XMLTestCase):
             ])
 
         # Try it again
-        response = self._put(url,
-            data=data,
-            content_type="application/xml")
+        response = self._put(url, data=data,
+            headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         self.failUnlessEqual(response.status_code, 200)
 
         system = models.System.objects.get(pk=system.pk)
@@ -2025,12 +2098,11 @@ class SystemEventTestCase(XMLTestCase):
         """
         url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
-        response = self._post(url,
-            data=system_event_post_xml, content_type='text/xml')
+        response = self._post(url, data=system_event_post_xml)
         self.assertEquals(response.status_code, 401)
         
         response = self._post(url,
-            data=system_event_post_xml, content_type='text/xml',
+            data=system_event_post_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
@@ -2038,7 +2110,7 @@ class SystemEventTestCase(XMLTestCase):
         url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
         response = self._post(url,
-            data=system_event_post_xml, content_type='text/xml',
+            data=system_event_post_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         system_event = models.SystemEvent.objects.get(pk=1)
@@ -2303,7 +2375,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.system_jobs.all()
+        jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
             ['uuid000'])
 
@@ -2346,7 +2418,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.system_jobs.all()
+        jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
             ['uuid000'])
         # XXX find a better way to extract the additional field from the
@@ -2553,3 +2625,29 @@ class TargetSystemImportTest(XMLTestCase):
         # Make sure we did set name, description etc
         self.failUnlessEqual(system.name, system.target_system_name)
         self.failUnlessEqual(system.description, system.target_system_description)
+
+    def testIsManageable(self):
+        # First, make sure these two users have the same credentials
+        user1 = rbuildermodels.Users.objects.get(username='JeanValjean1')
+        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
+        user3 = rbuildermodels.Users.objects.get(username='JeanValjean3')
+        self.failUnlessEqual(
+            rbuildermodels.TargetUserCredentials.objects.get(
+                targetid=self.tgt3, userid=user1).targetcredentialsid.pk,
+            rbuildermodels.TargetUserCredentials.objects.get(
+                targetid=self.tgt3, userid=user2).targetcredentialsid.pk,
+        )
+
+        system = models.System.objects.get(target_system_id='ec2aws-002')
+        # Mark the system as being launched by user1
+        system.launching_user = user1
+
+        # Owner, so manageable
+        self.mgr.user = user1
+        self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), True)
+        # same credentials
+        self.mgr.user = user2
+        self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), True)
+        # Different credentials
+        self.mgr.user = user3
+        self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), False)

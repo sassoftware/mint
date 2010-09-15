@@ -97,6 +97,28 @@ def requires_auth(function):
 
     return inner
 
+def requires_auth_or_event_uuid(function):
+    """
+    Decorator that verifies authentication or a valid event id
+    """
+    def inner(*args, **kw):
+        request = args[1]
+        eventUuid = request.environ.get('X-rBuilder-Event-UUID')
+        isAuthenticated = request._is_authenticated
+        if not isAuthenticated:
+            if request._auth != (None, None) or not eventUuid:
+                # Bad authentication, or no eventUuid
+                return authErrorResponse()
+        if eventUuid:
+            # Check if this system has such an event uuid
+            systemId = args[2]
+            sjobs = modellib.type_map['__systemJob'].objects.filter(
+                system__pk=systemId, event_uuid=eventUuid)
+            if not sjobs:
+                return authErrorResponse()
+        return function(*args, **kw)
+    return inner
+
 def return_xml(function):
     """
     Decorator that serializes a returned parser object into xml with a root

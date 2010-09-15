@@ -69,7 +69,7 @@ Methods:
     not supported
     
   PUT:
-    Authentication: none
+    Authentication: user
     
   DELETE:
     Authentication: admin]]>
