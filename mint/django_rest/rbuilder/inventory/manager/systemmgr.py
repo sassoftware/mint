@@ -217,6 +217,9 @@ class SystemManager(base.BaseManager):
         # add the system
         system.save()
 
+        # Verify potential duplicates here
+        self.mergeSystems(system)
+
         # setSystemState will generate a CIM call; if it's a new registration,
         # it will be using the outbound certificate signed by the low-grade
         # CA. The personalized pair is not stored on the disk yet
@@ -229,6 +232,45 @@ class SystemManager(base.BaseManager):
             self.postprocessEvent(system)
 
         return system
+
+    def mergeSystems(self, system):
+        if not system.event_uuid:
+            return
+        # Look up a system with a matching event_uuid
+        systems = [ x.system
+            for x in models.SystemJob.objects.filter(
+                event_uuid = system.event_uuid) ]
+        if not systems:
+            return
+        # Realistically there should only be one
+        systemByUuid = systems[0]
+        if systemByUuid.pk == system.pk:
+            # Same system, nothing to do
+            return
+        self._merge(system, systemByUuid)
+
+    def _merge(self, system, other):
+        # Fields we copy verbatim from the other system
+        fieldNames = [ 'target', 'target_system_id', 'target_system_name',
+            'target_system_description', 'target_system_state' ]
+        for fieldName in fieldNames:
+            setattr(system, fieldName, getattr(other, fieldName))
+
+        # XXX maybe we should merge instead of simply updating, since we may
+        # step over a unique constraint? -- misa
+        cu = connection.cursor()
+        cu.execute("""
+            UPDATE inventory_system_target_credentials
+               SET system_id = %s
+              WHERE system_id = %s""", [ system.pk, other.pk, ])
+        # See RBL-6968 - product management has agreed we shouldn't keep the
+        # other system's logs
+        # But we do want to add a log entry that we de-duped
+        if other.target:
+            self.log_system(system, "System linked to target %s (%s)" %
+                (other.target.targetname, other.target.targettype))
+        system.save()
+        other.delete()
 
     def postprocessEvent(self, system):
         # This code is kept here just as an example of how one can react to

@@ -649,7 +649,7 @@ class NetworksTestCase(XMLTestCase):
         self.failUnlessEqual(net.network_id, network3.network_id)
 
 class SystemsTestCase(XMLTestCase):
-    fixtures = ['system_job']
+    fixtures = ['system_job', 'targets']
 
     def setUp(self):
         XMLTestCase.setUp(self)
@@ -973,6 +973,74 @@ class SystemsTestCase(XMLTestCase):
         # We should have loaded the old one
         self.failUnlessEqual(system.pk, model.pk)
         self.failUnlessEqual(model.name, 'blippy')
+
+    def testDedupByEventUuidWithRemoval(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+
+        # Create the system, pretending it's registered
+        system0 = models.System(name='blippy', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system0.save()
+
+        # Create a target system
+        targetSystemId = 'systemid-001'
+        targetSystemName = 'target system name 001'
+        targetSystemDescription = 'target system description 001'
+        targetSystemState = "Obflusterating"
+        tgt1 = rbuildermodels.Targets.objects.get(pk=1) # vsphere1
+        system1 = models.System(name="bloppy", target=tgt1,
+            target_system_id=targetSystemId,
+            target_system_name=targetSystemName,
+            target_system_description=targetSystemDescription,
+            target_system_state=targetSystemState)
+        system1.save()
+
+        # Create a job
+        eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
+        job.save()
+        systemJob = models.SystemJob(system=system1, job=job,
+            event_uuid=eventUuid)
+        systemJob.save()
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
+</system>
+""" % params
+
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        # We should have loaded the old one
+        self.failUnlessEqual(system0.pk, model.pk)
+        self.failUnlessEqual(model.name, 'blippy')
+        self.failUnlessEqual(model.event_uuid, eventUuid)
+
+        self.mgr.sysMgr.mergeSystems(model)
+        # At this point, properties from system1 should have copied over
+        self.failUnlessEqual(model.target.pk, tgt1.pk)
+        self.failUnlessEqual(model.target_system_id, targetSystemId)
+        self.failUnlessEqual(model.target_system_name, targetSystemName)
+        self.failUnlessEqual(model.target_system_description, targetSystemDescription)
+        self.failUnlessEqual(model.target_system_state, targetSystemState)
+
+        # The other system should be gone
+        self.failUnlessEqual(list(models.System.objects.filter(pk=system1.pk)),
+            [])
+        entries = self.mgr.getSystemLogEntries(system0)
+        self.failUnlessEqual(
+            [ x.entry for x in entries ],
+            [
+                'System linked to target vsphere1.eng.rpath.com (vmware)',
+            ])
 
     def testCurrentStateUpdateApi(self):
         # Make sure current state can be updated via the API.  This allows

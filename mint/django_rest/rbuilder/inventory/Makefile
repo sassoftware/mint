@@ -12,7 +12,7 @@
 # full details.
 #
 
-SUBDIRS =	manager
+SUBDIRS =	manager models_xsl
 python_files =	$(wildcard *.py)
 
 dist_files = Makefile $(python_files)
