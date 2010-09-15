@@ -481,7 +481,7 @@ class SystemManager(base.BaseManager):
         cu.execute("""
             SELECT 1
               FROM TargetUserCredentials tc1
-              JOIN TargetUserCredentials tc2 USING (targetId, credentials)
+              JOIN TargetUserCredentials tc2 USING (targetId, targetCredentialsId)
              WHERE tc1.userId = %s
                AND tc2.userId = %s
          """, [ self.user.userid, managedSystem.launching_user.userid ])

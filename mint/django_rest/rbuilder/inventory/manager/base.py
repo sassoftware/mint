@@ -18,6 +18,10 @@ class BaseManager(object):
     def rest_db(self):
         return self.mgr.rest_db
 
+    @property
+    def user(self):
+        return self.mgr.user
+
 def exposed(fn):
     fn.exposed = True
     return fn

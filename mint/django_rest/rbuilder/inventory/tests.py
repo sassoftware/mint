@@ -2451,3 +2451,29 @@ class TargetSystemImportTest(XMLTestCase):
         # Make sure we did set name, description etc
         self.failUnlessEqual(system.name, system.target_system_name)
         self.failUnlessEqual(system.description, system.target_system_description)
+
+    def testIsManageable(self):
+        # First, make sure these two users have the same credentials
+        user1 = rbuildermodels.Users.objects.get(username='JeanValjean1')
+        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
+        user3 = rbuildermodels.Users.objects.get(username='JeanValjean3')
+        self.failUnlessEqual(
+            rbuildermodels.TargetUserCredentials.objects.get(
+                targetid=self.tgt3, userid=user1).targetcredentialsid.pk,
+            rbuildermodels.TargetUserCredentials.objects.get(
+                targetid=self.tgt3, userid=user2).targetcredentialsid.pk,
+        )
+
+        system = models.System.objects.get(target_system_id='ec2aws-002')
+        # Mark the system as being launched by user1
+        system.launching_user = user1
+
+        # Owner, so manageable
+        self.mgr.user = user1
+        self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), True)
+        # same credentials
+        self.mgr.user = user2
+        self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), True)
+        # Different credentials
+        self.mgr.user = user3
+        self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), False)
