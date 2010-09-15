@@ -5,14 +5,18 @@
 #
 
 import datetime
+import logging
 from dateutil import tz
 
 from conary import conaryclient
 from conary import versions
+from conary.errors import RepositoryError
 
 from mint.django_rest.rbuilder.inventory import models
 
 import base
+
+log = logging.getLogger(__name__)
 
 class VersionManager(base.BaseManager):
     """
@@ -152,8 +156,14 @@ class VersionManager(base.BaseManager):
 
         # Search the label for the trove of the top level item.  It should
         # only (hopefully) return 1 result.
-        troves = self.cclient.repos.findTroves(trvLabel,
-            [(trvName, trvVersion, trvFlavor)])
+        try:
+            troves = self.cclient.repos.findTroves(trvLabel,
+                [(trvName, trvVersion, trvFlavor)])
+        except RepositoryError, e:
+            log.error("Error contacting repository to look for available " + \
+                "updates for %s=%s[%s]" % (trvName, trvLabel, trvFlavor))
+            log.error(e)
+            return
         assert(len(troves) == 1)
 
         # findTroves returns a {} with keys of (name, version, flavor), values
