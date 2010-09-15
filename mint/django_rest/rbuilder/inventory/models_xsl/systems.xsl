@@ -13,8 +13,8 @@ Description:
   A collection of systems in inventory
   
 Systems Properties:
-    eventTypes - an entry point into system inventory event types
-    system - a system resource]]>
+  eventTypes - an entry point into system inventory event types
+  system - a system resource]]>
 <xsl:copy-of select="$eventTypesHrefModel" />
 <xsl:copy-of select="$systemModelProperties" />
 <xsl:copy-of select="$systemModelDedup" />

@@ -2,7 +2,7 @@
 
 <xsl:variable name="eventTypesHrefModel"><![CDATA[  
 EventTypes Properties:
-    href - the URL to the location of the event types collection]]>
+  href - the URL to the location of the event types collection]]>
 </xsl:variable>
 
 </xsl:stylesheet>
