@@ -787,7 +787,6 @@ class SystemsTestCase(XMLTestCase):
     def testGetSystem(self):
         models.System.objects.all().delete()
         system = self._saveSystem()
-        import epdb; epdb.st()  
         system.to_xml()
         response = self._get('/api/inventory/systems/%d/' % system.system_id,
             username="testuser", password="password")

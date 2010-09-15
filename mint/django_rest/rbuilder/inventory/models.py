@@ -386,7 +386,7 @@ class JobStates(modellib.XObjModel):
     list_fields = ['job_state']
     job_state = []
 
-class JobState(modellib.XObjModel):
+class JobState(modellib.XObjIdModel):
     class Meta:
         db_table = "inventory_job_state"
     QUEUED = "Queued"
@@ -399,7 +399,8 @@ class JobState(modellib.XObjModel):
         (COMPLETED, COMPLETED),
         (FAILED, FAILED),
     )
-    _xobj = xobj.XObjMetadata(tag='job_state')
+    _xobj = xobj.XObjMetadata(tag='job_state',
+                attributes = {'id':str})
 
     job_state_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=64, unique=True, choices=choices)

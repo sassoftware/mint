@@ -1002,10 +1002,6 @@ class SystemManager(base.BaseManager):
         systemsLog.systemLogEntry = list(systemLogEntries)
         return systemsLog
 
-    @base.exposed
-    def getSystemJobs(self, system, job_uuid):
-        return None
-    
     def resolveSystems(self):
         '''Used to resolve system dups and possibly other issues'''
         log.info("Resolving system inventory records")
