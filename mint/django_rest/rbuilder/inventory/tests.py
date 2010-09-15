@@ -562,7 +562,7 @@ class ManagementNodesTestCase(XMLTestCase):
         Ensure requires admin
         """
         models.ManagementNode.objects.all().delete()
-        zone = self._saveZone()
+        self._saveZone()
         response = self._post('/api/inventory/managementNodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
@@ -579,7 +579,7 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testPostManagementNode(self):
         models.ManagementNode.objects.all().delete()
-        zone = self._saveZone()
+        self._saveZone()
         xml = testsxml.management_node_post_xml
         response = self._post('/api/inventory/managementNodes/', 
             data=xml, content_type='text/xml', username="admin", password="password")

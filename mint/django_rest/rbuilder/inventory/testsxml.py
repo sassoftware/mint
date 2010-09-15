@@ -422,6 +422,7 @@ management_node_post_response_xml = """\
   <sslClientCertificate/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
+  <jobs/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <systemId>1</systemId>
