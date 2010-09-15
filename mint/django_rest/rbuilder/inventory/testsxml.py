@@ -4,6 +4,7 @@ inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
   <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
+  <jobStates href="http://testserver/api/inventory/jobStates/"/>
   <log href="http://testserver/api/inventory/log/"/>
   <zones href="http://testserver/api/inventory/zones/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
@@ -85,6 +86,7 @@ zones_xml = """\
         <generatedUuid/>
         <hostname/>
         <installedSoftware/>
+        <jobs/>
         <launchDate/>
         <launchingUser/>
         <localUuid/>
@@ -263,6 +265,7 @@ management_nodes_xml = """\
     <launchDate/>
     <local>true</local>
     <installedSoftware/>
+    <jobs/>
     <description>test management node desc</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
@@ -320,6 +323,7 @@ management_node_xml = """\
   <launchDate/>
   <local>true</local>
   <installedSoftware/>
+  <jobs/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -412,6 +416,7 @@ management_node_post_response_xml = """\
   <launchDate/>
   <local>true</local>
   <installedSoftware/>
+  <jobs/>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -449,6 +454,7 @@ systems_xml = """\
     <generatedUuid/>
     <hostname/>
     <installedSoftware/>
+    <jobs/>
     <launchDate/>
     <launchingUser/>
     <localUuid/>
@@ -496,6 +502,7 @@ systems_xml = """\
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
     <hostname/>
     <installedSoftware/>
+    <jobs/>
     <launchDate/>
     <launchingUser/>
     <localUuid>testsystemlocaluuid</localUuid>
@@ -625,6 +632,36 @@ system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <installedSoftware/>
+  <jobs>
+    <job id="http://testserver/api/inventory/jobs/1/">
+      <jobId>1</jobId>
+      <jobState>Queued</jobState>
+      <jobType>system registration</jobType>
+      <jobUuid>fixture-job-uuid1</jobUuid>
+      <systems/>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/2/">
+      <jobId>2</jobId>
+      <jobState>Queued</jobState>
+      <jobType>immediate system poll</jobType>
+      <jobUuid>fixture-job-uuid2</jobUuid>
+      <systems/>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/3/">
+     <jobId>3</jobId>
+      <jobState>Queued</jobState>
+      <jobType>system poll</jobType>
+      <jobUuid>fixture-job-uuid3</jobUuid>
+      <systems/>
+   </job>
+    <job id="http://testserver/api/inventory/jobs/4/">
+      <jobId>4</jobId>
+      <jobState>Queued</jobState>
+      <jobType>system registration</jobType>
+      <jobUuid>fixture-job-uuid4</jobUuid>
+      <systems/>
+    </job>
+  </jobs>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -737,6 +774,36 @@ system_post_xml_response = """\
   <managementNode/>
   <launchDate/>
   <installedSoftware/>
+  <jobs>
+    <job id="http://testserver/api/inventory/jobs/1/">
+      <jobState>Queued</jobState>
+      <jobType>system registration</jobType>
+      <systems/>
+      <jobUuid>fixture-job-uuid1</jobUuid>
+      <jobId>1</jobId>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/2/">
+      <jobState>Queued</jobState>
+      <jobType>immediate system poll</jobType>
+      <systems/>
+      <jobUuid>fixture-job-uuid2</jobUuid>
+      <jobId>2</jobId>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/3/">
+      <jobState>Queued</jobState>
+      <jobType>system poll</jobType>
+      <systems/>
+      <jobUuid>fixture-job-uuid3</jobUuid>
+      <jobId>3</jobId>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/4/">
+      <jobState>Queued</jobState>
+      <jobType>system registration</jobType>
+      <systems/>
+      <jobUuid>fixture-job-uuid4</jobUuid>
+      <jobId>4</jobId>
+    </job>
+  </jobs>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -826,6 +893,36 @@ system_target_xml = """\
   <managementNode/>
   <launchDate/>
   <installedSoftware/>
+  <jobs>
+    <job id="http://testserver/api/inventory/jobs/1/">
+      <jobId>1</jobId>
+      <jobState>Queued</jobState>
+      <jobType>system registration</jobType>
+      <jobUuid>fixture-job-uuid1</jobUuid>
+      <systems/>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/2/">
+      <jobId>2</jobId>
+      <jobState>Queued</jobState>
+      <jobType>immediate system poll</jobType>
+      <jobUuid>fixture-job-uuid2</jobUuid>
+      <systems/>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/3/">
+      <jobId>3</jobId>
+      <jobState>Queued</jobState>
+      <jobType>system poll</jobType>
+      <jobUuid>fixture-job-uuid3</jobUuid>
+      <systems/>
+    </job>
+    <job id="http://testserver/api/inventory/jobs/4/">
+      <jobId>4</jobId>
+      <jobState>Queued</jobState>
+      <jobType>system registration</jobType>
+      <jobUuid>fixture-job-uuid4</jobUuid>
+      <systems/>
+    </job>
+  </jobs>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -1068,6 +1165,7 @@ system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   %s
+  <jobs/>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
@@ -1302,6 +1400,7 @@ system_available_updates_xml = """\
       <flavor>desktop is: x86_64</flavor>
     </trove>
   </installedSoftware>
+  <jobs/>
   <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
   <osMajorVersion/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>

@@ -793,7 +793,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'createdDate', 'timeCreated', 'timeUpdated' ])
 
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
@@ -808,7 +808,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'createdDate', 'timeCreated', 'timeUpdated' ])
         
     def testPostSystemAuth(self):
         """
@@ -831,7 +831,8 @@ class SystemsTestCase(XMLTestCase):
             (system.registration_date.isoformat()))
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate', 'sslClientCertificate' ])
+            ignoreNodes = [ 'createdDate', 'sslClientCertificate',
+                            'timeCreated', 'timeUpdated'])
         # Unfortunately, we can't mock modules since we don't control Django's
         # class loading. So we ignore the cert in the previous step and we
         # test it with xobj (it is different every time)
@@ -1102,12 +1103,12 @@ class SystemsTestCase(XMLTestCase):
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <system_jobs>
+  <jobs>
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-  </system_jobs>
+  </jobs>
 </system>
 """
         xml = xmlTempl % params
@@ -1151,12 +1152,12 @@ class SystemsTestCase(XMLTestCase):
         xmlTempl = """\
 <system>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <system_jobs>
+  <jobs>
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-  </system_jobs>
+  </jobs>
 </system>
 """
         jobState = 'Failed'
@@ -2201,7 +2202,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.system_jobs.all()
+        jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
             ['uuid000'])
 
@@ -2244,7 +2245,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.system_jobs.all()
+        jobs = system.jobs.all()
         self.failUnlessEqual([ x.job_uuid for x in jobs ],
             ['uuid000'])
         # XXX find a better way to extract the additional field from the
