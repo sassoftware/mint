@@ -325,16 +325,3 @@ class InventorySystemJobStatesService(AbstractInventoryService):
 
     def get(self, system_id, job_state_id):
         return self.mgr.getSystemJobsByState(system_id, job_state_id)
-
-class InventoryJobStatesSystemsService(AbstractInventoryService):
-
-    @requires_auth
-    @return_xml
-    def read(self, request, job_state_id, system_id=None):
-        return self.get(job_state_id, system_id)
-
-    def get(self, job_state_id, system_id):
-        if system_id:
-            return self.mgr.getSystemJobsByState(job_state_id, system_id)
-        else:
-            return self.mgr.getAllSystemJobsByState(job_state_id)

@@ -121,7 +121,4 @@ urlpatterns = patterns('',
     url(r'^api/inventory/jobStates/([a-zA-Z1-9]+)/jobs/$',
         inventoryviews.InventoryJobStatesJobsService(),
         name='JobStateJobs'),
-    url(r'^api/inventory/jobStates/([a-zA-Z1-9]+)/systems/$',
-        inventoryviews.InventoryJobStatesSystemsService(),
-        name='JobStateSystems'),
 )

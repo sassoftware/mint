@@ -53,14 +53,6 @@ class JobManager(base.BaseManager):
         return jobs
 
     @base.exposed
-    def getAllSystemJobsByState(self, job_state_id):
-        jobs = models.Jobs()
-        jobState = models.JobState.objects.get(pk=job_state_id)
-        for job in models.Job.objects.filter(job_state=jobState):
-            jobs.job.append(job)
-        return jobs
-    
-    @base.exposed
     def getSystemJobs(self, system_id):
         jobs = models.Jobs()
         system = models.System.objects.get(pk=system_id)
