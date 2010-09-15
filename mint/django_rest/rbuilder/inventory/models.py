@@ -24,11 +24,12 @@ class Inventory(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory',
-                elements = ['zones', 'managementNodes', 'systems', 'log', "eventTypes", "systemStates"])
+                elements = ['zones', 'managementNodes', 'systems', 'log', 'eventTypes', 'systemStates', 'networks'])
 
     def __init__(self):
         self.zones = modellib.XObjHrefModel('zones/')
         self.managementNodes = modellib.XObjHrefModel('managementNodes/')
+        self.networks = modellib.XObjHrefModel('networks/')
         self.systems = modellib.XObjHrefModel('systems/')
         self.log = modellib.XObjHrefModel('log/')
         self.eventTypes = modellib.XObjHrefModel('eventTypes/')
@@ -110,8 +111,11 @@ class Networks(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag='networks',
-                elements=['network'])
+                elements=['network', 'systems'])
     list_fields = ['network']
+    
+    def __init__(self):
+        self.systems = modellib.XObjHrefModel('../systems/')
     
 class Zones(modellib.XObjModel):
     class Meta:
@@ -489,13 +493,14 @@ class SystemEvent(modellib.XObjIdModel):
             self.priority = self.event_type.priority
         modellib.XObjIdModel.save(self, *args, **kw)
 
-class Network(modellib.XObjModel):
+class Network(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_network'
         unique_together = (('system', 'dns_name', 'ip_address', 'ipv6_address'),)
         
     _xobj = xobj.XObjMetadata(
-                tag='network')
+                tag='network',
+                attributes = {'id':str})
     network_id = models.AutoField(primary_key=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
     system = models.ForeignKey(System, related_name='networks')

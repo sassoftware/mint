@@ -148,6 +148,36 @@ class InventoryZoneManagementNodeService(AbstractInventoryService):
         managementNode = self.mgr.addManagementNodeForZone(zone_id, managementNode)
         return managementNode
 
+class InventoryNetworkService(AbstractInventoryService):
+    
+    @requires_auth
+    @return_xml
+    def read(self, request, network_id=None):
+        return self.get(network_id)
+    
+    def get(self, network_id=None):
+        if network_id:
+            return self.mgr.getNetwork(network_id)
+        else:
+            return self.mgr.getNetworks()
+        
+    @requires_admin
+    @requires('network')
+    @return_xml
+    def update(self, request, network_id, network):
+        oldNetwork = self.get(network_id)
+        if not oldNetwork:
+            return HttpResponse(status=404)
+        # This really should be an update
+        self.mgr.updateNetwork(network)
+        return self.get(network_id)
+    
+    @requires_admin
+    def delete(self, request, network_id):
+        self.mgr.deleteNetwork(network_id)
+        response = HttpResponse(status=204)
+        return response
+
 class InventorySystemsService(AbstractInventoryService):
 
     @requires_auth

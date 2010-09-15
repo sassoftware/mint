@@ -105,6 +105,20 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/networks">
+<xsl:comment>
+<xsl:copy-of select="$networksInfo" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/network">
+<xsl:comment>
+<xsl:copy-of select="$networkInfo" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <xsl:template match="/systems">
 <xsl:comment>
 <xsl:copy-of select="$systemsInfo" />

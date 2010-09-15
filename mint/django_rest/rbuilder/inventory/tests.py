@@ -492,6 +492,99 @@ class SystemStatesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_state_xml, 
             ignoreNodes = [ 'createdDate' ])
+        
+class NetworkTestCase(XMLTestCase):
+
+    def testGetNetworks(self):
+        models.System.objects.all().delete()
+        self._saveSystem()
+        response = self._get('/api/inventory/networks/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.networks_xml, ignoreNodes = [ 'createdDate' ])
+
+    def testGetNetworkAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        self._saveSystem()
+        response = self._get('/api/inventory/networks/1/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/networks/1/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+    def testPutNetworkAuth(self):
+        """
+        Ensure we require admin to put zones
+        """
+        response = self._put('/api/inventory/networks/1/', 
+            data= testsxml.network_put_xml)
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._put('/api/inventory/networks/1/', 
+            data=testsxml.network_put_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+    def testPutNetworkNotFound(self):
+        """
+        Ensure we return 404 if we update network that doesn't exist
+        """
+        try:
+            response = self._put('/api/inventory/networks/1zcvxzvzgvsdzfewrew4t4tga34/', 
+                data=testsxml.network_put_xml,
+                username="testuser", password="password")
+            self.assertEquals(response.status_code, 404)
+        except TemplateDoesNotExist, e:
+            # might not have template, so check for 404 in error
+            self.assertTrue("404" in str(e))
+        
+    def testPutNetwork(self):
+        models.System.objects.all().delete()
+        self._saveSystem()
+        response = self._put('/api/inventory/networks/1/',
+            data=testsxml.network_put_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        network = models.Network.objects.get(pk=1)
+        self.assertTrue(network.dns_name == "new.com")
+        self.assertTrue(network.ip_address == "2.2.2.2")
+        
+    def testDeleteNetworkAuth(self):
+        """
+        Ensure we require admin to put zones
+        """
+        response = self._delete('/api/inventory/networks/1/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._delete('/api/inventory/networks/1/', 
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+    def testDeleteNetwork(self):
+        models.System.objects.all().delete()
+        self._saveSystem()
+        network = models.Network.objects.get(pk=1)
+        self.assertTrue(network is not None)
+        response = self._delete('/api/inventory/networks/1/', 
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 204)
+        try:
+            network = models.Network.objects.get(pk=1)
+            self.assertTrue(False) # should have been deleted
+        except models.Network.DoesNotExist:
+            pass  #expected
+
+    def testGetNetwork(self):
+        models.System.objects.all().delete()
+        self._saveSystem()
+        response = self._get('/api/inventory/networks/1/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.network_xml, ignoreNodes = [ 'createdDate' ])
 
 class ManagementNodesTestCase(XMLTestCase):
 

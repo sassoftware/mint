@@ -10,6 +10,7 @@ inventory_xml = """\
   <managementNodes href="http://testserver/api/inventory/managementNodes/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
   <systemStates href="http://testserver/api/inventory/systemStates/"/>
+  <networks href="http://testserver/api/inventory/networks/"/>
 </inventory>"""
 
 event_type_xml="""\
@@ -169,6 +170,57 @@ zone_put_xml = """\
 </zone>
 """
 
+networks_xml = """\
+<?xml version="1.0"?>
+<networks>
+  <systems href="http://testserver/api/inventory/systems/"/>
+  <network id="http://testserver/api/inventory/networks/1/">
+    <active/>
+    <createdDate>2010-09-15T21:41:40.142078+00:00</createdDate>
+    <deviceName>eth0</deviceName>
+    <dnsName>testnetwork.example.com</dnsName>
+    <ipAddress>1.1.1.1</ipAddress>
+    <ipv6Address/>
+    <netmask>255.255.255.0</netmask>
+    <networkId>1</networkId>
+    <portType>lan</portType>
+    <required/>
+    <system href="http://testserver/api/inventory/systems/1"/>
+  </network>
+</networks>"""
+
+network_xml = """\
+<?xml version="1.0"?>
+<network id="http://testserver/api/inventory/networks/1/">
+  <active/>
+  <createdDate>2010-09-15T21:41:40.142078+00:00</createdDate>
+  <deviceName>eth0</deviceName>
+  <dnsName>testnetwork.example.com</dnsName>
+  <ipAddress>1.1.1.1</ipAddress>
+  <ipv6Address/>
+  <netmask>255.255.255.0</netmask>
+  <networkId>1</networkId>
+  <portType>lan</portType>
+  <required/>
+  <system href="http://testserver/api/inventory/systems/1"/>
+</network>"""
+
+network_put_xml = """\
+<?xml version="1.0"?>
+<network id="http://testserver/api/inventory/networks/1/">
+  <active/>
+  <createdDate>2010-09-15T21:41:40.142078+00:00</createdDate>
+  <deviceName>eth0</deviceName>
+  <dnsName>new.com</dnsName>
+  <ipAddress>2.2.2.2</ipAddress>
+  <ipv6Address/>
+  <netmask>255.255.255.0</netmask>
+  <networkId>1</networkId>
+  <portType>lan</portType>
+  <required/>
+  <system href="http://testserver/api/inventory/systems/1"/>
+</network>"""
+
 system_states_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systemStates>
@@ -252,7 +304,7 @@ management_nodes_xml = """\
     <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
     <networks>
-      <network>
+      <network id="http://testserver/api/inventory/networks/1/">
         <active/>
         <createdDate>%s</createdDate>
         <deviceName>eth0</deviceName>
@@ -310,7 +362,7 @@ management_node_xml = """\
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
@@ -366,7 +418,7 @@ management_node_post_xml = """\
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -403,7 +455,7 @@ management_node_post_response_xml = """\
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
@@ -459,7 +511,7 @@ management_node_zone_post_xml = """\
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -496,7 +548,7 @@ management_node_zone_post_response_xml = """\
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
@@ -568,7 +620,7 @@ systems_xml = """\
     <managingZone href="http://testserver/api/inventory/zones/1/"/>
     <name>rPath Update Service</name>
     <networks>
-      <network>
+      <network id="http://testserver/api/inventory/networks/1/">
         <active/>
         <createdDate>2010-08-18T22:28:26+00:00</createdDate>
         <deviceName/>
@@ -616,7 +668,7 @@ systems_xml = """\
     <managingZone/>
     <name>testsystemname</name>
     <networks>
-      <network>
+      <network id="http://testserver/api/inventory/networks/2/">
         <active/>
         <createdDate>%s</createdDate>
         <deviceName>eth0</deviceName>
@@ -656,7 +708,7 @@ systems_put_xml = """\
     <registrationDate/>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
     <networks>
-      <network>
+      <network id="http://testserver/api/inventory/networks/1/">
         <active/>
         <deviceName>eth0</deviceName>
         <dnsName>testnetwork.example.com</dnsName>
@@ -697,7 +749,7 @@ systems_put_xml = """\
     <registrationDate/>
     <generatedUuid>testsystem2generateduuid</generatedUuid>
     <networks>
-      <network>
+      <network id="http://testserver/api/inventory/networks/1/">
         <active/>
         <deviceName>eth0</deviceName>
         <dnsName>testnetwork2.example.com</dnsName>
@@ -774,7 +826,7 @@ system_xml = """\
   <managingZone/>
   <hostname/>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
@@ -822,7 +874,7 @@ system_post_xml = """\
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -857,7 +909,7 @@ system_post_xml_response = """\
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
@@ -937,7 +989,7 @@ system_post_xml_dup = """\
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -976,7 +1028,7 @@ system_target_xml = """\
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <createdDate>%s</createdDate>
       <deviceName>eth0</deviceName>
@@ -1278,7 +1330,7 @@ system_version_xml = """\
   <managingZone/>
   <hostname/>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/2/">
       <active/>
       <createdDate>%%s</createdDate>
       <deviceName>eth0</deviceName>
@@ -1412,7 +1464,7 @@ system_version_put_response_xml = """\
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <managingZone/>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/1/">
       <active/>
       <deviceName>eth0</deviceName>
       <dnsName>testnetwork.example.com</dnsName>
@@ -1511,7 +1563,7 @@ system_available_updates_xml = """\
   <osMajorVersion/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
   <networks>
-    <network>
+    <network id="http://testserver/api/inventory/networks/2/">
       <active/>
       <createdDate>2010-08-27T12:21:59.801387+00:00</createdDate>
       <deviceName>eth0</deviceName>

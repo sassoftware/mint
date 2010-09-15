@@ -6,6 +6,7 @@
 <xsl:import href="systemsHref.xsl"/>
 <xsl:import href="zonesHref.xsl"/>
 <xsl:import href="managementNodesHref.xsl"/>
+<xsl:import href="networksHref.xsl"/>
 
 <xsl:variable name="inventoryInfo">
 <xsl:copy-of select="$inventoryModel" />
@@ -22,13 +23,15 @@ Inventory Properties:
   systemStates - an entry point into the inventory system states collection
   systems - an entry point into the inventory systems collection
   zones - an entry point into inventory management zones collection
-  managementNodes - an entry point into inventory management nodes collection]]>
+  managementNodes - an entry point into inventory management nodes collection
+  networks - an entry point into inventory system networks collection]]>
 <xsl:copy-of select="$eventTypesHrefModel" />
 <xsl:copy-of select="$logHrefModel" />
 <xsl:copy-of select="$systemStatesHrefModel" />
 <xsl:copy-of select="$systemsHrefModel" />
 <xsl:copy-of select="$zonesHrefModel" />
 <xsl:copy-of select="$managementNodesHrefModel" />
+<xsl:copy-of select="$networksHrefModel" />
 </xsl:variable>
 
 <xsl:variable name="inventoryMethods"><![CDATA[

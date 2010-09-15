@@ -122,6 +122,32 @@ class SystemManager(base.BaseManager):
         return
 
     @base.exposed
+    def getNetwork(self, network_id):
+        network = models.Network.objects.get(pk=network_id)
+        return network
+    
+    @base.exposed
+    def getNetworks(self):
+        Networks = models.Networks()
+        Networks.network = list(models.Network.objects.all())
+        return Networks
+    
+    @base.exposed
+    def updateNetwork(self, network):
+        """Update a network"""
+
+        if not network:
+            return
+
+        network.save()
+        return network
+    
+    @base.exposed
+    def deleteNetwork(self, network_id):
+        network = models.Network.objects.get(pk=network_id)
+        network.delete()
+
+    @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
         return system
