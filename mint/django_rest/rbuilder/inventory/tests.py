@@ -461,7 +461,7 @@ class ZonesTestCase(XMLTestCase):
         response = self._delete('/api/inventory/zones/1/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/zones/1/',
+        response = self._delete('/api/inventory/zones/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
