@@ -96,7 +96,6 @@ zones_xml = """\
         <osMinorVersion/>
         <osType/>
         <registrationDate/>
-        <scheduledEventStartDate/>
         <sslClientCertificate/>
         <sslServerCertificate/>
         <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
@@ -261,7 +260,6 @@ management_nodes_xml = """\
     <systemId>1</systemId>
     <launchingUser/>
     <managementNode>true</managementNode>
-    <scheduledEventStartDate/>
     <launchDate/>
     <local>true</local>
     <installedSoftware/>
@@ -319,7 +317,6 @@ management_node_xml = """\
   <systemId>1</systemId>
   <launchingUser/>
   <managementNode>true</managementNode>
-  <scheduledEventStartDate/>
   <launchDate/>
   <local>true</local>
   <installedSoftware/>
@@ -412,7 +409,6 @@ management_node_post_response_xml = """\
   <systemId>1</systemId>
   <launchingUser/>
   <managementNode>true</managementNode>
-  <scheduledEventStartDate/>
   <launchDate/>
   <local>true</local>
   <installedSoftware/>
@@ -477,7 +473,6 @@ systems_xml = """\
     <osMajorVersion/>
     <osMinorVersion/>
     <osType/>
-    <scheduledEventStartDate/>
     <sslClientCertificate/>
     <sslServerCertificate/>
     <systemEvents href="http://testserver/api/inventory/systems/2/systemEvents/"/>
@@ -525,7 +520,6 @@ systems_xml = """\
     <osMajorVersion/>
     <osMinorVersion/>
     <osType/>
-    <scheduledEventStartDate/>
     <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
     <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
@@ -563,7 +557,6 @@ systems_put_xml = """\
     </networks>
     <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-    <scheduledEventStartDate/>
     <launchDate/>
     <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <description>testsystemdescription</description>
@@ -605,7 +598,6 @@ systems_put_xml = """\
     </networks>
     <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-    <scheduledEventStartDate/>
     <launchDate/>
     <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
     <description>testsystemdescription</description>
@@ -657,7 +649,6 @@ system_xml = """\
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>1</systemId>
   <launchingUser/>
-  <scheduledEventStartDate/>
   <launchDate/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -701,7 +692,6 @@ system_post_xml = """\
   </networks>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <description>testsystemdescription</description>
@@ -745,7 +735,6 @@ system_post_xml_response = """\
   <systemId>1</systemId>
   <launchingUser/>
   <managementNode/>
-  <scheduledEventStartDate/>
   <launchDate/>
   <installedSoftware/>
   <description>testsystemdescription</description>
@@ -788,7 +777,6 @@ system_post_xml_dup = """\
   </networks>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
-  <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <description>testsystemdescription</description>
@@ -836,7 +824,6 @@ system_target_xml = """\
   <systemId>1</systemId>
   <launchingUser/>
   <managementNode/>
-  <scheduledEventStartDate/>
   <launchDate/>
   <installedSoftware/>
   <description>testsystemdescription</description>
@@ -1105,7 +1092,6 @@ system_version_xml = """\
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>3</systemId>
   <launchingUser/>
-  <scheduledEventStartDate/>
   <launchDate/>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
@@ -1239,7 +1225,6 @@ system_version_put_response_xml = """\
   <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
   <systemId>2</systemId>
   <launchingUser/>
-  <scheduledEventStartDate/>
   <launchDate/>
   <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
   <description>testsystemdescription</description>
@@ -1342,7 +1327,6 @@ system_available_updates_xml = """\
   <systemId>3</systemId>
   <launchingUser/>
   <managementNode/>
-  <scheduledEventStartDate/>
   <launchDate/>
   <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
   <registrationDate/>
