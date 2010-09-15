@@ -10,7 +10,7 @@ import time
 from django.http import HttpResponse
 from django_restapi import resource
 
-from mint.django_rest.deco import requires, return_xml, requires_auth, requires_admin
+from mint.django_rest.deco import requires, return_xml, requires_auth, requires_admin, requires_auth_or_event_uuid
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import manager
@@ -165,6 +165,7 @@ class InventorySystemsSystemService(AbstractInventoryService):
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
+    @requires_auth_or_event_uuid
     @requires('system')
     @return_xml
     def update(self, request, system_id, system):
