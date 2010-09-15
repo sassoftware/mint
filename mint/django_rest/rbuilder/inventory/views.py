@@ -272,7 +272,6 @@ class InventoryEventTypesService(AbstractInventoryService):
 
 class InventorySystemJobsService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
     def read(self, request, system):
         return self.get(system)
@@ -282,7 +281,6 @@ class InventorySystemJobsService(AbstractInventoryService):
 
 class InventoryJobsService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
     def read(self, request, job_id=None):
         return self.get(job_id)
@@ -295,7 +293,6 @@ class InventoryJobsService(AbstractInventoryService):
 
 class InventoryJobStatesService(AbstractInventoryService):
 
-    @requires_auth
     @return_xml
     def read(self, request, job_state_id=None):
         return self.get(job_state_id)
@@ -308,7 +305,6 @@ class InventoryJobStatesService(AbstractInventoryService):
 
 class InventoryJobStatesJobsService(AbstractInventoryService):
 
-    @requires_auth
     @return_xml
     def read(self, request, job_state_id):
         return self.get(job_state_id)
@@ -318,7 +314,6 @@ class InventoryJobStatesJobsService(AbstractInventoryService):
 
 class InventorySystemJobStatesService(AbstractInventoryService):
 
-    @requires_auth
     @return_xml
     def read(self, request, system_id, job_state_id):
         return self.get(system_id, job_state_id)
