@@ -12,7 +12,7 @@ Description:
   A collection of management zones available to inventory systems
   
 Zones Properties:
-    zone - a zone resource]]>
+  zone - a zone resource]]>
 <xsl:copy-of select="$zoneModelProperties" />
 </xsl:variable>
 

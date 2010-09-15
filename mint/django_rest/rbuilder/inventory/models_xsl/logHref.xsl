@@ -2,7 +2,7 @@
 
 <xsl:variable name="logHrefModel"><![CDATA[  
 Log Properties:
-    href - the URL to the location of the log collection]]>
+  href - the URL to the location of the log collection]]>
 </xsl:variable>
 
 </xsl:stylesheet>

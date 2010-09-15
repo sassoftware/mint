@@ -2,7 +2,7 @@
 
 <xsl:variable name="zonesHrefModel"><![CDATA[  
 Zones Properties:
-    href - the URL to the location of the zones collection]]>
+  href - the URL to the location of the zones collection]]>
 </xsl:variable>
 
 </xsl:stylesheet>

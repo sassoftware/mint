@@ -2,7 +2,7 @@
 
 <xsl:variable name="systemsHrefModel"><![CDATA[  
 Systems Properties:
-    href - the URL to the location of the systems collection]]>
+  href - the URL to the location of the systems collection]]>
 </xsl:variable>
 
 </xsl:stylesheet>
