@@ -1369,6 +1369,13 @@ class SystemCertificateTestCase(XMLTestCase):
         self.failUnlessEqual(system.ssl_client_key, clientKey)
 
 class SystemStateTestCase(XMLTestCase):
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        models.Job.getRmakeJob = self.mockGetRmakeJob
+    
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
+
     def testSetCurrentState(self):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
@@ -1389,12 +1396,12 @@ class SystemStateTestCase(XMLTestCase):
         xmlTempl = """\
 <system>
   <event_uuid>%(eventUuid)s</event_uuid>
-  <system_jobs>
+  <jobs>
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
     </job>
-  </system_jobs>
+  </jobs>
 </system>
 """
         xml = xmlTempl % params
@@ -1566,7 +1573,11 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
         manager.versionmgr.VersionManager.set_available_updates = \
             self.mock_set_available_updates
+        models.Job.getRmakeJob = self.mockGetRmakeJob
         
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
+
     def mock_set_available_updates(self, trove, *args, **kwargs):
         self.mock_set_available_updates_called = True
 
