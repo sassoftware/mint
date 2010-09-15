@@ -5,6 +5,7 @@
 <xsl:import href="systemStatesHref.xsl"/>
 <xsl:import href="systemsHref.xsl"/>
 <xsl:import href="zonesHref.xsl"/>
+<xsl:import href="managementNodesHref.xsl"/>
 
 <xsl:variable name="inventoryInfo">
 <xsl:copy-of select="$inventoryModel" />
@@ -20,12 +21,14 @@ Inventory Properties:
   log - an entry point into inventory logging
   systemStates - an entry point into the inventory system states collection
   systems - an entry point into the inventory systems collection
-  zones - an entry point into inventory management zones collection]]>
+  zones - an entry point into inventory management zones collection
+  managementNodes - an entry point into inventory management nodes collection]]>
 <xsl:copy-of select="$eventTypesHrefModel" />
 <xsl:copy-of select="$logHrefModel" />
 <xsl:copy-of select="$systemStatesHrefModel" />
 <xsl:copy-of select="$systemsHrefModel" />
 <xsl:copy-of select="$zonesHrefModel" />
+<xsl:copy-of select="$managementNodesHrefModel" />
 </xsl:variable>
 
 <xsl:variable name="inventoryMethods"><![CDATA[
@@ -34,11 +37,7 @@ Methods:
     Authentication: none
     Response Format:
       <inventory>
-        <eventTypes href="http://hostname/api/inventory/eventTypes/"/>
-        <log href="http://hostname/api/inventory/log/"/>
-        <systemStates href="http://hostname/api/inventory/systemStates/"/>
-        <systems href="http://hostname/api/inventory/systems/"/>
-        <zones href="http://hostname/api/inventory/zones/"/>
+        ...
       </inventory>
 
   POST:

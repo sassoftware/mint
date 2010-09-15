@@ -136,15 +136,54 @@ class SystemManager(base.BaseManager):
         Systems = models.Systems()
         Systems.system = list(models.System.objects.all())
         return Systems
-
+    
     @base.exposed
-    def getManagementNode(self, zone_id, management_node_id):
-        zone = models.Zone.objects.get(pk=zone_id)
-        managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
+    def getManagementNode(self, management_node_id):
+        managementNode = models.ManagementNode.objects.get(pk=management_node_id)
         return managementNode
 
     @base.exposed
-    def getManagementNodes(self, zone_id):
+    def getManagementNodes(self):
+        ManagementNodes = models.ManagementNodes()
+        ManagementNodes.managementNode = list(models.ManagementNode.objects.all())
+        return ManagementNodes
+    
+    @base.exposed
+    def addManagementNode(self, managementNode):
+        """Add a management node to the inventory"""
+        
+        if not managementNode:
+            return
+        
+        managementNode.save()
+
+        self.setSystemState(managementNode)
+        #TO-DO Need to add the JID to the models.ManagementNode object
+        return managementNode
+
+    @base.exposed
+    def getManagementNodeForZone(self, zone_id, management_node_id):
+        zone = models.Zone.objects.get(pk=zone_id)
+        managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)
+        return managementNode
+    
+    @base.exposed
+    def addManagementNodeForZone(self, zone_id, managementNode):
+        """Add a management node to the inventory"""
+        
+        if not managementNode:
+            return
+
+        zone = models.Zone.objects.get(pk=zone_id)
+        managementNode.zone = zone;
+        managementNode.save()
+
+        self.setSystemState(managementNode)
+        #TO-DO Need to add the JID to the models.ManagementNode object
+        return managementNode
+
+    @base.exposed
+    def getManagementNodesForZone(self, zone_id):
         zone = models.Zone.objects.get(pk=zone_id)
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.managementNode = list(models.ManagementNode.objects.filter(zone=zone).all())
@@ -164,21 +203,6 @@ class SystemManager(base.BaseManager):
     @classmethod
     def systemState(cls, stateName):
         return models.SystemState.objects.get(name = stateName)
-
-    @base.exposed
-    def addManagementNode(self, zone_id, managementNode):
-        """Add a management node to the inventory"""
-        
-        if not managementNode:
-            return
-
-        zone = models.Zone.objects.get(pk=zone_id)
-        managementNode.zone = zone;
-        managementNode.save()
-
-        self.setSystemState(managementNode)
-        #TO-DO Need to add the JID to the models.ManagementNode object
-        return managementNode
 
     def _getProductVersionAndStage(self, nvf):
         name, version, flavor = nvf
@@ -222,7 +246,7 @@ class SystemManager(base.BaseManager):
             return
 
         if system.management_node:
-            return self.addManagementNode(system.zone.zone_id, system)
+            return self.addManagementNode(system)
 
         # add the system
         system.save()

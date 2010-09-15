@@ -6,6 +6,7 @@ inventory_xml = """\
   <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <log href="http://testserver/api/inventory/log/"/>
   <zones href="http://testserver/api/inventory/zones/"/>
+  <managementNodes href="http://testserver/api/inventory/managementNodes/"/>
   <systems href="http://testserver/api/inventory/systems/"/>
   <systemStates href="http://testserver/api/inventory/systemStates/"/>
 </inventory>"""
@@ -243,7 +244,7 @@ system_state_xml = """\
 management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNodes>
-  <managementNode>
+  <managementNode id="http://testserver/api/inventory/managementNodes/1">
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <osMajorVersion/>
     <registrationDate/>
@@ -300,7 +301,7 @@ management_nodes_xml = """\
 
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<managementNode>
+<managementNode id="http://testserver/api/inventory/managementNodes/1">
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <osMajorVersion/>
   <registrationDate/>
@@ -376,6 +377,98 @@ management_node_post_xml = """\
   <nodeJid>abcd</nodeJid>
   <sslClientCertificate>test management node client cert</sslClientCertificate>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
+  <zone href="http://testserver/api/inventory/zones/1/"/>
+  <managingZone/>
+  <hostname>myhostname</hostname>
+  <name>test management node</name>
+  <systemId>1</systemId>
+  <launchingUser/>
+  <managementNode>True</managementNode>
+  <local>True</local>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
+  <description>test management node desc</description>
+  <localUuid>test management node luuid</localUuid>
+  <osType/>
+</managementNode>"""
+
+management_node_post_response_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<managementNode id="http://testserver/api/inventory/managementNodes/1">
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
+  <osMajorVersion/>
+  <registrationDate/>
+  <generatedUuid>test management node guuid</generatedUuid>
+  <networks>
+    <network>
+      <active/>
+      <createdDate>%s</createdDate>
+      <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
+      <ipAddress>2.2.2.2</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/1"/>
+    </network>
+  </networks>
+  <zone href="http://testserver/api/inventory/zones/1/"/>
+  <nodeJid>abcd</nodeJid>
+  <sslClientCertificate/>
+  <sslServerCertificate>test management node server cert</sslServerCertificate>
+  <managingZone/>
+  <hostname>myhostname</hostname>
+  <name>test management node</name>
+  <systemId>1</systemId>
+  <launchingUser/>
+  <managementNode>true</managementNode>
+  <launchDate/>
+  <local>true</local>
+  <installedSoftware/>
+  <description>test management node desc</description>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
+  <osMinorVersion/>
+  <target/>
+  <systemPtr href="http://testserver/api/inventory/systems/1"/>
+  <localUuid>test management node luuid</localUuid>
+  <currentState id="http://testserver/api/inventory/systemStates/2/">
+    <createdDate>%s</createdDate>
+    <description>Polling</description>
+    <name>registered</name>
+    <systemStateId>2</systemStateId>
+  </currentState>
+  <createdDate>%s</createdDate>
+  <osType/>
+</managementNode>"""
+
+management_node_zone_post_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<managementNode>
+  <sslClientKey>test management node client key</sslClientKey>
+  <osMajorVersion/>
+  <registrationDate/>
+  <generatedUuid>test management node guuid</generatedUuid>
+  <networks>
+    <network>
+      <active/>
+      <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
+      <ipAddress>2.2.2.2</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <required/>
+    </network>
+  </networks>
+  <nodeJid>abcd</nodeJid>
+  <sslClientCertificate>test management node client cert</sslClientCertificate>
+  <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
@@ -390,9 +483,9 @@ management_node_post_xml = """\
   <osType/>
 </managementNode>"""
 
-management_node_post_response_xml = """\
+management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<managementNode>
+<managementNode id="http://testserver/api/inventory/managementNodes/1">
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <osMajorVersion/>
   <registrationDate/>

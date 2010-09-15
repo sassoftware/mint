@@ -63,6 +63,20 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/managementNodes">
+<xsl:comment>
+<xsl:copy-of select="$managementNodesInfo" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/managementNode">
+<xsl:comment>
+<xsl:copy-of select="$managementNodeInfo" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <xsl:template match="/eventTypes">
 <xsl:comment>
 <xsl:copy-of select="$eventTypesInfo" />

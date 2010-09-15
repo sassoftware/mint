@@ -112,20 +112,40 @@ class InventoryManagementNodeService(AbstractInventoryService):
     
     @requires_auth
     @return_xml
+    def read(self, request, management_node_id=None):
+        return self.get(management_node_id)
+    
+    def get(self, management_node_id=None):
+        if management_node_id:
+            return self.mgr.getManagementNode(management_node_id)
+        else:
+            return self.mgr.getManagementNodes()
+        
+    @requires_admin
+    @requires('managementNode')
+    @return_xml
+    def create(self, request, managementNode):
+        managementNode = self.mgr.addManagementNode(managementNode)
+        return managementNode
+    
+class InventoryZoneManagementNodeService(AbstractInventoryService):
+    
+    @requires_auth
+    @return_xml
     def read(self, request, zone_id, management_node_id=None):
         return self.get(zone_id, management_node_id)
     
     def get(self, zone_id, management_node_id=None):
         if management_node_id:
-            return self.mgr.getManagementNode(zone_id, management_node_id)
+            return self.mgr.getManagementNodeForZone(zone_id, management_node_id)
         else:
-            return self.mgr.getManagementNodes(zone_id)
+            return self.mgr.getManagementNodesForZone(zone_id)
         
     @requires_admin
     @requires('managementNode')
     @return_xml
     def create(self, request, zone_id, managementNode):
-        managementNode = self.mgr.addManagementNode(zone_id, managementNode)
+        managementNode = self.mgr.addManagementNodeForZone(zone_id, managementNode)
         return managementNode
 
 class InventorySystemsService(AbstractInventoryService):

@@ -503,7 +503,84 @@ class ManagementNodesTestCase(XMLTestCase):
         management_node.save()
         _eq(management_node.current_state.name, models.SystemState.DEAD)
         
+    # -----------------
     def testGetManagementNodes(self):
+        management_node = self._saveManagementNode()
+        response = self._get('/api/inventory/managementNodes/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(),
+                                             management_node.current_state.created_date.isoformat(),
+                                             management_node.created_date.isoformat()))
+
+    def testGetManagementNodeAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        self._saveManagementNode()
+        response = self._get('/api/inventory/managementNodes/1/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/managementNodes/1/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
+    def testGetManagementNode(self):
+        management_node = self._saveManagementNode()
+        response = self._get('/api/inventory/managementNodes/1/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.management_node_xml % (management_node.networks.all()[0].created_date.isoformat(),
+                                            management_node.current_state.created_date.isoformat(), 
+                                            management_node.created_date.isoformat()))
+        
+    def testAddManagementNode(self):
+        management_node = self._saveManagementNode()
+        new_management_node = self.mgr.addManagementNode(management_node)
+        assert(new_management_node is not None)
+        assert(new_management_node.local)
+        assert(new_management_node.management_node)
+        
+    def testPostManagementNodeAuth(self):
+        """
+        Ensure requires admin
+        """
+        models.ManagementNode.objects.all().delete()
+        zone = self._saveZone()
+        response = self._post('/api/inventory/managementNodes/', 
+            data=testsxml.management_node_post_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._post('/api/inventory/managementNodes/', 
+            data=testsxml.management_node_post_xml, content_type='text/xml',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._post('/api/inventory/managementNodes/', 
+            data=testsxml.management_node_post_xml, content_type='text/xml',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        
+    def testPostManagementNode(self):
+        models.ManagementNode.objects.all().delete()
+        zone = self._saveZone()
+        xml = testsxml.management_node_post_xml
+        response = self._post('/api/inventory/managementNodes/', 
+            data=xml, content_type='text/xml', username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        management_node = models.ManagementNode.objects.get(pk=1)
+        management_node_xml = testsxml.management_node_post_response_xml.replace(
+            '<registrationDate/>',
+            '<registrationDate>%s</registrationDate>' % \
+            (management_node.registration_date.isoformat()))
+        self.assertXMLEquals(response.content, management_node_xml % \
+            (management_node.networks.all()[0].created_date.isoformat(), 
+             management_node.current_state.created_date.isoformat(),
+             management_node.created_date.isoformat()))
+        
+    def testGetManagementNodesForZone(self):
         management_node = self._saveManagementNode()
         response = self._get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id,
             username="testuser", password="password")
@@ -513,7 +590,7 @@ class ManagementNodesTestCase(XMLTestCase):
                                              management_node.current_state.created_date.isoformat(),
                                              management_node.created_date.isoformat()))
 
-    def testGetManagementNodeAuth(self):
+    def testGetManagementNodeForZoneAuth(self):
         """
         Ensure quires auth but not admin
         """
@@ -525,7 +602,7 @@ class ManagementNodesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
-    def testGetManagementNode(self):
+    def testGetManagementNodeForZone(self):
         management_node = self._saveManagementNode()
         response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id,
             username="testuser", password="password")
@@ -535,18 +612,18 @@ class ManagementNodesTestCase(XMLTestCase):
                                             management_node.current_state.created_date.isoformat(), 
                                             management_node.created_date.isoformat()))
         
-    def testAddManagementNodeNull(self):
+    def testAddManagementNodeForZoneNull(self):
         
         try:
             # create the system
             managementNode = None
-            self.mgr.addManagementNode(None, managementNode)
+            self.mgr.addManagementNodeForZone(None, managementNode)
         except:
             assert(False) # should not throw exception
         
-    def testAddManagementNode(self):
+    def testAddManagementNodeForZone(self):
         management_node = self._saveManagementNode()
-        new_management_node = self.mgr.addManagementNode(management_node.zone.zone_id, management_node)
+        new_management_node = self.mgr.addManagementNodeForZone(management_node.zone.zone_id, management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
         assert(new_management_node.management_node)
@@ -559,35 +636,35 @@ class ManagementNodesTestCase(XMLTestCase):
         management_node.save()
         assert(management_node.management_node)
         
-    def testPostManagementNodeAuth(self):
+    def testPostManagementNodeForZoneAuth(self):
         """
         Ensure requires admin
         """
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
         response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
-            data=testsxml.management_node_post_xml, content_type='text/xml')
+            data=testsxml.management_node_zone_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
         
         response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
-            data=testsxml.management_node_post_xml, content_type='text/xml',
+            data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
         response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
-            data=testsxml.management_node_post_xml, content_type='text/xml',
+            data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         
-    def testPostManagementNode(self):
+    def testPostManagementNodeForZone(self):
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
-        xml = testsxml.management_node_post_xml
+        xml = testsxml.management_node_zone_post_xml
         response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
             data=xml, content_type='text/xml', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
-        management_node_xml = testsxml.management_node_post_response_xml.replace(
+        management_node_xml = testsxml.management_node_zone_post_response_xml.replace(
             '<registrationDate/>',
             '<registrationDate>%s</registrationDate>' % \
             (management_node.registration_date.isoformat()))

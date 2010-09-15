@@ -24,10 +24,11 @@ class Inventory(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory',
-                elements = ['zones', 'systems', 'log', "eventTypes", "systemStates"])
+                elements = ['zones', 'managementNodes', 'systems', 'log', "eventTypes", "systemStates"])
 
     def __init__(self):
         self.zones = modellib.XObjHrefModel('zones/')
+        self.managementNodes = modellib.XObjHrefModel('managementNodes/')
         self.systems = modellib.XObjHrefModel('systems/')
         self.log = modellib.XObjHrefModel('log/')
         self.eventTypes = modellib.XObjHrefModel('eventTypes/')
