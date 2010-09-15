@@ -1712,6 +1712,31 @@ class EventTypeTestCase(XMLTestCase):
         response = self._get('/api/inventory/eventTypes/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_type_xml)
+        
+    def testPutEventTypeAuth(self):
+        """
+        Ensure we require admin to put event types
+        """
+        response = self._put('/api/inventory/eventTypes/1/', 
+            data= testsxml.event_type_put_xml, content_type='text/xml')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._put('/api/inventory/eventTypes/1/', 
+            data=testsxml.event_type_put_xml, content_type='text/xml',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+    def testPutEventType(self):
+        models.EventType.objects.all().delete()
+        event_type = models.EventType(name="foo", description="bar", priority=110)
+        event_type.save()
+        self.assertTrue(event_type.priority == 110)
+        response = self._put('/api/inventory/eventTypes/1/', 
+            data=testsxml.event_type_put_xml, content_type='text/xml',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        event_type = models.EventType.objects.get(pk=1)
+        self.assertTrue(event_type.priority == 1)
 
 class SystemEventTestCase(XMLTestCase):
     

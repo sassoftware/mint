@@ -57,6 +57,16 @@ class SystemManager(base.BaseManager):
     def getEventType(self, event_type_id):
         eventType = models.EventType.objects.get(pk=event_type_id)
         return eventType
+    
+    @base.exposed
+    def updateEventType(self, event_type):
+        """Update an event type"""
+
+        if not event_type:
+            return
+
+        event_type.save()
+        return event_type
 
     @base.exposed
     def getZone(self, zone_id):

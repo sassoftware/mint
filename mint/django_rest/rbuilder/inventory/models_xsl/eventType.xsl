@@ -33,7 +33,7 @@ Methods:
     not supported
     
   PUT:
-    not supported
+    Authentication: admin
     
   DELETE:
     not supported]]>

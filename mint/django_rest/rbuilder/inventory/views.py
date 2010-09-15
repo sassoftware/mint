@@ -269,6 +269,17 @@ class InventoryEventTypesService(AbstractInventoryService):
             return self.mgr.getEventType(event_type_id)
         else:
             return self.mgr.getEventTypes()
+        
+    @requires_admin
+    @requires('event_type')
+    @return_xml
+    def update(self, request, event_type_id, event_type):
+        old_event_type = self.get(event_type_id)
+        if not old_event_type:
+            return HttpResponse(status=404)
+        # This really should be an update
+        self.mgr.updateEventType(event_type)
+        return self.get(event_type_id)
 
 class InventorySystemJobsService(AbstractInventoryService):
     
