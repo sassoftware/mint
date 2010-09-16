@@ -1497,6 +1497,26 @@ class SystemsTestCase(XMLTestCase):
                 "Unable to register event 'system poll': no networking information",
             ])
 
+    def testAgentPort(self):
+        # RBL-7150
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        agentPort = 12345
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            agentPort=agentPort)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <agent_port>%(agentPort)s</agent_port>
+</system>
+""" % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.agent_port, agentPort)
+        self.failUnlessIn("<agent_port>%s</agent_port>" % agentPort,
+            model.to_xml())
 
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
