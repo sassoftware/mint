@@ -122,7 +122,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.failUnless(needle in haystack, "%s not in %s" % (needle,
             haystack))
 
-    def assertXMLEquals(self, first, second, ignoreNodes=None):
+    def assertXMLEquals(self, first, second, 
+                        ignoreNodes=['timeCreated', 'timeUpdated']):
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
         tree0 = X.normalize(etree.fromstring(first.strip()))
