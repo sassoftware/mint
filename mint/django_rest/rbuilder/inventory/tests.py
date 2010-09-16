@@ -337,15 +337,9 @@ class LogTestCase(XMLTestCase):
             password="password")
         # Just remove lines with dates in them, it's easier to test for now.
         content = []
-        for line in response.content.split('\n'):
-            if 'entryDate' in line or \
-               'poll event' in line or \
-               'registration event' in line:
-                continue
-            else:
-                content.append(line)
-        self.assertXMLEquals('\n'.join(content), testsxml.systems_log_xml)
-        
+        self.assertXMLEquals(response.content, testsxml.systems_log_xml,
+            ignoreNodes = [ 'entryDate' ])
+
 class ZonesTestCase(XMLTestCase):
 
     def testGetZones(self):
@@ -1551,8 +1545,8 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(
             [ x.entry for x in entries ],
             [
-                "Unable to register event 'immediate system poll': no networking information",
-                "Unable to register event 'system poll': no networking information",
+                "Unable to register event 'on-demand polling event': no networking information",
+                "Unable to register event 'standard polling event': no networking information",
             ])
 
     def testAgentPort(self):
@@ -1718,7 +1712,7 @@ class SystemStateTestCase(XMLTestCase):
         logEntries = log.system_log_entries.order_by('-entry_date')
         self.failUnlessEqual([ x.entry for x in logEntries ],
             [
-                'System state change: unmanaged -> responsive',
+                'System state change: Unmanaged -> Online',
             ])
 
 
