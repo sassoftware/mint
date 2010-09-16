@@ -43,6 +43,14 @@ class SystemManager(base.BaseManager):
     TZ = tz.tzutc()
     X509 = x509.X509
 
+    NonresponsiveStates = set([
+        models.SystemState.NONRESPONSIVE,
+        models.SystemState.NONRESPONSIVE_NET,
+        models.SystemState.NONRESPONSIVE_HOST,
+        models.SystemState.NONRESPONSIVE_SHUTDOWN,
+        models.SystemState.NONRESPONSIVE_SUSPENDED,
+    ])
+
     @classmethod
     def now(cls):
         return datetime.datetime.now(cls.TZ)
@@ -469,14 +477,6 @@ class SystemManager(base.BaseManager):
             system.current_state = nstate
             system.state_change_date = self.now()
             system.save()
-
-    NonresponsiveStates = set([
-        models.SystemState.NONRESPONSIVE,
-        models.SystemState.NONRESPONSIVE_NET,
-        models.SystemState.NONRESPONSIVE_HOST,
-        models.SystemState.NONRESPONSIVE_SHUTDOWN,
-        models.SystemState.NONRESPONSIVE_SUSPENDED,
-    ])
 
     def getNextSystemState(self, system, job):
         # Return None if the state hasn't changed
