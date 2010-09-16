@@ -29,6 +29,7 @@ System Properties:]]>
   sslClientKey - an x509 private key of an authorized client that can use the system's CIM broker
   sslClientCertificate - an x509 certificate of an authorized client that can use the system's CIM broker
   sslServerCertificate - an x509 public certificate of the system's CIM broker
+  agentPort - the port used by the system's CIM broker
   currentState - the current state of the system
   networks - a collection of network resources exposed by the system
   installedSoftware - a collection of top-level items installed on the system
