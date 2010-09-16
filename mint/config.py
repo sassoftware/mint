@@ -258,10 +258,10 @@ class MintConfig(ConfigFile):
                           "The number of asynchronous system events to dispatch at a time")
     systemEventsPollDelay = (CfgInt, 720,
                           "The number of minutes to wait before enabling a system's next polling task")
-    deadStateTimeout = (CfgInt, 720,
-                        "The number of hours after which a non-responsive system is marked as dead")
-    mothballedStateTimeout = (CfgInt, 720,
-                        "The number of hours after which a dead system is marked as mothballed")
+    deadStateTimeout = (CfgInt, 30,
+                        "The number of days after which a non-responsive system is marked as dead")
+    mothballedStateTimeout = (CfgInt, 30,
+                        "The number of days after which a dead system is marked as mothballed")
 
 
 
