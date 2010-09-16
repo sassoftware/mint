@@ -1518,6 +1518,34 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessIn("<agent_port>%s</agent_port>" % agentPort,
             model.to_xml())
 
+    def testSetSystemState(self):
+        # RBL-6795
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        systemState = 'dead'
+
+        system = models.System(name='blah', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            systemState=systemState)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <current_state>
+    <name>%(systemState)s</name>
+  </current_state>
+</system>
+""" % params
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml, username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system.current_state.name, systemState)
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = models.System(local_uuid="localuuid001",
