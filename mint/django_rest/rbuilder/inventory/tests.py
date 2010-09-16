@@ -336,7 +336,6 @@ class LogTestCase(XMLTestCase):
         response = self._get('/api/inventory/log/', username="testuser", 
             password="password")
         # Just remove lines with dates in them, it's easier to test for now.
-        content = []
         self.assertXMLEquals(response.content, testsxml.systems_log_xml,
             ignoreNodes = [ 'entryDate' ])
 
