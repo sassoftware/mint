@@ -1675,3 +1675,35 @@ t7xvvEYYpqmVTME3o3YZebhcd9aodPsazbS37wC+enig0RxYFErkpouNstEgGJTU
 Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
 9GYZo4+j1V1Ld2WUxY+jXJdJetbrPjU4Bq8M+etypQrNJXrX/DD4
 -----END RSA PRIVATE KEY-----"""
+
+jobs_xml = """\
+<?xml version="1.0"?>
+<jobs>
+  <job id="http://testserver/api/inventory/jobs/1/">
+    <timeUpdated>2010-09-16T13:36:25.939154+00:00</timeUpdated>
+    <jobState>Running</jobState>
+    <jobType>system registration</jobType>
+    <timeCreated>2010-09-16T13:36:25.939042+00:00</timeCreated>
+    <systems/>
+    <jobUuid>rmakeuuid001</jobUuid>
+    <jobId>1</jobId>
+  </job>
+  <job id="http://testserver/api/inventory/jobs/2/">
+    <timeUpdated>2010-09-16T13:36:25.943043+00:00</timeUpdated>
+    <jobState>Running</jobState>
+    <jobType>system poll</jobType>
+    <timeCreated>2010-09-16T13:36:25.942952+00:00</timeCreated>
+    <systems/>
+    <jobUuid>rmakeuuid002</jobUuid>
+    <jobId>2</jobId>
+  </job>
+  <job id="http://testserver/api/inventory/jobs/3/">
+    <timeUpdated>2010-09-16T13:36:25.946773+00:00</timeUpdated>
+    <jobState>Running</jobState>
+    <jobType>immediate system poll</jobType>
+    <timeCreated>2010-09-16T13:36:25.946675+00:00</timeCreated>
+    <systems/>
+    <jobUuid>rmakeuuid003</jobUuid>
+    <jobId>3</jobId>
+  </job>
+</jobs>"""

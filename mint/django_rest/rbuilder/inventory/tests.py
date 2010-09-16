@@ -2856,3 +2856,37 @@ class TargetSystemImportTest(XMLTestCase):
         # Different credentials
         self.mgr.user = user3
         self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), False)
+
+class JobsTestCase(XMLTestCase):
+
+    def _mock(self):
+        models.Job.getRmakeJob = self.mockGetRmakeJob
+
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        self._mock()
+
+        eventUuid1 = 'eventuuid001'
+        jobUuid1 = 'rmakeuuid001'
+        eventUuid2 = 'eventuuid002'
+        jobUuid2 = 'rmakeuuid002'
+        eventUuid3 = 'eventuuid003'
+        jobUuid3 = 'rmakeuuid003'
+        system = self._saveSystem()
+
+        job1 = self._newJob(system, eventUuid1, jobUuid1,
+            models.EventType.SYSTEM_REGISTRATION)
+        job2 = self._newJob(system, eventUuid2, jobUuid2,
+            models.EventType.SYSTEM_POLL)
+        job3 = self._newJob(system, eventUuid3, jobUuid3,
+            models.EventType.SYSTEM_POLL_IMMEDIATE)
+
+    def testGetJobs(self):
+        response = self._get('/api/inventory/jobs/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.jobs_xml,
+            ignoreNodes=['timeCreated', 'timeUpdated'])
+    
