@@ -1113,7 +1113,3 @@ class SystemManager(base.BaseManager):
             models.SystemLogEntry.objects.all().order_by('entry_date')
         systemsLog.systemLogEntry = list(systemLogEntries)
         return systemsLog
-
-    def resolveSystems(self):
-        '''Used to resolve system dups and possibly other issues'''
-        log.info("Resolving system inventory records")
