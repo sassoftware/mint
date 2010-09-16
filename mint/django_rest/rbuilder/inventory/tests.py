@@ -2888,6 +2888,20 @@ class JobsTestCase(XMLTestCase):
     def testGetJobs(self):
         response = self._get('/api/inventory/jobs/')
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.jobs_xml,
-            ignoreNodes=['timeCreated', 'timeUpdated'])
+        self.assertXMLEquals(response.content, testsxml.jobs_xml)
     
+    def testGetJobStates(self):
+        response = self._get('/api/inventory/jobStates/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.job_states_xml)
+
+    def testGetJob(self):
+        response = self._get('/api/inventory/jobs/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.job_xml)
+
+    def testGetJobState(self):
+        response = self._get('/api/inventory/jobStates/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.job_state_xml)
+

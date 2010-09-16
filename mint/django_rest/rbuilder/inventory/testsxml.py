@@ -1707,3 +1707,48 @@ jobs_xml = """\
     <jobId>3</jobId>
   </job>
 </jobs>"""
+
+job_xml = """\
+<?xml version="1.0"?>
+<job id="http://testserver/api/inventory/jobs/1/">
+  <timeUpdated>2010-09-16T13:53:18.402208+00:00</timeUpdated>
+  <jobState>Running</jobState>
+  <jobType>system registration</jobType>
+  <timeCreated>2010-09-16T13:53:18.402105+00:00</timeCreated>
+  <systems/>
+  <jobUuid>rmakeuuid001</jobUuid>
+  <jobId>1</jobId>
+</job>"""
+
+job_states_xml = """\
+<?xml version="1.0"?>
+<jobStates>
+  <jobState id="http://testserver/api/inventory/jobStates/1/">
+    <jobStateId>1</jobStateId>
+    <jobs href="http://testserver/api/inventory/jobStates/1/jobs/"/>
+    <name>Queued</name>
+  </jobState>
+  <jobState id="http://testserver/api/inventory/jobStates/2/">
+    <jobStateId>2</jobStateId>
+    <jobs href="http://testserver/api/inventory/jobStates/2/jobs/"/>
+    <name>Running</name>
+  </jobState>
+  <jobState id="http://testserver/api/inventory/jobStates/3/">
+    <jobStateId>3</jobStateId>
+    <jobs href="http://testserver/api/inventory/jobStates/3/jobs/"/>
+    <name>Completed</name>
+  </jobState>
+  <jobState id="http://testserver/api/inventory/jobStates/4/">
+    <jobStateId>4</jobStateId>
+    <jobs href="http://testserver/api/inventory/jobStates/4/jobs/"/>
+    <name>Failed</name>
+  </jobState>
+</jobStates>"""
+
+job_state_xml = """\
+<?xml version="1.0"?>
+<jobState id="http://testserver/api/inventory/jobStates/1/">
+  <jobStateId>1</jobStateId>
+  <jobs href="http://testserver/api/inventory/jobStates/1/jobs/"/>
+  <name>Queued</name>
+</jobState>"""
