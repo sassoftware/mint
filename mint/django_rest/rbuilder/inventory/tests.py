@@ -2123,6 +2123,22 @@ class EventTypeTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         event_type = models.EventType.objects.get(pk=1)
         self.assertTrue(event_type.priority == 1)
+        
+    def testPutEventTypeName(self):
+        """
+        Do not allow changing the event type name https://issues.rpath.com/browse/RBL-7171
+        """
+        models.EventType.objects.all().delete()
+        event_type = models.EventType(name=models.EventType.SYSTEM_POLL, description="bar", priority=110)
+        event_type.save()
+        self.assertTrue(event_type.name == models.EventType.SYSTEM_POLL)
+        response = self._put('/api/inventory/eventTypes/%d/' % event_type.pk, 
+            data=testsxml.event_type_put_name_change_xml, content_type='text/xml',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        event_type = models.EventType.objects.get(pk=event_type.pk)
+        # name should not have changed
+        self.assertTrue(event_type.name == models.EventType.SYSTEM_POLL)
 
 class SystemEventTestCase(XMLTestCase):
     

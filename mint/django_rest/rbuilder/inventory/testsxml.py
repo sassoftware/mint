@@ -80,6 +80,17 @@ event_type_put_xml="""\
   <systemEvents/>
 </eventType>"""
 
+event_type_put_name_change_xml="""\
+<?xml version="1.0" encoding="UTF-8"?>
+<eventType id="http://testserver/api/inventory/eventTypes/1/">
+  <description>on-demand registration event</description>
+  <priority>110</priority>
+  <jobSet/>
+  <eventTypeId>1</eventTypeId>
+  <name>foobar</name>
+  <systemEvents/>
+</eventType>"""
+
 zones_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zones>

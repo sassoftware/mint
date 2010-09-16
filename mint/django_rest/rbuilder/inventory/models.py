@@ -380,7 +380,7 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_SHUTDOWN_IMMEDIATE,
          SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION),
     )
-    name = models.CharField(max_length=8092, unique=True, choices=EVENT_TYPES)
+    name = modellib.APIReadOnlyCharField(max_length=8092, unique=True, choices=EVENT_TYPES)
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 
