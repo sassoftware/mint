@@ -2520,6 +2520,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
     def testDispatchSystemEvent(self):
         poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        self.system2.agent_port = 12345
+        self.system2.save()
 
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
@@ -2544,6 +2546,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                     (
                         cimParams(
                             host='3.3.3.3',
+                            port=12345,
                             eventUuid='really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem),
@@ -2558,6 +2561,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             ['uuid000'])
 
     def testDispatchActivateSystemEvent(self):
+        self.system2.agent_port = 12345
+        self.system2.save()
         act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         # Remove all networks
         for net in self.system2.networks.all():
@@ -2587,6 +2592,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ('register',
                     (
                         cimParams(host='superduper.com',
+                            port=12345,
                             eventUuid = 'really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem),

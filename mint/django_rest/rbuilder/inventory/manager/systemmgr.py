@@ -679,6 +679,7 @@ class SystemManager(base.BaseManager):
         # XXX FIXME
         zone = None
         cimParams = repClient.CimParams(host=destination,
+            port=event.system.agent_port or 5989,
             eventUuid=eventUuid,
             clientCert=event.system.ssl_client_certificate,
             clientKey=event.system.ssl_client_key)
