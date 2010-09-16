@@ -919,6 +919,42 @@ class SystemsTestCase(XMLTestCase):
             headers = { 'X-rBuilder-Event-UUID' : eventUuid + '-bogus' })
         self.failUnlessEqual(response.status_code, 401)
 
+    def testSystemMothballAuth(self):
+        """
+        Ensure admin users can mothball systems https://issues.rpath.com/browse/RBL-7170
+        """
+        
+        # TODO:  This test will fail until https://issues.rpath.com/browse/RBL-7172
+        # is fixed, please to do remove it!
+        
+        models.System.objects.all().delete()
+        system = self._saveSystem()
+        
+        # fail if anon
+        response = self._put('/api/inventory/systems/%d/' % system.system_id,
+            data=testsxml.systems_put_mothball_xml)
+        self.failUnlessEqual(response.status_code, 401)
+        
+        # fail if regular user
+        response = self._put('/api/inventory/systems/%d/' % system.system_id,
+            data=testsxml.systems_put_mothball_xml,
+            username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 401)
+
+    def testSystemMothball(self):
+        """
+        Ensure admin users can mothball systems https://issues.rpath.com/browse/RBL-7170
+        """
+        models.System.objects.all().delete()
+        system = self._saveSystem()
+        # work if admin
+        response = self._put('/api/inventory/systems/%d/' % system.system_id,
+            data=testsxml.systems_put_mothball_xml,
+            username="admin", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        system = models.System.objects.get(pk=system.system_id)
+        self.assertTrue(system.current_state.name == models.SystemState.MOTHBALLED)
+        self.assertTrue(system.current_state.description == models.SystemState.MOTHBALLED_DESC)
 
     def testSystemSave(self):
         # make sure state gets set to unmanaged

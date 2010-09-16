@@ -793,6 +793,48 @@ systems_put_xml = """\
   </system>
 </systems>"""
 
+systems_put_mothball_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="http://testserver/api/inventory/systems/1">
+  <sslClientKey>testsystemsslclientkey</sslClientKey>
+  <osMajorVersion/>
+  <registrationDate/>
+  <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <networks>
+    <network id="http://testserver/api/inventory/networks/1/">
+      <active/>
+      <deviceName>eth0</deviceName>
+      <dnsName>testnetwork.example.com</dnsName>
+      <ipAddress>1.1.1.1</ipAddress>
+      <ipv6Address/>
+      <netmask>255.255.255.0</netmask>
+      <networkId>1</networkId>
+      <portType>lan</portType>
+      <required/>
+    </network>
+  </networks>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <sslServerCertificate>testsystemsslservercertificate</sslServerCertificate>
+  <launchDate/>
+  <sslClientCertificate>testsystemsslclientcertificate</sslClientCertificate>
+  <description>testsystemdescription</description>
+  <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
+  <targetSystemId/>
+  <targetSystemName/>
+  <targetSystemDescription/>
+  <targetSystemState/>
+  <osMinorVersion/>
+  <managementNode/>
+  <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
+  <name>testsystemname</name>
+  <localUuid>testsystemlocaluuid</localUuid>
+  <currentState id="http://testserver/api/inventory/systemStates/10/">
+    <description>Retired</description>
+    <name>mothballed</name>
+    <systemStateId>10</systemStateId>
+  </currentState>
+</system>"""
+
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
