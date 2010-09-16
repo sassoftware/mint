@@ -122,7 +122,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.failUnless(needle in haystack, "%s not in %s" % (needle,
             haystack))
 
-    def assertXMLEquals(self, first, second, ignoreNodes=None):
+    def assertXMLEquals(self, first, second, 
+                        ignoreNodes=['timeCreated', 'timeUpdated']):
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
         tree0 = X.normalize(etree.fromstring(first.strip()))
@@ -2892,3 +2893,51 @@ class TargetSystemImportTest(XMLTestCase):
         # Different credentials
         self.mgr.user = user3
         self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), False)
+
+class JobsTestCase(XMLTestCase):
+
+    def _mock(self):
+        models.Job.getRmakeJob = self.mockGetRmakeJob
+
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        self._mock()
+
+        eventUuid1 = 'eventuuid001'
+        jobUuid1 = 'rmakeuuid001'
+        eventUuid2 = 'eventuuid002'
+        jobUuid2 = 'rmakeuuid002'
+        eventUuid3 = 'eventuuid003'
+        jobUuid3 = 'rmakeuuid003'
+        system = self._saveSystem()
+
+        job1 = self._newJob(system, eventUuid1, jobUuid1,
+            models.EventType.SYSTEM_REGISTRATION)
+        job2 = self._newJob(system, eventUuid2, jobUuid2,
+            models.EventType.SYSTEM_POLL)
+        job3 = self._newJob(system, eventUuid3, jobUuid3,
+            models.EventType.SYSTEM_POLL_IMMEDIATE)
+
+    def testGetJobs(self):
+        response = self._get('/api/inventory/jobs/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.jobs_xml)
+    
+    def testGetJobStates(self):
+        response = self._get('/api/inventory/jobStates/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.job_states_xml)
+
+    def testGetJob(self):
+        response = self._get('/api/inventory/jobs/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.job_xml)
+
+    def testGetJobState(self):
+        response = self._get('/api/inventory/jobStates/1/')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.job_state_xml)
+

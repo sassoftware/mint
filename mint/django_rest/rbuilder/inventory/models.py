@@ -434,7 +434,8 @@ class Job(modellib.XObjIdModel):
 
     job_id = models.AutoField(primary_key=True)
     job_uuid = models.CharField(max_length=64, unique=True)
-    job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name')
+    job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
+        related_name='jobs')
     event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, visible='name')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
@@ -462,6 +463,11 @@ class Job(modellib.XObjIdModel):
         xobj_model.job_type = self.event_type.name
         xobj_model.event_type = None
         return xobj_model
+
+    def get_absolute_url(self, request, parent=None):
+        if isinstance(parent, JobState):
+            self.view_name = 'JobStateJobs'
+        return modellib.XObjIdModel.get_absolute_url(self, request, parent)
 
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
