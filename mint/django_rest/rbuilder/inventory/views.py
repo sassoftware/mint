@@ -7,15 +7,19 @@
 import os
 import time
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django_restapi import resource
 
-from mint.django_rest.deco import requires, return_xml, requires_auth, requires_admin, requires_auth_or_event_uuid
+from mint.django_rest.deco import requires, return_xml, access, ACCESS, HttpAuthenticationRequired
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import manager
 
 MANAGER_CLASS = manager.Manager
+
+def undefined(function):
+    function.undefined = True
+    return function
 
 class AbstractInventoryService(resource.Resource):
 
@@ -29,39 +33,105 @@ class AbstractInventoryService(resource.Resource):
         return resource.Resource.__call__(self, request, *args, **kw)
 
     def read(self, request, *args, **kwargs):
-        response = HttpResponse(status=405)
-        return response
+        return self._auth(self.rest_GET, request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-        response = HttpResponse(status=405)
-        return response
+        return self._auth(self.rest_POST, request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        response = HttpResponse(status=405)
-        return response
+        return self._auth(self.rest_PUT, request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        response = HttpResponse(status=405)
-        return response
+        return self._auth(self.rest_DELETE, request, *args, **kwargs)
+
+    # Overwrite these functions when inheriting
+    @undefined
+    @access.anonymous
+    def rest_GET(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed(self._getPermittedMethods())
+
+    @undefined
+    @access.anonymous
+    def rest_POST(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed(self._getPermittedMethods())
+
+    @undefined
+    @access.anonymous
+    def rest_PUT(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed(self._getPermittedMethods())
+
+    @undefined
+    @access.anonymous
+    def rest_DELETE(self, request, *args, **kwargs):
+        return HttpResponseNotAllowed(self._getPermittedMethods())
+
+
+    @classmethod
+    def _getPermittedMethods(cls):
+        methods = [ 'GET', 'POST', 'PUT', 'DELETE' ]
+        # Methods of this class are undefined
+        return [ x for x in methods
+            if not getattr(getattr(cls, 'rest_%s' % x), 'undefined', False) ]
+        
+
+    @classmethod
+    def _auth(cls, method, request, *args, **kwargs):
+        """
+        Verify authentication and run the specified method
+        """
+        # By default, everything has to be authenticated
+        access = getattr(method, 'ACCESS', ACCESS.AUTHENTICATED)
+        # If authentication is present, but it's bad, simply give up, even if
+        # we're allowing anonymous access
+        if request._auth != (None, None) and not request._is_authenticated:
+            return HttpAuthenticationRequired
+        if access & ACCESS.EVENT_UUID:
+            # Event UUID authentication is special - it can be compounded with
+            # regular authentication or admin
+            eventUuid = request.environ.get('X-rBuilder-Event-UUID')
+            if eventUuid:
+                # Check if this system has such an event uuid
+                systemId = args[0]
+                sjobs = models.SystemJob.objects.filter(
+                    system__pk=systemId, event_uuid=eventUuid)
+                if not sjobs:
+                    return HttpAuthenticationRequired
+            elif cls._check_not_authenticated(request, access) \
+                    or cls._check_not_admin(request, access):
+                return HttpAuthenticationRequired
+        elif cls._check_not_authenticated(request, access):
+            return HttpAuthenticationRequired
+        elif cls._check_not_admin(request, access):
+            return HttpAuthenticationRequired
+        return method(request, *args, **kwargs)
+
+    @classmethod
+    def _check_not_authenticated(cls, request, access):
+        return access & ACCESS.AUTHENTICATED and not request._is_authenticated
+
+    @classmethod
+    def _check_not_admin(cls, request, access):
+        return access & ACCESS.ADMIN and not request._is_admin
 
 class InventoryService(AbstractInventoryService):
 
+    @access.anonymous
     @return_xml
-    def read(self, request):
+    def rest_GET(self, request):
         inventory = models.Inventory()
         return inventory
 
 class InventoryLogService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request):
+    def rest_GET(self, request):
         return self.mgr.getSystemsLog()
     
 class InventorySystemStateService(AbstractInventoryService):
     
+    @access.anonymous
     @return_xml
-    def read(self, request, system_state_id=None):
+    def rest_GET(self, request, system_state_id=None):
         return self.get(system_state_id)
     
     def get(self, system_state_id=None):
@@ -72,9 +142,8 @@ class InventorySystemStateService(AbstractInventoryService):
     
 class InventoryZoneService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, zone_id=None):
+    def rest_GET(self, request, zone_id=None):
         return self.get(zone_id)
     
     def get(self, zone_id=None):
@@ -83,25 +152,25 @@ class InventoryZoneService(AbstractInventoryService):
         else:
             return self.mgr.getZones()
 
-    @requires_admin
+    @access.admin
     @requires('zone')
     @return_xml
-    def create(self, request, zone):
+    def rest_POST(self, request, zone):
         zone = self.mgr.addZone(zone)
         return zone
     
-    @requires_admin
+    @access.admin
     @requires('zone')
     @return_xml
-    def update(self, request, zone_id, zone):
+    def rest_PUT(self, request, zone_id, zone):
         oldZone = self.mgr.getZone(zone_id)
         if not oldZone:
             return HttpResponse(status=404)
         self.mgr.updateZone(zone)
         return self.mgr.getZone(zone_id)
     
-    @requires_admin
-    def delete(self, request, zone_id):
+    @access.admin
+    def rest_DELETE(self, request, zone_id):
         zone = self.get(zone_id)
         if zone:
             self.mgr.deleteZone(zone)
@@ -110,9 +179,8 @@ class InventoryZoneService(AbstractInventoryService):
     
 class InventoryManagementNodeService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, management_node_id=None):
+    def rest_GET(self, request, management_node_id=None):
         return self.get(management_node_id)
     
     def get(self, management_node_id=None):
@@ -121,18 +189,17 @@ class InventoryManagementNodeService(AbstractInventoryService):
         else:
             return self.mgr.getManagementNodes()
         
-    @requires_admin
+    @access.admin
     @requires('managementNode')
     @return_xml
-    def create(self, request, managementNode):
+    def rest_POST(self, request, managementNode):
         managementNode = self.mgr.addManagementNode(managementNode)
         return managementNode
     
 class InventoryZoneManagementNodeService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, zone_id, management_node_id=None):
+    def rest_GET(self, request, zone_id, management_node_id=None):
         return self.get(zone_id, management_node_id)
     
     def get(self, zone_id, management_node_id=None):
@@ -141,18 +208,17 @@ class InventoryZoneManagementNodeService(AbstractInventoryService):
         else:
             return self.mgr.getManagementNodesForZone(zone_id)
         
-    @requires_admin
+    @access.admin
     @requires('managementNode')
     @return_xml
-    def create(self, request, zone_id, managementNode):
+    def rest_POST(self, request, zone_id, managementNode):
         managementNode = self.mgr.addManagementNodeForZone(zone_id, managementNode)
         return managementNode
 
 class InventoryNetworkService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, network_id=None):
+    def rest_GET(self, request, network_id=None):
         return self.get(network_id)
     
     def get(self, network_id=None):
@@ -161,10 +227,10 @@ class InventoryNetworkService(AbstractInventoryService):
         else:
             return self.mgr.getNetworks()
         
-    @requires_admin
+    @access.admin
     @requires('network')
     @return_xml
-    def update(self, request, network_id, network):
+    def rest_PUT(self, request, network_id, network):
         oldNetwork = self.get(network_id)
         if not oldNetwork:
             return HttpResponse(status=404)
@@ -172,33 +238,34 @@ class InventoryNetworkService(AbstractInventoryService):
         self.mgr.updateNetwork(network)
         return self.get(network_id)
     
-    @requires_admin
-    def delete(self, request, network_id):
+    @access.admin
+    def rest_DELETE(self, request, network_id):
         self.mgr.deleteNetwork(network_id)
         response = HttpResponse(status=204)
         return response
 
 class InventorySystemsService(AbstractInventoryService):
 
-    @requires_auth
     @return_xml
-    def read(self, request):
+    def rest_GET(self, request):
         return self.get()
 
     def get(self):
         return self.mgr.getSystems()
 
     # this must remain public for rpath-tools
+    @access.anonymous
     @requires('system')
     @return_xml
-    def create(self, request, system):
+    def rest_POST(self, request, system):
         system = self.mgr.addSystem(system, generateCertificates=True)
         return system
     
     # this must remain public for rpath-tools
+    @access.anonymous
     @requires('systems')
     @return_xml
-    def update(self, request, systems):
+    def rest_PUT(self, request, systems):
         systems = self.mgr.addSystems(systems.system)
         return self.mgr.getSystems()
 
@@ -207,18 +274,18 @@ class InventorySystemsService(AbstractInventoryService):
 
 class InventorySystemsSystemService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, system_id):
+    def rest_GET(self, request, system_id):
         return self.get(system_id)
 
     def get(self, system_id):
         return self.mgr.getSystem(system_id)
 
-    @requires_auth_or_event_uuid
+    @access.event_uuid
+    @access.authenticated
     @requires('system')
     @return_xml
-    def update(self, request, system_id, system):
+    def rest_PUT(self, request, system_id, system):
         oldSystem = self.mgr.getSystem(system_id)
         if not oldSystem:
             return HttpResponse(status=404)
@@ -226,17 +293,16 @@ class InventorySystemsSystemService(AbstractInventoryService):
         self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)
 
-    @requires_admin
-    def delete(self, request, system_id):
+    @access.admin
+    def rest_DELETE(self, request, system_id):
         self.mgr.deleteSystem(system_id)
         response = HttpResponse(status=204)
         return response
 
 class InventorySystemsSystemEventService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, system_id, system_event_id=None):
+    def rest_GET(self, request, system_id, system_event_id=None):
         return self.get(system_id)
         
     def get(self, system_id, system_event_id=None):
@@ -245,17 +311,15 @@ class InventorySystemsSystemEventService(AbstractInventoryService):
         else:
             return self.mgr.getSystemSystemEvents(system_id)
         
-    @requires_auth
     @requires('systemEvent')
     @return_xml
-    def create(self, request, system_id, systemEvent):
+    def rest_POST(self, request, system_id, systemEvent):
         systemEvent = self.mgr.addSystemSystemEvent(system_id, systemEvent)
         return systemEvent
 
 class InventorySystemsSystemLogService(AbstractInventoryService):
 
-    @requires_auth
-    def read(self, request, system, format='xml'):
+    def rest_GET(self, request, system, format='xml'):
         managedSystem = self.mgr.getSystem(system)
         systemLog = self.mgr.getSystemLog(managedSystem)
 
@@ -288,9 +352,8 @@ class InventoryUsersService(AbstractInventoryService):
 
 class InventorySystemEventsService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, system_event_id=None):
+    def rest_GET(self, request, system_event_id=None):
         return self.get(system_event_id)
         
     def get(self, system_event_id=None):
@@ -301,9 +364,8 @@ class InventorySystemEventsService(AbstractInventoryService):
 
 class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
     
-    @requires_auth
     @return_xml
-    def read(self, request, system_id):
+    def rest_GET(self, request, system_id):
         system = self.mgr.getSystem(system_id)
         installedSoftware = models.InstalledSoftware()
         installedSoftware.trove = system.installed_software.all()
@@ -311,8 +373,9 @@ class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
 
 class InventoryEventTypesService(AbstractInventoryService):
     
+    @access.anonymous
     @return_xml
-    def read(self, request, event_type_id=None):
+    def rest_GET(self, request, event_type_id=None):
         return self.get(event_type_id)
         
     def get(self, event_type_id=None):
@@ -321,10 +384,10 @@ class InventoryEventTypesService(AbstractInventoryService):
         else:
             return self.mgr.getEventTypes()
         
-    @requires_admin
+    @access.admin
     @requires('event_type')
     @return_xml
-    def update(self, request, event_type_id, event_type):
+    def rest_PUT(self, request, event_type_id, event_type):
         old_event_type = self.get(event_type_id)
         if not old_event_type:
             return HttpResponse(status=404)
@@ -334,8 +397,9 @@ class InventoryEventTypesService(AbstractInventoryService):
 
 class InventorySystemJobsService(AbstractInventoryService):
     
+    @access.anonymous
     @return_xml
-    def read(self, request, system):
+    def rest_GET(self, request, system):
         return self.get(system)
 
     def get(self, system):
@@ -343,8 +407,9 @@ class InventorySystemJobsService(AbstractInventoryService):
 
 class InventoryJobsService(AbstractInventoryService):
     
+    @access.anonymous
     @return_xml
-    def read(self, request, job_id=None):
+    def rest_GET(self, request, job_id=None):
         return self.get(job_id)
 
     def get(self, job_id):
@@ -355,8 +420,9 @@ class InventoryJobsService(AbstractInventoryService):
 
 class InventoryJobStatesService(AbstractInventoryService):
 
+    @access.anonymous
     @return_xml
-    def read(self, request, job_state_id=None):
+    def rest_GET(self, request, job_state_id=None):
         return self.get(job_state_id)
 
     def get(self, job_state_id):
@@ -367,8 +433,9 @@ class InventoryJobStatesService(AbstractInventoryService):
 
 class InventoryJobStatesJobsService(AbstractInventoryService):
 
+    @access.anonymous
     @return_xml
-    def read(self, request, job_state_id):
+    def rest_GET(self, request, job_state_id):
         return self.get(job_state_id)
 
     def get(self, job_state_id):
@@ -376,8 +443,9 @@ class InventoryJobStatesJobsService(AbstractInventoryService):
 
 class InventorySystemJobStatesService(AbstractInventoryService):
 
+    @access.anonymous
     @return_xml
-    def read(self, request, system_id, job_state_id):
+    def rest_GET(self, request, system_id, job_state_id):
         return self.get(system_id, job_state_id)
 
     def get(self, system_id, job_state_id):

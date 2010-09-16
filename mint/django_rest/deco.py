@@ -13,6 +13,12 @@ from xobj import xobj
 
 from mint.django_rest.rbuilder import modellib
 
+class ACCESS(object):
+    ANONYMOUS = 1
+    AUTHENTICATED = 2
+    ADMIN = 4
+    EVENT_UUID = 8
+
 def str_to_underscore(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
@@ -70,54 +76,47 @@ def requires(model_name, save=True):
         return inner
     return decorate
 
-def authErrorResponse():
-    return http.HttpResponse(status=401)
+HttpAuthenticationRequired = http.HttpResponse(status=401)
 
-def requires_admin(function):
-    """
-    Decorator that enforces admin access
-    """
-    def inner(*args, **kw):
-        request = args[1]
-        if not request._is_admin:
-            return authErrorResponse()
-        return function(*args, **kw)
+class access(object):
+    @classmethod
+    def anonymous(cls, function):
+        """
+        Decorator that allows for anonymous access
+        """
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.ANONYMOUS
+        return function
 
-    return inner
+    @classmethod
+    def admin(cls, function):
+        """
+        Decorator that enforces admin access
+        """
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.ADMIN
+        return function
 
-def requires_auth(function):
-    """
-    Decorator that enforces authenticated access
-    """
-    def inner(*args, **kw):
-        request = args[1]
-        if not request._is_authenticated:
-            return authErrorResponse()
-        return function(*args, **kw)
-
-    return inner
-
-def requires_auth_or_event_uuid(function):
-    """
-    Decorator that verifies authentication or a valid event id
-    """
-    def inner(*args, **kw):
-        request = args[1]
-        eventUuid = request.environ.get('X-rBuilder-Event-UUID')
-        isAuthenticated = request._is_authenticated
-        if not isAuthenticated:
-            if request._auth != (None, None) or not eventUuid:
-                # Bad authentication, or no eventUuid
+    @classmethod
+    def authenticated(cls, function):
+        """
+        Decorator that enforces authenticated access
+        """
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.AUTHENTICATED
+        return function
+        def inner(*args, **kw):
+            request = args[1]
+            if not request._is_authenticated:
                 return authErrorResponse()
-        if eventUuid:
-            # Check if this system has such an event uuid
-            systemId = args[2]
-            sjobs = modellib.type_map['__systemJob'].objects.filter(
-                system__pk=systemId, event_uuid=eventUuid)
-            if not sjobs:
-                return authErrorResponse()
-        return function(*args, **kw)
-    return inner
+            return function(*args, **kw)
+
+        return inner
+
+    @classmethod
+    def event_uuid(cls, function):
+        """
+        Decorator that verifies authentication or a valid event id
+        """
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.EVENT_UUID
+        return function
 
 def return_xml(function):
     """
