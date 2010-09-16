@@ -240,6 +240,9 @@ class System(modellib.XObjIdModel):
     #TO-DO should this ever be nullable?
     managing_zone = models.ForeignKey(Zone, null=True, related_name='systems')
     jobs = models.ManyToManyField("Job", through="SystemJob")
+    agent_port = models.IntegerField(null=True)
+    state_change_date = modellib.XObjHiddenDateTimeUtcField(auto_now_add=True,
+        default=datetime.datetime.now(tz.tzutc()))
     event_uuid = modellib.SyntheticField()
 
     load_fields = [local_uuid]

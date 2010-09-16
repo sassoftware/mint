@@ -89,6 +89,7 @@ zones_xml = """\
     <name>Local Zone</name>
     <systems>
       <system id="http://testserver/api/inventory/systems/1">
+        <agentPort/>
         <createdDate>2010-09-14T14:58:55.554533+00:00</createdDate>
         <currentState id="http://testserver/api/inventory/systemStates/1/">
           <createdDate>2010-09-14T14:58:40.939184+00:00</createdDate>
@@ -299,6 +300,7 @@ management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNodes>
   <managementNode id="http://testserver/api/inventory/managementNodes/1">
+    <agentPort/>
     <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
     <osMajorVersion/>
     <registrationDate/>
@@ -357,6 +359,7 @@ management_nodes_xml = """\
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode id="http://testserver/api/inventory/managementNodes/1">
+  <agentPort/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <osMajorVersion/>
   <registrationDate/>
@@ -450,6 +453,7 @@ management_node_post_xml = """\
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode id="http://testserver/api/inventory/managementNodes/1">
+  <agentPort/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <osMajorVersion/>
   <registrationDate/>
@@ -543,6 +547,7 @@ management_node_zone_post_xml = """\
 management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <managementNode id="http://testserver/api/inventory/managementNodes/1">
+  <agentPort/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <osMajorVersion/>
   <registrationDate/>
@@ -601,6 +606,7 @@ systems_xml = """\
 <systems>
   <eventTypes href="http://testserver/api/inventory/eventTypes/"/>
   <system id="http://testserver/api/inventory/systems/2">
+    <agentPort/>
     <registrationDate/>
     <createdDate>2010-08-18T22:28:26+00:00</createdDate>
     <currentState id="http://testserver/api/inventory/systemStates/1/">
@@ -649,6 +655,7 @@ systems_xml = """\
     <targetSystemState/>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
+    <agentPort/>
     <registrationDate/>
     <createdDate>%s</createdDate>
     <currentState id="http://testserver/api/inventory/systemStates/2/">
@@ -789,6 +796,7 @@ systems_put_xml = """\
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
+  <agentPort/>
   <installedSoftware/>
   <jobs>
     <job id="http://testserver/api/inventory/jobs/1/">
@@ -904,6 +912,7 @@ system_post_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
+  <agentPort/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <osMajorVersion/>
   <registrationDate/>
@@ -1030,6 +1039,7 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
+  <agentPort/>
   <systemEvents href="http://testserver/api/inventory/systems/1/systemEvents/"/>
   <osMajorVersion/>
   <registrationDate/>
@@ -1329,6 +1339,7 @@ installed_software_xml = """\
 system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
+  <agentPort/>
   %s
   <jobs/>
   <osMajorVersion/>
@@ -1514,6 +1525,7 @@ system_version_put_response_xml = """\
 system_available_updates_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
+  <agentPort/>
   <installedSoftware>
     <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%3D/clover.eng.rpath.com%40rpath%3Aclover-1-devel/1-2-1%5B%7E%21dom0%2C%7E%21domU%2Cvmware%2C%7E%21xen%20is%3A%20x86%28i486%2Ci586%2Ci686%2Csse%2Csse2%29%5D">
       <name>group-clover-appliance</name>

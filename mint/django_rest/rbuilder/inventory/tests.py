@@ -1518,6 +1518,54 @@ class SystemsTestCase(XMLTestCase):
                 "Unable to register event 'system poll': no networking information",
             ])
 
+    def testAgentPort(self):
+        # RBL-7150
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        agentPort = 12345
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            agentPort=agentPort)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <agent_port>%(agentPort)s</agent_port>
+</system>
+""" % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.agent_port, agentPort)
+        self.failUnlessIn("<agent_port>%s</agent_port>" % agentPort,
+            model.to_xml())
+
+    def testSetSystemState(self):
+        # RBL-6795
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        systemState = 'dead'
+
+        system = models.System(name='blah', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            systemState=systemState)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <current_state>
+    <name>%(systemState)s</name>
+  </current_state>
+</system>
+""" % params
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml, username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system.current_state.name, systemState)
 
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
@@ -1661,7 +1709,7 @@ class SystemStateTestCase(XMLTestCase):
         job2 = self._newJob(system, eventUuid2, jobUuid2,
             models.EventType.SYSTEM_POLL)
         job3 = self._newJob(system, eventUuid3, jobUuid3,
-            models.EventType.SYSTEM_POLL)
+            models.EventType.SYSTEM_POLL_IMMEDIATE)
 
         UNMANAGED = models.SystemState.UNMANAGED
         REGISTERED = models.SystemState.REGISTERED
@@ -1743,6 +1791,43 @@ class SystemStateTestCase(XMLTestCase):
         ]
         for (job, jobState, oldState, newState) in tests:
             system.current_state = self.mgr.sysMgr.systemState(oldState)
+            job.job_state = jobState
+            ret = self.mgr.sysMgr.getNextSystemState(system, job)
+            msg = "Job %s (%s): %s -> %s (expected: %s)" % (
+                (job.event_type.name, jobState.name, oldState, ret, newState))
+            self.failUnlessEqual(ret, newState, msg)
+
+        # Time-based tests
+        tests = [
+            (job2, stateFailed, UNMANAGED, None),
+            (job2, stateFailed, REGISTERED, NONRESPONSIVE),
+            (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job2, stateFailed, NONRESPONSIVE_HOST, DEAD),
+            (job2, stateFailed, NONRESPONSIVE_NET, DEAD),
+            (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
+            (job2, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
+            (job2, stateFailed, NONRESPONSIVE, DEAD),
+            (job2, stateFailed, DEAD, MOTHBALLED),
+            (job2, stateFailed, MOTHBALLED, None),
+
+            (job3, stateFailed, UNMANAGED, None),
+            (job3, stateFailed, REGISTERED, NONRESPONSIVE),
+            (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job3, stateFailed, NONRESPONSIVE_HOST, DEAD),
+            (job3, stateFailed, NONRESPONSIVE_NET, DEAD),
+            (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
+            (job3, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
+            (job3, stateFailed, NONRESPONSIVE, DEAD),
+            (job3, stateFailed, DEAD, MOTHBALLED),
+            (job3, stateFailed, MOTHBALLED, None),
+        ]
+
+        self.mgr.cfg.deadStateTimeout = 10
+        self.mgr.cfg.mothballedStateTimeout = 10
+        stateChange = self.mgr.sysMgr.now() - datetime.timedelta(days=10)
+        for (job, jobState, oldState, newState) in tests:
+            system.current_state = self.mgr.sysMgr.systemState(oldState)
+            system.state_change_date = stateChange
             job.job_state = jobState
             ret = self.mgr.sysMgr.getNextSystemState(system, job)
             msg = "Job %s (%s): %s -> %s (expected: %s)" % (
@@ -2456,6 +2541,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
     def testDispatchSystemEvent(self):
         poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        self.system2.agent_port = 12345
+        self.system2.save()
 
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
@@ -2480,6 +2567,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                     (
                         cimParams(
                             host='3.3.3.3',
+                            port=12345,
                             eventUuid='really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem),
@@ -2494,6 +2582,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             ['uuid000'])
 
     def testDispatchActivateSystemEvent(self):
+        self.system2.agent_port = 12345
+        self.system2.save()
         act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
         # Remove all networks
         for net in self.system2.networks.all():
@@ -2523,6 +2613,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ('register',
                     (
                         cimParams(host='superduper.com',
+                            port=12345,
                             eventUuid = 'really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem),
