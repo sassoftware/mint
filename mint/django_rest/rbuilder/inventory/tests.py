@@ -856,15 +856,6 @@ class SystemsTestCase(XMLTestCase):
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
 
-    def testAddSystemNull(self):
-        
-        try:
-            # create the system
-            system = None
-            self.mgr.addSystem(system)
-        except:
-            assert(False) # should not throw exception
-
     def testSystemPutAuth(self):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
@@ -1011,6 +1002,36 @@ class SystemsTestCase(XMLTestCase):
         
         # make sure we did not scheduled poll event since this is a management node
         self.failUnlessEqual(self.mock_scheduleSystemPollEvent_called, False)
+        
+    def testAddSystemNull(self):
+        
+        try:
+            # create the system
+            system = None
+            self.mgr.addSystem(system)
+        except:
+            assert(False) # should not throw exception
+            
+    def testAddSystemNoNetwork(self):
+        """
+        Ensure a network is not required per https://issues.rpath.com/browse/RBL-7152
+        """
+        models.System.objects.all().delete()
+        system = models.System(name="foo", description="bar")
+        self.mgr.addSystem(system)
+        
+    def testPostSystemNoNetwork(self):
+        """
+        Ensure a network is not required per https://issues.rpath.com/browse/RBL-7152
+        """
+        models.System.objects.all().delete()
+        system_xml = testsxml.system_post_no_network_xml
+        response = self._post('/api/inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
+        try:
+            models.System.objects.get(pk=1)
+        except models.System.DoesNotExist:
+            self.assertTrue(False) # should exist
         
     def testGetSystems(self):
         system = self._saveSystem()

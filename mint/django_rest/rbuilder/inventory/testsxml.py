@@ -981,6 +981,13 @@ system_post_xml_response = """\
   <osType/>
 </system>"""
 
+system_post_no_network_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <name>testsystemname</name>
+  <description>testsystemlocaluuid</description>
+</system>"""
+
 system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
