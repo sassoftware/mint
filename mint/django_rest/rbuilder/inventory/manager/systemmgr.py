@@ -466,11 +466,19 @@ class SystemManager(base.BaseManager):
             self.log_system(system, "System state change: %s -> %s" %
                 (system.current_state.name, nextSystemState))
             system.current_state = self.systemState(nextSystemState)
+            system.state_change_date = self.now()
             system.save()
 
+    NonresponsiveStates = set([
+        models.SystemState.NONRESPONSIVE,
+        models.SystemState.NONRESPONSIVE_NET,
+        models.SystemState.NONRESPONSIVE_HOST,
+        models.SystemState.NONRESPONSIVE_SHUTDOWN,
+        models.SystemState.NONRESPONSIVE_SUSPENDED,
+    ])
+
     def getNextSystemState(self, system, job):
-        # XXX Deal with time-based transitions too (i.e.
-        # NONRESPONSIVE -> DEAD, DEAD->MOTHBALLED)
+        # Return None if the state hasn't changed
         jobStateName = job.job_state.name
         eventTypeName = job.event_type.name
         if jobStateName == models.JobState.COMPLETED:
@@ -487,15 +495,16 @@ class SystemManager(base.BaseManager):
         if jobStateName == models.JobState.FAILED:
             currentStateName = system.current_state.name
             # Simple cases first.
-            if currentStateName in [models.SystemState.UNMANAGED,
-                    models.SystemState.DEAD,
-                    models.SystemState.MOTHBALLED,
-                    models.SystemState.NONRESPONSIVE,
-                    models.SystemState.NONRESPONSIVE_NET,
-                    models.SystemState.NONRESPONSIVE_HOST,
-                    models.SystemState.NONRESPONSIVE_SHUTDOWN,
-                    models.SystemState.NONRESPONSIVE_SUSPENDED]:
-                # No changes in this case
+            if currentStateName == models.SystemState.MOTHBALLED:
+                return None
+            timedelta = self.now() - system.state_change_date
+            if currentStateName == models.SystemState.DEAD:
+                if timedelta.days >= self.cfg.mothballedStateTimeout:
+                    return models.SystemState.MOTHBALLED
+                return None
+            if currentStateName in self.NonresponsiveStates:
+                if timedelta.days >= self.cfg.deadStateTimeout:
+                    return models.SystemState.DEAD
                 return None
             if eventTypeName not in self.PollEvents:
                 # Non-polling event, nothing to do

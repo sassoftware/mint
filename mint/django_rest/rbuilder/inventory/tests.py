@@ -1660,7 +1660,7 @@ class SystemStateTestCase(XMLTestCase):
         job2 = self._newJob(system, eventUuid2, jobUuid2,
             models.EventType.SYSTEM_POLL)
         job3 = self._newJob(system, eventUuid3, jobUuid3,
-            models.EventType.SYSTEM_POLL)
+            models.EventType.SYSTEM_POLL_IMMEDIATE)
 
         UNMANAGED = models.SystemState.UNMANAGED
         REGISTERED = models.SystemState.REGISTERED
@@ -1742,6 +1742,43 @@ class SystemStateTestCase(XMLTestCase):
         ]
         for (job, jobState, oldState, newState) in tests:
             system.current_state = self.mgr.sysMgr.systemState(oldState)
+            job.job_state = jobState
+            ret = self.mgr.sysMgr.getNextSystemState(system, job)
+            msg = "Job %s (%s): %s -> %s (expected: %s)" % (
+                (job.event_type.name, jobState.name, oldState, ret, newState))
+            self.failUnlessEqual(ret, newState, msg)
+
+        # Time-based tests
+        tests = [
+            (job2, stateFailed, UNMANAGED, None),
+            (job2, stateFailed, REGISTERED, NONRESPONSIVE),
+            (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job2, stateFailed, NONRESPONSIVE_HOST, DEAD),
+            (job2, stateFailed, NONRESPONSIVE_NET, DEAD),
+            (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
+            (job2, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
+            (job2, stateFailed, NONRESPONSIVE, DEAD),
+            (job2, stateFailed, DEAD, MOTHBALLED),
+            (job2, stateFailed, MOTHBALLED, None),
+
+            (job3, stateFailed, UNMANAGED, None),
+            (job3, stateFailed, REGISTERED, NONRESPONSIVE),
+            (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
+            (job3, stateFailed, NONRESPONSIVE_HOST, DEAD),
+            (job3, stateFailed, NONRESPONSIVE_NET, DEAD),
+            (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
+            (job3, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
+            (job3, stateFailed, NONRESPONSIVE, DEAD),
+            (job3, stateFailed, DEAD, MOTHBALLED),
+            (job3, stateFailed, MOTHBALLED, None),
+        ]
+
+        self.mgr.cfg.deadStateTimeout = 10
+        self.mgr.cfg.mothballedStateTimeout = 10
+        stateChange = self.mgr.sysMgr.now() - datetime.timedelta(days=10)
+        for (job, jobState, oldState, newState) in tests:
+            system.current_state = self.mgr.sysMgr.systemState(oldState)
+            system.state_change_date = stateChange
             job.job_state = jobState
             ret = self.mgr.sysMgr.getNextSystemState(system, job)
             msg = "Job %s (%s): %s -> %s (expected: %s)" % (
