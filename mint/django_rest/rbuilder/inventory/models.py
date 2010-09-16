@@ -414,15 +414,25 @@ class JobState(modellib.XObjIdModel):
 
     load_fields = [ name ]
 
-class Jobs(modellib.XObjModel):
+class Jobs(modellib.XObjIdModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'jobs',
-                elements=['job'])
+                elements=['job'],
+                attributes={'id':str})
     list_fields = ['job']
     job = []
     
+    def get_absolute_url(self, request, parent=None): 
+        """
+        This implementation of get_absolute_url is a bit different since the
+        jobs collection can be serialized on it's own from 2 different places
+        (/api/inventory/jobs or /api/inventory/systems/{systemId}/jobs).  We
+        need to ask the request to build the id for us based on the path.
+        """
+        return request.build_absolute_uri(request.get_full_path())
+
 class Job(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_job'

@@ -1731,7 +1731,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
 
 jobs_xml = """\
 <?xml version="1.0"?>
-<jobs>
+<jobs id="http://testserver/api/inventory/jobs/">
   <job id="http://testserver/api/inventory/jobs/1/">
     <timeUpdated>2010-09-16T13:36:25.939154+00:00</timeUpdated>
     <jobState>Running</jobState>
@@ -1808,7 +1808,7 @@ job_state_xml = """\
 
 systems_jobs_xml = """\
 <?xml version="1.0"?>
-<jobs id="http://testserver/api/inventory/jobs/">
+<jobs id="http://testserver/api/inventory/systems/3/jobs/">
   <job id="http://testserver/api/inventory/jobs/1/">
     <timeUpdated>2010-09-16T20:13:13.325788+00:00</timeUpdated>
     <jobState>Running</jobState>
