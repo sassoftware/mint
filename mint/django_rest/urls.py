@@ -107,12 +107,16 @@ urlpatterns = patterns('',
     url(r'^api/inventory/systemEvents/(\d+)/$', 
         inventoryviews.InventorySystemEventsService(), 
         name='SystemEvent'),
+
+    # Event Types
     url(r'^api/inventory/eventTypes/$', 
         inventoryviews.InventoryEventTypesService(), 
         name='EventTypes'),
     url(r'^api/inventory/eventTypes/(\d+)/$', 
         inventoryviews.InventoryEventTypesService(), 
         name='EventType'),
+
+    # Users
     url(r'^api/inventory/users/([a-zA-Z1-9]+)/$',
         inventoryviews.InventoryUsersService(),
         name='Users'),
