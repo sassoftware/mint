@@ -2930,6 +2930,8 @@ class JobsTestCase(XMLTestCase):
         job3 = self._newJob(system, eventUuid3, jobUuid3,
             models.EventType.SYSTEM_POLL_IMMEDIATE)
 
+        self.system = system
+
     def testGetJobs(self):
         response = self._get('/api/inventory/jobs/')
         self.assertEquals(response.status_code, 200)
@@ -2949,4 +2951,10 @@ class JobsTestCase(XMLTestCase):
         response = self._get('/api/inventory/jobStates/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.job_state_xml)
+
+    def testGetSystemJobs(self):
+        response = self._get('/api/inventory/systems/%s/jobs/' % \
+            self.system.pk)
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.systems_jobs_xml)
 
