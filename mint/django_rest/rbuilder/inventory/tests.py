@@ -2124,14 +2124,14 @@ class EventTypeTestCase(XMLTestCase):
         models.EventType.objects.all().delete()
         event_type = models.EventType(name=models.EventType.SYSTEM_POLL, description="bar", priority=110)
         event_type.save()
-        self.assertTrue(event_type.name == models.EventType.SYSTEM_POLL)
-        response = self._put('/api/inventory/eventTypes/%d/' % event_type.pk, 
-            data=testsxml.event_type_put_name_change_xml, content_type='text/xml',
+        self.failUnlessEqual(event_type.name, models.EventType.SYSTEM_POLL)
+        response = self._put('/api/inventory/eventTypes/%d/' % event_type.pk,
+            data=testsxml.event_type_put_name_change_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         event_type = models.EventType.objects.get(pk=event_type.pk)
         # name should not have changed
-        self.assertTrue(event_type.name == models.EventType.SYSTEM_POLL)
+        self.failUnlessEqual(event_type.name, models.EventType.SYSTEM_POLL)
 
 class SystemEventTestCase(XMLTestCase):
     
