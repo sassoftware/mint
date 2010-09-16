@@ -1254,7 +1254,7 @@ systems_log_xml = """\
     <systemLogEntryId>1</systemLogEntryId>
   </systemLogEntry>
    <systemLogEntry>
-    <entry>Unable to register event 'system registration': no networking information</entry>
+    <entry>Unable to register event 'on-demand registration event': no networking information</entry>
     <systemLog href="http://testserver/api/inventory/systems/3/systemLog/"/>
      <systemLogEntryId>2</systemLogEntryId>
    </systemLogEntry>
@@ -1264,7 +1264,7 @@ systems_log_xml = """\
      <systemLogEntryId>3</systemLogEntryId>
    </systemLogEntry>
   <systemLogEntry>
-    <entry>Unable to register event 'system registration': no networking information</entry>
+    <entry>Unable to register event 'on-demand registration event': no networking information</entry>
     <systemLog href="http://testserver/api/inventory/systems/4/systemLog/"/>
     <systemLogEntryId>4</systemLogEntryId>
   </systemLogEntry>
@@ -1274,7 +1274,7 @@ systems_log_xml = """\
     <systemLogEntryId>5</systemLogEntryId>
   </systemLogEntry>
   <systemLogEntry>
-    <entry>Unable to register event 'system registration': no networking information</entry>
+    <entry>Unable to register event 'on-demand registration event': no networking information</entry>
     <systemLog href="http://testserver/api/inventory/systems/5/systemLog/"/>
     <systemLogEntryId>6</systemLogEntryId>
   </systemLogEntry>

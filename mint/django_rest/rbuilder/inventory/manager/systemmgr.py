@@ -463,9 +463,10 @@ class SystemManager(base.BaseManager):
 
         nextSystemState = self.getNextSystemState(system, job)
         if nextSystemState is not None:
+            nstate = self.systemState(nextSystemState)
             self.log_system(system, "System state change: %s -> %s" %
-                (system.current_state.name, nextSystemState))
-            system.current_state = self.systemState(nextSystemState)
+                (system.current_state.description, nstate.description))
+            system.current_state = nstate
             system.state_change_date = self.now()
             system.save()
 
@@ -663,7 +664,8 @@ class SystemManager(base.BaseManager):
         if repClient is None:
             log.info("Failed loading repeater client, expected in local mode only")
             return
-        self.log_system(event.system,  "Dispatching %s event" % event.event_type.name)
+        self.log_system(event.system,
+            "Dispatching %s event" % event.event_type.description)
 
         network = self._extractNetworkToUse(event.system)
         if not network:
@@ -831,9 +833,10 @@ class SystemManager(base.BaseManager):
                 self.dispatchSystemEvent(event)
         else:
             systemName = system.name or system.hostname or system.target_system_name
-            log.info("System %s (%s) '%s' cannot be registered because there is no host information" % (system.pk, systemName, event_type.name))
+            log.info("System %s (%s) '%s' cannot be registered because there is no host information" % (system.pk, systemName, event_type.description))
             self.log_system(system,
-                "Unable to register event '%s': no networking information" % event_type.name)
+                "Unable to register event '%s': no networking information" %
+                    event_type.description)
 
         return event
 
