@@ -102,18 +102,11 @@ class access(object):
         """
         function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.AUTHENTICATED
         return function
-        def inner(*args, **kw):
-            request = args[1]
-            if not request._is_authenticated:
-                return authErrorResponse()
-            return function(*args, **kw)
-
-        return inner
 
     @classmethod
     def event_uuid(cls, function):
         """
-        Decorator that verifies authentication or a valid event id
+        Decorator that verifies a valid event id
         """
         function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.EVENT_UUID
         return function
