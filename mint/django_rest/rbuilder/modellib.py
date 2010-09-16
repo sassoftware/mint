@@ -82,6 +82,9 @@ class BaseManager(models.Manager):
                 # Ignore pk fields
                 if field.primary_key:
                     continue
+                if getattr(field, 'APIReadOnly', None):
+                    # Ignore APIReadOnly fields
+                    continue
                 # django throws ObjectDoesNotExist if you try to access a
                 # related model that doesn't exist, so just swallow it.
                 try:
@@ -94,6 +97,11 @@ class BaseManager(models.Manager):
                 if newFieldVal != oldFieldVal:
                     setattr(loaded_model, field.name, newFieldVal)
             return oldModel, loaded_model
+
+        # We need to remove the read-only fields, added from the xobj model
+        for field in model_inst._meta.fields:
+            if getattr(field, 'APIReadOnly', None):
+                setattr(model_inst, field.name, None)
 
         return oldModel, loaded_model
 
@@ -147,9 +155,6 @@ class BaseManager(models.Manager):
             # special case for fields that may not exist at load time or we
             # want to ignore for other reasons
             if key in model.load_ignore_fields:
-                continue
-            if getattr(field, 'APIReadOnly', None):
-                # Ignore APIReadOnly fields
                 continue
             if val == '' and not val._xobj.elements \
                 and not val._xobj.attributes:
