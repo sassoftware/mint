@@ -13,7 +13,7 @@ Description:
 
 <xsl:variable name="eventTypeModelProperties"><![CDATA[
 EventType Properties:
-  name - the event type name
+  name - the event type name (read-only)
   description - the event type description
   priority - the event type priority where > priority wins
   eventTypeId - the database id of the event type
@@ -34,6 +34,8 @@ Methods:
     
   PUT:
     Authentication: admin
+    Read-only fields:
+        name
     
   DELETE:
     not supported]]>
