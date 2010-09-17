@@ -834,3 +834,12 @@ class Database(DBInterface):
     @readonly
     def getCACertificates(self):
         return self.pkiMgr.getCACertificates()
+
+    @commitafter
+    def createCertificate(self, purpose, desc, issuer=None, common=None,
+            conditional=False):
+        if conditional:
+            x509_pem, pkey_pem = self.pkiMgr.getCertificatePair(purpose)
+            if x509_pem:
+                return x509_pem, pkey_pem
+        return self.pkiMgr.createCertificate(purpose, desc, issuer, common)

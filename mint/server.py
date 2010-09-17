@@ -705,6 +705,41 @@ class MintServer(object):
                 sp = xmlrpclib.ServerProxy(url, transport=m2xmlrpclib.SSL_Transport())
                 mirrorPassword = \
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
+
+            # Try to configure remote sputnik. It might fail if the upsrv is
+            # too old to have a sputnik (pre-5.7) in which case we should
+            # succeed anyway with just the repository setup.
+            result = sp.configure.Network.index()
+            fqdn = result.get('host_hostName')
+            if fqdn:
+                log.info("Creating certificate pair for update service %s",
+                        fqdn)
+                x509_pem, pkey_pem = self.restDb.createCertificate(
+                        purpose='upsrv %s' % (fqdn,),
+                        desc='rPath Update Service',
+                        issuer='hg_ca',
+                        common=fqdn,
+                        conditional=True,
+                        )
+                ret = sp.rusconf.RusConf.pushConfiguration({
+                    'x509_pem': x509_pem,
+                    'pkey_pem': pkey_pem,
+                    })
+                if ('errors' in ret
+                        and 'method "pushConfiguration" is not supported'
+                        not in ret['errors'][-1]):
+                    log.error("Error configuring update service %s: %s",
+                            urlhostname, ret['errors'][-1])
+                    raise mint_error.UpdateServiceUnknownError(urlhostname)
+                else:
+                    # At this point, the rmake node should have connected back to
+                    # our XMPP server. Push the new JID to rmake's whitelist.
+                    jid = ret.get('jid')
+                    log.info("Registered update service %s w/ JID %s", fqdn, jid)
+                # TODO: Add JID to rmake's connection whitelist.
+            else:
+                log.error("Not creating certificate pair for upsrv %s",
+                        urlhostname)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
                 raise mint_error.UpdateServiceAuthError(urlhostname)
@@ -715,7 +750,7 @@ class MintServer(object):
             raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
                                                            str(e[1]))
         else:
-            if not mirrorPassword:
+            if not mirrorPassword or isinstance(mirrorPassword, dict):
                 raise mint_error.UpdateServiceUnknownError(urlhostname)
 
         return (mirrorUser, mirrorPassword)
