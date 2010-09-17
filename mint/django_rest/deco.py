@@ -19,6 +19,10 @@ class ACCESS(object):
     ADMIN = 4
     EVENT_UUID = 8
 
+def D(field, docstring):
+    field.docstring = docstring
+    return field
+
 def str_to_underscore(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

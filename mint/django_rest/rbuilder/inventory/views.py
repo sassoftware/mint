@@ -289,6 +289,13 @@ class InventorySystemsSystemService(AbstractInventoryService):
         oldSystem = self.mgr.getSystem(system_id)
         if not oldSystem:
             return HttpResponse(status=404)
+        # This is a terrible place to put logic, but until we decide to pass
+        # the request into the manager, we don't have a way around it
+        mb = models.SystemState.MOTHBALLED
+        if oldSystem.current_state.name != mb and \
+                system.current_state.name == mb:
+            if not request._is_admin:
+                return HttpAuthenticationRequired
         # This really should be an update
         self.mgr.updateSystem(system)
         return self.mgr.getSystem(system_id)

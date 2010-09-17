@@ -14,6 +14,7 @@ from conary.deps import deps
 
 from django.db import models
 
+from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -198,6 +199,7 @@ class SystemState(modellib.XObjIdModel):
     load_fields = [ name ]
 
 class System(modellib.XObjIdModel):
+    XSL = "system.xsl"
     class Meta:
         db_table = 'inventory_system'
     # XXX this is hopefully a temporary solution to not serialize the FK
@@ -208,42 +210,79 @@ class System(modellib.XObjIdModel):
                 tag = 'system',
                 attributes = {'id':str},
                 elements = ['networks', ])
-    
+    """
+      networks - a collection of network resources exposed by the system
+      systemEvents - a link to the collection of system events currently active on this sytem
+    """
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
-    system_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=8092)
-    description = models.CharField(max_length=8092, null=True)
-    created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    hostname = models.CharField(max_length=8092, null=True)
+    system_id = D(models.AutoField(primary_key=True),
+        "the database ID for the system")
+    name = D(models.CharField(max_length=8092),
+        "the system name")
+    description = D(models.CharField(max_length=8092, null=True),
+        "the system description")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the system was added to inventory (UTC)")
+    hostname = D(models.CharField(max_length=8092, null=True),
+        "the system hostname")
     # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
-    launch_date = modellib.DateTimeUtcField(null=True)
-    target = models.ForeignKey(rbuildermodels.Targets, null=True)
-    target_system_id = modellib.APIReadOnlyCharField(max_length=255, null=True)
-    target_system_name = modellib.APIReadOnlyCharField(max_length=255, null=True)
-    target_system_description = modellib.APIReadOnlyCharField(max_length=1024, null=True)
-    target_system_state = modellib.APIReadOnlyCharField(max_length=64, null=True)
-    os_type = models.CharField(max_length=64, null=True)
-    os_major_version = models.CharField(max_length=32, null=True)
-    os_minor_version = models.CharField(max_length=32, null=True)
-    registration_date = modellib.DateTimeUtcField(null=True)
-    generated_uuid = models.CharField(max_length=64, unique=True, null=True)
-    local_uuid = models.CharField(max_length=64, null=True)
-    ssl_client_certificate = modellib.APIReadOnlyCharField(max_length=8092, null=True)
-    ssl_client_key = modellib.XObjHiddenCharField(max_length=8092, null=True)
-    ssl_server_certificate = models.CharField(max_length=8092, null=True)
-    launching_user = models.ForeignKey(rbuildermodels.Users, null=True)
-    current_state = modellib.SerializedForeignKey(SystemState, null=True, related_name='systems')
-    installed_software = models.ManyToManyField('Trove', null=True)
-    management_node = models.NullBooleanField()
+    launch_date = D(modellib.DateTimeUtcField(null=True),
+        "the date the system was deployed (only applies if system is on a virtual target)")
+    target = D(models.ForeignKey(rbuildermodels.Targets, null=True),
+        "the virtual target the system was deployed to (only applies if system is on a virtual target)")
+    target_system_id = D(modellib.APIReadOnlyCharField(max_length=255,
+            null=True),
+        "the system ID as reported by its target (only applies if system is on a virtual target)")
+    target_system_name = D(modellib.APIReadOnlyCharField(max_length=255,
+            null=True),
+        "the system name as reported by its target (only applies if system is on a virtual target)")
+    target_system_description = D(modellib.APIReadOnlyCharField(max_length=1024,
+            null=True),
+        "the system description as reported by its target (only applies if system is on a virtual target)")
+    target_system_state = D(modellib.APIReadOnlyCharField(max_length=64,
+            null=True),
+        "the system state as reported by its target (only applies if system is on a virtual target)")
+    os_type = D(models.CharField(max_length=64, null=True),
+        "the system operating system type")
+    os_major_version = D(models.CharField(max_length=32, null=True),
+        "operating system major version")
+    os_minor_version = D(models.CharField(max_length=32, null=True),
+        "operating system minor version")
+    registration_date = D(modellib.DateTimeUtcField(null=True),
+        "the date the system was registered in inventory (UTC)")
+    generated_uuid = D(models.CharField(max_length=64, unique=True, null=True),
+        "a UUID that is randomly generated")
+    local_uuid = D(models.CharField(max_length=64, null=True),
+        "a UUID created from the system hardware profile")
+    ssl_client_certificate = D(modellib.APIReadOnlyCharField(
+            max_length=8092, null=True),
+        "an x509 certificate of an authorized client that can use the system's CIM broker")
+    ssl_client_key = D(modellib.XObjHiddenCharField(max_length=8092, null=True),
+        "an x509 private key of an authorized client that can use the system's CIM broker")
+    ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
+        "an x509 public certificate of the system's CIM broker")
+    launching_user = D(models.ForeignKey(rbuildermodels.Users, null=True),
+        "the user that deployed the system (only applies if system is on a virtual target)")
+    current_state = D(modellib.SerializedForeignKey(
+            SystemState, null=True, related_name='systems'),
+        "the current state of the system")
+    installed_software = D(models.ManyToManyField('Trove', null=True),
+        "a collection of top-level items installed on the system")
+    management_node = D(models.NullBooleanField(),
+        "whether or not this system is a management node")
     #TO-DO should this ever be nullable?
-    managing_zone = models.ForeignKey(Zone, null=True, related_name='systems')
+    managing_zone = D(models.ForeignKey(Zone, null=True,
+            related_name='systems'),
+        "a link to the management zone in which this system resides")
     jobs = models.ManyToManyField("Job", through="SystemJob")
-    agent_port = models.IntegerField(null=True)
+    agent_port = D(models.IntegerField(null=True),
+          "the port used by the system's CIM broker")
     state_change_date = modellib.XObjHiddenDateTimeUtcField(auto_now_add=True,
         default=datetime.datetime.now(tz.tzutc()))
-    event_uuid = modellib.SyntheticField()
+    event_uuid = D(modellib.SyntheticField(),
+        "a UUID used to link system events with their returned responses")
 
     load_fields = [local_uuid]
 
