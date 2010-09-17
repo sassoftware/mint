@@ -517,6 +517,14 @@ class XObjModel(models.Model):
 
     old_m2m_accessors = {}
 
+    def __init__(self, *args, **kwargs):    
+        models.Model.__init__(self, *args, **kwargs)
+
+        # Clear out any values for list_fields, so they're not shared among
+        # individual instances of this class.
+        for list_field in self.list_fields:
+            setattr(self, list_field, [])
+
     def __setattr__(self, attr, val):
         """
         Hack since django has no support for timezones.  Whenever we set an
