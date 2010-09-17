@@ -1,7 +1,7 @@
 
 import os
 import inspect
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from mint.django_rest.rbuilder.inventory import models, views
 from mint.django_rest import deco
