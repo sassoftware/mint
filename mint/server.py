@@ -721,12 +721,9 @@ class MintServer(object):
                         common=fqdn,
                         conditional=True,
                         )
-                outbound_x509, outbound_pkey = self.restDb.getCertificatePair(
-                        purpose='outbound')
                 ret = sp.rusconf.RusConf.pushConfiguration({
                     'x509_pem': x509_pem,
                     'pkey_pem': pkey_pem,
-                    'outbound_pem': outbound_x509 + outbound_pkey,
                     })
                 if ('errors' in ret
                         and 'method "pushConfiguration" is not supported'

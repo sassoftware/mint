@@ -835,10 +835,6 @@ class Database(DBInterface):
     def getCACertificates(self):
         return self.pkiMgr.getCACertificates()
 
-    @readonly
-    def getCertificatePair(self, purpose):
-        return self.pkiMgr.getCertificatePair(purpose)
-
     @commitafter
     def createCertificate(self, purpose, desc, issuer=None, common=None,
             conditional=False):
