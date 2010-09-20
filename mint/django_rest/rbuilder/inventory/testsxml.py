@@ -110,9 +110,15 @@ zones_xml = """\
         </currentState>
         <description/>
         <generatedUuid/>
+        <hasActiveJobs>False</hasActiveJobs>
         <hostname/>
         <installedSoftware/>
-        <jobs/>
+        <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+          <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+          <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+          <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+          <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
+        </jobs>
         <launchDate/>
         <launchingUser/>
         <localUuid/>
@@ -316,6 +322,7 @@ management_nodes_xml = """\
     <osMajorVersion/>
     <registrationDate/>
     <generatedUuid>test management node guuid</generatedUuid>
+    <hasActiveJobs>False</hasActiveJobs>
     <networks>
       <network id="http://testserver/api/inventory/networks/1/">
         <active/>
@@ -343,7 +350,12 @@ management_nodes_xml = """\
     <launchDate/>
     <local>true</local>
     <installedSoftware/>
-    <jobs/>
+    <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+      <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+      <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+      <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+      <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
+    </jobs>
     <description>test management node desc</description>
     <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
     <targetSystemId/>
@@ -375,6 +387,7 @@ management_node_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
+  <hasActiveJobs>False</hasActiveJobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1/">
       <active/>
@@ -402,7 +415,12 @@ management_node_xml = """\
   <launchDate/>
   <local>true</local>
   <installedSoftware/>
-  <jobs/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
+  </jobs>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -469,6 +487,7 @@ management_node_post_response_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
+  <hasActiveJobs>False</hasActiveJobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1/">
       <active/>
@@ -489,7 +508,12 @@ management_node_post_response_xml = """\
   <sslClientCertificate/>
   <sslServerCertificate>test management node server cert</sslServerCertificate>
   <managingZone/>
-  <jobs/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
+  </jobs>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <systemId>1</systemId>
@@ -563,6 +587,7 @@ management_node_zone_post_response_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>test management node guuid</generatedUuid>
+  <hasActiveJobs>False</hasActiveJobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1/">
       <active/>
@@ -590,7 +615,12 @@ management_node_zone_post_response_xml = """\
   <launchDate/>
   <local>true</local>
   <installedSoftware/>
-  <jobs/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
+  </jobs>
   <description>test management node desc</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -627,9 +657,15 @@ systems_xml = """\
     </currentState>
     <description>Local rPath Update Service</description>
     <generatedUuid/>
+    <hasActiveJobs>False</hasActiveJobs>
     <hostname/>
     <installedSoftware/>
-    <jobs/>
+    <jobs id="http://testserver/api/inventory/systems/2/jobs/">
+      <completedJobs href="http://testserver/api/inventory/systems/2/jobStates/3/jobs/"/>
+      <failedJobs href="http://testserver/api/inventory/systems/2/jobStates/4/jobs/"/>
+      <queuedJobs href="http://testserver/api/inventory/systems/2/jobStates/1/jobs/"/>
+      <runningJobs href="http://testserver/api/inventory/systems/2/jobStates/2/jobs/"/>
+    </jobs>
     <launchDate/>
     <launchingUser/>
     <localUuid/>
@@ -676,9 +712,15 @@ systems_xml = """\
     </currentState>
     <description>testsystemdescription</description>
     <generatedUuid>testsystemgenerateduuid</generatedUuid>
+    <hasActiveJobs>False</hasActiveJobs>
     <hostname/>
     <installedSoftware/>
-    <jobs/>
+    <jobs id="http://testserver/api/inventory/systems/3/jobs/">
+      <completedJobs href="http://testserver/api/inventory/systems/3/jobStates/3/jobs/"/>
+      <failedJobs href="http://testserver/api/inventory/systems/3/jobStates/4/jobs/"/>
+      <queuedJobs href="http://testserver/api/inventory/systems/3/jobStates/1/jobs/"/>
+      <runningJobs href="http://testserver/api/inventory/systems/3/jobStates/2/jobs/"/>
+    </jobs>
     <launchDate/>
     <launchingUser/>
     <localUuid>testsystemlocaluuid</localUuid>
@@ -851,39 +893,16 @@ system_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agentPort/>
   <installedSoftware/>
-  <jobs>
-    <job id="http://testserver/api/inventory/jobs/1/">
-      <jobId>1</jobId>
-      <jobState>Queued</jobState>
-      <jobType>system registration</jobType>
-      <jobUuid>fixture-job-uuid1</jobUuid>
-      <systems/>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/2/">
-      <jobId>2</jobId>
-      <jobState>Queued</jobState>
-      <jobType>immediate system poll</jobType>
-      <jobUuid>fixture-job-uuid2</jobUuid>
-      <systems/>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/3/">
-     <jobId>3</jobId>
-      <jobState>Queued</jobState>
-      <jobType>system poll</jobType>
-      <jobUuid>fixture-job-uuid3</jobUuid>
-      <systems/>
-   </job>
-    <job id="http://testserver/api/inventory/jobs/4/">
-      <jobId>4</jobId>
-      <jobState>Queued</jobState>
-      <jobType>system registration</jobType>
-      <jobUuid>fixture-job-uuid4</jobUuid>
-      <systems/>
-    </job>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
   </jobs>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <hasActiveJobs>True</hasActiveJobs>
   <managingZone/>
   <hostname/>
   <networks>
@@ -970,6 +989,7 @@ system_post_xml_response = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <hasActiveJobs>True</hasActiveJobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1/">
       <active/>
@@ -994,35 +1014,11 @@ system_post_xml_response = """\
   <managementNode/>
   <launchDate/>
   <installedSoftware/>
-  <jobs>
-    <job id="http://testserver/api/inventory/jobs/1/">
-      <jobState>Queued</jobState>
-      <jobType>system registration</jobType>
-      <systems/>
-      <jobUuid>fixture-job-uuid1</jobUuid>
-      <jobId>1</jobId>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/2/">
-      <jobState>Queued</jobState>
-      <jobType>immediate system poll</jobType>
-      <systems/>
-      <jobUuid>fixture-job-uuid2</jobUuid>
-      <jobId>2</jobId>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/3/">
-      <jobState>Queued</jobState>
-      <jobType>system poll</jobType>
-      <systems/>
-      <jobUuid>fixture-job-uuid3</jobUuid>
-      <jobId>3</jobId>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/4/">
-      <jobState>Queued</jobState>
-      <jobType>system registration</jobType>
-      <systems/>
-      <jobUuid>fixture-job-uuid4</jobUuid>
-      <jobId>4</jobId>
-    </job>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
   </jobs>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
@@ -1097,6 +1093,7 @@ system_target_xml = """\
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <hasActiveJobs>True</hasActiveJobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1/">
       <active/>
@@ -1121,36 +1118,12 @@ system_target_xml = """\
   <managementNode/>
   <launchDate/>
   <installedSoftware/>
-  <jobs>
-    <job id="http://testserver/api/inventory/jobs/1/">
-      <jobId>1</jobId>
-      <jobState>Queued</jobState>
-      <jobType>system registration</jobType>
-      <jobUuid>fixture-job-uuid1</jobUuid>
-      <systems/>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/2/">
-      <jobId>2</jobId>
-      <jobState>Queued</jobState>
-      <jobType>immediate system poll</jobType>
-      <jobUuid>fixture-job-uuid2</jobUuid>
-      <systems/>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/3/">
-      <jobId>3</jobId>
-      <jobState>Queued</jobState>
-      <jobType>system poll</jobType>
-      <jobUuid>fixture-job-uuid3</jobUuid>
-      <systems/>
-    </job>
-    <job id="http://testserver/api/inventory/jobs/4/">
-      <jobId>4</jobId>
-      <jobState>Queued</jobState>
-      <jobType>system registration</jobType>
-      <jobUuid>fixture-job-uuid4</jobUuid>
-      <systems/>
-    </job>
-  </jobs>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/1/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/1/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/1/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/1/jobStates/2/jobs/"/>
+   </jobs>
   <description>testsystemdescription</description>
   <systemLog href="http://testserver/api/inventory/systems/1/systemLog/"/>
   <targetSystemId/>
@@ -1394,10 +1367,16 @@ system_version_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <agentPort/>
   %s
-  <jobs/>
+  <jobs id="http://testserver/api/inventory/systems/3/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/3/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/3/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/3/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/3/jobStates/2/jobs/"/>
+  </jobs>
   <osMajorVersion/>
   <registrationDate/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <hasActiveJobs>False</hasActiveJobs>
   <managingZone/>
   <hostname/>
   <networks>
@@ -1630,10 +1609,16 @@ system_available_updates_xml = """\
       <flavor>desktop is: x86_64</flavor>
     </trove>
   </installedSoftware>
-  <jobs/>
+  <jobs id="http://testserver/api/inventory/systems/3/jobs/">
+    <completedJobs href="http://testserver/api/inventory/systems/3/jobStates/3/jobs/"/>
+    <failedJobs href="http://testserver/api/inventory/systems/3/jobStates/4/jobs/"/>
+    <queuedJobs href="http://testserver/api/inventory/systems/3/jobStates/1/jobs/"/>
+    <runningJobs href="http://testserver/api/inventory/systems/3/jobStates/2/jobs/"/>
+  </jobs>
   <systemEvents href="http://testserver/api/inventory/systems/3/systemEvents/"/>
   <osMajorVersion/>
   <generatedUuid>testsystemgenerateduuid</generatedUuid>
+  <hasActiveJobs>False</hasActiveJobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/2/">
       <active/>
