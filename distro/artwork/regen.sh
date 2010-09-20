@@ -28,4 +28,7 @@ rasterfy bootloader_splash.svg bootloader_splash.png 2 -w 640 -h 480
 rasterfy bootloader_splash.svg splashy_background.png 2
 
 # PNGs with transparency
-rasterfy anaconda_splash.svg anaconda_splash.png 6
+for x in anaconda_first anaconda_splash
+do
+    rasterfy $x.svg $x.png 6
+done
