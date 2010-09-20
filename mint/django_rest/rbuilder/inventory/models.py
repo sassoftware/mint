@@ -637,7 +637,7 @@ class SystemLog(modellib.XObjIdModel):
         if not parents:
             parents = [self.system]
         if isinstance(parents[0], System):
-            view_name = 'SystemLog'
+            self.view_name = 'SystemLog'
         return modellib.XObjIdModel.get_absolute_url(self, request, *parents)
 
 class SystemLogEntry(modellib.XObjModel):
