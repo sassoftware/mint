@@ -20,12 +20,20 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 
 from xobj import xobj
 
+class Fault(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    code = models.IntegerField(null=True)
+    message = models.CharField(max_length=8092, null=True)
+    traceback = models.TextField(null=True)
+
 class Inventory(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory',
-                elements = ['zones', 'managementNodes', 'systems', 'log', 'eventTypes', 'systemStates', 'networks'])
+                elements = ['zones', 'managementNodes', 'systems', 'log', 
+                    'eventTypes', 'systemStates', 'networks'])
 
     def __init__(self):
         self.zones = modellib.XObjHrefModel('zones/')

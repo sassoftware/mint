@@ -19,6 +19,7 @@ from conary import versions as cnyver
 
 from mint.lib import uuid, x509
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
 from mint.rest import errors as mint_rest_errors
@@ -672,7 +673,7 @@ class SystemManager(base.BaseManager):
             msg = "No valid network information found; giving up"
             log.error(msg)
             self.log_system(event.system, msg)
-            return
+            raise errors.InvalidNetworkInformation
         # If no ip address was set, fall back to dns_name
         destination = network.ip_address or network.dns_name
         eventType = event.event_type.name
@@ -712,6 +713,7 @@ class SystemManager(base.BaseManager):
                 cimParams, resultsLocation, zone=zone)
         else:
             log.error("Unknown event type %s" % eventType)
+            raise errors.UnknownEventType(eventType=eventType)
 
     def _extractNetworkToUse(self, system):
         networks = system.networks.all()

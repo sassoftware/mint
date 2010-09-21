@@ -5,18 +5,21 @@
 #
 
 import logging
-from django.contrib.auth import authenticate
-from django.http import HttpResponseBadRequest
+import sys
+import traceback
 
 import libxml2
 import libxslt
 
+from django.contrib.auth import authenticate
+from django.http import HttpResponseBadRequest, HttpResponse
+
 from mint import config
 from mint.django_rest.rbuilder import auth
+from mint.django_rest.rbuilder.inventory import models
 from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
-
 
 class ExceptionLoggerMiddleware(object):
 
@@ -26,8 +29,20 @@ class ExceptionLoggerMiddleware(object):
         return None
 
     def process_exception(self, request, exception):
+        ei = sys.exc_info()
+        tb = ''.join(traceback.format_tb(ei[2]))
+        msg = str(ei[1])
+
         log.exception("Unhandled error in django handler:\n")
-        return None
+        log.exception(msg)
+        log.exception(tb)
+
+        code = 500
+        fault = models.Fault(code=code, message=msg, traceback=tb)
+        response = HttpResponse(status=code, content_type='text/xml')
+        response.content = fault.to_xml(request)
+
+        return response
 
 class SetMethodRequestMiddleware(object):
     
