@@ -356,7 +356,7 @@ class System(modellib.XObjIdModel):
                     'running_jobs', 'failed_jobs'],
                 attributes = {'id':str})
 
-            def __init__(self, system):
+            def __init__(self, request, system):
                 self.view_name = 'SystemJobs'
                 self.id = self.get_absolute_url(request, parents=[system])
                 self.view_name = 'SystemJobStateJobs'
@@ -377,7 +377,7 @@ class System(modellib.XObjIdModel):
                     self.get_absolute_url(request, parents=parents))
                 self.view_name = None
 
-        xobj_model.jobs = JobsHref(self)
+        xobj_model.jobs = JobsHref(request, self)
         return xobj_model
 
 class ManagementNode(System):
