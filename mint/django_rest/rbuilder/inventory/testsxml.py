@@ -67,6 +67,22 @@ event_types_xml="""\
     <priority>105</priority>
     <systemEvents/>
   </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/6/">
+    <description>shutdown a system</description>
+    <eventTypeId>6</eventTypeId>
+    <jobSet/>
+    <name>system shutdown</name>
+    <priority>50</priority>
+    <systemEvents/>
+  </eventType>
+  <eventType id="http://testserver/api/inventory/eventTypes/7/">
+    <description>on-demand shutdown a system</description>
+    <eventTypeId>7</eventTypeId>
+    <jobSet/>
+    <name>immediate system shutdown</name>
+    <priority>105</priority>
+    <systemEvents/>
+  </eventType>
 </eventTypes>"""
 
 event_type_put_xml="""\

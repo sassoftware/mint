@@ -71,6 +71,16 @@
         <field type="CharField" name="description">on-demand apply an update to a system</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
+    <object pk="6" model="inventory.eventtype">
+        <field type="CharField" name="name">system shutdown</field>
+        <field type="CharField" name="description">shutdown a system</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="7" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system shutdown</field>
+        <field type="CharField" name="description">on-demand shutdown a system</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>
