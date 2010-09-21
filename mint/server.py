@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -77,6 +77,7 @@ from conary import errors as conary_errors
 
 from mcp import client as mcp_client
 from mcp import mcp_error
+from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
 
 
@@ -656,6 +657,59 @@ class MintServer(object):
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
 
+    def _getRmakeClient(self):
+        """Return an instance of a rMake 3 client."""
+        return rmk_client.RmakeClient('http://localhost:9998')
+
+    def _configureSputnik(self, sp, urlhostname):
+        """Try to configure remote sputnik.
+
+        It might fail if the upsrv is too old to have a sputnik (pre-5.7) in
+        which case we should succeed anyway with just the repository setup.
+        """
+        result = sp.configure.Network.index()
+        fqdn = result.get('host_hostName')
+        if not fqdn:
+            log.warning("Update service %s has no FQDN configured "
+                    "-- not creating certificate pair.", urlhostname)
+            return
+
+        log.info("Creating certificate pair for update service %s", fqdn)
+        x509_pem, pkey_pem = self.restDb.createCertificate(
+                purpose='upsrv %s' % (fqdn,),
+                desc='rPath Update Service',
+                issuer='hg_ca',
+                common=fqdn,
+                conditional=True,
+                )
+        ret = sp.rusconf.RusConf.pushConfiguration({
+            'x509_pem': x509_pem,
+            'pkey_pem': pkey_pem,
+            })
+        if 'errors' in ret:
+            # Too old to have a sputnik installation.
+            if ('method "pushConfiguration" is not supported'
+                    not in ret['errors'][-1]):
+                log.error("Error configuring update service %s: %s",
+                        urlhostname, ret['errors'][-1])
+                raise mint_error.UpdateServiceUnknownError(urlhostname)
+            log.warning("Update service %s does not support system inventory "
+                    "-- only repository services will be configured.",
+                    urlhostname)
+            return
+
+        # At this point, the rmake node should be connecting back to our XMPP
+        # server. Push the new JID to rmake's whitelist so it can authenticate.
+        jid = ret.get('jid')
+        try:
+            client = self._getRmakeClient()
+            client.registerWorker(jid)
+        except:
+            log.exception("Failed to register remote update service %s "
+                    "(JID %s) with local rMake dispatcher:", fqdn, jid)
+        else:
+            log.info("Registered update service %s w/ JID %s", fqdn, jid)
+
     def _configureUpdateService(self, hostname, adminUser, adminPassword):
         import xmlrpclib
         from mint.lib import proxiedtransport
@@ -706,40 +760,7 @@ class MintServer(object):
                 mirrorPassword = \
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
 
-            # Try to configure remote sputnik. It might fail if the upsrv is
-            # too old to have a sputnik (pre-5.7) in which case we should
-            # succeed anyway with just the repository setup.
-            result = sp.configure.Network.index()
-            fqdn = result.get('host_hostName')
-            if fqdn:
-                log.info("Creating certificate pair for update service %s",
-                        fqdn)
-                x509_pem, pkey_pem = self.restDb.createCertificate(
-                        purpose='upsrv %s' % (fqdn,),
-                        desc='rPath Update Service',
-                        issuer='hg_ca',
-                        common=fqdn,
-                        conditional=True,
-                        )
-                ret = sp.rusconf.RusConf.pushConfiguration({
-                    'x509_pem': x509_pem,
-                    'pkey_pem': pkey_pem,
-                    })
-                if ('errors' in ret
-                        and 'method "pushConfiguration" is not supported'
-                        not in ret['errors'][-1]):
-                    log.error("Error configuring update service %s: %s",
-                            urlhostname, ret['errors'][-1])
-                    raise mint_error.UpdateServiceUnknownError(urlhostname)
-                else:
-                    # At this point, the rmake node should have connected back to
-                    # our XMPP server. Push the new JID to rmake's whitelist.
-                    jid = ret.get('jid')
-                    log.info("Registered update service %s w/ JID %s", fqdn, jid)
-                # TODO: Add JID to rmake's connection whitelist.
-            else:
-                log.error("Not creating certificate pair for upsrv %s",
-                        urlhostname)
+            self._configureSputnik(sp, urlhostname)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
                 raise mint_error.UpdateServiceAuthError(urlhostname)
