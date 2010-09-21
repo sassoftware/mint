@@ -559,7 +559,7 @@ class XObjModel(models.Model):
         xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
-    def get_absolute_url(self, request=None, *parents):
+    def get_absolute_url(self, request=None, parents=None):
         """
         Return an absolute url for this model.  Incorporates the same behavior
         as the django decorator models.pattern, but we use it directly here so
@@ -721,7 +721,7 @@ class XObjModel(models.Model):
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
                 rel_mod = getattr(self, accessorName).model()
-                href = rel_mod.get_absolute_url(request, self)
+                href = rel_mod.get_absolute_url(request, parents=[self])
                 accessor_model._xobj = xobj.XObjMetadata(
                     attributes={'href':str})
                 accessor_model.href = href
