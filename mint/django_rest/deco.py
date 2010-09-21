@@ -72,6 +72,14 @@ def requires(model_name, save=True):
             built_model = xobj.parse(underscore_xml)
             model_xml = str_to_underscore(model_name)
             built_model = getattr(built_model, model_xml)
+            modelCls = modellib.type_map[model_name]
+            # Extract the pk field
+            if modelCls._meta.has_auto_field:
+                autoField = modelCls._meta.auto_field
+                keyFieldName = autoField.name
+                keyFieldValue = kw.get(keyFieldName)
+                # This will also overwrite the field if it's present
+                setattr(built_model, keyFieldName, keyFieldValue)
             model = modellib.type_map[model_name].objects.load_from_object(
                 built_model, request, save=save)
             kw[model_name] = model

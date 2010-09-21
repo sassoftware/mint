@@ -133,10 +133,10 @@ class BaseManager(models.Manager):
             resolver = urlresolvers.resolve(path)
             # resolver contains a function and it's arguments that django
             # would use to call the view.
-            func, args = resolver[0:2]
+            func, args, kwargs = resolver
             # The django rest api always uses .get(...) to handle a GET, which
             # will always return a model.
-            return func.get(*args)
+            return func.get(*args, **kwargs)
         else:
             return None
 
@@ -401,6 +401,10 @@ class SystemManager(BaseManager):
         if the system already exists.
         """
 
+        if model_inst.system_id is not None:
+            loaded_model = self.tryLoad(dict(system_id=model_inst.system_id))
+            if loaded_model:
+                return loaded_model.serialize(), loaded_model
         # only check uuids if they are not none
         if model_inst.local_uuid and model_inst.generated_uuid:
             loaded_model = self.tryLoad(dict(local_uuid=model_inst.local_uuid,

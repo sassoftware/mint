@@ -91,7 +91,7 @@ class AbstractInventoryService(resource.Resource):
             eventUuid = request.environ.get('X-rBuilder-Event-UUID')
             if eventUuid:
                 # Check if this system has such an event uuid
-                systemId = args[0]
+                systemId = kwargs['system_id']
                 sjobs = models.SystemJob.objects.filter(
                     system__pk=systemId, event_uuid=eventUuid)
                 if not sjobs:
@@ -233,6 +233,8 @@ class InventoryNetworkService(AbstractInventoryService):
     def rest_PUT(self, request, network_id, network):
         oldNetwork = self.get(network_id)
         if not oldNetwork:
+            return HttpResponse(status=404)
+        if int(network_id) != network.pk:
             return HttpResponse(status=404)
         # This really should be an update
         self.mgr.updateNetwork(network)
