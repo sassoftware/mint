@@ -328,8 +328,8 @@ class InventorySystemsSystemEventService(AbstractInventoryService):
 
 class InventorySystemsSystemLogService(AbstractInventoryService):
 
-    def rest_GET(self, request, system, format='xml'):
-        managedSystem = self.mgr.getSystem(system)
+    def rest_GET(self, request, system_id, format='xml'):
+        managedSystem = self.mgr.getSystem(system_id)
         systemLog = self.mgr.getSystemLog(managedSystem)
 
         if format == 'xml':
@@ -408,11 +408,11 @@ class InventorySystemJobsService(AbstractInventoryService):
     
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, system):
-        return self.get(system)
+    def rest_GET(self, request, system_id, job_id=None):
+        return self.get(system_id)
 
-    def get(self, system):
-        return self.mgr.getSystemJobs(system)
+    def get(self, system_id):
+        return self.mgr.getSystemJobs(system_id)
 
 class InventoryJobsService(AbstractInventoryService):
     
