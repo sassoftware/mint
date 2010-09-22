@@ -15,6 +15,8 @@ from django.contrib.auth import authenticate
 from django.http import HttpResponseBadRequest, HttpResponse
 
 from mint import config
+from mint import logerror
+from mint import mint_error
 from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.inventory import models
 from mint.lib import mintutils
@@ -32,8 +34,7 @@ class ExceptionLoggerMiddleware(object):
         ei = sys.exc_info()
         tb = ''.join(traceback.format_tb(ei[2]))
         msg = str(ei[1])
-
-        log.error("Unhandled error in django handler:", exc_info=ei)
+        self.logError(request, ei[0], ei[1], ei[2])
 
         code = 500
         fault = models.Fault(code=code, message=msg, traceback=tb)
@@ -41,6 +42,21 @@ class ExceptionLoggerMiddleware(object):
         response.content = fault.to_xml(request)
 
         return response
+
+    def logError(self, request, e_type, e_value, e_tb, doEmail=True):
+        info = {
+                'path'              : request.path,
+                'method'            : request.method,
+                'headers_in'        : request.META,
+                'request_params'    : request.GET,
+                'is_secure'         : request.is_secure,
+                }
+        try:
+            logerror.logErrorAndEmail(request.cfg, e_type, e_value,
+                    e_tb, 'API call (django handler)', info, doEmail=doEmail)
+        except mint_error.MailError, err:
+            log.error("Error sending mail: %s", str(err))
+
 
 class SetMethodRequestMiddleware(object):
     
@@ -94,8 +110,10 @@ class SetMintConfigMiddleware(object):
     def process_request(self, request):
         if hasattr(request, '_req'):
             cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
-            cfg = config.getConfig(cfgPath)
-            request.cfg = cfg
+        else:
+            cfgPath = config.RBUILDER_CONFIG
+        cfg = config.getConfig(cfgPath)
+        request.cfg = cfg
 
         return None
 
