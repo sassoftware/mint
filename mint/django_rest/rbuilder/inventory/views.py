@@ -88,7 +88,11 @@ class AbstractInventoryService(resource.Resource):
         if access & ACCESS.EVENT_UUID:
             # Event UUID authentication is special - it can be compounded with
             # regular authentication or admin
-            eventUuid = request.environ.get('X-rBuilder-Event-UUID')
+            headerName = 'X-rBuilder-Event-UUID'
+            # HTTP_THANK_YOU_DJANGO_FOR_MANGLING_THE_HEADERS
+            mangledHeaderName = 'HTTP_' + headerName.replace('-', '_').upper()
+            eventUuid = request.META.get(headerName,
+                request.META.get(mangledHeaderName))
             if eventUuid:
                 # Check if this system has such an event uuid
                 systemId = kwargs['system_id']
