@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 import datetime
-import itertools
 import sys
 import urllib
 import urlparse
