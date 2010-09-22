@@ -12,6 +12,17 @@ import os.path
 from testrunner import pathManager
 from testrunner.decorators import tests
 
+os.environ['DJANGO_SETTINGS_MODULE'] = 'mint.django_rest.settings_local'
+from django import http
+from django.conf import settings
+from django.test import utils
+
+# Django will mistakengly set this to None when running under mod_python as we
+# do in our testsuite.
+if http.parse_qsl is None:
+    from cgi import parse_qsl
+    http.parse_qsl = parse_qsl
+
 _individual = False
 
 def isIndividual():
@@ -128,6 +139,32 @@ def sortTests(tests):
     tests = [ x[1] for x in tests ]
     return tests
 
+def setup_django_database(**kwargs):
+    """
+    Code taken from django.test.simple for setting up the django database for
+    django tests.
+    """
+    try:
+        if settings.DATABASE_ENGINE == 'sqlite3':
+            os.unlink(settings.TEST_DATABASE_NAME)
+    except OSError:
+        pass
+    from django.db import connections
+    old_names = []
+    mirrors = []
+    for alias in connections:
+        connection = connections[alias]
+        # If the database is a test mirror, redirect it's connection
+        # instead of creating a test database.
+        if connection.settings_dict['TEST_MIRROR']:
+            mirrors.append((alias, connection))
+            mirror_alias = connection.settings_dict['TEST_MIRROR']
+            connections._connections[alias] = connections[mirror_alias]
+        else:
+            old_names.append((connection, connection.settings_dict['NAME']))
+            connection.creation.create_test_db(1, autoclobber=False)
+    return old_names, mirrors
+
 def main(argv=None, individual=True):
     global _individual
     _individual=individual
@@ -135,6 +172,8 @@ def main(argv=None, individual=True):
     if argv is None:
         argv = sys.argv
     from testrunner import testhelp, testhandler
+    setup_django_database()
+    utils.setup_test_environment()
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
                                             getCoverageDirs,
                                             getExcludePaths,
@@ -142,6 +181,14 @@ def main(argv=None, individual=True):
 
     handler = handlerClass(individual=_individual)
     results = handler.main(argv)
+
+    # Need to delete the database used by django tests.
+    if settings.DATABASE_ENGINE == 'sqlite3':
+        try:
+            os.unlink(settings.TEST_DATABASE_NAME)
+        except OSError:
+            pass
+
     sys.exit(results.getExitCode())
 
 if __name__ == '__main__':

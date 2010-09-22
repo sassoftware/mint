@@ -9,16 +9,14 @@ from xobj import xobj
 from conary import versions
 
 from django.template import TemplateDoesNotExist
-
 from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
-from mint.lib import x509
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
-
 from mint.django_rest.rbuilder.inventory import testsxml
+from mint.lib import x509
 
 from testrunner import testcase
 
@@ -114,6 +112,17 @@ class XML(object):
         return (node1.text, node2.text)
 
 class XMLTestCase(TestCase, testcase.MockMixIn):
+
+    def setUp(self):
+        self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
+        mintCfg = os.path.join(self.workDir, "mint.cfg")
+        file(mintCfg, "w")
+        from mint import config
+        config.RBUILDER_CONFIG = mintCfg
+        self.client = Client()
+        self.mgr = manager.Manager()
+
+
     def tearDown(self):
         TestCase.tearDown(self)
         self.unmock()
@@ -273,15 +282,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             event_uuid=eventUuid)
         systemJob.save()
         return job
-
-    def setUp(self):
-        self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
-        mintCfg = os.path.join(self.workDir, "mint.cfg")
-        file(mintCfg, "w")
-        from mint import config
-        config.RBUILDER_CONFIG = mintCfg
-        self.client = Client()
-        self.mgr = manager.Manager()
 
     def cleanUp(self):
         shutil.rmtree(self.workDir, ignore_errors=True)

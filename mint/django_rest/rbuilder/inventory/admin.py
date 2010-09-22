@@ -5,7 +5,7 @@
 #
 
 from django.contrib import admin
-from rbuilder.inventory import models as inventory_models
+from mint.django_rest.rbuilder.inventory import models as inventory_models
 
 admin.site.register(inventory_models.System)
 admin.site.register(inventory_models.Network)
