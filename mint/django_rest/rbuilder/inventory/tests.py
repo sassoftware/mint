@@ -1071,6 +1071,31 @@ class SystemsTestCase(XMLTestCase):
         self.assertTrue(system.current_state.name == models.SystemState.MOTHBALLED)
         self.assertTrue(system.current_state.description == models.SystemState.MOTHBALLED_DESC)
 
+    def testBulkSystemAdd(self):
+        xmlTempl = """\
+  <system>
+    <name>%(name)s</name>
+    <description>%(name)s</description>
+    <networks>
+      <network>
+        <deviceName>eth0</deviceName>
+        <dnsName>%(dnsName)s</dnsName>
+      </network>
+    </networks>
+  </system>
+"""
+        systems = []
+        for i in range(10):
+            params = dict(name="name %03d" % i,
+                description="description %03d" % i,
+                dnsName="dns-name-%03d" % i)
+            systems.append(xmlTempl % params)
+        xml = "<systems>" + ''.join(systems) + "</systems>"
+        url = "/api/inventory/systems"
+        response = self._post(url, data=xml)
+        self.failUnlessEqual(response.status_code, 200)
+
+
     def testSystemSave(self):
         # make sure state gets set to unmanaged
         system = models.System(name="mgoblue", 

@@ -218,8 +218,13 @@ class BaseManager(models.Manager):
                 flist = [flist]
             mods = []
             for val in flist:
+                # We force a save here, even if the parent object was
+                # abstract.
+                # XXX the save keyword should be redesigned, I thought it
+                # meant something else - passing it around was not a good
+                # idea -- misa
                 m = type_map[key].objects.load_from_object(val, request,
-                    save=save)
+                    save=True)
                 mods.append(m)
             if mods:
                 setattr(model, key, mods)
@@ -483,6 +488,15 @@ class ManagementNodeManager(SystemManager):
     Overridden because management nodes have several checks required to
     determine if the system already exists.
     """
+
+class SystemsManager(BaseManager):
+    def load(self, model_inst, accessors=None):
+        """
+        Overridden because systems has no direct representation in the db - we
+        need to load individual objects
+        """
+        model = self.model()
+        return None, model
 
 class XObjModel(models.Model):
     """

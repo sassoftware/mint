@@ -66,11 +66,11 @@ def _getXobjModel(request, model_names):
         model_names = [ model_names ]
     for model_name in model_names:
         model_xml = str_to_underscore(model_name)
-        built_model = getattr(built_model, model_xml, None)
-        if built_model is None:
+        submodel = getattr(built_model, model_xml, None)
+        if submodel is None:
             continue
         modelCls = modellib.type_map[model_name]
-        return built_model, model_name, modelCls
+        return submodel, model_name, modelCls
     raise Exception("Unexpected XML")
 
 def requires(model_names, save=True):

@@ -80,7 +80,8 @@ class Systems(modellib.XObjModel):
                 elements=['system', 'eventTypes'])
     list_fields = ['system']
     system = []
-    
+    objects = modellib.SystemsManager()
+
     def __init__(self):
         self.eventTypes = modellib.XObjHrefModel('../eventTypes/')
 

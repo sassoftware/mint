@@ -257,19 +257,14 @@ class InventorySystemsService(AbstractInventoryService):
 
     # this must remain public for rpath-tools
     @access.anonymous
-    @requires('system')
+    @requires(['system', 'systems'])
     @return_xml
-    def rest_POST(self, request, system):
-        system = self.mgr.addSystem(system, generateCertificates=True)
-        return system
-    
-    # this must remain public for rpath-tools
-    @access.anonymous
-    @requires('systems')
-    @return_xml
-    def rest_PUT(self, request, systems):
+    def rest_POST(self, request, system=None, systems=None):
+        if system is not None:
+            system = self.mgr.addSystem(system, generateCertificates=True)
+            return system
         systems = self.mgr.addSystems(systems.system)
-        return self.mgr.getSystems()
+        return self.mgr.getSystems(request)
 
     def launch(self, instanceId, targetType, targetName):
         return self.mgr.launchSystem(instanceId, targetType, targetName)
