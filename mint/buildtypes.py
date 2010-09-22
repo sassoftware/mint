@@ -142,6 +142,8 @@ xmlTagNameImageTypeMap = {
     'vmwareOvfImage':      VMWARE_OVF_IMAGE,
     'xenOvaImage':         XEN_OVA,
     'imageless':           IMAGELESS,
+    'windowsIsoImage':     APPLIANCE_ISO,
+    'wimImage':            RAW_FS_IMAGE, 
 }
 
 imageTypeXmlTagNameMap = dict([(v,k) for k,v in xmlTagNameImageTypeMap.iteritems()])
