@@ -10,7 +10,6 @@ import sys
 import os
 import os.path
 from testrunner import pathManager
-from testrunner.decorators import tests
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'mint.django_rest.settings_local'
 from django import http
@@ -171,7 +170,7 @@ def main(argv=None, individual=True):
 
     if argv is None:
         argv = sys.argv
-    from testrunner import testhelp, testhandler
+    from testrunner import testhelp
     setup_django_database()
     utils.setup_test_environment()
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
