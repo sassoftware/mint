@@ -32,7 +32,7 @@ def hasTemporaryTables():
         ret = list(cu.execute("SELECT 1 FROM sqlite_temp_master WHERE type='table'"))
         return bool(ret)
     elif drvname == 'psql':
-        return 'inventory_tmp' in connection.introspection.table_names
+        return 'inventory_tmp' in connection.introspection.table_names()
     else:
         raise Exception("Unsupported driver")
 
