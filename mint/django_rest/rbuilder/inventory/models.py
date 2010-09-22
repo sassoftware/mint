@@ -12,7 +12,7 @@ from dateutil import tz
 from conary import versions
 from conary.deps import deps
 
-from django.db import connection, models, DatabaseError
+from django.db import connection, models
 from django.db.backends import signals
 
 from mint.django_rest.deco import D
