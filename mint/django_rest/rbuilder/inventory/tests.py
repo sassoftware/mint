@@ -3,6 +3,7 @@ import datetime
 import os
 import shutil
 import tempfile
+import time
 from dateutil import tz
 from xobj import xobj
 
@@ -14,6 +15,7 @@ from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
 from mint.lib import x509
 
+from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
@@ -907,7 +909,34 @@ class SystemsTestCase(XMLTestCase):
 
         try:
             connection.queries = []
+            t0 = time.time()
             systems = self.mgr.getSystems(request)
+            t1 = time.time()
+            print "Systems generated: %d: %.2fs" % (len(systems.system), t1 - t0)
+
+            f = deco.return_xml(lambda *args, **kwargs: systems)
+            f(None, request)
+            t2 = time.time()
+            print "return_xml decorator: %.2fs" % (t2 - t1)
+
+            # Breakdown of timing
+            xml = systems.to_xml(request)
+            t3 = time.time()
+            print "    Converted to xml: %.2fs" % (t3 - t2)
+
+            doc = deco.minidom.parseString(xml)
+            t4 = time.time()
+            print "    Re-parsed xml: %.2fs" % (t4 - t3)
+
+            deco.Transformations.nodeToCamelCase(doc.documentElement)
+            t5 = time.time()
+            print "    to_camel_case: %.2fs" % (t5 - t4)
+
+            xml = doc.toxml(encoding='UTF-8')
+            t6 = time.time()
+            print "    toxml again: %.2fs" % (t6 - t5)
+            print "  Re-run of deco steps: %.2fs" % (t6 - t2)
+
             qcount = len(connection.queries)
             self.failUnlessEqual(len(systems.system), count)
             if qcount > count:

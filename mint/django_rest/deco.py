@@ -23,49 +23,56 @@ def D(field, docstring):
     field.docstring = docstring
     return field
 
-def str_to_underscore(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+class Transformations(object):
+    RE_StringToCamelCase = re.compile('(.)_([a-z])')
+    RE_StringToUnderscore_1 = re.compile('(.)([A-Z][a-z]+)')
+    RE_StringToUnderscore_2 = re.compile('([a-z0-9])([A-Z])')
+    S_Group = r'\1_\2'
 
-def to_underscore(node):
-    for name in ['tagName', 'nodeName']:
-        if hasattr(node, name):
-            setattr(node, name, str_to_underscore(getattr(node, name)))
+    @classmethod
+    def strToCamelCase(cls, name):
+        return cls.RE_StringToCamelCase.sub(cls._repl, name)
 
-    for child in node.childNodes:
-        for name in ['tagName', 'nodeName']:
-            if hasattr(child, name):
-                setattr(child, name, str_to_underscore(getattr(child, name)))
-                to_underscore(child)
+    @classmethod
+    def nodeToCamelCase(cls, node):
+        for name in cls._FieldNames:
+            v = getattr(node, name, None)
+            if v is not None:
+                setattr(node, name, cls.strToCamelCase(v))
+        for child in node.childNodes:
+            cls.nodeToCamelCase(child)
 
-def str_to_camel_case(name):
-    def repl(m):
+    @classmethod
+    def strToUnderscore(cls, name):
+        s1 = cls.RE_StringToUnderscore_1.sub(cls.S_Group, name)
+        return cls.RE_StringToUnderscore_2.sub(cls.S_Group, s1).lower()
+
+    @classmethod
+    def nodeToUnderscore(cls, node):
+        for name in cls._FieldNames:
+            v = getattr(node, name, None)
+            if v is not None:
+                setattr(node, name, cls.strToUnderscore(v))
+        for child in node.childNodes:
+            cls.nodeToUnderscore(child)
+
+    @classmethod
+    def _repl(cls, m):
         return m.group()[:-2] + m.group()[-1].upper()
-    s1 = re.sub('(.)_([a-z])', repl, name)
-    return s1
 
-def to_camel_case(node):
-    for name in ['tagName', 'nodeName']:
-        if hasattr(node, name):
-            setattr(node, name, str_to_camel_case(getattr(node, name)))
- 
-    for child in node.childNodes:
-        for name in ['tagName', 'nodeName']:
-            if hasattr(child, name):
-                setattr(child, name, str_to_camel_case(getattr(child, name)))
-                to_camel_case(child)
+    _FieldNames = ['tagName', 'nodeName']
 
 def _getXobjModel(request, model_names):
     xml = request.raw_post_data
     doc = minidom.parseString(xml)
     root_node = doc.documentElement
-    to_underscore(root_node)
+    Transformations.nodeToUnderscore(root_node)
     underscore_xml = doc.toxml(encoding='UTF-8')
     built_model = xobj.parse(underscore_xml)
     if not isinstance(model_names, list):
         model_names = [ model_names ]
     for model_name in model_names:
-        model_xml = str_to_underscore(model_name)
+        model_xml = Transformations.strToUnderscore(model_name)
         submodel = getattr(built_model, model_xml, None)
         if submodel is None:
             continue
@@ -148,7 +155,7 @@ def return_xml(function):
         request = args[1]
         xml = ret_val.to_xml(request)
         doc = minidom.parseString(xml)
-        to_camel_case(doc.documentElement)
+        Transformations.nodeToCamelCase(doc.documentElement)
         response.write(doc.toxml(encoding='UTF-8'))
         return response
 

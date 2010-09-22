@@ -289,6 +289,12 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def getSystems(self, request):
+        profiling = False
+        if profiling:
+            from django.db import settings
+            settings.DEBUG = True
+            t0 = time.time()
+            del connection.queries[:]
         cu = connection.cursor()
         cu.execute("DELETE FROM inventory_tmp")
         # XXX we will have to change this to allow for filtering too
@@ -302,6 +308,15 @@ class SystemManager(base.BaseManager):
         ret = self.bulkSerialize(request, systems, valuesMap)
         Systems = models.Systems()
         Systems.system = ret
+        if profiling:
+            settings.DEBUG = False
+            now = time.time()
+            elapsed = now - t0
+            f = file("/tmp/queries-%.2f" % now, "w")
+            for q in connection.queries:
+                f.write("qtime: %s s: %s\n\n" % (q['time'], q['sql'].strip()))
+            f.write("PID: %d; %d queries, %.2f s\n" %
+                (os.getpid(), len(connection.queries), elapsed))
         return Systems
 
     def bulkSerialize(self, request, objects, valuesMap):
