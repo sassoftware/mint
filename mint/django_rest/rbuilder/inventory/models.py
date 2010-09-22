@@ -536,7 +536,8 @@ class Job(modellib.XObjIdModel):
     job_uuid = models.CharField(max_length=64, unique=True)
     job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
         related_name='jobs')
-    event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, visible='name')
+    event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, 
+        visible='name')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
 
