@@ -781,7 +781,7 @@ class XObjModel(models.Model):
                         else:
                             accessorValues = None
                     else:
-                        accessorValues = values[accessorName]
+                        accessorValues = values.get(accessorName)
                     if accessorValues is not None:
                         for rel_mod, subvalues in accessorValues:
                             rel_mod = rel_mod.serialize(request, values=subvalues)
