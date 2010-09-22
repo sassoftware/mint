@@ -55,24 +55,35 @@ def to_camel_case(node):
                 setattr(child, name, str_to_camel_case(getattr(child, name)))
                 to_camel_case(child)
 
-def requires(model_name, save=True):
+def _getXobjModel(request, model_names):
+    xml = request.raw_post_data
+    doc = minidom.parseString(xml)
+    root_node = doc.documentElement
+    to_underscore(root_node)
+    underscore_xml = doc.toxml(encoding='UTF-8')
+    built_model = xobj.parse(underscore_xml)
+    if not isinstance(model_names, list):
+        model_names = [ model_names ]
+    for model_name in model_names:
+        model_xml = str_to_underscore(model_name)
+        built_model = getattr(built_model, model_xml, None)
+        if built_model is None:
+            continue
+        modelCls = modellib.type_map[model_name]
+        return built_model, model_name, modelCls
+    raise Exception("Unexpected XML")
+
+def requires(model_names, save=True):
     """
     Decorator that parses the post data on a request into the class
     specified by modelClass.
+    We can specify multiple model names that we handle.
     """
     def decorate(function):
 
         def inner(*args, **kw):
             request = args[1]
-            xml = request.raw_post_data
-            doc = minidom.parseString(xml)
-            root_node = doc.documentElement
-            to_underscore(root_node)
-            underscore_xml = doc.toxml(encoding='UTF-8')
-            built_model = xobj.parse(underscore_xml)
-            model_xml = str_to_underscore(model_name)
-            built_model = getattr(built_model, model_xml)
-            modelCls = modellib.type_map[model_name]
+            built_model, model_name, modelCls  = _getXobjModel(request, model_names)
             # Extract the pk field
             if modelCls._meta.has_auto_field:
                 autoField = modelCls._meta.auto_field
