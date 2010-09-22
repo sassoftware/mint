@@ -19,6 +19,7 @@ class rBuilderTest(TestPackageRecipe):
         'conary-repository:python', 
         'django:python',
         'django-db-postgres:python',
+        'django-db-sqlite3:python',
         'django-rest-interface:python',
         'dnspython:python',
         'decorator:python',
