@@ -1,8 +1,9 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
-# All rights reserved
+# All rights reserved.
 #
+
 import os
 import sys
 
@@ -154,7 +155,8 @@ class MintConfig(ConfigFile):
 
     # User authorization
     adminNewProjects        = (CfgBool, False, "Whether project creation is restricted to site admins")
-    adminNewUsers           = (CfgBool, False, "Whether new users should have site admin privileges")
+    adminNewUsers           = (CfgBool, False,
+            "Whether user creation is restricted to site admins.")
 
     # Downloads
     redirectUrlType         = (CfgInt, urltypes.AMAZONS3)
