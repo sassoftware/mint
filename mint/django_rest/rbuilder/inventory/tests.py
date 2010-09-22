@@ -850,6 +850,127 @@ class SystemsTestCase(XMLTestCase):
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
 
+    def testBenchmarkQueryCount(self):
+        # Clean up
+        models.System.objects.all().delete()
+        count = 50
+        zone = models.Zone.objects.get(pk=1)
+        flv = 'is:x86'
+        ver0 = models.Version(full='/localhost@rpath:linux/1-1-1',
+            ordering='1234567890.12', flavor=flv)
+        ver0.save()
+        ver01 = models.Version(full='/localhost@rpath:linux/1-2-1',
+            ordering='1234567890.13', flavor=flv)
+        ver01.save()
+        trv0 = models.Trove(name='group-foo', version=ver0, flavor=flv)
+        trv0.save()
+        trv0.available_updates.add(ver01)
+
+        eventTypeCount = len(models.EventType.EVENT_TYPES)
+        for i in range(count):
+            ver = models.Version(full='/localhost@rpath:linux/2-1-%d' % i,
+                ordering=str(1234567891.12 + 10 * i), flavor=flv)
+            ver.save()
+            ver1 = models.Version(full='/localhost@rpath:linux/2-2-%d' % i,
+                ordering=str(1234567891.22 + 10 * i), flavor=flv)
+            ver1.save()
+            trv = models.Trove(name='group-foo', version=ver, flavor=flv)
+            trv.save()
+            trv.available_updates.add(ver1)
+
+            system = models.System(
+                local_uuid = "local-uuid-%03d" % i,
+                generated_uuid = "generated-uuid-%03d" % i,
+                name = "name-%03d" % i,
+                description = "description-%03d" % i,
+                managing_zone = zone,
+            )
+            system.save()
+            system.installed_software.add(trv0)
+            system.installed_software.add(trv)
+            network = models.Network(
+                dns_name = "dns-name-%3d" % i,
+                system = system)
+            network.save()
+
+            eventUuid = "event-uuid-%03d" % i
+            jobUuid = "rmake-job-%03d" % i
+            eventTypeName = models.EventType.EVENT_TYPES[i % eventTypeCount][0]
+            self._newJob(system, eventUuid, jobUuid, eventTypeName)
+
+        class Request(object):
+            def build_absolute_uri(slf, href=None):
+                return "blah%s" % href
+        request = Request()
+        from django.db import settings, connection
+        settings.DEBUG = True
+
+        try:
+            connection.queries = []
+            systems = self.mgr.getSystems(request)
+            qcount = len(connection.queries)
+            self.failUnlessEqual(len(systems.system), count)
+            if qcount > count:
+                f = file("/tmp/queries", "w")
+                for x in connection.queries:
+                    f.write("%s\n" % x['sql'])
+                    f.write("\n\n")
+                f.close()
+            self.failUnless(qcount < count,
+                "Expected fewer than %s queries; got %s" % (count, qcount))
+        finally:
+            connection.queries = []
+            settings.DEBUG = False
+        return
+
+        if 0:
+            system = models.System(name="a")
+            system.save()
+            network = models.Network(dns_name='adf', system=system)
+            network.save()
+
+            del connection.queries[:]
+            cu = connection.cursor()
+            sql = """
+                INSERT INTO inventory_system_temp (system_id)
+                SELECT system_id FROM inventory_system"""
+            cu.execute(sql)
+            systems = models.System.objects.select_related(
+                'current_state', 'target', 'launching_user', 'managing_zone',
+                'management_node'
+                ).extra(tables=["inventory_system_temp"],
+                where=["inventory_system_temp.system_id = inventory_system.system_id"])
+            networks = models.Network.objects.extra(
+                tables=["inventory_system_temp"],
+                where=["inventory_system_temp.system_id = inventory_system_network.system_id"])
+            class DummyQS(object):
+                def __init__(self):
+                    self.data = []
+                def all(self):
+                    return self.data
+            systemsMap = {}
+            for system in systems:
+                systemsMap[system.system_id] = system
+            for network in networks:
+                systemsMap[network.system.system_id].networks.add(network)
+            print systems
+            print networks
+
+        del connection.queries[:]
+        if 1:
+            systems = self.mgr.getSystems(request)
+        else:
+            system = models.System.objects.select_related('current_state',
+                'target', 'launching_user', 'managing_zone').get(pk=10)
+            system.to_xml(request=request)
+
+        f = file("/tmp/queries", "w")
+        for x in connection.queries:
+            f.write("%s\n" % x['sql'])
+            f.write("\n\n")
+        f.flush()
+        print len(connection.queries)
+
     def testSystemPutAuth(self):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'

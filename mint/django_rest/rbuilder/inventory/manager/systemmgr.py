@@ -167,11 +167,160 @@ class SystemManager(base.BaseManager):
         system.delete()
 
     @base.exposed
-    def getSystems(self):
+    def XXXgetSystems(self):
         Systems = models.Systems()
-        Systems.system = list(models.System.objects.all())
+        qs = models.System.objects.select_related(
+            'current_state', 'target', 'launching_user', 'managing_zone',
+            'management_node', )
+        Systems.system = list(qs)
         return Systems
-    
+
+    @classmethod
+    def _getClassName(cls, field):
+        xobj = getattr(field, '_xobj', None)
+        if xobj:
+            clsName = xobj.tag
+        else:
+            clsName = field._meta.verbose_name
+        return models.modellib.type_map[clsName]
+
+    def bulkLoad(self, cursor, baseCls, depth):
+        baseTableName = baseCls._meta.db_table
+        baseTablePkName = baseCls._meta.auto_field.name
+        baseObjects = baseCls.objects.extra(
+            select = dict(_baseId = 'inventory_tmp.res_id'),
+            tables=["inventory_tmp"],
+            where=["inventory_tmp.res_id = %s.%s" %
+                        (baseTableName, baseTablePkName),
+                   "inventory_tmp.depth = %s" % depth])
+        baseObjectsMap = dict((x.pk, x) for x in baseObjects)
+        valuesMap = {}
+        for fk in baseCls.iterForeignKeys():
+            cls = self._getClassName(fk.rel.to)
+            dbTable = fk.rel.to._meta.db_table
+            dbColumn = fk.rel.field_name
+            # Because this is a pure FK, we lose track of the source object,
+            # so we add it as an extra select
+            objects = cls.objects.extra(
+                select = dict(_baseId = 'inventory_tmp.res_id'),
+                tables=["inventory_tmp", baseTableName, dbTable],
+                where=["inventory_tmp.res_id = %s.%s" %
+                        (baseTableName, baseTablePkName),
+                       "%s.%s = %s.%s" % (baseTableName, fk.column,
+                            dbTable, dbColumn),
+                   "inventory_tmp.depth = %s" % depth])
+            if objects:
+                valuesMap[fk.name] = dict((x._baseId, x) for x in objects)
+        for fk in baseCls.iterAccessors(withHidden=False):
+            if getattr(fk.field, 'Deferred', False):
+                # XXX FIXME
+                continue
+            cls = self._getClassName(fk.model)
+            dbTable = fk.opts.db_table
+            dbColumn = fk.field.column
+            objects = cls.objects.extra(
+                tables=["inventory_tmp", dbTable],
+                where=["inventory_tmp.res_id = %s.%s" %
+                            (dbTable, dbColumn),
+                   "inventory_tmp.depth = %s" % depth])
+            vmKey = fk.get_accessor_name()
+            valuesMap[vmKey] = vmap = {}
+            # Prepare the values. Accessor values are lists
+            for obj in objects:
+                # k = getattr(getattr(x, fk.field.name)
+                k = getattr(obj, dbColumn)
+                # We're cheating a bit. We know the base object is related to
+                # this object already, so we're adding it as a value. This
+                # prevents another recursive bulkLoad
+                revFieldName = fk.field.related.field.name
+                svmap = { revFieldName : baseObjectsMap[k] }
+                vmap.setdefault(k, []).append((obj, svmap))
+        for m2m in baseCls.iterM2MAccessors(withHidden=False):
+            cls = m2m.rel.to
+            #if m2m.rel.through:
+            #    cls = m2m.rel.through
+            #else:
+            #    cls = self._getClassName(m2m.model)
+            field = m2m.m2m_field_name()
+            m2mTable = m2m.m2m_db_table()
+            m2mFieldFrom = getattr(m2m.rel.through, field).field.rel.field_name
+            toTable = cls._meta.db_table
+            toField = m2m.rel.get_related_field().name
+
+            # Track objects for this m2m relationship
+            sql = """
+                SELECT DISTINCT inventory_tmp.res_id, %s.%s
+                  FROM inventory_tmp
+                  JOIN %s ON (inventory_tmp.res_id = %s.%s)
+                 WHERE inventory_tmp.depth = %%s
+            """ % (m2mTable, toField, m2mTable, m2mTable, m2mFieldFrom)
+            subobjMap = {}
+            for (resId, relId) in cursor.execute(sql, [ depth ]):
+                subobjMap.setdefault(relId, []).append(resId)
+
+            sql = """
+                DELETE FROM inventory_tmp WHERE depth = %s
+            """
+            cursor.execute(sql, [ depth + 1 ])
+            sql = """
+                INSERT INTO inventory_tmp (res_id, depth)
+                SELECT DISTINCT %s.%s, %%s
+                  FROM inventory_tmp
+                  JOIN %s ON (inventory_tmp.res_id = %s.%s)
+                 WHERE inventory_tmp.depth = %%s
+            """ % (m2mTable, toField,
+                m2mTable, m2mTable, m2mFieldFrom)
+            cursor.execute(sql, [ depth + 1, depth ])
+
+            objects, subvaluesMap = self.bulkLoad(cursor, cls, depth + 1)
+            vmKey = m2m.name
+            valuesMap[vmKey] = vmap = {}
+            for obj in objects:
+                objPk = obj.pk
+                baseObjectIds = subobjMap.get(objPk, [])
+                subvMap = subvaluesMap.get(objPk, {})
+                for baseObjectId in baseObjectIds:
+                    vmap.setdefault(baseObjectId, []).append((obj, subvMap))
+        # Reassemble valuesMap to be keyed on the baseObject's pk
+        retvMap = {}
+        for vmKey, vhash in valuesMap.items():
+            for resId, values in vhash.items():
+                retvMap.setdefault(resId, {})[vmKey] = values
+        return baseObjects, retvMap
+
+    @base.exposed
+    def getSystems(self, request):
+        nullableFKs = [
+            'current_state', 'target', 'launching_user',
+            'managing_zone', 'management_node',
+        ]
+        cu = connection.cursor()
+        cu.execute("DELETE FROM inventory_tmp")
+        # XXX we will have to change this to allow for filtering too
+        sql = """
+            INSERT INTO inventory_tmp (res_id, depth)
+            SELECT system_id, 0 FROM inventory_system"""
+        cu.execute(sql)
+        baseCls = models.System
+        depth = 0
+        systems, valuesMap = self.bulkLoad(cu, baseCls, depth)
+        ret = self.bulkSerialize(request, systems, valuesMap)
+        Systems = models.Systems()
+        Systems.system = ret
+        return Systems
+
+    def bulkSerialize(self, request, objects, valuesMap):
+        ret = []
+        for obj in objects:
+            pk = obj.pk
+            ret.append(self.bulkSerializeOne(request, obj,
+                valuesMap.get(pk, {})))
+        return ret
+
+    def bulkSerializeOne(self, request, obj, values):
+        ret = obj.serialize(request, values=values)
+        return ret
+
     @base.exposed
     def getManagementNode(self, management_node_id):
         managementNode = models.ManagementNode.objects.get(pk=management_node_id)

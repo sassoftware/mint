@@ -244,3 +244,11 @@ class PkiCertificates(modellib.XObjModel):
     ca_serial_index = models.IntegerField(null=True)
     time_issued = modellib.DateTimeUtcField(null=False)
     time_expired = modellib.DateTimeUtcField(null=False)
+
+class TemporarySystem(modellib.XObjModel):
+    # This table is created in schema.py as a temporary table
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = 'inventory_tmp'
+    res_id = models.IntegerField(null=False)
+    depth = models.IntegerField(null=False)
