@@ -33,9 +33,7 @@ class ExceptionLoggerMiddleware(object):
         tb = ''.join(traceback.format_tb(ei[2]))
         msg = str(ei[1])
 
-        log.exception("Unhandled error in django handler:\n")
-        log.exception(msg)
-        log.exception(tb)
+        log.error("Unhandled error in django handler:", exc_info=ei)
 
         code = 500
         fault = models.Fault(code=code, message=msg, traceback=tb)
