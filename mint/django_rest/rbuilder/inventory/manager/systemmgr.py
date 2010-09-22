@@ -244,7 +244,6 @@ class SystemManager(base.BaseManager):
             field = m2m.m2m_field_name()
             m2mTable = m2m.m2m_db_table()
             m2mFieldFrom = getattr(m2m.rel.through, field).field.rel.field_name
-            toTable = cls._meta.db_table
             toField = m2m.rel.get_related_field().name
 
             # Track objects for this m2m relationship
@@ -290,10 +289,6 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def getSystems(self, request):
-        nullableFKs = [
-            'current_state', 'target', 'launching_user',
-            'managing_zone', 'management_node',
-        ]
         cu = connection.cursor()
         cu.execute("DELETE FROM inventory_tmp")
         # XXX we will have to change this to allow for filtering too
