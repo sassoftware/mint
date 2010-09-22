@@ -12,7 +12,8 @@ from dateutil import tz
 from conary import versions
 from conary.deps import deps
 
-from django.db import models
+from django.db import connection, models, DatabaseError
+from django.db.backends import signals
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
@@ -21,6 +22,30 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from xobj import xobj
 
 Cache = modellib.Cache
+
+def hasTemporaryTables():
+    drvname = connection.client.executable_name
+    if drvname == 'sqlite3':
+        # Bummer. sqlite3 won't report temp tables in sqlite_master, so django
+        # won't report them in introspection.table_names
+        cu = connection.cursor()
+        ret = list(cu.execute("SELECT 1 FROM sqlite_temp_master WHERE type='table'"))
+        return bool(ret)
+    elif drvname == 'psql':
+        return 'inventory_tmp' in connection.introspection.table_names
+    else:
+        raise Exception("Unsupported driver")
+
+def createTemporaryTables(**kwargs):
+    if not hasTemporaryTables():
+        cu = connection.cursor()
+        cu.execute("""
+            CREATE TEMPORARY TABLE inventory_tmp (
+                res_id INTEGER NOT NULL,
+                depth INTEGER NOT NULL
+        )""")
+# This registers the function to be executed when the connection is created
+signals.connection_created.connect(createTemporaryTables)
 
 class Fault(modellib.XObjModel):
     class Meta:
