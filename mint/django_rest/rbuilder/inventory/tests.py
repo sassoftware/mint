@@ -921,55 +921,6 @@ class SystemsTestCase(XMLTestCase):
         finally:
             connection.queries = []
             settings.DEBUG = False
-        return
-
-        if 0:
-            system = models.System(name="a")
-            system.save()
-            network = models.Network(dns_name='adf', system=system)
-            network.save()
-
-            del connection.queries[:]
-            cu = connection.cursor()
-            sql = """
-                INSERT INTO inventory_system_temp (system_id)
-                SELECT system_id FROM inventory_system"""
-            cu.execute(sql)
-            systems = models.System.objects.select_related(
-                'current_state', 'target', 'launching_user', 'managing_zone',
-                'management_node'
-                ).extra(tables=["inventory_system_temp"],
-                where=["inventory_system_temp.system_id = inventory_system.system_id"])
-            networks = models.Network.objects.extra(
-                tables=["inventory_system_temp"],
-                where=["inventory_system_temp.system_id = inventory_system_network.system_id"])
-            class DummyQS(object):
-                def __init__(self):
-                    self.data = []
-                def all(self):
-                    return self.data
-            systemsMap = {}
-            for system in systems:
-                systemsMap[system.system_id] = system
-            for network in networks:
-                systemsMap[network.system.system_id].networks.add(network)
-            print systems
-            print networks
-
-        del connection.queries[:]
-        if 1:
-            systems = self.mgr.getSystems(request)
-        else:
-            system = models.System.objects.select_related('current_state',
-                'target', 'launching_user', 'managing_zone').get(pk=10)
-            system.to_xml(request=request)
-
-        f = file("/tmp/queries", "w")
-        for x in connection.queries:
-            f.write("%s\n" % x['sql'])
-            f.write("\n\n")
-        f.flush()
-        print len(connection.queries)
 
     def testSystemPutAuth(self):
         localUuid = 'localuuid001'
