@@ -254,7 +254,7 @@ class SystemManager(base.BaseManager):
                  WHERE inventory_tmp.depth = %%s
             """ % (m2mTable, toField, m2mTable, m2mTable, m2mFieldFrom)
             subobjMap = {}
-            for (resId, relId) in cursor.execute(sql, [ depth ]):
+            for (resId, relId) in cursor.execute(sql, [ depth ]) or []:
                 subobjMap.setdefault(relId, []).append(resId)
 
             sql = """
