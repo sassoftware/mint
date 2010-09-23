@@ -63,14 +63,14 @@ class Inventory(modellib.XObjModel):
                 tag = 'inventory')
 
     def __init__(self):
-        self.zones = modellib.XObjHrefModel('zones/')
-        self.management_nodes = modellib.XObjHrefModel('management_nodes/')
-        self.networks = modellib.XObjHrefModel('networks/')
-        self.systems = modellib.XObjHrefModel('systems/')
-        self.log = modellib.XObjHrefModel('log/')
-        self.event_types = modellib.XObjHrefModel('event_types/')
-        self.system_states = modellib.XObjHrefModel('system_states/')
-        self.job_states = modellib.XObjHrefModel('job_states/')
+        self.zones = modellib.XObjHrefModel('zones')
+        self.management_nodes = modellib.XObjHrefModel('management_nodes')
+        self.networks = modellib.XObjHrefModel('networks')
+        self.systems = modellib.XObjHrefModel('systems')
+        self.log = modellib.XObjHrefModel('log')
+        self.event_types = modellib.XObjHrefModel('event_types')
+        self.system_states = modellib.XObjHrefModel('system_states')
+        self.job_states = modellib.XObjHrefModel('job_states')
 
 class Systems(modellib.XObjModel):
     class Meta:
@@ -82,7 +82,7 @@ class Systems(modellib.XObjModel):
     objects = modellib.SystemsManager()
 
     def __init__(self):
-        self.event_types = modellib.XObjHrefModel('../event_types/')
+        self.event_types = modellib.XObjHrefModel('../event_types')
 
     def save(self):
         return [s.save() for s in self.system]
@@ -148,7 +148,7 @@ class Networks(modellib.XObjModel):
     list_fields = ['network']
     
     def __init__(self):
-        self.systems = modellib.XObjHrefModel('../systems/')
+        self.systems = modellib.XObjHrefModel('../systems')
     
 class Zones(modellib.XObjModel):
     class Meta:

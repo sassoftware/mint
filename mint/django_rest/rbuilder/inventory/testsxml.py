@@ -3,19 +3,19 @@
 inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
-  <event_types href="http://testserver/api/inventory/event_types/"/>
-  <job_states href="http://testserver/api/inventory/job_states/"/>
-  <log href="http://testserver/api/inventory/log/"/>
-  <zones href="http://testserver/api/inventory/zones/"/>
-  <management_nodes href="http://testserver/api/inventory/management_nodes/"/>
-  <systems href="http://testserver/api/inventory/systems/"/>
-  <system_states href="http://testserver/api/inventory/system_states/"/>
-  <networks href="http://testserver/api/inventory/networks/"/>
+  <event_types href="http://testserver/api/inventory/event_types"/>
+  <job_states href="http://testserver/api/inventory/job_states"/>
+  <log href="http://testserver/api/inventory/log"/>
+  <zones href="http://testserver/api/inventory/zones"/>
+  <management_nodes href="http://testserver/api/inventory/management_nodes"/>
+  <systems href="http://testserver/api/inventory/systems"/>
+  <system_states href="http://testserver/api/inventory/system_states"/>
+  <networks href="http://testserver/api/inventory/networks"/>
 </inventory>"""
 
 event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/inventory/event_types/1/">
+<event_type id="http://testserver/api/inventory/event_types/1">
   <description>on-demand registration event</description>
   <priority>110</priority>
   <job_set/>
@@ -27,7 +27,7 @@ event_type_xml="""\
 event_types_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <event_types>
-  <event_type id="http://testserver/api/inventory/event_types/1/">
+  <event_type id="http://testserver/api/inventory/event_types/1">
     <name>system registration</name>
     <priority>110</priority>
     <job_set/>
@@ -35,7 +35,7 @@ event_types_xml="""\
     <description>on-demand registration event</description>
     <system_events/>
   </event_type>
-  <event_type id="http://testserver/api/inventory/event_types/2/">
+  <event_type id="http://testserver/api/inventory/event_types/2">
     <name>immediate system poll</name>
     <priority>105</priority>
     <job_set/>
@@ -43,7 +43,7 @@ event_types_xml="""\
     <description>on-demand polling event</description>
     <system_events/>
   </event_type>
-  <event_type id="http://testserver/api/inventory/event_types/3/">
+  <event_type id="http://testserver/api/inventory/event_types/3">
     <name>system poll</name>
     <priority>50</priority>
     <job_set/>
@@ -51,7 +51,7 @@ event_types_xml="""\
     <description>standard polling event</description>
     <system_events/>
   </event_type>
-  <event_type id="http://testserver/api/inventory/event_types/4/">
+  <event_type id="http://testserver/api/inventory/event_types/4">
     <description>apply an update to a system</description>
     <event_type_id>4</event_type_id>
     <job_set/>
@@ -59,7 +59,7 @@ event_types_xml="""\
     <priority>50</priority>
     <system_events/>
   </event_type>
-  <event_type id="http://testserver/api/inventory/event_types/5/">
+  <event_type id="http://testserver/api/inventory/event_types/5">
     <description>on-demand apply an update to a system</description>
     <event_type_id>5</event_type_id>
     <job_set/>
@@ -67,7 +67,7 @@ event_types_xml="""\
     <priority>105</priority>
     <system_events/>
   </event_type>
-  <event_type id="http://testserver/api/inventory/event_types/6/">
+  <event_type id="http://testserver/api/inventory/event_types/6">
     <description>shutdown a system</description>
     <event_type_id>6</event_type_id>
     <job_set/>
@@ -75,7 +75,7 @@ event_types_xml="""\
     <priority>50</priority>
     <system_events/>
   </event_type>
-  <event_type id="http://testserver/api/inventory/event_types/7/">
+  <event_type id="http://testserver/api/inventory/event_types/7">
     <description>on-demand shutdown a system</description>
     <event_type_id>7</event_type_id>
     <job_set/>
@@ -87,7 +87,7 @@ event_types_xml="""\
 
 event_type_put_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/inventory/event_types/1/">
+<event_type id="http://testserver/api/inventory/event_types/1">
   <description>on-demand registration event</description>
   <priority>1</priority>
   <job_set/>
@@ -98,7 +98,7 @@ event_type_put_xml="""\
 
 event_type_put_name_change_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
-<event_type id="http://testserver/api/inventory/event_types/1/">
+<event_type id="http://testserver/api/inventory/event_types/1">
   <description>on-demand registration event</description>
   <priority>110</priority>
   <job_set/>
@@ -110,7 +110,7 @@ event_type_put_name_change_xml="""\
 zones_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zones>
-  <zone id="http://testserver/api/inventory/zones/1/">
+  <zone id="http://testserver/api/inventory/zones/1">
     <description>Some local zone</description>
     <created_date>%s</created_date>
     <name>Local Zone</name>
@@ -118,7 +118,7 @@ zones_xml = """\
       <system id="http://testserver/api/inventory/systems/1">
         <agent_port/>
         <created_date>2010-09-14T14:58:55.554533+00:00</created_date>
-        <current_state id="http://testserver/api/inventory/system_states/1/">
+        <current_state id="http://testserver/api/inventory/system_states/1">
           <created_date>2010-09-14T14:58:40.939184+00:00</created_date>
           <description>Unmanaged</description>
           <name>unmanaged</name>
@@ -129,17 +129,17 @@ zones_xml = """\
         <has_active_jobs>False</has_active_jobs>
         <hostname/>
         <installed_software/>
-        <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-          <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-          <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-          <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-          <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+        <jobs id="http://testserver/api/inventory/systems/1/jobs">
+          <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+          <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+          <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+          <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
         </jobs>
         <launch_date/>
         <launching_user/>
         <local_uuid/>
         <management_node/>
-        <managing_zone href="http://testserver/api/inventory/zones/1/"/>
+        <managing_zone href="http://testserver/api/inventory/zones/1"/>
         <name>foo</name>
         <networks/>
         <os_major_version/>
@@ -148,9 +148,9 @@ zones_xml = """\
         <registration_date/>
         <ssl_client_certificate/>
         <ssl_server_certificate/>
-        <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+        <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
         <system_id>1</system_id>
-        <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+        <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
         <target/>
         <target_system_description/>
         <target_system_id/>
@@ -166,7 +166,7 @@ zones_xml = """\
 
 zone_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/inventory/zones/1/">
+<zone id="http://testserver/api/inventory/zones/1">
   <description>Some local zone</description>
   <created_date>%s</created_date>
   <name>Local Zone</name>
@@ -186,7 +186,7 @@ zone_post_xml = """\
 
 zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/inventory/zones/1/">
+<zone id="http://testserver/api/inventory/zones/1">
   <description>Some local zone</description>
   <created_date>%s</created_date>
   <name>Local Zone</name>
@@ -198,7 +198,7 @@ zone_post_response_xml = """\
 
 zone_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<zone id="http://testserver/api/inventory/zones/1/">
+<zone id="http://testserver/api/inventory/zones/1">
   <description>zoneputdesc</description>
   <name>zoneputname</name>
 </zone>
@@ -207,8 +207,8 @@ zone_put_xml = """\
 networks_xml = """\
 <?xml version="1.0"?>
 <networks>
-  <systems href="http://testserver/api/inventory/systems/"/>
-  <network id="http://testserver/api/inventory/networks/1/">
+  <systems href="http://testserver/api/inventory/systems"/>
+  <network id="http://testserver/api/inventory/networks/1">
     <active/>
     <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
     <device_name>eth0</device_name>
@@ -225,7 +225,7 @@ networks_xml = """\
 
 network_xml = """\
 <?xml version="1.0"?>
-<network id="http://testserver/api/inventory/networks/1/">
+<network id="http://testserver/api/inventory/networks/1">
   <active/>
   <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
   <device_name>eth0</device_name>
@@ -241,7 +241,7 @@ network_xml = """\
 
 network_put_xml = """\
 <?xml version="1.0"?>
-<network id="http://testserver/api/inventory/networks/1/">
+<network id="http://testserver/api/inventory/networks/1">
   <active/>
   <created_date>2010-09-15T21:41:40.142078+00:00</created_date>
   <device_name>eth0</device_name>
@@ -258,61 +258,61 @@ network_put_xml = """\
 system_states_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_states>
-  <system_state id="http://testserver/api/inventory/system_states/1/">
+  <system_state id="http://testserver/api/inventory/system_states/1">
     <system_state_id>1</system_state_id>
     <description>Unmanaged</description>
     <name>unmanaged</name>
     <created_date>2010-09-03T18:23:42.656549+00:00</created_date>
   </system_state>
-  <system_state id="http://testserver/api/inventory/system_states/2/">
+  <system_state id="http://testserver/api/inventory/system_states/2">
     <system_state_id>2</system_state_id>
     <description>Polling</description>
     <name>registered</name>
     <created_date>2010-09-03T18:23:42.658249+00:00</created_date>
   </system_state>
-  <system_state id="http://testserver/api/inventory/system_states/3/">
+  <system_state id="http://testserver/api/inventory/system_states/3">
     <system_state_id>3</system_state_id>
     <description>Online</description>
     <name>responsive</name>
     <created_date>2010-09-03T18:23:42.659883+00:00</created_date>
   </system_state>
-  <system_state id="http://testserver/api/inventory/system_states/4/">
+  <system_state id="http://testserver/api/inventory/system_states/4">
     <system_state_id>4</system_state_id>
     <description>Not responding: unknown</description>
     <name>non-responsive-unknown</name>
     <created_date>2010-09-03T18:23:42.661629+00:00</created_date>
   </system_state>
-  <system_state id="http://testserver/api/inventory/system_states/5/">
+  <system_state id="http://testserver/api/inventory/system_states/5">
     <system_state_id>5</system_state_id>
     <description>Not responding: network unreachable</description>
     <name>non-responsive-net</name>
     <created_date>2010-09-03T18:23:42.663290+00:00</created_date>
   </system_state>
-  <system_state id="http://testserver/api/inventory/system_states/6/">
+  <system_state id="http://testserver/api/inventory/system_states/6">
     <system_state_id>6</system_state_id>
     <description>Not responding: host unreachable</description>
     <name>non-responsive-host</name>
     <created_date>2010-09-03T18:23:42.664943+00:00</created_date>
     </system_state>
-    <system_state id="http://testserver/api/inventory/system_states/7/">
+    <system_state id="http://testserver/api/inventory/system_states/7">
       <system_state_id>7</system_state_id>
       <description>Not responding: shutdown</description>
       <name>non-responsive-shutdown</name>
       <created_date>2010-09-03T18:23:42.666612+00:00</created_date>
     </system_state>
-    <system_state id="http://testserver/api/inventory/system_states/8/">
+    <system_state id="http://testserver/api/inventory/system_states/8">
       <system_state_id>8</system_state_id>
       <description>Not responding: suspended</description>
       <name>non-responsive-suspended</name>
       <created_date>2010-09-03T18:23:42.668266+00:00</created_date>
     </system_state>
-    <system_state id="http://testserver/api/inventory/system_states/9/">
+    <system_state id="http://testserver/api/inventory/system_states/9">
       <system_state_id>9</system_state_id>
       <description>Stale</description>
       <name>dead</name>
       <created_date>2010-09-03T18:23:42.669899+00:00</created_date>
     </system_state>
-    <system_state id="http://testserver/api/inventory/system_states/10/">
+    <system_state id="http://testserver/api/inventory/system_states/10">
       <system_state_id>10</system_state_id>
       <description>Retired</description>
       <name>mothballed</name>
@@ -322,7 +322,7 @@ system_states_xml = """\
 
 system_state_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system_state id="http://testserver/api/inventory/system_states/1/">
+<system_state id="http://testserver/api/inventory/system_states/1">
   <system_state_id>1</system_state_id>
   <description>Unmanaged</description>
   <name>unmanaged</name>
@@ -334,13 +334,13 @@ management_nodes_xml = """\
 <management_nodes>
   <management_node id="http://testserver/api/inventory/management_nodes/1">
     <agent_port/>
-    <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+    <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <os_major_version/>
     <registration_date/>
     <generated_uuid>test management node guuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
     <networks>
-      <network id="http://testserver/api/inventory/networks/1/">
+      <network id="http://testserver/api/inventory/networks/1">
         <active/>
         <created_date>%s</created_date>
         <device_name>eth0</device_name>
@@ -366,24 +366,24 @@ management_nodes_xml = """\
     <launch_date/>
     <local>true</local>
     <installed_software/>
-    <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-      <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-      <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-      <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-      <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+    <jobs id="http://testserver/api/inventory/systems/1/jobs">
+      <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+      <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
     </jobs>
     <description>test management node desc</description>
-    <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
     <target_system_id/>
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
     <os_minor_version/>
     <target/>
-    <zone href="http://testserver/api/inventory/zones/2/"/>
+    <zone href="http://testserver/api/inventory/zones/2"/>
     <system_ptr href="http://testserver/api/inventory/systems/1"/>
     <local_uuid>test management node luuid</local_uuid>
-    <current_state id="http://testserver/api/inventory/system_states/2/">
+    <current_state id="http://testserver/api/inventory/system_states/2">
       <created_date>%s</created_date>
       <description>Polling</description>
       <name>registered</name>
@@ -399,13 +399,13 @@ management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port/>
-  <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <os_major_version/>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -431,24 +431,24 @@ management_node_xml = """\
   <launch_date/>
   <local>true</local>
   <installed_software/>
-  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
   </jobs>
   <description>test management node desc</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
   <os_minor_version/>
   <target/>
-  <zone href="http://testserver/api/inventory/zones/2/"/>
+  <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
     <description>Polling</description>
     <name>registered</name>
@@ -466,7 +466,7 @@ management_node_post_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -481,7 +481,7 @@ management_node_post_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <zone href="http://testserver/api/inventory/zones/1/"/>
+  <zone href="http://testserver/api/inventory/zones/1"/>
   <managing_zone/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
@@ -499,13 +499,13 @@ management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port/>
-  <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <os_major_version/>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -519,16 +519,16 @@ management_node_post_response_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <zone href="http://testserver/api/inventory/zones/1/"/>
+  <zone href="http://testserver/api/inventory/zones/1"/>
   <node_jid>abcd</node_jid>
   <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <managing_zone/>
-  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
   </jobs>
   <hostname>myhostname</hostname>
   <name>test management node</name>
@@ -539,7 +539,7 @@ management_node_post_response_xml = """\
   <local>true</local>
   <installed_software/>
   <description>test management node desc</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -548,7 +548,7 @@ management_node_post_response_xml = """\
   <target/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
     <description>Polling</description>
     <name>registered</name>
@@ -566,7 +566,7 @@ management_node_zone_post_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -590,7 +590,7 @@ management_node_zone_post_xml = """\
   <local>True</local>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
-  <zone href="http://testserver/api/inventory/zones/2/"/>
+  <zone href="http://testserver/api/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
   <os_type/>
 </management_node>"""
@@ -599,13 +599,13 @@ management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port/>
-  <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <os_major_version/>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -631,24 +631,24 @@ management_node_zone_post_response_xml = """\
   <launch_date/>
   <local>true</local>
   <installed_software/>
-  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
   </jobs>
   <description>test management node desc</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
   <os_minor_version/>
   <target/>
-  <zone href="http://testserver/api/inventory/zones/2/"/>
+  <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
     <description>Polling</description>
     <name>registered</name>
@@ -661,12 +661,12 @@ management_node_zone_post_response_xml = """\
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
-  <event_types href="http://testserver/api/inventory/event_types/"/>
+  <event_types href="http://testserver/api/inventory/event_types"/>
   <system id="http://testserver/api/inventory/systems/2">
     <agent_port/>
     <registration_date/>
     <created_date>2010-08-18T22:28:26+00:00</created_date>
-    <current_state id="http://testserver/api/inventory/system_states/1/">
+    <current_state id="http://testserver/api/inventory/system_states/1">
       <description>Unmanaged</description>
       <name>unmanaged</name>
       <system_state_id>1</system_state_id>
@@ -676,20 +676,20 @@ systems_xml = """\
     <has_active_jobs>False</has_active_jobs>
     <hostname/>
     <installed_software/>
-    <jobs id="http://testserver/api/inventory/systems/2/jobs/">
-      <completed_jobs href="http://testserver/api/inventory/systems/2/job_states/3/jobs/"/>
-      <failed_jobs href="http://testserver/api/inventory/systems/2/job_states/4/jobs/"/>
-      <queued_jobs href="http://testserver/api/inventory/systems/2/job_states/1/jobs/"/>
-      <running_jobs href="http://testserver/api/inventory/systems/2/job_states/2/jobs/"/>
+    <jobs id="http://testserver/api/inventory/systems/2/jobs">
+      <completed_jobs href="http://testserver/api/inventory/systems/2/job_states/3/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/2/job_states/4/jobs"/>
+      <queued_jobs href="http://testserver/api/inventory/systems/2/job_states/1/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/2/job_states/2/jobs"/>
     </jobs>
     <launch_date/>
     <launching_user/>
     <local_uuid/>
     <management_node>true</management_node>
-    <managing_zone href="http://testserver/api/inventory/zones/1/"/>
+    <managing_zone href="http://testserver/api/inventory/zones/1"/>
     <name>rPath Update Service</name>
     <networks>
-      <network id="http://testserver/api/inventory/networks/1/">
+      <network id="http://testserver/api/inventory/networks/1">
         <active/>
         <created_date>2010-08-18T22:28:26+00:00</created_date>
         <device_name/>
@@ -708,9 +708,9 @@ systems_xml = """\
     <os_type/>
     <ssl_client_certificate/>
     <ssl_server_certificate/>
-    <system_events href="http://testserver/api/inventory/systems/2/system_events/"/>
+    <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <system_id>2</system_id>
-    <system_log href="http://testserver/api/inventory/systems/2/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/2/system_log"/>
     <target/>
     <target_system_id/>
     <target_system_name/>
@@ -721,7 +721,7 @@ systems_xml = """\
     <agent_port/>
     <registration_date/>
     <created_date>%s</created_date>
-    <current_state id="http://testserver/api/inventory/system_states/2/">
+    <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Polling</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
@@ -731,11 +731,11 @@ systems_xml = """\
     <has_active_jobs>False</has_active_jobs>
     <hostname/>
     <installed_software/>
-    <jobs id="http://testserver/api/inventory/systems/3/jobs/">
-      <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs/"/>
-      <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs/"/>
-      <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs/"/>
-      <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs/"/>
+    <jobs id="http://testserver/api/inventory/systems/3/jobs">
+      <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
+      <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
     </jobs>
     <launch_date/>
     <launching_user/>
@@ -744,7 +744,7 @@ systems_xml = """\
     <managing_zone/>
     <name>testsystemname</name>
     <networks>
-      <network id="http://testserver/api/inventory/networks/2/">
+      <network id="http://testserver/api/inventory/networks/2">
         <active/>
         <created_date>%s</created_date>
         <device_name>eth0</device_name>
@@ -763,9 +763,9 @@ systems_xml = """\
     <os_type/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-    <system_events href="http://testserver/api/inventory/systems/3/system_events/"/>
+    <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
     <system_id>3</system_id>
-    <system_log href="http://testserver/api/inventory/systems/3/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
     <target/>
     <target_system_id/>
     <target_system_name/>
@@ -784,7 +784,7 @@ systems_put_xml = """\
     <registration_date/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <networks>
-      <network id="http://testserver/api/inventory/networks/1/">
+      <network id="http://testserver/api/inventory/networks/1">
         <active/>
         <device_name>eth0</device_name>
         <dns_name>testnetwork.example.com</dns_name>
@@ -801,17 +801,17 @@ systems_put_xml = """\
     <launch_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
-    <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
     <target_system_id/>
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
     <os_minor_version/>
     <management_node/>
-    <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+    <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystemlocaluuid</local_uuid>
-    <current_state id="http://testserver/api/inventory/system_states/2/">
+    <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Polling</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
@@ -825,7 +825,7 @@ systems_put_xml = """\
     <registration_date/>
     <generated_uuid>testsystem2generateduuid</generated_uuid>
     <networks>
-      <network id="http://testserver/api/inventory/networks/1/">
+      <network id="http://testserver/api/inventory/networks/1">
         <active/>
         <device_name>eth0</device_name>
         <dns_name>testnetwork2.example.com</dns_name>
@@ -842,17 +842,17 @@ systems_put_xml = """\
     <launch_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
-    <system_log href="http://testserver/api/inventory/systems/2/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/2/system_log"/>
     <target_system_id/>
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
     <os_minor_version/>
     <management_node/>
-    <system_events href="http://testserver/api/inventory/systems/2/system_events/"/>
+    <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystem2localuuid</local_uuid>
-    <current_state id="http://testserver/api/inventory/system_states/2/">
+    <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Polling</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
@@ -870,7 +870,7 @@ systems_put_mothball_xml = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -887,17 +887,17 @@ systems_put_mothball_xml = """\
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
   <os_minor_version/>
   <management_node/>
-  <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/10/">
+  <current_state id="http://testserver/api/inventory/system_states/10">
     <description>Retired</description>
     <name>mothballed</name>
     <system_state_id>10</system_state_id>
@@ -909,11 +909,11 @@ system_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port/>
   <installed_software/>
-  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
   </jobs>
   <os_major_version/>
   <registration_date/>
@@ -922,7 +922,7 @@ system_xml = """\
   <managing_zone/>
   <hostname/>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -942,18 +942,18 @@ system_xml = """\
   <launching_user/>
   <launch_date/>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
   <os_minor_version/>
   <management_node/>
-  <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
@@ -970,7 +970,7 @@ system_post_xml = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -986,7 +986,7 @@ system_post_xml = """\
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1001,13 +1001,13 @@ system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port/>
-  <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <os_major_version/>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -1030,14 +1030,14 @@ system_post_xml_response = """\
   <management_node/>
   <launch_date/>
   <installed_software/>
-  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
   </jobs>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1046,7 +1046,7 @@ system_post_xml_response = """\
   <name>testsystemname</name>
   <target/>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
@@ -1070,7 +1070,7 @@ system_post_xml_dup = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1086,7 +1086,7 @@ system_post_xml_dup = """\
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1105,13 +1105,13 @@ system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port/>
-  <system_events href="http://testserver/api/inventory/systems/1/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <os_major_version/>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <created_date>%s</created_date>
       <device_name>eth0</device_name>
@@ -1134,14 +1134,14 @@ system_target_xml = """\
   <management_node/>
   <launch_date/>
   <installed_software/>
-  <jobs id="http://testserver/api/inventory/systems/1/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/1/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
    </jobs>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1150,7 +1150,7 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
@@ -1163,18 +1163,18 @@ system_target_xml = """\
 system_events_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_events>
-    <system_event id="http://testserver/api/inventory/system_events/1/">
+    <system_event id="http://testserver/api/inventory/system_events/1">
         <event_data/>
-        <event_type href="http://testserver/api/inventory/event_types/3/"/>
+        <event_type href="http://testserver/api/inventory/event_types/3"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <time_created>%s</time_created>
         <priority>50</priority>
         <time_enabled>%s</time_enabled>
         <system_event_id>1</system_event_id>
     </system_event>
-    <system_event id="http://testserver/api/inventory/system_events/2/">
+    <system_event id="http://testserver/api/inventory/system_events/2">
         <event_data/>
-        <event_type href="http://testserver/api/inventory/event_types/1/"/>
+        <event_type href="http://testserver/api/inventory/event_types/1"/>
         <system href="http://testserver/api/inventory/systems/3"/>
         <time_created>%s</time_created>
         <priority>110</priority>
@@ -1186,9 +1186,9 @@ system_events_xml = """\
 
 system_event_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system_event id="http://testserver/api/inventory/system_events/1/">
+<system_event id="http://testserver/api/inventory/system_events/1">
     <event_data/>
-    <event_type href="http://testserver/api/inventory/event_types/3/"/>
+    <event_type href="http://testserver/api/inventory/event_types/3"/>
     <system href="http://testserver/api/inventory/systems/3"/>
     <time_created>%s</time_created>
     <priority>50</priority>
@@ -1200,7 +1200,7 @@ system_event_xml = """\
 system_event_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event>
-    <event_type href="http://testserver/api/inventory/event_types/3/"/>
+    <event_type href="http://testserver/api/inventory/event_types/3"/>
     <system href="http://testserver/api/inventory/systems/2"/>
     <priority>50</priority>
 </system_event>
@@ -1208,24 +1208,24 @@ system_event_post_xml = """\
 
 system_log_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system_log id="http://testserver/api/inventory/systems/1/system_log/">
+<system_log id="http://testserver/api/inventory/systems/1/system_log">
   <system_log_entries>
     <system_log_entry>
       <entry>System added to inventory</entry>
-      <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+      <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
       <system_log_entry_id>1</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
       <entry>System registered via rpath-tools</entry>
-      <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+      <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
       <system_log_entry_id>2</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
-      <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+      <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
       <system_log_entry_id>3</system_log_entry_id>
     </system_log_entry>
     <system_log_entry>
-      <system_log href="http://testserver/api/inventory/systems/1/system_log/"/>
+      <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
       <system_log_entry_id>4</system_log_entry_id>
     </system_log_entry>
   </system_log_entries>
@@ -1239,32 +1239,32 @@ systems_log_xml = """\
 <systems_log>
   <system_log_entry>
     <entry>System added to inventory</entry>
-    <system_log href="http://testserver/api/inventory/systems/3/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
     <system_log_entry_id>1</system_log_entry_id>
   </system_log_entry>
    <system_log_entry>
     <entry>Unable to register event 'on-demand registration event': no networking information</entry>
-    <system_log href="http://testserver/api/inventory/systems/3/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
      <system_log_entry_id>2</system_log_entry_id>
    </system_log_entry>
    <system_log_entry>
      <entry>System added to inventory</entry>
-    <system_log href="http://testserver/api/inventory/systems/4/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
      <system_log_entry_id>3</system_log_entry_id>
    </system_log_entry>
   <system_log_entry>
     <entry>Unable to register event 'on-demand registration event': no networking information</entry>
-    <system_log href="http://testserver/api/inventory/systems/4/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
     <system_log_entry_id>4</system_log_entry_id>
   </system_log_entry>
   <system_log_entry>
     <entry>System added to inventory</entry>
-    <system_log href="http://testserver/api/inventory/systems/5/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/5/system_log"/>
     <system_log_entry_id>5</system_log_entry_id>
   </system_log_entry>
   <system_log_entry>
     <entry>Unable to register event 'on-demand registration event': no networking information</entry>
-    <system_log href="http://testserver/api/inventory/systems/5/system_log/"/>
+    <system_log href="http://testserver/api/inventory/systems/5/system_log"/>
     <system_log_entry_id>6</system_log_entry_id>
   </system_log_entry>
 </systems_log>
@@ -1383,11 +1383,11 @@ system_version_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port/>
   %s
-  <jobs id="http://testserver/api/inventory/systems/3/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/3/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <os_major_version/>
   <registration_date/>
@@ -1396,7 +1396,7 @@ system_version_xml = """\
   <managing_zone/>
   <hostname/>
   <networks>
-    <network id="http://testserver/api/inventory/networks/2/">
+    <network id="http://testserver/api/inventory/networks/2">
       <active/>
       <created_date>%%s</created_date>
       <device_name>eth0</device_name>
@@ -1416,18 +1416,18 @@ system_version_xml = """\
   <launching_user/>
   <launch_date/>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/3/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
   <os_minor_version/>
   <management_node/>
-  <system_events href="http://testserver/api/inventory/systems/3/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
@@ -1522,7 +1522,7 @@ system_version_put_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/2">
   %s
-  <system_events href="http://testserver/api/inventory/systems/2/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
   <registered>True</registered>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <os_major_version/>
@@ -1530,7 +1530,7 @@ system_version_put_response_xml = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <managing_zone/>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1/">
+    <network id="http://testserver/api/inventory/networks/1">
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1550,7 +1550,7 @@ system_version_put_response_xml = """\
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
-  <system_log href="http://testserver/api/inventory/systems/2/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/2/system_log"/>
   <target_system_id/>
   <target_system_name/>
   <target_system_description/>
@@ -1560,7 +1560,7 @@ system_version_put_response_xml = """\
   <target/>
   <name/>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
@@ -1625,18 +1625,18 @@ system_available_updates_xml = """\
       <flavor>desktop is: x86_64</flavor>
     </trove>
   </installed_software>
-  <jobs id="http://testserver/api/inventory/systems/3/jobs/">
-    <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs/"/>
-    <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs/"/>
-    <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs/"/>
-    <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs/"/>
+  <jobs id="http://testserver/api/inventory/systems/3/jobs">
+    <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
+    <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
-  <system_events href="http://testserver/api/inventory/systems/3/system_events/"/>
+  <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
   <os_major_version/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <networks>
-    <network id="http://testserver/api/inventory/networks/2/">
+    <network id="http://testserver/api/inventory/networks/2">
       <active/>
       <created_date>2010-08-27T12:21:59.801387+00:00</created_date>
       <device_name>eth0</device_name>
@@ -1658,7 +1658,7 @@ system_available_updates_xml = """\
   <launching_user/>
   <management_node/>
   <launch_date/>
-  <system_log href="http://testserver/api/inventory/systems/3/system_log/"/>
+  <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
   <registration_date/>
   <description>testsystemdescription</description>
   <target_system_id/>
@@ -1669,7 +1669,7 @@ system_available_updates_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <current_state id="http://testserver/api/inventory/system_states/2/">
+  <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
@@ -1733,7 +1733,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
 jobs_xml = """\
 <?xml version="1.0"?>
 <jobs id="http://testserver/api/inventory/jobs/">
-  <job id="http://testserver/api/inventory/jobs/1/">
+  <job id="http://testserver/api/inventory/jobs/1">
     <time_updated>2010-09-16T13:36:25.939154+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system registration</job_type>
@@ -1742,7 +1742,7 @@ jobs_xml = """\
     <job_uuid>rmakeuuid001</job_uuid>
     <job_id>1</job_id>
   </job>
-  <job id="http://testserver/api/inventory/jobs/2/">
+  <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system poll</job_type>
@@ -1751,7 +1751,7 @@ jobs_xml = """\
     <job_uuid>rmakeuuid002</job_uuid>
     <job_id>2</job_id>
   </job>
-  <job id="http://testserver/api/inventory/jobs/3/">
+  <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>immediate system poll</job_type>
@@ -1764,7 +1764,7 @@ jobs_xml = """\
 
 job_xml = """\
 <?xml version="1.0"?>
-<job id="http://testserver/api/inventory/jobs/1/">
+<job id="http://testserver/api/inventory/jobs/1">
   <time_updated>2010-09-16T13:53:18.402208+00:00</time_updated>
   <job_state>Running</job_state>
   <job_type>system registration</job_type>
@@ -1777,40 +1777,40 @@ job_xml = """\
 job_states_xml = """\
 <?xml version="1.0"?>
 <job_states>
-  <job_state id="http://testserver/api/inventory/job_states/1/">
+  <job_state id="http://testserver/api/inventory/job_states/1">
     <job_state_id>1</job_state_id>
-    <jobs href="http://testserver/api/inventory/job_states/1/jobs/"/>
+    <jobs href="http://testserver/api/inventory/job_states/1/jobs"/>
     <name>Queued</name>
   </job_state>
-  <job_state id="http://testserver/api/inventory/job_states/2/">
+  <job_state id="http://testserver/api/inventory/job_states/2">
     <job_state_id>2</job_state_id>
-    <jobs href="http://testserver/api/inventory/job_states/2/jobs/"/>
+    <jobs href="http://testserver/api/inventory/job_states/2/jobs"/>
     <name>Running</name>
   </job_state>
-  <job_state id="http://testserver/api/inventory/job_states/3/">
+  <job_state id="http://testserver/api/inventory/job_states/3">
     <job_state_id>3</job_state_id>
-    <jobs href="http://testserver/api/inventory/job_states/3/jobs/"/>
+    <jobs href="http://testserver/api/inventory/job_states/3/jobs"/>
     <name>Completed</name>
   </job_state>
-  <job_state id="http://testserver/api/inventory/job_states/4/">
+  <job_state id="http://testserver/api/inventory/job_states/4">
     <job_state_id>4</job_state_id>
-    <jobs href="http://testserver/api/inventory/job_states/4/jobs/"/>
+    <jobs href="http://testserver/api/inventory/job_states/4/jobs"/>
     <name>Failed</name>
   </job_state>
 </job_states>"""
 
 job_state_xml = """\
 <?xml version="1.0"?>
-<job_state id="http://testserver/api/inventory/job_states/1/">
+<job_state id="http://testserver/api/inventory/job_states/1">
   <job_state_id>1</job_state_id>
-  <jobs href="http://testserver/api/inventory/job_states/1/jobs/"/>
+  <jobs href="http://testserver/api/inventory/job_states/1/jobs"/>
   <name>Queued</name>
 </job_state>"""
 
 systems_jobs_xml = """\
 <?xml version="1.0"?>
 <jobs id="http://testserver/api/inventory/systems/3/jobs/">
-  <job id="http://testserver/api/inventory/jobs/1/">
+  <job id="http://testserver/api/inventory/jobs/1">
     <time_updated>2010-09-16T20:13:13.325788+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system registration</job_type>
@@ -1819,7 +1819,7 @@ systems_jobs_xml = """\
     <job_uuid>rmakeuuid001</job_uuid>
     <job_id>1</job_id>
   </job>
-  <job id="http://testserver/api/inventory/jobs/2/">
+  <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system poll</job_type>
@@ -1828,7 +1828,7 @@ systems_jobs_xml = """\
     <job_uuid>rmakeuuid002</job_uuid>
     <job_id>2</job_id>
   </job>
-  <job id="http://testserver/api/inventory/jobs/3/">
+  <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>immediate system poll</job_type>
