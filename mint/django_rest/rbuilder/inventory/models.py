@@ -22,6 +22,8 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from xobj import xobj
 
 Cache = modellib.Cache
+XObjHidden = modellib.XObjHidden
+APIReadOnly = modellib.APIReadOnly
 
 def hasTemporaryTables():
     drvname = connection.client.executable_name
@@ -58,32 +60,29 @@ class Inventory(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag = 'inventory',
-                elements = ['zones', 'managementNodes', 'systems', 'log', 
-                    'eventTypes', 'systemStates', 'networks'])
+                tag = 'inventory')
 
     def __init__(self):
         self.zones = modellib.XObjHrefModel('zones/')
-        self.managementNodes = modellib.XObjHrefModel('managementNodes/')
+        self.management_nodes = modellib.XObjHrefModel('management_nodes/')
         self.networks = modellib.XObjHrefModel('networks/')
         self.systems = modellib.XObjHrefModel('systems/')
         self.log = modellib.XObjHrefModel('log/')
-        self.eventTypes = modellib.XObjHrefModel('eventTypes/')
-        self.systemStates = modellib.XObjHrefModel('systemStates/')
-        self.jobStates = modellib.XObjHrefModel('jobStates/')
+        self.event_types = modellib.XObjHrefModel('event_types/')
+        self.system_states = modellib.XObjHrefModel('system_states/')
+        self.job_states = modellib.XObjHrefModel('job_states/')
 
 class Systems(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag = 'systems',
-                elements=['system', 'eventTypes'])
+                tag = 'systems')
     list_fields = ['system']
     system = []
     objects = modellib.SystemsManager()
 
     def __init__(self):
-        self.eventTypes = modellib.XObjHrefModel('../eventTypes/')
+        self.event_types = modellib.XObjHrefModel('../event_types/')
 
     def save(self):
         return [s.save() for s in self.system]
@@ -92,56 +91,53 @@ class SystemStates(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag = 'systemStates',
-                elements=['systemState'])
-    list_fields = ['systemState']
-    systemState = []
+                tag = 'system_states')
+    list_fields = ['system_state']
+    system_state = []
 
     def save(self):
-        return [s.save() for s in self.systemState]
+        return [s.save() for s in self.system_state]
     
 class ManagementNodes(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag = 'managementNodes',
-                elements=['managementNode'])
-    list_fields = ['managementNode']
-    managementNode = []
+                tag = 'management_nodes')
+    list_fields = ['management_node']
+    management_node = []
 
     def save(self):
-        return [s.save() for s in self.managementNode]
+        return [s.save() for s in self.management_node]
     
 class EventTypes(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag = 'eventTypes',
-                elements=['eventType'])
-    list_fields = ['eventType']
-    eventType = []
+                tag = 'event_types')
+    list_fields = ['event_type']
+    event_type = []
 
     def save(self):
-        return [s.save() for s in self.eventType]
+        return [s.save() for s in self.event_type]
     
 class SystemsLog(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag='systemsLog')
-    list_fields = ['systemLogEntry']
-    systemLogEntry = []
+    list_fields = ['system_log_entry']
+    system_log_entry = []
 
 class SystemEvents(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag = 'systemEvents')
-    list_fields = ['systemEvent']
-    systemEvent = []
+                tag = 'system_events')
+    list_fields = ['system_event']
+    system_event = []
 
     def save(self):
-        return [s.save() for s in self.systemEvent]
+        return [s.save() for s in self.system_event]
 
 class Networks(modellib.XObjModel):
     class Meta:
@@ -249,7 +245,7 @@ class System(modellib.XObjIdModel):
                 elements = ['networks', ])
     """
       networks - a collection of network resources exposed by the system
-      systemEvents - a link to the collection of system events currently active on this sytem
+      system_events - a link to the collection of system events currently active on this sytem
     """
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
@@ -269,17 +265,17 @@ class System(modellib.XObjIdModel):
         "the date the system was deployed (only applies if system is on a virtual target)")
     target = D(models.ForeignKey(rbuildermodels.Targets, null=True),
         "the virtual target the system was deployed to (only applies if system is on a virtual target)")
-    target_system_id = D(modellib.APIReadOnlyCharField(max_length=255,
-            null=True),
+    target_system_id = D(APIReadOnly(models.CharField(max_length=255,
+            null=True)),
         "the system ID as reported by its target (only applies if system is on a virtual target)")
-    target_system_name = D(modellib.APIReadOnlyCharField(max_length=255,
-            null=True),
+    target_system_name = D(APIReadOnly(models.CharField(max_length=255,
+            null=True)),
         "the system name as reported by its target (only applies if system is on a virtual target)")
-    target_system_description = D(modellib.APIReadOnlyCharField(max_length=1024,
-            null=True),
+    target_system_description = D(APIReadOnly(models.CharField(max_length=1024,
+            null=True)),
         "the system description as reported by its target (only applies if system is on a virtual target)")
-    target_system_state = D(modellib.APIReadOnlyCharField(max_length=64,
-            null=True),
+    target_system_state = D(APIReadOnly(models.CharField(max_length=64,
+            null=True)),
         "the system state as reported by its target (only applies if system is on a virtual target)")
     os_type = D(models.CharField(max_length=64, null=True),
         "the system operating system type")
@@ -293,10 +289,11 @@ class System(modellib.XObjIdModel):
         "a UUID that is randomly generated")
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile")
-    ssl_client_certificate = D(modellib.APIReadOnlyCharField(
-            max_length=8092, null=True),
+    ssl_client_certificate = D(APIReadOnly(models.CharField(
+            max_length=8092, null=True)),
         "an x509 certificate of an authorized client that can use the system's CIM broker")
-    ssl_client_key = D(modellib.XObjHiddenCharField(max_length=8092, null=True),
+    ssl_client_key = D(XObjHidden(APIReadOnly(models.CharField(
+        max_length=8092, null=True))),
         "an x509 private key of an authorized client that can use the system's CIM broker")
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
@@ -316,8 +313,8 @@ class System(modellib.XObjIdModel):
     jobs = models.ManyToManyField("Job", through="SystemJob")
     agent_port = D(models.IntegerField(null=True),
           "the port used by the system's CIM broker")
-    state_change_date = modellib.XObjHiddenDateTimeUtcField(auto_now_add=True,
-        default=datetime.datetime.now(tz.tzutc()))
+    state_change_date = XObjHidden(APIReadOnly(modellib.DateTimeUtcField(
+        auto_now_add=True, default=datetime.datetime.now(tz.tzutc()))))
     event_uuid = D(modellib.SyntheticField(),
         "a UUID used to link system events with their returned responses")
 
@@ -393,7 +390,7 @@ class System(modellib.XObjIdModel):
             jobs = [ x[0] for x in values.pop('jobs', []) ]
         xobj_model = modellib.XObjIdModel.serialize(self, request,
             values=values)
-        xobj_model.hasActiveJobs = self.areJobsActive(jobs)
+        xobj_model.has_active_jobs = self.areJobsActive(jobs)
 
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
@@ -430,10 +427,10 @@ class ManagementNode(System):
     class Meta:
         db_table = 'inventory_zone_management_node'
     _xobj = xobj.XObjMetadata(
-                tag = 'managementNode',
+                tag = 'management_node',
                 attributes = {'id':str})
     local = models.NullBooleanField()
-    zone = models.ForeignKey(Zone, related_name='managementNodes')
+    zone = models.ForeignKey(Zone, related_name='management_nodes')
     node_jid = models.CharField(max_length=64, null=True)
     
     # ignore auto generated ptr from inheritance
@@ -460,8 +457,7 @@ class InstalledSoftware(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='installedSoftware',
-                elements=['trove'])
+                tag='installed_software')
     list_fields = ['trove']
 
 class EventType(modellib.XObjIdModel):
@@ -516,7 +512,8 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_SHUTDOWN_IMMEDIATE,
          SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION),
     )
-    name = modellib.APIReadOnlyCharField(max_length=8092, unique=True, choices=EVENT_TYPES)
+    name = APIReadOnly(models.CharField(max_length=8092, unique=True,
+        choices=EVENT_TYPES))
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 
@@ -582,8 +579,8 @@ class Job(modellib.XObjIdModel):
     job_uuid = models.CharField(max_length=64, unique=True)
     job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
         related_name='jobs')
-    event_type = modellib.APIReadOnlyInlinedForeignKey(EventType, 
-        visible='name')
+    event_type = APIReadOnly(modellib.InlinedForeignKey(EventType,
+        visible='name'))
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
 
@@ -632,7 +629,7 @@ class SystemEvent(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event'
     _xobj = xobj.XObjMetadata(
-                tag = 'systemEvent',
+                tag = 'system_event',
                 attributes = {'id':str})
     
     system_event_id = models.AutoField(primary_key=True)
@@ -705,7 +702,7 @@ class SystemLog(modellib.XObjIdModel):
 
 class SystemLogEntry(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
-                tag='systemLogEntry')
+                tag='system_log_entry')
     class Meta:
         db_table = 'inventory_system_log_entry'
         ordering = ['entry_date']
@@ -863,7 +860,7 @@ class SystemJob(modellib.XObjModel):
     system_job_id = models.AutoField(primary_key=True)
     system = models.ForeignKey(System)
     job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')
-    event_uuid = modellib.XObjHiddenCharField(max_length=64, unique=True)
+    event_uuid = XObjHidden(models.CharField(max_length=64, unique=True))
 
 class ErrorResponse(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(

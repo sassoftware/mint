@@ -59,7 +59,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getEventTypes(self):
         EventTypes = models.EventTypes()
-        EventTypes.eventType = list(models.EventType.objects.all())
+        EventTypes.event_type = list(models.EventType.objects.all())
         return EventTypes
 
     @base.exposed
@@ -339,7 +339,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getManagementNodes(self):
         ManagementNodes = models.ManagementNodes()
-        ManagementNodes.managementNode = list(models.ManagementNode.objects.all())
+        ManagementNodes.management_node = list(models.ManagementNode.objects.all())
         return ManagementNodes
     
     @base.exposed
@@ -380,7 +380,7 @@ class SystemManager(base.BaseManager):
     def getManagementNodesForZone(self, zone_id):
         zone = models.Zone.objects.get(pk=zone_id)
         ManagementNodes = models.ManagementNodes()
-        ManagementNodes.managementNode = list(models.ManagementNode.objects.filter(zone=zone).all())
+        ManagementNodes.management_node = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
 
     @base.exposed
@@ -391,7 +391,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystemStates(self):
         SystemStates = models.SystemStates()
-        SystemStates.systemState = list(models.SystemState.objects.all())
+        SystemStates.system_state = list(models.SystemState.objects.all())
         return SystemStates
 
     @classmethod
@@ -745,7 +745,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystemEvents(self):
         SystemEvents = models.SystemEvents()
-        SystemEvents.systemEvent = list(models.SystemEvent.objects.all())
+        SystemEvents.system_event = list(models.SystemEvent.objects.all())
         return SystemEvents
 
     @base.exposed
@@ -753,7 +753,7 @@ class SystemManager(base.BaseManager):
         system = models.System.objects.get(pk=system_id)
         events = models.SystemEvent.objects.filter(system=system)
         system_events = models.SystemEvents()
-        system_events.systemEvent = list(events)
+        system_events.system_event = list(events)
         return system_events
 
     @base.exposed
@@ -1275,5 +1275,5 @@ class SystemManager(base.BaseManager):
         systemsLog = models.SystemsLog()
         systemLogEntries = \
             models.SystemLogEntry.objects.all().order_by('entry_date')
-        systemsLog.systemLogEntry = list(systemLogEntries)
+        systemsLog.system_log_entry = list(systemLogEntries)
         return systemsLog

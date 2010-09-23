@@ -5,6 +5,8 @@ from dateutil import parser
 from dateutil import tz
 import urlparse
 
+from mint.lib import mintutils
+
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
@@ -13,19 +15,21 @@ from django.core import urlresolvers
 
 from xobj import xobj
 
-class XObjHiddenMixIn(object):
+def XObjHidden(field):
     """
     Fields implementing this interface will not be serialized in the
     external API
     """
-    XObjHidden = True
+    field.XObjHidden = True
+    return field
 
-class APIReadOnlyMixIn(object):
+def APIReadOnly(field):
     """
     Fields implementing this interface will not be updated through the
     external API
     """
-    APIReadOnly = True
+    field.APIReadOnly = True
+    return field
 
 class DeferredForeignKeyMixIn(object):
     """
@@ -504,6 +508,15 @@ class XObjModel(models.Model):
     manager on a model with our BaseManager.  Implements get_absolute_url on
     all models.  Adds ability to serialize a model to xml using xobj.
     """
+    class __metaclass__(models.Model.__metaclass__):
+        def __new__(cls, name, bases, attrs):
+            ret = models.Model.__metaclass__.__new__(cls, name, bases, attrs)
+            # Create the xobj class for this model
+            underscoreName = mintutils.Transformations.strToUnderscore(
+                name[0].lower() + name[1:])
+            ret._xobjClass = type(underscoreName, (object, ), {})
+            return ret
+
     class Meta:
         abstract = True
 
@@ -876,10 +889,9 @@ class XObjModel(models.Model):
         xobj to produce the xml that we require.
         """
         self._serialize_hrefs(request)
-        name = self.__class__.__name__
-        name = name[0].lower() + name[1:]
         # Basic object to use to send to xobj.
-        xobj_model = type(name, (object,), {})()
+        xobjModelClass = self._xobjClass
+        xobj_model = xobjModelClass()
 
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
@@ -1014,21 +1026,6 @@ class DateTimeUtcField(models.DateTimeField):
             return python_value.replace(tzinfo=tz.tzutc())
         else:
             return python_value
-
-class XObjHiddenCharField(models.CharField, XObjHiddenMixIn):
-    pass
-
-class XObjHiddenDateTimeUtcField(DateTimeUtcField, XObjHiddenMixIn):
-    pass
-
-class APIReadOnlyCharField(models.CharField, APIReadOnlyMixIn):
-    pass
-
-class APIReadOnlyForeignKey(models.ForeignKey, APIReadOnlyMixIn):
-    pass
-
-class APIReadOnlyInlinedForeignKey(InlinedForeignKey, APIReadOnlyMixIn):
-    pass
 
 class DeferredForeignKey(models.ForeignKey, DeferredForeignKeyMixIn):
     pass

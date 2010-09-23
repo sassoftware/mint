@@ -10,6 +10,7 @@ General utilities for use in the rBuilder codebase.
 
 import logging
 import inspect
+import re
 import time
 
 from conary.lib import util
@@ -153,3 +154,43 @@ def urlAddAuth(url, username, password):
     if password is not None:
         urlArr[2] = password
     return util.urlUnsplit(urlArr)
+
+class Transformations(object):
+    RE_StringToCamelCase = re.compile('(.)_([a-z])')
+    RE_StringToUnderscore_1 = re.compile('(.)([A-Z][a-z]+)')
+    RE_StringToUnderscore_2 = re.compile('([a-z0-9])([A-Z])')
+    S_Group = r'\1_\2'
+
+    @classmethod
+    def strToCamelCase(cls, name):
+        return cls.RE_StringToCamelCase.sub(cls._repl, name)
+
+    @classmethod
+    def nodeToCamelCase(cls, node):
+        for name in cls._FieldNames:
+            v = getattr(node, name, None)
+            if v is not None:
+                setattr(node, name, cls.strToCamelCase(v))
+        for child in node.childNodes:
+            cls.nodeToCamelCase(child)
+
+    @classmethod
+    def strToUnderscore(cls, name):
+        s1 = cls.RE_StringToUnderscore_1.sub(cls.S_Group, name)
+        return cls.RE_StringToUnderscore_2.sub(cls.S_Group, s1).lower()
+
+    @classmethod
+    def nodeToUnderscore(cls, node):
+        for name in cls._FieldNames:
+            v = getattr(node, name, None)
+            if v is not None:
+                setattr(node, name, cls.strToUnderscore(v))
+        for child in node.childNodes:
+            cls.nodeToUnderscore(child)
+
+    @classmethod
+    def _repl(cls, m):
+        return m.group()[:-2] + m.group()[-1].upper()
+
+    _FieldNames = ['tagName', 'nodeName']
+
