@@ -106,3 +106,5 @@ class rBuilderTest(TestPackageRecipe):
 
     def install(r):
         r.Install('mint_test', '%(libdir)s/mint-test')
+        r.MakeDirs('%(libdir)s/mint')
+        r.Install('mint/django_rest', '%(libdir)s/mint/django_rest')
