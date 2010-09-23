@@ -2,33 +2,33 @@
 
 <xsl:import href="systemState.xsl"/>
 
-<xsl:variable name="systemStatesInfo">
-<xsl:copy-of select="$systemStatesModel" />
-<xsl:copy-of select="$systemStatesMethods" />
+<xsl:variable name="system_states_info">
+<xsl:copy-of select="$system_states_model" />
+<xsl:copy-of select="$system_states_methods" />
 </xsl:variable>
 
-<xsl:variable name="systemStatesModel"><![CDATA[
+<xsl:variable name="system_states_model"><![CDATA[
 Description:
   A collection of states applicable to systems in inventory
   
 SystemStates Properties:
-  systemState - a system state resource]]>
-<xsl:copy-of select="$systemStateModelProperties" />
+  system_state - a system state resource]]>
+<xsl:copy-of select="$system_state_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="systemStatesMethods"><![CDATA[
+<xsl:variable name="system_states_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: none
     Response Format:
-      <systemStates> 
-        <systemState id="http://hostname/api/inventory/systemStates/1/">
+      <system_states> 
+        <system_state id="http://hostname/api/inventory/system_states/1/">
           ...
-        </systemState>
-        <systemState id="http://hostname/api/inventory/systemStates/2/">
+        </system_state>
+        <system_state id="http://hostname/api/inventory/system_states/2/">
           ...
-        </systemState>
-      </systemStates>
+        </system_state>
+      </system_states>
 
   POST:
     not supported

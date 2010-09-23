@@ -3,30 +3,30 @@
 <xsl:import href="eventTypesHref.xsl"/>
 <xsl:import href="system.xsl"/>
 
-<xsl:variable name="systemsInfo">
-<xsl:copy-of select="$systemsModel" />
-<xsl:copy-of select="$systemsMethods" />
+<xsl:variable name="systems_info">
+<xsl:copy-of select="$systems_model" />
+<xsl:copy-of select="$systems_methods" />
 </xsl:variable>
 
-<xsl:variable name="systemsModel"><![CDATA[
+<xsl:variable name="systems_model"><![CDATA[
 Description:
   A collection of systems in inventory
   
 Systems Properties:
-  eventTypes - an entry point into system inventory event types
+  event_types - an entry point into system inventory event types
   system - a system resource]]>
-<xsl:copy-of select="$eventTypesHrefModel" />
-<xsl:copy-of select="$systemModelProperties" />
-<xsl:copy-of select="$systemModelDedup" />
+<xsl:copy-of select="$event_types_href_model" />
+<xsl:copy-of select="$system_model_properties" />
+<xsl:copy-of select="$system_model_dedup" />
 </xsl:variable>
 
-<xsl:variable name="systemsMethods"><![CDATA[
+<xsl:variable name="systems_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: user
     Response Format:
       <systems>
-        <eventTypes href="http://hostname/api/inventory/eventTypes/"/>
+        <event_types href="http://hostname/api/inventory/event_types/"/>
         <system id="http://hostname/api/inventory/systems/1/">
           ...
         </system>
@@ -43,10 +43,10 @@ Methods:
     Example:
       <system>
         <name>Billing System Application Server</name>
-        <descriptionThe app server for the HR billing system</description>
+        <description>The app server for the HR billing system</description>
         <networks>
           <network>
-            <dnsName>192.168.1.192</dnsName>
+            <dns_name>192.168.1.192</dns_name>
           </network>
         </networks>
       </system>
@@ -57,19 +57,19 @@ Methods:
       <systems>
         <system>
           <name>Billing System Application Server</name>
-          <descriptionThe app server for the HR billing system</description>
+          <description>The app server for the HR billing system</description>
           <networks>
             <network>
-              <dnsName>192.168.1.192</dnsName>
+              <dns_name>192.168.1.192</dns_name>
             </network>
           </networks>
         </system>
         <system>
           <name>Billing System File Server</name>
-          <descriptionThe file server for the HR billing system</description>
+          <description>The file server for the HR billing system</description>
           <networks>
             <network>
-              <dnsName>192.168.1.193</dnsName>
+              <dns_name>192.168.1.193</dns_name>
             </network>
           </networks>
         </system>

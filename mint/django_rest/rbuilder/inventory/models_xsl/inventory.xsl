@@ -8,33 +8,33 @@
 <xsl:import href="managementNodesHref.xsl"/>
 <xsl:import href="networksHref.xsl"/>
 
-<xsl:variable name="inventoryInfo">
-<xsl:copy-of select="$inventoryModel" />
-<xsl:copy-of select="$inventoryMethods" />
+<xsl:variable name="inventory_info">
+<xsl:copy-of select="$inventory_model" />
+<xsl:copy-of select="$inventory_methods" />
 </xsl:variable>
 
-<xsl:variable name="inventoryModel"><![CDATA[
+<xsl:variable name="inventory_model"><![CDATA[
 Description:
   A node listing the entry points into the inventory API
   
 Inventory Properties:
-  eventTypes - an entry point into inventory event types
+  event_types - an entry point into inventory event types
   log - an entry point into inventory logging
-  systemStates - an entry point into the inventory system states collection
+  system_states - an entry point into the inventory system states collection
   systems - an entry point into the inventory systems collection
   zones - an entry point into inventory management zones collection
-  managementNodes - an entry point into inventory management nodes collection
+  management_nodes - an entry point into inventory management nodes collection
   networks - an entry point into inventory system networks collection]]>
-<xsl:copy-of select="$eventTypesHrefModel" />
-<xsl:copy-of select="$logHrefModel" />
-<xsl:copy-of select="$systemStatesHrefModel" />
-<xsl:copy-of select="$systemsHrefModel" />
-<xsl:copy-of select="$zonesHrefModel" />
-<xsl:copy-of select="$managementNodesHrefModel" />
-<xsl:copy-of select="$networksHrefModel" />
+<xsl:copy-of select="$event_types_href_model" />
+<xsl:copy-of select="$log_href_model" />
+<xsl:copy-of select="$system_states_href_model" />
+<xsl:copy-of select="$systems_href_model" />
+<xsl:copy-of select="$zones_href_model" />
+<xsl:copy-of select="$management_nodes_href_model" />
+<xsl:copy-of select="$networks_href_model" />
 </xsl:variable>
 
-<xsl:variable name="inventoryMethods"><![CDATA[
+<xsl:variable name="inventory_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: none

@@ -2,33 +2,33 @@
 
 <xsl:import href="managementNode.xsl"/>
 
-<xsl:variable name="managementNodesInfo">
-<xsl:copy-of select="$managementNodesModel" />
-<xsl:copy-of select="$managementNodesMethods" />
+<xsl:variable name="management_nodes_info">
+<xsl:copy-of select="$management_nodes_model" />
+<xsl:copy-of select="$management_nodes_methods" />
 </xsl:variable>
 
-<xsl:variable name="managementNodesModel"><![CDATA[
+<xsl:variable name="management_nodes_model"><![CDATA[
 Description:
   A collection of management nodes available to inventory systems
   
 ManagementNodes Properties:
-  managementNode - a management node resource]]>
-<xsl:copy-of select="$managementNodeModelProperties" />
+  management_node - a management node resource]]>
+<xsl:copy-of select="$management_node_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="managementNodesMethods"><![CDATA[
+<xsl:variable name="management_nodes_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: user
     Response Format:
-      <managementNodes>
-        <managementNode id="http://hostname/api/inventory/managementNodes/1/">
+      <management_nodes>
+        <management_node id="http://hostname/api/inventory/management_nodes/1/">
           ...
-        </managementNode>
-        <managementNode id="http://hostname/api/inventory/managementNodes/2/">
+        </management_node>
+        <management_node id="http://hostname/api/inventory/management_nodes/2/">
           ...
-        </managementNode>
-      </managementNodes>
+        </management_node>
+      </management_nodes>
       
   POST:
     Authentication: admin
@@ -36,11 +36,11 @@ Methods:
       name
       zone
     Example:
-      <managementNode>
+      <management_node>
         <name>East Datacenter Node 1</name>
         <description>Management node 1 for east datacenter</description>
         <zone href="http://hostname/api/inventory/zones/1/">
-      </managementNode>
+      </management_node>
     
   PUT:
     not supported

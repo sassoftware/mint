@@ -2,23 +2,23 @@
 
 <xsl:import href="systemsHref.xsl"/>
 
-<xsl:variable name="networksInfo">
-<xsl:copy-of select="$networksModel" />
-<xsl:copy-of select="$networksMethods" />
+<xsl:variable name="networks_info">
+<xsl:copy-of select="$networks_model" />
+<xsl:copy-of select="$networks_methods" />
 </xsl:variable>
 
-<xsl:variable name="networksModel"><![CDATA[
+<xsl:variable name="networks_model"><![CDATA[
 Description:
   A collection of networks attached to systems in inventory
   
 Networks Properties:
   systems - an entry point into system inventory
   network - a network resource]]>
-<xsl:copy-of select="$systemsHrefModel" />
-<xsl:copy-of select="$networkModelProperties" />
+<xsl:copy-of select="$systems_href_model" />
+<xsl:copy-of select="$network_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="networksMethods"><![CDATA[
+<xsl:variable name="networks_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: user

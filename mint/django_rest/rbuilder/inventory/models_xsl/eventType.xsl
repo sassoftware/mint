@@ -1,33 +1,33 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-<xsl:variable name="eventTypeInfo">
-<xsl:copy-of select="$eventTypeModel" />
-<xsl:copy-of select="$eventTypeMethods" />
+<xsl:variable name="event_type_info">
+<xsl:copy-of select="$event_type_model" />
+<xsl:copy-of select="$event_type_methods" />
 </xsl:variable>
 
-<xsl:variable name="eventTypeModel"><![CDATA[
+<xsl:variable name="event_type_model"><![CDATA[
 Description:
   A system event type]]>
-<xsl:copy-of select="$eventTypeModelProperties" />
+<xsl:copy-of select="$event_type_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="eventTypeModelProperties"><![CDATA[
+<xsl:variable name="event_type_model_properties"><![CDATA[
 EventType Properties:
   name - the event type name (read-only)
   description - the event type description
   priority - the event type priority where > priority wins
-  eventTypeId - the database id of the event type
-  systemEvents - an entry point into a collection of all system events of this type]]>
+  event_type_id - the database id of the event type
+  system_events - an entry point into a collection of all system events of this type]]>
 </xsl:variable>
 
-<xsl:variable name="eventTypeMethods"><![CDATA[
+<xsl:variable name="event_type_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: none
     Response Format:
-       <eventType id="http://hostname/api/inventory/eventTypes/1/">
+       <event_type id="http://hostname/api/inventory/event_types/1/">
          ...
-       </eventType>
+       </event_type>
       
   POST:
     not supported
