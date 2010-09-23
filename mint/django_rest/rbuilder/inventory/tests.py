@@ -3042,6 +3042,14 @@ class TargetSystemImportTest(XMLTestCase):
         self.mgr.user = user3
         self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), False)
 
+    def testGetSystemWithTarget(self):
+        system = models.System.objects.get(target_system_id='vsphere1-002')
+        url = '/api/inventory/systems/%s' % system.pk
+        response = self._get(url, username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.system_with_target,
+            ignoreNodes=['created_date'])
+
 class JobsTestCase(XMLTestCase):
 
     def _mock(self):

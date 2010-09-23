@@ -1838,3 +1838,63 @@ systems_jobs_xml = """\
     <job_id>3</job_id>
   </job>
 </jobs>"""
+
+
+system_with_target = """\
+<system id="http://testserver/api/inventory/systems/4">
+  <system_events href="http://testserver/api/inventory/systems/4/system_events"/>
+  <os_major_version/>
+  <generated_uuid/>
+  <networks>
+    <network id="http://testserver/api/inventory/networks/3">
+      <ipv6_address/>
+      <network_id>3</network_id>
+      <dns_name>vsphere1-002</dns_name>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/4"/>
+      <device_name/>
+      <netmask/>
+      <port_type/>
+      <created_date>2010-09-23T13:30:14.299741+00:00</created_date>
+      <active/>
+      <ip_address/>
+    </network>
+  </networks>
+  <ssl_server_certificate/>
+  <managing_zone/>
+  <hostname/>
+  <system_id>4</system_id>
+  <launching_user/>
+  <management_node/>
+  <launch_date/>
+  <ssl_client_certificate/>
+  <installed_software/>
+  <registration_date/>
+  <jobs id="http://testserver/api/inventory/systems/4/jobs">
+    <queued_jobs href="http://testserver/api/inventory/systems/4/job_states/1/jobs"/>
+    <completed_jobs href="http://testserver/api/inventory/systems/4/job_states/3/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/4/job_states/2/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/4/job_states/4/jobs"/>
+  </jobs>
+  <description>vsphere1 002 description</description>
+  <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
+  <target_system_id>vsphere1-002</target_system_id>
+  <target_system_name/>
+  <os_minor_version/>
+  <has_active_jobs>False</has_active_jobs>
+  <agent_port/>
+  <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com"/>
+  <name>vsphere1 002</name>
+  <local_uuid/>
+  <target_system_state/>
+  <current_state id="http://testserver/api/inventory/system_states/1">
+    <system_state_id>1</system_state_id>
+    <description>Unmanaged</description>
+    <name>unmanaged</name>
+    <created_date>2010-09-23T13:30:14.100890+00:00</created_date>
+  </current_state>
+  <created_date>2010-09-23T13:30:14.295974+00:00</created_date>
+  <os_type/>
+  <target_system_description/>
+</system>
+"""
