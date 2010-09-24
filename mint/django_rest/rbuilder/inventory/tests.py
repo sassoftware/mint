@@ -3074,6 +3074,11 @@ class TargetSystemImportTest(XMLTestCase):
         self.failUnlessIn(stc.credentials_id,
             [ x.targetcredentialsid.targetcredentialsid
                 for x in user2.targetusercredentials_set.all() ])
+        self.failUnlessEqual(system.managing_zone.name,
+            models.Zone.LOCAL_ZONE)
+        self.failUnlessEqual(system.name, params['target_system_name'])
+        self.failUnlessEqual(system.description,
+            params['target_system_description'])
 
 class JobsTestCase(XMLTestCase):
 

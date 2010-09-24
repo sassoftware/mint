@@ -691,9 +691,12 @@ class SystemManager(base.BaseManager):
 
         # For bayonet, we only launch in the local zone
         zone = models.Zone.objects.get(name=models.Zone.LOCAL_ZONE)
-        system.zone = zone
+        system.managing_zone = zone
         system.launching_user = self.user
         system.launch_date = self.now()
+        # Copy some of the data from the target
+        system.name = system.target_system_name
+        system.description = system.target_system_description
         # Look up the credentials for this user
         credentials = self._getCredentialsForUser(system.target)
         assert credentials is not None, "User should have credentials"
