@@ -271,9 +271,6 @@ class InventorySystemsService(AbstractInventoryService):
         systems = self.mgr.addSystems(systems.system)
         return self.mgr.getSystems(request)
 
-    def launch(self, instanceId, targetType, targetName):
-        return self.mgr.launchSystem(instanceId, targetType, targetName)
-
 class InventorySystemsSystemService(AbstractInventoryService):
     
     @return_xml

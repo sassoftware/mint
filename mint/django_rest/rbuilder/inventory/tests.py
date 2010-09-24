@@ -3050,6 +3050,31 @@ class TargetSystemImportTest(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.system_with_target,
             ignoreNodes=['created_date'])
 
+    def testAddLaunchedSystem(self):
+        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
+        self.mgr.user = user2
+        params = dict(
+            target_system_id = "target-system-id-001",
+            target_system_name = "target-system-name 001",
+            target_system_description = "target-system-description 001",
+            target_system_state = "Frisbulating",
+            ssl_client_certificate = "ssl client certificate 001",
+            ssl_client_key = "ssl client key 001",
+        )
+        dnsName = 'dns-name-1'
+        system = models.System(**params)
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.targetname,
+            targetType=self.tgt2.targettype)
+        for k, v in params.items():
+            self.failUnlessEqual(getattr(system, k), v)
+        # Make sure we have credentials
+        stc = list(system.target_credentials.all())[0]
+        self.failUnlessIn(stc.credentials_id,
+            [ x.targetcredentialsid.targetcredentialsid
+                for x in user2.targetusercredentials_set.all() ])
+
 class JobsTestCase(XMLTestCase):
 
     def _mock(self):

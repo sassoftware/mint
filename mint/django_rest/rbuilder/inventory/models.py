@@ -159,6 +159,7 @@ class Zones(modellib.XObjModel):
     list_fields = ['zone']
     
 class Zone(modellib.XObjIdModel):
+    LOCAL_ZONE = "Local rBuilder"
     class Meta:
         db_table = 'inventory_zone'
     _xobj = xobj.XObjMetadata(

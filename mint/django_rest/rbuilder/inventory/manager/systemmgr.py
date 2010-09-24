@@ -680,16 +680,40 @@ class SystemManager(base.BaseManager):
         return rbuildermodels.Targets.objects.get(
             targettype=targetType, targetname=targetName)
 
-    def launchSystem(self, system):
-        managedSystem = models.managed_system.factoryParser(system)
-        managedSystem.launching_user = self.user
-        managedSystem.launch_date = int(time.time())
-        managedSystem.save()
-        target = self.lookupTarget(system.target_type, system.target_name)
-        systemTarget = models.system_target(managed_system=managedSystem,
-            target=target, target_system_id=system.target_system_id)
-        systemTarget.save()
-        return systemTarget
+    @base.exposed
+    def addLaunchedSystem(self, system, dnsName=None, targetName=None,
+            targetType=None):
+        target = self.lookupTarget(targetType=targetType,
+            targetName=targetName)
+        system.target = target
+        oldModel, system = models.System.objects.load_or_create(system,
+            withReadOnly=True)
+
+        # For bayonet, we only launch in the local zone
+        zone = models.Zone.objects.get(name=models.Zone.LOCAL_ZONE)
+        system.zone = zone
+        system.launching_user = self.user
+        system.launch_date = self.now()
+        # Look up the credentials for this user
+        credentials = self._getCredentialsForUser(system.target)
+        assert credentials is not None, "User should have credentials"
+        # Add link to SystemTargetCredentials
+        stc = models.SystemTargetCredentials(system=system,
+            credentials=credentials)
+        stc.save()
+        if dnsName:
+            network = models.Network(dns_name=dnsName,
+                            active=True)
+            system.networks.add(network)
+        self.addSystem(system)
+        return system
+
+    def _getCredentialsForUser(self, target):
+        tucs = rbuildermodels.TargetUserCredentials.objects.filter(
+            targetid=target, userid=self.user)
+        for tuc in tucs:
+            return tuc.targetcredentialsid
+        return None
 
     def matchSystem(self, system):
         matchingIPs = models.network_information.objects.filter(
