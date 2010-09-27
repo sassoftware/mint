@@ -1154,6 +1154,9 @@ class SystemManager(base.BaseManager):
         targetsData = self.TargetsData()
         systems = models.System.objects.filter(target__isnull = False)
         for system in systems:
+            if system.target_system_id is None:
+                # Systems without a target_system_id are ignored
+                continue
             target = system.target
             # Grab credentials used when importing this system
             credentials = system.target_credentials.all()
@@ -1276,6 +1279,13 @@ class SystemManager(base.BaseManager):
         log.info("Target data collected in %.2f seconds" % (time.time() - t0))
         return targetsData
 
+    @classmethod
+    def _getField(cls, system, fieldName):
+        fieldVal = getattr(system, fieldName)
+        if fieldVal is not None:
+            return fieldVal.getText()
+        return None
+
     def collectOneTargetData(self, driver, targetsData):
         t0 = time.time()
         log.info("Enumerating systems for target %s (%s) as user %s" %
@@ -1286,10 +1296,10 @@ class SystemManager(base.BaseManager):
         tsystems = driver.getAllInstances()
         for tsys in tsystems:
             instanceId = tsys.instanceId.getText()
-            instanceName = tsys.instanceName.getText()
-            instanceDescription = tsys.instanceDescription.getText()
-            dnsName = (tsys.dnsName and tsys.dnsName.getText()) or None
-            state = (tsys.state and tsys.state.getText()) or "unknown"
+            instanceName = self._getField(tsys, 'instanceName')
+            instanceDescription = self._getField(tsys, 'instanceDescription')
+            dnsName = self._getField(tsys, 'dnsName')
+            state = self._getField(tsys, 'state') or 'unknown'
             targetsData.addSystem(targetType, targetName, userName,
                 instanceId, instanceName, instanceDescription, dnsName,
                 state)
