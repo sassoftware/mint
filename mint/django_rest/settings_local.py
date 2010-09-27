@@ -33,9 +33,9 @@ for i in range(len(MIDDLEWARE_CLASSES)):
         break
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES[0:i] + \
                      MIDDLEWARE_CLASSES[i+1:]
-MIDDLEWARE_CLASSES = list(MIDDLEWARE_CLASSES)                     
-MIDDLEWARE_CLASSES.append('mint.django_rest.middleware.LocalSetMintAdminMiddleware')
-MIDDLEWARE_CLASSES = tuple(MIDDLEWARE_CLASSES)
+# MIDDLEWARE_CLASSES = list(MIDDLEWARE_CLASSES)                     
+# MIDDLEWARE_CLASSES.append('mint.django_rest.middleware.LocalSetMintAdminMiddleware')
+# MIDDLEWARE_CLASSES = tuple(MIDDLEWARE_CLASSES)
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True
