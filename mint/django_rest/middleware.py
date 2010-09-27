@@ -97,6 +97,12 @@ class SetMintAdminMiddleware(object):
         request._is_admin = auth.isAdmin(request._authUser)
         return None
     
+class LocalSetMintAdminMiddleware(object):
+    def process_request(self, request):
+        request._is_admin = True
+        request._is_authenticated = True
+        return None
+
 class SetMintAuthenticatedMiddleware(object):
     """
     Set a flag on the request indicating whether or not the user is authenticated
@@ -144,4 +150,3 @@ class AddCommentsMiddleware(object):
                 pass
 
         return response 
-
