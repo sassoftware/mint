@@ -864,9 +864,7 @@ class SystemManager(base.BaseManager):
         destination = network.ip_address or network.dns_name
         eventType = event.event_type.name
         eventUuid = str(uuid.uuid4())
-        #zone = event.system.managing_zone.name
-        # XXX FIXME
-        zone = None
+        zone = event.system.managing_zone.name
         cimParams = repClient.CimParams(host=destination,
             port=event.system.agent_port or 5989,
             eventUuid=eventUuid,

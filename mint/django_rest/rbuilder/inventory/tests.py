@@ -2715,8 +2715,9 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         class RepeaterMgr(object):
             repeaterClient = RepeaterClient()
 
+        zone = models.Zone.objects.get(name=models.Zone.LOCAL_ZONE)
         self.mgr.repeaterMgr = RepeaterMgr()
-        self.system2 = system = models.System(name="hey")
+        self.system2 = system = models.System(name="hey", managing_zone=zone)
         system.save()
         network2 = models.Network(ip_address="2.2.2.2", active=True)
         network3 = models.Network(ip_address="3.3.3.3", required=True)
@@ -2758,7 +2759,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             clientCert=testsxml.x509_pem),
                         resLoc(path='/api/inventory/systems/4', port=80),
                     ),
-                    dict(zone=None),
+                    dict(zone='Local rBuilder'),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
@@ -2804,7 +2805,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             clientCert=testsxml.x509_pem),
                         resLoc(path='/api/inventory/systems/4', port=80),
                     ),
-                    dict(requiredNetwork=None, zone=None),
+                    dict(requiredNetwork=None, zone='Local rBuilder'),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)

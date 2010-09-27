@@ -63,8 +63,7 @@ class Command(BaseCommand):
             docstring = getattr(field, 'docstring', None)
             if docstring is None:
                 continue
-            fdesc.append("   %s - %s" % (
-                deco.Transformations.strToCamelCase(field.name), docstring))
+            fdesc.append("   %s - %s" % (field.name, docstring))
         fdesc = '\n'.join(fdesc)
         contents = file(templ).read().replace("@@FIELDS@@", fdesc)
         file(fname, "w").write(contents)
