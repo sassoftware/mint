@@ -600,25 +600,6 @@ class Job(modellib.XObjIdModel):
             else:
                 return None
 
-    def serialize(self, request=None, values=None):
-        if self.job_state.name == JobState.RUNNING:
-            xobj_model = modellib.XObjIdModel.serialize(self, request,
-                values=values)
-            rmakeJob = self.getRmakeJob()
-            if rmakeJob:
-                xobj_model.job_log = rmakeJob.status.text
-            xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
-                pk=self.event_type_id).name
-            xobj_model.event_type = None
-            return xobj_model
-        else:
-            name = self.job_state.name.lower() + '_jobs'
-            xobj_model = type(str(name), (object,), {})()
-            xobj_model._xobj = xobj.XObjMetadata(
-                attributes = {'href':str})
-            xobj_model.href = name
-            return xobj_model
-
     def get_absolute_url(self, request, parents=None, model=None):
         if parents:
             if isinstance(parents[0], JobState):
