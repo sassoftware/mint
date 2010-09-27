@@ -384,11 +384,13 @@ class System(modellib.XObjIdModel):
         # the jobs m2m relationship as hidden, or else the bulk load fails
         if values is None:
             jobs = self.jobs.all()
+            installed_software = None
         else:
             # We're popping the jobs data structure from values because its
             # only purpose is to prevent repeated database hits when we bulk
             # load
             jobs = [ x[0] for x in values.pop('jobs', []) ]
+            installed_software = values.pop('installed_software', None)
         xobj_model = modellib.XObjIdModel.serialize(self, request,
             values=values)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
@@ -422,6 +424,14 @@ class System(modellib.XObjIdModel):
                 self.view_name = None
 
         xobj_model.jobs = JobsHref(request, self)
+
+        # Set out of date flag on xobj_model
+        out_of_date = False
+        for trove in xobj_model.installed_software.trove:
+            if len(trove.available_updates.version) > 1:
+                out_of_date = True
+        xobj_model.out_of_date = out_of_date
+
         return xobj_model
 
 class ManagementNode(System):
