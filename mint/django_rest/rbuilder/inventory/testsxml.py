@@ -309,7 +309,7 @@ management_nodes_xml = """\
         <system href="http://testserver/api/inventory/systems/1"/>
       </network>
     </networks>
-    <node_jid/>
+    <node_jid>superduperjid2@rbuilder.rpath</node_jid>
     <ssl_client_certificate>test management node client cert</ssl_client_certificate>
     <ssl_server_certificate>test management node server cert</ssl_server_certificate>
     <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>
@@ -375,7 +375,7 @@ management_node_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <node_jid/>
+  <node_jid>superduperjid2@rbuilder.rpath</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>

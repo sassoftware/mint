@@ -242,6 +242,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             models.SystemState.REGISTERED)
         management_node.local = True
         management_node.management_node = True
+        management_node.node_jid = "superduperjid2@rbuilder.rpath"
         management_node.save()
 
         network = models.Network()
@@ -1259,6 +1260,28 @@ class SystemsTestCase(XMLTestCase):
         self.failUnless(xobjmodel.ssl_client_certificate.startswith(
             '-----BEGIN CERTIFICATE-----'),
             repr(xobjmodel.ssl_client_certificate))
+
+    def testPostSystemThroughManagementNode(self):
+        # Send the identity of the management node
+        models.System.objects.all().delete()
+        mgmtNode = self._saveManagementNode()
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid)
+        xmlTempl = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
+</system>
+"""
+        response = self._post('/api/inventory/systems/',
+            data=xmlTempl % params,
+            headers={ 'X-rpathManagementNetworkNode' :
+                mgmtNode.node_jid })
+        self.failUnlessEqual(response.status_code, 200)
 
     def testPostSystemDupUuid(self):
         # add the first system
