@@ -77,6 +77,7 @@ from conary import errors as conary_errors
 
 from mcp import client as mcp_client
 from mcp import mcp_error
+from rmake.lib import procutil
 from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
 
@@ -2618,6 +2619,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not lg_ca:
             log.warning("Low-grade CA certificate is missing. Images will "
                     "not be remote-registerable.")
+
+        # Send our IP to jobslave for rpath-tools configuration. This is mainly
+        # here for demoability, because images booted in a different management
+        # zone will fail to contact the rBuilder. Eventually SLP will work out
+        # of the box and this won't be necessary.
+        rbuilder_ip = procutil.getNetName()
+        if rbuilder_ip != 'localhost':
+            r['inventory_node'] = rbuilder_ip + ':8443'
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:

@@ -594,13 +594,13 @@ class XObjModel(models.Model):
     @classmethod
     def iterRegularFields(cls):
         for f in cls._meta.fields:
-            if not isinstance(f, models.ForeignKey):
+            if not isinstance(f, ForeignKey):
                 yield f
 
     @classmethod
     def iterForeignKeys(cls):
         for f in cls._meta.fields:
-            if isinstance(f, models.ForeignKey):
+            if isinstance(f, ForeignKey):
                 yield f
 
     @classmethod
@@ -765,6 +765,7 @@ class XObjModel(models.Model):
                     val = getattr(self, fieldName)
                 else:
                     val = values.get(fieldName, None)
+                text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
                 if val:
@@ -779,6 +780,8 @@ class XObjModel(models.Model):
                         href_model._xobj = xobj.XObjMetadata(
                                             attributes = {'href':str})
                         href_model.href = val.get_absolute_url(request)
+                        if text_field and getattr(val, text_field):
+                            href_model._xobj.text = getattr(val, text_field)
                         setattr(xobj_model, fieldName, href_model)
                     else:
                         val = val.serialize(request)
@@ -975,23 +978,43 @@ class XObjHrefModel(XObjModel):
 
     def serialize(self, request=None, values=None):
         self.href = request.build_absolute_uri(self.href)
+        
+class ForeignKey(models.ForeignKey):
+    """
+    Wrapper of django foreign key for use in models
+    """
+    def __init__(self, *args, **kwargs):
+        #
+        # text_field is used when serializing the href.  It is the name of the 
+        # property to use for node text.  For example, a zone with name zone1
+        # serialized as an href would be <zone href="somehost/api/inventory/zones/1"/>.  
+        # If you set text_field to be name, it would be <zone href="somehost/api/inventory/zones/1">zone1</zone>.
+        #
+        self.text_field = None
+        try:
+            self.text_field = kwargs.pop('text_field')
+        except KeyError:
+            pass # text wasn't specified, that is fine
+        super(ForeignKey, self).__init__(*args, **kwargs)
 
-class SerializedForeignKey(models.ForeignKey):
+class SerializedForeignKey(ForeignKey):
     """
     By default, Foreign Keys serialize to hrefs. Use this field class if you
     want them to serialize to the full xml object representation instead.  Be
     careful of self referenceing models that can cause infinite recursion.
     """
     def __init__(self, *args, **kwargs):
+        self.text_field = None
         self.serialized = True
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
 
-class InlinedForeignKey(models.ForeignKey):
+class InlinedForeignKey(ForeignKey):
     """
     If you want a FK to be serialized as one of its fields, use the "visible"
     argument
     """
     def __init__(self, *args, **kwargs):
+        self.text_field = None
         self.visible = kwargs.pop('visible')
         super(InlinedForeignKey, self).__init__(*args, **kwargs)
 
@@ -1048,7 +1071,7 @@ class DateTimeUtcField(models.DateTimeField):
         else:
             return python_value
 
-class DeferredForeignKey(models.ForeignKey, DeferredForeignKeyMixIn):
+class DeferredForeignKey(ForeignKey, DeferredForeignKeyMixIn):
     pass
 
 class InlinedDeferredForeignKey(InlinedForeignKey, DeferredForeignKeyMixIn):
