@@ -620,6 +620,17 @@ class Job(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, request,
             parents=parents, model=model)
 
+    def serialize(self, request=None, values=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request,
+            values=values)
+        rmakeJob = self.getRmakeJob()
+        if rmakeJob:
+            xobj_model.job_log = rmakeJob.status.text
+        xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
+            pk=self.event_type_id).name
+        xobj_model.event_type = None
+        return xobj_model
+
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_event'
