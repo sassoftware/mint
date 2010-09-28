@@ -303,7 +303,7 @@ class System(modellib.XObjIdModel):
         "an x509 private key of an authorized client that can use the system's CIM broker")
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
-    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
+    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True, text_field="username"),
         "the user that deployed the system (only applies if system is on a virtual target)")
     current_state = D(modellib.SerializedForeignKey(
             SystemState, null=True, related_name='systems'),
