@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1569,6 +1569,18 @@ def _createJobsSchema(db):
                     REFERENCES Targets ON DELETE CASCADE
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['job_target'] = []
+        changed = True
+
+    if 'job_system' not in db.tables:
+        cu.execute("""
+            CREATE TABLE job_system
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                system_id    INTEGER NOT NULL
+                    REFERENCES inventory_system ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['job_system'] = []
         changed = True
 
     return changed
