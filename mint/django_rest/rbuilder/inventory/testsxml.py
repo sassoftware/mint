@@ -114,51 +114,6 @@ zones_xml = """\
     <description>Some local zone</description>
     <created_date>%s</created_date>
     <name>Local Zone</name>
-    <systems>
-      <system id="http://testserver/api/inventory/systems/1">
-        <agent_port/>
-        <created_date>2010-09-14T14:58:55.554533+00:00</created_date>
-        <current_state id="http://testserver/api/inventory/system_states/1">
-          <created_date>2010-09-14T14:58:40.939184+00:00</created_date>
-          <description>Unmanaged</description>
-          <name>unmanaged</name>
-          <system_state_id>1</system_state_id>
-        </current_state>
-        <description/>
-        <generated_uuid/>
-        <has_active_jobs>False</has_active_jobs>
-        <hostname/>
-        <installed_software/>
-        <jobs id="http://testserver/api/inventory/systems/1/jobs">
-          <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
-          <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
-          <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
-          <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
-        </jobs>
-        <launch_date/>
-        <launching_user/>
-        <local_uuid/>
-        <management_node/>
-        <managing_zone href="http://testserver/api/inventory/zones/1"/>
-        <name>foo</name>
-        <networks/>
-        <os_major_version/>
-        <os_minor_version/>
-        <os_type/>
-        <out_of_date>False</out_of_date>
-        <registration_date/>
-        <ssl_client_certificate/>
-        <ssl_server_certificate/>
-        <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
-        <system_id>1</system_id>
-        <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
-        <target/>
-        <target_system_description/>
-        <target_system_id/>
-        <target_system_name/>
-        <target_system_state/>
-      </system>
-    </systems>
     <management_nodes/>
     <zone_id>1</zone_id>
   </zone>
@@ -171,7 +126,6 @@ zone_xml = """\
   <description>Some local zone</description>
   <created_date>%s</created_date>
   <name>Local Zone</name>
-  <systems/>
   <management_nodes/>
   <zone_id>1</zone_id>
 </zone>
@@ -193,7 +147,6 @@ zone_post_response_xml = """\
   <name>Local Zone</name>
   <management_nodes/>
   <zone_id>1</zone_id>
-  <systems/>
 </zone>
 """
 
