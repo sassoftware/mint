@@ -165,6 +165,11 @@ class Zone(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'zone',
                 attributes = {'id':str})
+    
+    # Don't inline all the systems now.  Do not remove this code!
+    # See https://issues.rpath.com/browse/RBL-7236 and 
+    # https://issues.rpath.com/browse/RBL-7237 for more info
+    _xobj_hidden_accessors = set(['systems',])
 
     zone_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=8092, unique=True)
