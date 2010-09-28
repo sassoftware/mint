@@ -1117,7 +1117,8 @@ def _createInventorySchema(db, cfg):
                 "current_state_id" integer NOT NULL
                     REFERENCES "inventory_system_state" ("system_state_id"),
                 "management_node" bool,
-                "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
+                "managing_zone_id" integer NOT NULL
+                    REFERENCES "inventory_zone" ("zone_id")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         changed = True

@@ -686,12 +686,12 @@ class SystemManager(base.BaseManager):
         target = self.lookupTarget(targetType=targetType,
             targetName=targetName)
         system.target = target
+        if system.managing_zone_id is None:
+            system.managing_zone = self.getLocalZone()
+        # For bayonet, we only launch in the local zone
         oldModel, system = models.System.objects.load_or_create(system,
             withReadOnly=True)
 
-        # For bayonet, we only launch in the local zone
-        zone = models.Zone.objects.get(name=models.Zone.LOCAL_ZONE)
-        system.managing_zone = zone
         system.launching_user = self.user
         system.launch_date = self.now()
         # Copy some of the data from the target
@@ -1085,14 +1085,14 @@ class SystemManager(base.BaseManager):
         log.info("  Importing system %s (%s)" % (targetSystemId,
             targetSystem.instanceName))
         system, created = models.System.objects.get_or_create(target=target,
-            target_system_id=targetSystemId)
+            target_system_id=targetSystemId,
+            managing_zone = self.getLocalZone())
         if created:
             self.log_system(system, "System added as part of target %s (%s)" %
                 (target.targetname, target.targettype))
             # Having nothing else available, we copy the target's name
             system.name = targetSystem.instanceName
             system.description = targetSystem.instanceDescription
-            system.managing_zone = self.getLocalZone()
         system.target_system_name = targetSystem.instanceName
         system.target_system_description = targetSystem.instanceDescription
         self._addTargetSystemNetwork(system, target, targetSystem)

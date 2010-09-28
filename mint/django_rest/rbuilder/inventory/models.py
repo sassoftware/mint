@@ -312,8 +312,7 @@ class System(modellib.XObjIdModel):
         "a collection of top-level items installed on the system")
     management_node = D(models.NullBooleanField(),
         "whether or not this system is a management node")
-    #TO-DO should this ever be nullable?
-    managing_zone = D(modellib.ForeignKey(Zone, null=True,
+    managing_zone = D(modellib.ForeignKey(Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
     jobs = models.ManyToManyField("Job", through="SystemJob")
