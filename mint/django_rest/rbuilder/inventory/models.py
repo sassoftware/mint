@@ -269,7 +269,7 @@ class System(modellib.XObjIdModel):
     # physical target, we may not.
     launch_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was deployed (only applies if system is on a virtual target)")
-    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True),
+    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, text_field="targetname"),
         "the virtual target the system was deployed to (only applies if system is on a virtual target)")
     target_system_id = D(APIReadOnly(models.CharField(max_length=255,
             null=True)),

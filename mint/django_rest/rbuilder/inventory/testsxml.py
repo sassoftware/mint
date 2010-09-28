@@ -1118,7 +1118,7 @@ system_target_xml = """\
   <target_system_state/>
   <os_minor_version/>
   <name>testsystemname</name>
-  <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname"/>
+  <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
@@ -1857,7 +1857,7 @@ system_with_target = """\
   <os_minor_version/>
   <has_active_jobs>False</has_active_jobs>
   <agent_port/>
-  <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com"/>
+  <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
   <local_uuid/>
   <target_system_state/>
