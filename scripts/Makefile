@@ -41,6 +41,7 @@ generic_scripts = \
 	job-cleanup			\
 	migrate-config			\
 	pki-tool			\
+	postgres-major-migrate		\
 	process-system-events		\
 	rbuilder-database		\
 	system-resolver			\

@@ -44,91 +44,91 @@ Attributes:
 
 <xsl:template match="/inventory">
 <xsl:comment>
-<xsl:copy-of select="$inventoryInfo" />
+<xsl:copy-of select="$inventory_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
 <xsl:template match="/zones">
 <xsl:comment>
-<xsl:copy-of select="$zonesInfo" />
+<xsl:copy-of select="$zones_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
 <xsl:template match="/zone">
 <xsl:comment>
-<xsl:copy-of select="$zoneInfo" />
+<xsl:copy-of select="$zone_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
-<xsl:template match="/managementNodes">
+<xsl:template match="/management_nodes">
 <xsl:comment>
-<xsl:copy-of select="$managementNodesInfo" />
+<xsl:copy-of select="$management_nodes_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
-<xsl:template match="/managementNode">
+<xsl:template match="/management_node">
 <xsl:comment>
-<xsl:copy-of select="$managementNodeInfo" />
+<xsl:copy-of select="$management_node_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
-<xsl:template match="/eventTypes">
+<xsl:template match="/event_types">
 <xsl:comment>
-<xsl:copy-of select="$eventTypesInfo" />
+<xsl:copy-of select="$event_types_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
-<xsl:template match="/eventType">
+<xsl:template match="/event_type">
 <xsl:comment>
-<xsl:copy-of select="$eventTypeInfo" />
+<xsl:copy-of select="$event_type_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
-<xsl:template match="/systemStates">
+<xsl:template match="/system_states">
 <xsl:comment>
-<xsl:copy-of select="$systemStatesInfo" />
+<xsl:copy-of select="$system_states_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
-<xsl:template match="/systemState">
+<xsl:template match="/system_state">
 <xsl:comment>
-<xsl:copy-of select="$systemStateInfo" />
+<xsl:copy-of select="$system_state_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
 <xsl:template match="/networks">
 <xsl:comment>
-<xsl:copy-of select="$networksInfo" />
+<xsl:copy-of select="$networks_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
 <xsl:template match="/network">
 <xsl:comment>
-<xsl:copy-of select="$networkInfo" />
+<xsl:copy-of select="$network_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
 <xsl:template match="/systems">
 <xsl:comment>
-<xsl:copy-of select="$systemsInfo" />
+<xsl:copy-of select="$systems_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
 
 <xsl:template match="/system">
 <xsl:comment>
-<xsl:copy-of select="$systemInfo" />
+<xsl:copy-of select="$system_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>

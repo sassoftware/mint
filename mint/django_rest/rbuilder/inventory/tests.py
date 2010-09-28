@@ -3,22 +3,22 @@ import datetime
 import os
 import shutil
 import tempfile
+import time
 from dateutil import tz
 from xobj import xobj
 
 from conary import versions
 
 from django.template import TemplateDoesNotExist
-
 from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
-from mint.lib import x509
 
+from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
-
 from mint.django_rest.rbuilder.inventory import testsxml
+from mint.lib import x509
 
 from testrunner import testcase
 
@@ -114,6 +114,17 @@ class XML(object):
         return (node1.text, node2.text)
 
 class XMLTestCase(TestCase, testcase.MockMixIn):
+
+    def setUp(self):
+        self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
+        mintCfg = os.path.join(self.workDir, "mint.cfg")
+        file(mintCfg, "w")
+        from mint import config
+        config.RBUILDER_CONFIG = mintCfg
+        self.client = Client()
+        self.mgr = manager.Manager()
+
+
     def tearDown(self):
         TestCase.tearDown(self)
         self.unmock()
@@ -122,8 +133,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.failUnless(needle in haystack, "%s not in %s" % (needle,
             haystack))
 
-    def assertXMLEquals(self, first, second, 
-                        ignoreNodes=['timeCreated', 'timeUpdated']):
+    def assertXMLEquals(self, first, second, ignoreNodes=None):
+        if ignoreNodes is None:
+            ignoreNodes = ['time_created', 'time_updated']
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
         tree0 = X.normalize(etree.fromstring(first.strip()))
@@ -274,15 +286,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         systemJob.save()
         return job
 
-    def setUp(self):
-        self.workDir = tempfile.mkdtemp(dir="/tmp", prefix="rbuilder-django-")
-        mintCfg = os.path.join(self.workDir, "mint.cfg")
-        file(mintCfg, "w")
-        from mint import config
-        config.RBUILDER_CONFIG = mintCfg
-        self.client = Client()
-        self.mgr = manager.Manager()
-
     def cleanUp(self):
         shutil.rmtree(self.workDir, ignore_errors=True)
 
@@ -337,7 +340,7 @@ class LogTestCase(XMLTestCase):
             password="password")
         # Just remove lines with dates in them, it's easier to test for now.
         self.assertXMLEquals(response.content, testsxml.systems_log_xml,
-            ignoreNodes = [ 'entryDate' ])
+            ignoreNodes = [ 'entry_date' ])
 
 class ZonesTestCase(XMLTestCase):
 
@@ -352,7 +355,7 @@ class ZonesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.zones_xml % (zone.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'created_date' ])
 
     def testGetZoneAuth(self):
         """
@@ -374,7 +377,7 @@ class ZonesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.zone_xml % (zone.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'created_date' ])
         
     def testAddZoneNodeNull(self):
         
@@ -476,16 +479,16 @@ class ZonesTestCase(XMLTestCase):
 class SystemStatesTestCase(XMLTestCase):
 
     def testGetSystemStates(self):
-        response = self._get('/api/inventory/systemStates/')
+        response = self._get('/api/inventory/system_states/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_states_xml, 
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'created_date' ])
 
     def testGetSystemState(self):
-        response = self._get('/api/inventory/systemStates/1/')
+        response = self._get('/api/inventory/system_states/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_state_xml, 
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'created_date' ])
         
 class NetworkTestCase(XMLTestCase):
 
@@ -496,7 +499,7 @@ class NetworkTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.networks_xml, ignoreNodes = [ 'createdDate' ])
+            testsxml.networks_xml, ignoreNodes = [ 'created_date' ])
 
     def testGetNetworkAuth(self):
         """
@@ -578,7 +581,7 @@ class NetworkTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.network_xml, ignoreNodes = [ 'createdDate' ])
+            testsxml.network_xml, ignoreNodes = [ 'created_date' ])
 
 class ManagementNodesTestCase(XMLTestCase):
 
@@ -607,7 +610,7 @@ class ManagementNodesTestCase(XMLTestCase):
     # -----------------
     def testGetManagementNodes(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/managementNodes/',
+        response = self._get('/api/inventory/management_nodes/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -620,16 +623,16 @@ class ManagementNodesTestCase(XMLTestCase):
         Ensure requires auth but not admin
         """
         self._saveManagementNode()
-        response = self._get('/api/inventory/managementNodes/1/')
+        response = self._get('/api/inventory/management_nodes/1/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/managementNodes/1/',
+        response = self._get('/api/inventory/management_nodes/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
     def testGetManagementNode(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/managementNodes/1/',
+        response = self._get('/api/inventory/management_nodes/1/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -650,16 +653,16 @@ class ManagementNodesTestCase(XMLTestCase):
         """
         models.ManagementNode.objects.all().delete()
         self._saveZone()
-        response = self._post('/api/inventory/managementNodes/', 
+        response = self._post('/api/inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/managementNodes/', 
+        response = self._post('/api/inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/managementNodes/', 
+        response = self._post('/api/inventory/management_nodes/', 
             data=testsxml.management_node_post_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -668,13 +671,13 @@ class ManagementNodesTestCase(XMLTestCase):
         models.ManagementNode.objects.all().delete()
         self._saveZone()
         xml = testsxml.management_node_post_xml
-        response = self._post('/api/inventory/managementNodes/', 
+        response = self._post('/api/inventory/management_nodes/', 
             data=xml, content_type='text/xml', username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
         management_node_xml = testsxml.management_node_post_response_xml.replace(
-            '<registrationDate/>',
-            '<registrationDate>%s</registrationDate>' % \
+            '<registration_date/>',
+            '<registration_date>%s</registration_date>' % \
             (management_node.registration_date.isoformat()))
         self.assertXMLEquals(response.content, management_node_xml % \
             (management_node.networks.all()[0].created_date.isoformat(), 
@@ -683,7 +686,7 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testGetManagementNodesForZone(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/zones/%d/managementNodes/' % management_node.zone.zone_id,
+        response = self._get('/api/inventory/zones/%d/management_nodes/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -696,16 +699,16 @@ class ManagementNodesTestCase(XMLTestCase):
         Ensure quires auth but not admin
         """
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id)
+        response = self._get('/api/inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id)
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id,
+        response = self._get('/api/inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
     def testGetManagementNodeForZone(self):
         management_node = self._saveManagementNode()
-        response = self._get('/api/inventory/zones/%d/managementNodes/1/' % management_node.zone.zone_id,
+        response = self._get('/api/inventory/zones/%d/management_nodes/1/' % management_node.zone.zone_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -743,16 +746,16 @@ class ManagementNodesTestCase(XMLTestCase):
         """
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
-        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
-        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=testsxml.management_node_zone_post_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -761,13 +764,13 @@ class ManagementNodesTestCase(XMLTestCase):
         models.ManagementNode.objects.all().delete()
         zone = self._saveZone()
         xml = testsxml.management_node_zone_post_xml
-        response = self._post('/api/inventory/zones/%d/managementNodes/' % zone.zone_id, 
+        response = self._post('/api/inventory/zones/%d/management_nodes/' % zone.zone_id, 
             data=xml, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         management_node = models.ManagementNode.objects.get(pk=1)
         management_node_xml = testsxml.management_node_zone_post_response_xml.replace(
-            '<registrationDate/>',
-            '<registrationDate>%s</registrationDate>' % \
+            '<registration_date/>',
+            '<registration_date>%s</registration_date>' % \
             (management_node.registration_date.isoformat()))
         self.assertXMLEquals(response.content, management_node_xml % \
             (management_node.networks.all()[0].created_date.isoformat(), 
@@ -907,7 +910,16 @@ class SystemsTestCase(XMLTestCase):
 
         try:
             connection.queries = []
+            t0 = time.time()
             systems = self.mgr.getSystems(request)
+            t1 = time.time()
+            print "Systems generated: %d: %.2fs" % (len(systems.system), t1 - t0)
+
+            f = deco.return_xml(lambda *args, **kwargs: systems)
+            f(None, request)
+            t2 = time.time()
+            print "return_xml decorator: %.2fs" % (t2 - t1)
+
             qcount = len(connection.queries)
             self.failUnlessEqual(len(systems.system), count)
             if qcount > count:
@@ -1029,8 +1041,8 @@ class SystemsTestCase(XMLTestCase):
     <description>%(name)s</description>
     <networks>
       <network>
-        <deviceName>eth0</deviceName>
-        <dnsName>%(dnsName)s</dnsName>
+        <device_name>eth0</device_name>
+        <dns_name>%(dnsName)s</dns_name>
       </network>
     </networks>
   </system>
@@ -1166,7 +1178,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'created_date' ])
 
     def testGetSystemAuth(self):
         """
@@ -1189,7 +1201,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate', 'timeCreated', 'timeUpdated' ])
+            ignoreNodes = [ 'created_date', 'time_created', 'time_updated' ])
 
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
@@ -1204,7 +1216,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate', 'timeCreated', 'timeUpdated' ])
+            ignoreNodes = [ 'created_date', 'time_created', 'time_updated' ])
         
     def testPostSystemAuth(self):
         """
@@ -1220,21 +1232,21 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('/api/inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
         system = models.System.objects.get(pk=1)
-        system_xml = testsxml.system_post_xml_response.replace('<registrationDate/>',
-            '<registrationDate>%s</registrationDate>' % \
+        system_xml = testsxml.system_post_xml_response.replace('<registration_date/>',
+            '<registration_date>%s</registration_date>' % \
             (system.registration_date.isoformat()))
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate', 'sslClientCertificate',
-                            'timeCreated', 'timeUpdated'])
+            ignoreNodes = [ 'created_date', 'ssl_client_certificate',
+                            'time_created', 'time_updated'])
         # Unfortunately, we can't mock modules since we don't control Django's
         # class loading. So we ignore the cert in the previous step and we
         # test it with xobj (it is different every time)
         obj = xobj.parse(response.content)
         xobjmodel = obj.system
-        self.failUnless(xobjmodel.sslClientCertificate.startswith(
+        self.failUnless(xobjmodel.ssl_client_certificate.startswith(
             '-----BEGIN CERTIFICATE-----'),
-            repr(xobjmodel.sslClientCertificate))
+            repr(xobjmodel.ssl_client_certificate))
 
     def testPostSystemDupUuid(self):
         # add the first system
@@ -1262,10 +1274,10 @@ class SystemsTestCase(XMLTestCase):
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
         
-        response = self._get('/api/inventory/systems/1/systemLog/')
+        response = self._get('/api/inventory/systems/1/system_log/')
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/systems/1/systemLog/',
+        response = self._get('/api/inventory/systems/1/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         
@@ -1275,13 +1287,13 @@ class SystemsTestCase(XMLTestCase):
         response = self._post('/api/inventory/systems/', 
             data=testsxml.system_post_xml)
         self.assertEquals(response.status_code, 200)
-        response = self._get('/api/inventory/systems/1/systemLog/',
+        response = self._get('/api/inventory/systems/1/system_log/',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         content = []
         # Just remove lines with dates in them, it's easier to test for now.
         for line in response.content.split('\n'):
-            if 'entryDate' in line or \
+            if 'entry_date' in line or \
                'will be enabled on' in line:
                 continue
             else:
@@ -1450,11 +1462,11 @@ class SystemsTestCase(XMLTestCase):
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <currentState>
+  <current_state>
     <description>Retired</description>
     <name>mothballed</name>
-    <systemStateId>10</systemStateId>
-  </currentState>
+    <system_state_id>10</system_state_id>
+  </current_state>
 </system>
 """ % params
 
@@ -1462,7 +1474,7 @@ class SystemsTestCase(XMLTestCase):
         xobjmodel = obj.system
         model = models.System.objects.load_from_object(xobjmodel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
-        self.failUnlessEqual(model.current_state.name, "unmanaged")
+        self.failUnlessEqual(model.current_state.name, "mothballed")
 
     def testUpdateCurrentState(self):
         localUuid = 'localuuid001'
@@ -1584,8 +1596,8 @@ class SystemsTestCase(XMLTestCase):
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <sslClientCertificate>thou shalt not change me</sslClientCertificate>
-  <sslClientKey>thou shalt not change me</sslClientKey>
+  <ssl_client_certificate>thou shalt not change me</ssl_client_certificate>
+  <ssl_client_key>thou shalt not change me</ssl_client_key>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -2087,7 +2099,7 @@ class SystemVersionsTestCase(XMLTestCase):
              self.trove2.last_available_update_refresh.isoformat(),
              system.networks.all()[0].created_date.isoformat(),
              system.created_date.isoformat()),
-            ignoreNodes = [ 'createdDate' ])
+            ignoreNodes = [ 'created_date' ])
 
     def testGetInstalledSoftwareRest(self):
         system = self._saveSystem()
@@ -2095,7 +2107,7 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove)
         system.installed_software.add(self.trove2)
         system.save()
-        url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
+        url = '/api/inventory/systems/%s/installed_software/' % system.pk
         response = self._get(url, username="testuser", password="password")
         self.assertXMLEquals(response.content,
             testsxml.get_installed_software_xml %(
@@ -2109,12 +2121,12 @@ class SystemVersionsTestCase(XMLTestCase):
         system.installed_software.add(self.trove2)
         system.save()
 
-        url = '/api/inventory/systems/%s/installedSoftware/' % system.pk
+        url = '/api/inventory/systems/%s/installed_software/' % system.pk
         response = self._post(url,
             data=testsxml.installed_software_post_xml)
         self.assertXMLEquals(response.content,
             testsxml.installed_software_response_xml,
-            ignoreNodes = ['lastAvailableUpdateRefresh'])
+            ignoreNodes = ['last_available_update_refresh'])
 
     def testAvailableUpdatesXml(self):
         system = self._saveSystem()
@@ -2127,7 +2139,7 @@ class SystemVersionsTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
-            ignoreNodes=['createdDate', 'lastAvailableUpdateRefresh'])
+            ignoreNodes=['created_date', 'last_available_update_refresh'])
 
     def testSetInstalledSoftwareSystemRest(self):
         system = self._saveSystem()
@@ -2210,12 +2222,12 @@ class SystemVersionsTestCase(XMLTestCase):
 class EventTypeTestCase(XMLTestCase):
 
     def testGetEventTypes(self):
-        response = self._get('/api/inventory/eventTypes/')
+        response = self._get('/api/inventory/event_types/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_types_xml)
 
     def testGetEventType(self):
-        response = self._get('/api/inventory/eventTypes/1/')
+        response = self._get('/api/inventory/event_types/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.event_type_xml)
         
@@ -2223,11 +2235,11 @@ class EventTypeTestCase(XMLTestCase):
         """
         Ensure we require admin to put event types
         """
-        response = self._put('/api/inventory/eventTypes/1/', 
+        response = self._put('/api/inventory/event_types/1/', 
             data= testsxml.event_type_put_xml, content_type='text/xml')
         self.assertEquals(response.status_code, 401)
         
-        response = self._put('/api/inventory/eventTypes/1/', 
+        response = self._put('/api/inventory/event_types/1/', 
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
@@ -2237,7 +2249,7 @@ class EventTypeTestCase(XMLTestCase):
         event_type = models.EventType(name="foo", description="bar", priority=110)
         event_type.save()
         self.assertTrue(event_type.priority == 110)
-        response = self._put('/api/inventory/eventTypes/1/', 
+        response = self._put('/api/inventory/event_types/1/', 
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -2252,7 +2264,7 @@ class EventTypeTestCase(XMLTestCase):
         event_type = models.EventType(name=models.EventType.SYSTEM_POLL, description="bar", priority=110)
         event_type.save()
         self.failUnlessEqual(event_type.name, models.EventType.SYSTEM_POLL)
-        response = self._put('/api/inventory/eventTypes/%d/' % event_type.pk,
+        response = self._put('/api/inventory/event_types/%d/' % event_type.pk,
             data=testsxml.event_type_put_name_change_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
@@ -2290,7 +2302,7 @@ class SystemEventTestCase(XMLTestCase):
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
-        response = self._get('/api/inventory/systemEvents/',
+        response = self._get('/api/inventory/system_events/',
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -2305,10 +2317,10 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        response = self._get('/api/inventory/systemEvents/%d/' % event.system_event_id)
+        response = self._get('/api/inventory/system_events/%d/' % event.system_event_id)
         self.assertEquals(response.status_code, 401)
         
-        response = self._get('/api/inventory/systemEvents/%d/' % event.system_event_id,
+        response = self._get('/api/inventory/system_events/%d/' % event.system_event_id,
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
@@ -2316,7 +2328,7 @@ class SystemEventTestCase(XMLTestCase):
         poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
-        response = self._get('/api/inventory/systemEvents/%d/' % event.system_event_id,
+        response = self._get('/api/inventory/system_events/%d/' % event.system_event_id,
            username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
@@ -2339,7 +2351,7 @@ class SystemEventTestCase(XMLTestCase):
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
         event2.save()
         SystemEvents = self.mgr.getSystemEvents()
-        assert(len(SystemEvents.systemEvent) == 2)
+        assert(len(SystemEvents.system_event) == 2)
         
     def testDeleteSystemEvent(self):
         # add an event
@@ -2468,7 +2480,7 @@ class SystemEventTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
+        url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
         response = self._post(url, data=system_event_post_xml)
         self.assertEquals(response.status_code, 401)
@@ -2479,7 +2491,7 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         
     def testPostSystemEvent(self):
-        url = '/api/inventory/systems/%d/systemEvents/' % self.system.system_id
+        url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
         system_event_post_xml = testsxml.system_event_post_xml
         response = self._post(url,
             data=system_event_post_xml,
@@ -2490,7 +2502,7 @@ class SystemEventTestCase(XMLTestCase):
             (system_event.time_created.isoformat(),
             system_event.time_enabled.isoformat())
         self.assertXMLEquals(response.content, system_event_xml,
-            ignoreNodes='timeCreated')
+            ignoreNodes='time_created')
         
 class SystemEventProcessingTestCase(XMLTestCase):
     
@@ -2703,8 +2715,9 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         class RepeaterMgr(object):
             repeaterClient = RepeaterClient()
 
+        zone = models.Zone.objects.get(name=models.Zone.LOCAL_ZONE)
         self.mgr.repeaterMgr = RepeaterMgr()
-        self.system2 = system = models.System(name="hey")
+        self.system2 = system = models.System(name="hey", managing_zone=zone)
         system.save()
         network2 = models.Network(ip_address="2.2.2.2", active=True)
         network3 = models.Network(ip_address="3.3.3.3", required=True)
@@ -2746,7 +2759,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             clientCert=testsxml.x509_pem),
                         resLoc(path='/api/inventory/systems/4', port=80),
                     ),
-                    dict(zone=None),
+                    dict(zone='Local rBuilder'),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
@@ -2792,7 +2805,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             clientCert=testsxml.x509_pem),
                         resLoc(path='/api/inventory/systems/4', port=80),
                     ),
-                    dict(requiredNetwork=None, zone=None),
+                    dict(requiredNetwork=None, zone='Local rBuilder'),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
@@ -2969,12 +2982,12 @@ class TargetSystemImportTest(XMLTestCase):
         obj = xobj.parse(response.content)
         xobjmodel = obj.system
         self.failUnlessEqual(xobjmodel.name, 'vsphere1 001')
-        self.failUnlessEqual(xobjmodel.targetSystemId, 'vsphere1-001')
-        self.failUnlessEqual(xobjmodel.targetSystemName, 'Instance 1')
-        self.failUnlessEqual(xobjmodel.targetSystemDescription,
+        self.failUnlessEqual(xobjmodel.target_system_id, 'vsphere1-001')
+        self.failUnlessEqual(xobjmodel.target_system_name, 'Instance 1')
+        self.failUnlessEqual(xobjmodel.target_system_description,
             'Instance desc 1')
-        self.failUnlessEqual(xobjmodel.targetSystemState, 'running')
-        self.failUnlessEqual(xobjmodel.networks.network.dnsName, 'dnsName1-001')
+        self.failUnlessEqual(xobjmodel.target_system_state, 'running')
+        self.failUnlessEqual(xobjmodel.networks.network.dns_name, 'dnsName1-001')
 
         # Check system log entries
         system = models.System.objects.get(target_system_id='vsphere2-003')
@@ -3030,6 +3043,44 @@ class TargetSystemImportTest(XMLTestCase):
         self.mgr.user = user3
         self.failUnlessEqual(self.mgr.sysMgr.isManageable(system), False)
 
+    def testGetSystemWithTarget(self):
+        system = models.System.objects.get(target_system_id='vsphere1-002')
+        url = '/api/inventory/systems/%s' % system.pk
+        response = self._get(url, username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.system_with_target,
+            ignoreNodes=['created_date'])
+
+    def testAddLaunchedSystem(self):
+        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
+        self.mgr.user = user2
+        params = dict(
+            target_system_id = "target-system-id-001",
+            target_system_name = "target-system-name 001",
+            target_system_description = "target-system-description 001",
+            target_system_state = "Frisbulating",
+            ssl_client_certificate = "ssl client certificate 001",
+            ssl_client_key = "ssl client key 001",
+        )
+        dnsName = 'dns-name-1'
+        system = models.System(**params)
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.targetname,
+            targetType=self.tgt2.targettype)
+        for k, v in params.items():
+            self.failUnlessEqual(getattr(system, k), v)
+        # Make sure we have credentials
+        stc = list(system.target_credentials.all())[0]
+        self.failUnlessIn(stc.credentials_id,
+            [ x.targetcredentialsid.targetcredentialsid
+                for x in user2.targetusercredentials_set.all() ])
+        self.failUnlessEqual(system.managing_zone.name,
+            models.Zone.LOCAL_ZONE)
+        self.failUnlessEqual(system.name, params['target_system_name'])
+        self.failUnlessEqual(system.description,
+            params['target_system_description'])
+
 class JobsTestCase(XMLTestCase):
 
     def _mock(self):
@@ -3065,7 +3116,7 @@ class JobsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.jobs_xml)
     
     def testGetJobStates(self):
-        response = self._get('/api/inventory/jobStates/')
+        response = self._get('/api/inventory/job_states/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.job_states_xml)
 
@@ -3075,7 +3126,7 @@ class JobsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.job_xml)
 
     def testGetJobState(self):
-        response = self._get('/api/inventory/jobStates/1/')
+        response = self._get('/api/inventory/job_states/1/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.job_state_xml)
 

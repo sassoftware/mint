@@ -1,21 +1,21 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-<xsl:variable name="networkInfo">
-<xsl:copy-of select="$networkModel" />
-<xsl:copy-of select="$networkMethods" />
+<xsl:variable name="network_info">
+<xsl:copy-of select="$network_model" />
+<xsl:copy-of select="$network_methods" />
 </xsl:variable>
 
-<xsl:variable name="networkModel"><![CDATA[
+<xsl:variable name="network_model"><![CDATA[
 Description:
   A network in inventory]]>
-<xsl:copy-of select="$networkModelProperties" />
+<xsl:copy-of select="$network_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="networkModelProperties"><![CDATA[
+<xsl:variable name="network_model_properties"><![CDATA[
 Network Properties:
-  deviceName - the network device name
-  networkId - the database ID for the network
-  createdDate - the date the network was created (UTC)
+  device_name - the network device name
+  network_id - the database ID for the network
+  created_date - the date the network was created (UTC)
   ip_address - the network IP address
   ipv6_address - the network IPv6 address
   dns_name - the network DNS name
@@ -25,7 +25,7 @@ Network Properties:
   required - whether or not a user has required that this network device be the ones used to manage the system]]>
 </xsl:variable>
 
-<xsl:variable name="networkMethods"><![CDATA[
+<xsl:variable name="network_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: user

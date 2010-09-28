@@ -19,6 +19,7 @@ class rBuilderTest(TestPackageRecipe):
         'conary-repository:python', 
         'django:python',
         'django-db-postgres:python',
+        'django-db-sqlite3:python',
         'django-rest-interface:python',
         'dnspython:python',
         'decorator:python',
@@ -79,6 +80,8 @@ class rBuilderTest(TestPackageRecipe):
         # Make sure the testsuite uses the installed rBuilder. Moving
         # is faster than removing.
         r.MakeDirs('../mint')
+        r.Move('mint/django_rest/rbuilder/inventory/tests.py',
+            'inventory_tests.py')
         r.Move('mint', '../mint/mint')
         r.Move('raaplugins', '../mint/raaplugins')
 

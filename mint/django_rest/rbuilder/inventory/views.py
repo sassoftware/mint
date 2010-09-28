@@ -88,7 +88,11 @@ class AbstractInventoryService(resource.Resource):
         if access & ACCESS.EVENT_UUID:
             # Event UUID authentication is special - it can be compounded with
             # regular authentication or admin
-            eventUuid = request.environ.get('X-rBuilder-Event-UUID')
+            headerName = 'X-rBuilder-Event-UUID'
+            # HTTP_THANK_YOU_DJANGO_FOR_MANGLING_THE_HEADERS
+            mangledHeaderName = 'HTTP_' + headerName.replace('-', '_').upper()
+            eventUuid = request.META.get(headerName,
+                request.META.get(mangledHeaderName))
             if eventUuid:
                 # Check if this system has such an event uuid
                 systemId = kwargs['system_id']
@@ -190,10 +194,10 @@ class InventoryManagementNodeService(AbstractInventoryService):
             return self.mgr.getManagementNodes()
         
     @access.admin
-    @requires('managementNode')
+    @requires('management_node')
     @return_xml
-    def rest_POST(self, request, managementNode):
-        managementNode = self.mgr.addManagementNode(managementNode)
+    def rest_POST(self, request, management_node):
+        managementNode = self.mgr.addManagementNode(management_node)
         return managementNode
     
 class InventoryZoneManagementNodeService(AbstractInventoryService):
@@ -209,10 +213,11 @@ class InventoryZoneManagementNodeService(AbstractInventoryService):
             return self.mgr.getManagementNodesForZone(zone_id)
         
     @access.admin
-    @requires('managementNode')
+    @requires('management_node')
     @return_xml
-    def rest_POST(self, request, zone_id, managementNode):
-        managementNode = self.mgr.addManagementNodeForZone(zone_id, managementNode)
+    def rest_POST(self, request, zone_id, management_node):
+        managementNode = self.mgr.addManagementNodeForZone(zone_id,
+            management_node)
         return managementNode
 
 class InventoryNetworkService(AbstractInventoryService):
@@ -266,9 +271,6 @@ class InventorySystemsService(AbstractInventoryService):
         systems = self.mgr.addSystems(systems.system)
         return self.mgr.getSystems(request)
 
-    def launch(self, instanceId, targetType, targetName):
-        return self.mgr.launchSystem(instanceId, targetType, targetName)
-
 class InventorySystemsSystemService(AbstractInventoryService):
     
     @return_xml
@@ -315,10 +317,10 @@ class InventorySystemsSystemEventService(AbstractInventoryService):
         else:
             return self.mgr.getSystemSystemEvents(system_id)
         
-    @requires('systemEvent')
+    @requires('system_event')
     @return_xml
-    def rest_POST(self, request, system_id, systemEvent):
-        systemEvent = self.mgr.addSystemSystemEvent(system_id, systemEvent)
+    def rest_POST(self, request, system_id, system_event):
+        systemEvent = self.mgr.addSystemSystemEvent(system_id, system_event)
         return systemEvent
 
 class InventorySystemsSystemLogService(AbstractInventoryService):

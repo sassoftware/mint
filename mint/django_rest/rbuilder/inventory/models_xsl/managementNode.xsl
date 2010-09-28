@@ -2,32 +2,32 @@
 
 <xsl:import href="systems.xsl"/>
 
-<xsl:variable name="managementNodeInfo">
-<xsl:copy-of select="$managementNodeModel" />
-<xsl:copy-of select="$managementNodeMethods" />
+<xsl:variable name="management_node_info">
+<xsl:copy-of select="$management_node_model" />
+<xsl:copy-of select="$management_node_methods" />
 </xsl:variable>
 
-<xsl:variable name="managementNodeModel"><![CDATA[
+<xsl:variable name="management_node_model"><![CDATA[
 Description:
   A management node in inventory.]]>
-<xsl:copy-of select="$managementNodeModelProperties" />
+<xsl:copy-of select="$management_node_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="managementNodeModelProperties"><![CDATA[
-ManagementNode Properties (extends System resource):]]><xsl:copy-of select="$systemModelPropertiesNoDescription" /><![CDATA[  local - whether or not this management node is local to the rBuilder
-  systemPtr - a link to the management node's underlying system
+<xsl:variable name="management_node_model_properties"><![CDATA[
+ManagementNode Properties (extends System resource):]]><xsl:copy-of select="$system_model_properties_no_description" /><![CDATA[  local - whether or not this management node is local to the rBuilder
+  system_ptr - a link to the management node's underlying system
   zone - the zone the management node lives in
-  nodeJid - the Jabber ID the management node is using]]>
+  node_jid - the Jabber ID the management node is using]]>
 </xsl:variable>
 
-<xsl:variable name="managementNodeMethods"><![CDATA[
+<xsl:variable name="management_node_methods"><![CDATA[
 Methods: 
   GET:
     Authentication: user
     Response Format:
-       <managementNode id="http://hostname/api/inventory/managementNodes/1/">
+       <management_node id="http://hostname/api/inventory/management_nodes/1/">
          ...
-       </managementNode>
+       </management_node>
 
   POST:
     not supported

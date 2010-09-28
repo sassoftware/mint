@@ -59,7 +59,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getEventTypes(self):
         EventTypes = models.EventTypes()
-        EventTypes.eventType = list(models.EventType.objects.all())
+        EventTypes.event_type = list(models.EventType.objects.all())
         return EventTypes
 
     @base.exposed
@@ -289,6 +289,12 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def getSystems(self, request):
+        profiling = False
+        if profiling:
+            from django.db import settings
+            settings.DEBUG = True
+            t0 = time.time()
+            del connection.queries[:]
         cu = connection.cursor()
         cu.execute("DELETE FROM inventory_tmp")
         # XXX we will have to change this to allow for filtering too
@@ -302,6 +308,15 @@ class SystemManager(base.BaseManager):
         ret = self.bulkSerialize(request, systems, valuesMap)
         Systems = models.Systems()
         Systems.system = ret
+        if profiling:
+            settings.DEBUG = False
+            now = time.time()
+            elapsed = now - t0
+            f = file("/tmp/queries-%.2f" % now, "w")
+            for q in connection.queries:
+                f.write("qtime: %s s: %s\n\n" % (q['time'], q['sql'].strip()))
+            f.write("PID: %d; %d queries, %.2f s\n" %
+                (os.getpid(), len(connection.queries), elapsed))
         return Systems
 
     def bulkSerialize(self, request, objects, valuesMap):
@@ -324,7 +339,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getManagementNodes(self):
         ManagementNodes = models.ManagementNodes()
-        ManagementNodes.managementNode = list(models.ManagementNode.objects.all())
+        ManagementNodes.management_node = list(models.ManagementNode.objects.all())
         return ManagementNodes
     
     @base.exposed
@@ -365,7 +380,7 @@ class SystemManager(base.BaseManager):
     def getManagementNodesForZone(self, zone_id):
         zone = models.Zone.objects.get(pk=zone_id)
         ManagementNodes = models.ManagementNodes()
-        ManagementNodes.managementNode = list(models.ManagementNode.objects.filter(zone=zone).all())
+        ManagementNodes.management_node = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
 
     @base.exposed
@@ -376,7 +391,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystemStates(self):
         SystemStates = models.SystemStates()
-        SystemStates.systemState = list(models.SystemState.objects.all())
+        SystemStates.system_state = list(models.SystemState.objects.all())
         return SystemStates
 
     @classmethod
@@ -665,16 +680,43 @@ class SystemManager(base.BaseManager):
         return rbuildermodels.Targets.objects.get(
             targettype=targetType, targetname=targetName)
 
-    def launchSystem(self, system):
-        managedSystem = models.managed_system.factoryParser(system)
-        managedSystem.launching_user = self.user
-        managedSystem.launch_date = int(time.time())
-        managedSystem.save()
-        target = self.lookupTarget(system.target_type, system.target_name)
-        systemTarget = models.system_target(managed_system=managedSystem,
-            target=target, target_system_id=system.target_system_id)
-        systemTarget.save()
-        return systemTarget
+    @base.exposed
+    def addLaunchedSystem(self, system, dnsName=None, targetName=None,
+            targetType=None):
+        target = self.lookupTarget(targetType=targetType,
+            targetName=targetName)
+        system.target = target
+        oldModel, system = models.System.objects.load_or_create(system,
+            withReadOnly=True)
+
+        # For bayonet, we only launch in the local zone
+        zone = models.Zone.objects.get(name=models.Zone.LOCAL_ZONE)
+        system.managing_zone = zone
+        system.launching_user = self.user
+        system.launch_date = self.now()
+        # Copy some of the data from the target
+        system.name = system.target_system_name
+        system.description = system.target_system_description
+        # Look up the credentials for this user
+        credentials = self._getCredentialsForUser(system.target)
+        assert credentials is not None, "User should have credentials"
+        # Add link to SystemTargetCredentials
+        stc = models.SystemTargetCredentials(system=system,
+            credentials=credentials)
+        stc.save()
+        if dnsName:
+            network = models.Network(dns_name=dnsName,
+                            active=True)
+            system.networks.add(network)
+        self.addSystem(system)
+        return system
+
+    def _getCredentialsForUser(self, target):
+        tucs = rbuildermodels.TargetUserCredentials.objects.filter(
+            targetid=target, userid=self.user)
+        for tuc in tucs:
+            return tuc.targetcredentialsid
+        return None
 
     def matchSystem(self, system):
         matchingIPs = models.network_information.objects.filter(
@@ -730,7 +772,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystemEvents(self):
         SystemEvents = models.SystemEvents()
-        SystemEvents.systemEvent = list(models.SystemEvent.objects.all())
+        SystemEvents.system_event = list(models.SystemEvent.objects.all())
         return SystemEvents
 
     @base.exposed
@@ -738,7 +780,7 @@ class SystemManager(base.BaseManager):
         system = models.System.objects.get(pk=system_id)
         events = models.SystemEvent.objects.filter(system=system)
         system_events = models.SystemEvents()
-        system_events.systemEvent = list(events)
+        system_events.system_event = list(events)
         return system_events
 
     @base.exposed
@@ -822,9 +864,7 @@ class SystemManager(base.BaseManager):
         destination = network.ip_address or network.dns_name
         eventType = event.event_type.name
         eventUuid = str(uuid.uuid4())
-        #zone = event.system.managing_zone.name
-        # XXX FIXME
-        zone = None
+        zone = event.system.managing_zone.name
         cimParams = repClient.CimParams(host=destination,
             port=event.system.agent_port or 5989,
             eventUuid=eventUuid,
@@ -1112,6 +1152,9 @@ class SystemManager(base.BaseManager):
         targetsData = self.TargetsData()
         systems = models.System.objects.filter(target__isnull = False)
         for system in systems:
+            if system.target_system_id is None:
+                # Systems without a target_system_id are ignored
+                continue
             target = system.target
             # Grab credentials used when importing this system
             credentials = system.target_credentials.all()
@@ -1234,6 +1277,13 @@ class SystemManager(base.BaseManager):
         log.info("Target data collected in %.2f seconds" % (time.time() - t0))
         return targetsData
 
+    @classmethod
+    def _getField(cls, system, fieldName):
+        fieldVal = getattr(system, fieldName)
+        if fieldVal is not None:
+            return fieldVal.getText()
+        return None
+
     def collectOneTargetData(self, driver, targetsData):
         t0 = time.time()
         log.info("Enumerating systems for target %s (%s) as user %s" %
@@ -1244,10 +1294,10 @@ class SystemManager(base.BaseManager):
         tsystems = driver.getAllInstances()
         for tsys in tsystems:
             instanceId = tsys.instanceId.getText()
-            instanceName = tsys.instanceName.getText()
-            instanceDescription = tsys.instanceDescription.getText()
-            dnsName = (tsys.dnsName and tsys.dnsName.getText()) or None
-            state = (tsys.state and tsys.state.getText()) or "unknown"
+            instanceName = self._getField(tsys, 'instanceName')
+            instanceDescription = self._getField(tsys, 'instanceDescription')
+            dnsName = self._getField(tsys, 'dnsName')
+            state = self._getField(tsys, 'state') or 'unknown'
             targetsData.addSystem(targetType, targetName, userName,
                 instanceId, instanceName, instanceDescription, dnsName,
                 state)
@@ -1260,5 +1310,5 @@ class SystemManager(base.BaseManager):
         systemsLog = models.SystemsLog()
         systemLogEntries = \
             models.SystemLogEntry.objects.all().order_by('entry_date')
-        systemsLog.systemLogEntry = list(systemLogEntries)
+        systemsLog.system_log_entry = list(systemLogEntries)
         return systemsLog

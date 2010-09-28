@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 
-import re
 from xml.dom import minidom
 
 from django import http
@@ -23,50 +22,13 @@ def D(field, docstring):
     field.docstring = docstring
     return field
 
-def str_to_underscore(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-
-def to_underscore(node):
-    for name in ['tagName', 'nodeName']:
-        if hasattr(node, name):
-            setattr(node, name, str_to_underscore(getattr(node, name)))
-
-    for child in node.childNodes:
-        for name in ['tagName', 'nodeName']:
-            if hasattr(child, name):
-                setattr(child, name, str_to_underscore(getattr(child, name)))
-                to_underscore(child)
-
-def str_to_camel_case(name):
-    def repl(m):
-        return m.group()[:-2] + m.group()[-1].upper()
-    s1 = re.sub('(.)_([a-z])', repl, name)
-    return s1
-
-def to_camel_case(node):
-    for name in ['tagName', 'nodeName']:
-        if hasattr(node, name):
-            setattr(node, name, str_to_camel_case(getattr(node, name)))
- 
-    for child in node.childNodes:
-        for name in ['tagName', 'nodeName']:
-            if hasattr(child, name):
-                setattr(child, name, str_to_camel_case(getattr(child, name)))
-                to_camel_case(child)
-
 def _getXobjModel(request, model_names):
     xml = request.raw_post_data
-    doc = minidom.parseString(xml)
-    root_node = doc.documentElement
-    to_underscore(root_node)
-    underscore_xml = doc.toxml(encoding='UTF-8')
-    built_model = xobj.parse(underscore_xml)
+    built_model = xobj.parse(xml)
     if not isinstance(model_names, list):
         model_names = [ model_names ]
     for model_name in model_names:
-        model_xml = str_to_underscore(model_name)
-        submodel = getattr(built_model, model_xml, None)
+        submodel = getattr(built_model, model_name, None)
         if submodel is None:
             continue
         modelCls = modellib.type_map[model_name]
@@ -146,10 +108,7 @@ def return_xml(function):
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
         request = args[1]
-        xml = ret_val.to_xml(request)
-        doc = minidom.parseString(xml)
-        to_camel_case(doc.documentElement)
-        response.write(doc.toxml(encoding='UTF-8'))
+        response.write(ret_val.to_xml(request))
         return response
 
     return inner

@@ -5,6 +5,8 @@ from dateutil import parser
 from dateutil import tz
 import urlparse
 
+from mint.lib import mintutils
+
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
@@ -13,19 +15,21 @@ from django.core import urlresolvers
 
 from xobj import xobj
 
-class XObjHiddenMixIn(object):
+def XObjHidden(field):
     """
     Fields implementing this interface will not be serialized in the
     external API
     """
-    XObjHidden = True
+    field.XObjHidden = True
+    return field
 
-class APIReadOnlyMixIn(object):
+def APIReadOnly(field):
     """
     Fields implementing this interface will not be updated through the
     external API
     """
-    APIReadOnly = True
+    field.APIReadOnly = True
+    return field
 
 class DeferredForeignKeyMixIn(object):
     """
@@ -60,7 +64,7 @@ class BaseManager(models.Manager):
         except exceptions.MultipleObjectsReturned:
             return None, None
 
-    def load(self, model_inst, accessors=None):
+    def load(self, model_inst, accessors=None, withReadOnly=False):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -69,6 +73,9 @@ class BaseManager(models.Manager):
 
         If a matching model was found, update it's fields with the values from
         model_inst.
+
+        If withReadOnly is set to True, read-only fields will also be copied
+        This should never be done when src is "unsafe" (i.e. loaded from XML)
         """
 
         oldModel, loaded_model = self.load_from_db(model_inst, accessors)
@@ -78,40 +85,53 @@ class BaseManager(models.Manager):
         # loaded_model.  In this case we are most likely handling a PUT or an
         # update to a model.
         if loaded_model:
-            for field in loaded_model._meta.fields:
-                # Ignore pk fields
-                if field.primary_key:
-                    continue
-                if getattr(field, 'APIReadOnly', None):
-                    # Ignore APIReadOnly fields
-                    continue
-                # django throws ObjectDoesNotExist if you try to access a
-                # related model that doesn't exist, so just swallow it.
-                try:
-                    newFieldVal = getattr(model_inst, field.name, None)
-                except exceptions.ObjectDoesNotExist:
-                    newFieldVal = None
-                if newFieldVal is None:
-                    continue
-                oldFieldVal = getattr(loaded_model, field.name)
-                if newFieldVal != oldFieldVal:
-                    setattr(loaded_model, field.name, newFieldVal)
+            self.copyFields(loaded_model, model_inst,
+                withReadOnly=withReadOnly)
+            return oldModel, loaded_model
+
+        if withReadOnly:
+            # Don't touch the old model's fields even if they are read-only
             return oldModel, loaded_model
 
         # We need to remove the read-only fields, added from the xobj model
         for field in model_inst._meta.fields:
             if getattr(field, 'APIReadOnly', None):
                 setattr(model_inst, field.name, None)
-
         return oldModel, loaded_model
 
-    def load_or_create(self, model_inst, accessors=None):
+    def copyFields(self, dest, src, withReadOnly=False):
+        """
+        Copy fields from src to dest
+        If withReadOnly is set to True, read-only fields will also be copied
+        This should never be done when src is "unsafe" (i.e. loaded from XML)
+        """
+        for field in dest._meta.fields:
+            # Ignore pk fields
+            if field.primary_key:
+                continue
+            if not withReadOnly and getattr(field, 'APIReadOnly', None):
+                # Ignore APIReadOnly fields
+                continue
+            # django throws ObjectDoesNotExist if you try to access a
+            # related model that doesn't exist, so just swallow it.
+            try:
+                newFieldVal = getattr(src, field.name, None)
+            except exceptions.ObjectDoesNotExist:
+                newFieldVal = None
+            if newFieldVal is None:
+                continue
+            oldFieldVal = getattr(dest, field.name)
+            if newFieldVal != oldFieldVal:
+                setattr(dest, field.name, newFieldVal)
+
+    def load_or_create(self, model_inst, accessors=None, withReadOnly=False):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
         """
         # Load the model from the db.
-        oldModel, loaded_model = self.load(model_inst, accessors)
+        oldModel, loaded_model = self.load(model_inst, accessors,
+            withReadOnly=withReadOnly)
         if not loaded_model:
             # No matching model was found. We need to save.  This scenario
             # means we must be creating something new (POST), so it's safe to
@@ -425,6 +445,11 @@ class SystemManager(BaseManager):
             if systems:
                 system = systems[0]
                 return system.serialize(), system
+        if model_inst.target and model_inst.target_system_id:
+            loaded_model = self.tryLoad(dict(target=model_inst.target,
+                target_system_id=model_inst.target_system_id))
+            if loaded_model:
+                return loaded_model.serialize(), loaded_model
 
         return None, None
 
@@ -504,6 +529,15 @@ class XObjModel(models.Model):
     manager on a model with our BaseManager.  Implements get_absolute_url on
     all models.  Adds ability to serialize a model to xml using xobj.
     """
+    class __metaclass__(models.Model.__metaclass__):
+        def __new__(cls, name, bases, attrs):
+            ret = models.Model.__metaclass__.__new__(cls, name, bases, attrs)
+            # Create the xobj class for this model
+            underscoreName = mintutils.Transformations.strToUnderscore(
+                name[0].lower() + name[1:])
+            ret._xobjClass = type(underscoreName, (object, ), {})
+            return ret
+
     class Meta:
         abstract = True
 
@@ -876,10 +910,9 @@ class XObjModel(models.Model):
         xobj to produce the xml that we require.
         """
         self._serialize_hrefs(request)
-        name = self.__class__.__name__
-        name = name[0].lower() + name[1:]
         # Basic object to use to send to xobj.
-        xobj_model = type(name, (object,), {})()
+        xobjModelClass = self._xobjClass
+        xobj_model = xobjModelClass()
 
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
@@ -1014,21 +1047,6 @@ class DateTimeUtcField(models.DateTimeField):
             return python_value.replace(tzinfo=tz.tzutc())
         else:
             return python_value
-
-class XObjHiddenCharField(models.CharField, XObjHiddenMixIn):
-    pass
-
-class XObjHiddenDateTimeUtcField(DateTimeUtcField, XObjHiddenMixIn):
-    pass
-
-class APIReadOnlyCharField(models.CharField, APIReadOnlyMixIn):
-    pass
-
-class APIReadOnlyForeignKey(models.ForeignKey, APIReadOnlyMixIn):
-    pass
-
-class APIReadOnlyInlinedForeignKey(InlinedForeignKey, APIReadOnlyMixIn):
-    pass
 
 class DeferredForeignKey(models.ForeignKey, DeferredForeignKeyMixIn):
     pass
