@@ -314,7 +314,7 @@ class System(modellib.XObjIdModel):
         "whether or not this system is a management node")
     #TO-DO should this ever be nullable?
     managing_zone = D(modellib.ForeignKey(Zone, null=True,
-            related_name='systems'),
+            related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
     jobs = models.ManyToManyField("Job", through="SystemJob")
     agent_port = D(models.IntegerField(null=True),

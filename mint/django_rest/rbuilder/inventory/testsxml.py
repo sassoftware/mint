@@ -647,7 +647,7 @@ systems_xml = """\
     <launching_user/>
     <local_uuid/>
     <management_node>true</management_node>
-    <managing_zone href="http://testserver/api/inventory/zones/1"/>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">

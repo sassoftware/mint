@@ -765,6 +765,7 @@ class XObjModel(models.Model):
                     val = getattr(self, fieldName)
                 else:
                     val = values.get(fieldName, None)
+                text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
                 if val:
@@ -779,6 +780,8 @@ class XObjModel(models.Model):
                         href_model._xobj = xobj.XObjMetadata(
                                             attributes = {'href':str})
                         href_model.href = val.get_absolute_url(request)
+                        if text_field and getattr(val, text_field):
+                            href_model._xobj.text = getattr(val, text_field)
                         setattr(xobj_model, fieldName, href_model)
                     else:
                         val = val.serialize(request)
@@ -981,6 +984,17 @@ class ForeignKey(models.ForeignKey):
     Wrapper of django foreign key for use in models
     """
     def __init__(self, *args, **kwargs):
+        #
+        # text_field is used when serializing the href.  It is the name of the 
+        # proper to use for node text.  For example, a zone with name zone1
+        # serialized as an href would be <zone href="somehost/api/inventory/zones/1"/>.  
+        # If you set text_field to be name, it would be <zone href="somehost/api/inventory/zones/1">zone1</zone>.
+        #
+        self.text_field = None
+        try:
+            self.text_field = kwargs.pop('text_field')
+        except KeyError:
+            pass # text wasn't specified, that is fine
         super(ForeignKey, self).__init__(*args, **kwargs)
 
 class SerializedForeignKey(ForeignKey):
@@ -990,6 +1004,7 @@ class SerializedForeignKey(ForeignKey):
     careful of self referenceing models that can cause infinite recursion.
     """
     def __init__(self, *args, **kwargs):
+        self.text_field = None
         self.serialized = True
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
 
@@ -999,6 +1014,7 @@ class InlinedForeignKey(ForeignKey):
     argument
     """
     def __init__(self, *args, **kwargs):
+        self.text_field = None
         self.visible = kwargs.pop('visible')
         super(InlinedForeignKey, self).__init__(*args, **kwargs)
 
