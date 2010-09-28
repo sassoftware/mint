@@ -117,6 +117,7 @@ def getRepository(projectName, repName, context,
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
     nscfg.repositoryDB = dbTuple
+    nscfg.proxyContentsDir = os.path.join(cfg.dataPath, 'proxycontents')
     nscfg.changesetCacheDir = os.path.join(cfg.dataPath, 'cscache')
     nscfg.contentsDir = " ".join(x % repName
             for x in cfg.reposContentsDir.split(" "))
@@ -186,7 +187,7 @@ def getRepository(projectName, repName, context,
     else:
         raise
 
-    repos = SimpleRepositoryFilter(restDb, nscfg, urlBase, netRepos)
+    repos = CachingRepositoryServer(restDb, nscfg, urlBase, netRepos)
     shim = shimclient.NetworkRepositoryServer(nscfg, urlBase, reposDb)
 
     return netRepos, repos, shim
@@ -333,16 +334,21 @@ class CapsuleFilterMixIn(object):
                     (e.faultCode, e.faultString))
             return self.fromFile(fobj)
 
+        def downloadCapsuleFiles(self, capsuleKey, capsuleSha1sum, fileList):
+            return [ self.downloadCapsuleFile(capsuleKey, capsuleSha1sum,
+                fileName, fileSha1sum)
+                    for (fileName, fileSha1sum) in fileList ]
+
         fromFile = proxy.ChangesetFilter.CapsuleDownloader.fromFile
 
     def __init__(self):
         self.CapsuleDownloader = lambda x: self._CapsuleDownloader(
             self._restDb)
 
-class SimpleRepositoryFilter(proxy.SimpleRepositoryFilter, CapsuleFilterMixIn):
+class CachingRepositoryServer(proxy.CachingRepositoryServer, CapsuleFilterMixIn):
     withCapsuleInjection = True
     def __init__(self, restDb, nscfg, urlBase, netRepos):
-        proxy.SimpleRepositoryFilter.__init__(self, nscfg, urlBase, netRepos)
+        proxy.CachingRepositoryServer.__init__(self, nscfg, urlBase, netRepos)
         self.setRestDb(restDb)
 
     def setRestDb(self, restDb):
