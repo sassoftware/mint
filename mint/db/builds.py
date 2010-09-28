@@ -31,6 +31,11 @@ class BuildsTable(database.KeyedTable):
               'buildCount', 'productVersionId', 'stageName',
               'status', 'statusMessage']
 
+    # Not the ideal place to put these, but I wanted to easily find them later
+    # --misa
+    EC2TargetType = 'ec2'
+    EC2TargetName = 'aws'
+
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given
             project with ID projectId. The iterator is ordered by the date
@@ -165,12 +170,21 @@ class BuildsTable(database.KeyedTable):
             extraWhere = ''
 
             # Extra selects:
-            # add in awsAccount if it exists.
-            extraSelect = ''', COALESCE(ud.value,'Unknown') AS awsAccountNumber,
+            # awsCredentials cannot be a single -
+            # We use it to mark that we did not have credentials set for this
+            # EC2 target (as opposed to None for non-ec2 targets)
+            extraSelect = ''', COALESCE(subq.creds, '-') AS awsCredentials,
                              bd.value AS amiId'''
-            extraJoin += '''LEFT OUTER JOIN userData ud
-                            ON (b.createdBy = ud.userId
-                                AND ud.name = 'awsAccountNumber')'''
+            extraJoin += ''' LEFT OUTER JOIN
+                             (SELECT tuc.userId AS userId,
+                                     tuc.credentials AS creds
+                                FROM Targets
+                                JOIN TargetUserCredentials AS tuc
+                                     ON (Targets.targetId = tuc.targetId)
+                               WHERE Targets.targetType = '%s'
+                                 AND Targets.targetName = '%s') as subq
+                              ON (b.createdBy = subq.userId)
+                            ''' % (self.EC2TargetType, self.EC2TargetName)
 
             # make sure that this build has an amiId.  Since it doesn't
             # have any files (thus no sha1), we need to know that it
@@ -232,7 +246,7 @@ class BuildsTable(database.KeyedTable):
         keys = ['projectId', 'hostname', 'buildId', 'productName',
                 'productDescription', 'buildName', 'buildDescription',
                 'isPublished', 'isPrivate', 'createdBy', 'role',
-                'awsAccountNumber', 'amiId',
+                'awsCredentials', 'amiId',
                 ]
 
         cu.execute(query, requestingUserId, imageType)
@@ -244,6 +258,14 @@ class BuildsTable(database.KeyedTable):
             outRow = {}
             for key in keys:
                 value = row.pop(key, None)
+                if key == 'awsCredentials':
+                    if value == '-':
+                        value = 'Unknown'
+                    elif value:
+                        value = data.unmarshalTargetUserCredentials(value)
+                        value = value.get('accountId')
+                    # Keep the old interface for getAllBuildsByType
+                    key = 'awsAccountNumber'
                 if value is not None:
                     outRow[key] = value
             assert not row.fields

@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+import sys
+
 from django.core.management import execute_manager
 try:
     import settings # Assumed to be in the same directory.
@@ -8,4 +11,5 @@ except ImportError:
     sys.exit(1)
 
 if __name__ == "__main__":
+    sys.path.insert(0, '../../../include')
     execute_manager(settings)
