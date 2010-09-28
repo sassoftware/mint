@@ -986,7 +986,7 @@ class ForeignKey(models.ForeignKey):
     def __init__(self, *args, **kwargs):
         #
         # text_field is used when serializing the href.  It is the name of the 
-        # proper to use for node text.  For example, a zone with name zone1
+        # property to use for node text.  For example, a zone with name zone1
         # serialized as an href would be <zone href="somehost/api/inventory/zones/1"/>.  
         # If you set text_field to be name, it would be <zone href="somehost/api/inventory/zones/1">zone1</zone>.
         #
