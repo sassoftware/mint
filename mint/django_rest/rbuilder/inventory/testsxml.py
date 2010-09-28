@@ -1756,7 +1756,7 @@ jobs_xml = """\
   <job id="http://testserver/api/inventory/jobs/1">
     <time_updated>2010-09-16T13:36:25.939154+00:00</time_updated>
     <job_state>Running</job_state>
-    <event_type>system registration</event_type>
+    <job_type>system registration</job_type>
     <time_created>2010-09-16T13:36:25.939042+00:00</time_created>
     <systems/>
     <job_uuid>rmakeuuid001</job_uuid>
@@ -1765,7 +1765,7 @@ jobs_xml = """\
   <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
     <job_state>Running</job_state>
-    <event_type>system poll</event_type>
+    <job_type>system poll</job_type>
     <time_created>2010-09-16T13:36:25.942952+00:00</time_created>
     <systems/>
     <job_uuid>rmakeuuid002</job_uuid>
@@ -1774,7 +1774,7 @@ jobs_xml = """\
   <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
     <job_state>Running</job_state>
-    <event_type>immediate system poll</event_type>
+    <job_type>immediate system poll</job_type>
     <time_created>2010-09-16T13:36:25.946675+00:00</time_created>
     <systems/>
     <job_uuid>rmakeuuid003</job_uuid>
@@ -1787,7 +1787,7 @@ job_xml = """\
 <job id="http://testserver/api/inventory/jobs/1">
   <time_updated>2010-09-16T13:53:18.402208+00:00</time_updated>
   <job_state>Running</job_state>
-  <event_type>system registration</event_type>
+  <job_type>system registration</job_type>
   <time_created>2010-09-16T13:53:18.402105+00:00</time_created>
   <systems/>
   <job_uuid>rmakeuuid001</job_uuid>
@@ -1833,7 +1833,7 @@ systems_jobs_xml = """\
   <job id="http://testserver/api/inventory/jobs/1">
     <time_updated>2010-09-16T20:13:13.325788+00:00</time_updated>
     <job_state>Running</job_state>
-    <event_type>system registration</event_type>
+    <job_type>system registration</job_type>
     <time_created>2010-09-16T20:13:13.325686+00:00</time_created>
     <systems/>
     <job_uuid>rmakeuuid001</job_uuid>
@@ -1842,7 +1842,7 @@ systems_jobs_xml = """\
   <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
     <job_state>Running</job_state>
-    <event_type>system poll</event_type>
+    <job_type>system poll</job_type>
     <time_created>2010-09-16T20:13:13.334392+00:00</time_created>
     <systems/>
     <job_uuid>rmakeuuid002</job_uuid>
@@ -1851,7 +1851,7 @@ systems_jobs_xml = """\
   <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
     <job_state>Running</job_state>
-    <event_type>immediate system poll</event_type>
+    <job_type>immediate system poll</job_type>
     <time_created>2010-09-16T20:13:13.339318+00:00</time_created>
     <systems/>
     <job_uuid>rmakeuuid003</job_uuid>
