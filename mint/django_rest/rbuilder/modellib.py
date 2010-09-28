@@ -594,13 +594,13 @@ class XObjModel(models.Model):
     @classmethod
     def iterRegularFields(cls):
         for f in cls._meta.fields:
-            if not isinstance(f, models.ForeignKey):
+            if not isinstance(f, ForeignKey):
                 yield f
 
     @classmethod
     def iterForeignKeys(cls):
         for f in cls._meta.fields:
-            if isinstance(f, models.ForeignKey):
+            if isinstance(f, ForeignKey):
                 yield f
 
     @classmethod
@@ -975,8 +975,15 @@ class XObjHrefModel(XObjModel):
 
     def serialize(self, request=None, values=None):
         self.href = request.build_absolute_uri(self.href)
+        
+class ForeignKey(models.ForeignKey):
+    """
+    Wrapper of django foreign key for use in models
+    """
+    def __init__(self, *args, **kwargs):
+        super(ForeignKey, self).__init__(*args, **kwargs)
 
-class SerializedForeignKey(models.ForeignKey):
+class SerializedForeignKey(ForeignKey):
     """
     By default, Foreign Keys serialize to hrefs. Use this field class if you
     want them to serialize to the full xml object representation instead.  Be
@@ -986,7 +993,7 @@ class SerializedForeignKey(models.ForeignKey):
         self.serialized = True
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
 
-class InlinedForeignKey(models.ForeignKey):
+class InlinedForeignKey(ForeignKey):
     """
     If you want a FK to be serialized as one of its fields, use the "visible"
     argument
@@ -1048,7 +1055,7 @@ class DateTimeUtcField(models.DateTimeField):
         else:
             return python_value
 
-class DeferredForeignKey(models.ForeignKey, DeferredForeignKeyMixIn):
+class DeferredForeignKey(ForeignKey, DeferredForeignKeyMixIn):
     pass
 
 class InlinedDeferredForeignKey(InlinedForeignKey, DeferredForeignKeyMixIn):

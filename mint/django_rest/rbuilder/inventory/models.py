@@ -269,7 +269,7 @@ class System(modellib.XObjIdModel):
     # physical target, we may not.
     launch_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was deployed (only applies if system is on a virtual target)")
-    target = D(models.ForeignKey(rbuildermodels.Targets, null=True),
+    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True),
         "the virtual target the system was deployed to (only applies if system is on a virtual target)")
     target_system_id = D(APIReadOnly(models.CharField(max_length=255,
             null=True)),
@@ -303,7 +303,7 @@ class System(modellib.XObjIdModel):
         "an x509 private key of an authorized client that can use the system's CIM broker")
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
-    launching_user = D(models.ForeignKey(rbuildermodels.Users, null=True),
+    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that deployed the system (only applies if system is on a virtual target)")
     current_state = D(modellib.SerializedForeignKey(
             SystemState, null=True, related_name='systems'),
@@ -313,7 +313,7 @@ class System(modellib.XObjIdModel):
     management_node = D(models.NullBooleanField(),
         "whether or not this system is a management node")
     #TO-DO should this ever be nullable?
-    managing_zone = D(models.ForeignKey(Zone, null=True,
+    managing_zone = D(modellib.ForeignKey(Zone, null=True,
             related_name='systems'),
         "a link to the management zone in which this system resides")
     jobs = models.ManyToManyField("Job", through="SystemJob")
@@ -444,7 +444,7 @@ class ManagementNode(System):
                 tag = 'management_node',
                 attributes = {'id':str})
     local = models.NullBooleanField()
-    zone = models.ForeignKey(Zone, related_name='management_nodes')
+    zone = modellib.ForeignKey(Zone, related_name='management_nodes')
     node_jid = models.CharField(max_length=64, null=True)
     
     # ignore auto generated ptr from inheritance
@@ -462,9 +462,9 @@ class SystemTargetCredentials(modellib.XObjModel):
         db_table = 'inventory_system_target_credentials'
         unique_together = [ ('system', 'credentials') ]
 
-    system = models.ForeignKey(System, null=False,
+    system = modellib.ForeignKey(System, null=False,
         related_name = 'target_credentials')
-    credentials = models.ForeignKey(rbuildermodels.TargetCredentials,
+    credentials = modellib.ForeignKey(rbuildermodels.TargetCredentials,
         null=False, related_name = 'systems')
 
 class InstalledSoftware(modellib.XObjModel):
@@ -676,7 +676,7 @@ class Network(modellib.XObjIdModel):
                 attributes = {'id':str})
     network_id = models.AutoField(primary_key=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    system = models.ForeignKey(System, related_name='networks')
+    system = modellib.ForeignKey(System, related_name='networks')
     ip_address = models.CharField(max_length=15, null=True)
     # TODO: how long should this be?
     ipv6_address = models.CharField(max_length=32, null=True)
@@ -727,7 +727,7 @@ class SystemLogEntry(modellib.XObjModel):
     )
 
     system_log_entry_id = models.AutoField(primary_key=True)
-    system_log = models.ForeignKey(SystemLog,
+    system_log = modellib.ForeignKey(SystemLog,
         related_name='system_log_entries')
     entry = models.CharField(max_length=8092, choices=choices)
     entry_date = modellib.DateTimeUtcField(auto_now_add=True)
@@ -864,7 +864,7 @@ class SystemJob(modellib.XObjModel):
     # field is added, we have no access to it from modellib
     _xobj = xobj.XObjMetadata(tag='__systemJob')
     system_job_id = models.AutoField(primary_key=True)
-    system = models.ForeignKey(System)
+    system = modellib.ForeignKey(System)
     job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')
     event_uuid = XObjHidden(models.CharField(max_length=64, unique=True))
 
