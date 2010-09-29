@@ -7,7 +7,7 @@ import testsuite
 testsuite.setup()
 from testutils import mock
 
-from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, WebRepositoryHelper
+from mint_rephelp import FQDN
 
 from mint.mint_error import UpdateServiceNotFound
 from conary.dbstore import sqlerrors
