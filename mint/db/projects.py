@@ -736,7 +736,7 @@ class ProjectUsersTable(database.DatabaseTable):
               FROM projectUsers AS pu
               JOIN TargetUserCredentials AS tuc USING (userId)
               JOIN TargetCredentials AS tc USING (targetCredentialsId)
-              JOIN Targets USING (targetId)
+              JOIN Targets ON (tuc.targetId=Targets.targetId)
              WHERE pu.projectId = ?
                AND Targets.targetType = ?
                AND Targets.targetName = ?""", projectId, 'ec2', 'aws')
