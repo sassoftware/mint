@@ -1463,7 +1463,7 @@ class MigrateTo_50(SchemaMigration):
             db.tables['job_system'] = []
             changed = True
 
-        return True
+        return changed or True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
