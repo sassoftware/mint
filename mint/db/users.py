@@ -340,7 +340,7 @@ class UsersTable(database.KeyedTable):
               FROM Users u
               JOIN TargetUserCredentials AS tuc USING (userId)
               JOIN TargetCredentials AS tc USING (targetCredentialsId)
-              JOIN Targets AS t USING (targetId)
+              JOIN Targets AS t ON (t.targetId=tuc.targetId)
              WHERE t.targetType = ?
                AND t.targetName = ?
             """
