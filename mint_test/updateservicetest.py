@@ -5,6 +5,7 @@
 
 import testsuite
 testsuite.setup()
+from testutils import mock
 
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN, WebRepositoryHelper
 
@@ -35,6 +36,10 @@ class FakeUpdateServiceServerProxy:
     def addRandomUser(self, name):
         return STOCK_MIRROR_PASSWORD
 
+    Network = mock.MockObject()
+    Network.Network.index._mock.setDefaultReturn({'host_hostName':None})
+    configure = Network
+    rusconf = mock.MockObject()
 
 usedProxy = False
 def fake_proxy_request(self, *args, **kw):
