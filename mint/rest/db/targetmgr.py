@@ -92,11 +92,12 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute("""
             SELECT Targets.targetName,
-                   TargetCredentials.credentials
+                   tc.credentials
               FROM Targets
-              JOIN TargetUserCredentials USING (targetId)
+              JOIN TargetUserCredentials AS tuc USING (targetId)
               JOIN Users USING (userId)
-              JOIN TargetCredentials USING (targetCredentialsId)
+              JOIN TargetCredentials AS tc ON
+                  (tuc.targetCredentialsId=tc.targetCredentialsId)
              WHERE Targets.targetType = ?
                AND Users.username = ?
         """, targetType, userName)
@@ -114,14 +115,15 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         cu.execute("""
             SELECT Targets.targetName,
-                   TargetCredentials.credentials,
-                   TargetCredentials.targetCredentialsId,
+                   tc.credentials,
+                   tc.targetCredentialsId,
                    Users.username,
                    Users.userId
               FROM Targets
-              JOIN TargetUserCredentials USING (targetId)
+              JOIN TargetUserCredentials AS tuc USING (targetId)
               JOIN Users USING (userId)
-              JOIN TargetCredentials USING (targetCredentialsId)
+              JOIN TargetCredentials AS tc ON
+                  (tuc.targetCredentialsId=tc.targetCredentialsId)
              WHERE Targets.targetType = ?
              ORDER BY Users.userId, targetName
         """, targetType)
@@ -209,7 +211,8 @@ class TargetManager(manager.Manager):
               FROM Users
               JOIN TargetUserCredentials USING (userId)
               JOIN TargetCredentials AS creds USING (targetCredentialsId)
-              JOIN Targets USING (targetId)
+              JOIN Targets ON
+                (Targets.targetId=TargetUserCredentials.targetId)
              WHERE Targets.targetType = ?
                AND Targets.targetName = ?
                AND Users.username = ?
