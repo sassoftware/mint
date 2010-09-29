@@ -26,10 +26,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend'
 )
 
-MIDDLEWARE_CLASSES = tuple(
-    x for x in MIDDLEWARE_CLASSES
-        if x != 'mint.django_rest.middleware.SetMintConfigMiddleware')
-
 # Uncomment this to disable the comments middleware for local mode
 #MIDDLEWARE_CLASSES = tuple(
 #    x for x in MIDDLEWARE_CLASSES
