@@ -309,10 +309,10 @@ management_nodes_xml = """\
         <system href="http://testserver/api/inventory/systems/1"/>
       </network>
     </networks>
-    <node_jid/>
+    <node_jid>superduperjid2@rbuilder.rpath</node_jid>
     <ssl_client_certificate>test management node client cert</ssl_client_certificate>
     <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-    <managing_zone/>
+    <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>
     <hostname/>
     <name>test management node</name>
     <system_id>1</system_id>
@@ -375,10 +375,10 @@ management_node_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
-  <node_jid/>
+  <node_jid>superduperjid2@rbuilder.rpath</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>
   <hostname/>
   <name>test management node</name>
   <system_id>1</system_id>
@@ -439,7 +439,7 @@ management_node_post_xml = """\
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <zone href="http://testserver/api/inventory/zones/1"/>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1"/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <system_id>1</system_id>
@@ -481,7 +481,7 @@ management_node_post_response_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
     <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
@@ -540,7 +540,6 @@ management_node_zone_post_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <managing_zone/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <system_id>1</system_id>
@@ -552,6 +551,7 @@ management_node_zone_post_xml = """\
   <zone href="http://testserver/api/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
   <os_type/>
+  <managing_zone href="http://testserver/api/inventory/zones/1"/>
 </management_node>"""
 
 management_node_zone_post_response_xml = """\
@@ -582,7 +582,7 @@ management_node_zone_post_response_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <system_id>1</system_id>
@@ -703,7 +703,7 @@ systems_xml = """\
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
     <management_node/>
-    <managing_zone/>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
     <networks>
       <network id="http://testserver/api/inventory/networks/2">
@@ -885,7 +885,7 @@ system_xml = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
@@ -931,6 +931,7 @@ system_xml = """\
 system_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <os_major_version/>
   <out_of_date>False</out_of_date>
@@ -991,7 +992,7 @@ system_post_xml_response = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>1</system_id>
   <launching_user/>
@@ -1028,11 +1029,13 @@ system_post_no_network_xml = """\
 <system>
   <name>testsystemname</name>
   <description>testsystemlocaluuid</description>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
 </system>"""
 
 system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <os_major_version/>
   <out_of_date>False</out_of_date>
@@ -1097,7 +1100,7 @@ system_target_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>1</system_id>
   <launching_user/>
@@ -1364,7 +1367,7 @@ system_version_xml = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
@@ -1624,7 +1627,7 @@ system_available_updates_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>3</system_id>
   <launching_user/>
@@ -1834,7 +1837,7 @@ system_with_target = """\
     </network>
   </networks>
   <ssl_server_certificate/>
-  <managing_zone/>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>4</system_id>
   <launching_user/>

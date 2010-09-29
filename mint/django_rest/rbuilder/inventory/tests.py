@@ -123,7 +123,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         config.RBUILDER_CONFIG = mintCfg
         self.client = Client()
         self.mgr = manager.Manager()
-
+        self.localZone = self.mgr.sysMgr.getLocalZone()
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -151,6 +151,11 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             if 0:
                 diff += "\nNode diff: %s" % (nd, )
             self.fail(diff)
+
+    def newSystem(self, **kwargs):
+        if 'managing_zone' not in kwargs:
+            kwargs['managing_zone'] = self.localZone
+        return models.System(**kwargs)
 
     def _addRequestAuth(self, username=None, password=None, **extra):
         if username:
@@ -205,6 +210,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.registered = True
         system.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.REGISTERED)
+        system.managing_zone = self.localZone
         system.save()
 
         network = models.Network()
@@ -223,6 +229,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         
         management_node = models.ManagementNode()
         management_node.zone = zone
+        management_node.managing_zone = zone
         management_node.name = 'test management node'
         management_node.description = 'test management node desc'
         management_node.local_uuid = 'test management node luuid'
@@ -235,6 +242,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             models.SystemState.REGISTERED)
         management_node.local = True
         management_node.management_node = True
+        management_node.node_jid = "superduperjid2@rbuilder.rpath"
         management_node.save()
 
         network = models.Network()
@@ -260,6 +268,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.registered = True
         system.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.REGISTERED)
+        system.managing_zone = self.localZone
         system.save()
 
         network = models.Network()
@@ -327,13 +336,13 @@ class LogTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
     def testGetLog(self):
-        system = models.System(name="mgoblue",
+        system = self.newSystem(name="mgoblue",
             description="best appliance ever")
         self.mgr.addSystem(system)
-        system = models.System(name="mgoblue2",
+        system = self.newSystem(name="mgoblue2",
             description="best appliance ever2")
         self.mgr.addSystem(system)
-        system = models.System(name="mgoblue3",
+        system = self.newSystem(name="mgoblue3",
             description="best appliance ever3")
         self.mgr.addSystem(system)
         response = self._get('/api/inventory/log/', username="testuser", 
@@ -348,7 +357,7 @@ class ZonesTestCase(XMLTestCase):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
         # Create a system, just for kicks
-        system = models.System(name="foo", managing_zone=zone)
+        system = self.newSystem(name="foo", managing_zone=zone)
         system.save()
         response = self._get('/api/inventory/zones/',
             username="testuser", password="password")
@@ -592,8 +601,8 @@ class ManagementNodesTestCase(XMLTestCase):
     def testManagementNodeSave(self):
         zone = self._saveZone()
         # make sure state gets set to unmanaged
-        management_node = models.ManagementNode(name="mgoblue", 
-            description="best node ever", zone=zone)
+        management_node = models.ManagementNode(name="mgoblue",
+            description="best node ever", zone=zone, managing_zone=zone)
         _eq = self.failUnlessEqual
         _eq(management_node.current_state_id, None)
         management_node.save()
@@ -603,7 +612,8 @@ class ManagementNodesTestCase(XMLTestCase):
         # make sure we honor the state if set though
         management_node = models.ManagementNode(name="mgoblue", zone=zone,
             description="best node ever",
-            current_state=self.mgr.sysMgr.systemState(models.SystemState.DEAD))
+            current_state=self.mgr.sysMgr.systemState(models.SystemState.DEAD),
+            managing_zone=zone)
         management_node.save()
         _eq(management_node.current_state.name, models.SystemState.DEAD)
         
@@ -781,7 +791,8 @@ class NetworksTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.system = models.System(name="mgoblue", description="best appliance ever")
+        self.system = self.newSystem(name="mgoblue",
+            description="best appliance ever")
         self.system.save()
         
     def testExtractNetworkToUse(self):
@@ -857,7 +868,7 @@ class SystemsTestCase(XMLTestCase):
         # Clean up
         models.System.objects.all().delete()
         count = 50
-        zone = models.Zone.objects.get(pk=1)
+        zone = self.localZone
         flv = 'is:x86'
         ver0 = models.Version(full='/localhost@rpath:linux/1-1-1',
             ordering='1234567890.12', flavor=flv)
@@ -881,7 +892,7 @@ class SystemsTestCase(XMLTestCase):
             trv.save()
             trv.available_updates.add(ver1)
 
-            system = models.System(
+            system = self.newSystem(
                 local_uuid = "local-uuid-%03d" % i,
                 generated_uuid = "generated-uuid-%03d" % i,
                 name = "name-%03d" % i,
@@ -941,10 +952,10 @@ class SystemsTestCase(XMLTestCase):
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
             eventUuid=eventUuid)
 
-        system = models.System(name="blah")
+        system = self.newSystem(name="blah")
         system.save()
 
-        system2 = models.System(name="blip")
+        system2 = self.newSystem(name="blip")
         system2.save()
 
         self._newJob(system, eventUuid, 'rmakejob007',
@@ -1045,13 +1056,15 @@ class SystemsTestCase(XMLTestCase):
         <dns_name>%(dnsName)s</dns_name>
       </network>
     </networks>
+    <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
   </system>
 """
         systems = []
         for i in range(10):
             params = dict(name="name %03d" % i,
                 description="description %03d" % i,
-                dnsName="dns-name-%03d" % i)
+                dnsName="dns-name-%03d" % i,
+                zoneId=self.localZone.zone_id)
             systems.append(xmlTempl % params)
         xml = "<systems>" + ''.join(systems) + "</systems>"
         url = "/api/inventory/systems"
@@ -1061,7 +1074,7 @@ class SystemsTestCase(XMLTestCase):
 
     def testSystemSave(self):
         # make sure state gets set to unmanaged
-        system = models.System(name="mgoblue", 
+        system = self.newSystem(name="mgoblue", 
             description="best appliance ever")
         _eq = self.failUnlessEqual
         _eq(system.current_state_id, None)
@@ -1069,33 +1082,33 @@ class SystemsTestCase(XMLTestCase):
         _eq(system.current_state.name, models.SystemState.UNMANAGED)
         
         # make sure we honor the state if set though
-        system = models.System(name="mgoblue", 
+        system = self.newSystem(name="mgoblue", 
             description="best appliance ever",
             current_state=self.mgr.sysMgr.systemState(models.SystemState.DEAD))
         system.save()
         _eq(system.current_state.name, models.SystemState.DEAD)
         
         # test name fallback to hostname
-        system = models.System(hostname="mgoblue", 
+        system = self.newSystem(hostname="mgoblue", 
             description="best appliance ever")
         self.failUnlessEqual(system.name, '')
         system.save()
         self.failUnlessEqual(system.name, system.hostname)
         
         # test name fallback to blank
-        system = models.System(description="best appliance ever")
+        system = self.newSystem(description="best appliance ever")
         self.failUnlessEqual(system.name, '')
         system.save()
         self.failUnlessEqual(system.name, '')
         
         # make sure we honor the name if set though
-        system = models.System(name="mgoblue")
+        system = self.newSystem(name="mgoblue")
         system.save()
         self.failUnlessEqual(system.name, "mgoblue")
         
     def testAddSystem(self):
         # create the system
-        system = models.System(name="mgoblue",
+        system = self.newSystem(name="mgoblue",
             description="best appliance ever")
         new_system = self.mgr.addSystem(system)
         assert(new_system is not None)
@@ -1107,7 +1120,7 @@ class SystemsTestCase(XMLTestCase):
         
     def testAddRegisteredSystem(self):
         # create the system
-        system = models.System(name="mgoblue",
+        system = self.newSystem(name="mgoblue",
             description="best appliance ever",
             local_uuid='123', generated_uuid='456')
         new_system = self.mgr.addSystem(system)
@@ -1125,7 +1138,7 @@ class SystemsTestCase(XMLTestCase):
     def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
         # create the system
-        system = models.System(name="mgoblue",
+        system = self.newSystem(name="mgoblue",
             description="best appliance ever",
             management_node=True,
             local_uuid='123', generated_uuid='456')
@@ -1156,7 +1169,7 @@ class SystemsTestCase(XMLTestCase):
         Ensure a network is not required per https://issues.rpath.com/browse/RBL-7152
         """
         models.System.objects.all().delete()
-        system = models.System(name="foo", description="bar")
+        system = self.newSystem(name="foo", description="bar")
         self.mgr.addSystem(system)
         
     def testPostSystemNoNetwork(self):
@@ -1248,6 +1261,28 @@ class SystemsTestCase(XMLTestCase):
             '-----BEGIN CERTIFICATE-----'),
             repr(xobjmodel.ssl_client_certificate))
 
+    def testPostSystemThroughManagementNode(self):
+        # Send the identity of the management node
+        models.System.objects.all().delete()
+        mgmtNode = self._saveManagementNode()
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        eventUuid = 'eventuuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            eventUuid=eventUuid)
+        xmlTempl = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <event_uuid>%(eventUuid)s</event_uuid>
+</system>
+"""
+        response = self._post('/api/inventory/systems/',
+            data=xmlTempl % params,
+            headers={ 'X-rpathManagementNetworkNode' :
+                mgmtNode.node_jid })
+        self.failUnlessEqual(response.status_code, 200)
+
     def testPostSystemDupUuid(self):
         # add the first system
         models.System.objects.all().delete()
@@ -1301,7 +1336,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals('\n'.join(content), testsxml.system_log_xml)
         
     def testGetSystemHasHostInfo(self):
-        system = models.System(name="mgoblue")
+        system = self.newSystem(name="mgoblue")
         system.save()
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system) == False)
         
@@ -1332,12 +1367,13 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid)
+            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -1352,17 +1388,18 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid)
+            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
         # Create a system with just a name
-        system = models.System(name = 'blippy')
+        system = self.newSystem(name = 'blippy')
         system.save()
         # Create a job
         eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
@@ -1385,7 +1422,7 @@ class SystemsTestCase(XMLTestCase):
         eventUuid = 'eventuuid001'
 
         # Create the system, pretending it's registered
-        system0 = models.System(name='blippy', local_uuid=localUuid,
+        system0 = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
         system0.save()
 
@@ -1395,7 +1432,7 @@ class SystemsTestCase(XMLTestCase):
         targetSystemDescription = 'target system description 001'
         targetSystemState = "Obflusterating"
         tgt1 = rbuildermodels.Targets.objects.get(pk=1) # vsphere1
-        system1 = models.System(name="bloppy", target=tgt1,
+        system1 = self.newSystem(name="bloppy", target=tgt1,
             target_system_id=targetSystemId,
             target_system_name=targetSystemName,
             target_system_description=targetSystemDescription,
@@ -1412,12 +1449,13 @@ class SystemsTestCase(XMLTestCase):
         systemJob.save()
 
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid)
+            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -1453,11 +1491,12 @@ class SystemsTestCase(XMLTestCase):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
 
-        system = models.System(name='blippy', local_uuid=localUuid,
+        system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
         system.save()
 
-        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
@@ -1467,6 +1506,7 @@ class SystemsTestCase(XMLTestCase):
     <name>mothballed</name>
     <system_state_id>10</system_state_id>
   </current_state>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -1483,7 +1523,7 @@ class SystemsTestCase(XMLTestCase):
         jobState = "Completed"
         jobUuid = 'rmakeuuid001'
 
-        system = models.System(name='blippy', local_uuid=localUuid,
+        system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
         system.save()
 
@@ -1500,7 +1540,7 @@ class SystemsTestCase(XMLTestCase):
         # Pass bogus event uuid, we should not update
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
             eventUuid=eventUuid + "bogus", jobUuid=jobUuid + "bogus",
-            jobState=jobState)
+            jobState=jobState, zoneId=self.localZone.zone_id)
 
         xmlTempl = """\
 <system>
@@ -1513,6 +1553,7 @@ class SystemsTestCase(XMLTestCase):
       <job_state>%(jobState)s</job_state>
     </job>
   </jobs>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """
         xml = xmlTempl % params
@@ -1562,6 +1603,7 @@ class SystemsTestCase(XMLTestCase):
       <job_state>%(jobState)s</job_state>
     </job>
   </jobs>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """
         jobState = 'Failed'
@@ -1584,9 +1626,10 @@ class SystemsTestCase(XMLTestCase):
         sslClientCert = 'sslClientCert'
         sslClientKey = 'sslClientKey'
 
-        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            zoneId=self.localZone.zone_id)
 
-        system = models.System(name='blippy', local_uuid=localUuid,
+        system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid,
             ssl_client_certificate=sslClientCert,
             ssl_client_key=sslClientKey)
@@ -1598,6 +1641,7 @@ class SystemsTestCase(XMLTestCase):
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <ssl_client_certificate>thou shalt not change me</ssl_client_certificate>
   <ssl_client_key>thou shalt not change me</ssl_client_key>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -1610,7 +1654,7 @@ class SystemsTestCase(XMLTestCase):
 
     def testBooleanFieldSerialization(self):
         # XML schema sez lowercase true or false for boolean fields
-        system = models.System(name = 'blippy')
+        system = self.newSystem(name = 'blippy')
         system.save()
         network = models.Network(dns_name="foo3.com", ip_address='1.2.3.4',
             active=False, required=True, system=system)
@@ -1624,17 +1668,18 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid)
+            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
         # Create a system with just a name
-        system = models.System(name = 'blippy')
+        system = self.newSystem(name = 'blippy')
         system.save()
         # Create a job
         eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
@@ -1663,12 +1708,13 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         agentPort = 12345
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            agentPort=agentPort)
+            agentPort=agentPort, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <agent_port>%(agentPort)s</agent_port>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
         obj = xobj.parse(xml)
@@ -1684,12 +1730,12 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         systemState = 'dead'
 
-        system = models.System(name='blah', local_uuid=localUuid,
+        system = self.newSystem(name='blah', local_uuid=localUuid,
             generated_uuid=generatedUuid)
         system.save()
 
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            systemState=systemState)
+            systemState=systemState, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
@@ -1697,6 +1743,7 @@ class SystemsTestCase(XMLTestCase):
   <current_state>
     <name>%(systemState)s</name>
   </current_state>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -1713,11 +1760,11 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         systemState = 'dead'
 
-        system = models.System(name='blah')
+        system = self.newSystem(name='blah')
         system.save()
 
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            systemState=systemState)
+            systemState=systemState, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
@@ -1725,6 +1772,7 @@ class SystemsTestCase(XMLTestCase):
   <current_state>
     <name>%(systemState)s</name>
   </current_state>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
 
@@ -1738,7 +1786,7 @@ class SystemsTestCase(XMLTestCase):
 
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
-        system = models.System(local_uuid="localuuid001",
+        system = self.newSystem(local_uuid="localuuid001",
             generated_uuid="generateduuid001")
         system.save()
         self.failUnlessEqual(system.ssl_client_certificate, None)
@@ -1792,14 +1840,15 @@ class SystemStateTestCase(XMLTestCase):
         eventUuid1 = 'eventuuid001'
         jobUuid1 = 'rmakeuuid001'
 
-        system = models.System(name='blippy', local_uuid=localUuid,
+        system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
         system.save()
 
         self._newJob(system, eventUuid1, jobUuid1,
             models.EventType.SYSTEM_REGISTRATION)
 
-        params = dict(eventUuid=eventUuid1, jobUuid=jobUuid1, jobState=jobState)
+        params = dict(eventUuid=eventUuid1, jobUuid=jobUuid1, jobState=jobState,
+            zoneId=self.localZone.zone_id)
 
         xmlTempl = """\
 <system>
@@ -1810,6 +1859,7 @@ class SystemStateTestCase(XMLTestCase):
       <job_state>%(jobState)s</job_state>
     </job>
   </jobs>
+  <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
 </system>
 """
         xml = xmlTempl % params
@@ -1835,7 +1885,8 @@ class SystemStateTestCase(XMLTestCase):
         self._newJob(system, eventUuid2, jobUuid2,
             models.EventType.SYSTEM_POLL)
 
-        params = dict(eventUuid=eventUuid2, jobUuid=jobUuid2, jobState=jobState)
+        params = dict(eventUuid=eventUuid2, jobUuid=jobUuid2, jobState=jobState,
+            zoneId=self.localZone.zone_id)
 
         xml = xmlTempl % params
 
@@ -1866,7 +1917,7 @@ class SystemStateTestCase(XMLTestCase):
         eventUuid3 = 'eventuuid003'
         jobUuid3 = 'rmakeuuid003'
 
-        system = models.System(name='blippy', local_uuid=localUuid,
+        system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
         system.save()
 
@@ -2279,7 +2330,7 @@ class SystemEventTestCase(XMLTestCase):
 
         # need a system
         network = models.Network(ip_address='1.1.1.1')
-        self.system = models.System(name="mgoblue", description="best appliance ever")
+        self.system = self.newSystem(name="mgoblue", description="best appliance ever")
         self.system.save()
         network.system = self.system
         self.system.networks.add(network)
@@ -2363,7 +2414,7 @@ class SystemEventTestCase(XMLTestCase):
         assert(len(events) == 0)
         
     def testCreateSystemEvent(self):
-        local_system = models.System(name="mgoblue_local", description="best appliance ever")
+        local_system = self.newSystem(name="mgoblue_local", description="best appliance ever")
         local_system.save()
         network = models.Network(system=local_system)
         network.save()
@@ -2645,7 +2696,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
         act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
 
-        system = models.System(name="hey")
+        system = self.newSystem(name="hey")
         system.save()
         # sanity check dispatching poll event
         event = models.SystemEvent(system=system,event_type=poll_event, priority=poll_event.priority)
@@ -2715,9 +2766,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         class RepeaterMgr(object):
             repeaterClient = RepeaterClient()
 
-        zone = models.Zone.objects.get(name=models.Zone.LOCAL_ZONE)
         self.mgr.repeaterMgr = RepeaterMgr()
-        self.system2 = system = models.System(name="hey", managing_zone=zone)
+        self.system2 = system = self.newSystem(name="hey")
         system.save()
         network2 = models.Network(ip_address="2.2.2.2", active=True)
         network3 = models.Network(ip_address="3.3.3.3", required=True)
@@ -2757,7 +2807,9 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             eventUuid='really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem),
-                        resLoc(path='/api/inventory/systems/4', port=80),
+                        resLoc(path='/api/inventory/systems/%s' %
+                                self.system2.pk,
+                            port=80),
                     ),
                     dict(zone='Local rBuilder'),
                 ),
@@ -2905,6 +2957,8 @@ class TargetSystemImportTest(XMLTestCase):
             minor=schema.RBUILDER_DB_VERSION.minor)
         v.save()
 
+        zone = self.localZone
+
         # Create some dummy systems
         self.tgt1 = rbuildermodels.Targets.objects.get(pk=1) # vsphere1
         self.tgt2 = rbuildermodels.Targets.objects.get(pk=2) # vsphere2
@@ -2926,7 +2980,7 @@ class TargetSystemImportTest(XMLTestCase):
         for (systemId, systemName, target, credList) in systems:
             description = systemName + " description"
             sy = models.System(name=systemName, target_system_id=systemId,
-                target=target, description=description)
+                target=target, description=description, managing_zone=zone)
             sy.save()
             nw = models.Network(system=sy, dns_name=systemId)
             nw.save()
@@ -3063,7 +3117,7 @@ class TargetSystemImportTest(XMLTestCase):
             ssl_client_key = "ssl client key 001",
         )
         dnsName = 'dns-name-1'
-        system = models.System(**params)
+        system = self.newSystem(**params)
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
             targetName=self.tgt2.targetname,

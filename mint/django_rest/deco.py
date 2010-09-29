@@ -35,6 +35,11 @@ def _getXobjModel(request, model_names):
         return submodel, model_name, modelCls
     raise Exception("Unexpected XML")
 
+def getHeaderValue(request, headerName):
+    # HTTP_THANK_YOU_DJANGO_FOR_MANGLING_THE_HEADERS
+    mangledHeaderName = 'HTTP_' + headerName.replace('-', '_').upper()
+    return request.META.get(headerName, request.META.get(mangledHeaderName))
+
 def requires(model_names, save=True):
     """
     Decorator that parses the post data on a request into the class
@@ -53,13 +58,34 @@ def requires(model_names, save=True):
                 keyFieldValue = kw.get(keyFieldName)
                 # This will also overwrite the field if it's present
                 setattr(built_model, keyFieldName, keyFieldValue)
-            model = modellib.type_map[model_name].objects.load_from_object(
+            # XXX This is not the ideal place to handle this
+            _injectZone(request, built_model, model_name, modelCls)
+            model = modelCls.objects.load_from_object(
                 built_model, request, save=save)
             kw[model_name] = model
             return function(*args, **kw)
 
         return inner
     return decorate
+
+def _injectZone(request, xobjModel, modelName, modelClass):
+    if modelName != 'system' or request.method != 'POST':
+        return
+    headerName = 'X-rpathManagementNetworkNode'
+    mgmtNetworkNodeId = getHeaderValue(request, headerName)
+    if mgmtNetworkNodeId is None:
+        return
+    mgmtClass = modellib.type_map['management_node']
+    managementNodes = list(mgmtClass.objects.filter(node_jid=mgmtNetworkNodeId))
+    if not managementNodes:
+        return
+    # Inject zone into xobjModel
+    zone = managementNodes[0].zone
+    propName = 'managing_zone'
+    zclass = modellib.type_map['zone']
+    mzone = zclass._xobjClass()
+    mzone.href = zone.get_absolute_url(request)
+    setattr(xobjModel, propName, mzone)
 
 HttpAuthenticationRequired = http.HttpResponse(status=401)
 

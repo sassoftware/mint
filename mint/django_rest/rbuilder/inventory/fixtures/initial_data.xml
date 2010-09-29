@@ -106,6 +106,7 @@
   <object pk="2" model="inventory.managementnode">
         <field type="NullBooleanField" name="local"><None></None></field>
         <field to="inventory.zone" name="zone" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="node_jid">superduperjid@rbuilder.rpath</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
     </object>
   <object pk="1" model="inventory.zone">

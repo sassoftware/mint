@@ -10,7 +10,7 @@ import time
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django_restapi import resource
 
-from mint.django_rest.deco import requires, return_xml, access, ACCESS, HttpAuthenticationRequired
+from mint.django_rest.deco import requires, return_xml, access, ACCESS, HttpAuthenticationRequired, getHeaderValue
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import manager
@@ -89,10 +89,7 @@ class AbstractInventoryService(resource.Resource):
             # Event UUID authentication is special - it can be compounded with
             # regular authentication or admin
             headerName = 'X-rBuilder-Event-UUID'
-            # HTTP_THANK_YOU_DJANGO_FOR_MANGLING_THE_HEADERS
-            mangledHeaderName = 'HTTP_' + headerName.replace('-', '_').upper()
-            eventUuid = request.META.get(headerName,
-                request.META.get(mangledHeaderName))
+            eventUuid = getHeaderValue(request, headerName)
             if eventUuid:
                 # Check if this system has such an event uuid
                 systemId = kwargs['system_id']

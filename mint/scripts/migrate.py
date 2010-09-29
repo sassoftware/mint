@@ -1063,7 +1063,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 0)
+    Version = (50, 1)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1134,7 +1134,8 @@ class MigrateTo_50(SchemaMigration):
                     "current_state_id" integer NOT NULL
                         REFERENCES "inventory_system_state" ("system_state_id"),
                     "management_node" bool,
-                    "managing_zone_id" integer REFERENCES "inventory_zone" ("zone_id")
+                    "managing_zone_id" integer NOT NULL
+                        REFERENCES "inventory_zone" ("zone_id")
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system'] = []
             changed = True
@@ -1445,6 +1446,22 @@ class MigrateTo_50(SchemaMigration):
         """)
 
         return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        if 'job_system' not in db.tables:
+            cu.execute("""
+                CREATE TABLE job_system
+                (
+                    job_id      INTEGER NOT NULL
+                        REFERENCES jobs ON DELETE CASCADE,
+                    system_id    INTEGER NOT NULL
+                        REFERENCES inventory_system ON DELETE CASCADE
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['job_system'] = []
+            changed = True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
