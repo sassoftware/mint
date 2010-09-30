@@ -1278,10 +1278,10 @@ class SystemsTestCase(XMLTestCase):
   <event_uuid>%(eventUuid)s</event_uuid>
 </system>
 """
+        zoneName = base64.b64encode(self.localZone.name)
         response = self._post('/api/inventory/systems/',
             data=xmlTempl % params,
-            headers={ 'X-rpathManagementNetworkNode' :
-                mgmtNode.node_jid })
+            headers={ 'X-rPath-Management-Zone' : zoneName })
         self.failUnlessEqual(response.status_code, 200)
 
     def testPostSystemDupUuid(self):

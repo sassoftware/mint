@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import base64
 from xml.dom import minidom
 
 from django import http
@@ -71,16 +72,17 @@ def requires(model_names, save=True):
 def _injectZone(request, xobjModel, modelName, modelClass):
     if modelName != 'system' or request.method != 'POST':
         return
-    headerName = 'X-rpathManagementNetworkNode'
-    mgmtNetworkNodeId = getHeaderValue(request, headerName)
-    if mgmtNetworkNodeId is None:
+    headerName = 'X-rPath-Management-Zone'
+    encZoneName = getHeaderValue(request, headerName)
+    if encZoneName is None:
         return
-    mgmtClass = modellib.type_map['management_node']
-    managementNodes = list(mgmtClass.objects.filter(node_jid=mgmtNetworkNodeId))
-    if not managementNodes:
+    zoneName = base64.b64decode(encZoneName)
+    zoneClass = modellib.type_map['zone']
+    zones = list(zoneClass.objects.filter(name=zoneName))
+    if not zones:
         return
     # Inject zone into xobjModel
-    zone = managementNodes[0].zone
+    zone = zones[0]
     propName = 'managing_zone'
     zclass = modellib.type_map['zone']
     mzone = zclass._xobjClass()
