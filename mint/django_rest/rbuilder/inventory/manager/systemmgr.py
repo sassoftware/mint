@@ -463,18 +463,18 @@ class SystemManager(base.BaseManager):
 
     def mergeSystems(self, system):
         if not system.event_uuid:
-            return
+            return system
         # Look up a system with a matching event_uuid
         systems = [ x.system
             for x in models.SystemJob.objects.filter(
                 event_uuid = system.event_uuid) ]
         if not systems:
-            return
+            return system
         # Realistically there should only be one
         systemByUuid = systems[0]
         if systemByUuid.pk == system.pk:
             # Same system, nothing to do
-            return
+            return system
         systemToKeep, systemToRemove = sorted([system, systemByUuid],
             key = lambda x: x.pk)
         return self._merge(systemToKeep, systemToRemove)
