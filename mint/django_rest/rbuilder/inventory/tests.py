@@ -124,6 +124,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.client = Client()
         self.mgr = manager.Manager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
+        manager.repeatermgr.repeater_client = None
 
     def tearDown(self):
         TestCase.tearDown(self)
