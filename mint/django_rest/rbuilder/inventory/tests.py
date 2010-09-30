@@ -1417,15 +1417,42 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(system.pk, model.pk)
         self.failUnlessEqual(model.name, 'blippy')
 
-    def testDedupByEventUuidWithRemoval(self):
+    def testDedupByEventUuidWithRemoval1(self):
+        system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=False)
+        entries = self.mgr.getSystemLogEntries(system)
+        self.failUnlessEqual(
+            [ x.entry for x in entries ],
+            [
+                '(copied) Log message from target system',
+                'Log message from empty system'
+            ])
+
+    def testDedupByEventUuidWithRemoval2(self):
+        system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=True)
+        entries = self.mgr.getSystemLogEntries(system)
+        self.failUnlessEqual(
+            [ x.entry for x in entries ],
+            [
+                '(copied) Log message from empty system',
+                'Log message from target system',
+            ])
+
+    def _newEmptySystem(self):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
+        # Create the system, pretending it's registered
+        system = self.newSystem(name='blippy', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+        self.mgr.sysMgr.log_system(system, "Log message from empty system")
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+        return system, params
+
+    def _testDedupByEventUuidWithRemoval(self, targetSystemFirst=False):
         eventUuid = 'eventuuid001'
 
-        # Create the system, pretending it's registered
-        system0 = self.newSystem(name='blippy', local_uuid=localUuid,
-            generated_uuid=generatedUuid)
-        system0.save()
+        if not targetSystemFirst:
+            system0, params = self._newEmptySystem()
 
         # Create a target system
         targetSystemId = 'systemid-001'
@@ -1439,6 +1466,7 @@ class SystemsTestCase(XMLTestCase):
             target_system_description=targetSystemDescription,
             target_system_state=targetSystemState)
         system1.save()
+        self.mgr.sysMgr.log_system(system1, "Log message from target system")
 
         # Create a job
         eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
@@ -1449,8 +1477,10 @@ class SystemsTestCase(XMLTestCase):
             event_uuid=eventUuid)
         systemJob.save()
 
-        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
+        if targetSystemFirst:
+            system0, params = self._newEmptySystem()
+
+        params.update(eventUuid=eventUuid, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
@@ -1463,28 +1493,32 @@ class SystemsTestCase(XMLTestCase):
         obj = xobj.parse(xml)
         xobjmodel = obj.system
         model = models.System.objects.load_from_object(xobjmodel, request=None)
+
         # We should have loaded the old one
-        self.failUnlessEqual(system0.pk, model.pk)
+        self.failUnlessEqual(model.pk, system0.pk)
         self.failUnlessEqual(model.name, 'blippy')
         self.failUnlessEqual(model.event_uuid, eventUuid)
 
         self.mgr.sysMgr.mergeSystems(model)
+
+        systemToKeep, systemRemoved = sorted([ system0, system1 ],
+            key = lambda x: x.pk)
+        system = models.System.objects.get(pk=systemToKeep.pk)
+
         # At this point, properties from system1 should have copied over
-        self.failUnlessEqual(model.target.pk, tgt1.pk)
-        self.failUnlessEqual(model.target_system_id, targetSystemId)
-        self.failUnlessEqual(model.target_system_name, targetSystemName)
-        self.failUnlessEqual(model.target_system_description, targetSystemDescription)
-        self.failUnlessEqual(model.target_system_state, targetSystemState)
+        self.failUnlessEqual(system.target.pk, tgt1.pk)
+        self.failUnlessEqual(system.target_system_id, targetSystemId)
+        self.failUnlessEqual(system.target_system_name, targetSystemName)
+        self.failUnlessEqual(system.target_system_description, targetSystemDescription)
+        self.failUnlessEqual(system.target_system_state, targetSystemState)
+        self.failUnlessEqual(system.local_uuid, params['localUuid'])
+        self.failUnlessEqual(system.generated_uuid, params['generatedUuid'])
 
         # The other system should be gone
-        self.failUnlessEqual(list(models.System.objects.filter(pk=system1.pk)),
+        self.failUnlessEqual(list(models.System.objects.filter(
+            pk=systemRemoved.pk)),
             [])
-        entries = self.mgr.getSystemLogEntries(system0)
-        self.failUnlessEqual(
-            [ x.entry for x in entries ],
-            [
-                'System linked to target vsphere1.eng.rpath.com (vmware)',
-            ])
+        return system, systemRemoved
 
     def testCurrentStateUpdateApi(self):
         # Make sure current state can be updated via the API.  This allows

@@ -475,14 +475,14 @@ class SystemManager(base.BaseManager):
         if systemByUuid.pk == system.pk:
             # Same system, nothing to do
             return
-        self._merge(system, systemByUuid)
+        systemToKeep, systemToRemove = sorted([system, systemByUuid],
+            key = lambda x: x.pk)
+        self._merge(systemToKeep, systemToRemove)
 
     def _merge(self, system, other):
-        # Fields we copy verbatim from the other system
-        fieldNames = [ 'target', 'target_system_id', 'target_system_name',
-            'target_system_description', 'target_system_state' ]
-        for fieldName in fieldNames:
-            setattr(system, fieldName, getattr(other, fieldName))
+        # We don't want to overwrite the name and description
+        other.name = other.description = None
+        models.System.objects.copyFields(system, other, withReadOnly=True)
 
         # XXX maybe we should merge instead of simply updating, since we may
         # step over a unique constraint? -- misa
@@ -491,14 +491,51 @@ class SystemManager(base.BaseManager):
             UPDATE inventory_system_target_credentials
                SET system_id = %s
               WHERE system_id = %s""", [ system.pk, other.pk, ])
+
+        # If the other system has the uuids, we'll trust its network and
+        # installed software info
+        if other.generated_uuid:
+            cu.execute("""
+                DELETE FROM inventory_system_network
+                 WHERE system_id = %s
+            """, [ system.pk ])
+            cu.execute("""
+                UPDATE inventory_system_network
+                   SET system_id = %s
+                 WHERE system_id = %s
+            """, [ system.pk, other.pk ])
+            cu.execute("""
+                DELETE FROM inventory_system_installed_software
+                 WHERE system_id = %s
+            """, [ system.pk ])
+            cu.execute("""
+                UPDATE inventory_system_installed_software
+                   SET system_id = %s
+                 WHERE system_id = %s
+            """, [ system.pk, other.pk ])
+
+        self._mergeLogs(cu, system, other)
+
+        # Remove the other system before saving this one, or else we may stop
+        # over some unique constraints (like the one on generated_uuid)
+        other.delete()
+        system.save()
+
+    def _mergeLogs(self, cu, system, other):
         # See RBL-6968 - product management has agreed we shouldn't keep the
         # other system's logs
-        # But we do want to add a log entry that we de-duped
-        if other.target:
-            self.log_system(system, "System linked to target %s (%s)" %
-                (other.target.targetname, other.target.targettype))
-        system.save()
-        other.delete()
+        # But now we're trying to merge them
+        otherSystemLog = other.system_log.all()
+        if not otherSystemLog:
+            return
+        otherSystemLog = otherSystemLog[0]
+        systemLog = self.getSystemLog(system)
+        cu.execute("""
+            UPDATE inventory_system_log_entry
+               SET system_log_id = %s,
+                   entry = '(copied) ' || entry
+             WHERE system_log_id = %s
+        """, [ systemLog.pk, otherSystemLog.pk ])
 
     def postprocessEvent(self, system):
         # This code is kept here just as an example of how one can react to
