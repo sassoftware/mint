@@ -446,7 +446,7 @@ class SystemManager(base.BaseManager):
         system.save()
 
         # Verify potential duplicates here
-        self.mergeSystems(system)
+        system = self.mergeSystems(system)
 
         # setSystemState will generate a CIM call; if it's a new registration,
         # it will be using the outbound certificate signed by the low-grade
@@ -477,7 +477,7 @@ class SystemManager(base.BaseManager):
             return
         systemToKeep, systemToRemove = sorted([system, systemByUuid],
             key = lambda x: x.pk)
-        self._merge(systemToKeep, systemToRemove)
+        return self._merge(systemToKeep, systemToRemove)
 
     def _merge(self, system, other):
         # We don't want to overwrite the name and description
@@ -513,6 +513,11 @@ class SystemManager(base.BaseManager):
                    SET system_id = %s
                  WHERE system_id = %s
             """, [ system.pk, other.pk ])
+            cu.execute("""
+                UPDATE inventory_system_job
+                   SET system_id = %s
+                 WHERE system_id = %s
+            """, [ system.pk, other.pk ])
 
         self._mergeLogs(cu, system, other)
 
@@ -520,6 +525,7 @@ class SystemManager(base.BaseManager):
         # over some unique constraints (like the one on generated_uuid)
         other.delete()
         system.save()
+        return system
 
     def _mergeLogs(self, cu, system, other):
         # See RBL-6968 - product management has agreed we shouldn't keep the
