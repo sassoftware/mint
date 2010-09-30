@@ -80,7 +80,8 @@ class rBuilderTest(TestPackageRecipe):
         # Make sure the testsuite uses the installed rBuilder. Moving
         # is faster than removing.
         r.MakeDirs('../mint')
-        # r.Move('mint/django_rest', 'django_rest')
+        r.Move('mint/django_rest/rbuilder/inventory/tests.py',
+            'inventory_tests.py')
         r.Move('mint', '../mint/mint')
         r.Move('raaplugins', '../mint/raaplugins')
 
