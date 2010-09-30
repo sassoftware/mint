@@ -745,6 +745,8 @@ class SystemManager(base.BaseManager):
             network = models.Network(dns_name=dnsName,
                             active=True)
             system.networks.add(network)
+        self.log_system(system, "System launched in target %s (%s)" %
+            (target.targetname, target.targettype))
         self.addSystem(system)
         return system
 
