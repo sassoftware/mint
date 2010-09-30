@@ -189,7 +189,7 @@ class SystemState(modellib.XObjIdModel):
     UNMANAGED_DESC = "Unmanaged"
     
     REGISTERED = "registered"
-    REGISTERED_DESC = "Polling"
+    REGISTERED_DESC = "Initial synchronization pending"
     
     RESPONSIVE = "responsive"
     RESPONSIVE_DESC = "Online"
