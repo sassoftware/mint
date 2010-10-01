@@ -425,16 +425,24 @@ class ZonesTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, testsxml.zone_post_response_xml % \
             (zone.created_date.isoformat()))
         
+        # test posting a second zone https://issues.rpath.com/browse/RBL-7229
+        response = self._post('/api/inventory/zones/',
+            data=testsxml.zone_post_2_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        zones = models.Zone.objects.all()
+        self.assertTrue(len(zones) == 2)
+        
     def testPutZoneAuth(self):
         """
         Ensure we require admin to put zones
         """
+        zone = models.Zone.objects.get(pk=1)
         response = self._put('/api/inventory/zones/1/', 
-            data= testsxml.zone_put_xml)
+            data=testsxml.zone_put_xml % zone.created_date)
         self.assertEquals(response.status_code, 401)
         
         response = self._put('/api/inventory/zones/1/', 
-            data=testsxml.zone_put_xml,
+            data=testsxml.zone_put_xml % zone.created_date,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
         
@@ -442,9 +450,10 @@ class ZonesTestCase(XMLTestCase):
         """
         Ensure we return 404 if we update zone that doesn't exist
         """
+        zone = models.Zone.objects.get(pk=1)
         try:
             response = self._put('/api/inventory/zones/1zcvxzvzgvsdzfewrew4t4tga34/', 
-                data=testsxml.zone_put_xml,
+                data=testsxml.zone_put_xml % zone.created_date,
                 username="testuser", password="password")
             self.assertEquals(response.status_code, 404)
         except TemplateDoesNotExist, e:
@@ -455,7 +464,7 @@ class ZonesTestCase(XMLTestCase):
         models.Zone.objects.all().delete()
         zone = self._saveZone()
         response = self._put('/api/inventory/zones/%d/' % zone.zone_id,
-            data=testsxml.zone_put_xml, username="admin", password="password")
+            data=testsxml.zone_put_xml % zone.created_date, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         zone = models.Zone.objects.get(pk=1)
         self.assertTrue(zone.name == "zoneputname")

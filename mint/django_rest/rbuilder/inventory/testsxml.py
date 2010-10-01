@@ -150,11 +150,20 @@ zone_post_response_xml = """\
 </zone>
 """
 
+zone_post_2_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<zone>
+  <description>Some other zone</description>
+  <name>someother zone</name>
+</zone>
+"""
+
 zone_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <zone id="http://testserver/api/inventory/zones/1">
   <description>zoneputdesc</description>
   <name>zoneputname</name>
+  <created_date>%s</created_date>
 </zone>
 """
 

@@ -175,6 +175,8 @@ class Zone(modellib.XObjIdModel):
     name = models.CharField(max_length=8092, unique=True)
     description = models.CharField(max_length=8092, null=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    
+    load_fields = [ name ]
 
 class SystemState(modellib.XObjIdModel):
     serialize_accessors = False
