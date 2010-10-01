@@ -7,9 +7,10 @@
 import os
 import time
 
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound
 from django_restapi import resource
 
+from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.deco import requires, return_xml, access, ACCESS, HttpAuthenticationRequired, getHeaderValue
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
@@ -33,7 +34,12 @@ class AbstractInventoryService(resource.Resource):
         return resource.Resource.__call__(self, request, *args, **kw)
 
     def read(self, request, *args, **kwargs):
-        return self._auth(self.rest_GET, request, *args, **kwargs)
+        resp = None
+        try:
+            resp = self._auth(self.rest_GET, request, *args, **kwargs)
+        except ObjectDoesNotExist:
+            resp = HttpResponseNotFound()
+        return resp
 
     def create(self, request, *args, **kwargs):
         return self._auth(self.rest_POST, request, *args, **kwargs)

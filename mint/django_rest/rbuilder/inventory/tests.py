@@ -1206,6 +1206,14 @@ class SystemsTestCase(XMLTestCase):
         response = self._get('/api/inventory/systems/%d/' % system.system_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
+        
+    def testGetSystemDoesntExist(self):
+        models.System.objects.all().delete()
+        system = self._saveSystem()
+        system.to_xml()
+        response = self._get('/api/inventory/systems/86753021/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 404)
 
     def testGetSystem(self):
         models.System.objects.all().delete()
