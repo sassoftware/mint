@@ -172,7 +172,7 @@ class InventoryZoneService(AbstractInventoryService):
     def rest_PUT(self, request, zone_id, zone):
         oldZone = self.mgr.getZone(zone_id)
         if not oldZone:
-            return HttpResponse(status=404)
+            return HttpResponseNotFound()
         self.mgr.updateZone(zone)
         return self.mgr.getZone(zone_id)
     
@@ -241,9 +241,9 @@ class InventoryNetworkService(AbstractInventoryService):
     def rest_PUT(self, request, network_id, network):
         oldNetwork = self.get(network_id)
         if not oldNetwork:
-            return HttpResponse(status=404)
+            return HttpResponseNotFound()
         if int(network_id) != network.pk:
-            return HttpResponse(status=404)
+            return HttpResponseNotFound()
         # This really should be an update
         self.mgr.updateNetwork(network)
         return self.get(network_id)
@@ -290,7 +290,7 @@ class InventorySystemsSystemService(AbstractInventoryService):
     def rest_PUT(self, request, system_id, system):
         oldSystem = self.mgr.getSystem(system_id)
         if not oldSystem:
-            return HttpResponse(status=404)
+            return HttpResponseNotFound()
         # This is a terrible place to put logic, but until we decide to pass
         # the request into the manager, we don't have a way around it
         mb = models.SystemState.MOTHBALLED
@@ -399,7 +399,7 @@ class InventoryEventTypesService(AbstractInventoryService):
     def rest_PUT(self, request, event_type_id, event_type):
         old_event_type = self.get(event_type_id)
         if not old_event_type:
-            return HttpResponse(status=404)
+            return HttpResponseNotFound()
         # This really should be an update
         self.mgr.updateEventType(event_type)
         return self.get(event_type_id)
