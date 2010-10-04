@@ -1488,8 +1488,8 @@ class MigrateTo_50(SchemaMigration):
             INSERT INTO "inventory_event_type" 
                 ("name", "description", "priority")
             VALUES
-                ("system launch wait",
-                 "wait for a launched system's network information",
+                ('system launch wait',
+                 'wait for a launched system''s network information',
                  105)
         """)
         return True
