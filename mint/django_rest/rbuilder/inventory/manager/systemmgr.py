@@ -40,6 +40,9 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_SHUTDOWN,
         models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
     ])
+    LaunchWaitForNetworkEvents = set([
+        models.EventType.LAUNCH_WAIT_FOR_NETWORK
+    ])
 
     TZ = tz.tzutc()
     X509 = x509.X509
@@ -165,6 +168,15 @@ class SystemManager(base.BaseManager):
     def deleteSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
         system.delete()
+
+    @base.exposed
+    def getSystemByTargetSystemId(self, target_system_id):
+        systems = models.System.objects.filter(
+            target_system_id=target_system_id)
+        if systems:
+            return systems[0]
+        else:
+            return None
 
     @base.exposed
     def XXXgetSystems(self):
@@ -751,6 +763,8 @@ class SystemManager(base.BaseManager):
             network = models.Network(dns_name=dnsName,
                             active=True)
             system.networks.add(network)
+        else:
+            self.scheduleLaunchWaitForNetworkEvent(system)
         self.log_system(system, "System launched in target %s (%s)" %
             (target.targetname, target.targettype))
         self.addSystem(system)
@@ -900,21 +914,30 @@ class SystemManager(base.BaseManager):
             "Dispatching %s event" % event.event_type.description)
 
         network = self._extractNetworkToUse(event.system)
-        if not network:
+        eventType = event.event_type.name
+        if not network and eventType not in self.LaunchWaitForNetworkEvents:
             msg = "No valid network information found; giving up"
             log.error(msg)
             self.log_system(event.system, msg)
             raise errors.InvalidNetworkInformation
         # If no ip address was set, fall back to dns_name
         destination = network.ip_address or network.dns_name
-        eventType = event.event_type.name
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
+        if event.system.target:
+            targetName = event.system.target.targetname
+            targetType = event.system.target.targettype
+        else:
+            targetName = None
+            targetType = None
         cimParams = repClient.CimParams(host=destination,
             port=event.system.agent_port or 5989,
             eventUuid=eventUuid,
             clientCert=event.system.ssl_client_certificate,
-            clientKey=event.system.ssl_client_key)
+            clientKey=event.system.ssl_client_key,
+            instanceId=event.system.target_system_id,
+            targetName=targetName,
+            targetType=targetType)
         if None in [cimParams.clientKey, cimParams.clientCert]:
             # This is most likely a new system.
             # Get a cert that is likely to work
@@ -940,6 +963,9 @@ class SystemManager(base.BaseManager):
         elif eventType in self.ShutdownEvents:
             self._runSystemEvent(event, repClient.shutdown,
                 cimParams, resultsLocation, zone=zone)
+        elif eventType in self.LaunchWaitForNetworkEvents:
+            self._runSystemEvent(event, repClient.launchWaitForNetwork,
+                cimParams, resultsLocation)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
@@ -1046,6 +1072,18 @@ class SystemManager(base.BaseManager):
         self.createSystemEvent(system, shutdown_event_type)
 
     @base.exposed
+    def scheduleLaunchWaitForNetworkEvent(self, system):
+        """
+        Schedule an event that either waits for the system's IP address to
+        become available, or sees that the system has registered via
+        rpath-tools.
+        """
+        enable_time = self.now()
+        launch_wait_for_network_event_type = self.eventType(
+            models.EventType.LAUNCH_WAIT_FOR_NETWORK)
+        self.createSystemEvent(system, launch_wait_for_network_event_type, enable_time)
+
+    @base.exposed
     def createSystemEvent(self, system, event_type, enable_time=None, 
                           data=None):
         event = None
@@ -1127,7 +1165,7 @@ class SystemManager(base.BaseManager):
 
     def _addSystemToTarget(self, target, targetSystemId, targetSystem):
         t0 = time.time()
-        log.info("  Importing system %s (%s)" % (targetSystemId,
+        log.info("  Importin/tmp/mint-error-myUhev.txtg system %s (%s)" % (targetSystemId,
             targetSystem.instanceName))
         system, created = models.System.objects.get_or_create(target=target,
             target_system_id=targetSystemId,

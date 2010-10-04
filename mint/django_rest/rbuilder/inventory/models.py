@@ -510,6 +510,10 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
         'on-demand shutdown a system'
+
+    LAUNCH_WAIT_FOR_NETWORK = 'system launch wait'
+    LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION = "wait for a launched system's network information"
+    LAUNCH_WAIT_FOR_NETWORK_PRIORITY = ON_DEMAND_BASE + 5
         
     event_type_id = models.AutoField(primary_key=True)
     EVENT_TYPES = (
@@ -523,6 +527,8 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_SHUTDOWN_DESCRIPTION),
         (SYSTEM_SHUTDOWN_IMMEDIATE,
          SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION),
+        (LAUNCH_WAIT_FOR_NETWORK,
+         LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION),
     )
     name = APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES))

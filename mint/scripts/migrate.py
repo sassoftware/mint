@@ -1480,6 +1480,20 @@ class MigrateTo_50(SchemaMigration):
         cu.execute("ALTER TABLE jobs ADD UNIQUE(job_uuid)")
         return True
 
+    def migrate2(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ("system launch wait",
+                 "wait for a launched system's network information",
+                 105)
+        """)
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
