@@ -81,6 +81,11 @@
         <field type="CharField" name="description">on-demand shutdown a system</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
+    <object pk="8" model="inventory.eventtype">
+        <field type="CharField" name="name">system launch wait</field>
+        <field type="CharField" name="description">wait for a launched system's network information</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>

@@ -83,6 +83,14 @@ event_types_xml="""\
     <priority>105</priority>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/inventory/event_types/8">
+    <description>wait for a launched system's network information</description>
+    <event_type_id>8</event_type_id>
+    <job_set/>
+    <name>system launch wait</name>
+    <priority>105</priority>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\

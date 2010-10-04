@@ -920,8 +920,13 @@ class SystemManager(base.BaseManager):
             log.error(msg)
             self.log_system(event.system, msg)
             raise errors.InvalidNetworkInformation
+
         # If no ip address was set, fall back to dns_name
-        destination = network.ip_address or network.dns_name
+        if network:
+            destination = network.ip_address or network.dns_name
+        else:
+            destination = None
+
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
         if event.system.target:
@@ -946,11 +951,11 @@ class SystemManager(base.BaseManager):
                 outCert = outCerts[0]
                 cimParams.clientCert = outCert.x509_pem
                 cimParams.clientKey = outCert.pkey_pem
-        requiredNetwork = (network.required and destination) or None
         resultsLocation = repClient.ResultsLocation(
             path = "/api/inventory/systems/%d" % event.system.pk,
             port = 80)
         if eventType in self.RegistrationEvents:
+            requiredNetwork = (network.required and destination) or None
             self._runSystemEvent(event, repClient.register, cimParams,
                 resultsLocation, zone=zone, requiredNetwork=requiredNetwork)
         elif eventType in self.PollEvents:
@@ -1088,7 +1093,8 @@ class SystemManager(base.BaseManager):
                           data=None):
         event = None
         # do not create events for systems that we cannot possibly contact
-        if self.getSystemHasHostInfo(system):
+        if self.getSystemHasHostInfo(system) or \
+            event_type.name in self.LaunchWaitForNetworkEvents:
             if not enable_time:
                 enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventsPollDelay)
             pickledData = cPickle.dumps(data)
