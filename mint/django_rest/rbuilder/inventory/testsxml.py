@@ -298,7 +298,6 @@ management_nodes_xml = """\
   <management_node id="http://testserver/api/inventory/management_nodes/1">
     <agent_port/>
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
-    <os_major_version/>
     <out_of_date>False</out_of_date>
     <registration_date/>
     <generated_uuid>test management node guuid</generated_uuid>
@@ -342,7 +341,6 @@ management_nodes_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <os_minor_version/>
     <target/>
     <zone href="http://testserver/api/inventory/zones/2"/>
     <system_ptr href="http://testserver/api/inventory/systems/1"/>
@@ -354,7 +352,6 @@ management_nodes_xml = """\
       <system_state_id>2</system_state_id>
     </current_state>
     <created_date>%s</created_date>
-    <os_type/>
   </management_node>
 </management_nodes>
 """
@@ -364,7 +361,6 @@ management_node_xml = """\
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -408,7 +404,6 @@ management_node_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
@@ -420,14 +415,12 @@ management_node_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>%s</created_date>
-  <os_type/>
 </management_node>"""
 
 management_node_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
   <ssl_client_key>test management node client key</ssl_client_key>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -458,7 +451,6 @@ management_node_post_xml = """\
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <local_uuid>test management node luuid</local_uuid>
-  <os_type/>
 </management_node>"""
 
 management_node_post_response_xml = """\
@@ -466,7 +458,6 @@ management_node_post_response_xml = """\
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -511,7 +502,6 @@ management_node_post_response_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <target/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
@@ -522,14 +512,12 @@ management_node_post_response_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>%s</created_date>
-  <os_type/>
 </management_node>"""
 
 management_node_zone_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
   <ssl_client_key>test management node client key</ssl_client_key>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -559,7 +547,6 @@ management_node_zone_post_xml = """\
   <description>test management node desc</description>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
-  <os_type/>
   <managing_zone href="http://testserver/api/inventory/zones/1"/>
 </management_node>"""
 
@@ -568,7 +555,6 @@ management_node_zone_post_response_xml = """\
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -612,7 +598,6 @@ management_node_zone_post_response_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
@@ -624,7 +609,6 @@ management_node_zone_post_response_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>%s</created_date>
-  <os_type/>
 </management_node>"""
 
 systems_xml = """\
@@ -673,9 +657,6 @@ systems_xml = """\
         <system href="http://testserver/api/inventory/systems/2"/>
       </network>
     </networks>
-    <os_major_version/>
-    <os_minor_version/>
-    <os_type/>
     <ssl_client_certificate/>
     <ssl_server_certificate/>
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
@@ -729,9 +710,6 @@ systems_xml = """\
         <system href="http://testserver/api/inventory/systems/3"/>
       </network>
     </networks>
-    <os_major_version/>
-    <os_minor_version/>
-    <os_type/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
@@ -751,7 +729,6 @@ systems_put_xml = """\
 <systems>
   <system id="http://testserver/api/inventory/systems/1">
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-    <os_major_version/>
     <out_of_date>False</out_of_date>
     <registration_date/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -778,7 +755,6 @@ systems_put_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <os_minor_version/>
     <management_node/>
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <name>testsystemname</name>
@@ -789,11 +765,9 @@ systems_put_xml = """\
       <system_state_id>2</system_state_id>
     </current_state>
     <created_date>%s</created_date>
-    <os_type/>
   </system>
   <system id="http://testserver/api/inventory/systems/2">
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-    <os_major_version/>
     <out_of_date>False</out_of_date>
     <registration_date/>
     <generated_uuid>testsystem2generateduuid</generated_uuid>
@@ -820,7 +794,6 @@ systems_put_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <os_minor_version/>
     <management_node/>
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <name>testsystemname</name>
@@ -831,7 +804,6 @@ systems_put_xml = """\
       <system_state_id>2</system_state_id>
     </current_state>
     <created_date>%s</created_date>
-    <os_type/>
   </system>
 </systems>"""
 
@@ -839,7 +811,6 @@ systems_put_mothball_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -866,7 +837,6 @@ systems_put_mothball_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <management_node/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <name>testsystemname</name>
@@ -889,7 +859,6 @@ system_xml = """\
     <queued_jobs href="http://testserver/api/inventory/systems/1/job_states/1/jobs"/>
     <running_jobs href="http://testserver/api/inventory/systems/1/job_states/2/jobs"/>
   </jobs>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -922,7 +891,6 @@ system_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <management_node/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <target/>
@@ -934,7 +902,6 @@ system_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>%s</created_date>
-  <os_type/>
 </system>"""
 
 system_post_xml = """\
@@ -942,7 +909,6 @@ system_post_xml = """\
 <system>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -968,10 +934,8 @@ system_post_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <os_type/>
 </system>"""
 
 system_post_xml_response = """\
@@ -979,7 +943,6 @@ system_post_xml_response = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1020,7 +983,6 @@ system_post_xml_response = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <name>testsystemname</name>
   <target/>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1030,7 +992,6 @@ system_post_xml_response = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>%s</created_date>
-  <os_type/>
 </system>"""
 
 system_post_no_network_xml = """\
@@ -1046,7 +1007,6 @@ system_post_xml_dup = """\
 <system>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1072,10 +1032,8 @@ system_post_xml_dup = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
-  <os_type/>
 </system>"""
 
 system_post_xml_dup2 = system_post_xml_dup.replace(
@@ -1087,7 +1045,6 @@ system_target_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1128,7 +1085,6 @@ system_target_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1138,7 +1094,6 @@ system_target_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>%s</created_date>
-  <os_type/>
 </system>
 """
 
@@ -1371,7 +1326,6 @@ system_version_xml = """\
     <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs"/>
     <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
-  <os_major_version/>
   <out_of_date>True</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1404,7 +1358,6 @@ system_version_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <management_node/>
   <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
   <target/>
@@ -1416,7 +1369,6 @@ system_version_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>%%s</created_date>
-  <os_type/>
 </system>
 """ % get_installed_software_xml
 
@@ -1508,7 +1460,6 @@ system_version_put_response_xml = """\
   <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
   <registered>True</registered>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <os_major_version/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1539,7 +1490,6 @@ system_version_put_response_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <management_node/>
   <target/>
   <name/>
@@ -1550,7 +1500,6 @@ system_version_put_response_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>2010-08-23T21:41:31.278455+00:00</created_date>
-  <os_type/>
 </system>
 """ % installed_software_response_xml
 
@@ -1616,7 +1565,6 @@ system_available_updates_xml = """\
     <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
-  <os_major_version/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <networks>
@@ -1650,7 +1598,6 @@ system_available_updates_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <os_minor_version/>
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1660,7 +1607,6 @@ system_available_updates_xml = """\
     <system_state_id>2</system_state_id>
   </current_state>
   <created_date>2010-08-27T12:21:59.800269+00:00</created_date>
-  <os_type/>
 </system>
 """
 
@@ -1828,7 +1774,6 @@ systems_jobs_xml = """\
 system_with_target = """\
 <system id="http://testserver/api/inventory/systems/4">
   <system_events href="http://testserver/api/inventory/systems/4/system_events"/>
-  <os_major_version/>
   <generated_uuid/>
   <networks>
     <network id="http://testserver/api/inventory/networks/3">
@@ -1866,7 +1811,6 @@ system_with_target = """\
   <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
   <target_system_id>vsphere1-002</target_system_id>
   <target_system_name/>
-  <os_minor_version/>
   <has_active_jobs>False</has_active_jobs>
   <agent_port/>
   <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
@@ -1880,7 +1824,6 @@ system_with_target = """\
     <created_date>2010-09-23T13:30:14.100890+00:00</created_date>
   </current_state>
   <created_date>2010-09-23T13:30:14.295974+00:00</created_date>
-  <os_type/>
   <target_system_description/>
 </system>
 """

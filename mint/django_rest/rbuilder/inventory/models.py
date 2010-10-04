@@ -285,12 +285,6 @@ class System(modellib.XObjIdModel):
     target_system_state = D(APIReadOnly(models.CharField(max_length=64,
             null=True)),
         "the system state as reported by its target (only applies if system is on a virtual target)")
-    os_type = D(models.CharField(max_length=64, null=True),
-        "the system operating system type")
-    os_major_version = D(models.CharField(max_length=32, null=True),
-        "operating system major version")
-    os_minor_version = D(models.CharField(max_length=32, null=True),
-        "operating system minor version")
     registration_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was registered in inventory (UTC)")
     generated_uuid = D(models.CharField(max_length=64, unique=True, null=True),

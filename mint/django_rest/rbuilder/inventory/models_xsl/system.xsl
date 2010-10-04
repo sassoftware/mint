@@ -29,9 +29,6 @@ System Properties:]]>
    management_node - whether or not this system is a management node
    managing_zone - a link to the management zone in which this system resides
    name - the system name
-   os_major_version - operating system major version
-   os_minor_version - operating system minor version
-   os_type - the system operating system type
    registration_date - the date the system was registered in inventory (UTC)
    ssl_client_certificate - an x509 certificate of an authorized client that can use the system's CIM broker
    ssl_client_key - an x509 private key of an authorized client that can use the system's CIM broker
