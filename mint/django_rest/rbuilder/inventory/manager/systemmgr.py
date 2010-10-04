@@ -170,6 +170,15 @@ class SystemManager(base.BaseManager):
         system.delete()
 
     @base.exposed
+    def getSystemByTargetSystemId(self, target_system_id):
+        systems = models.System.objects.filter(
+            target_system_id=target_system_id)
+        if systems:
+            return systems[0]
+        else:
+            return None
+
+    @base.exposed
     def XXXgetSystems(self):
         Systems = models.Systems()
         qs = models.System.objects.select_related(
@@ -905,21 +914,30 @@ class SystemManager(base.BaseManager):
             "Dispatching %s event" % event.event_type.description)
 
         network = self._extractNetworkToUse(event.system)
-        if not network:
+        eventType = event.event_type.name
+        if not network and eventType not in self.LaunchWaitForNetworkEvents:
             msg = "No valid network information found; giving up"
             log.error(msg)
             self.log_system(event.system, msg)
             raise errors.InvalidNetworkInformation
         # If no ip address was set, fall back to dns_name
         destination = network.ip_address or network.dns_name
-        eventType = event.event_type.name
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
+        if event.system.target:
+            targetName = event.system.target.targetname
+            targetType = event.system.target.targettype
+        else:
+            targetName = None
+            targetType = None
         cimParams = repClient.CimParams(host=destination,
             port=event.system.agent_port or 5989,
             eventUuid=eventUuid,
             clientCert=event.system.ssl_client_certificate,
-            clientKey=event.system.ssl_client_key)
+            clientKey=event.system.ssl_client_key,
+            instanceId=event.system.target_system_id,
+            targetName=targetName,
+            targetType=targetType)
         if None in [cimParams.clientKey, cimParams.clientCert]:
             # This is most likely a new system.
             # Get a cert that is likely to work
@@ -947,7 +965,7 @@ class SystemManager(base.BaseManager):
                 cimParams, resultsLocation, zone=zone)
         elif eventType in self.LaunchWaitForNetworkEvents:
             self._runSystemEvent(event, repClient.launchWaitForNetwork,
-               resultsLocation)
+                cimParams, resultsLocation)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
