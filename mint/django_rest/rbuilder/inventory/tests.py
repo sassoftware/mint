@@ -9,6 +9,7 @@ from xobj import xobj
 
 from conary import versions
 
+from django.db import connection
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
@@ -927,7 +928,7 @@ class SystemsTestCase(XMLTestCase):
             def build_absolute_uri(slf, href=None):
                 return "blah%s" % href
         request = Request()
-        from django.db import settings, connection
+        from django.db import settings
         settings.DEBUG = True
 
         try:
@@ -1380,6 +1381,53 @@ class SystemsTestCase(XMLTestCase):
         network.save()
         system.networks.add(network)
         assert(self.mgr.sysMgr.getSystemHasHostInfo(system))
+
+    def testDedupByBootUuid(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        bootUuid = 'eventuuid001'
+        targetSystemId = 'target-system-id-001'
+
+        # Create 2 systems with differnt target_system_id, just like ec2 would
+        # if you asked it to launch 2 instances
+        system = self.newSystem(name="blah", target_system_id=targetSystemId)
+        system.save()
+
+        system2 = self.newSystem(name="blah2",
+            target_system_id=targetSystemId.replace('001', '002'))
+        system2.save()
+
+        # Create a job
+        cu = connection.cursor()
+        cu.execute("INSERT INTO jobs (job_uuid) VALUES (%s)",
+            [ bootUuid ])
+        jobId = cu.lastrowid
+
+        # Pretend that this job launched 2 systems (the way ec2 can do)
+        cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
+            [ jobId, system.pk ])
+        cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
+            [ jobId, system2.pk ])
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            bootUuid=bootUuid, targetSystemId=targetSystemId)
+
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <boot_uuid>%(bootUuid)s</boot_uuid>
+  <target_system_id>%(targetSystemId)s</target_system_id>
+</system>
+""" % params
+        obj = xobj.parse(xml)
+        xobjmodel = obj.system
+        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        self.failUnlessEqual(model.local_uuid, localUuid)
+        self.failUnlessEqual(model.generated_uuid, generatedUuid)
+        self.failUnlessEqual(model.boot_uuid, bootUuid)
+        self.failUnlessEqual(model.pk, system.pk)
+        self.failUnlessEqual(model.target_system_id, targetSystemId)
 
     def testLoadFromObjectEventUuid(self):
         localUuid = 'localuuid001'

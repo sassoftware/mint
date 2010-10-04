@@ -244,3 +244,10 @@ class PkiCertificates(modellib.XObjModel):
     ca_serial_index = models.IntegerField(null=True)
     time_issued = modellib.DateTimeUtcField(null=False)
     time_expired = modellib.DateTimeUtcField(null=False)
+
+class Jobs(modellib.XObjModel):
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = 'jobs'
+    job_id = models.AutoField(primary_key=True)
+    job_uuid = models.TextField(max_length=64, null=False)

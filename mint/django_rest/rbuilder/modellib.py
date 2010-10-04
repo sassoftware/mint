@@ -7,6 +7,7 @@ import urlparse
 
 from mint.lib import mintutils
 
+from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
@@ -445,6 +446,29 @@ class SystemManager(BaseManager):
             if systems:
                 system = systems[0]
                 return system.serialize(), system
+        if model_inst.boot_uuid:
+            # Look up systems by old-style jobs
+            cu = connection.cursor()
+            if model_inst.target_system_id:
+                rs = cu.execute("""
+                    SELECT job_system.system_id
+                      FROM job_system
+                      JOIN jobs USING (job_id)
+                      JOIN inventory_system USING (system_id)
+                     WHERE jobs.job_uuid = %s
+                       AND inventory_system.target_system_id = %s
+                """, [ model_inst.boot_uuid, model_inst.target_system_id ])
+            else:
+                rs = cu.execute("""
+                    SELECT job_system.system_id
+                      FROM job_system
+                      JOIN jobs USING (job_id)
+                     WHERE jobs.job_uuid = %s
+                """, [ model_inst.boot_uuid ])
+            rs = list(rs)
+            if rs:
+                loaded_model = self.tryLoad(dict(system_id=rs[0][0]))
+                return loaded_model.serialize(), loaded_model
         if model_inst.target and model_inst.target_system_id:
             loaded_model = self.tryLoad(dict(target=model_inst.target,
                 target_system_id=model_inst.target_system_id))

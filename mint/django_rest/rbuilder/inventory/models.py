@@ -12,6 +12,7 @@ from dateutil import tz
 from conary import versions
 from conary.deps import deps
 
+from django.conf import settings
 from django.db import connection, models
 from django.db.backends import signals
 
@@ -245,7 +246,7 @@ class System(modellib.XObjIdModel):
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
-        'managementnode', ])
+        'managementnode', 'jobsystem_set', ])
     _xobj_hidden_m2m = set()
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
@@ -273,8 +274,8 @@ class System(modellib.XObjIdModel):
         "the date the system was deployed (only applies if system is on a virtual target)")
     target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, text_field="targetname"),
         "the virtual target the system was deployed to (only applies if system is on a virtual target)")
-    target_system_id = D(APIReadOnly(models.CharField(max_length=255,
-            null=True)),
+    target_system_id = D(models.CharField(max_length=255,
+            null=True),
         "the system ID as reported by its target (only applies if system is on a virtual target)")
     target_system_name = D(APIReadOnly(models.CharField(max_length=255,
             null=True)),
@@ -318,6 +319,8 @@ class System(modellib.XObjIdModel):
         auto_now_add=True, default=datetime.datetime.now(tz.tzutc()))))
     event_uuid = D(modellib.SyntheticField(),
         "a UUID used to link system events with their returned responses")
+    boot_uuid = D(modellib.SyntheticField(),
+        "a UUID used for tracking systems registering at startup time")
 
     load_fields = [local_uuid]
 
@@ -862,6 +865,13 @@ class SystemJob(modellib.XObjModel):
     system = modellib.ForeignKey(System)
     job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')
     event_uuid = XObjHidden(models.CharField(max_length=64, unique=True))
+
+class JobSystem(modellib.XObjModel):
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = 'job_system'
+    job = models.ForeignKey(rbuildermodels.Jobs, null=False)
+    system = models.ForeignKey(System, null=False)
 
 class ErrorResponse(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(

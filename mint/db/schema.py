@@ -1514,6 +1514,7 @@ def _createJobsSchema(db):
                     REFERENCES job_types ON DELETE CASCADE,
                 job_state_id INTEGER NOT NULL
                     REFERENCES job_states ON DELETE CASCADE,
+                job_uuid    VARCHAR(64) NOT NULL UNIQUE,
                 created_by   INTEGER NOT NULL
                     REFERENCES Users ON DELETE CASCADE,
                 created     NUMERIC(14,4) NOT NULL,

@@ -1063,7 +1063,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 1)
+    Version = (50, 2)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1467,24 +1467,18 @@ class MigrateTo_50(SchemaMigration):
     
     def migrate2(self):
         cu = self.db.cursor()
-        db = self.db
 
-        if 'inventory_system' in db.tables:
-            cu.execute("""
-                ALTER TABLE inventory_system
-                    DROP COLUMN os_type
-            """)
-            cu.execute("""
-                ALTER TABLE inventory_system
-                    DROP COLUMN os_major_version
-            """)
-            cu.execute("""
-                ALTER TABLE inventory_system
-                    DROP COLUMN os_minor_version
-            """)
-            changed = True
-
-        return changed or True
+        cu.execute("""
+            ALTER TABLE inventory_system
+                DROP COLUMN os_type,
+                DROP COLUMN os_major_version,
+                DROP COLUMN os_minor_version
+        """)
+        cu.execute("ALTER TABLE jobs ADD COLUMN job_uuid VARCHAR(64)")
+        cu.execute("UPDATE jobs SET job_uuid=job_id")
+        cu.execute("ALTER TABLE jobs ALTER COLUMN job_uuid SET NOT NULL")
+        cu.execute("ALTER TABLE jobs ADD UNIQUE(job_uuid)")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
