@@ -1063,7 +1063,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 2)
+    Version = (50, 3)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1480,7 +1480,7 @@ class MigrateTo_50(SchemaMigration):
         cu.execute("ALTER TABLE jobs ADD UNIQUE(job_uuid)")
         return True
 
-    def migrate2(self):
+    def migrate3(self):
         cu = self.db.cursor()
         db = self.db
 
