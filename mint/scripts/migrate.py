@@ -1119,9 +1119,6 @@ class MigrateTo_50(SchemaMigration):
                     "target_system_name" varchar(255),
                     "target_system_description" varchar(1024),
                     "target_system_state" varchar(64),
-                    "os_type" varchar(64),
-                    "os_major_version" varchar(32),
-                    "os_minor_version" varchar(32),
                     "registration_date" timestamp with time zone,
                     "generated_uuid" varchar(64) UNIQUE,
                     "local_uuid" varchar(64),
@@ -1461,6 +1458,27 @@ class MigrateTo_50(SchemaMigration):
                         REFERENCES inventory_system ON DELETE CASCADE
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['job_system'] = []
+            changed = True
+
+        return changed or True
+    
+    def migrate2(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        if 'inventory_system' in db.tables:
+            cu.execute("""
+                ALTER TABLE inventory_system
+                    DROP COLUMN os_type
+            """)
+            cu.execute("""
+                ALTER TABLE inventory_system
+                    DROP COLUMN os_major_version
+            """)
+            cu.execute("""
+                ALTER TABLE inventory_system
+                    DROP COLUMN os_minor_version
+            """)
             changed = True
 
         return changed or True

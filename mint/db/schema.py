@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(50, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1102,9 +1102,6 @@ def _createInventorySchema(db, cfg):
                 "target_system_name" varchar(255),
                 "target_system_description" varchar(1024),
                 "target_system_state" varchar(64),
-                "os_type" varchar(64),
-                "os_major_version" varchar(32),
-                "os_minor_version" varchar(32),
                 "registration_date" timestamp with time zone,
                 "generated_uuid" varchar(64) UNIQUE,
                 "local_uuid" varchar(64),
