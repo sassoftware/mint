@@ -1063,7 +1063,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
 class MigrateTo_50(SchemaMigration):
-    Version = (50, 1)
+    Version = (50, 2)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1464,6 +1464,20 @@ class MigrateTo_50(SchemaMigration):
             changed = True
 
         return changed or True
+
+    def migrate2(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ("system launch wait",
+                 "wait for a launched system's network information",
+                 105)
+        """)
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
