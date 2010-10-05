@@ -1284,7 +1284,7 @@ class SystemsTestCase(XMLTestCase):
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
         models.System.objects.all().delete()
-        mgmtNode = self._saveManagementNode()
+        self._saveManagementNode()
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'

@@ -1482,7 +1482,6 @@ class MigrateTo_50(SchemaMigration):
 
     def migrate3(self):
         cu = self.db.cursor()
-        db = self.db
 
         cu.execute("""
             INSERT INTO "inventory_event_type" 
