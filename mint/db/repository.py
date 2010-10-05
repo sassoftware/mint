@@ -415,10 +415,10 @@ class RepositoryHandle(object):
     @cached
     def getProxyServer(self):
         """
-        Return a (cached) C{SimpleRepositoryFilter} for this project's
+        Return a (cached) C{CachingRepositoryServer} for this project's
         repository.
         """
-        return proxy.SimpleRepositoryFilter(self.getNetServerConfig(),
+        return proxy.CachingRepositoryServer(self.getNetServerConfig(),
                 self.getURL(), self.getNetServer())
 
     @cached

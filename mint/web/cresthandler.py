@@ -13,7 +13,7 @@ from mint.rest.middleware import auth
 
 def handleCrest(prefix, cfg, db, repos, req):
     handler, callback = getCrestHandler(cfg, db)
-    if isinstance(repos, proxy.SimpleRepositoryFilter):
+    if isinstance(repos, proxy.CachingRepositoryServer):
         callback.repos = repos.repos
     else:
         callback.repos = repos
