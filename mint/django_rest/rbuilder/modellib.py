@@ -450,7 +450,7 @@ class SystemManager(BaseManager):
             # Look up systems by old-style jobs
             cu = connection.cursor()
             if model_inst.target_system_id:
-                rs = cu.execute("""
+                cu.execute("""
                     SELECT job_system.system_id
                       FROM job_system
                       JOIN jobs USING (job_id)
@@ -459,13 +459,13 @@ class SystemManager(BaseManager):
                        AND inventory_system.target_system_id = %s
                 """, [ model_inst.boot_uuid, model_inst.target_system_id ])
             else:
-                rs = cu.execute("""
+                cu.execute("""
                     SELECT job_system.system_id
                       FROM job_system
                       JOIN jobs USING (job_id)
                      WHERE jobs.job_uuid = %s
                 """, [ model_inst.boot_uuid ])
-            rs = list(rs)
+            rs = list(cu)
             if rs:
                 loaded_model = self.tryLoad(dict(system_id=rs[0][0]))
                 return loaded_model.serialize(), loaded_model
