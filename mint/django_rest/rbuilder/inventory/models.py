@@ -877,7 +877,11 @@ class JobSystem(modellib.XObjModel):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = 'job_system'
     job = models.ForeignKey(rbuildermodels.Jobs, null=False)
-    system = models.ForeignKey(System, null=False)
+    # Django will insist on removing entries from this table when removing a
+    # system, and because there's no primary key, it will fail. So, for now,
+    # we don't use a FK for system
+    #system = models.ForeignKey(System, null=False)
+    system_id = models.IntegerField(null=False)
 
 class ErrorResponse(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
