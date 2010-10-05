@@ -169,7 +169,7 @@ class PlatformLoadStatusStub(Model):
 
 class PlatformLoad(Model):
     uri = fields.CharField()
-    jobId = fields.IntegerField()
+    jobId = fields.CharField()
     platformId = fields.IntegerField()
     job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
     # platformLoadStatus = fields.ModelField(PlatformLoadStatusStub)

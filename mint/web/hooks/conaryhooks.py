@@ -117,7 +117,7 @@ def getRepository(projectName, repName, context,
     repositoryDir = os.path.join(cfg.reposPath, repName)
 
     nscfg.repositoryDB = dbTuple
-    nscfg.proxyContentsDir = os.path.join(cfg.dataPath, 'proxycontents')
+    nscfg.proxyContentsDir = os.path.join(cfg.dataPath, 'proxy-contents')
     nscfg.changesetCacheDir = os.path.join(cfg.dataPath, 'cscache')
     nscfg.contentsDir = " ".join(x % repName
             for x in cfg.reposContentsDir.split(" "))

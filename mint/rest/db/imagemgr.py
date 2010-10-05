@@ -42,13 +42,14 @@ class ImageManager(manager.Manager):
             SELECT
                 p.hostname,
                 pv.name AS version,
-                b.buildId AS imageId, b.pubReleaseId AS "release",
+                b.buildId AS imageId, b.pubReleaseId AS "releaseId",
                     b.buildType AS imageType, b.name, b.description,
                     b.troveName, b.troveVersion, b.troveFlavor,
                     b.troveLastChanged, b.timeCreated, b.timeUpdated,
                     b.status AS statusCode, b.statusMessage, b.buildCount,
                     b.stageName AS stage,
                 pr.timePublished,
+                pr.name AS release,
                 cr_user.username AS creator, up_user.username AS updater,
                 ami_data.value AS amiId
 
@@ -82,7 +83,7 @@ class ImageManager(manager.Manager):
         images = []
         for row in rows:
             imageType = row['imageType']
-            row['released'] = bool(row['release'])
+            row['released'] = bool(row['releaseId'])
             row['published'] = bool(row.pop('timePublished', False))
             if row['troveFlavor'] is not None:
                 row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
@@ -110,10 +111,13 @@ class ImageManager(manager.Manager):
             image.imageStatus = status
             images.append(image)
 
-        imagesFiles = self._getFilesForImages(hostname,
-                (x.imageId for x in images))
+        imageIds = [ x.imageId for x in images ]
+        imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
+
+        imagesFiles = self._getFilesForImages(hostname, imageIds)
         for image, imageFiles in zip(images, imagesFiles):
             image.files = imageFiles
+            image.baseFileName = imagesBaseFileNameMap[image.imageId]
 
         if getOne:
             return images[0]
@@ -147,8 +151,9 @@ class ImageManager(manager.Manager):
             else:
                 file = imageFiles[fileId] = models.ImageFile(d)
                 file.urls = []
+                file.sha1 = d['sha1']
             if url:
-                file.baseFileName = os.path.basename(url)
+                file.fileName = os.path.basename(url)
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
 
         # Order image files in a list parallel to imageIds
@@ -156,6 +161,59 @@ class ImageManager(manager.Manager):
         return [models.ImageFileList(hostname=hostname, imageId=imageId,
             files=sorted(imageFiles.values(), key=lambda x: x.idx))
             for (imageId, imageFiles) in zip(imageIds, imageFilesList) ]
+
+    def getImagesBaseFileName(self, hostname, imageIds):
+        imageIds = [int(x) for x in imageIds]
+        if not imageIds:
+            return {}
+
+        cu = self.db.cursor()
+        # We join Builds with BuildData in a subquery first, to find out the
+        # base file name; the outer join will make sure we get NULL if
+        # baseFileName is not set.
+        sql = '''
+            SELECT b.buildId, b.troveName, b.troveVersion, b.troveFlavor,
+                   bd.baseFileName
+              FROM Builds AS b
+         LEFT JOIN (
+                    SELECT buildId, value AS baseFileName
+                      FROM Builds
+                      JOIN BuildData USING (buildId)
+                     WHERE BuildData.name ='baseFileName'
+                   ) AS bd USING (buildId)
+             WHERE b.buildId IN ( %(images)s )
+            '''
+        sql %= dict(images=','.join('%d' % x for x in imageIds))
+        cu.execute(sql)
+        imageTroveMap = dict(
+            (r['buildId'],
+                (r['troveName'], r['troveVersion'], r['troveFlavor'],
+                    r['baseFileName']))
+             for r in cu)
+        ret = {}
+        for imageId in imageIds:
+            troveName, troveVersion, troveFlavor, baseFileName = imageTroveMap[imageId]
+            baseFileName = self._sanitizeString(baseFileName)
+            if not baseFileName:
+                troveVersion = helperfuncs.parseVersion(troveVersion)
+                troveArch = helperfuncs.getArchFromFlavor(troveFlavor)
+                baseFileName = "%(name)s-%(version)s-%(arch)s" % dict(
+                    # XXX One would assume hostname == troveName, but that's
+                    # how server.py had the code written
+                    name = hostname,
+                    version = troveVersion.trailingRevision().version,
+                    arch = troveArch)
+            ret[imageId] = baseFileName
+        return ret
+
+    @classmethod
+    def _sanitizeString(cls, string):
+        if string is None:
+            return ''
+        # Copied from mint/server.py
+        return ''.join(
+            [(x.isalnum() or x in ('-', '.')) and x or '_'
+            for x in string])
 
     def listImagesForProduct(self, fqdn):
         return self._getImages(fqdn)
@@ -369,19 +427,22 @@ class ImageManager(manager.Manager):
 
         failed = (status.code != jobstatus.FINISHED)
 
-        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%%d" % (
-            self.cfg.siteHost, self.cfg.basePath, )
         if amiId is not None:
             notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
             imageFiles = [ amiId ]
         else:
             notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
-            imageFiles = [ (x[0], downloadUrlTemplate % x[1])
+            imageFiles = [ (x[0], self.getDownloadUrl(x[1]))
                 for x in self._getImageFiles(imageId) ]
 
         method = (failed and notices.notify_error) or notices.notify_built
         method(imageName, imageType, time.time(), projectName, projectVersion,
             imageFiles)
+
+    def getDownloadUrl(self, fileId):
+        downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%d"
+        return downloadUrlTemplate % (
+            self.cfg.siteHost, self.cfg.basePath, fileId)
 
     def _getImageFiles(self, imageId):
         cu = self.db.cursor()
@@ -436,7 +497,7 @@ class ImageManager(manager.Manager):
             fileId = cu.lastrowid
 
             # ... then the URL ...
-            fileName = os.path.basename(file.baseFileName)
+            fileName = os.path.basename(file.fileName)
             filePath = os.path.join(self.cfg.imagesPath, hostname,
                     str(imageId), fileName)
             cu.execute("INSERT INTO FilesUrls ( urlType, url) VALUES ( ?, ? )",
@@ -449,3 +510,37 @@ class ImageManager(manager.Manager):
                     fileId, urlId)
 
         return self.listFilesForImage(hostname, imageId)
+
+    def getAllImagesByType(self, imageType):
+        images = self.db.db.builds.getAllBuildsByType(imageType,
+            self.db.auth.userId)
+        hostname = None
+        imageIds = []
+        hostnameToImageIdsMap = {}
+        if not images:
+            return []
+        for imageData in images:
+            hostname = imageData.pop('hostname')
+            hostnameToImageIdsMap.setdefault(hostname, []).append(
+                imageData['buildId'])
+        imagesBaseFileNameMap = {}
+        imageFileListMap = {}
+        for hostname, imageIds in hostnameToImageIdsMap.items():
+            imagesBaseFileNameMap.update(
+                self.getImagesBaseFileName(hostname, imageIds))
+            imageFilesList = self._getFilesForImages(hostname, imageIds)
+            imageFileListMap.update(dict((x, y)
+                for (x, y) in zip(imageIds, imageFilesList)))
+
+        for imageData in images:
+            imageFileList = imageFileListMap[imageData['buildId']]
+            imageFileData = [
+                dict(fileId = x.fileId, sha1 = x.sha1,
+                     fileName = x.fileName,
+                     idx = x.idx, size = x.size,
+                     downloadUrl = self.getDownloadUrl(x.fileId),)
+                for x in imageFileList.files ]
+            imageData['files'] = imageFileData
+            imageId = imageData['buildId']
+            imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
+        return images
