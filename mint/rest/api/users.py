@@ -71,6 +71,8 @@ class UserController(base.BaseController):
     def get(self, request, username):
         return self.db.getUser(username)
     
+    #actual controllers need to be added to handle the product membership 
+    #and groups that a user belongs.  This will likely intersect with RBAC.
     def listProducts(self, request, username):
         return self.db.listMembershipsForUser(username)
 

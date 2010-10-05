@@ -15,6 +15,7 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
+from mint.session import SqlSession
 from mint.client import timeDelta
 from mint import server
 from mint import shimclient
@@ -180,7 +181,7 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = "Bad Parameter", error = str(e),
                 traceback = self.cfg.debugMode and tb or None)
         else:
-            if self.auth.authorized:
+            if self.auth.authorized and isinstance(self.session, SqlSession):
                 self.session.save()
             setCacheControl(self.req)
             self.req.headers_out['Last-modified'] = formatHTTPDate()
