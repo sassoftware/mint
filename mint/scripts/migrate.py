@@ -1538,6 +1538,13 @@ class MigrateTo_51(SchemaMigration):
         cu.execute("UPDATE inventory_management_interface SET port='5989' WHERE name='cim'")
         
         return True
+    
+    def migrate3(self):
+        cu = self.db.cursor()
+        
+        cu.execute("ALTER TABLE inventory_system ADD COLUMN credentials text")
+        
+        return True
 
     def migrate3(self):
         cu = self.db.cursor()
