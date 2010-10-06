@@ -1494,7 +1494,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 2)
+    Version = (51, 3)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1539,7 +1539,7 @@ class MigrateTo_51(SchemaMigration):
         
         return True
 
-    def migrate2(self):
+    def migrate3(self):
         cu = self.db.cursor()
         db = self.db
 
