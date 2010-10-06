@@ -66,6 +66,7 @@ class Inventory(modellib.XObjModel):
     def __init__(self):
         self.zones = modellib.XObjHrefModel('zones')
         self.management_nodes = modellib.XObjHrefModel('management_nodes')
+        self.management_interfaces = modellib.XObjHrefModel('management_interfaces')
         self.networks = modellib.XObjHrefModel('networks')
         self.systems = modellib.XObjHrefModel('systems')
         self.log = modellib.XObjHrefModel('log')
@@ -239,6 +240,41 @@ class SystemState(modellib.XObjIdModel):
 
     load_fields = [ name ]
 
+class ManagementInterfaces(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='management_interfaces',
+                elements=['management_interface'])
+    list_fields = ['management_interface']
+    
+class ManagementInterface(modellib.XObjIdModel):
+    XSL = "managementInterface.xsl"
+    class Meta:
+        db_table = 'inventory_management_interface'
+    _xobj = xobj.XObjMetadata(
+                tag = 'management_interface',
+                attributes = {'id':str})
+        
+    CIM = "cim"
+    CIM_DESC = "Common Information Model (CIM)"
+    CIM_PORT = 8443
+    WMI = "wmi"
+    WMI_PORT = 135
+    WMI_DESC = "Windows Management Instrumentation (WMI)"
+
+    CHOICES = (
+        (CIM, CIM_DESC),
+        (WMI, WMI_DESC),
+    )
+        
+    management_interface_id = D(models.AutoField(primary_key=True), "the database ID for the management interface")
+    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the management interface")
+    description = D(models.CharField(max_length=8092), "the description of the management interface")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the management interface was added to inventory (UTC)")
+    port = D(models.IntegerField(null=True), "the port used by the management interface")
+    credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
+
 class System(modellib.XObjIdModel):
     XSL = "system.xsl"
     class Meta:
@@ -321,6 +357,8 @@ class System(modellib.XObjIdModel):
         "a UUID used to link system events with their returned responses")
     boot_uuid = D(modellib.SyntheticField(),
         "a UUID used for tracking systems registering at startup time")
+    management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
+        "the management interface used to communicate with the system")
 
     load_fields = [local_uuid]
 

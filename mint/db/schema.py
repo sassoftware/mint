@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 0)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1087,6 +1087,20 @@ def _createInventorySchema(db, cfg):
         db.tables['inventory_system_state'] = []
         changed = True
         changed |= _addSystemStates(db, cfg)
+        
+    if 'inventory_management_interface' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_management_interface" (
+                "management_interface_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL UNIQUE,
+                "description" varchar(8092) NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "port" integer NOT NULL,
+                "credentials_descriptor" text NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_management_interface'] = []
+        changed |= _addManagementInterfaces(db, cfg)
+        changed = True
 
     if 'inventory_system' not in db.tables:
         cu.execute("""
@@ -1115,7 +1129,9 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_system_state" ("system_state_id"),
                 "management_node" bool,
                 "managing_zone_id" integer NOT NULL
-                    REFERENCES "inventory_zone" ("zone_id")
+                    REFERENCES "inventory_zone" ("zone_id"),
+                "management_interface_id" integer 
+                    REFERENCES "inventory_management_interface" ("management_interface_id")
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         changed = True
@@ -1438,6 +1454,30 @@ def _addManagementZone(db, cfg):
                     [dict(system_ptr_id=systemId, 
                           local='true', 
                           zone_id=zoneId)])
+    
+    return changed
+
+cim_credentials_descriptor="""&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;serverCert&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Server Cert&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;"""
+wmi_credentials_descriptor="""&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;domain&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Windows Domain&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;user&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;User&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;password&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Password&lt;/desc&gt;&lt;/descriptions&gt;&lt;password&gt;true&lt;/password&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;"""
+
+def _addManagementInterfaces(db, cfg):
+    changed = False
+    
+    changed |= _addTableRows(db, 'inventory_management_interface', 'name',
+            [dict(name='cim',
+                  description='Common Information Model (CIM)',
+                  port=8443,
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  credentials_descriptor=cim_credentials_descriptor
+            )])
+    
+    changed |= _addTableRows(db, 'inventory_management_interface', 'name',
+            [dict(name='wmi',
+                  description='Windows Management Instrumentation (WMI)"',
+                  port=135,
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  credentials_descriptor=wmi_credentials_descriptor
+            )])
     
     return changed
 

@@ -203,6 +203,31 @@ class InventoryManagementNodeService(AbstractInventoryService):
         managementNode = self.mgr.addManagementNode(management_node)
         return managementNode
     
+class InventoryManagementInterfaceService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request, management_interface_id=None):
+        mis = self.get(management_interface_id)
+        return self.get(management_interface_id)
+    
+    def get(self, management_interface_id=None):
+        if management_interface_id:
+            return self.mgr.getManagementInterface(management_interface_id)
+        else:
+            return self.mgr.getManagementInterfaces()
+        
+    @access.admin
+    @requires('management_interface')
+    @return_xml
+    def rest_PUT(self, request, management_interface_id, management_interface):
+        old = self.get(management_interface_id)
+        if not old:
+            return HttpResponseNotFound()
+        if int(management_interface_id) != management_interface.pk:
+            return HttpResponseNotFound()
+        self.mgr.updateManagementInterface(management_interface)
+        return self.get(management_interface_id)
+    
 class InventoryZoneManagementNodeService(AbstractInventoryService):
     
     @return_xml

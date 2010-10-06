@@ -8,6 +8,7 @@ inventory_xml = """\
   <log href="http://testserver/api/inventory/log"/>
   <zones href="http://testserver/api/inventory/zones"/>
   <management_nodes href="http://testserver/api/inventory/management_nodes"/>
+  <management_interfaces href="http://testserver/api/inventory/management_interfaces"/>
   <systems href="http://testserver/api/inventory/systems"/>
   <system_states href="http://testserver/api/inventory/system_states"/>
   <networks href="http://testserver/api/inventory/networks"/>
@@ -173,6 +174,47 @@ zone_put_xml = """\
   <name>zoneputname</name>
   <created_date>%s</created_date>
 </zone>
+"""
+
+management_interfaces_xml="""\
+<?xml version="1.0"?>
+<management_interfaces>
+  <management_interface id="http://testserver/api/inventory/management_interfaces/1">
+    <systems/>
+    <description>bar</description>
+    <management_interface_id>1</management_interface_id>
+    <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
+    <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
+    <port>8000</port>
+    <name>foo</name>
+  </management_interface>
+</management_interfaces>
+"""
+
+management_interface_xml="""\
+<?xml version="1.0"?>
+<management_interface id="http://testserver/api/inventory/management_interfaces/1">
+  <systems/>
+  <description>bar</description>
+  <management_interface_id>1</management_interface_id>
+  <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
+  <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
+  <port>8000</port>
+  <name>foo</name>
+</management_interface>
+"""
+
+management_interface_put_xml="""\
+<?xml version="1.0"?>
+<management_interface id="http://testserver/api/inventory/management_interfaces/1/">
+  <systems/>
+  <description>bar</description>
+  <management_interface_id>1</management_interface_id>
+  <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
+  <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
+  <port>123</port>
+  <name>thisnameshouldnotstick</name>
+</management_interface>
 """
 
 networks_xml = """\
@@ -353,6 +395,7 @@ management_nodes_xml = """\
     <zone href="http://testserver/api/inventory/zones/2"/>
     <system_ptr href="http://testserver/api/inventory/systems/1"/>
     <local_uuid>test management node luuid</local_uuid>
+    <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <created_date>%s</created_date>
       <description>Polling</description>
@@ -416,6 +459,7 @@ management_node_xml = """\
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
     <description>Polling</description>
@@ -459,6 +503,7 @@ management_node_post_xml = """\
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <local_uuid>test management node luuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </management_node>"""
 
 management_node_post_response_xml = """\
@@ -513,6 +558,7 @@ management_node_post_response_xml = """\
   <target/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
     <description>Polling</description>
@@ -555,6 +601,7 @@ management_node_zone_post_xml = """\
   <description>test management node desc</description>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <managing_zone href="http://testserver/api/inventory/zones/1"/>
 </management_node>"""
 
@@ -610,6 +657,7 @@ management_node_zone_post_response_xml = """\
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
     <description>Polling</description>
@@ -647,6 +695,7 @@ systems_xml = """\
     <launch_date/>
     <launching_user/>
     <local_uuid/>
+    <management_interface/>
     <management_node>true</management_node>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
@@ -700,6 +749,7 @@ systems_xml = """\
     <launch_date/>
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
+    <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <management_node/>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
@@ -767,6 +817,7 @@ systems_put_xml = """\
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystemlocaluuid</local_uuid>
+    <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Polling</description>
       <name>registered</name>
@@ -806,6 +857,7 @@ systems_put_xml = """\
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystem2localuuid</local_uuid>
+    <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Polling</description>
       <name>registered</name>
@@ -849,6 +901,7 @@ systems_put_mothball_xml = """\
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/10">
     <description>Retired</description>
     <name>mothballed</name>
@@ -904,6 +957,7 @@ system_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
@@ -944,6 +998,7 @@ system_post_xml = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </system>"""
 
 system_post_xml_response = """\
@@ -994,6 +1049,7 @@ system_post_xml_response = """\
   <name>testsystemname</name>
   <target/>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
@@ -1042,6 +1098,7 @@ system_post_xml_dup = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </system>"""
 
 system_post_xml_dup2 = system_post_xml_dup.replace(
@@ -1096,6 +1153,7 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
@@ -1371,6 +1429,7 @@ system_version_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
@@ -1502,6 +1561,7 @@ system_version_put_response_xml = """\
   <target/>
   <name/>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
@@ -1609,6 +1669,7 @@ system_available_updates_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Polling</description>
     <name>registered</name>
@@ -1824,6 +1885,7 @@ system_with_target = """\
   <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
   <local_uuid/>
+  <management_interface/>
   <target_system_state/>
   <current_state id="http://testserver/api/inventory/system_states/1">
     <system_state_id>1</system_state_id>

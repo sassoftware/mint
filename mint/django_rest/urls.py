@@ -62,6 +62,14 @@ urlpatterns = patterns('',
     url(r'^api/inventory/zones/(\d+)/management_nodes/(\d+)/?$',
         inventoryviews.InventoryZoneManagementNodeService(),
         name='ManagementNode'),
+        
+    # Management Interfaces
+    url(r'^api/inventory/management_interfaces/?$',
+        inventoryviews.InventoryManagementInterfaceService(),
+        name='ManagementInterfaces'),
+    url(r'^api/inventory/management_interfaces/(\d+)/?$',
+        inventoryviews.InventoryManagementInterfaceService(),
+        name='ManagementInterface'),
        
     # Networks
     url(r'^api/inventory/networks/?$',

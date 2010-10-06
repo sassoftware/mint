@@ -1493,6 +1493,35 @@ class MigrateTo_50(SchemaMigration):
         """)
         return True
 
+class MigrateTo_51(SchemaMigration):
+    Version = (51, 0)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        db = self.db
+        
+        if 'inventory_management_interface' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_management_interface" (
+                    "management_interface_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "port" integer NOT NULL,
+                    "credentials_descriptor" text NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_management_interface'] = []
+            changed |= schema._addManagementInterfaces(db, cfg)
+            changed = True
+        
+        cu.execute("""
+            ALTER TABLE inventory_system
+                ADD COLUMN management_interface_id  INTEGER
+                    REFERENCES inventory_management_interface
+        """)
+        
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

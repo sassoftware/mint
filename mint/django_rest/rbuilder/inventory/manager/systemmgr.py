@@ -342,6 +342,27 @@ class SystemManager(base.BaseManager):
     def bulkSerializeOne(self, request, obj, values):
         ret = obj.serialize(request, values=values)
         return ret
+    
+    @base.exposed
+    def getManagementInterface(self, management_interface_id):
+        managementInterface = models.ManagementInterface.objects.get(pk=management_interface_id)
+        return managementInterface
+
+    @base.exposed
+    def getManagementInterfaces(self):
+        ManagementInterfaces = models.ManagementInterfaces()
+        ManagementInterfaces.management_interface = list(models.ManagementInterface.objects.all())
+        return ManagementInterfaces
+    
+    @base.exposed
+    def updateManagementInterface(self, management_interface):
+        """Update a management interface"""
+
+        if not management_interface:
+            return
+
+        management_interface.save()
+        return management_interface
 
     @base.exposed
     def getManagementNode(self, management_node_id):

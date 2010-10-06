@@ -214,6 +214,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.REGISTERED)
         system.managing_zone = self.localZone
+        system.management_interface = models.ManagementInterface.objects.get(pk=1)
         system.save()
 
         network = models.Network()
@@ -245,6 +246,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             models.SystemState.REGISTERED)
         management_node.local = True
         management_node.management_node = True
+        management_node.management_interface = models.ManagementInterface.objects.get(pk=1)
         management_node.node_jid = "superduperjid2@rbuilder.rpath"
         management_node.save()
 
@@ -496,6 +498,79 @@ class ZonesTestCase(XMLTestCase):
             self.fail("Lookup should have failed due to deletion")
         except models.Zone.DoesNotExist:
             pass # what we expect
+        
+class ManagementInterfacesTestCase(XMLTestCase):
+
+    def testGetManagementInterfaces(self):
+        models.ManagementInterface.objects.all().delete()
+        mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
+        mi.save()
+        response = self._get('/api/inventory/management_interfaces/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date' ])
+
+    def testGetManagementInterfacesAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        response = self._get('/api/inventory/management_interfaces/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/management_interfaces/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
+    def testGetManagementInterface(self):
+        models.ManagementInterface.objects.all().delete()
+        mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
+        mi.save()
+        response = self._get('/api/inventory/management_interfaces/1/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.management_interface_xml, ignoreNodes = [ 'created_date' ])
+        
+    def testPutManagementInterfaceAuth(self):
+        """
+        Ensure we require admin to put
+        """
+        zone = models.ManagementInterface.objects.get(pk=1)
+        response = self._put('/api/inventory/management_interfaces/1/', 
+            data=testsxml.management_interface_put_xml)
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._put('/api/inventory/management_interfaces/1/', 
+            data=testsxml.management_interface_put_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+    def testPutManagementInterfaceNotFound(self):
+        """
+        Ensure we return 404 if we update one that doesn't exist
+        """
+        try:
+            response = self._put('/api/inventory/management_interfaces/1zcvxzvzgvsdzfewrew4t4tga34/', 
+                data=testsxml.management_interface_put_xml,
+                username="admin", password="password")
+            self.assertEquals(response.status_code, 404)
+        except TemplateDoesNotExist, e:
+            # might not have template, so check for 404 in error
+            self.assertTrue("404" in str(e))
+        
+    def testPutManagementInterface(self):
+        models.ManagementInterface.objects.all().delete()
+        mi = models.ManagementInterface(name="foo2", description="bar", port=8000, credentials_descriptor="<foo/>")
+        mi.save()
+        self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.management_interface_put_xml)
+        response = self._put('/api/inventory/management_interfaces/1',
+            data=testsxml.management_interface_put_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        mi = models.ManagementInterface.objects.get(pk=mi.pk)
+        # name is read only, should not get changed
+        self.assertTrue(mi.name != "thisnameshouldnotstick")
+        self.assertTrue(mi.port == 123)
         
 class SystemStatesTestCase(XMLTestCase):
 
