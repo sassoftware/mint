@@ -276,8 +276,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.REGISTERED)
         system.managing_zone = self.localZone
-        management_node.management_interface = models.ManagementInterface.objects.get(pk=1)
-        management_node.type = models.SystemType.objects.get(pk=1)
         system.save()
 
         network = models.Network()
