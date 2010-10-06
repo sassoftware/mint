@@ -1539,6 +1539,29 @@ class MigrateTo_51(SchemaMigration):
         
         return True
 
+    def migrate2(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('system detect management interface',
+                 'detect a system''s management interface',
+                 50)
+        """)
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('immediate system detect management interface',
+                 'on-demand detect a system''s management interface',
+                 105)
+        """)
+
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

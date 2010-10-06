@@ -547,6 +547,16 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_SHUTDOWN_PRIORITY = 50
     SYSTEM_SHUTDOWN_DESCRIPTION = 'shutdown a system'
 
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE = 'system detect management interface'
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_PRIORITY = 50
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC = \
+        "detect a system's management interface"
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE = \
+        'immediate system detect management interface'
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_PRIORITY = 105
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC = \
+        "on-demand detect a system's management interface"
+
     SYSTEM_SHUTDOWN_IMMEDIATE = 'immediate system shutdown'
     SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
@@ -570,6 +580,10 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION),
         (LAUNCH_WAIT_FOR_NETWORK,
          LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION),
+        (SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+         SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC),
+        (SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
+         SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
     )
     name = APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES))
