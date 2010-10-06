@@ -619,9 +619,8 @@ class SystemManager(base.BaseManager):
                 system.save()
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
         else:
-            # mark the system as needing registration
-            self.scheduleSystemRegistrationEvent(system)
-
+            # Need to dectect the management interface on the system
+            self.scheduleSystemDetectMgmtInterface(system)
 
     def generateSystemCertificates(self, system):
         if system.ssl_client_certificate is not None and \
@@ -730,6 +729,10 @@ class SystemManager(base.BaseManager):
                 return None
             if eventTypeName in self.PollEvents:
                 return models.SystemState.RESPONSIVE
+            if eventTypeName in self.ManagementInterfaceEvents:
+                # Management interface detection finished, need to schedule a
+                # registration event now.
+                self.scheduleSystemRegistrationEvent(system)
             else:
                 # Add more processing here if needed
                 return None
@@ -1117,7 +1120,7 @@ class SystemManager(base.BaseManager):
         self.createSystemEvent(system, launch_wait_for_network_event_type, enable_time)
 
     @base.exposed
-    def scheduleSystemDetectManagementInterfaceNowEvent(self, system):
+    def scheduleSystemDetectMgmtInterface(self, system):
         """
         Schedule an immediate event that detects the management interface
         on the system.
