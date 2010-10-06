@@ -620,7 +620,7 @@ class SystemManager(base.BaseManager):
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
         else:
             # Need to dectect the management interface on the system
-            self.scheduleSystemDetectMgmtInterface(system)
+            self.scheduleSystemDetectMgmtInterfaceEvent(system)
 
     def generateSystemCertificates(self, system):
         if system.ssl_client_certificate is not None and \
@@ -1120,7 +1120,7 @@ class SystemManager(base.BaseManager):
         self.createSystemEvent(system, launch_wait_for_network_event_type, enable_time)
 
     @base.exposed
-    def scheduleSystemDetectMgmtInterface(self, system):
+    def scheduleSystemDetectMgmtInterfaceEvent(self, system):
         """
         Schedule an immediate event that detects the management interface
         on the system.

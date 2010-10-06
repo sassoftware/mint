@@ -92,6 +92,22 @@ event_types_xml="""\
     <priority>105</priority>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/inventory/event_types/9">
+    <description>detect a system's management interface</description>
+    <event_type_id>9</event_type_id>
+    <job_set/>
+    <name>system detect management interface</name>
+    <priority>50</priority>
+    <system_events/>
+  </event_type>
+  <event_type id="http://testserver/api/inventory/event_types/10">
+    <description>on-demand detect a system's management interface</description>
+    <event_type_id>10</event_type_id>
+    <job_set/>
+    <name>immediate system detect management interface</name>
+    <priority>105</priority>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
@@ -1248,7 +1264,7 @@ systems_log_xml = """\
     <system_log_entry_id>1</system_log_entry_id>
   </system_log_entry>
    <system_log_entry>
-    <entry>Unable to register event 'on-demand registration event': no networking information</entry>
+    <entry>Unable to register event 'on-demand detect a system's management interface': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
      <system_log_entry_id>2</system_log_entry_id>
    </system_log_entry>
@@ -1258,7 +1274,7 @@ systems_log_xml = """\
      <system_log_entry_id>3</system_log_entry_id>
    </system_log_entry>
   <system_log_entry>
-    <entry>Unable to register event 'on-demand registration event': no networking information</entry>
+    <entry>Unable to register event 'on-demand detect a system's management interface': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
     <system_log_entry_id>4</system_log_entry_id>
   </system_log_entry>
@@ -1268,7 +1284,7 @@ systems_log_xml = """\
     <system_log_entry_id>5</system_log_entry_id>
   </system_log_entry>
   <system_log_entry>
-    <entry>Unable to register event 'on-demand registration event': no networking information</entry>
+    <entry>Unable to register event 'on-demand detect a system's management interface': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/5/system_log"/>
     <system_log_entry_id>6</system_log_entry_id>
   </system_log_entry>

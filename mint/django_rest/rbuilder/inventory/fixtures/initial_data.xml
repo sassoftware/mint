@@ -102,6 +102,16 @@
         <field type="CharField" name="description">wait for a launched system's network information</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
+    <object pk="9" model="inventory.eventtype">
+        <field type="CharField" name="name">system detect management interface</field>
+        <field type="CharField" name="description">detect a system's management interface</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="10" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system detect management interface</field>
+        <field type="CharField" name="description">on-demand detect a system's management interface</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>

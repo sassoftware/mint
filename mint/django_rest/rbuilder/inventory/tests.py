@@ -934,8 +934,11 @@ class SystemsTestCase(XMLTestCase):
         self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mockGetRmakeJob_called = False
+        self.mock_scheduleSystemDetectMgmtInterfaceEvent_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
+        self.mgr.sysMgr.scheduleSystemDetectMgmtInterfaceEvent = \
+            self.mock_scheduleSystemDetectMgmtInterfaceEvent
         models.Job.getRmakeJob = self.mockGetRmakeJob
 
     def tearDown(self):
@@ -949,6 +952,9 @@ class SystemsTestCase(XMLTestCase):
         
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
+
+    def mock_scheduleSystemDetectMgmtInterfaceEvent(self, system):
+        self.mock_scheduleSystemDetectMgmtInterfaceEvent_called = True
 
     def testBenchmarkQueryCount(self):
         # Clean up
@@ -1220,7 +1226,7 @@ class SystemsTestCase(XMLTestCase):
             models.SystemState.UNMANAGED)
         
         # make sure we scheduled our registration event
-        assert(self.mock_scheduleSystemRegistrationEvent_called)
+        assert(self.mock_scheduleSystemDetectMgmtInterfaceEvent_called)
         
     def testAddRegisteredSystem(self):
         # create the system
