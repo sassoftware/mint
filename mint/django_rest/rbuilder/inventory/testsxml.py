@@ -1019,6 +1019,76 @@ system_post_xml = """\
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </system>"""
 
+system_mgmt_interface_put_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
+  <out_of_date>False</out_of_date>
+  <registration_date/>
+  <generated_uuid>testsystemgenerateduuid</generated_uuid>
+  <networks>
+    <network id="http://testserver/api/inventory/networks/1">
+      <active/>
+      <device_name>eth0</device_name>
+      <dns_name>testnetwork.example.com</dns_name>
+      <ip_address>1.1.1.1</ip_address>
+      <ipv6_address/>
+      <netmask>255.255.255.0</netmask>
+      <port_type>lan</port_type>
+      <required/>
+    </network>
+  </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+  <description>testsystemdescription</description>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
+  <target_system_id/>
+  <target_system_name/>
+  <target_system_description/>
+  <target_system_state/>
+  <name>testsystemname</name>
+  <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface href="http://testserver/api/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
+</system>"""
+
+system_delete_mgmt_interface_put_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
+  <out_of_date>False</out_of_date>
+  <registration_date/>
+  <generated_uuid>testsystemgenerateduuid</generated_uuid>
+  <networks>
+    <network id="http://testserver/api/inventory/networks/1">
+      <active/>
+      <device_name>eth0</device_name>
+      <dns_name>testnetwork.example.com</dns_name>
+      <ip_address>1.1.1.1</ip_address>
+      <ipv6_address/>
+      <netmask>255.255.255.0</netmask>
+      <port_type>lan</port_type>
+      <required/>
+    </network>
+  </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+  <description>testsystemdescription</description>
+  <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
+  <target_system_id/>
+  <target_system_name/>
+  <target_system_description/>
+  <target_system_state/>
+  <name>testsystemname</name>
+  <local_uuid>testsystemlocaluuid</local_uuid>
+  <management_interface/>
+</system>"""
+
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">

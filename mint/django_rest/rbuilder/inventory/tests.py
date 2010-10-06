@@ -1418,6 +1418,38 @@ class SystemsTestCase(XMLTestCase):
         this_system = models.System.objects.get(pk=1)
         self.failUnlessEqual(this_system.name, "testsystemnameChanged")
 
+    def testPutSystemManagementInterface(self):
+        system = self._saveSystem()
+
+        # Test that a mgmt interface can be changed.
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=testsxml.system_mgmt_interface_put_xml, 
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.assertEquals(system.management_interface.name, 'wmi')
+        self.assertEquals(system.management_interface.pk, 2)
+
+        # Test that a mgmt interface can be added.
+        system.management_interface = None
+        system.save()
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=testsxml.system_mgmt_interface_put_xml, 
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.assertEquals(system.management_interface.name, 'wmi')
+        self.assertEquals(system.management_interface.pk, 2)
+
+        # DISABLED TEST, no support for this
+        # Test that mgmt interface can be deleted
+        # response = self._put('/api/inventory/systems/%s' % system.pk,
+            # data=testsxml.system_delete_mgmt_interface_put_xml, 
+            # username="admin", password="password")
+        # self.assertEquals(response.status_code, 200)
+        # system = models.System.objects.get(pk=system.pk)
+        # self.assertEquals(system.management_interface, None)
+
     def testGetSystemLogAuth(self):
         """
         Ensure requires auth but not admin
