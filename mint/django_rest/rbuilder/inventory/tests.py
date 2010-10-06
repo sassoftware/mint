@@ -1192,6 +1192,24 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         self.failUnlessEqual(system.name, "mgoblue")
         
+    def testSystemSaveAgentPort(self):
+        # make sure state gets set to unmanaged
+        system = self.newSystem(name="mgoblue", 
+            description="best appliance ever")
+        self.assertTrue(system.agent_port is None)
+        system.management_interface = models.ManagementInterface.objects.get(pk=1)
+        system.save()
+        self.assertTrue(system.agent_port == system.management_interface.port)
+        
+        system.agent_port = 897
+        system.save()
+        self.assertTrue(system.agent_port == 897)
+        
+        system = self.newSystem(name="mgoblue2", 
+            description="best appliance ever")
+        system.save()
+        self.assertTrue(system.agent_port is None)
+        
     def testAddSystem(self):
         # create the system
         system = self.newSystem(name="mgoblue",

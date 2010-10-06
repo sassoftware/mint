@@ -373,6 +373,8 @@ class System(modellib.XObjIdModel):
                 name = SystemState.UNMANAGED)
         if not self.name:
             self.name = self.hostname and self.hostname or ''
+        if not self.agent_port and self.management_interface:
+            self.agent_port = self.management_interface.port
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
 

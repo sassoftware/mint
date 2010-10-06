@@ -348,7 +348,7 @@ management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_nodes>
   <management_node id="http://testserver/api/inventory/management_nodes/1">
-    <agent_port/>
+    <agent_port>5989</agent_port>
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <out_of_date>False</out_of_date>
     <registration_date/>
@@ -412,7 +412,7 @@ management_nodes_xml = """\
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -511,7 +511,7 @@ management_node_post_xml = """\
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -610,7 +610,7 @@ management_node_zone_post_xml = """\
 management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -728,7 +728,7 @@ systems_xml = """\
     <target_system_state/>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
-    <agent_port/>
+    <agent_port>5989</agent_port>
     <out_of_date>False</out_of_date>
     <registration_date/>
     <created_date>%s</created_date>
@@ -914,7 +914,7 @@ systems_put_mothball_xml = """\
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   <installed_software/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
@@ -1006,7 +1006,7 @@ system_post_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -1110,7 +1110,7 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -1386,7 +1386,7 @@ installed_software_xml = """\
 system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   %s
   <jobs id="http://testserver/api/inventory/systems/3/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
@@ -1576,7 +1576,7 @@ system_version_put_response_xml = """\
 system_available_updates_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
-  <agent_port/>
+  <agent_port>5989</agent_port>
   <installed_software>
     <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%3D/clover.eng.rpath.com%40rpath%3Aclover-1-devel/1-2-1%5B%7E%21dom0%2C%7E%21domU%2Cvmware%2C%7E%21xen%20is%3A%20x86%28i486%2Ci586%2Ci686%2Csse%2Csse2%29%5D">
       <name>group-clover-appliance</name>
