@@ -1560,6 +1560,8 @@ class MigrateTo_51(SchemaMigration):
                  'on-demand detect a system''s management interface',
                  105)
         """)
+        
+        return True
 
     def migrate4(self):
         cu = self.db.cursor()
