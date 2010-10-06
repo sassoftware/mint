@@ -187,6 +187,7 @@ management_interfaces_xml="""\
     <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
     <port>8000</port>
     <name>foo</name>
+    <credentials_readonly/>
   </management_interface>
 </management_interfaces>
 """
@@ -201,6 +202,7 @@ management_interface_xml="""\
   <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
   <port>8000</port>
   <name>foo</name>
+  <credentials_readonly/>
 </management_interface>
 """
 

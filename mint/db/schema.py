@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1096,7 +1096,8 @@ def _createInventorySchema(db, cfg):
                 "description" varchar(8092) NOT NULL,
                 "created_date" timestamp with time zone NOT NULL,
                 "port" integer NOT NULL,
-                "credentials_descriptor" text NOT NULL
+                "credentials_descriptor" text NOT NULL,
+                "credentials_readonly" bool
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_management_interface'] = []
         changed |= _addManagementInterfaces(db)
@@ -1468,7 +1469,8 @@ def _addManagementInterfaces(db):
                   description='Common Information Model (CIM)',
                   port=8443,
                   created_date=str(datetime.datetime.now(tz.tzutc())),
-                  credentials_descriptor=cim_credentials_descriptor
+                  credentials_descriptor=cim_credentials_descriptor,
+                  credentials_readonly=True
             )])
     
     changed |= _addTableRows(db, 'inventory_management_interface', 'name',
@@ -1476,7 +1478,8 @@ def _addManagementInterfaces(db):
                   description='Windows Management Instrumentation (WMI)"',
                   port=135,
                   created_date=str(datetime.datetime.now(tz.tzutc())),
-                  credentials_descriptor=wmi_credentials_descriptor
+                  credentials_descriptor=wmi_credentials_descriptor,
+                  credentials_readonly=False
             )])
     
     return changed

@@ -274,6 +274,7 @@ class ManagementInterface(modellib.XObjIdModel):
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the management interface was added to inventory (UTC)")
     port = D(models.IntegerField(null=True), "the port used by the management interface")
     credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
+    credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
 
 class System(modellib.XObjIdModel):
     XSL = "system.xsl"
