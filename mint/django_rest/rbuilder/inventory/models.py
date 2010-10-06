@@ -360,6 +360,7 @@ class System(modellib.XObjIdModel):
         "a UUID used for tracking systems registering at startup time")
     management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
+    credentials = D(models.TextField(null=True), "the credentials used to access the system")
 
     load_fields = [local_uuid]
 
