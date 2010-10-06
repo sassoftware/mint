@@ -536,7 +536,6 @@ class ManagementInterfacesTestCase(XMLTestCase):
         """
         Ensure we require admin to put
         """
-        zone = models.ManagementInterface.objects.get(pk=1)
         response = self._put('/api/inventory/management_interfaces/1/', 
             data=testsxml.management_interface_put_xml)
         self.assertEquals(response.status_code, 401)

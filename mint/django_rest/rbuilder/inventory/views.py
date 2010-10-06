@@ -207,7 +207,6 @@ class InventoryManagementInterfaceService(AbstractInventoryService):
     
     @return_xml
     def rest_GET(self, request, management_interface_id=None):
-        mis = self.get(management_interface_id)
         return self.get(management_interface_id)
     
     def get(self, management_interface_id=None):
