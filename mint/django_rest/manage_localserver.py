@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+import os
 import sys
+testutilsPath = os.environ.get('TESTUTILS_PATH', None)
+if testutilsPath:
+    sys.path.insert(0, testutilsPath)
 sys.path.insert(0, '../../../include')
 
 from django.core.management import execute_manager
