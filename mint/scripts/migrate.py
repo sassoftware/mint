@@ -1494,7 +1494,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 0)
+    Version = (51, 1)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1528,8 +1528,8 @@ class MigrateTo_51(SchemaMigration):
         db = self.db
         
         cu.execute("ALTER TABLE inventory_management_interface ADD COLUMN credentials_readonly bool")
-        cu.execute("UPDATE TABLE inventory_management_interface SET credentials_readonly='true' WHERE name='cim'")
-        cu.execute("UPDATE TABLE inventory_management_interface SET credentials_readonly='false' WHERE name='wmi'")
+        cu.execute("UPDATE inventory_management_interface SET credentials_readonly='true' WHERE name='cim'")
+        cu.execute("UPDATE inventory_management_interface SET credentials_readonly='false' WHERE name='wmi'")
         
         return True
 
