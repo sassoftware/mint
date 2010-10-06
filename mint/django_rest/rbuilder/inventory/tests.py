@@ -215,6 +215,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             models.SystemState.REGISTERED)
         system.managing_zone = self.localZone
         system.management_interface = models.ManagementInterface.objects.get(pk=1)
+        system.type = models.SystemType.objects.get(pk=1)
         system.save()
 
         network = models.Network()
@@ -247,6 +248,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         management_node.local = True
         management_node.management_node = True
         management_node.management_interface = models.ManagementInterface.objects.get(pk=1)
+        management_node.type = models.SystemType.objects.get(pk=2)
         management_node.node_jid = "superduperjid2@rbuilder.rpath"
         management_node.save()
 
@@ -274,6 +276,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.REGISTERED)
         system.managing_zone = self.localZone
+        management_node.management_interface = models.ManagementInterface.objects.get(pk=1)
+        management_node.type = models.SystemType.objects.get(pk=1)
         system.save()
 
         network = models.Network()

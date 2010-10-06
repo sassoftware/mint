@@ -386,6 +386,9 @@ class SystemManager(base.BaseManager):
         if not managementNode:
             return
         
+        managementNode.type = models.SystemType.objects.get(
+                    name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+        
         managementNode.save()
 
         self.setSystemState(managementNode)
@@ -407,6 +410,8 @@ class SystemManager(base.BaseManager):
 
         zone = models.Zone.objects.get(pk=zone_id)
         managementNode.zone = zone;
+        managementNode.type = models.SystemType.objects.get(
+                    name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         managementNode.save()
 
         self.setSystemState(managementNode)
@@ -419,6 +424,27 @@ class SystemManager(base.BaseManager):
         ManagementNodes = models.ManagementNodes()
         ManagementNodes.management_node = list(models.ManagementNode.objects.filter(zone=zone).all())
         return ManagementNodes
+
+    @base.exposed
+    def getSystemType(self, system_type_id):
+        systemType = models.SystemType.objects.get(pk=system_type_id)
+        return systemType
+
+    @base.exposed
+    def getSystemTypes(self):
+        SystemTypes = models.SystemTypes()
+        SystemTypes.system_type = list(models.SystemType.objects.all())
+        return SystemTypes
+    
+    @base.exposed
+    def updateSystemType(self, system_type):
+        """Update a system type"""
+
+        if not system_type:
+            return
+
+        system_type.save()
+        return system_type
 
     @base.exposed
     def getSystemState(self, system_state_id):

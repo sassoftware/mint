@@ -70,6 +70,14 @@ urlpatterns = patterns('',
     url(r'^api/inventory/management_interfaces/(\d+)/?$',
         inventoryviews.InventoryManagementInterfaceService(),
         name='ManagementInterface'),
+        
+    # System types
+    url(r'^api/inventory/system_types/?$',
+        inventoryviews.InventorySystemTypeService(),
+        name='SystemTypes'),
+    url(r'^api/inventory/system_types/(\d+)/?$',
+        inventoryviews.InventorySystemTypeService(),
+        name='SystemType'),
        
     # Networks
     url(r'^api/inventory/networks/?$',

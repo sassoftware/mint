@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 4)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 5)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1102,6 +1102,19 @@ def _createInventorySchema(db, cfg):
         db.tables['inventory_management_interface'] = []
         changed |= _addManagementInterfaces(db)
         changed = True
+        
+    if 'inventory_system_type' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_type" (
+                "system_type_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL UNIQUE,
+                "description" varchar(8092) NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "infrastructure" bool
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_type'] = []
+        changed |= _addSystemTypes(db)
+        changed = True
 
     if 'inventory_system' not in db.tables:
         cu.execute("""
@@ -1133,6 +1146,8 @@ def _createInventorySchema(db, cfg):
                     REFERENCES "inventory_zone" ("zone_id"),
                 "management_interface_id" integer 
                     REFERENCES "inventory_management_interface" ("management_interface_id"),
+                "type_id" integer 
+                    REFERENCES "inventory_system_type" ("system_type_id"),
                 "credentials" text
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
@@ -1433,6 +1448,11 @@ def _addManagementZone(db, cfg):
     ids = cu.fetchall()
     if len(ids) == 1:
         zoneId = ids[0][0]
+        
+        # get the system type id
+        cu.execute("SELECT system_type_id from inventory_system_type where name='infrastructure-management-node'")
+        ids = cu.fetchall()
+        systemTypeId = ids[0][0]
     
         cu.execute("SELECT system_state_id FROM inventory_system_state WHERE name = 'unmanaged'")
         stateId = cu.fetchone()[0]
@@ -1443,6 +1463,7 @@ def _addManagementZone(db, cfg):
                       management_node='true',
                       current_state_id=stateId,
                       managing_zone_id=zoneId,
+                      type_id=systemTypeId,
                       created_date=str(datetime.datetime.now(tz.tzutc())))])
         
         # get the system id
@@ -1459,7 +1480,7 @@ def _addManagementZone(db, cfg):
                       created_date=str(datetime.datetime.now(tz.tzutc())))])
             # add the management node
             changed |= _addTableRows(db, 'inventory_zone_management_node', 'system_ptr_id',
-                    [dict(system_ptr_id=systemId, 
+                    [dict(system_ptr_id=systemId,
                           local='true', 
                           zone_id=zoneId)])
     
@@ -1487,6 +1508,32 @@ def _addManagementInterfaces(db):
                   created_date=str(datetime.datetime.now(tz.tzutc())),
                   credentials_descriptor=wmi_credentials_descriptor,
                   credentials_readonly=False
+            )])
+    
+    return changed
+
+def _addSystemTypes(db):
+    changed = False
+    
+    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+            [dict(name='inventory',
+                  description='Inventory',
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  infrastructure=False
+            )])
+    
+    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+            [dict(name='infrastructure-management-node',
+                  description='rPath Update Service (Infrastructure)',
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  infrastructure=True
+            )])
+    
+    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+            [dict(name='infrastructure-windows-build-node',
+                  description='rPath Windows Build Service (Infrastructure)',
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  infrastructure=True
             )])
     
     return changed

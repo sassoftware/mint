@@ -15,6 +15,7 @@ from conary.deps import deps
 from django.conf import settings
 from django.db import connection, models
 from django.db.backends import signals
+from django.core.exceptions import ObjectDoesNotExist
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
@@ -67,6 +68,7 @@ class Inventory(modellib.XObjModel):
         self.zones = modellib.XObjHrefModel('zones')
         self.management_nodes = modellib.XObjHrefModel('management_nodes')
         self.management_interfaces = modellib.XObjHrefModel('management_interfaces')
+        self.system_types = modellib.XObjHrefModel('system_types')
         self.networks = modellib.XObjHrefModel('networks')
         self.systems = modellib.XObjHrefModel('systems')
         self.log = modellib.XObjHrefModel('log')
@@ -275,6 +277,41 @@ class ManagementInterface(modellib.XObjIdModel):
     port = D(models.IntegerField(null=True), "the port used by the management interface")
     credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
     credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
+    
+class SystemTypes(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='system_types',
+                elements=['system_type'])
+    list_fields = ['system_type']
+    
+class SystemType(modellib.XObjIdModel):
+    XSL = "systemType.xsl"
+    class Meta:
+        db_table = 'inventory_system_type'
+    _xobj = xobj.XObjMetadata(
+                tag = 'system_type',
+                attributes = {'id':str})
+        
+    INVENTORY = "inventory"
+    INVENTORY_DESC = "Inventory"
+    INFRASTRUCTURE_MANAGEMENT_NODE = "infrastructure-management-node"
+    INFRASTRUCTURE_MANAGEMENT_NODE_DESC = "rPath Update Service (Infrastructure)"
+    INFRASTRUCTURE_WINDOWS_BUILD_NODE = "infrastructure-windows-build-node"
+    INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC = "rPath Windows Build Service (Infrastructure)"
+
+    CHOICES = (
+        (INVENTORY, INVENTORY_DESC),
+        (INFRASTRUCTURE_MANAGEMENT_NODE, INFRASTRUCTURE_MANAGEMENT_NODE_DESC),
+        (INFRASTRUCTURE_WINDOWS_BUILD_NODE, INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC),
+    )
+        
+    system_type_id = D(models.AutoField(primary_key=True), "the database ID for the system type")
+    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the system type")
+    description = D(models.CharField(max_length=8092), "the description of the system type")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the system type was added to inventory (UTC)")
+    infrastructure = D(models.NullBooleanField(), "whether or not the system type is infrastructure")
 
 class System(modellib.XObjIdModel):
     XSL = "system.xsl"
@@ -361,6 +398,8 @@ class System(modellib.XObjIdModel):
     management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
     credentials = XObjHidden(models.TextField(null=True))
+    type = D(modellib.ForeignKey(SystemType, null=False, related_name='systems', text_field="description"),
+        "the type of the system")
 
     load_fields = [local_uuid]
 
@@ -376,6 +415,13 @@ class System(modellib.XObjIdModel):
             self.name = self.hostname and self.hostname or ''
         if not self.agent_port and self.management_interface:
             self.agent_port = self.management_interface.port
+        try:
+            if not self.type:
+                self.type = SystemType.objects.get(
+                    name = SystemType.INVENTORY)
+        except ObjectDoesNotExist:
+            self.type = SystemType.objects.get(
+                    name = SystemType.INVENTORY)
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
 

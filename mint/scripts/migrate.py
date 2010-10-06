@@ -1494,7 +1494,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 4)
+    Version = (51, 5)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1567,6 +1567,43 @@ class MigrateTo_51(SchemaMigration):
         cu = self.db.cursor()
         
         cu.execute("ALTER TABLE inventory_system ADD COLUMN credentials text")
+        
+        return True
+    
+    def migrate5(self):
+        cu = self.db.cursor()
+        changed = True
+        
+        if 'inventory_system_type' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_type" (
+                    "system_type_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "infrastructure" bool
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['inventory_system_type'] = []
+            changed |= schema._addSystemTypes(self.db)
+            changed = True
+            
+        cu.execute("""
+            ALTER TABLE inventory_system
+                ADD COLUMN type_id  INTEGER
+                    REFERENCES inventory_system_type
+        """)
+            
+        # update type on the rUS
+        cu.execute("SELECT system_type_id from inventory_system_type where name='infrastructure-management-node'")
+        ids = cu.fetchall()
+        mgmtNodeId = ids[0][0]
+        cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name='rPath Update Service'" % mgmtNodeId)
+        
+        # update type on the other systems
+        cu.execute("SELECT system_type_id from inventory_system_type where name='inventory'")
+        ids = cu.fetchall()
+        invTypeId = ids[0][0]
+        cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name<>'rPath Update Service'" % invTypeId)
         
         return True
 

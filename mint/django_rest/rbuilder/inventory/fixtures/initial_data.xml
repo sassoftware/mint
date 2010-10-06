@@ -62,6 +62,24 @@
         <field type="NullBooleanField" name="credentials_readonly">False</field>
         <field type="TextField" name="credentials_descriptor">&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;serverCert&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Server Cert&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;</field>
     </object>
+    <object pk="1" model="inventory.systemtype">
+        <field type="CharField" name="name">inventory</field>
+        <field type="CharField" name="description">Inventory</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">False</field>
+    </object>
+    <object pk="2" model="inventory.systemtype">
+        <field type="CharField" name="name">infrastructure-management-node</field>
+        <field type="CharField" name="description">rPath Update Service (Infrastructure)</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">True</field>
+    </object>
+    <object pk="3" model="inventory.systemtype">
+        <field type="CharField" name="name">infrastructure-windows-build-node"</field>
+        <field type="CharField" name="description">rPath Windows Build Service (Infrastructure)"</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">True</field>
+    </object>
     <object pk="1" model="inventory.eventtype">
         <field type="CharField" name="name">system registration</field>
         <field type="CharField" name="description">on-demand registration event</field>
@@ -130,6 +148,7 @@
         <field type="NullBooleanField" name="management_node">True</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="type" rel="ManyToOneRel">2</field>
     </object>
   <object pk="2" model="inventory.managementnode">
         <field type="NullBooleanField" name="local"><None></None></field>

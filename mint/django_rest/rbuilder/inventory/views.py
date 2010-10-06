@@ -227,6 +227,30 @@ class InventoryManagementInterfaceService(AbstractInventoryService):
         self.mgr.updateManagementInterface(management_interface)
         return self.get(management_interface_id)
     
+class InventorySystemTypeService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request, system_type_id=None):
+        return self.get(system_type_id)
+    
+    def get(self, system_type_id=None):
+        if system_type_id:
+            return self.mgr.getSystemType(system_type_id)
+        else:
+            return self.mgr.getSystemTypes()
+        
+    @access.admin
+    @requires('system_type')
+    @return_xml
+    def rest_PUT(self, request, system_type_id, system_type):
+        old = self.get(system_type_id)
+        if not old:
+            return HttpResponseNotFound()
+        if int(system_type_id) != system_type.pk:
+            return HttpResponseNotFound()
+        self.mgr.updateSystemType(system_type)
+        return self.get(system_type_id)
+    
 class InventoryZoneManagementNodeService(AbstractInventoryService):
     
     @return_xml
