@@ -1257,7 +1257,7 @@ def _createInventorySchema(db, cfg):
              dict(name="system launch wait",
                   description="wait for a launched system's network information",
                   priority=105),
-             dict(name="system detect management interface"
+             dict(name="system detect management interface",
                   description="detect a system''s management interface",
                   priority=50),
              dict(name="immediate system detect management interface",

@@ -45,7 +45,7 @@ class SystemManager(base.BaseManager):
     ])
     ManagementInterfaceEvents = set([
         models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-        SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
+        models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
     ])
 
     TZ = tz.tzutc()
