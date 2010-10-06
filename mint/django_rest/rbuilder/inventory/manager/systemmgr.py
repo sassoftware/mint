@@ -43,6 +43,10 @@ class SystemManager(base.BaseManager):
     LaunchWaitForNetworkEvents = set([
         models.EventType.LAUNCH_WAIT_FOR_NETWORK
     ])
+    ManagementInterfaceEvents = set([
+        models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+        SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
+    ])
 
     TZ = tz.tzutc()
     X509 = x509.X509
@@ -992,6 +996,9 @@ class SystemManager(base.BaseManager):
         elif eventType in self.LaunchWaitForNetworkEvents:
             self._runSystemEvent(event, repClient.launchWaitForNetwork,
                 cimParams, resultsLocation)
+        elif eventType in self.ManagementInterfaceEvents:
+            self._runSystemEvent(event, repClient.detectMgmtInterface,
+                cimParams, resultsLocation)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
@@ -1108,6 +1115,17 @@ class SystemManager(base.BaseManager):
         launch_wait_for_network_event_type = self.eventType(
             models.EventType.LAUNCH_WAIT_FOR_NETWORK)
         self.createSystemEvent(system, launch_wait_for_network_event_type, enable_time)
+
+    @base.exposed
+    def scheduleSystemDetectManagementInterfaceNowEvent(self, system):
+        """
+        Schedule an immediate event that detects the management interface
+        on the system.
+        """
+        enable_time = self.now()
+        detMgmtInterfaceEventType = self.eventType(
+            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
+        self.createSystemEvent(system, detMgmtInterfaceEventType, enable_time)
 
     @base.exposed
     def createSystemEvent(self, system, event_type, enable_time=None, 
