@@ -454,7 +454,8 @@ class SystemManager(BaseManager):
                     SELECT job_system.system_id
                       FROM job_system
                       JOIN jobs USING (job_id)
-                      JOIN inventory_system USING (system_id)
+                      JOIN inventory_system
+                            ON (job_system.system_id = inventory_system.system_id)
                      WHERE jobs.job_uuid = %s
                        AND inventory_system.target_system_id = %s
                 """, [ model_inst.boot_uuid, model_inst.target_system_id ])
