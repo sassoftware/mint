@@ -50,7 +50,7 @@
         <field type="CharField" name="name">cim</field>
         <field type="CharField" name="description">Common Information Model (CIM)</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-        <field type="IntegerField" name="port">8443</field>
+        <field type="IntegerField" name="port">5989</field>
         <field type="NullBooleanField" name="credentials_readonly">True</field>
         <field type="TextField" name="credentials_descriptor">&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;domain&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Windows Domain&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;user&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;User&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;password&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Password&lt;/desc&gt;&lt;/descriptions&gt;&lt;password&gt;true&lt;/password&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;</field>
     </object>

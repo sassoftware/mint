@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1467,7 +1467,7 @@ def _addManagementInterfaces(db):
     changed |= _addTableRows(db, 'inventory_management_interface', 'name',
             [dict(name='cim',
                   description='Common Information Model (CIM)',
-                  port=8443,
+                  port=5989,
                   created_date=str(datetime.datetime.now(tz.tzutc())),
                   credentials_descriptor=cim_credentials_descriptor,
                   credentials_readonly=True
