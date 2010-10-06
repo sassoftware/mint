@@ -1099,7 +1099,7 @@ def _createInventorySchema(db, cfg):
                 "credentials_descriptor" text NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_management_interface'] = []
-        changed |= _addManagementInterfaces(db, cfg)
+        changed |= _addManagementInterfaces(db)
         changed = True
 
     if 'inventory_system' not in db.tables:
@@ -1460,7 +1460,7 @@ def _addManagementZone(db, cfg):
 cim_credentials_descriptor="""&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;serverCert&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Server Cert&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;"""
 wmi_credentials_descriptor="""&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;domain&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Windows Domain&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;user&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;User&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;password&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Password&lt;/desc&gt;&lt;/descriptions&gt;&lt;password&gt;true&lt;/password&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;"""
 
-def _addManagementInterfaces(db, cfg):
+def _addManagementInterfaces(db):
     changed = False
     
     changed |= _addTableRows(db, 'inventory_management_interface', 'name',

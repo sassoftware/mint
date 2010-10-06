@@ -1499,6 +1499,7 @@ class MigrateTo_51(SchemaMigration):
     def migrate(self):
         cu = self.db.cursor()
         db = self.db
+        changed = False
         
         if 'inventory_management_interface' not in db.tables:
             cu.execute("""
@@ -1511,7 +1512,7 @@ class MigrateTo_51(SchemaMigration):
                     "credentials_descriptor" text NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_management_interface'] = []
-            changed |= schema._addManagementInterfaces(db, cfg)
+            changed |= schema._addManagementInterfaces(db)
             changed = True
         
         cu.execute("""
