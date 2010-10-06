@@ -956,8 +956,11 @@ class SystemManager(base.BaseManager):
         else:
             targetName = None
             targetType = None
+        port = event.system.agent_port
+        if not port and system.management_interface:
+            port = system.management_interface.port
         cimParams = repClient.CimParams(host=destination,
-            port=event.system.agent_port or 5989,
+            port=port,
             eventUuid=eventUuid,
             clientCert=event.system.ssl_client_certificate,
             clientKey=event.system.ssl_client_key,
