@@ -1494,7 +1494,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 0)
+    Version = (51, 2)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1532,6 +1532,29 @@ class MigrateTo_51(SchemaMigration):
         cu.execute("UPDATE TABLE inventory_management_interface SET credentials_readonly='false' WHERE name='wmi'")
         
         return True
+
+    def migrate2(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('system detect management interface',
+                 'detect a system''s management interface',
+                 50)
+        """)
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('immediate system detect management interface',
+                 'on-demand detect a system''s management interface',
+                 105)
+        """)
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

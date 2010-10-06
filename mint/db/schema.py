@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1256,7 +1256,13 @@ def _createInventorySchema(db, cfg):
                   priority=105),
              dict(name="system launch wait",
                   description="wait for a launched system's network information",
-                  priority=105)
+                  priority=105),
+             dict(name="system detect management interface"
+                  description="detect a system''s management interface",
+                  priority=50),
+             dict(name="immediate system detect management interface",
+                  description="on-demand detect a system''s management interface",
+                  priority=105),
             ])
         
     if 'inventory_system_event' not in db.tables:
