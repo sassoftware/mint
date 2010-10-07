@@ -335,6 +335,8 @@ class SystemType(modellib.XObjIdModel):
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the system type was added to inventory (UTC)")
     infrastructure = D(models.NullBooleanField(), "whether or not the system type is infrastructure")
 
+    load_fields = [ name ]
+
 class System(modellib.XObjIdModel):
     XSL = "system.xsl"
     class Meta:
