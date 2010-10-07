@@ -16,8 +16,6 @@ from dateutil import tz
 from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
 
-from conary import versions as cnyver
-
 from mint.lib import uuid, x509
 from mint.lib import data as mintdata
 from mint.django_rest.rbuilder import models as rbuildermodels
