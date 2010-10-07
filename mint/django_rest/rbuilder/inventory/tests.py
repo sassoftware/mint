@@ -1514,6 +1514,50 @@ class SystemsTestCase(XMLTestCase):
         # system = models.System.objects.get(pk=system.pk)
         # self.assertEquals(system.management_interface, None)
 
+    def testSystemCredentials(self):
+        system = self._saveSystem()
+        response = self._post('/api/inventory/systems/%s/credentials' % \
+            system.pk,
+            data=testsxml.credentials_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.credentials_xml)
+
+        response = self._get('/api/inventory/systems/%s/credentials' % \
+            system.pk,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.credentials_xml)
+
+        response = self._put('/api/inventory/systems/%s/credentials' % \
+            system.pk,
+            data=testsxml.credentials_put_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.credentials_put_xml)
+
+    def testSystemWmiCredentials(self):
+        system = self._saveSystem()
+        response = self._post('/api/inventory/systems/%s/credentials' % \
+            system.pk,
+            data=testsxml.credentials_wmi_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.credentials_wmi_xml)
+
+        response = self._get('/api/inventory/systems/%s/credentials' % \
+            system.pk,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.credentials_wmi_xml)
+
+        response = self._put('/api/inventory/systems/%s/credentials' % \
+            system.pk,
+            data=testsxml.credentials_wmi_put_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.credentials_wmi_put_xml)
+
     def testGetSystemLogAuth(self):
         """
         Ensure requires auth but not admin

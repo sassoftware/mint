@@ -115,6 +115,9 @@ urlpatterns = patterns('',
     url(r'^api/inventory/systems/(?P<system_id>\d+)/installed_software/?$',
         inventoryviews.InventorySystemsInstalledSoftwareService(),
         name='InstalledSoftware'),
+    url(r'^api/inventory/systems/(?P<system_id>\d+)/credentials/?$',
+        inventoryviews.InventorySystemCredentialsServices(),
+        name='SystemCredentials'),
 
     # System Events
     url(r'^api/inventory/system_events/?$',

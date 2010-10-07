@@ -428,6 +428,36 @@ class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
 
+class InventorySystemCredentialsServices(AbstractInventoryService):
+
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, system_id):
+        return self.get(system_id)
+
+    @access.admin
+    @return_xml
+    @requires('credentials')
+    def rest_PUT(self, request, system_id, credentials):
+        credsDict = {}
+        for k, v in credentials.__dict__.items():
+            if not k.startswith('_'):
+                credsDict[k] = v
+        return self.mgr.addSystemCredentials(system_id, credsDict)
+
+    @access.admin
+    @return_xml
+    @requires('credentials')
+    def rest_POST(self, request, system_id, credentials):
+        credsDict = {}
+        for k, v in credentials.__dict__.items():
+            if not k.startswith('_'):
+                credsDict[k] = v
+        return self.mgr.addSystemCredentials(system_id, credsDict)
+
+    def get(self, system_id):
+        return self.mgr.getSystemCredentials(system_id)
+
 class InventoryEventTypesService(AbstractInventoryService):
     
     @access.anonymous

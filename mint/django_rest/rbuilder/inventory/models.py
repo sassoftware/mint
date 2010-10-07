@@ -162,6 +162,18 @@ class Zones(modellib.XObjModel):
                 elements=['zone'])
     list_fields = ['zone']
     
+class Credentials(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'credentials',
+                attributes = {'id':str})
+    objects = modellib.CredentialsManager()
+
+    def to_xml(self, request=None):
+        self.id = self.get_absolute_url(request, model=self)
+        return xobj.toxml(self)
+
 class Zone(modellib.XObjIdModel):
     LOCAL_ZONE = "Local rBuilder"
     class Meta:

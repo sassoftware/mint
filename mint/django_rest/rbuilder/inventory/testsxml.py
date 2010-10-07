@@ -2096,3 +2096,35 @@ system_with_target = """\
   <target_system_description/>
 </system>
 """
+
+credentials_xml = """\
+<?xml version="1.0"?>
+<credentials>
+  <serverCert>testServerCert</serverCert>
+</credentials>
+"""
+
+credentials_put_xml = """\
+<?xml version="1.0"?>
+<credentials>
+  <serverCert>testServerCertChanged</serverCert>
+</credentials>
+"""
+
+credentials_wmi_xml = """\
+<?xml version="1.0"?>
+<credentials>
+  <domain>testDomain</domain>
+  <user>testUser</user>
+  <password>testPassword</password>
+</credentials>
+"""
+
+credentials_wmi_put_xml = """\
+<?xml version="1.0"?>
+<credentials>
+  <domain>testDomainChanged</domain>
+  <user>testUserChanged</user>
+  <password>testPasswordChanged</password>
+</credentials>
+"""
