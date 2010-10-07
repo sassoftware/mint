@@ -236,6 +236,38 @@ management_interface_put_xml="""\
 </management_interface>
 """
 
+system_types_xml="""\
+<?xml version="1.0"?>
+<system_types>
+  <system_type id="http://testserver/api/inventory/system_types/1">
+    <system_type_id>1</system_type_id>
+    <infrastructure/>
+    <description>bar</description>
+    <name>foo</name>
+    <created_date>2010-10-07T00:42:33.634913+00:00</created_date>
+  </system_type>
+</system_types>"""
+
+system_type_xml="""\
+<?xml version="1.0"?>
+<system_type id="http://testserver/api/inventory/system_types/1">
+  <system_type_id>1</system_type_id>
+  <infrastructure/>
+  <description>bar</description>
+  <name>foo</name>
+  <created_date>2010-10-07T00:42:33.634913+00:00</created_date>
+</system_type>"""
+
+system_types_put_xml="""\
+<?xml version="1.0"?>
+<system_type id="http://testserver/api/inventory/system_types/1">
+  <system_type_id>1</system_type_id>
+  <infrastructure>True</infrastructure>
+  <description>bar</description>
+  <name>thisnameshouldnotstick</name>
+  <created_date>2010-10-07T00:42:33.634913+00:00</created_date>
+</system_type>"""
+
 networks_xml = """\
 <?xml version="1.0"?>
 <networks>

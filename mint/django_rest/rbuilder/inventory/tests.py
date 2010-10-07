@@ -573,6 +573,65 @@ class ManagementInterfacesTestCase(XMLTestCase):
         self.assertTrue(mi.name != "thisnameshouldnotstick")
         self.assertTrue(mi.port == 123)
         
+class SystemTypesTestCase(XMLTestCase):
+
+    def testGetSystemTypes(self):
+        models.SystemType.objects.all().delete()
+        si = models.SystemType(name="foo", description="bar")
+        si.save()
+        response = self._get('/api/inventory/system_types/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.system_types_xml, ignoreNodes = [ 'created_date' ])
+
+    def testGetSystemTypesAuth(self):
+        """
+        Ensure requires auth but not admin
+        """
+        response = self._get('/api/inventory/system_types/')
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._get('/api/inventory/system_types/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
+    def testGetSystemType(self):
+        models.SystemType.objects.all().delete()
+        si = models.SystemType(name="foo", description="bar")
+        si.save()
+        response = self._get('/api/inventory/system_types/1/',
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.system_type_xml, ignoreNodes = [ 'created_date' ])
+        
+    def testPutSystemTypeAuth(self):
+        """
+        Ensure we require admin to put
+        """
+        response = self._put('/api/inventory/system_types/1/', 
+            data=testsxml.system_types_put_xml)
+        self.assertEquals(response.status_code, 401)
+        
+        response = self._put('/api/inventory/system_types/1/', 
+            data=testsxml.system_types_put_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 401)
+        
+    def testPutSystemTypes(self):
+        models.SystemType.objects.all().delete()
+        si = models.SystemType(name="foo", description="bar")
+        si.save()
+        self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.system_types_put_xml)
+        response = self._put('/api/inventory/system_types/1',
+            data=testsxml.system_types_put_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        si = models.SystemType.objects.get(pk=si.pk)
+        # name is read only, should not get changed
+        self.assertTrue(si.name != "thisnameshouldnotstick")
+        self.assertTrue(si.infrastructure == True)
+        
 class SystemStatesTestCase(XMLTestCase):
 
     def testGetSystemStates(self):
