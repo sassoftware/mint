@@ -1512,7 +1512,6 @@ class MigrateTo_51(SchemaMigration):
                     "credentials_descriptor" text NOT NULL
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_management_interface'] = []
-            changed |= schema._addManagementInterfaces(db)
             changed = True
         
         cu.execute("""
@@ -1527,6 +1526,7 @@ class MigrateTo_51(SchemaMigration):
         cu = self.db.cursor()
         
         cu.execute("ALTER TABLE inventory_management_interface ADD COLUMN credentials_readonly bool")
+        schema._addManagementInterfaces(db)
         cu.execute("UPDATE inventory_management_interface SET credentials_readonly='true' WHERE name='cim'")
         cu.execute("UPDATE inventory_management_interface SET credentials_readonly='false' WHERE name='wmi'")
         
