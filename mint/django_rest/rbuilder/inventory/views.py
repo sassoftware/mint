@@ -251,6 +251,15 @@ class InventorySystemTypeService(AbstractInventoryService):
         self.mgr.updateSystemType(system_type)
         return self.get(system_type_id)
     
+class InventorySystemTypeSystemsService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request, system_type_id, system_id=None):
+        return self.get(system_type_id)
+
+    def get(self, system_type_id):
+        return self.mgr.getSystemTypeSystems(system_type_id)
+    
 class InventoryZoneManagementNodeService(AbstractInventoryService):
     
     @return_xml

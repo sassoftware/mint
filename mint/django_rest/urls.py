@@ -78,6 +78,9 @@ urlpatterns = patterns('',
     url(r'^api/inventory/system_types/(\d+)/?$',
         inventoryviews.InventorySystemTypeService(),
         name='SystemType'),
+    url(r'^api/inventory/system_types/(?P<system_type_id>\d+)/systems/?$',
+        inventoryviews.InventorySystemTypeSystemsService(),
+        name='Systems'),
        
     # Networks
     url(r'^api/inventory/networks/?$',

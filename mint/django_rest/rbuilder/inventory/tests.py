@@ -605,6 +605,14 @@ class SystemTypesTestCase(XMLTestCase):
         self.assertXMLEquals(response.content,
             testsxml.system_type_xml, ignoreNodes = [ 'created_date' ])
         
+    def testGetSystemTypeSystems(self):
+        system = self._saveSystem()
+        response = self._get('/api/inventory/system_types/%d/systems/' % system.type.system_type_id,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.system_type_systems_xml, ignoreNodes = [ 'created_date' ])
+        
     def testPutSystemTypeAuth(self):
         """
         Ensure we require admin to put

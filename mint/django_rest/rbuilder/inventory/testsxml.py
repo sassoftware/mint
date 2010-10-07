@@ -268,6 +268,70 @@ system_types_put_xml="""\
   <created_date>2010-10-07T00:42:33.634913+00:00</created_date>
 </system_type>"""
 
+system_type_systems_xml="""
+<?xml version="1.0"?>
+<systems>
+  <event_types href="http://testserver/api/inventory/system_types/1/event_types"/>
+  <system id="http://testserver/api/inventory/systems/3">
+    <agent_port>5989</agent_port>
+    <current_state id="http://testserver/api/inventory/system_states/2">
+      <description>Polling</description>
+      <name>registered</name>
+      <system_state_id>2</system_state_id>
+    </current_state>
+    <description>testsystemdescription</description>
+    <generated_uuid>testsystemgenerateduuid</generated_uuid>
+    <has_active_jobs>False</has_active_jobs>
+    <hostname/>
+    <installed_software/>
+    <jobs id="http://testserver/api/inventory/systems/3/jobs">
+      <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
+      <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
+    </jobs>
+    <launch_date/>
+    <launching_user/>
+    <local_uuid>testsystemlocaluuid</local_uuid>
+    <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <name>testsystemname</name>
+    <networks>
+      <network id="http://testserver/api/inventory/networks/2">
+        <active/>
+        <device_name>eth0</device_name>
+        <dns_name>testnetwork.example.com</dns_name>
+        <ip_address>1.1.1.1</ip_address>
+        <ipv6_address/>
+        <netmask>255.255.255.0</netmask>
+        <network_id>2</network_id>
+        <port_type>lan</port_type>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/3"/>
+      </network>
+    </networks>
+    <out_of_date>False</out_of_date>
+    <registration_date/>
+    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+    <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+    <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
+    <system_id>3</system_id>
+    <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
+    <target/>
+    <target_system_description/>
+    <target_system_id/>
+    <target_system_name/>
+    <target_system_state/>
+    <type id="http://testserver/api/inventory/system_types/1">
+      <description>Inventory</description>
+      <infrastructure>false</infrastructure>
+      <name>inventory</name>
+      <system_type_id>1</system_type_id>
+    </type>
+  </system>
+</systems>
+"""
+
 networks_xml = """\
 <?xml version="1.0"?>
 <networks>

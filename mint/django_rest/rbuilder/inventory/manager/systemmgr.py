@@ -440,6 +440,13 @@ class SystemManager(base.BaseManager):
 
         system_type.save()
         return system_type
+    
+    @base.exposed
+    def getSystemTypeSystems(self, system_type_id):
+        system_type = self.getSystemType(system_type_id)
+        Systems = models.Systems()
+        Systems.system = system_type.systems.all()
+        return Systems
 
     @base.exposed
     def getSystemState(self, system_state_id):
