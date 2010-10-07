@@ -888,6 +888,9 @@ class SystemManager(base.BaseManager):
         systemCreds = mintdata.marshalTargetUserCredentials(credentials)
         system.credentials = systemCreds
         system.save()
+        # Schedule a system registration event after adding/updating
+        # credentials.
+        self.scheduleSystemRegistrationEvent(system)
         return self._getCredentials(system, credentials)
 
     @base.exposed
