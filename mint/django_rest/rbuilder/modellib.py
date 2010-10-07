@@ -419,6 +419,13 @@ class JobManager(BaseManager):
         model.event_type = mclass.objects.get(name=mclass.SYSTEM_REGISTRATION)
         return oldModel, model
 
+class CredentialsManager(BaseManager):
+    def load_from_object(self, obj, request, save=False):
+        model = self.model()
+        for k, v in obj.__dict__.items():
+            setattr(model, k, v)
+        return model
+
 class SystemManager(BaseManager):
     
     def load_from_db(self, model_inst, accessors):

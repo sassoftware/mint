@@ -18,6 +18,7 @@ from django.db import connection
 from conary import versions as cnyver
 
 from mint.lib import uuid, x509
+from mint.lib import data as mintdata
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
@@ -845,6 +846,26 @@ class SystemManager(base.BaseManager):
         systemLog = self.getSystemLog(system)
         logEntries = systemLog.system_log_entries.order_by('-entry_date')
         return logEntries
+
+    def _getCredentials(self, credsDict):
+        credentials = models.Credentials()
+        for k, v in credsDict.items():
+            setattr(credentials, k, v)
+        return credentials
+
+    @base.exposed
+    def getSystemCredentials(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        systemCreds = mintdata.unmarshalTargetUserCredentials(system.credentials)
+        return self._getCredentials(systemCreds)
+
+    @base.exposed
+    def addSystemCredentials(self, system_id, credentials):
+        system = models.System.objects.get(pk=system_id)
+        systemCreds = mintdata.marshalTargetUserCredentials(credentials)
+        system.credentials = systemCreds
+        system.save()
+        return self._getCredentials(credentials)
 
     @base.exposed
     def getSystemEvent(self, event_id):
