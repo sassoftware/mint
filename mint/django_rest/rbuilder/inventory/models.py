@@ -400,7 +400,7 @@ class System(modellib.XObjIdModel):
     management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
     credentials = XObjHidden(models.TextField(null=True))
-    type = D(modellib.ForeignKey(SystemType, null=False, related_name='systems', text_field="description"),
+    type = D(modellib.SerializedForeignKey(SystemType, null=False, related_name='systems'),
         "the type of the system")
 
     load_fields = [local_uuid]

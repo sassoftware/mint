@@ -441,7 +441,12 @@ management_nodes_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <type href="http://testserver/api/inventory/system_types/2">rPath Update Service (Infrastructure)</type>
+    <type id="http://testserver/api/inventory/system_types/2">
+      <description>rPath Update Service (Infrastructure)</description>
+      <infrastructure>true</infrastructure>
+      <name>infrastructure-management-node</name>
+      <system_type_id>2</system_type_id>
+    </type>
     <target/>
     <zone href="http://testserver/api/inventory/zones/2"/>
     <system_ptr href="http://testserver/api/inventory/systems/1"/>
@@ -505,7 +510,12 @@ management_node_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/2">rPath Update Service (Infrastructure)</type>
+  <type id="http://testserver/api/inventory/system_types/2">
+    <description>rPath Update Service (Infrastructure)</description>
+    <infrastructure>true</infrastructure>
+    <name>infrastructure-management-node</name>
+    <system_type_id>2</system_type_id>
+  </type>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
@@ -604,7 +614,12 @@ management_node_post_response_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/2">rPath Update Service (Infrastructure)</type>
+  <type id="http://testserver/api/inventory/system_types/2">
+    <description>rPath Update Service (Infrastructure)</description>
+    <infrastructure>true</infrastructure>
+    <name>infrastructure-management-node</name>
+    <system_type_id>2</system_type_id>
+  </type>
   <target/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
@@ -701,7 +716,12 @@ management_node_zone_post_response_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/2">rPath Update Service (Infrastructure)</type>
+  <type id="http://testserver/api/inventory/system_types/2">
+    <description>rPath Update Service (Infrastructure)</description>
+    <infrastructure>true</infrastructure>
+    <name>infrastructure-management-node</name>
+    <system_type_id>2</system_type_id>
+  </type>
   <target/>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
@@ -772,7 +792,12 @@ systems_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <type href="http://testserver/api/inventory/system_types/2">rPath Update Service (Infrastructure)</type>
+    <type id="http://testserver/api/inventory/system_types/2">
+      <description>rPath Update Service (Infrastructure)</description>
+      <infrastructure>true</infrastructure>
+      <name>infrastructure-management-node</name>
+      <system_type_id>2</system_type_id>
+    </type>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
@@ -826,7 +851,12 @@ systems_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+    <type id="http://testserver/api/inventory/system_types/1">
+      <description>Inventory</description>
+      <infrastructure>false</infrastructure>
+      <name>inventory</name>
+      <system_type_id>1</system_type_id>
+    </type>
   </system>
 </systems>
 """
@@ -862,7 +892,12 @@ systems_put_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+    <type id="http://testserver/api/inventory/system_types/1">
+      <description>Inventory</description>
+      <infrastructure>false</infrastructure>
+      <name>inventory</name>
+      <system_type_id>1</system_type_id>
+    </type>
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystemlocaluuid</local_uuid>
@@ -902,7 +937,12 @@ systems_put_xml = """\
     <target_system_name/>
     <target_system_description/>
     <target_system_state/>
-    <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+    <type id="http://testserver/api/inventory/system_types/1">
+      <description>Inventory</description>
+      <infrastructure>false</infrastructure>
+      <name>inventory</name>
+      <system_type_id>1</system_type_id>
+    </type>
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystem2localuuid</local_uuid>
@@ -946,7 +986,6 @@ systems_put_mothball_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1001,7 +1040,12 @@ system_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <target/>
   <name>testsystemname</name>
@@ -1045,7 +1089,6 @@ system_post_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
@@ -1081,7 +1124,6 @@ system_mgmt_interface_put_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
@@ -1117,7 +1159,12 @@ system_delete_mgmt_interface_put_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface/>
@@ -1167,7 +1214,12 @@ system_post_xml_response = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <name>testsystemname</name>
   <target/>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1218,7 +1270,6 @@ system_post_xml_dup = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
@@ -1272,7 +1323,12 @@ system_target_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1547,7 +1603,12 @@ system_version_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
   <target/>
   <name>testsystemname</name>
@@ -1680,7 +1741,12 @@ system_version_put_response_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <target/>
   <name/>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1788,7 +1854,12 @@ system_available_updates_xml = """\
   <target_system_name/>
   <target_system_description/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -2009,7 +2080,12 @@ system_with_target = """\
   <local_uuid/>
   <management_interface/>
   <target_system_state/>
-  <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
+  <type id="http://testserver/api/inventory/system_types/1">
+    <description>Inventory</description>
+    <infrastructure>false</infrastructure>
+    <name>inventory</name>
+    <system_type_id>1</system_type_id>
+  </type>
   <current_state id="http://testserver/api/inventory/system_states/1">
     <system_state_id>1</system_state_id>
     <description>Unmanaged</description>
