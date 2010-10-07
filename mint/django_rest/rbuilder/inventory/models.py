@@ -292,7 +292,7 @@ class ManagementInterface(modellib.XObjIdModel):
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the management interface")
     description = D(models.CharField(max_length=8092), "the description of the management interface")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the management interface was added to inventory (UTC)")
-    port = D(models.IntegerField(null=True), "the port used by the management interface")
+    port = D(models.IntegerField(null=False), "the port used by the management interface")
     credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
     credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
     
