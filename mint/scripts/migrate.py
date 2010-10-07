@@ -1524,6 +1524,7 @@ class MigrateTo_51(SchemaMigration):
     
     def migrate1(self):
         cu = self.db.cursor()
+        db = self.db
         
         cu.execute("ALTER TABLE inventory_management_interface ADD COLUMN credentials_readonly bool")
         schema._addManagementInterfaces(db)
