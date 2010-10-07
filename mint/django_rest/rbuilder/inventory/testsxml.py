@@ -2128,3 +2128,35 @@ credentials_wmi_put_xml = """\
   <password>testPasswordChanged</password>
 </credentials>
 """
+
+credentials_resp_xml = """\
+<?xml version="1.0"?>
+<credentials id="http://testserver/api/inventory/systems/3/credentials">
+  <serverCert>testServerCert</serverCert>
+</credentials>
+"""
+
+credentials_put_resp_xml = """\
+<?xml version="1.0"?>
+<credentials id="http://testserver/api/inventory/systems/3/credentials">
+  <serverCert>testServerCertChanged</serverCert>
+</credentials>
+"""
+
+credentials_wmi_resp_xml = """\
+<?xml version="1.0"?>
+<credentials id="http://testserver/api/inventory/systems/3/credentials">
+  <domain>testDomain</domain>
+  <user>testUser</user>
+  <password>testPassword</password>
+</credentials>
+"""
+
+credentials_wmi_put_resp_xml = """\
+<?xml version="1.0"?>
+<credentials id="http://testserver/api/inventory/systems/3/credentials">
+  <domain>testDomainChanged</domain>
+  <user>testUserChanged</user>
+  <password>testPasswordChanged</password>
+</credentials>
+"""

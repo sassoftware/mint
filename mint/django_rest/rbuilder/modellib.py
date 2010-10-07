@@ -421,7 +421,7 @@ class JobManager(BaseManager):
 
 class CredentialsManager(BaseManager):
     def load_from_object(self, obj, request, save=False):
-        model = self.model()
+        model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model

@@ -872,8 +872,8 @@ class SystemManager(base.BaseManager):
         logEntries = systemLog.system_log_entries.order_by('-entry_date')
         return logEntries
 
-    def _getCredentials(self, credsDict):
-        credentials = models.Credentials()
+    def _getCredentials(self, system, credsDict):
+        credentials = models.Credentials(system)
         for k, v in credsDict.items():
             setattr(credentials, k, v)
         return credentials
@@ -882,7 +882,7 @@ class SystemManager(base.BaseManager):
     def getSystemCredentials(self, system_id):
         system = models.System.objects.get(pk=system_id)
         systemCreds = mintdata.unmarshalTargetUserCredentials(system.credentials)
-        return self._getCredentials(systemCreds)
+        return self._getCredentials(system, systemCreds)
 
     @base.exposed
     def addSystemCredentials(self, system_id, credentials):
@@ -890,7 +890,7 @@ class SystemManager(base.BaseManager):
         systemCreds = mintdata.marshalTargetUserCredentials(credentials)
         system.credentials = systemCreds
         system.save()
-        return self._getCredentials(credentials)
+        return self._getCredentials(system, credentials)
 
     @base.exposed
     def getSystemEvent(self, event_id):

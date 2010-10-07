@@ -169,9 +169,15 @@ class Credentials(modellib.XObjIdModel):
                 tag = 'credentials',
                 attributes = {'id':str})
     objects = modellib.CredentialsManager()
+    view_name = 'SystemCredentials'
+
+    def __init__(self, system, *args, **kwargs):
+        self._system = system
+        modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None):
-        self.id = self.get_absolute_url(request, model=self)
+        self.id = self.get_absolute_url(request, model=self,
+            parents=[self._system])
         return xobj.toxml(self)
 
 class Zone(modellib.XObjIdModel):
