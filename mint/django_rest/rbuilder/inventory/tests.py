@@ -3140,6 +3140,12 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 def __repr__(self):
                     return repr(self.__dict__)
 
+            class WmiParams(CimParams):
+                pass
+
+            class ManagementInterfaceParams(CimParams):
+                pass
+
             class ResultsLocation(object):
                 def __init__(self, **kwargs):
                     self.__dict__.update(kwargs)
@@ -3153,6 +3159,9 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
             def poll(slf, *args, **kwargs):
                 return slf._action('poll', *args, **kwargs)
+
+            def detectMgmtInterface(slf, *args, **kwargs):
+                return slf._action('detectMgmtInterface', *args, **kwargs)
 
             def _action(slf, method, *args, **kwargs):
                 count = len(slf.methodsCalled)
@@ -3271,6 +3280,69 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.failUnlessEqual(
             [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
             [ 'really-unique-id' ])
+
+    def testDispatchManagementInterfaceEvent(self):
+        self.system2.agent_port = 12345
+        self.system2.save()
+        eventType = self.mgr.sysMgr.eventType(
+            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
+        # Remove all networks
+        for net in self.system2.networks.all():
+            net.delete()
+        network = models.Network(dns_name = 'superduper.com')
+        network.system = self.system2
+        network.save()
+        # sanity check dispatching poll event
+        event = models.SystemEvent(system=self.system2,
+            event_type=eventType, priority=eventType.priority)
+        event.save()
+        def mockedUuid4():
+            return "really-unique-id"
+        from mint.lib import uuid
+        origUuid4 = uuid.uuid4
+        try:
+            uuid.uuid4 = mockedUuid4
+            self.mgr.sysMgr.dispatchSystemEvent(event)
+        finally:
+            uuid.uuid4 = origUuid4
+
+        mgmtIfaceParams = self.mgr.repeaterMgr.repeaterClient.ManagementInterfaceParams
+        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
+
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+            [
+                ('detectMgmtInterface',
+                    (
+                        mgmtIfaceParams(host='superduper.com',
+                            eventUuid = 'really-unique-id',
+                            interfacesList=[
+                                {
+                                    'port': 135,
+                                    'interfaceHref':
+                                      '/api/inventory/management_interfaces/2',
+                                },
+                                {
+                                    'port': 5989,
+                                    'interfaceHref':
+                                      '/api/inventory/management_interfaces/1',
+                                },
+                                ]
+                        ),
+                        resLoc(path='/api/inventory/systems/4', port=80),
+                    ),
+                    dict(zone='Local rBuilder'),
+                ),
+            ])
+        system = self.mgr.getSystem(self.system2.system_id)
+        jobs = system.jobs.all()
+        self.failUnlessEqual([ x.job_uuid for x in jobs ],
+            ['uuid000'])
+        # XXX find a better way to extract the additional field from the
+        # many-to-many table
+        self.failUnlessEqual(
+            [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
+            [ 'really-unique-id' ])
+
 
 class TargetSystemImportTest(XMLTestCase):
     fixtures = ['users', 'targets']

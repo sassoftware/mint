@@ -1132,13 +1132,25 @@ class Cache(object):
                     for obj in self._pk.values())
             return self._maps[keyName][keyValue]
 
+        def all(self):
+            return self._pk.values()
+
     @classmethod
-    def get(cls, modelClass, **kwargs):
+    def _getCachedClass(cls, modelClass):
         cached = cls._cache.get(modelClass, None)
         if cached is None:
             cached = cls._cache[modelClass] = cls._cacheData(modelClass)
+        return cached
+
+    @classmethod
+    def get(cls, modelClass, **kwargs):
+        cached = cls._getCachedClass(modelClass)
         keyName, keyValue = kwargs.items()[0]
         return cached.get(keyName, keyValue)
+
+    @classmethod
+    def all(cls, modelClass):
+        return cls._getCachedClass(modelClass).all()
 
     @classmethod
     def reset(cls):

@@ -1054,11 +1054,26 @@ class SystemManager(base.BaseManager):
             self._runSystemEvent(event, repClient.launchWaitForNetwork,
                 cimParams, resultsLocation)
         elif eventType in self.ManagementInterfaceEvents:
+            params = self.getManagementInterfaceParams(repClient, destination)
+            params.eventUuid = eventUuid
             self._runSystemEvent(event, repClient.detectMgmtInterface,
-                cimParams, resultsLocation)
+                params, resultsLocation=resultsLocation, zone=zone)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
+
+    def getManagementInterfaceParams(self, repClient, destination):
+        # Enumerate all management interfaces
+        ifaces = models.Cache.all(models.ManagementInterface)
+        interfacesList = [ dict(interfaceHref=x.get_absolute_url(), port=x.port)
+            for x in ifaces ]
+        # Order the list so we detect wmi before cim (luckily we can sort by
+        # port number)
+        interfacesList.sort(key=lambda x: x['port'])
+        params = repClient.ManagementInterfaceParams(host=destination,
+            interfacesList=interfacesList)
+        return params
+
 
     def _extractNetworkToUse(self, system):
         networks = system.networks.all()
@@ -1079,25 +1094,28 @@ class SystemManager(base.BaseManager):
         return None
 
     @classmethod
-    def _runSystemEvent(cls, event, method, cimParams, resultsLocation=None,
+    def _runSystemEvent(cls, event, method, params, resultsLocation=None,
             **kwargs):
         zone = kwargs.pop('zone', None)
         systemName = event.system.name
         eventType = event.event_type.name
-        eventUuid = cimParams.eventUuid
+        if hasattr(params, 'eventUuid'):
+            eventUuid = params.eventUuid
+        else:
+            eventUuid = kwargs.get('eventUuid')
         log.info("System %s (%s), task type '%s' launching" %
-            (systemName, cimParams.host, eventType))
+            (systemName, params.host, eventType))
         try:
-            uuid, job = method(cimParams, resultsLocation, zone=zone, **kwargs)
+            uuid, job = method(params, resultsLocation, zone=zone, **kwargs)
         except Exception, e:
             tb = sys.exc_info()[2]
             traceback.print_tb(tb)
             log.error("System %s (%s), task type '%s' failed: %s" %
-                (systemName, cimParams.host, eventType, str(e)))
+                (systemName, params.host, eventType, str(e)))
             return None, None
 
         log.info("System %s (%s), task %s (%s) in progress" %
-            (systemName, cimParams.host, uuid, eventType))
+            (systemName, params.host, uuid, eventType))
         job = models.Job()
         job.job_uuid = str(uuid)
         job.event_type = event.event_type
