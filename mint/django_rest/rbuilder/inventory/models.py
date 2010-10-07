@@ -293,6 +293,10 @@ class SystemType(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'system_type',
                 attributes = {'id':str})
+    
+    # Don't inline all the systems now.  Do not remove this code!
+    # See https://issues.rpath.com/browse/RBL-7372 for more info
+    _xobj_hidden_accessors = set(['systems',])
         
     INVENTORY = "inventory"
     INVENTORY_DESC = "Inventory"
