@@ -426,7 +426,6 @@ management_nodes_xml = """\
     <name>test management node</name>
     <system_id>1</system_id>
     <launching_user/>
-    <management_node>true</management_node>
     <launch_date/>
     <local>true</local>
     <installed_software/>
@@ -491,7 +490,6 @@ management_node_xml = """\
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
-  <management_node>true</management_node>
   <launch_date/>
   <local>true</local>
   <installed_software/>
@@ -551,7 +549,6 @@ management_node_post_xml = """\
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
-  <management_node>True</management_node>
   <local>True</local>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
@@ -598,7 +595,6 @@ management_node_post_response_xml = """\
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
-  <management_node>true</management_node>
   <launch_date/>
   <local>true</local>
   <installed_software/>
@@ -649,7 +645,6 @@ management_node_zone_post_xml = """\
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
-  <management_node>True</management_node>
   <local>True</local>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
@@ -691,7 +686,6 @@ management_node_zone_post_response_xml = """\
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
-  <management_node>true</management_node>
   <launch_date/>
   <local>true</local>
   <installed_software/>
@@ -751,7 +745,6 @@ systems_xml = """\
     <launching_user/>
     <local_uuid/>
     <management_interface/>
-    <management_node>true</management_node>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
     <networks>
@@ -806,7 +799,6 @@ systems_xml = """\
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-    <management_node/>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
     <networks>
@@ -871,7 +863,6 @@ systems_put_xml = """\
     <target_system_description/>
     <target_system_state/>
     <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
-    <management_node/>
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystemlocaluuid</local_uuid>
@@ -912,7 +903,6 @@ systems_put_xml = """\
     <target_system_description/>
     <target_system_state/>
     <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
-    <management_node/>
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystem2localuuid</local_uuid>
@@ -957,7 +947,6 @@ systems_put_mothball_xml = """\
   <target_system_description/>
   <target_system_state/>
   <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
-  <management_node/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1013,7 +1002,6 @@ system_xml = """\
   <target_system_description/>
   <target_system_state/>
   <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
-  <management_node/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <target/>
   <name>testsystemname</name>
@@ -1165,7 +1153,6 @@ system_post_xml_response = """\
   <hostname/>
   <system_id>1</system_id>
   <launching_user/>
-  <management_node/>
   <launch_date/>
   <installed_software/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
@@ -1271,7 +1258,6 @@ system_target_xml = """\
   <hostname/>
   <system_id>1</system_id>
   <launching_user/>
-  <management_node/>
   <launch_date/>
   <installed_software/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
@@ -1562,7 +1548,6 @@ system_version_xml = """\
   <target_system_description/>
   <target_system_state/>
   <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
-  <management_node/>
   <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
   <target/>
   <name>testsystemname</name>
@@ -1696,7 +1681,6 @@ system_version_put_response_xml = """\
   <target_system_description/>
   <target_system_state/>
   <type href="http://testserver/api/inventory/system_types/1">Inventory</type>
-  <management_node/>
   <target/>
   <name/>
   <local_uuid>testsystemlocaluuid</local_uuid>
@@ -1795,7 +1779,6 @@ system_available_updates_xml = """\
   <hostname/>
   <system_id>3</system_id>
   <launching_user/>
-  <management_node/>
   <launch_date/>
   <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
   <out_of_date>True</out_of_date>
@@ -2004,7 +1987,6 @@ system_with_target = """\
   <hostname/>
   <system_id>4</system_id>
   <launching_user/>
-  <management_node/>
   <launch_date/>
   <ssl_client_certificate/>
   <installed_software/>

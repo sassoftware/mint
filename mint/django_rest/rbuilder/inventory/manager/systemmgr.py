@@ -18,6 +18,7 @@ from django.db import connection
 from conary import versions as cnyver
 
 from mint.lib import uuid, x509
+from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
@@ -386,9 +387,6 @@ class SystemManager(base.BaseManager):
         if not managementNode:
             return
         
-        managementNode.type = models.SystemType.objects.get(
-                    name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
-        
         managementNode.save()
 
         self.setSystemState(managementNode)
@@ -410,8 +408,6 @@ class SystemManager(base.BaseManager):
 
         zone = models.Zone.objects.get(pk=zone_id)
         managementNode.zone = zone;
-        managementNode.type = models.SystemType.objects.get(
-                    name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         managementNode.save()
 
         self.setSystemState(managementNode)
@@ -502,8 +498,11 @@ class SystemManager(base.BaseManager):
         if not system:
             return
 
-        if system.management_node:
-            return self.addManagementNode(system)
+        try:
+            if system.type.name == models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE:
+                return self.addManagementNode(system)
+        except ObjectDoesNotExist:
+            pass # will default later on
 
         # add the system
         system.save()
@@ -634,7 +633,7 @@ class SystemManager(base.BaseManager):
                 # We really see this system the first time with its proper
                 # uuids. We'll assume it's been registered with rpath-register
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
-            if not system.management_node:
+            if not system.type.infrastructure:
                 # Schedule a poll event in the future
                 self.scheduleSystemPollEvent(system)
                 # And schedule one immediately

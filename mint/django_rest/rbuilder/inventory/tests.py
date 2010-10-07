@@ -246,7 +246,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         management_node.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.REGISTERED)
         management_node.local = True
-        management_node.management_node = True
         management_node.management_interface = models.ManagementInterface.objects.get(pk=1)
         management_node.type = models.SystemType.objects.get(pk=2)
         management_node.node_jid = "superduperjid2@rbuilder.rpath"
@@ -753,7 +752,6 @@ class ManagementNodesTestCase(XMLTestCase):
         _eq = self.failUnlessEqual
         _eq(management_node.current_state_id, None)
         management_node.save()
-        assert(management_node.management_node)
         _eq(management_node.current_state.name, models.SystemState.UNMANAGED)
         
         # make sure we honor the state if set though
@@ -802,7 +800,8 @@ class ManagementNodesTestCase(XMLTestCase):
         new_management_node = self.mgr.addManagementNode(management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
-        assert(new_management_node.management_node)
+        type = models.SystemType.objects.get(name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+        assert(new_management_node.type == type)
         
     def testPostManagementNodeAuth(self):
         """
@@ -887,15 +886,17 @@ class ManagementNodesTestCase(XMLTestCase):
         new_management_node = self.mgr.addManagementNodeForZone(management_node.zone.zone_id, management_node)
         assert(new_management_node is not None)
         assert(new_management_node.local)
-        assert(new_management_node.management_node)
+        assert(management_node.type == models.SystemType.objects.get(
+            name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE))
         
     def testAddManagementNodeSave(self):
         management_node = self._saveManagementNode()
-        management_node.management_node = False
-        assert(management_node.management_node == False)
+        management_node.type = models.SystemType.objects.get(
+            name = models.SystemType.INVENTORY)
         # now save, which should automatically set management_node
         management_node.save()
-        assert(management_node.management_node)
+        assert(management_node.type == models.SystemType.objects.get(
+            name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE))
         
     def testPostManagementNodeForZoneAuth(self):
         """
@@ -1308,10 +1309,12 @@ class SystemsTestCase(XMLTestCase):
         
     def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
+        type = models.SystemType.objects.get(
+            name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         # create the system
         system = self.newSystem(name="mgoblue",
             description="best appliance ever",
-            management_node=True,
+            type=type,
             local_uuid='123', generated_uuid='456')
         system.zone = zone
         new_system = self.mgr.addSystem(system)

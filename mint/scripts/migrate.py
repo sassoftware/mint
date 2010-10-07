@@ -1494,7 +1494,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 5)
+    Version = (51, 6)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1604,6 +1604,13 @@ class MigrateTo_51(SchemaMigration):
         ids = cu.fetchall()
         invTypeId = ids[0][0]
         cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name<>'rPath Update Service'" % invTypeId)
+        
+        return True
+    
+    def migrate6(self):
+        cu = self.db.cursor()
+
+        cu.execute("""ALTER TABLE inventory_system DROP COLUMN management_node""")
         
         return True
 

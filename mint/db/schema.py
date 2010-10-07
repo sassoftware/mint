@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 6)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1141,7 +1141,6 @@ def _createInventorySchema(db, cfg):
                 "launching_user_id" integer REFERENCES "users" ("userid"),
                 "current_state_id" integer NOT NULL
                     REFERENCES "inventory_system_state" ("system_state_id"),
-                "management_node" bool,
                 "managing_zone_id" integer NOT NULL
                     REFERENCES "inventory_zone" ("zone_id"),
                 "management_interface_id" integer 
@@ -1460,7 +1459,6 @@ def _addManagementZone(db, cfg):
         changed |= _addTableRows(db, 'inventory_system', 'name',
                 [dict(name="rPath Update Service", 
                       description='Local rPath Update Service',
-                      management_node='true',
                       current_state_id=stateId,
                       managing_zone_id=zoneId,
                       type_id=systemTypeId,

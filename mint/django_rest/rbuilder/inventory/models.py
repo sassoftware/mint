@@ -385,8 +385,6 @@ class System(modellib.XObjIdModel):
         "the current state of the system")
     installed_software = D(models.ManyToManyField('Trove', null=True),
         "a collection of top-level items installed on the system")
-    management_node = D(models.NullBooleanField(),
-        "whether or not this system is a management node")
     managing_zone = D(modellib.ForeignKey(Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
@@ -544,7 +542,12 @@ class ManagementNode(System):
     objects = modellib.ManagementNodeManager()
     
     def save(self, *args, **kw):
-        self.management_node = True
+        try:
+            self.type = SystemType.objects.get(
+                name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+        except ObjectDoesNotExist:
+            self.type = SystemType.objects.get(
+                name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         System.save(self, *args, **kw)
 
 class SystemTargetCredentials(modellib.XObjModel):
