@@ -2127,6 +2127,47 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(system.generated_uuid, generatedUuid)
         self.failUnlessEqual(system.current_state.name, systemState)
 
+    def testSetSystemManagementInterface(self):
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        agentPort = 8675309
+
+        managementInterface = models.Cache.get(models.ManagementInterface,
+            name="wmi")
+        managementInterfaceId = managementInterface.pk
+
+        system = self.newSystem(name='blah', local_uuid=localUuid,
+            generated_uuid=generatedUuid)
+        system.save()
+
+        self.failUnlessEqual(system.management_interface_id, None)
+
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
+            agentPort=agentPort,
+            managementInterfaceId=managementInterfaceId)
+        xml = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <management_interface href="/api/inventory/management_interfaces/%(managementInterfaceId)s"/>
+  <agent_port>%(agentPort)s</agent_port>
+</system>
+""" % params
+
+        """
+  <management_interface>
+    <name>%(managementInterfaceName)s</name>
+  </management_interface>
+        """
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml, username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system.management_interface_id,
+            managementInterfaceId)
+        self.failUnlessEqual(system.agent_port, agentPort)
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",
