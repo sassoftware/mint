@@ -5079,13 +5079,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def getPackageCreatorClient(self):
         callback = notices_callbacks.PackageNoticesCallback(self.cfg, self.authToken[0])
+        return self._getPackageCreatorClient(callback)
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
             callback = callback)
 
     def getApplianceCreatorClient(self):
         callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])
+        return self._getPackageCreatorClient(callback)
+
+    def _getPackageCreatorClient(self, callback):
+        from mint.django_rest.rbuilder.inventory import manager
+        mgr = manager.Manager()
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            callback = callback)
+            callback=callback, djangoManager=mgr)
 
     def getDownloadUrlTemplate(self, useRequest=True):
         if self.req and useRequest:
