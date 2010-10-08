@@ -1086,8 +1086,6 @@ class SystemManager(base.BaseManager):
             port = 80)
 
         mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)
-        CIM = models.ManagementInterface.CIM
-        WMI = models.ManagementInterface.WMI
 
         if eventType in self.RegistrationEvents:
             requiredNetwork = (network.required and destination) or None
