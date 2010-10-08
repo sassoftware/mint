@@ -1107,9 +1107,26 @@ class SystemsTestCase(XMLTestCase):
                 f.close()
             self.failUnless(qcount < count,
                 "Expected fewer than %s queries; got %s" % (count, qcount))
+            # Make sure we get installed software back
+            for system in systems.system:
+                self.failUnlessEqual(len(system.installed_software.trove), 2)
         finally:
             connection.queries = []
             settings.DEBUG = False
+
+        # While we are at it, make sure we can properly fetch stuff via REST
+        # too
+
+        response = self._get('/api/inventory/systems',
+            username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        systems = obj.systems
+
+        self.failUnlessEqual(len(systems.system), count)
+        # Make sure we get installed software back
+        for system in systems.system:
+            self.failUnlessEqual(len(system.installed_software.trove), 2)
 
     def testSystemPutAuth(self):
         localUuid = 'localuuid001'
