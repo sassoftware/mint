@@ -119,9 +119,17 @@ class SetMintConfigMiddleware(object):
         else:
             cfgPath = config.RBUILDER_CONFIG
         cfg = config.getConfig(cfgPath)
+
         request.cfg = cfg
 
         return None
+
+class SetMintConfigLocalMiddleware(object):
+
+    def process_request(self, request):
+        cfg = config.MintConfig()
+        cfg.siteHost = 'localhost.localdomain'
+        request.cfg = cfg
 
 class AddCommentsMiddleware(object):
    
