@@ -877,28 +877,36 @@ class SystemManager(base.BaseManager):
         logEntries = systemLog.system_log_entries.order_by('-entry_date')
         return logEntries
 
-    def _getCredentials(self, system, credsDict):
+    def _getCredentialsModel(self, system, credsDict):
         credentials = models.Credentials(system)
         for k, v in credsDict.items():
             setattr(credentials, k, v)
         return credentials
 
+    @classmethod
+    def unmarshalCredentials(cls, credentialsString):
+        return mintdata.unmarshalTargetUserCredentials(credentialsString)
+
+    @classmethod
+    def marshalCredentials(cls, credentialsDict):
+        return mintdata.marshalTargetUserCredentials(credentialsDict)
+
     @base.exposed
     def getSystemCredentials(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        systemCreds = mintdata.unmarshalTargetUserCredentials(system.credentials)
-        return self._getCredentials(system, systemCreds)
+        systemCreds = self.unmarshalCredentials(system.credentials)
+        return self._getCredentialsModel(system, systemCreds)
 
     @base.exposed
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
-        systemCreds = mintdata.marshalTargetUserCredentials(credentials)
+        systemCreds = self.marshalCredentials(credentials)
         system.credentials = systemCreds
         system.save()
         # Schedule a system registration event after adding/updating
         # credentials.
         self.scheduleSystemRegistrationEvent(system)
-        return self._getCredentials(system, credentials)
+        return self._getCredentialsModel(system, credentials)
 
     @base.exposed
     def getSystemEvent(self, event_id):
@@ -987,6 +995,66 @@ class SystemManager(base.BaseManager):
         else:
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
 
+    @classmethod
+    @base.exposed
+    def getSystemManagementInterfaceName(cls, system):
+        if system.management_interface_id is None:
+            # Assume CIM
+            return models.ManagementInterface.CIM
+        return system.management_interface.name
+
+    @classmethod
+    def _computeDispatcherMethodParams(cls, repClient, system, destination, eventUuid):
+        methodMap = {
+            models.ManagementInterface.CIM : cls._cimParams,
+            models.ManagementInterface.WMI : cls._wmiParams,
+        }
+        mgmtInterfaceName = cls.getSystemManagementInterfaceName(system)
+        method = methodMap[mgmtInterfaceName]
+        return method(repClient, system, destination, eventUuid)
+
+    @classmethod
+    def _cimParams(cls, repClient, system, destination, eventUuid):
+        if system.target_id is not None:
+            targetName = system.target.targetname
+            targetType = system.target.targettype
+        else:
+            targetName = None
+            targetType = None
+        cimParams = repClient.CimParams(host=destination,
+            port=system.agent_port,
+            eventUuid=eventUuid,
+            clientCert=system.ssl_client_certificate,
+            clientKey=system.ssl_client_key,
+            # XXX These three do not belong to cimParams
+            instanceId=system.target_system_id,
+            targetName=targetName,
+            targetType=targetType)
+        if None in [cimParams.clientKey, cimParams.clientCert]:
+            # This is most likely a new system.
+            # Get a cert that is likely to work
+            outCerts = rbuildermodels.PkiCertificates.objects.filter(purpose="outbound").order_by('-time_issued')
+            if outCerts:
+                outCert = outCerts[0]
+                cimParams.clientCert = outCert.x509_pem
+                cimParams.clientKey = outCert.pkey_pem
+        return cimParams
+
+    @classmethod
+    def _wmiParams(cls, repClient, system, destination, eventUuid):
+        kwargs = {}
+        credentialsString = system.credentials
+        if credentialsString:
+            kwargs.update(cls.unmarshalCredentials(credentialsString))
+        kwargs.update(
+            host=destination,
+            port=system.agent_port,
+            eventUuid=eventUuid)
+
+        # SlotCompare objects are smart enough to ignore unknown keywords
+        wmiParams = repClient.WmiParams(**kwargs)
+        return wmiParams
+
     def _dispatchSystemEvent(self, event):
         repClient = self.mgr.repeaterMgr.repeaterClient
         if repClient is None:
@@ -1011,48 +1079,37 @@ class SystemManager(base.BaseManager):
 
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
-        if event.system.target:
-            targetName = event.system.target.targetname
-            targetType = event.system.target.targettype
-        else:
-            targetName = None
-            targetType = None
-        cimParams = repClient.CimParams(host=destination,
-            port=event.system.agent_port,
-            eventUuid=eventUuid,
-            clientCert=event.system.ssl_client_certificate,
-            clientKey=event.system.ssl_client_key,
-            instanceId=event.system.target_system_id,
-            targetName=targetName,
-            targetType=targetType)
-        if None in [cimParams.clientKey, cimParams.clientCert]:
-            # This is most likely a new system.
-            # Get a cert that is likely to work
-            outCerts = rbuildermodels.PkiCertificates.objects.filter(purpose="outbound").order_by('-time_issued')
-            if outCerts:
-                outCert = outCerts[0]
-                cimParams.clientCert = outCert.x509_pem
-                cimParams.clientKey = outCert.pkey_pem
+        params = self._computeDispatcherMethodParams(repClient, event.system,
+            destination, eventUuid)
         resultsLocation = repClient.ResultsLocation(
             path = "/api/inventory/systems/%d" % event.system.pk,
             port = 80)
+
+        mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)
+        CIM = models.ManagementInterface.CIM
+        WMI = models.ManagementInterface.WMI
+
         if eventType in self.RegistrationEvents:
             requiredNetwork = (network.required and destination) or None
-            self._runSystemEvent(event, repClient.register, cimParams,
+            method = getattr(repClient, "register_" + mgmtInterfaceName)
+            self._runSystemEvent(event, method, params,
                 resultsLocation, zone=zone, requiredNetwork=requiredNetwork)
         elif eventType in self.PollEvents:
-            self._runSystemEvent(event, repClient.poll,
-                cimParams, resultsLocation, zone=zone)
+            method = getattr(repClient, "poll_" + mgmtInterfaceName)
+            self._runSystemEvent(event, method,
+                params, resultsLocation, zone=zone)
         elif eventType in self.SystemUpdateEvents:
             data = cPickle.loads(event.event_data)
-            self._runSystemEvent(event, repClient.update, cimParams,
+            method = getattr(repClient, "update_" + mgmtInterfaceName)
+            self._runSystemEvent(event, method, params,
                 resultsLocation, zone=zone, sources=data)
         elif eventType in self.ShutdownEvents:
-            self._runSystemEvent(event, repClient.shutdown,
-                cimParams, resultsLocation, zone=zone)
+            method = getattr(repClient, "shutdown_" + mgmtInterfaceName)
+            self._runSystemEvent(event, method,
+                params, resultsLocation, zone=zone)
         elif eventType in self.LaunchWaitForNetworkEvents:
             self._runSystemEvent(event, repClient.launchWaitForNetwork,
-                cimParams, resultsLocation)
+                params, resultsLocation)
         elif eventType in self.ManagementInterfaceEvents:
             params = self.getManagementInterfaceParams(repClient, destination)
             params.eventUuid = eventUuid

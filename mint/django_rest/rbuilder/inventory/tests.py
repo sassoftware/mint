@@ -3154,11 +3154,17 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 def __repr__(self):
                     return repr(self.__dict__)
 
-            def register(slf, *args, **kwargs):
-                return slf._action('register', *args, **kwargs)
+            def register_cim(slf, *args, **kwargs):
+                return slf._action('register_cim', *args, **kwargs)
 
-            def poll(slf, *args, **kwargs):
-                return slf._action('poll', *args, **kwargs)
+            def register_wmi(slf, *args, **kwargs):
+                return slf._action('register_wmi', *args, **kwargs)
+
+            def poll_cim(slf, *args, **kwargs):
+                return slf._action('poll_cim', *args, **kwargs)
+
+            def poll_wmi(slf, *args, **kwargs):
+                return slf._action('poll_wmi', *args, **kwargs)
 
             def detectMgmtInterface(slf, *args, **kwargs):
                 return slf._action('detectMgmtInterface', *args, **kwargs)
@@ -3180,34 +3186,43 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         system.networks.add(network3)
         system.save()
 
-    def testDispatchSystemEvent(self):
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+    def _setupEvent(self, eventType):
         self.system2.agent_port = 12345
         self.system2.save()
-
+        eventType = self.mgr.sysMgr.eventType(eventType)
+        # Remove all networks
+        for net in self.system2.networks.all():
+            net.delete()
+        network = models.Network(dns_name = 'superduper.com')
+        network.system = self.system2
+        network.save()
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
-            event_type=poll_event, priority=poll_event.priority)
+            event_type=eventType, priority=eventType.priority)
         event.save()
+        return event
+
+    def _dispatchEvent(self, event):
         def mockedUuid4():
             return "really-unique-id"
         from mint.lib import uuid
-        origUuid4 = uuid.uuid4
-        try:
-            uuid.uuid4 = mockedUuid4
-            self.mgr.sysMgr.dispatchSystemEvent(event)
-        finally:
-            uuid.uuid4 = origUuid4
+        self.mock(uuid, 'uuid4', mockedUuid4)
+        self.mgr.sysMgr.dispatchSystemEvent(event)
+
+
+    def testDispatchSystemEvent(self):
+        event = self._setupEvent(models.EventType.SYSTEM_POLL)
+        self._dispatchEvent(event)
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
-                ('poll',
+                ('poll_cim',
                     (
                         cimParams(
-                            host='3.3.3.3',
+                            host='superduper.com',
                             port=12345,
                             eventUuid='really-unique-id',
                             clientKey=testsxml.pkey_pem,
@@ -3228,35 +3243,15 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             ['uuid000'])
 
     def testDispatchActivateSystemEvent(self):
-        self.system2.agent_port = 12345
-        self.system2.save()
-        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
-        # Remove all networks
-        for net in self.system2.networks.all():
-            net.delete()
-        network = models.Network(dns_name = 'superduper.com')
-        network.system = self.system2
-        network.save()
-        # sanity check dispatching poll event
-        event = models.SystemEvent(system=self.system2,
-            event_type=act_event, priority=act_event.priority)
-        event.save()
-        def mockedUuid4():
-            return "really-unique-id"
-        from mint.lib import uuid
-        origUuid4 = uuid.uuid4
-        try:
-            uuid.uuid4 = mockedUuid4
-            self.mgr.sysMgr.dispatchSystemEvent(event)
-        finally:
-            uuid.uuid4 = origUuid4
+        event = self._setupEvent(models.EventType.SYSTEM_REGISTRATION)
+        self._dispatchEvent(event)
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
 
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [
-                ('register',
+                ('register_cim',
                     (
                         cimParams(host='superduper.com',
                             port=12345,
@@ -3282,29 +3277,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             [ 'really-unique-id' ])
 
     def testDispatchManagementInterfaceEvent(self):
-        self.system2.agent_port = 12345
-        self.system2.save()
-        eventType = self.mgr.sysMgr.eventType(
-            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
-        # Remove all networks
-        for net in self.system2.networks.all():
-            net.delete()
-        network = models.Network(dns_name = 'superduper.com')
-        network.system = self.system2
-        network.save()
-        # sanity check dispatching poll event
-        event = models.SystemEvent(system=self.system2,
-            event_type=eventType, priority=eventType.priority)
-        event.save()
-        def mockedUuid4():
-            return "really-unique-id"
-        from mint.lib import uuid
-        origUuid4 = uuid.uuid4
-        try:
-            uuid.uuid4 = mockedUuid4
-            self.mgr.sysMgr.dispatchSystemEvent(event)
-        finally:
-            uuid.uuid4 = origUuid4
+        event = self._setupEvent(models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
+        self._dispatchEvent(event)
 
         mgmtIfaceParams = self.mgr.repeaterMgr.repeaterClient.ManagementInterfaceParams
         resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
@@ -3342,6 +3316,36 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.failUnlessEqual(
             [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
             [ 'really-unique-id' ])
+
+    def testDispatchPollWmi(self):
+        wmiInt = models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.WMI)
+        self.system2.management_interface = wmiInt
+        credDict = dict(username="JeanValjean", password="Javert",
+            domain="Paris")
+        self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
+            credDict)
+        event = self._setupEvent(models.EventType.SYSTEM_POLL)
+        self._dispatchEvent(event)
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        wmiParams = repClient.WmiParams
+        resLoc = repClient.ResultsLocation
+
+        wmiDict = credDict.copy()
+        wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
+            port=12345)
+
+        self.failUnlessEqual(repClient.methodsCalled,
+            [
+                ('poll_wmi',
+                    (
+                        wmiParams(**wmiDict),
+                        resLoc(path='/api/inventory/systems/4', port=80),
+                    ),
+                    dict(zone='Local rBuilder'),
+                ),
+            ])
 
 
 class TargetSystemImportTest(XMLTestCase):
