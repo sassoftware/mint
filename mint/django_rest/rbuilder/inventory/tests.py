@@ -2197,6 +2197,14 @@ class SystemsTestCase(XMLTestCase):
             managementInterfaceId)
         self.failUnlessEqual(system.agent_port, agentPort)
 
+    def testGetCredentialsWhenMissing(self):
+        system = self.newSystem(name="blah")
+        system.save()
+        creds = self.mgr.getSystemCredentials(system.pk)
+        self.assertXMLEquals(creds.to_xml(),
+            '<credentials id="/api/inventory/systems/%s/credentials"/>' %
+                system.pk)
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",
@@ -3362,7 +3370,6 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                     dict(zone='Local rBuilder'),
                 ),
             ])
-
 
 class TargetSystemImportTest(XMLTestCase):
     fixtures = ['users', 'targets']

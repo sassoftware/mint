@@ -904,7 +904,10 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystemCredentials(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        systemCreds = self.unmarshalCredentials(system.credentials)
+        if system.credentials is None:
+            systemCreds = {}
+        else:
+            systemCreds = self.unmarshalCredentials(system.credentials)
         return self._getCredentialsModel(system, systemCreds)
 
     @base.exposed
