@@ -2253,8 +2253,7 @@ class SystemStateTestCase(XMLTestCase):
         eventUuid1 = 'eventuuid001'
         jobUuid1 = 'rmakeuuid001'
 
-        system = self.newSystem(name='blippy', local_uuid=localUuid,
-            generated_uuid=generatedUuid)
+        system = self.newSystem(name='blippy')
         system.save()
 
         self._newJob(system, eventUuid1, jobUuid1,

@@ -498,7 +498,8 @@ class SystemManager(base.BaseManager):
             self.addSystem(system)
 
     @base.exposed
-    def addSystem(self, system, generateCertificates=False):
+    def addSystem(self, system, generateCertificates=False,
+                  withManagementInterfaceDetection=True):
         '''Add a new system to inventory'''
 
         if not system:
@@ -519,7 +520,8 @@ class SystemManager(base.BaseManager):
         # setSystemState will generate a CIM call; if it's a new registration,
         # it will be using the outbound certificate signed by the low-grade
         # CA. The personalized pair is not stored on the disk yet
-        self.setSystemState(system)
+        self.setSystemState(system,
+            withManagementInterfaceDetection=withManagementInterfaceDetection)
 
         if generateCertificates:
             self.generateSystemCertificates(system)
@@ -627,7 +629,7 @@ class SystemManager(base.BaseManager):
         self.scheduleSystemPollNowEvent(system)
         """
 
-    def setSystemState(self, system):
+    def setSystemState(self, system, withManagementInterfaceDetection=True):
         if system.oldModel is None:
             self.log_system(system, models.SystemLogEntry.ADDED)
         registeredState = self.systemState(models.SystemState.REGISTERED)
@@ -649,7 +651,7 @@ class SystemManager(base.BaseManager):
                 system.current_state = registeredState
                 system.save()
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
-        else:
+        elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
 
@@ -699,6 +701,11 @@ class SystemManager(base.BaseManager):
         if self.checkAndApplyShutdown(system):
             return
         self.check_system_versions(system)
+        last_job = getattr(system, 'lastJob', None)
+        if last_job and last_job.job_state.name == models.JobState.COMPLETED:
+            # This will update the system state as a side-effect
+            self.addSystem(system, generateCertificates=False,
+                withManagementInterfaceDetection=False)
         self.setSystemStateFromJob(system)
         self.check_system_last_job(system)
         system.save()
