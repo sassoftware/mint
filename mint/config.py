@@ -225,7 +225,6 @@ class MintConfig(ConfigFile):
     # Build system
     anacondaTemplatesFallback   = (CfgString, 'conary.rpath.com@rpl:1')
     packageCreatorConfiguration = (CfgPath, None)
-    packageCreatorURL       = (CfgString, None)
     visibleBuildTypes       = (CfgList(CfgBuildEnum))
     excludeBuildTypes       = (CfgList(CfgBuildEnum))
     includeBuildTypes       = (CfgList(CfgBuildEnum))
@@ -284,6 +283,7 @@ class MintConfig(ConfigFile):
     serializeCommits        = (CfgBool, True)
     projectAdmin            = (CfgBool, True)
     externalDomainName      = (CfgString, None)
+    packageCreatorURL       = (CfgString, None)
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
