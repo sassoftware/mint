@@ -65,6 +65,12 @@ class VersionManager(base.BaseManager):
             self.set_available_updates(trove, force=True)
         system.save()
 
+    @classmethod
+    def _flavor(cls, flavor):
+        if flavor is None:
+            return ''
+        return str(flavor)
+
     @base.exposed
     def updateInstalledSoftware(self, system, new_versions):
         oldInstalled, newInstalled, toAdd = \
@@ -72,12 +78,12 @@ class VersionManager(base.BaseManager):
         sources = []
         for nvf in newInstalled:
             n, v, f = nvf
-            sources.append("%s=%s[%s]" % (n, str(v), str(f)))
+            sources.append("%s=%s[%s]" % (n, str(v), self._flavor(f)))
         self.mgr.scheduleSystemApplyUpdateEvent(system, sources)
 
     def trove_from_nvf(self, nvf):
         n, v, f = conaryclient.cmdline.parseTroveSpec(nvf)
-        f = str(f)
+        f = self._flavor(f)
 
         thawed_v = versions.ThawVersion(v)
         version = models.Version()
