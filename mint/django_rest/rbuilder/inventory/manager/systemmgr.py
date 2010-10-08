@@ -885,7 +885,10 @@ class SystemManager(base.BaseManager):
 
     @classmethod
     def unmarshalCredentials(cls, credentialsString):
-        return mintdata.unmarshalTargetUserCredentials(credentialsString)
+        creds = mintdata.unmarshalTargetUserCredentials(credentialsString)
+        # Keys should be strings, not unicode
+        creds = dict((str(k), v) for (k, v) in creds.iteritems)
+        return creds
 
     @classmethod
     def marshalCredentials(cls, credentialsDict):
