@@ -1494,7 +1494,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 6)
+    Version = (51, 7)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1612,6 +1612,14 @@ class MigrateTo_51(SchemaMigration):
         cu = self.db.cursor()
 
         cu.execute("""ALTER TABLE inventory_system DROP COLUMN management_node""")
+        
+        return True
+    
+    def migrate7(self):
+        cu = self.db.cursor()
+
+        cu.execute("""update inventory_management_interface set credentials_descriptor='%s' where name='wmi'""" % schema.wmi_credentials_descriptor)
+        cu.execute("""update inventory_management_interface set credentials_descriptor='%s' where name='cim'""" % schema.cim_credentials_descriptor)
         
         return True
 

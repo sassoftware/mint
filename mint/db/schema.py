@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 6)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 7)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1484,8 +1484,78 @@ def _addManagementZone(db, cfg):
     
     return changed
 
-cim_credentials_descriptor="""&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;serverCert&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Server Cert&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;"""
-wmi_credentials_descriptor="""&lt;descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"&gt;&lt;metadata&gt;&lt;/metadata&gt;&lt;dataFields&gt;&lt;field&gt;&lt;name&gt;domain&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Windows Domain&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;username&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;User&lt;/desc&gt;&lt;/descriptions&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;field&gt;&lt;name&gt;password&lt;/name&gt;&lt;descriptions&gt;&lt;desc&gt;Password&lt;/desc&gt;&lt;/descriptions&gt;&lt;password&gt;true&lt;/password&gt;&lt;type&gt;str&lt;/type&gt;&lt;default&gt;&lt;/default&gt;&lt;required&gt;true&lt;/required&gt;&lt;/field&gt;&lt;/dataFields&gt;&lt;/descriptor&gt;"""
+cim_credentials_descriptor="""\
+<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field>
+      <name>ssl_client_certificate</name>
+      <descriptions>
+        <desc>Client Certificate</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The certificate must start with '-----BEGIN CERTIFICATE-----', end with '-----END CERTIFICATE-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+      <allowFileContent>true</allowFileContent>
+    </field>
+    <field>
+      <name>ssl_client_key</name>
+      <descriptions>
+        <desc>Client Private Key</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The key must start with '-----BEGIN PRIVATE KEY-----', end with '----END PRIVATE KEY-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN (\S+ )?PRIVATE KEY-----.*-----END (\S+ )?PRIVATE KEY-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+     <allowFileContent>true</allowFileContent>
+    </field>
+  </dataFields>
+</descriptor>"""
+
+wmi_credentials_descriptor="""\
+<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field><name>domain</name>
+      <descriptions>
+        <desc>Windows Domain</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>username</name>
+      <descriptions>
+        <desc>User</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>password</name>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <password>true</password>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>"""
 
 def _addManagementInterfaces(db):
     changed = False
