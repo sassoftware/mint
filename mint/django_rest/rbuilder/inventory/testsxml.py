@@ -201,7 +201,7 @@ management_interfaces_xml="""\
     <description>bar</description>
     <management_interface_id>1</management_interface_id>
     <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
-    <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
+    <credentials_descriptor><foo/></credentials_descriptor>
     <port>8000</port>
     <name>foo</name>
     <credentials_readonly/>
@@ -216,7 +216,7 @@ management_interface_xml="""\
   <description>bar</description>
   <management_interface_id>1</management_interface_id>
   <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
-  <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
+  <credentials_descriptor><foo/></credentials_descriptor>
   <port>8000</port>
   <name>foo</name>
   <credentials_readonly/>
@@ -230,7 +230,7 @@ management_interface_put_xml="""\
   <description>bar</description>
   <management_interface_id>1</management_interface_id>
   <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
-  <credentials_descriptor>&lt;foo/&gt;</credentials_descriptor>
+  <credentials_descriptor><foo/></credentials_descriptor>
   <port>123</port>
   <name>thisnameshouldnotstick</name>
 </management_interface>

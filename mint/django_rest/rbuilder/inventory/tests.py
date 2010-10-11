@@ -554,7 +554,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
             data=testsxml.management_interface_put_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 401)
-        
+
     def testPutManagementInterfaceNotFound(self):
         """
         Ensure we return 404 if we update one that doesn't exist
@@ -579,7 +579,8 @@ class ManagementInterfacesTestCase(XMLTestCase):
         mi = models.ManagementInterface.objects.get(pk=mi.pk)
         # name is read only, should not get changed
         self.assertTrue(mi.name != "thisnameshouldnotstick")
-        self.assertTrue(mi.port == 123)
+        self.failUnlessEqual(mi.port, 123)
+        self.failUnlessEqual(mi.credentials_descriptor, "<foo/>")
         
 class SystemTypesTestCase(XMLTestCase):
 

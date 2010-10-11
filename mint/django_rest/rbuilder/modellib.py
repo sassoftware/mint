@@ -194,6 +194,17 @@ class BaseManager(models.Manager):
                                     djangofields.NullBooleanField)):
                 val = str(val)
                 val = (val.lower() == str(True).lower())
+            elif isinstance(field, djangofields.XMLField):
+                if not val._xobj.elements:
+                    # No children for this element
+                    continue
+                subelementTag = val._xobj.tag
+                subelementName = val._xobj.elements[0]
+                subelement = getattr(val, subelementName, None)
+                if subelement is None:
+                    continue
+                val = xobj.toxml(subelement, tag=subelementTag,
+                    prettyPrint=False, xml_declaration=False)
             elif isinstance(field, DateTimeUtcField):
                 # Empty string is not valid, explicitly convert to None
                 if val:
@@ -779,6 +790,10 @@ class XObjModel(models.Model):
                 elif isinstance(field, (djangofields.BooleanField,
                                         djangofields.NullBooleanField)):
                     val = str(val).lower()
+                elif isinstance(field, djangofields.XMLField):
+                    if val is None:
+                        continue
+                    val = xobj.parse(val)
                 setattr(xobj_model, key, val)
             # TODO: is this still needed, we already called serialize_hrefs.?
             elif isinstance(val, XObjHrefModel):
