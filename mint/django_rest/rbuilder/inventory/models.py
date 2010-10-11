@@ -506,6 +506,18 @@ class System(modellib.XObjIdModel):
             values=values)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
 
+        if request:
+            class CredentialsHref(object): 
+                _xobj = xobj.XObjMetadata(
+                            tag='credentials',
+                            attributes={'href':str})
+
+                def __init__(self, href):
+                    self.href = href
+
+            xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
+                '%s/credentials' % self.get_absolute_url(request)))
+
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
                 elements = ['queued_jobs', 'completed_jobs',
