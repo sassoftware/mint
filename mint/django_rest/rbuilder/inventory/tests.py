@@ -1,4 +1,5 @@
 import base64
+import cPickle
 import datetime
 import os
 import shutil
@@ -3190,6 +3191,9 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             def poll_wmi(slf, *args, **kwargs):
                 return slf._action('poll_wmi', *args, **kwargs)
 
+            def update_wmi(slf, *args, **kwargs):
+                return slf._action('update_wmi', *args, **kwargs)
+
             def detectMgmtInterface(slf, *args, **kwargs):
                 return slf._action('detectMgmtInterface', *args, **kwargs)
 
@@ -3210,7 +3214,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         system.networks.add(network3)
         system.save()
 
-    def _setupEvent(self, eventType):
+    def _setupEvent(self, eventType, eventData=None):
         self.system2.agent_port = 12345
         self.system2.save()
         eventType = self.mgr.sysMgr.eventType(eventType)
@@ -3223,6 +3227,8 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         # sanity check dispatching poll event
         event = models.SystemEvent(system=self.system2,
             event_type=eventType, priority=eventType.priority)
+        if eventData:
+            event.event_data = cPickle.dumps(eventData)
         event.save()
         return event
 
@@ -3370,6 +3376,45 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                     dict(zone='Local rBuilder'),
                 ),
             ])
+
+    def testDispatchUpdateWmi(self):
+        wmiInt = models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.WMI)
+        self.system2.management_interface = wmiInt
+        credDict = dict(username="JeanValjean", password="Javert",
+            domain="Paris")
+        self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
+            credDict)
+        toInstall = [ "group-foo=/a@b:c/1-2-3", "group-bar=/a@b:c//d@e:f/1-2.1-2.2" ]
+        event = self._setupEvent(models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+            eventData=toInstall)
+
+        self._dispatchEvent(event)
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        wmiParams = repClient.WmiParams
+        resLoc = repClient.ResultsLocation
+
+        wmiDict = credDict.copy()
+        wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
+            port=12345)
+
+        self.failUnlessEqual(repClient.methodsCalled,
+            [
+                ('update_wmi',
+                    (
+                        wmiParams(**wmiDict),
+                        resLoc(path='/api/inventory/systems/4', port=80),
+                    ),
+                    dict(
+                        zone='Local rBuilder',
+                        sources=[
+                            'group-foo=/a@b:c/1-2-3',
+                            'group-bar=/a@b:c//d@e:f/1-2.1-2.2',
+                        ],),
+                ),
+            ])
+
 
 class TargetSystemImportTest(XMLTestCase):
     fixtures = ['users', 'targets']
