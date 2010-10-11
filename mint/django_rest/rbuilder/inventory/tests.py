@@ -1575,6 +1575,23 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, 
             testsxml.credentials_put_resp_xml)
 
+        system = models.System.objects.get(pk=system.pk)
+        self.failIf(system.credentials is None)
+
+        creds = system.credentials
+        # Do a simple PUT on systems
+        xml = """\
+<system>
+  <credentials>blahblah</credentials>
+</system>
+"""
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml,
+            username="admin", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system.credentials, creds)
+
     def testSystemWmiCredentials(self):
         system = self._saveSystem()
         response = self._post('/api/inventory/systems/%s/credentials' % \

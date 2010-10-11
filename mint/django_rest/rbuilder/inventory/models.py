@@ -419,7 +419,7 @@ class System(modellib.XObjIdModel):
         "a UUID used for tracking systems registering at startup time")
     management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
-    credentials = XObjHidden(models.TextField(null=True))
+    credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
     type = D(modellib.SerializedForeignKey(SystemType, null=False, related_name='systems'),
         "the type of the system")
 
