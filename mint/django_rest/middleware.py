@@ -60,6 +60,14 @@ class ExceptionLoggerMiddleware(object):
             log.error("Error sending mail: %s", str(err))
 
 
+class RequestSanitizationMiddleware(object):
+    def process_request(self, request):
+        # django will do bad things if the path doesn't end with / - it uses
+        # urljoin which strips off the last component
+        if not request.path.endswith('/'):
+            request.path += '/'
+        return None
+
 class SetMethodRequestMiddleware(object):
     
     def process_request(self, request):

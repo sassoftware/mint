@@ -327,7 +327,15 @@ class InventoryTestCase(XMLTestCase):
     def testDeleteTypes(self):
         response = self._delete('/api/inventory/')
         self.assertEquals(response.status_code, 405)
-       
+
+    def testGetTypesNoTrailingSlash(self):
+        response = self._get('/api/inventory')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.inventory_xml)
+
+        response = self._post('/api/inventory?_method=GET')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.inventory_xml)
 
 class LogTestCase(XMLTestCase):
 
