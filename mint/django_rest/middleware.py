@@ -51,6 +51,8 @@ class ExceptionLoggerMiddleware(object):
                 'request_params'    : request.GET,
                 'is_secure'         : request.is_secure,
                 }
+        if request.raw_post_data:
+            info.update(raw_post_data = request.raw_post_data)
         try:
             logerror.logErrorAndEmail(request.cfg, e_type, e_value,
                     e_tb, 'API call (django handler)', info, doEmail=doEmail)
