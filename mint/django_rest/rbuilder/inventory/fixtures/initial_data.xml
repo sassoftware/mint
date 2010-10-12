@@ -244,7 +244,7 @@
   </object>
   <object pk="2" model="inventory.systemstate">
     <field type="CharField" name="name">registered</field>
-    <field type="CharField" name="description">Polling</field>
+    <field type="CharField" name="description">Initial synchronization pending</field>
   </object>
   <object pk="3" model="inventory.systemstate">
     <field type="CharField" name="name">responsive</field>

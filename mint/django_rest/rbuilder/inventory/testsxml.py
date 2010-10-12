@@ -276,7 +276,7 @@ system_type_systems_xml="""
     <agent_port>5989</agent_port>
     <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
     <current_state id="http://testserver/api/inventory/system_states/2">
-      <description>Polling</description>
+      <description>Initial synchronization pending</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
     </current_state>
@@ -395,7 +395,7 @@ system_states_xml = """\
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/2">
     <system_state_id>2</system_state_id>
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <created_date>2010-09-03T18:23:42.658249+00:00</created_date>
   </system_state>
@@ -520,7 +520,7 @@ management_nodes_xml = """\
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <created_date>%s</created_date>
-      <description>Polling</description>
+      <description>Initial synchronization pending</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
     </current_state>
@@ -590,7 +590,7 @@ management_node_xml = """\
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -694,7 +694,7 @@ management_node_post_response_xml = """\
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -798,7 +798,7 @@ management_node_zone_post_response_xml = """\
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -876,7 +876,7 @@ systems_xml = """\
     <registration_date/>
     <created_date>%s</created_date>
     <current_state id="http://testserver/api/inventory/system_states/2">
-      <description>Polling</description>
+      <description>Initial synchronization pending</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
     </current_state>
@@ -974,7 +974,7 @@ systems_put_xml = """\
     <local_uuid>testsystemlocaluuid</local_uuid>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
-      <description>Polling</description>
+      <description>Initial synchronization pending</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
     </current_state>
@@ -1019,7 +1019,7 @@ systems_put_xml = """\
     <local_uuid>testsystem2localuuid</local_uuid>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
-      <description>Polling</description>
+      <description>Initial synchronization pending</description>
       <name>registered</name>
       <system_state_id>2</system_state_id>
     </current_state>
@@ -1124,7 +1124,7 @@ system_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -1298,7 +1298,7 @@ system_post_xml_response = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -1408,7 +1408,7 @@ system_target_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -1690,7 +1690,7 @@ system_version_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -1827,7 +1827,7 @@ system_version_put_response_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
@@ -1941,7 +1941,7 @@ system_available_updates_xml = """\
   <local_uuid>testsystemlocaluuid</local_uuid>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
-    <description>Polling</description>
+    <description>Initial synchronization pending</description>
     <name>registered</name>
     <system_state_id>2</system_state_id>
   </current_state>
