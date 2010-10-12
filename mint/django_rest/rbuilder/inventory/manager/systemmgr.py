@@ -818,7 +818,8 @@ class SystemManager(base.BaseManager):
                 # won't transition to REGISTERED, rpath-register should be
                 # responsible with that
                 return None
-            if eventTypeName in self.PollEvents:
+            if eventTypeName in self.PollEvents or \
+                    eventTypeName in self.SystemUpdateEvents:
                 return models.SystemState.RESPONSIVE
             if eventTypeName in self.ManagementInterfaceEvents:
                 # Management interface detection finished, need to schedule a
@@ -841,7 +842,8 @@ class SystemManager(base.BaseManager):
                 if timedelta.days >= self.cfg.deadStateTimeout:
                     return models.SystemState.DEAD
                 return None
-            if eventTypeName not in self.PollEvents:
+            if eventTypeName not in self.PollEvents and \
+                    eventTypeName not in self.SystemUpdateEvents:
                 # Non-polling event, nothing to do
                 return None
             if currentStateName in [models.SystemState.REGISTERED,

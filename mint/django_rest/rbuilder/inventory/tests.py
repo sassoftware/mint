@@ -2418,6 +2418,10 @@ class SystemStateTestCase(XMLTestCase):
         jobUuid2 = 'rmakeuuid002'
         eventUuid3 = 'eventuuid003'
         jobUuid3 = 'rmakeuuid003'
+        eventUuid4 = 'eventuuid004'
+        jobUuid4 = 'rmakeuuid004'
+        eventUuid5 = 'eventuuid005'
+        jobUuid5 = 'rmakeuuid005'
 
         system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
@@ -2432,6 +2436,10 @@ class SystemStateTestCase(XMLTestCase):
             models.EventType.SYSTEM_POLL)
         job3 = self._newJob(system, eventUuid3, jobUuid3,
             models.EventType.SYSTEM_POLL_IMMEDIATE)
+        job4 = self._newJob(system, eventUuid4, jobUuid4,
+            models.EventType.SYSTEM_APPLY_UPDATE)
+        job5 = self._newJob(system, eventUuid5, jobUuid5,
+            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
 
         UNMANAGED = models.SystemState.UNMANAGED
         REGISTERED = models.SystemState.REGISTERED
@@ -2466,51 +2474,27 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateFailed, NONRESPONSIVE, None),
             (job1, stateFailed, DEAD, None),
             (job1, stateFailed, MOTHBALLED, None),
-
-            (job2, stateCompleted, UNMANAGED, RESPONSIVE),
-            (job2, stateCompleted, REGISTERED, RESPONSIVE),
-            (job2, stateCompleted, RESPONSIVE, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE, RESPONSIVE),
-            (job2, stateCompleted, DEAD, RESPONSIVE),
-            (job2, stateCompleted, MOTHBALLED, RESPONSIVE),
-
-            (job2, stateFailed, UNMANAGED, None),
-            (job2, stateFailed, REGISTERED, NONRESPONSIVE),
-            (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job2, stateFailed, NONRESPONSIVE_HOST, None),
-            (job2, stateFailed, NONRESPONSIVE_NET, None),
-            (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
-            (job2, stateFailed, NONRESPONSIVE_SUSPENDED, None),
-            (job2, stateFailed, NONRESPONSIVE, None),
-            (job2, stateFailed, DEAD, None),
-            (job2, stateFailed, MOTHBALLED, None),
-
-            (job3, stateCompleted, UNMANAGED, RESPONSIVE),
-            (job3, stateCompleted, REGISTERED, RESPONSIVE),
-            (job3, stateCompleted, RESPONSIVE, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE, RESPONSIVE),
-            (job3, stateCompleted, DEAD, RESPONSIVE),
-            (job3, stateCompleted, MOTHBALLED, RESPONSIVE),
-
-            (job3, stateFailed, UNMANAGED, None),
-            (job3, stateFailed, REGISTERED, NONRESPONSIVE),
-            (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job3, stateFailed, NONRESPONSIVE_HOST, None),
-            (job3, stateFailed, NONRESPONSIVE_NET, None),
-            (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
-            (job3, stateFailed, NONRESPONSIVE_SUSPENDED, None),
-            (job3, stateFailed, NONRESPONSIVE, None),
-            (job3, stateFailed, DEAD, None),
-            (job3, stateFailed, MOTHBALLED, None),
         ]
+        transitionsCompleted = []
+        for oldState in [UNMANAGED, REGISTERED, RESPONSIVE,
+                NONRESPONSIVE_HOST, NONRESPONSIVE_NET, NONRESPONSIVE_SHUTDOWN,
+                NONRESPONSIVE_SUSPENDED, NONRESPONSIVE, DEAD, MOTHBALLED]:
+            transitionsCompleted.append((oldState, RESPONSIVE))
+        transitionsFailed = [
+            (REGISTERED, NONRESPONSIVE),
+            (RESPONSIVE, NONRESPONSIVE),
+        ]
+        for oldState in [UNMANAGED, NONRESPONSIVE_HOST, NONRESPONSIVE_NET,
+                NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SUSPENDED,
+                NONRESPONSIVE, DEAD, MOTHBALLED]:
+            transitionsFailed.append((oldState, None))
+
+        for job in [job2, job3, job4, job5]:
+            for oldState, newState in transitionsCompleted:
+                tests.append((job, stateCompleted, oldState, newState))
+            for oldState, newState in transitionsFailed:
+                tests.append((job, stateFailed, oldState, newState))
+
         for (job, jobState, oldState, newState) in tests:
             system.current_state = self.mgr.sysMgr.systemState(oldState)
             job.job_state = jobState
