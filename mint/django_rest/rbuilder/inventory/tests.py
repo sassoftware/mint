@@ -653,6 +653,53 @@ class SystemTypesTestCase(XMLTestCase):
         self.assertTrue(si.name != "thisnameshouldnotstick")
         self.assertTrue(si.infrastructure == True)
         
+    def testGetWindowsBuildServiceNodes(self):
+        models.SystemType.objects.all().delete()
+        models.SystemType.objects.all().delete()
+        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE, 
+            description=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE_DESC, infrastructure=True)
+        st.save()
+        system = models.System()
+        system.name = 'testsystemname'
+        system.description = 'testsystemdescription'
+        system.managing_zone = self.localZone
+        system.management_interface = models.ManagementInterface.objects.get(pk=1)
+        system.type = st
+        system.save()
+
+        network = models.Network()
+        network.ip_address = '1.1.1.1'
+        network.device_name = 'eth0'
+        network.dns_name = 'testnetwork.example.com'
+        network.netmask = '255.255.255.0'
+        network.port_type = 'lan'
+        network.system = system
+        network.save()
+        
+        st2 = models.SystemType(name=models.SystemType.INVENTORY, 
+            description=models.SystemType.INVENTORY_DESC, infrastructure=True)
+        st2.save()
+        
+        system2 = models.System()
+        system2.name = 'testsystemname2'
+        system2.description = 'testsystemdescription2'
+        system2.managing_zone = self.localZone
+        system2.management_interface = models.ManagementInterface.objects.get(pk=1)
+        system2.st = st2
+        system2.save()
+        
+        buildNodes = self.mgr.sysMgr.getWindowsBuildServiceNodes()
+        assert(len(buildNodes) == 1)
+        assert(buildNodes[0].system_id == system.system_id)
+        
+    def testGetWindowsBuildServiceNodesEmpty(self):
+        models.SystemType.objects.all().delete()
+        models.SystemType.objects.all().delete()
+        
+        buildNodes = self.mgr.sysMgr.getWindowsBuildServiceNodes()
+        assert(buildNodes is not None)
+        assert(len(buildNodes) == 0)
+        
 class SystemStatesTestCase(XMLTestCase):
 
     def testGetSystemStates(self):

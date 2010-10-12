@@ -447,6 +447,18 @@ class SystemManager(base.BaseManager):
         Systems = models.Systems()
         Systems.system = system_type.systems.all()
         return Systems
+    
+    @base.exposed
+    def getWindowsBuildServiceNodes(self):
+        nodes = []
+        try:
+            system_type = models.SystemType.objects.get(name=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+            systems = self.getSystemTypeSystems(system_type.system_type_id)
+            nodes = systems and system.system or []
+        except ObjectDoesNotExist:
+            pass
+        
+        return nodes
 
     @base.exposed
     def getSystemState(self, system_state_id):
