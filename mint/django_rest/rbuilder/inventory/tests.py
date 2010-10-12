@@ -653,6 +653,14 @@ class SystemTypesTestCase(XMLTestCase):
         self.assertTrue(si.name != "thisnameshouldnotstick")
         self.assertTrue(si.infrastructure == True)
         
+    def testAddWindowsBuildService(self):
+        system = self.mgr.sysMgr.addWindowsBuildService("myname", "mydesc", "1.1.1.1")
+        network = self.mgr.sysMgr.extractNetworkToUse(system)
+        assert(system.name =="myname")
+        assert(system.description == "mydesc")
+        assert(system.type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
+        assert(network.dns_name == "1.1.1.1")
+        
     def testGetWindowsBuildServiceNodes(self):
         models.SystemType.objects.all().delete()
         models.SystemType.objects.all().delete()

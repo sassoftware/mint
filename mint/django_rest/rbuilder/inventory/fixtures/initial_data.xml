@@ -142,7 +142,7 @@
         <field type="NullBooleanField" name="infrastructure">True</field>
     </object>
     <object pk="3" model="inventory.systemtype">
-        <field type="CharField" name="name">infrastructure-windows-build-node"</field>
+        <field type="CharField" name="name">infrastructure-windows-build-node</field>
         <field type="CharField" name="description">rPath Windows Build Service (Infrastructure)"</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
         <field type="NullBooleanField" name="infrastructure">True</field>
