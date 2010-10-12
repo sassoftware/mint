@@ -935,7 +935,7 @@ class Trove(modellib.XObjIdModel):
 
     def getFlavor(self):
         if not self.flavor:
-            return None
+            return deps.parseFlavor('')
         return deps.parseFlavor(self.flavor)
 
     def getLabel(self):
