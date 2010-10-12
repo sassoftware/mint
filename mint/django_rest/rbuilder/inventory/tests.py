@@ -1018,7 +1018,7 @@ class NetworksTestCase(XMLTestCase):
         network = models.Network(dns_name="foo.com", active=False, required=False)
         network.system = self.system
         network.save()
-        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.dns_name, "foo.com")
 
         # Second network showed up, we assume no network
@@ -1026,20 +1026,20 @@ class NetworksTestCase(XMLTestCase):
             required=False)
         network2.system = self.system
         network2.save()
-        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net, None)
 
         # try one with required only
         network.required = True
         network.save()
-        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.dns_name, "foo.com")
 
         # try one with active only
         network.required = False
         network.active = True
         network.save()
-        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.dns_name, "foo.com")
 
         # now add a required one in addition to active one to test order
@@ -1054,7 +1054,7 @@ class NetworksTestCase(XMLTestCase):
                 ('foo2.com', False, False),
                 ('foo3.com', True, False),
             ])
-        net = self.mgr.sysMgr._extractNetworkToUse(self.system)
+        net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.network_id, network3.network_id)
 
 class SystemsTestCase(XMLTestCase):
@@ -3060,7 +3060,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.mintConfig = self.mgr.cfg
         self.mgr.sysMgr.cleanupSystemEvent = self.mock_cleanupSystemEvent
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
-        self.mgr.sysMgr._extractNetworkToUse = self.mock_extractNetworkToUse
+        self.mgr.sysMgr.extractNetworkToUse = self.mock_extractNetworkToUse
         self.resetFlags()
 
     def resetFlags(self):

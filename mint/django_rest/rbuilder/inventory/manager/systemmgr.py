@@ -454,7 +454,7 @@ class SystemManager(base.BaseManager):
         try:
             system_type = models.SystemType.objects.get(name=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
             systems = self.getSystemTypeSystems(system_type.system_type_id)
-            nodes = systems and system.system or []
+            nodes = systems and systems.system or []
         except ObjectDoesNotExist:
             pass
         
@@ -1088,7 +1088,7 @@ class SystemManager(base.BaseManager):
         self.log_system(event.system,
             "Dispatching %s event" % event.event_type.description)
 
-        network = self._extractNetworkToUse(event.system)
+        network = self.extractNetworkToUse(event.system)
         eventType = event.event_type.name
         if not network and eventType not in self.LaunchWaitForNetworkEvents:
             msg = "No valid network information found; giving up"
@@ -1154,8 +1154,8 @@ class SystemManager(base.BaseManager):
             interfacesList=interfacesList)
         return params
 
-
-    def _extractNetworkToUse(self, system):
+    @base.exposed
+    def extractNetworkToUse(self, system):
         networks = system.networks.all()
 
         # first look for user required nets
