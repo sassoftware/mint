@@ -461,6 +461,10 @@ class SystemManager(base.BaseManager):
             pass
         
         return nodes
+    
+    @base.exposed
+    def addWindowsBuildService(self, name, description, network_address):
+        log.info("Adding Windows Build Service with name '%s', description '%s', and network address '%s'" % (name, description, network_address))
 
     @base.exposed
     def getSystemState(self, system_state_id):
