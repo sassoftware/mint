@@ -1408,7 +1408,7 @@ class SystemManager(base.BaseManager):
 
     def _addSystemToTarget(self, target, targetSystemId, targetSystem):
         t0 = time.time()
-        log.info("  Importin/tmp/mint-error-myUhev.txtg system %s (%s)" % (targetSystemId,
+        log.info("  Importing system %s (%s)" % (targetSystemId,
             targetSystem.instanceName))
         system, created = models.System.objects.get_or_create(target=target,
             target_system_id=targetSystemId,
