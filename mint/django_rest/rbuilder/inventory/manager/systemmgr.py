@@ -494,7 +494,7 @@ class SystemManager(base.BaseManager):
 
         return None, None
 
-
+    @base.exposed
     def log_system(self, system, log_msg):
         system_log = system.createLog()
         system_log_entry = models.SystemLogEntry(system_log=system_log,
@@ -739,9 +739,25 @@ class SystemManager(base.BaseManager):
         # If there is an event_uuid set on system, assume we're just updating
         # the DB with the results of a job, otherwise, update the actual
         # installed software on the system.
+        if system.new_versions is None:
+            return
+        troveSpecs = ["%s=%s[%s]" % x.getNVF()
+            for x in system.new_versions ]
         if system.event_uuid:
+            if troveSpecs:
+                msg = "Setting installed software to: %s" % (
+                    ', '.join(troveSpecs), )
+            else:
+                msg = "Deleting all installed software"
+            self.log_system(system, msg)
             self.mgr.setInstalledSoftware(system, system.new_versions)
         else:
+            if troveSpecs:
+                msg = "Initiating software update to: %s" % (
+                    ', '.join(troveSpecs), )
+            else:
+                msg = "Initiating software update, deleting everything"
+            self.log_system(system, msg)
             self.mgr.updateInstalledSoftware(system, system.new_versions)
 
     def checkAndApplyShutdown(self, system):

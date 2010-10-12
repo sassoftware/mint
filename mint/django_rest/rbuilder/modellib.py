@@ -516,6 +516,8 @@ class SystemManager(BaseManager):
     def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
         # XXX Need a better way to handle this
         if m2m_accessor == 'installed_software':
+            if model.new_versions is None:
+                model.new_versions = []
             model.new_versions.append(rel_mod)
         elif m2m_accessor == 'jobs':
             self._handleSystemJob(model, rel_mod)

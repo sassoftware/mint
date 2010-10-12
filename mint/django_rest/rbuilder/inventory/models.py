@@ -425,7 +425,9 @@ class System(modellib.XObjIdModel):
 
     load_fields = [local_uuid]
 
-    new_versions = []
+    # We need to distinguish between an <installed_software> node not being
+    # present at all, and being present and empty
+    new_versions = None
     lastJob = None
     oldModel = None
 
