@@ -825,7 +825,15 @@ class SystemManager(base.BaseManager):
             if eventTypeName in self.ManagementInterfaceEvents:
                 # Management interface detection finished, need to schedule a
                 # registration event now.
+                wmiIfaceId = models.Cache.get(models.ManagementInterface,
+                    name=models.ManagementInterface.WMI).pk
+                # But if it's a WMI system and we have no credentials, skip
+                # directly to UNMANAGED_CREDENTIALS_REQUIRED (RBL-7439)
+                if system.management_interface_id == wmiIfaceId:
+                    if not system.credentials:
+                        return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
                 self.scheduleSystemRegistrationEvent(system)
+                return None
             else:
                 # Add more processing here if needed
                 return None

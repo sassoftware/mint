@@ -3358,11 +3358,14 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         event.save()
         return event
 
-    def _dispatchEvent(self, event):
+    def _mockUuid(self):
         def mockedUuid4():
             return "really-unique-id"
         from mint.lib import uuid
         self.mock(uuid, 'uuid4', mockedUuid4)
+
+    def _dispatchEvent(self, event):
+        self._mockUuid()
         self.mgr.sysMgr.dispatchSystemEvent(event)
 
 
@@ -3541,6 +3544,73 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                 ),
             ])
 
+    def testInterfaceDetection(self):
+        self._mockUuid()
+
+        eventUuid1 = "eventUuid1"
+        jobUuid1 = "jobUuid1"
+        eventUuid2 = "eventUuid2"
+        jobUuid2 = "jobUuid2"
+
+        CIM = models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.CIM)
+        WMI = models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.WMI)
+
+        systemCim = self.newSystem(name="blah cim",
+            management_interface=CIM)
+        systemCim.save()
+        network = models.Network(dns_name="blah cim", ip_address="1.2.3.4",
+            system=systemCim)
+        network.save()
+        systemWmi = self.newSystem(name="blah wmi",
+            management_interface=WMI)
+        systemWmi.save()
+        network = models.Network(dns_name="blah wmi", ip_address="1.2.3.4",
+            system=systemWmi)
+
+        jobCim = self._newJob(systemCim, eventUuid1, jobUuid1,
+            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+            jobState=models.JobState.COMPLETED)
+        jobWmi = self._newJob(systemWmi, eventUuid2, jobUuid2,
+            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+            jobState=models.JobState.COMPLETED)
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        cimParams = repClient.CimParams
+        resLoc = repClient.ResultsLocation
+
+        newState = self.mgr.sysMgr.getNextSystemState(systemCim, jobCim)
+        self.failUnlessEqual(newState, None)
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+            [
+                ('register_cim',
+                    (
+                        cimParams(host='1.2.3.4',
+                            port=5989,
+                            eventUuid='really-unique-id',
+                            clientKey=testsxml.pkey_pem,
+                            clientCert=testsxml.x509_pem,
+                            targetName=None,
+                            targetType=None,
+                            instanceId=None),
+                        resLoc(path='/api/inventory/systems/%s' %
+                                systemCim.pk,
+                            port=80),
+                    ),
+                    dict(requiredNetwork=None, zone='Local rBuilder'),
+                ),
+            ])
+
+        # Clean the deck
+        del self.mgr.repeaterMgr.repeaterClient.methodsCalled[:]
+
+        newState = self.mgr.sysMgr.getNextSystemState(systemWmi, jobWmi)
+        self.failUnlessEqual(newState,
+            models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED)
+        # Being a WMI system, we need credentials
+        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
+            [])
 
 class TargetSystemImportTest(XMLTestCase):
     fixtures = ['users', 'targets']
