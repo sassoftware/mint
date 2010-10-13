@@ -448,8 +448,8 @@ system_states_xml = """\
       <created_date>2010-09-03T18:23:42.671647+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/inventory/system_states/11">
-    <description>Invalid credentials</description>
-    <name>credentials-required</name>
+    <description>Unmanaged: Invalid credentials</description>
+    <name>unmanaged-credentials</name>
     <system_state_id>11</system_state_id>
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/12">
