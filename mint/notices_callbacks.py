@@ -130,7 +130,6 @@ class PackageNoticesCallback(NoticesCallback):
     _labelTitle = "Package Build"
 
     def _notify(self, troveBuilder, job):
-        import epdb; epdb.server()  
         troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
         self.refreshCachedUpdates(troveBinaries)
         title, buildDate = self.getJobMeta(job, troveBinaries)
