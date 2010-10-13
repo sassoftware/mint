@@ -2682,6 +2682,31 @@ class SystemVersionsTestCase(XMLTestCase):
         self.trove = trove
         self.trove2 = trove2
 
+    def testRefreshCachedUpdates(self):
+        self._saveTrove()
+        name = self.trove.name
+        label = self.trove.version.label
+
+        version_update3 = models.Version()
+        version_update3.fromConaryVersion(versions.ThawVersion(
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1234567893.14:1-5-1'))
+        version_update3.flavor = \
+            '~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)'
+        version_update3.save()
+
+        def mock_set_available_updates(self, trove, *args, **kwargs):
+            trove.available_updates.add(version_update3)
+
+        manager.versionmgr.VersionManager.set_available_updates = \
+            mock_set_available_updates
+
+        self.mgr.versionMgr.refreshCachedUpdates(name, label)
+        update = self.trove.available_updates.all()
+        self.assertEquals(len(update), 1)
+        update = update[0]
+        self.assertEquals(update.full,
+            '/clover.eng.rpath.com@rpath:clover-1-devel/1-5-1')
+
     def testGetSystemWithVersion(self):
         system = self._saveSystem()
         self._saveTrove()
