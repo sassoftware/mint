@@ -278,6 +278,14 @@
     <field type="CharField" name="name">mothballed</field>
     <field type="CharField" name="description">Retired</field>
   </object>
+  <object pk="11" model="inventory.systemstate">
+    <field type="CharField" name="name">credentials-required</field>
+    <field type="CharField" name="description">Invalid credentials</field>
+  </object>
+  <object pk="12" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-credentials</field>
+    <field type="CharField" name="description">Not responding: invalid credentials</field>
+  </object>
   <object pk="1" model="inventory.jobstate">
     <field type="CharField" name="name">Queued</field>
   </object>

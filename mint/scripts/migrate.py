@@ -9,6 +9,9 @@ import os
 import sys
 import time
 
+import datetime
+from dateutil import tz
+
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
 from mint import userlevels
@@ -1494,7 +1497,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 8)
+    Version = (51, 9)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1628,6 +1631,29 @@ class MigrateTo_51(SchemaMigration):
 
         cu.execute("""update inventory_system_state set description='Initial synchronization pending' where name='registered'""")
         
+        return True
+    
+    def migrate9(self):
+        cu = self.db.cursor()
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('credentials-required',
+                 'Invalid credentials',
+                 %s)
+        """ % str(datetime.datetime.now(tz.tzutc())))
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('non-responsive-credentials',
+                 'Not responding: invalid credentials',
+                 %s)
+        """ % str(datetime.datetime.now(tz.tzutc())))
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

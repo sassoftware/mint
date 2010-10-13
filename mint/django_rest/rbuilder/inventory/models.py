@@ -212,6 +212,9 @@ class SystemState(modellib.XObjIdModel):
     UNMANAGED = "unmanaged"
     UNMANAGED_DESC = "Unmanaged"
     
+    CREDENTIALS_REQUIRED = "credentials-required"
+    CREDENTIALS_REQUIRED_DESC = "Invalid credentials"
+    
     REGISTERED = "registered"
     REGISTERED_DESC = "Initial synchronization pending"
     
@@ -233,6 +236,9 @@ class SystemState(modellib.XObjIdModel):
     NONRESPONSIVE_SUSPENDED = "non-responsive-suspended"
     NONRESPONSIVE_SUSPENDED_DESC = "Not responding: suspended"
     
+    NONRESPONSIVE_CREDENTIALS = "non-responsive-credentials"
+    NONRESPONSIVE_CREDENTIALS_DESC = "Not responding: invalid credentials"
+    
     DEAD = "dead"
     DEAD_DESC = "Stale"
     
@@ -241,6 +247,7 @@ class SystemState(modellib.XObjIdModel):
 
     STATE_CHOICES = (
         (UNMANAGED, UNMANAGED_DESC),
+        (CREDENTIALS_REQUIRED, CREDENTIALS_REQUIRED_DESC),
         (REGISTERED, REGISTERED_DESC),
         (RESPONSIVE, RESPONSIVE_DESC),
         (NONRESPONSIVE, NONRESPONSIVE_DESC),
@@ -248,6 +255,7 @@ class SystemState(modellib.XObjIdModel):
         (NONRESPONSIVE_HOST, NONRESPONSIVE_HOST_DESC),
         (NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SHUTDOWN_DESC),
         (NONRESPONSIVE_SUSPENDED, NONRESPONSIVE_SUSPENDED_DESC),
+        (NONRESPONSIVE_CREDENTIALS, NONRESPONSIVE_CREDENTIALS_DESC),
         (DEAD, DEAD_DESC),
         (MOTHBALLED, MOTHBALLED_DESC),
     )

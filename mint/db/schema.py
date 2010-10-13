@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 8)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 9)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1417,6 +1417,7 @@ def _addSystemStates(db, cfg):
     changed |= _addTableRows(db, 'inventory_system_state', 'name',
             [
                 dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="credentials-required", description="Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="non-responsive-unknown", description="Not responding: unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
@@ -1424,6 +1425,7 @@ def _addSystemStates(db, cfg):
                 dict(name="non-responsive-host", description="Not responding: host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="non-responsive-shutdown", description="Not responding: shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="non-responsive-suspended", description="Not responding: suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-credentials", description="Not responding: invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
             ])
