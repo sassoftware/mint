@@ -1574,7 +1574,7 @@ def _addManagementInterfaces(db):
     
     changed |= _addTableRows(db, 'inventory_management_interface', 'name',
             [dict(name='wmi',
-                  description='Windows Management Instrumentation (WMI)"',
+                  description='Windows Management Instrumentation (WMI)',
                   port=135,
                   created_date=str(datetime.datetime.now(tz.tzutc())),
                   credentials_descriptor=wmi_credentials_descriptor,
