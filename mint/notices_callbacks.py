@@ -196,7 +196,7 @@ class PackageNoticesCallback(NoticesCallback):
         mgr = manager.Manager()
         for trvName, trvVersion in troveBinaries:
             trvLabel = trvVersion.trailingLabel().asString()
-            mgr.refreshCachedUpdates(trvName, trvVersion)
+            mgr.refreshCachedUpdates(trvName, trvLabel)
             
 
 class ApplianceNoticesCallback(PackageNoticesCallback):
