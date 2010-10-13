@@ -664,8 +664,8 @@ class SystemTypesTestCase(XMLTestCase):
     def testGetWindowsBuildServiceNodes(self):
         models.SystemType.objects.all().delete()
         models.SystemType.objects.all().delete()
-        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE, 
-            description=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE_DESC, infrastructure=True)
+        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE, 
+            description=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC, infrastructure=True)
         st.save()
         system = models.System()
         system.name = 'testsystemname'

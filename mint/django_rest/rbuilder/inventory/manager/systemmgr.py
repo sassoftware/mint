@@ -459,7 +459,7 @@ class SystemManager(base.BaseManager):
     def getWindowsBuildServiceNodes(self):
         nodes = []
         try:
-            system_type = models.SystemType.objects.get(name=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+            system_type = self.getWindowsBuildServiceSystemType()
             systems = self.getSystemTypeSystems(system_type.system_type_id)
             nodes = systems and systems.system or []
         except ObjectDoesNotExist:
