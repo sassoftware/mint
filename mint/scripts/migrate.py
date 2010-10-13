@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 11)
+    Version = (51, 12)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1677,6 +1677,14 @@ class MigrateTo_51(SchemaMigration):
                  ?)
         """, str(datetime.datetime.now(tz.tzutc())))
 
+        return True
+    
+    def migrate12(self):
+        cu = self.db.cursor()
+
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='wmi'""" , schema.wmi_credentials_descriptor)
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='cim'""" , schema.cim_credentials_descriptor)
+        
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
