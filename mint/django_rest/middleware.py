@@ -51,12 +51,22 @@ class ExceptionLoggerMiddleware(object):
                 'request_params'    : request.GET,
                 'is_secure'         : request.is_secure,
                 }
+        if request.raw_post_data:
+            info.update(raw_post_data = request.raw_post_data)
         try:
             logerror.logErrorAndEmail(request.cfg, e_type, e_value,
                     e_tb, 'API call (django handler)', info, doEmail=doEmail)
         except mint_error.MailError, err:
             log.error("Error sending mail: %s", str(err))
 
+
+class RequestSanitizationMiddleware(object):
+    def process_request(self, request):
+        # django will do bad things if the path doesn't end with / - it uses
+        # urljoin which strips off the last component
+        if not request.path.endswith('/'):
+            request.path += '/'
+        return None
 
 class SetMethodRequestMiddleware(object):
     
@@ -119,9 +129,17 @@ class SetMintConfigMiddleware(object):
         else:
             cfgPath = config.RBUILDER_CONFIG
         cfg = config.getConfig(cfgPath)
+
         request.cfg = cfg
 
         return None
+
+class SetMintConfigLocalMiddleware(object):
+
+    def process_request(self, request):
+        cfg = config.MintConfig()
+        cfg.siteHost = 'localhost.localdomain'
+        request.cfg = cfg
 
 class AddCommentsMiddleware(object):
    

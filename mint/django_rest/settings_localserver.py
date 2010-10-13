@@ -29,12 +29,9 @@ AUTHENTICATION_BACKENDS = (
 MIDDLEWARE_CLASSES = tuple(
     x for x in MIDDLEWARE_CLASSES
         if x != 'mint.django_rest.middleware.SetMintConfigMiddleware')
-
-# Uncomment this to disable the comments middleware for local mode
-#MIDDLEWARE_CLASSES = tuple(
-#    x for x in MIDDLEWARE_CLASSES
-#        if x != 'mint.django_rest.middleware.AddCommentsMiddleware')
-# MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + ('mint.django_rest.middleware.LocalSetMintAdminMiddleware', )
+MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
+    ('mint.django_rest.middleware.LocalSetMintAdminMiddleware',
+     'mint.django_rest.middleware.SetMintConfigLocalMiddleware')
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True

@@ -194,6 +194,17 @@ class BaseManager(models.Manager):
                                     djangofields.NullBooleanField)):
                 val = str(val)
                 val = (val.lower() == str(True).lower())
+            elif isinstance(field, djangofields.XMLField):
+                if not val._xobj.elements:
+                    # No children for this element
+                    continue
+                subelementTag = val._xobj.tag
+                subelementName = val._xobj.elements[0]
+                subelement = getattr(val, subelementName, None)
+                if subelement is None:
+                    continue
+                val = xobj.toxml(subelement, tag=subelementTag,
+                    prettyPrint=False, xml_declaration=False)
             elif isinstance(field, DateTimeUtcField):
                 # Empty string is not valid, explicitly convert to None
                 if val:
@@ -419,6 +430,13 @@ class JobManager(BaseManager):
         model.event_type = mclass.objects.get(name=mclass.SYSTEM_REGISTRATION)
         return oldModel, model
 
+class CredentialsManager(BaseManager):
+    def load_from_object(self, obj, request, save=False):
+        model = self.model(system=None)
+        for k, v in obj.__dict__.items():
+            setattr(model, k, v)
+        return model
+
 class SystemManager(BaseManager):
     
     def load_from_db(self, model_inst, accessors):
@@ -498,6 +516,8 @@ class SystemManager(BaseManager):
     def set_m2m_accessor(self, model, m2m_accessor, rel_mod):
         # XXX Need a better way to handle this
         if m2m_accessor == 'installed_software':
+            if model.new_versions is None:
+                model.new_versions = []
             model.new_versions.append(rel_mod)
         elif m2m_accessor == 'jobs':
             self._handleSystemJob(model, rel_mod)
@@ -772,6 +792,10 @@ class XObjModel(models.Model):
                 elif isinstance(field, (djangofields.BooleanField,
                                         djangofields.NullBooleanField)):
                     val = str(val).lower()
+                elif isinstance(field, djangofields.XMLField):
+                    if val is None:
+                        continue
+                    val = xobj.parse(val)
                 setattr(xobj_model, key, val)
             # TODO: is this still needed, we already called serialize_hrefs.?
             elif isinstance(val, XObjHrefModel):
@@ -1125,13 +1149,25 @@ class Cache(object):
                     for obj in self._pk.values())
             return self._maps[keyName][keyValue]
 
+        def all(self):
+            return self._pk.values()
+
     @classmethod
-    def get(cls, modelClass, **kwargs):
+    def _getCachedClass(cls, modelClass):
         cached = cls._cache.get(modelClass, None)
         if cached is None:
             cached = cls._cache[modelClass] = cls._cacheData(modelClass)
+        return cached
+
+    @classmethod
+    def get(cls, modelClass, **kwargs):
+        cached = cls._getCachedClass(modelClass)
         keyName, keyValue = kwargs.items()[0]
         return cached.get(keyName, keyValue)
+
+    @classmethod
+    def all(cls, modelClass):
+        return cls._getCachedClass(modelClass).all()
 
     @classmethod
     def reset(cls):

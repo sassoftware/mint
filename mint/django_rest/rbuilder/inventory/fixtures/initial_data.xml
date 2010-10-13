@@ -46,6 +46,107 @@
 	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2000</field>
 	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2000</field>
 	</object>
+	<object pk="1" model="inventory.managementinterface">
+        <field type="CharField" name="name">cim</field>
+        <field type="CharField" name="description">Common Information Model (CIM)</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="IntegerField" name="port">5989</field>
+        <field type="NullBooleanField" name="credentials_readonly">True</field>
+        <field type="TextField" name="credentials_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field>
+      <name>ssl_client_certificate</name>
+      <descriptions>
+        <desc>Client Certificate</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The certificate must start with '-----BEGIN CERTIFICATE-----', end with '-----END CERTIFICATE-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+      <allowFileContent>true</allowFileContent>
+    </field>
+    <field>
+      <name>ssl_client_key</name>
+      <descriptions>
+        <desc>Client Private Key</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The key must start with '-----BEGIN PRIVATE KEY-----', end with '----END PRIVATE KEY-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN (\S+ )?PRIVATE KEY-----.*-----END (\S+ )?PRIVATE KEY-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+     <allowFileContent>true</allowFileContent>
+    </field>
+  </dataFields>
+</descriptor>]]></field>
+    </object>
+    <object pk="2" model="inventory.managementinterface">
+        <field type="CharField" name="name">wmi</field>
+        <field type="CharField" name="description">Windows Management Instrumentation (WMI)</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:38</field>
+        <field type="IntegerField" name="port">135</field>
+        <field type="NullBooleanField" name="credentials_readonly">False</field>
+        <field type="TextField" name="credentials_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field><name>domain</name>
+      <descriptions>
+        <desc>Windows Domain</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>username</name>
+      <descriptions>
+        <desc>User</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>password</name>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <password>true</password>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>]]></field>
+    </object>
+    <object pk="1" model="inventory.systemtype">
+        <field type="CharField" name="name">inventory</field>
+        <field type="CharField" name="description">Inventory</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">False</field>
+    </object>
+    <object pk="2" model="inventory.systemtype">
+        <field type="CharField" name="name">infrastructure-management-node</field>
+        <field type="CharField" name="description">rPath Update Service (Infrastructure)</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">True</field>
+    </object>
+    <object pk="3" model="inventory.systemtype">
+        <field type="CharField" name="name">infrastructure-windows-build-node</field>
+        <field type="CharField" name="description">rPath Windows Build Service (Infrastructure)"</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">True</field>
+    </object>
     <object pk="1" model="inventory.eventtype">
         <field type="CharField" name="name">system registration</field>
         <field type="CharField" name="description">on-demand registration event</field>
@@ -86,6 +187,16 @@
         <field type="CharField" name="description">wait for a launched system's network information</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
+    <object pk="9" model="inventory.eventtype">
+        <field type="CharField" name="name">system detect management interface</field>
+        <field type="CharField" name="description">detect a system's management interface</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="10" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system detect management interface</field>
+        <field type="CharField" name="description">on-demand detect a system's management interface</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>
@@ -101,9 +212,9 @@
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
         <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
-        <field type="NullBooleanField" name="management_node">True</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="type" rel="ManyToOneRel">2</field>
     </object>
   <object pk="2" model="inventory.managementnode">
         <field type="NullBooleanField" name="local"><None></None></field>
@@ -133,7 +244,7 @@
   </object>
   <object pk="2" model="inventory.systemstate">
     <field type="CharField" name="name">registered</field>
-    <field type="CharField" name="description">Polling</field>
+    <field type="CharField" name="description">Initial synchronization pending</field>
   </object>
   <object pk="3" model="inventory.systemstate">
     <field type="CharField" name="name">responsive</field>
@@ -141,23 +252,23 @@
   </object>
   <object pk="4" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-unknown</field>
-    <field type="CharField" name="description">Not responding: unknown</field>
+    <field type="CharField" name="description">Not responding: Unknown</field>
   </object>
   <object pk="5" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-net</field>
-    <field type="CharField" name="description">Not responding: network unreachable</field>
+    <field type="CharField" name="description">Not responding: Network unreachable</field>
   </object>
   <object pk="6" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-host</field>
-    <field type="CharField" name="description">Not responding: host unreachable</field>
+    <field type="CharField" name="description">Not responding: Host unreachable</field>
   </object>
   <object pk="7" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-shutdown</field>
-    <field type="CharField" name="description">Not responding: shutdown</field>
+    <field type="CharField" name="description">Not responding: Shutdown</field>
   </object>
   <object pk="8" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-suspended</field>
-    <field type="CharField" name="description">Not responding: suspended</field>
+    <field type="CharField" name="description">Not responding: Suspended</field>
   </object>
   <object pk="9" model="inventory.systemstate">
     <field type="CharField" name="name">dead</field>
@@ -166,6 +277,14 @@
   <object pk="10" model="inventory.systemstate">
     <field type="CharField" name="name">mothballed</field>
     <field type="CharField" name="description">Retired</field>
+  </object>
+  <object pk="11" model="inventory.systemstate">
+    <field type="CharField" name="name">unmanaged-credentials</field>
+    <field type="CharField" name="description">Unmanaged: Invalid credentials</field>
+  </object>
+  <object pk="12" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-credentials</field>
+    <field type="CharField" name="description">Not responding: Invalid credentials</field>
   </object>
   <object pk="1" model="inventory.jobstate">
     <field type="CharField" name="name">Queued</field>

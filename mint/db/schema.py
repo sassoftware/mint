@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(50, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 11)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1087,6 +1087,34 @@ def _createInventorySchema(db, cfg):
         db.tables['inventory_system_state'] = []
         changed = True
         changed |= _addSystemStates(db, cfg)
+        
+    if 'inventory_management_interface' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_management_interface" (
+                "management_interface_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL UNIQUE,
+                "description" varchar(8092) NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "port" integer NOT NULL,
+                "credentials_descriptor" text NOT NULL,
+                "credentials_readonly" bool
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_management_interface'] = []
+        changed |= _addManagementInterfaces(db)
+        changed = True
+        
+    if 'inventory_system_type' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_system_type" (
+                "system_type_id" %(PRIMARYKEY)s,
+                "name" varchar(8092) NOT NULL UNIQUE,
+                "description" varchar(8092) NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "infrastructure" bool
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['inventory_system_type'] = []
+        changed |= _addSystemTypes(db)
+        changed = True
 
     if 'inventory_system' not in db.tables:
         cu.execute("""
@@ -1113,9 +1141,13 @@ def _createInventorySchema(db, cfg):
                 "launching_user_id" integer REFERENCES "users" ("userid"),
                 "current_state_id" integer NOT NULL
                     REFERENCES "inventory_system_state" ("system_state_id"),
-                "management_node" bool,
                 "managing_zone_id" integer NOT NULL
-                    REFERENCES "inventory_zone" ("zone_id")
+                    REFERENCES "inventory_zone" ("zone_id"),
+                "management_interface_id" integer 
+                    REFERENCES "inventory_management_interface" ("management_interface_id"),
+                "type_id" integer 
+                    REFERENCES "inventory_system_type" ("system_type_id"),
+                "credentials" text
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         changed = True
@@ -1239,7 +1271,13 @@ def _createInventorySchema(db, cfg):
                   priority=105),
              dict(name="system launch wait",
                   description="wait for a launched system's network information",
-                  priority=105)
+                  priority=105),
+             dict(name="system detect management interface",
+                  description="detect a system''s management interface",
+                  priority=50),
+             dict(name="immediate system detect management interface",
+                  description="on-demand detect a system''s management interface",
+                  priority=105),
             ])
         
     if 'inventory_system_event' not in db.tables:
@@ -1291,6 +1329,9 @@ def _createInventorySchema(db, cfg):
                     REFERENCES inventory_job_state,
                 event_type_id integer NOT NULL
                     REFERENCES inventory_event_type,
+                status_code INTEGER NOT NULL DEFAULT 100,
+                status_text VARCHAR NOT NULL DEFAULT 'Initializing',
+                status_detail VARCHAR,
                 time_created timestamp with time zone NOT NULL,
                 time_updated timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
@@ -1379,13 +1420,15 @@ def _addSystemStates(db, cfg):
     changed |= _addTableRows(db, 'inventory_system_state', 'name',
             [
                 dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="registered", description="Polling", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-unknown", description="Not responding: unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-net", description="Not responding: network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-host", description="Not responding: host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-shutdown", description="Not responding: shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-suspended", description="Not responding: suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-unknown", description="Not responding: Unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-net", description="Not responding: Network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-host", description="Not responding: Host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-shutdown", description="Not responding: Shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-suspended", description="Not responding: Suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
             ])
@@ -1409,6 +1452,11 @@ def _addManagementZone(db, cfg):
     ids = cu.fetchall()
     if len(ids) == 1:
         zoneId = ids[0][0]
+        
+        # get the system type id
+        cu.execute("SELECT system_type_id from inventory_system_type where name='infrastructure-management-node'")
+        ids = cu.fetchall()
+        systemTypeId = ids[0][0]
     
         cu.execute("SELECT system_state_id FROM inventory_system_state WHERE name = 'unmanaged'")
         stateId = cu.fetchone()[0]
@@ -1416,9 +1464,9 @@ def _addManagementZone(db, cfg):
         changed |= _addTableRows(db, 'inventory_system', 'name',
                 [dict(name="rPath Update Service", 
                       description='Local rPath Update Service',
-                      management_node='true',
                       current_state_id=stateId,
                       managing_zone_id=zoneId,
+                      type_id=systemTypeId,
                       created_date=str(datetime.datetime.now(tz.tzutc())))])
         
         # get the system id
@@ -1435,9 +1483,131 @@ def _addManagementZone(db, cfg):
                       created_date=str(datetime.datetime.now(tz.tzutc())))])
             # add the management node
             changed |= _addTableRows(db, 'inventory_zone_management_node', 'system_ptr_id',
-                    [dict(system_ptr_id=systemId, 
+                    [dict(system_ptr_id=systemId,
                           local='true', 
                           zone_id=zoneId)])
+    
+    return changed
+
+cim_credentials_descriptor=r"""\
+<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field>
+      <name>ssl_client_certificate</name>
+      <descriptions>
+        <desc>Client Certificate</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The certificate must start with '-----BEGIN CERTIFICATE-----', end with '-----END CERTIFICATE-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+      <allowFileContent>true</allowFileContent>
+    </field>
+    <field>
+      <name>ssl_client_key</name>
+      <descriptions>
+        <desc>Client Private Key</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The key must start with '-----BEGIN PRIVATE KEY-----', end with '----END PRIVATE KEY-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN (\S+ )?PRIVATE KEY-----.*-----END (\S+ )?PRIVATE KEY-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+     <allowFileContent>true</allowFileContent>
+    </field>
+  </dataFields>
+</descriptor>"""
+
+wmi_credentials_descriptor=r"""\
+<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field><name>domain</name>
+      <descriptions>
+        <desc>Windows Domain</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>username</name>
+      <descriptions>
+        <desc>User</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>password</name>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <password>true</password>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>"""
+
+def _addManagementInterfaces(db):
+    changed = False
+    
+    changed |= _addTableRows(db, 'inventory_management_interface', 'name',
+            [dict(name='cim',
+                  description='Common Information Model (CIM)',
+                  port=5989,
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  credentials_descriptor=cim_credentials_descriptor,
+                  credentials_readonly=True
+            )])
+    
+    changed |= _addTableRows(db, 'inventory_management_interface', 'name',
+            [dict(name='wmi',
+                  description='Windows Management Instrumentation (WMI)"',
+                  port=135,
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  credentials_descriptor=wmi_credentials_descriptor,
+                  credentials_readonly=False
+            )])
+    
+    return changed
+
+def _addSystemTypes(db):
+    changed = False
+    
+    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+            [dict(name='inventory',
+                  description='Inventory',
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  infrastructure=False
+            )])
+    
+    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+            [dict(name='infrastructure-management-node',
+                  description='rPath Update Service (Infrastructure)',
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  infrastructure=True
+            )])
+    
+    changed |= _addTableRows(db, 'inventory_system_type', 'name',
+            [dict(name='infrastructure-windows-build-node',
+                  description='rPath Windows Build Service (Infrastructure)',
+                  created_date=str(datetime.datetime.now(tz.tzutc())),
+                  infrastructure=True
+            )])
     
     return changed
 

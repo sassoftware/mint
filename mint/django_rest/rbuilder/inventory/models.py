@@ -15,6 +15,7 @@ from conary.deps import deps
 from django.conf import settings
 from django.db import connection, models
 from django.db.backends import signals
+from django.core.exceptions import ObjectDoesNotExist
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
@@ -66,6 +67,8 @@ class Inventory(modellib.XObjModel):
     def __init__(self):
         self.zones = modellib.XObjHrefModel('zones')
         self.management_nodes = modellib.XObjHrefModel('management_nodes')
+        self.management_interfaces = modellib.XObjHrefModel('management_interfaces')
+        self.system_types = modellib.XObjHrefModel('system_types')
         self.networks = modellib.XObjHrefModel('networks')
         self.systems = modellib.XObjHrefModel('systems')
         self.log = modellib.XObjHrefModel('log')
@@ -159,6 +162,24 @@ class Zones(modellib.XObjModel):
                 elements=['zone'])
     list_fields = ['zone']
     
+class Credentials(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'credentials',
+                attributes = {'id':str})
+    objects = modellib.CredentialsManager()
+    view_name = 'SystemCredentials'
+
+    def __init__(self, system, *args, **kwargs):
+        self._system = system
+        modellib.XObjIdModel.__init__(self, *args, **kwargs)
+
+    def to_xml(self, request=None):
+        self.id = self.get_absolute_url(request, model=self,
+            parents=[self._system])
+        return xobj.toxml(self)
+
 class Zone(modellib.XObjIdModel):
     LOCAL_ZONE = "Local rBuilder"
     class Meta:
@@ -191,6 +212,9 @@ class SystemState(modellib.XObjIdModel):
     UNMANAGED = "unmanaged"
     UNMANAGED_DESC = "Unmanaged"
     
+    UNMANAGED_CREDENTIALS_REQUIRED = "unmanaged-credentials"
+    UNMANAGED_CREDENTIALS_REQUIRED_DESC = "Unmanaged: Invalid credentials"
+    
     REGISTERED = "registered"
     REGISTERED_DESC = "Initial synchronization pending"
     
@@ -198,19 +222,22 @@ class SystemState(modellib.XObjIdModel):
     RESPONSIVE_DESC = "Online"
     
     NONRESPONSIVE = "non-responsive-unknown"
-    NONRESPONSIVE_DESC = "Not responding: unknown"
+    NONRESPONSIVE_DESC = "Not responding: Unknown"
     
     NONRESPONSIVE_NET = "non-responsive-net"
-    NONRESPONSIVE_NET_DESC = "Not responding: network unreachable"
+    NONRESPONSIVE_NET_DESC = "Not responding: Network unreachable"
     
     NONRESPONSIVE_HOST = "non-responsive-host"
-    NONRESPONSIVE_HOST_DESC = "Not responding: host unreachable"
+    NONRESPONSIVE_HOST_DESC = "Not responding: Host unreachable"
     
     NONRESPONSIVE_SHUTDOWN = "non-responsive-shutdown"
-    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: shutdown"
+    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: Hhutdown"
     
     NONRESPONSIVE_SUSPENDED = "non-responsive-suspended"
-    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: suspended"
+    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: Suspended"
+    
+    NONRESPONSIVE_CREDENTIALS = "non-responsive-credentials"
+    NONRESPONSIVE_CREDENTIALS_DESC = "Not responding: Invalid credentials"
     
     DEAD = "dead"
     DEAD_DESC = "Stale"
@@ -220,6 +247,7 @@ class SystemState(modellib.XObjIdModel):
 
     STATE_CHOICES = (
         (UNMANAGED, UNMANAGED_DESC),
+        (UNMANAGED_CREDENTIALS_REQUIRED, UNMANAGED_CREDENTIALS_REQUIRED_DESC),
         (REGISTERED, REGISTERED_DESC),
         (RESPONSIVE, RESPONSIVE_DESC),
         (NONRESPONSIVE, NONRESPONSIVE_DESC),
@@ -227,6 +255,7 @@ class SystemState(modellib.XObjIdModel):
         (NONRESPONSIVE_HOST, NONRESPONSIVE_HOST_DESC),
         (NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SHUTDOWN_DESC),
         (NONRESPONSIVE_SUSPENDED, NONRESPONSIVE_SUSPENDED_DESC),
+        (NONRESPONSIVE_CREDENTIALS, NONRESPONSIVE_CREDENTIALS_DESC),
         (DEAD, DEAD_DESC),
         (MOTHBALLED, MOTHBALLED_DESC),
     )
@@ -236,6 +265,83 @@ class SystemState(modellib.XObjIdModel):
         choices=STATE_CHOICES)
     description = models.CharField(max_length=8092)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
+
+    load_fields = [ name ]
+
+class ManagementInterfaces(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='management_interfaces',
+                elements=['management_interface'])
+    list_fields = ['management_interface']
+    
+class ManagementInterface(modellib.XObjIdModel):
+    XSL = "managementInterface.xsl"
+    class Meta:
+        db_table = 'inventory_management_interface'
+    _xobj = xobj.XObjMetadata(
+                tag = 'management_interface',
+                attributes = {'id':str})
+        
+    CIM = "cim"
+    CIM_DESC = "Common Information Model (CIM)"
+    CIM_PORT = 8443
+    WMI = "wmi"
+    WMI_PORT = 135
+    WMI_DESC = "Windows Management Instrumentation (WMI)"
+
+    CHOICES = (
+        (CIM, CIM_DESC),
+        (WMI, WMI_DESC),
+    )
+        
+    management_interface_id = D(models.AutoField(primary_key=True), "the database ID for the management interface")
+    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the management interface")
+    description = D(models.CharField(max_length=8092), "the description of the management interface")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the management interface was added to inventory (UTC)")
+    port = D(models.IntegerField(null=False), "the port used by the management interface")
+    credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
+    credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
+    
+class SystemTypes(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='system_types',
+                elements=['system_type'])
+    list_fields = ['system_type']
+    
+class SystemType(modellib.XObjIdModel):
+    XSL = "systemType.xsl"
+    class Meta:
+        db_table = 'inventory_system_type'
+    _xobj = xobj.XObjMetadata(
+                tag = 'system_type',
+                attributes = {'id':str})
+    
+    # Don't inline all the systems now.  Do not remove this code!
+    # See https://issues.rpath.com/browse/RBL-7372 for more info
+    _xobj_hidden_accessors = set(['systems',])
+        
+    INVENTORY = "inventory"
+    INVENTORY_DESC = "Inventory"
+    INFRASTRUCTURE_MANAGEMENT_NODE = "infrastructure-management-node"
+    INFRASTRUCTURE_MANAGEMENT_NODE_DESC = "rPath Update Service (Infrastructure)"
+    INFRASTRUCTURE_WINDOWS_BUILD_NODE = "infrastructure-windows-build-node"
+    INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC = "rPath Windows Build Service (Infrastructure)"
+
+    CHOICES = (
+        (INVENTORY, INVENTORY_DESC),
+        (INFRASTRUCTURE_MANAGEMENT_NODE, INFRASTRUCTURE_MANAGEMENT_NODE_DESC),
+        (INFRASTRUCTURE_WINDOWS_BUILD_NODE, INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC),
+    )
+        
+    system_type_id = D(models.AutoField(primary_key=True), "the database ID for the system type")
+    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the system type")
+    description = D(models.CharField(max_length=8092), "the description of the system type")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the system type was added to inventory (UTC)")
+    infrastructure = D(models.NullBooleanField(), "whether or not the system type is infrastructure")
 
     load_fields = [ name ]
 
@@ -307,8 +413,6 @@ class System(modellib.XObjIdModel):
         "the current state of the system")
     installed_software = D(models.ManyToManyField('Trove', null=True),
         "a collection of top-level items installed on the system")
-    management_node = D(models.NullBooleanField(),
-        "whether or not this system is a management node")
     managing_zone = D(modellib.ForeignKey(Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
@@ -321,10 +425,17 @@ class System(modellib.XObjIdModel):
         "a UUID used to link system events with their returned responses")
     boot_uuid = D(modellib.SyntheticField(),
         "a UUID used for tracking systems registering at startup time")
+    management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
+        "the management interface used to communicate with the system")
+    credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
+    type = D(modellib.SerializedForeignKey(SystemType, null=False, related_name='systems'),
+        "the type of the system")
 
     load_fields = [local_uuid]
 
-    new_versions = []
+    # We need to distinguish between an <installed_software> node not being
+    # present at all, and being present and empty
+    new_versions = None
     lastJob = None
     oldModel = None
 
@@ -334,6 +445,15 @@ class System(modellib.XObjIdModel):
                 name = SystemState.UNMANAGED)
         if not self.name:
             self.name = self.hostname and self.hostname or ''
+        if not self.agent_port and self.management_interface:
+            self.agent_port = self.management_interface.port
+        try:
+            if not self.type:
+                self.type = SystemType.objects.get(
+                    name = SystemType.INVENTORY)
+        except ObjectDoesNotExist:
+            self.type = SystemType.objects.get(
+                    name = SystemType.INVENTORY)
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
 
@@ -396,6 +516,18 @@ class System(modellib.XObjIdModel):
             values=values)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
 
+        if request:
+            class CredentialsHref(object): 
+                _xobj = xobj.XObjMetadata(
+                            tag='credentials',
+                            attributes={'href':str})
+
+                def __init__(self, href):
+                    self.href = href
+
+            xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
+                '%s/credentials' % self.get_absolute_url(request)))
+
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
                 elements = ['queued_jobs', 'completed_jobs',
@@ -452,7 +584,12 @@ class ManagementNode(System):
     objects = modellib.ManagementNodeManager()
     
     def save(self, *args, **kw):
-        self.management_node = True
+        try:
+            self.type = SystemType.objects.get(
+                name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+        except ObjectDoesNotExist:
+            self.type = SystemType.objects.get(
+                name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         System.save(self, *args, **kw)
 
 class SystemTargetCredentials(modellib.XObjModel):
@@ -506,6 +643,16 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_SHUTDOWN_PRIORITY = 50
     SYSTEM_SHUTDOWN_DESCRIPTION = 'shutdown a system'
 
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE = 'system detect management interface'
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_PRIORITY = 50
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC = \
+        "detect a system's management interface"
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE = \
+        'immediate system detect management interface'
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_PRIORITY = 105
+    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC = \
+        "on-demand detect a system's management interface"
+
     SYSTEM_SHUTDOWN_IMMEDIATE = 'immediate system shutdown'
     SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
@@ -529,6 +676,10 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION),
         (LAUNCH_WAIT_FOR_NETWORK,
          LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION),
+        (SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+         SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC),
+        (SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
+         SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
     )
     name = APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES))
@@ -597,6 +748,9 @@ class Job(modellib.XObjIdModel):
     job_uuid = models.CharField(max_length=64, unique=True)
     job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
         related_name='jobs')
+    status_code = models.IntegerField(null=False, default=100)
+    status_text = models.TextField(null=False, default='Initializing')
+    status_detail = XObjHidden(models.TextField(null=True))
     event_type = APIReadOnly(modellib.InlinedForeignKey(EventType,
         visible='name'))
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
@@ -604,18 +758,38 @@ class Job(modellib.XObjIdModel):
 
     load_fields = [ job_uuid ]
 
-    def getRmakeJob(self):  
-        if not self.job_uuid:
-            return None
-        else:
-            from rmake3 import client
-            RMAKE_ADDRESS = 'http://localhost:9998'
-            rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
-            rmakeJobs = rmakeClient.getJobs([self.job_uuid])
-            if rmakeJobs:
-                return rmakeJobs[0]
-            else:
-                return None
+    def getRmakeJob(self):
+        # XXX we should be using the repeater client for this
+        from rmake3 import client
+        RMAKE_ADDRESS = 'http://localhost:9998'
+        rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
+        rmakeJobs = rmakeClient.getJobs([self.job_uuid])
+        if rmakeJobs:
+            return rmakeJobs[0]
+        return None
+
+    def setValuesFromRmake(self):
+        runningState = modellib.Cache.get(JobState,
+            name=JobState.RUNNING)
+        if self.job_state_id != runningState.pk:
+            return
+        completedState = modellib.Cache.get(JobState,
+            name=JobState.COMPLETED)
+        failedState = modellib.Cache.get(JobState,
+            name=JobState.FAILED)
+        # This job is still running, we need to poll rmake to get its
+        # status
+        job = self.getRmakeJob()
+        if job:
+            self.status_code = job.status.code
+            self.status_text = job.status.text
+            self.status_detail = job.status.detail
+            if job.status.final:
+                if job.status.completed:
+                    self.job_state = completedState
+                else:
+                    self.job_state = failedState
+            self.save()
 
     def get_absolute_url(self, request, parents=None, model=None):
         if parents:
@@ -627,9 +801,6 @@ class Job(modellib.XObjIdModel):
     def serialize(self, request=None, values=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request,
             values=values)
-        rmakeJob = self.getRmakeJob()
-        if rmakeJob:
-            xobj_model.job_log = rmakeJob.status.text
         xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
             pk=self.event_type_id).name
         xobj_model.event_type = None
@@ -794,7 +965,7 @@ class Trove(modellib.XObjIdModel):
 
     def getFlavor(self):
         if not self.flavor:
-            return None
+            return deps.parseFlavor('')
         return deps.parseFlavor(self.flavor)
 
     def getLabel(self):

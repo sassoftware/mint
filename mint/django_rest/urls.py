@@ -62,6 +62,25 @@ urlpatterns = patterns('',
     url(r'^api/inventory/zones/(\d+)/management_nodes/(\d+)/?$',
         inventoryviews.InventoryZoneManagementNodeService(),
         name='ManagementNode'),
+        
+    # Management Interfaces
+    url(r'^api/inventory/management_interfaces/?$',
+        inventoryviews.InventoryManagementInterfaceService(),
+        name='ManagementInterfaces'),
+    url(r'^api/inventory/management_interfaces/(\d+)/?$',
+        inventoryviews.InventoryManagementInterfaceService(),
+        name='ManagementInterface'),
+        
+    # System types
+    url(r'^api/inventory/system_types/?$',
+        inventoryviews.InventorySystemTypeService(),
+        name='SystemTypes'),
+    url(r'^api/inventory/system_types/(\d+)/?$',
+        inventoryviews.InventorySystemTypeService(),
+        name='SystemType'),
+    url(r'^api/inventory/system_types/(?P<system_type_id>\d+)/systems/?$',
+        inventoryviews.InventorySystemTypeSystemsService(),
+        name='Systems'),
        
     # Networks
     url(r'^api/inventory/networks/?$',
@@ -99,6 +118,9 @@ urlpatterns = patterns('',
     url(r'^api/inventory/systems/(?P<system_id>\d+)/installed_software/?$',
         inventoryviews.InventorySystemsInstalledSoftwareService(),
         name='InstalledSoftware'),
+    url(r'^api/inventory/systems/(?P<system_id>\d+)/credentials/?$',
+        inventoryviews.InventorySystemCredentialsServices(),
+        name='SystemCredentials'),
 
     # System Events
     url(r'^api/inventory/system_events/?$',

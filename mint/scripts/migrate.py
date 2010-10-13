@@ -7,7 +7,9 @@
 import logging
 import os
 import sys
-import time
+
+import datetime
+from dateutil import tz
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
@@ -1482,7 +1484,6 @@ class MigrateTo_50(SchemaMigration):
 
     def migrate3(self):
         cu = self.db.cursor()
-        db = self.db
 
         cu.execute("""
             INSERT INTO "inventory_event_type" 
@@ -1492,6 +1493,190 @@ class MigrateTo_50(SchemaMigration):
                  'wait for a launched system''s network information',
                  105)
         """)
+        return True
+
+class MigrateTo_51(SchemaMigration):
+    Version = (51, 11)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        db = self.db
+        changed = False
+        
+        if 'inventory_management_interface' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_management_interface" (
+                    "management_interface_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "port" integer NOT NULL,
+                    "credentials_descriptor" text NOT NULL
+                ) %(TABLEOPTS)s""" % db.keywords)
+            db.tables['inventory_management_interface'] = []
+            changed = True
+        
+        cu.execute("""
+            ALTER TABLE inventory_system
+                ADD COLUMN management_interface_id  INTEGER
+                    REFERENCES inventory_management_interface
+        """)
+        
+        return True
+    
+    def migrate1(self):
+        cu = self.db.cursor()
+        db = self.db
+        
+        cu.execute("ALTER TABLE inventory_management_interface ADD COLUMN credentials_readonly bool")
+        schema._addManagementInterfaces(db)
+        cu.execute("UPDATE inventory_management_interface SET credentials_readonly='true' WHERE name='cim'")
+        cu.execute("UPDATE inventory_management_interface SET credentials_readonly='false' WHERE name='wmi'")
+        
+        return True
+    
+    def migrate2(self):
+        cu = self.db.cursor()
+        
+        cu.execute("UPDATE inventory_management_interface SET port='5989' WHERE name='cim'")
+        
+        return True
+
+    def migrate3(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('system detect management interface',
+                 'detect a system''s management interface',
+                 50)
+        """)
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('immediate system detect management interface',
+                 'on-demand detect a system''s management interface',
+                 105)
+        """)
+        
+        return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        
+        cu.execute("ALTER TABLE inventory_system ADD COLUMN credentials text")
+        
+        return True
+    
+    def migrate5(self):
+        cu = self.db.cursor()
+        changed = True
+        
+        if 'inventory_system_type' not in self.db.tables:
+            cu.execute("""
+                CREATE TABLE "inventory_system_type" (
+                    "system_type_id" %(PRIMARYKEY)s,
+                    "name" varchar(8092) NOT NULL UNIQUE,
+                    "description" varchar(8092) NOT NULL,
+                    "created_date" timestamp with time zone NOT NULL,
+                    "infrastructure" bool
+                ) %(TABLEOPTS)s""" % self.db.keywords)
+            self.db.tables['inventory_system_type'] = []
+            changed |= schema._addSystemTypes(self.db)
+            changed = True
+            
+        cu.execute("""
+            ALTER TABLE inventory_system
+                ADD COLUMN type_id  INTEGER
+                    REFERENCES inventory_system_type
+        """)
+            
+        # update type on the rUS
+        cu.execute("SELECT system_type_id from inventory_system_type where name='infrastructure-management-node'")
+        ids = cu.fetchall()
+        mgmtNodeId = ids[0][0]
+        cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name='rPath Update Service'" % mgmtNodeId)
+        
+        # update type on the other systems
+        cu.execute("SELECT system_type_id from inventory_system_type where name='inventory'")
+        ids = cu.fetchall()
+        invTypeId = ids[0][0]
+        cu.execute("UPDATE inventory_system SET type_id='%d' WHERE name<>'rPath Update Service'" % invTypeId)
+        
+        return True
+    
+    def migrate6(self):
+        cu = self.db.cursor()
+
+        cu.execute("""ALTER TABLE inventory_system DROP COLUMN management_node""")
+        
+        return True
+    
+    def migrate7(self):
+        cu = self.db.cursor()
+
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='wmi'""" , schema.wmi_credentials_descriptor)
+        cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='cim'""" , schema.cim_credentials_descriptor)
+        
+        return True
+    
+    def migrate8(self):
+        cu = self.db.cursor()
+
+        cu.execute("""update inventory_system_state set description='Initial synchronization pending' where name='registered'""")
+
+        return True
+
+    def migrate9(self):
+        cu = self.db.cursor()
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('credentials-required',
+                 'Invalid credentials',
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('non-responsive-credentials',
+                 'Not responding: invalid credentials',
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
+
+        return True
+
+    def migrate10(self):
+        add_columns(self.db, 'inventory_job',
+            "status_code INTEGER NOT NULL DEFAULT 100",
+            "status_text VARCHAR NOT NULL DEFAULT 'Initializing'",
+            "status_detail VARCHAR",
+        )
+        return True
+    
+    def migrate11(self):
+        cu = self.db.cursor()
+        
+        cu.execute("""DELETE FROM inventory_system_state where name='credentials-required'""")
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('unmanaged-credentials',
+                 'Unmanaged: Invalid credentials',
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

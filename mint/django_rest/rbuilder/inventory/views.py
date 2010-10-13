@@ -203,6 +203,63 @@ class InventoryManagementNodeService(AbstractInventoryService):
         managementNode = self.mgr.addManagementNode(management_node)
         return managementNode
     
+class InventoryManagementInterfaceService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request, management_interface_id=None):
+        return self.get(management_interface_id)
+    
+    def get(self, management_interface_id=None):
+        if management_interface_id:
+            return self.mgr.getManagementInterface(management_interface_id)
+        else:
+            return self.mgr.getManagementInterfaces()
+        
+    @access.admin
+    @requires('management_interface')
+    @return_xml
+    def rest_PUT(self, request, management_interface_id, management_interface):
+        old = self.get(management_interface_id)
+        if not old:
+            return HttpResponseNotFound()
+        if int(management_interface_id) != management_interface.pk:
+            return HttpResponseNotFound()
+        self.mgr.updateManagementInterface(management_interface)
+        return self.get(management_interface_id)
+    
+class InventorySystemTypeService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request, system_type_id=None):
+        return self.get(system_type_id)
+    
+    def get(self, system_type_id=None):
+        if system_type_id:
+            return self.mgr.getSystemType(system_type_id)
+        else:
+            return self.mgr.getSystemTypes()
+        
+    @access.admin
+    @requires('system_type')
+    @return_xml
+    def rest_PUT(self, request, system_type_id, system_type):
+        old = self.get(system_type_id)
+        if not old:
+            return HttpResponseNotFound()
+        if int(system_type_id) != system_type.pk:
+            return HttpResponseNotFound()
+        self.mgr.updateSystemType(system_type)
+        return self.get(system_type_id)
+    
+class InventorySystemTypeSystemsService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request, system_type_id, system_id=None):
+        return self.get(system_type_id)
+
+    def get(self, system_type_id):
+        return self.mgr.getSystemTypeSystems(system_type_id)
+    
 class InventoryZoneManagementNodeService(AbstractInventoryService):
     
     @return_xml
@@ -379,6 +436,36 @@ class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
         installedSoftware = models.InstalledSoftware()
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
+
+class InventorySystemCredentialsServices(AbstractInventoryService):
+
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, system_id):
+        return self.get(system_id)
+
+    @access.admin
+    @return_xml
+    @requires('credentials')
+    def rest_PUT(self, request, system_id, credentials):
+        credsDict = {}
+        for k, v in credentials.__dict__.items():
+            if not k.startswith('_'):
+                credsDict[k] = v
+        return self.mgr.addSystemCredentials(system_id, credsDict)
+
+    @access.admin
+    @return_xml
+    @requires('credentials')
+    def rest_POST(self, request, system_id, credentials):
+        credsDict = {}
+        for k, v in credentials.__dict__.items():
+            if not k.startswith('_'):
+                credsDict[k] = v
+        return self.mgr.addSystemCredentials(system_id, credsDict)
+
+    def get(self, system_id):
+        return self.mgr.getSystemCredentials(system_id)
 
 class InventoryEventTypesService(AbstractInventoryService):
     

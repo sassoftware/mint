@@ -516,30 +516,27 @@ class Platforms(object):
             projectId = None
 
         if projectId:
-            # Check if the project is external.
-            project = self.db.db.projects.get(projectId)
-            external = project['external'] == 1 and True or False
-
-            if external:
-                # Look up any repo maps from the labels table.
-                labelIdMap, repoMap, userMap, entMap = \
-                    self.db.db.labels.getLabelsForProject(projectId) 
-                url = repoMap.get(hostname, url)
-
-                if mirror:
-                    # Check if there is a mirror set up.
-                    try:
-                        mirrorId = self.db.db.inboundMirrors.getIdByColumn(
-                                    'targetProjectId', projectId)
-                    except mint_error.ItemNotFound, e:
-                        # Add an inboud mirror for this external project.
-                        self.db.productMgr.reposMgr.addIncomingMirror(
-                            projectId, hostname, domainname, url, authInfo, True)
-
             # Add the project to our platform
             self.db.db.platforms.update(platformId, projectId=projectId)
 
         return projectId
+
+    def _setupExternalProject(self, hostname, domainname, authInfo, 
+                              url, projectId, mirror):
+        # Look up any repo maps from the labels table.
+        labelIdMap, repoMap, userMap, entMap = \
+            self.db.db.labels.getLabelsForProject(projectId) 
+        url = repoMap.get(hostname, url)
+
+        if mirror:
+            # Check if there is a mirror set up.
+            try:
+                mirrorId = self.db.db.inboundMirrors.getIdByColumn(
+                            'targetProjectId', projectId)
+            except mint_error.ItemNotFound, e:
+                # Add an inboud mirror for this external project.
+                self.db.productMgr.reposMgr.addIncomingMirror(
+                    projectId, hostname, domainname, url, authInfo, True)
 
     def _getHostname(self, platform):
         label = versions.Label(platform.label)
@@ -562,11 +559,22 @@ class Platforms(object):
         return domainname
 
     def _getUrl(self, platform):
-        hostname = self._getHostname(platform)
-        # XXX Don't leave this hard-coded forever
-        if hostname == 'centos.rpath.com':
-            return 'https://centos.rpath.com/nocapsules/'
-        return 'https://%s/conary/' % (hostname)
+        projectId = self._getProjectId(platform.platformId)
+        if projectId:
+            project = self.db.db.projects.get(projectId)
+            local = not(project['external'] == 1)
+        else:
+            local = False
+
+        if local:
+            return 'https://%s/repos/%s/' % \
+                (self.cfg.secureHost, platform.label)
+        else:
+            hostname = self._getHostname(platform)
+            # XXX Don't leave this hard-coded forever
+            if hostname == 'centos.rpath.com':
+                return 'https://centos.rpath.com/nocapsules/'
+            return 'https://%s/conary/' % (hostname)
 
     def _getAuthInfo(self):
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
@@ -588,19 +596,25 @@ class Platforms(object):
 
         authInfo = self._getAuthInfo()
 
-        # Get the productId to see if this platform has already been
-        # associated with an external product.
+        # Get the projectId to see if this platform has already been
+        # associated with an external project.
         projectId = self._getProjectId(platformId)
 
         if not projectId:
             projectId = self._getUsableProject(platformId, hostname,
                             domainname, url, authInfo, mirror)
+            if projectId:
+                project = self.db.db.projects.get(projectId)
+                if project['external'] == 1:
+                    self._setupExternalProject(hostname, domainname, 
+                        authInfo, url, projectId, mirror)
 
         if not projectId:            
             # Still no project, we need to create a new one.
             try:
-                projectId = self.db.productMgr.createExternalProduct(platformName, host, 
-                                domainname, url, authInfo, mirror=mirror)
+                projectId = self.db.productMgr.createExternalProduct(
+                    platformName, host, domainname, url, authInfo,
+                    mirror=mirror)
             except mint_error.RepositoryAlreadyExists, e:
                 projectId = self.db.db.projects.getProjectIdByFQDN(hostname)
 

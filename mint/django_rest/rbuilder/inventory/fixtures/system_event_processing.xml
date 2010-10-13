@@ -17,6 +17,7 @@
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="type" rel="ManyToOneRel">1</field>
     </object>
     <object pk="2" model="inventory.system">
         <field type="CharField" name="name">mgoblue2</field>
@@ -35,6 +36,7 @@
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="type" rel="ManyToOneRel">1</field>
     </object>
     <object pk="3" model="inventory.system">
         <field type="CharField" name="name">mgoblue3</field>
@@ -53,6 +55,7 @@
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="type" rel="ManyToOneRel">1</field>
     </object>
     <object pk="1" model="inventory.systemevent">
         <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
