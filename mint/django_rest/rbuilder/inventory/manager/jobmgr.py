@@ -35,7 +35,7 @@ class JobManager(base.BaseManager):
     @base.exposed
     def getJobsByJobState(self, job_state_id):
         jobState = models.JobState.objects.get(pk=job_state_id)
-        return sef._jobsFromIterator(models.Job.objects.filter(
+        return self._jobsFromIterator(models.Job.objects.filter(
             job_state=jobState))
 
     @base.exposed
