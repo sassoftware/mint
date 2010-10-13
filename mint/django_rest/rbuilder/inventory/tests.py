@@ -3125,7 +3125,7 @@ class SystemEventTestCase(XMLTestCase):
             (system_event.time_created.isoformat(),
             system_event.time_enabled.isoformat())
         self.assertXMLEquals(response.content, system_event_xml,
-            ignoreNodes='time_created')
+            ignoreNodes=['time_created', 'time_enabled'])
         
 class SystemEventProcessingTestCase(XMLTestCase):
     
