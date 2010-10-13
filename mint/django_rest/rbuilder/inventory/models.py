@@ -763,7 +763,7 @@ class Job(modellib.XObjIdModel):
         from rmake3 import client
         RMAKE_ADDRESS = 'http://localhost:9998'
         rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
-        rmakeJobs = rmakeClient.getJob([self.job_uuid])
+        rmakeJobs = rmakeClient.getJobs([self.job_uuid])
         if rmakeJobs:
             return rmakeJobs[0]
         return None
