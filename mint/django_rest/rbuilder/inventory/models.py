@@ -212,6 +212,9 @@ class SystemState(modellib.XObjIdModel):
     UNMANAGED = "unmanaged"
     UNMANAGED_DESC = "Unmanaged"
     
+    UNMANAGED_CREDENTIALS_REQUIRED = "unmanaged-credentials"
+    UNMANAGED_CREDENTIALS_REQUIRED_DESC = "Unmanaged: Invalid credentials"
+    
     REGISTERED = "registered"
     REGISTERED_DESC = "Initial synchronization pending"
     
@@ -219,19 +222,22 @@ class SystemState(modellib.XObjIdModel):
     RESPONSIVE_DESC = "Online"
     
     NONRESPONSIVE = "non-responsive-unknown"
-    NONRESPONSIVE_DESC = "Not responding: unknown"
+    NONRESPONSIVE_DESC = "Not responding: Unknown"
     
     NONRESPONSIVE_NET = "non-responsive-net"
-    NONRESPONSIVE_NET_DESC = "Not responding: network unreachable"
+    NONRESPONSIVE_NET_DESC = "Not responding: Network unreachable"
     
     NONRESPONSIVE_HOST = "non-responsive-host"
-    NONRESPONSIVE_HOST_DESC = "Not responding: host unreachable"
+    NONRESPONSIVE_HOST_DESC = "Not responding: Host unreachable"
     
     NONRESPONSIVE_SHUTDOWN = "non-responsive-shutdown"
-    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: shutdown"
+    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: Hhutdown"
     
     NONRESPONSIVE_SUSPENDED = "non-responsive-suspended"
-    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: suspended"
+    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: Suspended"
+    
+    NONRESPONSIVE_CREDENTIALS = "non-responsive-credentials"
+    NONRESPONSIVE_CREDENTIALS_DESC = "Not responding: Invalid credentials"
     
     DEAD = "dead"
     DEAD_DESC = "Stale"
@@ -241,6 +247,7 @@ class SystemState(modellib.XObjIdModel):
 
     STATE_CHOICES = (
         (UNMANAGED, UNMANAGED_DESC),
+        (UNMANAGED_CREDENTIALS_REQUIRED, UNMANAGED_CREDENTIALS_REQUIRED_DESC),
         (REGISTERED, REGISTERED_DESC),
         (RESPONSIVE, RESPONSIVE_DESC),
         (NONRESPONSIVE, NONRESPONSIVE_DESC),
@@ -248,6 +255,7 @@ class SystemState(modellib.XObjIdModel):
         (NONRESPONSIVE_HOST, NONRESPONSIVE_HOST_DESC),
         (NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SHUTDOWN_DESC),
         (NONRESPONSIVE_SUSPENDED, NONRESPONSIVE_SUSPENDED_DESC),
+        (NONRESPONSIVE_CREDENTIALS, NONRESPONSIVE_CREDENTIALS_DESC),
         (DEAD, DEAD_DESC),
         (MOTHBALLED, MOTHBALLED_DESC),
     )
@@ -740,6 +748,9 @@ class Job(modellib.XObjIdModel):
     job_uuid = models.CharField(max_length=64, unique=True)
     job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
         related_name='jobs')
+    status_code = models.IntegerField(null=False, default=100)
+    status_text = models.TextField(null=False, default='Initializing')
+    status_detail = XObjHidden(models.TextField(null=True))
     event_type = APIReadOnly(modellib.InlinedForeignKey(EventType,
         visible='name'))
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
@@ -747,18 +758,38 @@ class Job(modellib.XObjIdModel):
 
     load_fields = [ job_uuid ]
 
-    def getRmakeJob(self):  
-        if not self.job_uuid:
-            return None
-        else:
-            from rmake3 import client
-            RMAKE_ADDRESS = 'http://localhost:9998'
-            rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
-            rmakeJobs = rmakeClient.getJobs([self.job_uuid])
-            if rmakeJobs:
-                return rmakeJobs[0]
-            else:
-                return None
+    def getRmakeJob(self):
+        # XXX we should be using the repeater client for this
+        from rmake3 import client
+        RMAKE_ADDRESS = 'http://localhost:9998'
+        rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
+        rmakeJobs = rmakeClient.getJobs([self.job_uuid])
+        if rmakeJobs:
+            return rmakeJobs[0]
+        return None
+
+    def setValuesFromRmake(self):
+        runningState = modellib.Cache.get(JobState,
+            name=JobState.RUNNING)
+        if self.job_state_id != runningState.pk:
+            return
+        completedState = modellib.Cache.get(JobState,
+            name=JobState.COMPLETED)
+        failedState = modellib.Cache.get(JobState,
+            name=JobState.FAILED)
+        # This job is still running, we need to poll rmake to get its
+        # status
+        job = self.getRmakeJob()
+        if job:
+            self.status_code = job.status.code
+            self.status_text = job.status.text
+            self.status_detail = job.status.detail
+            if job.status.final:
+                if job.status.completed:
+                    self.job_state = completedState
+                else:
+                    self.job_state = failedState
+            self.save()
 
     def get_absolute_url(self, request, parents=None, model=None):
         if parents:
@@ -770,9 +801,6 @@ class Job(modellib.XObjIdModel):
     def serialize(self, request=None, values=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request,
             values=values)
-        rmakeJob = self.getRmakeJob()
-        if rmakeJob:
-            xobj_model.job_log = rmakeJob.status.text
         xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
             pk=self.event_type_id).name
         xobj_model.event_type = None

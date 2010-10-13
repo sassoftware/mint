@@ -142,7 +142,7 @@
         <field type="NullBooleanField" name="infrastructure">True</field>
     </object>
     <object pk="3" model="inventory.systemtype">
-        <field type="CharField" name="name">infrastructure-windows-build-node"</field>
+        <field type="CharField" name="name">infrastructure-windows-build-node</field>
         <field type="CharField" name="description">rPath Windows Build Service (Infrastructure)"</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
         <field type="NullBooleanField" name="infrastructure">True</field>
@@ -252,23 +252,23 @@
   </object>
   <object pk="4" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-unknown</field>
-    <field type="CharField" name="description">Not responding: unknown</field>
+    <field type="CharField" name="description">Not responding: Unknown</field>
   </object>
   <object pk="5" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-net</field>
-    <field type="CharField" name="description">Not responding: network unreachable</field>
+    <field type="CharField" name="description">Not responding: Network unreachable</field>
   </object>
   <object pk="6" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-host</field>
-    <field type="CharField" name="description">Not responding: host unreachable</field>
+    <field type="CharField" name="description">Not responding: Host unreachable</field>
   </object>
   <object pk="7" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-shutdown</field>
-    <field type="CharField" name="description">Not responding: shutdown</field>
+    <field type="CharField" name="description">Not responding: Shutdown</field>
   </object>
   <object pk="8" model="inventory.systemstate">
     <field type="CharField" name="name">non-responsive-suspended</field>
-    <field type="CharField" name="description">Not responding: suspended</field>
+    <field type="CharField" name="description">Not responding: Suspended</field>
   </object>
   <object pk="9" model="inventory.systemstate">
     <field type="CharField" name="name">dead</field>
@@ -277,6 +277,14 @@
   <object pk="10" model="inventory.systemstate">
     <field type="CharField" name="name">mothballed</field>
     <field type="CharField" name="description">Retired</field>
+  </object>
+  <object pk="11" model="inventory.systemstate">
+    <field type="CharField" name="name">unmanaged-credentials</field>
+    <field type="CharField" name="description">Unmanaged: Invalid credentials</field>
+  </object>
+  <object pk="12" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-credentials</field>
+    <field type="CharField" name="description">Not responding: Invalid credentials</field>
   </object>
   <object pk="1" model="inventory.jobstate">
     <field type="CharField" name="name">Queued</field>

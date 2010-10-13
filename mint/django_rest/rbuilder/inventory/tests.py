@@ -653,11 +653,19 @@ class SystemTypesTestCase(XMLTestCase):
         self.assertTrue(si.name != "thisnameshouldnotstick")
         self.assertTrue(si.infrastructure == True)
         
+    def testAddWindowsBuildService(self):
+        system = self.mgr.sysMgr.addWindowsBuildService("myname", "mydesc", "1.1.1.1")
+        network = self.mgr.sysMgr.extractNetworkToUse(system)
+        assert(system.name =="myname")
+        assert(system.description == "mydesc")
+        assert(system.type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
+        assert(network.dns_name == "1.1.1.1")
+        
     def testGetWindowsBuildServiceNodes(self):
         models.SystemType.objects.all().delete()
         models.SystemType.objects.all().delete()
-        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE, 
-            description=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE_DESC, infrastructure=True)
+        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE, 
+            description=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC, infrastructure=True)
         st.save()
         system = models.System()
         system.name = 'testsystemname'
@@ -1968,6 +1976,9 @@ class SystemsTestCase(XMLTestCase):
         eventUuid = 'eventuuid001'
         jobState = "Completed"
         jobUuid = 'rmakeuuid001'
+        statusCode = 291
+        statusText = "text 291"
+        statusDetail = "detail 291"
 
         system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
@@ -1986,7 +1997,9 @@ class SystemsTestCase(XMLTestCase):
         # Pass bogus event uuid, we should not update
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
             eventUuid=eventUuid + "bogus", jobUuid=jobUuid + "bogus",
-            jobState=jobState, zoneId=self.localZone.zone_id)
+            jobState=jobState, zoneId=self.localZone.zone_id,
+            statusCode=statusCode, statusText=statusText,
+            statusDetail=statusDetail)
 
         xmlTempl = """\
 <system>
@@ -1997,6 +2010,9 @@ class SystemsTestCase(XMLTestCase):
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
+      <status_code>%(statusCode)s</status_code>
+      <status_text>%(statusText)s</status_text>
+      <status_detail>%(statusDetail)s</status_detail>
     </job>
   </jobs>
   <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
@@ -2037,6 +2053,9 @@ class SystemsTestCase(XMLTestCase):
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
         self.failUnlessEqual(model.lastJob.pk, job.pk)
+        self.failUnlessEqual(job.status_code, statusCode)
+        self.failUnlessEqual(job.status_text, statusText)
+        self.failUnlessEqual(job.status_detail, statusDetail)
 
         # Make sure that pasting a system job with just the event uuid and job
         # info works (i.e. without the local and generated uuids)
@@ -2047,6 +2066,9 @@ class SystemsTestCase(XMLTestCase):
     <job>
       <job_uuid>%(jobUuid)s</job_uuid>
       <job_state>%(jobState)s</job_state>
+      <status_code>%(statusCode)s</status_code>
+      <status_text>%(statusText)s</status_text>
+      <status_detail>%(statusDetail)s</status_detail>
     </job>
   </jobs>
   <managing_zone href="http://testserver/api/inventory/zones/%(zoneId)s"/>
@@ -2054,6 +2076,9 @@ class SystemsTestCase(XMLTestCase):
 """
         jobState = 'Failed'
         params['jobState'] = jobState
+        statusCode = params['statusCode'] = 432
+        statusText = params['statusText'] = "status text 432"
+        statusDetail = params['statusDetail'] = "status detail 432"
 
         xml = xmlTempl % params
         obj = xobj.parse(xml)
@@ -2064,6 +2089,9 @@ class SystemsTestCase(XMLTestCase):
         job = models.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
         self.failUnlessEqual(model.lastJob.pk, job.pk)
+        self.failUnlessEqual(job.status_code, statusCode)
+        self.failUnlessEqual(job.status_text, statusText)
+        self.failUnlessEqual(job.status_detail, statusDetail)
 
     def testLoadFromObjectHiddenFields(self):
         # Make sure one can't overwrite hidden fields (sslClientKey is hidden)
@@ -2410,6 +2438,10 @@ class SystemStateTestCase(XMLTestCase):
         jobUuid2 = 'rmakeuuid002'
         eventUuid3 = 'eventuuid003'
         jobUuid3 = 'rmakeuuid003'
+        eventUuid4 = 'eventuuid004'
+        jobUuid4 = 'rmakeuuid004'
+        eventUuid5 = 'eventuuid005'
+        jobUuid5 = 'rmakeuuid005'
 
         system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
@@ -2424,6 +2456,10 @@ class SystemStateTestCase(XMLTestCase):
             models.EventType.SYSTEM_POLL)
         job3 = self._newJob(system, eventUuid3, jobUuid3,
             models.EventType.SYSTEM_POLL_IMMEDIATE)
+        job4 = self._newJob(system, eventUuid4, jobUuid4,
+            models.EventType.SYSTEM_APPLY_UPDATE)
+        job5 = self._newJob(system, eventUuid5, jobUuid5,
+            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
 
         UNMANAGED = models.SystemState.UNMANAGED
         REGISTERED = models.SystemState.REGISTERED
@@ -2458,51 +2494,27 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateFailed, NONRESPONSIVE, None),
             (job1, stateFailed, DEAD, None),
             (job1, stateFailed, MOTHBALLED, None),
-
-            (job2, stateCompleted, UNMANAGED, RESPONSIVE),
-            (job2, stateCompleted, REGISTERED, RESPONSIVE),
-            (job2, stateCompleted, RESPONSIVE, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
-            (job2, stateCompleted, NONRESPONSIVE, RESPONSIVE),
-            (job2, stateCompleted, DEAD, RESPONSIVE),
-            (job2, stateCompleted, MOTHBALLED, RESPONSIVE),
-
-            (job2, stateFailed, UNMANAGED, None),
-            (job2, stateFailed, REGISTERED, NONRESPONSIVE),
-            (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job2, stateFailed, NONRESPONSIVE_HOST, None),
-            (job2, stateFailed, NONRESPONSIVE_NET, None),
-            (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
-            (job2, stateFailed, NONRESPONSIVE_SUSPENDED, None),
-            (job2, stateFailed, NONRESPONSIVE, None),
-            (job2, stateFailed, DEAD, None),
-            (job2, stateFailed, MOTHBALLED, None),
-
-            (job3, stateCompleted, UNMANAGED, RESPONSIVE),
-            (job3, stateCompleted, REGISTERED, RESPONSIVE),
-            (job3, stateCompleted, RESPONSIVE, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_HOST, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_NET, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_SHUTDOWN, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE_SUSPENDED, RESPONSIVE),
-            (job3, stateCompleted, NONRESPONSIVE, RESPONSIVE),
-            (job3, stateCompleted, DEAD, RESPONSIVE),
-            (job3, stateCompleted, MOTHBALLED, RESPONSIVE),
-
-            (job3, stateFailed, UNMANAGED, None),
-            (job3, stateFailed, REGISTERED, NONRESPONSIVE),
-            (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
-            (job3, stateFailed, NONRESPONSIVE_HOST, None),
-            (job3, stateFailed, NONRESPONSIVE_NET, None),
-            (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
-            (job3, stateFailed, NONRESPONSIVE_SUSPENDED, None),
-            (job3, stateFailed, NONRESPONSIVE, None),
-            (job3, stateFailed, DEAD, None),
-            (job3, stateFailed, MOTHBALLED, None),
         ]
+        transitionsCompleted = []
+        for oldState in [UNMANAGED, REGISTERED, RESPONSIVE,
+                NONRESPONSIVE_HOST, NONRESPONSIVE_NET, NONRESPONSIVE_SHUTDOWN,
+                NONRESPONSIVE_SUSPENDED, NONRESPONSIVE, DEAD, MOTHBALLED]:
+            transitionsCompleted.append((oldState, RESPONSIVE))
+        transitionsFailed = [
+            (REGISTERED, NONRESPONSIVE),
+            (RESPONSIVE, NONRESPONSIVE),
+        ]
+        for oldState in [UNMANAGED, NONRESPONSIVE_HOST, NONRESPONSIVE_NET,
+                NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SUSPENDED,
+                NONRESPONSIVE, DEAD, MOTHBALLED]:
+            transitionsFailed.append((oldState, None))
+
+        for job in [job2, job3, job4, job5]:
+            for oldState, newState in transitionsCompleted:
+                tests.append((job, stateCompleted, oldState, newState))
+            for oldState, newState in transitionsFailed:
+                tests.append((job, stateFailed, oldState, newState))
+
         for (job, jobState, oldState, newState) in tests:
             system.current_state = self.mgr.sysMgr.systemState(oldState)
             job.job_state = jobState
@@ -3754,13 +3766,9 @@ class TargetSystemImportTest(XMLTestCase):
         self.failUnlessEqual(system.description,
             params['target_system_description'])
 
-class JobsTestCase(XMLTestCase):
-
+class BaseJobsTest(XMLTestCase):
     def _mock(self):
-        models.Job.getRmakeJob = self.mockGetRmakeJob
-
-    def mockGetRmakeJob(self):
-        self.mockGetRmakeJob_called = True
+        pass
 
     def setUp(self):
         XMLTestCase.setUp(self)
@@ -3774,20 +3782,28 @@ class JobsTestCase(XMLTestCase):
         jobUuid3 = 'rmakeuuid003'
         system = self._saveSystem()
 
-        job1 = self._newJob(system, eventUuid1, jobUuid1,
+        self.job1 = self._newJob(system, eventUuid1, jobUuid1,
             models.EventType.SYSTEM_REGISTRATION)
-        job2 = self._newJob(system, eventUuid2, jobUuid2,
+        self.job2 = self._newJob(system, eventUuid2, jobUuid2,
             models.EventType.SYSTEM_POLL)
-        job3 = self._newJob(system, eventUuid3, jobUuid3,
+        self.job3 = self._newJob(system, eventUuid3, jobUuid3,
             models.EventType.SYSTEM_POLL_IMMEDIATE)
 
         self.system = system
+
+class JobsTestCase(BaseJobsTest):
+
+    def _mock(self):
+        models.Job.getRmakeJob = self.mockGetRmakeJob
+
+    def mockGetRmakeJob(self):
+        self.mockGetRmakeJob_called = True
 
     def testGetJobs(self):
         response = self._get('/api/inventory/jobs/')
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.jobs_xml)
-    
+
     def testGetJobStates(self):
         response = self._get('/api/inventory/job_states/')
         self.assertEquals(response.status_code, 200)
@@ -3809,3 +3825,54 @@ class JobsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.systems_jobs_xml)
 
+class Jobs2TestCase(BaseJobsTest):
+    def _mock(self):
+        class DummyStatus(object):
+            def __init__(slf, **kwargs):
+                slf.__dict__.update(kwargs)
+        class DummyJob(object):
+            def __init__(slf, code, text, detail, final, completed, failed):
+                slf.status = DummyStatus(code=code, text=text, detail=detail,
+                    final=final, completed=completed, failed=failed)
+        class Dummy(object):
+            data = dict(
+                rmakeuuid001 = (101, "text 101", "detail 101", False,
+                    False, False),
+                rmakeuuid002 = (202, "text 202", "detail 202", True,
+                    True, False),
+                rmakeuuid003 = (404, "text 404", "detail 404", True,
+                    False, True),
+            )
+            @staticmethod
+            def mockGetRmakeJob(slf):
+                jobUuid = slf.job_uuid
+                code, text, detail, final, completed, failed = Dummy.data[jobUuid]
+                j = DummyJob(code, text, detail, final, completed, failed)
+                return j
+        self.mock(models.Job, 'getRmakeJob', Dummy.mockGetRmakeJob)
+
+    def testGetJobs(self):
+        # Mark job2 as succeeded, to make sure the status doesn't get updated
+        # from the rmake job again (this is a stretch)
+        completedState = models.Cache.get(models.JobState,
+            name=models.JobState.COMPLETED)
+        self.job2.job_state = completedState
+        self.job2.status_code = 299
+        self.job2.status_text = "text 299"
+        self.job2.status_detail = "no such luck"
+        self.job2.save()
+
+        response = self._get('/api/inventory/jobs/')
+        self.assertEquals(response.status_code, 200)
+
+        obj = xobj.parse(response.content)
+        jobs = obj.jobs.job
+
+        self.failUnlessEqual([ str(x.job_state) for x in jobs ],
+            [models.JobState.RUNNING, models.JobState.COMPLETED,
+            models.JobState.FAILED ])
+
+        self.failUnlessEqual([ int(x.status_code) for x in jobs ],
+            [101, 299, 404])
+        self.failUnlessEqual([ x.status_text for x in jobs ],
+            ["text 101", "text 299", "text 404"])

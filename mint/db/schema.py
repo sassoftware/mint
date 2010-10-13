@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 8)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 11)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1329,6 +1329,9 @@ def _createInventorySchema(db, cfg):
                     REFERENCES inventory_job_state,
                 event_type_id integer NOT NULL
                     REFERENCES inventory_event_type,
+                status_code INTEGER NOT NULL DEFAULT 100,
+                status_text VARCHAR NOT NULL DEFAULT 'Initializing',
+                status_detail VARCHAR,
                 time_created timestamp with time zone NOT NULL,
                 time_updated timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
@@ -1417,13 +1420,15 @@ def _addSystemStates(db, cfg):
     changed |= _addTableRows(db, 'inventory_system_state', 'name',
             [
                 dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-unknown", description="Not responding: unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-net", description="Not responding: network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-host", description="Not responding: host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-shutdown", description="Not responding: shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-suspended", description="Not responding: suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-unknown", description="Not responding: Unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-net", description="Not responding: Network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-host", description="Not responding: Host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-shutdown", description="Not responding: Shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-suspended", description="Not responding: Suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
             ])

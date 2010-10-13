@@ -7,7 +7,9 @@
 import logging
 import os
 import sys
-import time
+
+import datetime
+from dateutil import tz
 
 from conary.conarycfg import loadEntitlement, EntitlementList
 from conary.dbstore import migration, sqlerrors
@@ -1494,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 8)
+    Version = (51, 11)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1627,7 +1629,54 @@ class MigrateTo_51(SchemaMigration):
         cu = self.db.cursor()
 
         cu.execute("""update inventory_system_state set description='Initial synchronization pending' where name='registered'""")
+
+        return True
+
+    def migrate9(self):
+        cu = self.db.cursor()
         
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('credentials-required',
+                 'Invalid credentials',
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('non-responsive-credentials',
+                 'Not responding: invalid credentials',
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
+
+        return True
+
+    def migrate10(self):
+        add_columns(self.db, 'inventory_job',
+            "status_code INTEGER NOT NULL DEFAULT 100",
+            "status_text VARCHAR NOT NULL DEFAULT 'Initializing'",
+            "status_detail VARCHAR",
+        )
+        return True
+    
+    def migrate11(self):
+        cu = self.db.cursor()
+        
+        cu.execute("""DELETE FROM inventory_system_state where name='credentials-required'""")
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('unmanaged-credentials',
+                 'Unmanaged: Invalid credentials',
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

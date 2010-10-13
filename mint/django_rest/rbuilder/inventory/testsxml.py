@@ -407,31 +407,31 @@ system_states_xml = """\
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/4">
     <system_state_id>4</system_state_id>
-    <description>Not responding: unknown</description>
+    <description>Not responding: Unknown</description>
     <name>non-responsive-unknown</name>
     <created_date>2010-09-03T18:23:42.661629+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/5">
     <system_state_id>5</system_state_id>
-    <description>Not responding: network unreachable</description>
+    <description>Not responding: Network unreachable</description>
     <name>non-responsive-net</name>
     <created_date>2010-09-03T18:23:42.663290+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/6">
     <system_state_id>6</system_state_id>
-    <description>Not responding: host unreachable</description>
+    <description>Not responding: Host unreachable</description>
     <name>non-responsive-host</name>
     <created_date>2010-09-03T18:23:42.664943+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/inventory/system_states/7">
       <system_state_id>7</system_state_id>
-      <description>Not responding: shutdown</description>
+      <description>Not responding: Shutdown</description>
       <name>non-responsive-shutdown</name>
       <created_date>2010-09-03T18:23:42.666612+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/inventory/system_states/8">
       <system_state_id>8</system_state_id>
-      <description>Not responding: suspended</description>
+      <description>Not responding: Suspended</description>
       <name>non-responsive-suspended</name>
       <created_date>2010-09-03T18:23:42.668266+00:00</created_date>
     </system_state>
@@ -447,6 +447,16 @@ system_states_xml = """\
       <name>mothballed</name>
       <created_date>2010-09-03T18:23:42.671647+00:00</created_date>
     </system_state>
+    <system_state id="http://testserver/api/inventory/system_states/11">
+    <description>Unmanaged: Invalid credentials</description>
+    <name>unmanaged-credentials</name>
+    <system_state_id>11</system_state_id>
+  </system_state>
+  <system_state id="http://testserver/api/inventory/system_states/12">
+    <description>Not responding: Invalid credentials</description>
+    <name>non-responsive-credentials</name>
+    <system_state_id>12</system_state_id>
+  </system_state>
 </system_states>"""
 
 system_state_xml = """\
@@ -2011,6 +2021,8 @@ jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid001</job_uuid>
     <job_id>1</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
@@ -2020,6 +2032,8 @@ jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid002</job_uuid>
     <job_id>2</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
@@ -2029,6 +2043,8 @@ jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid003</job_uuid>
     <job_id>3</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
 </jobs>"""
 
@@ -2042,6 +2058,8 @@ job_xml = """\
   <systems/>
   <job_uuid>rmakeuuid001</job_uuid>
   <job_id>1</job_id>
+  <status_code>100</status_code>
+  <status_text>Initializing</status_text>
 </job>"""
 
 job_states_xml = """\
@@ -2088,6 +2106,8 @@ systems_jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid001</job_uuid>
     <job_id>1</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
@@ -2097,6 +2117,8 @@ systems_jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid002</job_uuid>
     <job_id>2</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
@@ -2106,6 +2128,8 @@ systems_jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid003</job_uuid>
     <job_id>3</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
 </jobs>"""
 

@@ -451,16 +451,39 @@ class SystemManager(base.BaseManager):
         return Systems
     
     @base.exposed
+    def getWindowsBuildServiceSystemType(self):
+        "Return the zone for this rBuilder"
+        return models.SystemType.objects.get(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
+    
+    @base.exposed
     def getWindowsBuildServiceNodes(self):
         nodes = []
         try:
-            system_type = models.SystemType.objects.get(name=models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+            system_type = self.getWindowsBuildServiceSystemType()
             systems = self.getSystemTypeSystems(system_type.system_type_id)
             nodes = systems and systems.system or []
         except ObjectDoesNotExist:
             pass
         
         return nodes
+    
+    @base.exposed
+    def addWindowsBuildService(self, name, description, network_address):
+        log.info("Adding Windows Build Service with name '%s', description '%s', and network address '%s'" % (name, description, network_address))
+        system = models.System(name=name, description=description)
+        system.current_state = self.mgr.sysMgr.systemState(
+            models.SystemState.UNMANAGED)
+        system.managing_zone = self.getLocalZone()
+        system.management_interface = models.ManagementInterface.objects.get(pk=1)
+        system.type = self.getWindowsBuildServiceSystemType()
+        system.save()
+
+        network = models.Network()
+        network.dns_name = network_address
+        network.system = system
+        network.save()
+        
+        return system
 
     @base.exposed
     def getSystemState(self, system_state_id):
@@ -795,7 +818,8 @@ class SystemManager(base.BaseManager):
                 # won't transition to REGISTERED, rpath-register should be
                 # responsible with that
                 return None
-            if eventTypeName in self.PollEvents:
+            if eventTypeName in self.PollEvents or \
+                    eventTypeName in self.SystemUpdateEvents:
                 return models.SystemState.RESPONSIVE
             if eventTypeName in self.ManagementInterfaceEvents:
                 # Management interface detection finished, need to schedule a
@@ -818,7 +842,8 @@ class SystemManager(base.BaseManager):
                 if timedelta.days >= self.cfg.deadStateTimeout:
                     return models.SystemState.DEAD
                 return None
-            if eventTypeName not in self.PollEvents:
+            if eventTypeName not in self.PollEvents and \
+                    eventTypeName not in self.SystemUpdateEvents:
                 # Non-polling event, nothing to do
                 return None
             if currentStateName in [models.SystemState.REGISTERED,
@@ -1383,7 +1408,7 @@ class SystemManager(base.BaseManager):
 
     def _addSystemToTarget(self, target, targetSystemId, targetSystem):
         t0 = time.time()
-        log.info("  Importin/tmp/mint-error-myUhev.txtg system %s (%s)" % (targetSystemId,
+        log.info("  Importing system %s (%s)" % (targetSystemId,
             targetSystem.instanceName))
         system, created = models.System.objects.get_or_create(target=target,
             target_system_id=targetSystemId,
