@@ -130,7 +130,9 @@ class PackageNoticesCallback(NoticesCallback):
     _labelTitle = "Package Build"
 
     def _notify(self, troveBuilder, job):
+        import epdb; epdb.server()  
         troveBinaries = self.getJobBuiltTroves(troveBuilder, job)
+        self.refreshCachedUpdates(troveBinaries)
         title, buildDate = self.getJobMeta(job, troveBinaries)
         description = self.getJobInformation(job, troveBinaries)
 
@@ -188,6 +190,14 @@ class PackageNoticesCallback(NoticesCallback):
         ret.append("")
         return cls._lineSep.join(ret)
 
+    @classmethod
+    def refreshCachedUpdates(cls, troveBinaries):
+        from mint.django_rest.rbuilder.inventory import manager
+        mgr = manager.Manager()
+        for trvName, trvVersion in troveBinaries:
+            trvLabel = trvVersion.trailingLabel().asString()
+            mgr.refreshCachedUpdates(trvName, trvVersion)
+            
 
 class ApplianceNoticesCallback(PackageNoticesCallback):
     _labelTitle = "Build"
