@@ -57,6 +57,7 @@ class SystemManager(base.BaseManager):
         models.SystemState.NONRESPONSIVE_HOST,
         models.SystemState.NONRESPONSIVE_SHUTDOWN,
         models.SystemState.NONRESPONSIVE_SUSPENDED,
+        models.SystemState.NONRESPONSIVE_CREDENTIALS,
     ])
 
     @classmethod
@@ -831,6 +832,16 @@ class SystemManager(base.BaseManager):
         if jobStateName == models.JobState.FAILED:
             currentStateName = system.current_state.name
             # Simple cases first.
+            if job.status_code == 401:
+                # Authentication required
+                if currentStateName == models.SystemState.UNMANAGED:
+                    return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
+                # A mothballed system remains mothballed
+                if currentStateName in [models.SystemState.MOTHBALLED,
+                        models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED,
+                        models.SystemState.NONRESPONSIVE_CREDENTIALS]:
+                    return None
+                return models.SystemState.NONRESPONSIVE_CREDENTIALS
             if currentStateName == models.SystemState.MOTHBALLED:
                 return None
             timedelta = self.now() - system.state_change_date

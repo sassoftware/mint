@@ -289,13 +289,16 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
         return system
 
-    def _newJob(self, system, eventUuid, jobUuid, jobType, jobState=None):
+    def _newJob(self, system, eventUuid, jobUuid, jobType, jobState=None,
+            statusCode=100, statusText=None, statusDetail=None):
         eventType = self.mgr.sysMgr.eventType(jobType)
         if jobState is None:
             jobState = models.JobState.RUNNING
         jobState = self.mgr.sysMgr.jobState(jobState)
         job = models.Job(job_uuid=jobUuid, event_type=eventType,
-            job_state=jobState)
+            job_state=jobState, status_code=statusCode,
+            status_text=statusText or 'Initializing',
+            status_detail=statusDetail)
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
@@ -2442,6 +2445,10 @@ class SystemStateTestCase(XMLTestCase):
         jobUuid4 = 'rmakeuuid004'
         eventUuid5 = 'eventuuid005'
         jobUuid5 = 'rmakeuuid005'
+        eventUuid6 = 'eventuuid006'
+        jobUuid6 = 'rmakeuuid006'
+        eventUuid7 = 'eventuuid007'
+        jobUuid7 = 'rmakeuuid007'
 
         system = self.newSystem(name='blippy', local_uuid=localUuid,
             generated_uuid=generatedUuid)
@@ -2461,7 +2468,13 @@ class SystemStateTestCase(XMLTestCase):
         job5 = self._newJob(system, eventUuid5, jobUuid5,
             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
 
+        jobRegNoAuth = self._newJob(system, eventUuid6, jobUuid6,
+            models.EventType.SYSTEM_REGISTRATION, statusCode = 401)
+        jobPollNoAuth = self._newJob(system, eventUuid7, jobUuid7,
+            models.EventType.SYSTEM_POLL, statusCode = 401)
+
         UNMANAGED = models.SystemState.UNMANAGED
+        UNMANAGED_CREDENTIALS_REQUIRED = models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
         REGISTERED = models.SystemState.REGISTERED
         RESPONSIVE = models.SystemState.RESPONSIVE
         NONRESPONSIVE = models.SystemState.NONRESPONSIVE
@@ -2469,44 +2482,52 @@ class SystemStateTestCase(XMLTestCase):
         NONRESPONSIVE_HOST = models.SystemState.NONRESPONSIVE_HOST
         NONRESPONSIVE_SHUTDOWN = models.SystemState.NONRESPONSIVE_SHUTDOWN
         NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
+        NONRESPONSIVE_CREDENTIALS = models.SystemState.NONRESPONSIVE_CREDENTIALS
         DEAD = models.SystemState.DEAD
         MOTHBALLED = models.SystemState.MOTHBALLED
 
         tests = [
             (job1, stateCompleted, UNMANAGED, None),
+            (job1, stateCompleted, UNMANAGED_CREDENTIALS_REQUIRED, None),
             (job1, stateCompleted, REGISTERED, None),
             (job1, stateCompleted, RESPONSIVE, None),
             (job1, stateCompleted, NONRESPONSIVE_HOST, None),
             (job1, stateCompleted, NONRESPONSIVE_NET, None),
             (job1, stateCompleted, NONRESPONSIVE_SHUTDOWN, None),
             (job1, stateCompleted, NONRESPONSIVE_SUSPENDED, None),
+            (job1, stateCompleted, NONRESPONSIVE_CREDENTIALS, None),
             (job1, stateCompleted, NONRESPONSIVE, None),
             (job1, stateCompleted, DEAD, None),
             (job1, stateCompleted, MOTHBALLED, None),
 
             (job1, stateFailed, UNMANAGED, None),
+            (job1, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED, None),
             (job1, stateFailed, REGISTERED, None),
             (job1, stateFailed, RESPONSIVE, None),
             (job1, stateFailed, NONRESPONSIVE_HOST, None),
             (job1, stateFailed, NONRESPONSIVE_NET, None),
             (job1, stateFailed, NONRESPONSIVE_SHUTDOWN, None),
             (job1, stateFailed, NONRESPONSIVE_SUSPENDED, None),
+            (job1, stateFailed, NONRESPONSIVE_CREDENTIALS, None),
             (job1, stateFailed, NONRESPONSIVE, None),
             (job1, stateFailed, DEAD, None),
             (job1, stateFailed, MOTHBALLED, None),
         ]
         transitionsCompleted = []
-        for oldState in [UNMANAGED, REGISTERED, RESPONSIVE,
+        for oldState in [UNMANAGED, UNMANAGED_CREDENTIALS_REQUIRED,
+                REGISTERED, RESPONSIVE,
                 NONRESPONSIVE_HOST, NONRESPONSIVE_NET, NONRESPONSIVE_SHUTDOWN,
-                NONRESPONSIVE_SUSPENDED, NONRESPONSIVE, DEAD, MOTHBALLED]:
+                NONRESPONSIVE_SUSPENDED, NONRESPONSIVE,
+                NONRESPONSIVE_CREDENTIALS, DEAD, MOTHBALLED]:
             transitionsCompleted.append((oldState, RESPONSIVE))
         transitionsFailed = [
             (REGISTERED, NONRESPONSIVE),
             (RESPONSIVE, NONRESPONSIVE),
         ]
-        for oldState in [UNMANAGED, NONRESPONSIVE_HOST, NONRESPONSIVE_NET,
+        for oldState in [UNMANAGED, UNMANAGED_CREDENTIALS_REQUIRED,
+                NONRESPONSIVE_HOST, NONRESPONSIVE_NET,
                 NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SUSPENDED,
-                NONRESPONSIVE, DEAD, MOTHBALLED]:
+                NONRESPONSIVE, NONRESPONSIVE_CREDENTIALS, DEAD, MOTHBALLED]:
             transitionsFailed.append((oldState, None))
 
         for job in [job2, job3, job4, job5]:
@@ -2515,34 +2536,54 @@ class SystemStateTestCase(XMLTestCase):
             for oldState, newState in transitionsFailed:
                 tests.append((job, stateFailed, oldState, newState))
 
+        # Failed auth tests`
+        for job in [ jobRegNoAuth, jobPollNoAuth ]:
+            tests.append((job, stateFailed, UNMANAGED,
+                UNMANAGED_CREDENTIALS_REQUIRED))
+            tests.append((job, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED,
+                None))
+            for oldState in [REGISTERED, RESPONSIVE, NONRESPONSIVE_NET,
+                    NONRESPONSIVE_HOST, NONRESPONSIVE_SHUTDOWN,
+                    NONRESPONSIVE_SUSPENDED, DEAD]:
+                tests.append((job, stateFailed, oldState,
+                    NONRESPONSIVE_CREDENTIALS))
+            for oldState in [NONRESPONSIVE_CREDENTIALS, MOTHBALLED]:
+                tests.append((job, stateFailed, oldState, None))
+
+
         for (job, jobState, oldState, newState) in tests:
             system.current_state = self.mgr.sysMgr.systemState(oldState)
             job.job_state = jobState
             ret = self.mgr.sysMgr.getNextSystemState(system, job)
-            msg = "Job %s (%s): %s -> %s (expected: %s)" % (
-                (job.event_type.name, jobState.name, oldState, ret, newState))
+            msg = "Job %s (%s; %s): %s -> %s (expected: %s)" % (
+                (job.event_type.name, jobState.name, job.status_code,
+                 oldState, ret, newState))
             self.failUnlessEqual(ret, newState, msg)
 
         # Time-based tests
         tests = [
             (job2, stateFailed, UNMANAGED, None),
+            (job2, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED, None),
             (job2, stateFailed, REGISTERED, NONRESPONSIVE),
             (job2, stateFailed, RESPONSIVE, NONRESPONSIVE),
             (job2, stateFailed, NONRESPONSIVE_HOST, DEAD),
             (job2, stateFailed, NONRESPONSIVE_NET, DEAD),
             (job2, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
             (job2, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
+            (job2, stateFailed, NONRESPONSIVE_CREDENTIALS, DEAD),
             (job2, stateFailed, NONRESPONSIVE, DEAD),
             (job2, stateFailed, DEAD, MOTHBALLED),
             (job2, stateFailed, MOTHBALLED, None),
 
             (job3, stateFailed, UNMANAGED, None),
+            (job3, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED, None),
             (job3, stateFailed, REGISTERED, NONRESPONSIVE),
             (job3, stateFailed, RESPONSIVE, NONRESPONSIVE),
             (job3, stateFailed, NONRESPONSIVE_HOST, DEAD),
             (job3, stateFailed, NONRESPONSIVE_NET, DEAD),
             (job3, stateFailed, NONRESPONSIVE_SHUTDOWN, DEAD),
             (job3, stateFailed, NONRESPONSIVE_SUSPENDED, DEAD),
+            (job3, stateFailed, NONRESPONSIVE_CREDENTIALS, DEAD),
             (job3, stateFailed, NONRESPONSIVE, DEAD),
             (job3, stateFailed, DEAD, MOTHBALLED),
             (job3, stateFailed, MOTHBALLED, None),
