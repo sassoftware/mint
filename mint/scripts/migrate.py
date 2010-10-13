@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 10)
+    Version = (51, 11)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1654,8 +1654,16 @@ class MigrateTo_51(SchemaMigration):
         """, str(datetime.datetime.now(tz.tzutc())))
 
         return True
-    
+
     def migrate10(self):
+        add_columns(self.db, 'inventory_job',
+            "status_code INTEGER NOT NULL DEFAULT 100",
+            "status_text VARCHAR NOT NULL DEFAULT 'Initializing'",
+            "status_detail VARCHAR",
+        )
+        return True
+    
+    def migrate11(self):
         cu = self.db.cursor()
         
         cu.execute("""DELETE FROM inventory_system_state where name='credentials-required'""")
@@ -1669,14 +1677,6 @@ class MigrateTo_51(SchemaMigration):
                  ?)
         """, str(datetime.datetime.now(tz.tzutc())))
 
-        return True
-
-    def migrate10(self):
-        add_columns(self.db, 'inventory_job',
-            "status_code INTEGER NOT NULL DEFAULT 100",
-            "status_text VARCHAR NOT NULL DEFAULT 'Initializing'",
-            "status_detail VARCHAR",
-        )
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
