@@ -118,9 +118,13 @@ class VersionManager(base.BaseManager):
             trove=trove, trove_available_update=update_trove)
         available_update.save()
 
-    def clear_cached_updates(self, nvf):
-        trove = self.trove_from_nvf(nvf)
-        trove.available_updates.all().delete()
+    @base.exposed
+    def refreshCachedUpdates(self, name, label):
+        troves = models.Trove.objects.filter(name=name, 
+            version__label=label)
+        for trove in troves:
+            trove.available_updates.clear()
+            self.set_available_updates(trove, force=True)
 
     def get_conary_client(self):
         if self._cclient is None:

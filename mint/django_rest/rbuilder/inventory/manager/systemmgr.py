@@ -57,6 +57,7 @@ class SystemManager(base.BaseManager):
         models.SystemState.NONRESPONSIVE_HOST,
         models.SystemState.NONRESPONSIVE_SHUTDOWN,
         models.SystemState.NONRESPONSIVE_SUSPENDED,
+        models.SystemState.NONRESPONSIVE_CREDENTIALS,
     ])
 
     @classmethod
@@ -824,13 +825,31 @@ class SystemManager(base.BaseManager):
             if eventTypeName in self.ManagementInterfaceEvents:
                 # Management interface detection finished, need to schedule a
                 # registration event now.
+                wmiIfaceId = models.Cache.get(models.ManagementInterface,
+                    name=models.ManagementInterface.WMI).pk
+                # But if it's a WMI system and we have no credentials, skip
+                # directly to UNMANAGED_CREDENTIALS_REQUIRED (RBL-7439)
+                if system.management_interface_id == wmiIfaceId:
+                    if not system.credentials:
+                        return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
                 self.scheduleSystemRegistrationEvent(system)
+                return None
             else:
                 # Add more processing here if needed
                 return None
         if jobStateName == models.JobState.FAILED:
             currentStateName = system.current_state.name
             # Simple cases first.
+            if job.status_code == 401:
+                # Authentication required
+                if currentStateName == models.SystemState.UNMANAGED:
+                    return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
+                # A mothballed system remains mothballed
+                if currentStateName in [models.SystemState.MOTHBALLED,
+                        models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED,
+                        models.SystemState.NONRESPONSIVE_CREDENTIALS]:
+                    return None
+                return models.SystemState.NONRESPONSIVE_CREDENTIALS
             if currentStateName == models.SystemState.MOTHBALLED:
                 return None
             timedelta = self.now() - system.state_change_date
