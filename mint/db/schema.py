@@ -1420,12 +1420,12 @@ def _addSystemStates(db, cfg):
                 dict(name="credentials-required", description="Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-unknown", description="Not responding: unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-net", description="Not responding: network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-host", description="Not responding: host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-shutdown", description="Not responding: shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-suspended", description="Not responding: suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="non-responsive-credentials", description="Not responding: invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-unknown", description="Not responding: Unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-net", description="Not responding: Network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-host", description="Not responding: Host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-shutdown", description="Not responding: Shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-suspended", description="Not responding: Suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
             ])

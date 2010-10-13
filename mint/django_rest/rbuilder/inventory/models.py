@@ -222,22 +222,22 @@ class SystemState(modellib.XObjIdModel):
     RESPONSIVE_DESC = "Online"
     
     NONRESPONSIVE = "non-responsive-unknown"
-    NONRESPONSIVE_DESC = "Not responding: unknown"
+    NONRESPONSIVE_DESC = "Not responding: Unknown"
     
     NONRESPONSIVE_NET = "non-responsive-net"
-    NONRESPONSIVE_NET_DESC = "Not responding: network unreachable"
+    NONRESPONSIVE_NET_DESC = "Not responding: Network unreachable"
     
     NONRESPONSIVE_HOST = "non-responsive-host"
-    NONRESPONSIVE_HOST_DESC = "Not responding: host unreachable"
+    NONRESPONSIVE_HOST_DESC = "Not responding: Host unreachable"
     
     NONRESPONSIVE_SHUTDOWN = "non-responsive-shutdown"
-    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: shutdown"
+    NONRESPONSIVE_SHUTDOWN_DESC = "Not responding: Hhutdown"
     
     NONRESPONSIVE_SUSPENDED = "non-responsive-suspended"
-    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: suspended"
+    NONRESPONSIVE_SUSPENDED_DESC = "Not responding: Suspended"
     
     NONRESPONSIVE_CREDENTIALS = "non-responsive-credentials"
-    NONRESPONSIVE_CREDENTIALS_DESC = "Not responding: invalid credentials"
+    NONRESPONSIVE_CREDENTIALS_DESC = "Not responding: Invalid credentials"
     
     DEAD = "dead"
     DEAD_DESC = "Stale"

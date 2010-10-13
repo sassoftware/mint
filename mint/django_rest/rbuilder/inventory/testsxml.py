@@ -407,31 +407,31 @@ system_states_xml = """\
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/4">
     <system_state_id>4</system_state_id>
-    <description>Not responding: unknown</description>
+    <description>Not responding: Unknown</description>
     <name>non-responsive-unknown</name>
     <created_date>2010-09-03T18:23:42.661629+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/5">
     <system_state_id>5</system_state_id>
-    <description>Not responding: network unreachable</description>
+    <description>Not responding: Network unreachable</description>
     <name>non-responsive-net</name>
     <created_date>2010-09-03T18:23:42.663290+00:00</created_date>
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/6">
     <system_state_id>6</system_state_id>
-    <description>Not responding: host unreachable</description>
+    <description>Not responding: Host unreachable</description>
     <name>non-responsive-host</name>
     <created_date>2010-09-03T18:23:42.664943+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/inventory/system_states/7">
       <system_state_id>7</system_state_id>
-      <description>Not responding: shutdown</description>
+      <description>Not responding: Shutdown</description>
       <name>non-responsive-shutdown</name>
       <created_date>2010-09-03T18:23:42.666612+00:00</created_date>
     </system_state>
     <system_state id="http://testserver/api/inventory/system_states/8">
       <system_state_id>8</system_state_id>
-      <description>Not responding: suspended</description>
+      <description>Not responding: Suspended</description>
       <name>non-responsive-suspended</name>
       <created_date>2010-09-03T18:23:42.668266+00:00</created_date>
     </system_state>
@@ -453,7 +453,7 @@ system_states_xml = """\
     <system_state_id>11</system_state_id>
   </system_state>
   <system_state id="http://testserver/api/inventory/system_states/12">
-    <description>Not responding: invalid credentials</description>
+    <description>Not responding: Invalid credentials</description>
     <name>non-responsive-credentials</name>
     <system_state_id>12</system_state_id>
   </system_state>
