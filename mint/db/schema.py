@@ -1329,6 +1329,9 @@ def _createInventorySchema(db, cfg):
                     REFERENCES inventory_job_state,
                 event_type_id integer NOT NULL
                     REFERENCES inventory_event_type,
+                status_code INTEGER NOT NULL DEFAULT 100,
+                status_text VARCHAR NOT NULL DEFAULT 'Initializing',
+                status_detail VARCHAR,
                 time_created timestamp with time zone NOT NULL,
                 time_updated timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)

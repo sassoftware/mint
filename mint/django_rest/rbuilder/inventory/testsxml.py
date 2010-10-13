@@ -2021,6 +2021,8 @@ jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid001</job_uuid>
     <job_id>1</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
@@ -2030,6 +2032,8 @@ jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid002</job_uuid>
     <job_id>2</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
@@ -2039,6 +2043,8 @@ jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid003</job_uuid>
     <job_id>3</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
 </jobs>"""
 
@@ -2052,6 +2058,8 @@ job_xml = """\
   <systems/>
   <job_uuid>rmakeuuid001</job_uuid>
   <job_id>1</job_id>
+  <status_code>100</status_code>
+  <status_text>Initializing</status_text>
 </job>"""
 
 job_states_xml = """\
@@ -2098,6 +2106,8 @@ systems_jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid001</job_uuid>
     <job_id>1</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
@@ -2107,6 +2117,8 @@ systems_jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid002</job_uuid>
     <job_id>2</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
@@ -2116,6 +2128,8 @@ systems_jobs_xml = """\
     <systems/>
     <job_uuid>rmakeuuid003</job_uuid>
     <job_id>3</job_id>
+    <status_code>100</status_code>
+    <status_text>Initializing</status_text>
   </job>
 </jobs>"""
 
