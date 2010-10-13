@@ -15,14 +15,11 @@ class JobManager(base.BaseManager):
 
     @base.exposed
     def getJobs(self):
-        jobs = models.Jobs()
-        for job in models.Job.objects.all():
-            jobs.job.append(job)
-        return jobs
+        return self._jobsFromIterator(models.Job.objects.all())
 
     @base.exposed
     def getJob(self, job_id):
-        return models.Job.objects.get(pk=job_id)
+        return self._fillIn(models.Job.objects.get(pk=job_id))
 
     @base.exposed
     def getJobStates(self):
@@ -37,27 +34,29 @@ class JobManager(base.BaseManager):
 
     @base.exposed
     def getJobsByJobState(self, job_state_id):
-        jobs = models.Jobs()
         jobState = models.JobState.objects.get(pk=job_state_id)
-        for job in models.Job.objects.filter(job_state=jobState):
-            jobs.job.append(job)
-        return jobs
+        return sef._jobsFromIterator(models.Job.objects.filter(
+            job_state=jobState))
 
     @base.exposed
     def getSystemJobsByState(self, system_id, job_state_id):
-        jobs = models.Jobs()
         system = models.System.objects.get(pk=system_id)
         jobState = models.JobState.objects.get(pk=job_state_id)
-        for job in system.jobs.filter(job_state=jobState):
-            jobs.job.append(job)
-        return jobs
+        return self._jobsFromIterator(system.jobs.filter(job_state=jobState))
 
     @base.exposed
     def getSystemJobs(self, system_id):
-        jobs = models.Jobs()
         system = models.System.objects.get(pk=system_id)
-        for job in system.jobs.all():
-            jobs.job.append(job)
+        return self._jobsFromIterator(system.jobs.all())
+
+    @classmethod
+    def _jobsFromIterator(cls, iterator):
+        jobs = models.Jobs()
+        for job in iterator:
+            jobs.job.append(cls._fillIn(job))
         return jobs
 
-
+    @classmethod
+    def _fillIn(cls, job):
+        job.setValuesFromRmake()
+        return job

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 9)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 10)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1329,6 +1329,9 @@ def _createInventorySchema(db, cfg):
                     REFERENCES inventory_job_state,
                 event_type_id integer NOT NULL
                     REFERENCES inventory_event_type,
+                status_code INTEGER NOT NULL DEFAULT 100,
+                status_text VARCHAR NOT NULL DEFAULT 'Initializing',
+                status_detail VARCHAR,
                 time_created timestamp with time zone NOT NULL,
                 time_updated timestamp with time zone NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
