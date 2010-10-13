@@ -1656,11 +1656,11 @@ class MigrateTo_51(SchemaMigration):
         return True
 
     def migrate10(self):
-        add_columns(self.db, 'inventory_job', [
+        add_columns(self.db, 'inventory_job',
             "status_code INTEGER NOT NULL DEFAULT 100",
             "status_text VARCHAR NOT NULL DEFAULT 'Initializing'",
             "status_detail VARCHAR",
-        ])
+        )
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
