@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All rights reserved.
 #
@@ -10,15 +10,10 @@ General utilities for use in the rBuilder codebase.
 
 import logging
 import inspect
+import re
+import time
 
 from conary.lib import util
-
-FORMATS = {
-        'apache': ('[%(asctime)s] [%(levelname)s] (%(name)s) %(message)s',
-            '%a %b %d %T %Y'),
-        'console': ('%(levelname)s: %(message)s', None),
-        'file': ('%(asctime)s %(levelname)s %(name)s : %(message)s', None),
-        }
 
 
 def setupLogging(logPath=None, consoleLevel=logging.WARNING,
@@ -32,9 +27,7 @@ def setupLogging(logPath=None, consoleLevel=logging.WARNING,
 
     # Console handler
     if consoleLevel is not None:
-        if consoleFormat in FORMATS:
-            consoleFormat = FORMATS[consoleFormat]
-        consoleFormatter = logging.Formatter(*consoleFormat)
+        consoleFormatter = _getFormatter(consoleFormat)
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(consoleFormatter)
         consoleHandler.setLevel(consoleLevel)
@@ -43,9 +36,7 @@ def setupLogging(logPath=None, consoleLevel=logging.WARNING,
 
     # File handler
     if logPath and fileLevel is not None:
-        if fileFormat in FORMATS:
-            fileFormat = FORMATS[fileFormat]
-        logfileFormatter = logging.Formatter(*fileFormat)
+        logfileFormatter = _getFormatter(fileFormat)
         logfileHandler = logging.FileHandler(logPath)
         logfileHandler.setFormatter(logfileFormatter)
         logfileHandler.setLevel(fileLevel)
@@ -54,6 +45,51 @@ def setupLogging(logPath=None, consoleLevel=logging.WARNING,
 
     logger.setLevel(level)
     return logger
+
+
+class ISOFormatter(logging.Formatter):
+    """
+    Logging formatter for ISO 8601 timestamps with milliseconds.
+    """
+
+    def formatTime(self, record, datefmt=None):
+        timetup = time.localtime(record.created)
+        if timetup.tm_isdst:
+            tz_seconds = time.altzone
+        else:
+            tz_seconds = time.timezone
+        tz_offset = abs(tz_seconds / 60)
+        tz_sign = (time.timezone < 0 and '+' or '-')
+
+        timestampPart = time.strftime('%F %T', timetup)
+        return '%s.%03d%s%02d%02d' % (timestampPart, record.msecs, tz_sign,
+                tz_offset / 60, tz_offset % 60)
+
+
+FORMATS = {
+        'console': '%(levelname)s: %(message)s',
+        'apache': ISOFormatter(
+            '[%(asctime)s] [%(levelname)s] (%(name)s) %(message)s'),
+        'file': ISOFormatter(
+            '%(asctime)s %(levelname)s %(name)s : %(message)s'),
+        }
+
+
+def _getFormatter(format):
+    """
+    Logging formats can be:
+     * A string - the record format
+     * A tuple - the record format and the timestamp format
+     * An instance of Formatter or a subclass
+     * A string selecting a tuple or instance from FORMATS
+    """
+    if format in FORMATS:
+        format = FORMATS[format]
+    if isinstance(format, basestring):
+        format = (format,)
+    if isinstance(format, logging.Formatter):
+        return format
+    return logging.Formatter(*format)
 
 
 class ArgFiller(object):
@@ -118,3 +154,43 @@ def urlAddAuth(url, username, password):
     if password is not None:
         urlArr[2] = password
     return util.urlUnsplit(urlArr)
+
+class Transformations(object):
+    RE_StringToCamelCase = re.compile('(.)_([a-z])')
+    RE_StringToUnderscore_1 = re.compile('(.)([A-Z][a-z]+)')
+    RE_StringToUnderscore_2 = re.compile('([a-z0-9])([A-Z])')
+    S_Group = r'\1_\2'
+
+    @classmethod
+    def strToCamelCase(cls, name):
+        return cls.RE_StringToCamelCase.sub(cls._repl, name)
+
+    @classmethod
+    def nodeToCamelCase(cls, node):
+        for name in cls._FieldNames:
+            v = getattr(node, name, None)
+            if v is not None:
+                setattr(node, name, cls.strToCamelCase(v))
+        for child in node.childNodes:
+            cls.nodeToCamelCase(child)
+
+    @classmethod
+    def strToUnderscore(cls, name):
+        s1 = cls.RE_StringToUnderscore_1.sub(cls.S_Group, name)
+        return cls.RE_StringToUnderscore_2.sub(cls.S_Group, s1).lower()
+
+    @classmethod
+    def nodeToUnderscore(cls, node):
+        for name in cls._FieldNames:
+            v = getattr(node, name, None)
+            if v is not None:
+                setattr(node, name, cls.strToUnderscore(v))
+        for child in node.childNodes:
+            cls.nodeToUnderscore(child)
+
+    @classmethod
+    def _repl(cls, m):
+        return m.group()[:-2] + m.group()[-1].upper()
+
+    _FieldNames = ['tagName', 'nodeName']
+

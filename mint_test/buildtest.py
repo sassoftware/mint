@@ -903,10 +903,13 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.failIf(buildDict['protocolVersion'] != 1,
                     "Serial Version 1 was not honored")
 
+        expectedKeys = ['UUID', 'buildType', 'data', 'description', 'name',
+            'outputToken', 'project', 'protocolVersion', 'proxy',
+            'troveFlavor', 'troveName', 'outputUrl', 'troveVersion', 'type',
+            'buildId', 'outputUrl', 'proddefLabel', 'pki', 'inventory_node']
+
         self.failUnlessEqual(set(str(x) for x in buildDict.keys()),
-            set(str(x) for x in ['UUID', 'buildType', 'data', 'description', 'name', 'outputToken',
-             'project', 'protocolVersion', 'proxy', 'troveFlavor', 'troveName', 'outputUrl',
-             'troveVersion', 'type', 'buildId', 'outputUrl', 'proddefLabel']))
+            set(str(x) for x in expectedKeys))
 
         self.failUnlessEqual(set(buildDict['project']), set(['hostname', 'name', 'label', 'conaryCfg']))
 

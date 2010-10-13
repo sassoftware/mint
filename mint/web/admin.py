@@ -1,11 +1,11 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
-# All rights reserved
+# All rights reserved.
 #
 
-import os
-
+import logging
+import simplejson
 from conary import conarycfg
 from conary import conaryclient
 from conary.repository import errors
@@ -13,20 +13,20 @@ from conary.repository import errors
 from mint import users
 from mint import maintenance
 from mint.helperfuncs import getProjectText, configureClientProxies
-from mint.mint_error import *
 from mint.scripts import mirror
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
-from conary import conarycfg, versions
+from conary import versions
 
 import kid.parser
 if hasattr(kid.parser, 'XML'):
     from kid.parser import XML
 else:
-    from kid.pull import XML
+    from kid.pull import XML  # pyflakes=ignore
 
-import simplejson
+log = logging.getLogger(__name__)
+
 
 class AdminHandler(WebHandler):
     def handle(self, context):
@@ -581,6 +581,7 @@ class AdminHandler(WebHandler):
                     self.client.addUpdateService(hostname, adminUser,
                             adminPassword, description)
                 except Exception, e:
+                    log.exception("Failed to add update service %s:", hostname)
                     self._addErrors("Failed to add Update Service: %s" % \
                             str(e))
                 else:

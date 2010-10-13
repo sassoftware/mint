@@ -4,18 +4,59 @@
 # All Rights Reserved
 #
 
+import logging
+import sys
+import traceback
+
+import libxml2
+import libxslt
+
 from django.contrib.auth import authenticate
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponse
 
 from mint import config
-from mint.django_rest import logger
+from mint import logerror
+from mint import mint_error
 from mint.django_rest.rbuilder import auth
+from mint.django_rest.rbuilder.inventory import models
+from mint.lib import mintutils
+
+log = logging.getLogger(__name__)
 
 class ExceptionLoggerMiddleware(object):
 
-    def process_exception(self, request, exception):
-        logger.exception(exception)
+    def process_request(self, request):
+        mintutils.setupLogging(consoleLevel=logging.INFO,
+                consoleFormat='apache')
         return None
+
+    def process_exception(self, request, exception):
+        ei = sys.exc_info()
+        tb = ''.join(traceback.format_tb(ei[2]))
+        msg = str(ei[1])
+        self.logError(request, ei[0], ei[1], ei[2])
+
+        code = 500
+        fault = models.Fault(code=code, message=msg, traceback=tb)
+        response = HttpResponse(status=code, content_type='text/xml')
+        response.content = fault.to_xml(request)
+
+        return response
+
+    def logError(self, request, e_type, e_value, e_tb, doEmail=True):
+        info = {
+                'path'              : request.path,
+                'method'            : request.method,
+                'headers_in'        : request.META,
+                'request_params'    : request.GET,
+                'is_secure'         : request.is_secure,
+                }
+        try:
+            logerror.logErrorAndEmail(request.cfg, e_type, e_value,
+                    e_tb, 'API call (django handler)', info, doEmail=doEmail)
+        except mint_error.MailError, err:
+            log.error("Error sending mail: %s", str(err))
+
 
 class SetMethodRequestMiddleware(object):
     
@@ -37,16 +78,37 @@ class SetMethodRequestMiddleware(object):
                 return response
 
         return None
+    
+class SetMintAuthMiddleware(object):
+    """
+    Set the authentication information on the request
+    """
+    def process_request(self, request):
+        request._auth = auth.getAuth(request)
+        username, password = request._auth
+        request._authUser = authenticate(username = username, password = password)
+        return None
 
 class SetMintAdminMiddleware(object):
-
+    """
+    Set a flag on the request indicating whether or not the user is an admin
+    """
     def process_request(self, request):
-         # Mark the request as from an admin
-        request._is_admin = False        
-        username, password = auth.getAuth(request)
-        if username:
-            user = authenticate(username = username, password = password)
-            request._is_admin = auth.isAdmin(user)
+        request._is_admin = auth.isAdmin(request._authUser)
+        return None
+    
+class LocalSetMintAdminMiddleware(object):
+    def process_request(self, request):
+        request._is_admin = True
+        request._is_authenticated = True
+        return None
+
+class SetMintAuthenticatedMiddleware(object):
+    """
+    Set a flag on the request indicating whether or not the user is authenticated
+    """
+    def process_request(self, request):
+        request._is_authenticated = auth.isAuthenticated(request._authUser)
         return None
        
 class SetMintConfigMiddleware(object):
@@ -54,7 +116,37 @@ class SetMintConfigMiddleware(object):
     def process_request(self, request):
         if hasattr(request, '_req'):
             cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
-            cfg = config.getConfig(cfgPath)
-            request.cfg = cfg
+        else:
+            cfgPath = config.RBUILDER_CONFIG
+        cfg = config.getConfig(cfgPath)
+        request.cfg = cfg
 
         return None
+
+class AddCommentsMiddleware(object):
+   
+    useXForm = True
+    
+    def __init__(self):
+        try:
+            styledoc = libxml2.parseFile(__file__[0:__file__.index('.py')].replace(
+                    'middleware', 'templates/comments.xsl'))
+            self.style = libxslt.parseStylesheetDoc(styledoc)
+        except libxml2.parserError:
+            self.useXForm = False 
+
+    def process_response(self, request, response):
+
+        if self.useXForm and response.content and  \
+            response.status_code in (200, 201, 206, 207):
+
+            try: 
+                xmldoc = libxml2.parseDoc(response.content)
+                result = self.style.applyStylesheet(xmldoc, None)
+                response.content = result.serialize()
+                xmldoc.freeDoc()
+                result.freeDoc()
+            except:
+                pass
+
+        return response 

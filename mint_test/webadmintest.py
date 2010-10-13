@@ -7,6 +7,7 @@
 
 import testsuite
 testsuite.setup()
+from testutils import mock
 
 import os
 
@@ -26,6 +27,11 @@ class FakeUpdateServiceServerProxy:
     def addRandomUser(self, name):
         return 'thisisamirrorpassword'
 
+    Network = mock.MockObject()
+    Network.Network.index._mock.setDefaultReturn({'host_hostName':''})
+    configure = Network
+    rusconf = mock.MockObject()
+
 
 class FakerAPA(mint_rephelp.StubXMLRPCServerController):
 
@@ -40,6 +46,9 @@ class FakerAPA(mint_rephelp.StubXMLRPCServerController):
 
         def addRandomUser(self, name):
             return 'thisisamirrorpassword'
+
+        def index(self):
+            return {'has_hostName':''}
 
     def handlerFactory(self):
         return self.FakerAPAInterface()

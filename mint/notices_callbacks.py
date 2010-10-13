@@ -98,12 +98,24 @@ class NoticesCallback(packagecreator.callbacks.Callback):
     def formatSeconds(cls, secs):
         return "%02d:%02d:%02d" % (secs / 3600, (secs % 3600) / 60, secs % 60)
 
+setup_complete_message="""\
+Welcome to rBuilder!
+
+The menu on the left is the launch point for each task you can do here. Before you get started creating Appliances and deploying Systems, though, be sure to do the following:
+
+(1) Add one or more Platforms to use as the base operating system for your appliances.
+
+(2) If you're using rBuilder to deploy and manage systems in a virtual environment, add a Target with the configuration rBuilder needs for that environment.
+
+For information on how to complete these first tasks and more, see the rBuilder Evaluation Guide at <a href="event:http://docs.rpath.com" target="_blank">docs.rpath.com</a>.
+"""
+
 class RbaSetupNoticeCallback(NoticesCallback):
 
     def __init__(self, *args, **kw):
         self.title = 'rBuilder setup complete'
         self.noticeDate = self.formatTime(time.time())
-        self.description = 'Setup completed on %s' % self.noticeDate
+        self.description = setup_complete_message
         self.category = 'success'
         NoticesCallback.__init__(self, *args, **kw)
 

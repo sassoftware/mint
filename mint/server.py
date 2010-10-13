@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -77,6 +77,8 @@ from conary import errors as conary_errors
 
 from mcp import client as mcp_client
 from mcp import mcp_error
+from rmake.lib import procutil
+from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
 
 
@@ -656,6 +658,59 @@ class MintServer(object):
             httpProxies = self.cfg.proxy or {}
         return [ useInternalConaryProxy, httpProxies ]
 
+    def _getRmakeClient(self):
+        """Return an instance of a rMake 3 client."""
+        return rmk_client.RmakeClient('http://localhost:9998')
+
+    def _configureSputnik(self, sp, urlhostname):
+        """Try to configure remote sputnik.
+
+        It might fail if the upsrv is too old to have a sputnik (pre-5.7) in
+        which case we should succeed anyway with just the repository setup.
+        """
+        result = sp.configure.Network.index()
+        fqdn = result.get('host_hostName')
+        if not fqdn:
+            log.warning("Update service %s has no FQDN configured "
+                    "-- not creating certificate pair.", urlhostname)
+            return
+
+        log.info("Creating certificate pair for update service %s", fqdn)
+        x509_pem, pkey_pem = self.restDb.createCertificate(
+                purpose='upsrv %s' % (fqdn,),
+                desc='rPath Update Service',
+                issuer='hg_ca',
+                common=fqdn,
+                conditional=True,
+                )
+        ret = sp.rusconf.RusConf.pushConfiguration({
+            'x509_pem': x509_pem,
+            'pkey_pem': pkey_pem,
+            })
+        if 'errors' in ret:
+            # Too old to have a sputnik installation.
+            if ('method "pushConfiguration" is not supported'
+                    not in ret['errors'][-1]):
+                log.error("Error configuring update service %s: %s",
+                        urlhostname, ret['errors'][-1])
+                raise mint_error.UpdateServiceUnknownError(urlhostname)
+            log.warning("Update service %s does not support system inventory "
+                    "-- only repository services will be configured.",
+                    urlhostname)
+            return
+
+        # At this point, the rmake node should be connecting back to our XMPP
+        # server. Push the new JID to rmake's whitelist so it can authenticate.
+        jid = ret.get('jid')
+        try:
+            client = self._getRmakeClient()
+            client.registerWorker(jid)
+        except:
+            log.exception("Failed to register remote update service %s "
+                    "(JID %s) with local rMake dispatcher:", fqdn, jid)
+        else:
+            log.info("Registered update service %s w/ JID %s", fqdn, jid)
+
     def _configureUpdateService(self, hostname, adminUser, adminPassword):
         import xmlrpclib
         from mint.lib import proxiedtransport
@@ -705,6 +760,8 @@ class MintServer(object):
                 sp = xmlrpclib.ServerProxy(url, transport=m2xmlrpclib.SSL_Transport())
                 mirrorPassword = \
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
+
+            self._configureSputnik(sp, urlhostname)
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 403:
                 raise mint_error.UpdateServiceAuthError(urlhostname)
@@ -715,7 +772,7 @@ class MintServer(object):
             raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
                                                            str(e[1]))
         else:
-            if not mirrorPassword:
+            if not mirrorPassword or isinstance(mirrorPassword, dict):
                 raise mint_error.UpdateServiceUnknownError(urlhostname)
 
         return (mirrorUser, mirrorPassword)
@@ -2549,6 +2606,27 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         #Set up the http/https proxy
         r['proxy'] = dict(self.cfg.proxy)
+
+        # CA certificates for rpath-tools.
+        hg_ca, lg_ca = self.restDb.getCACertificates()
+        r['pki'] = {
+                'hg_ca': hg_ca or '',
+                'lg_ca': lg_ca or '',
+                }
+        if not hg_ca:
+            log.warning("High-grade CA certificate is missing. Images will "
+                    "not be registerable.")
+        if not lg_ca:
+            log.warning("Low-grade CA certificate is missing. Images will "
+                    "not be remote-registerable.")
+
+        # Send our IP to jobslave for rpath-tools configuration. This is mainly
+        # here for demoability, because images booted in a different management
+        # zone will fail to contact the rBuilder. Eventually SLP will work out
+        # of the box and this won't be necessary.
+        rbuilder_ip = procutil.getNetName()
+        if rbuilder_ip != 'localhost':
+            r['inventory_node'] = rbuilder_ip + ':8443'
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
