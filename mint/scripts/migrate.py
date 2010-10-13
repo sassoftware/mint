@@ -1641,8 +1641,8 @@ class MigrateTo_51(SchemaMigration):
             VALUES
                 ('credentials-required',
                  'Invalid credentials',
-                 %s)
-        """ % str(datetime.datetime.now(tz.tzutc())))
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
         
         cu.execute("""
             INSERT INTO "inventory_system_state" 
@@ -1650,8 +1650,8 @@ class MigrateTo_51(SchemaMigration):
             VALUES
                 ('non-responsive-credentials',
                  'Not responding: invalid credentials',
-                 %s)
-        """ % str(datetime.datetime.now(tz.tzutc())))
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
 
         return True
 
