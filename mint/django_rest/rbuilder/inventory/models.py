@@ -212,8 +212,8 @@ class SystemState(modellib.XObjIdModel):
     UNMANAGED = "unmanaged"
     UNMANAGED_DESC = "Unmanaged"
     
-    CREDENTIALS_REQUIRED = "credentials-required"
-    CREDENTIALS_REQUIRED_DESC = "Invalid credentials"
+    UNMANAGED_CREDENTIALS_REQUIRED = "unmanaged-credentials"
+    UNMANAGED_CREDENTIALS_REQUIRED_DESC = "Unmanaged: Invalid credentials"
     
     REGISTERED = "registered"
     REGISTERED_DESC = "Initial synchronization pending"
@@ -247,7 +247,7 @@ class SystemState(modellib.XObjIdModel):
 
     STATE_CHOICES = (
         (UNMANAGED, UNMANAGED_DESC),
-        (CREDENTIALS_REQUIRED, CREDENTIALS_REQUIRED_DESC),
+        (UNMANAGED_CREDENTIALS_REQUIRED, UNMANAGED_CREDENTIALS_REQUIRED_DESC),
         (REGISTERED, REGISTERED_DESC),
         (RESPONSIVE, RESPONSIVE_DESC),
         (NONRESPONSIVE, NONRESPONSIVE_DESC),

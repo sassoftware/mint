@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 9)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 10)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1417,7 +1417,7 @@ def _addSystemStates(db, cfg):
     changed |= _addTableRows(db, 'inventory_system_state', 'name',
             [
                 dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
-                dict(name="credentials-required", description="Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
                 dict(name="non-responsive-unknown", description="Not responding: Unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),

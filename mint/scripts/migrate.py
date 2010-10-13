@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 9)
+    Version = (51, 10)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1650,6 +1650,22 @@ class MigrateTo_51(SchemaMigration):
             VALUES
                 ('non-responsive-credentials',
                  'Not responding: invalid credentials',
+                 ?)
+        """, str(datetime.datetime.now(tz.tzutc())))
+
+        return True
+    
+    def migrate10(self):
+        cu = self.db.cursor()
+        
+        cu.execute("""DELETE FROM inventory_system_state where name='credentials-required'""")
+        
+        cu.execute("""
+            INSERT INTO "inventory_system_state" 
+                ("name", "description", "created_date")
+            VALUES
+                ('unmanaged-credentials',
+                 'Unmanaged: Invalid credentials',
                  ?)
         """, str(datetime.datetime.now(tz.tzutc())))
 
