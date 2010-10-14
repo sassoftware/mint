@@ -170,7 +170,7 @@ class SystemManager(base.BaseManager):
         # Recalculate available updates for each trove on the system, if
         # needed.  This call honors the 24 hour cache.
         for trove in system.installed_software.all():
-            self.mgr.set_available_updates(trove)
+            self.mgr.versionMgr.set_available_updates(trove)
         return system
 
     @base.exposed
