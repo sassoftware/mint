@@ -191,6 +191,8 @@ class PackageNoticesCallback(NoticesCallback):
 
     @classmethod
     def refreshCachedUpdates(cls, troveBinaries):
+        from django import db
+        db.close_connection()
         from mint.django_rest.rbuilder.inventory import manager
         mgr = manager.Manager()
         for trvName, trvVersion in troveBinaries:
