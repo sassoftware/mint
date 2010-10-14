@@ -167,6 +167,10 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
+        # Recalculate available updates for each trove on the system, if
+        # needed.  This call honors the 24 hour cache.
+        for trove in system.installed_software.all():
+            self.mgr.set_available_updates(trove)
         return system
 
     @base.exposed

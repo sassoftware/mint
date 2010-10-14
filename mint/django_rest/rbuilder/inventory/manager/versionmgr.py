@@ -131,6 +131,10 @@ class VersionManager(base.BaseManager):
             self._cclient = self.rest_db.productMgr.reposMgr.getUserClient()
         return self._cclient
 
+    def _checkCacheExpired(self, trove):
+        return (trove.last_available_update_refresh + one_day) < \
+            datetime.datetime.now(tz.tzutc())
+
     @base.exposed
     def set_available_updates(self, trove, force=False):
         one_day = datetime.timedelta(1)
@@ -141,15 +145,11 @@ class VersionManager(base.BaseManager):
             trove.last_available_update_refresh = \
                 trove.last_available_update_refresh.replace(tzinfo=tz.tzutc())
 
-        if force or trove.last_available_update_refresh is None:
-            self.refresh_available_updates(trove)
-            trove.last_available_update_refresh = \
-                datetime.datetime.now(tz.tzutc())
-            trove.save()
-            return
+        if force or \
+           trove.last_available_update_refresh is None or \
+           self._checkCacheExpired(trove):
 
-        if (trove.last_available_update_refresh + one_day) < \
-            datetime.datetime.now(tz.tzutc()):
+            trove.available_updates.clear()
             self.refresh_available_updates(trove)
             trove.last_available_update_refresh = \
                 datetime.datetime.now(tz.tzutc())
