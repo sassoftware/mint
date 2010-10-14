@@ -506,18 +506,17 @@ class Platforms(object):
         plat = self.db.db.platforms.get(platformId)
         return plat.get('projectId', None)
 
-    def _getUsableProject(self, platformId, hostname, domainname, url,
-                          authInfo, mirror):
+    def _getUsableProject(self, platformId, hostname):
+        projectId = self._getProjectId(platformId)
+        if projectId:
+            return projectId
+
         # See if there is project already setup that shares
         # the fqdn of the platform.
         try:
             projectId = self.db.db.projects.getProjectIdByFQDN(hostname)
         except mint_error.ItemNotFound, e:
             projectId = None
-
-        if projectId:
-            # Add the project to our platform
-            self.db.db.platforms.update(platformId, projectId=projectId)
 
         return projectId
 
@@ -559,7 +558,8 @@ class Platforms(object):
         return domainname
 
     def _getUrl(self, platform):
-        projectId = self._getProjectId(platform.platformId)
+        hostname = self._getHostname(platform)
+        projectId = self._getUsableProject(platform.platformId, hostname)
         if projectId:
             project = self.db.db.projects.get(projectId)
             local = not(project['external'] == 1)
@@ -568,9 +568,8 @@ class Platforms(object):
 
         if local:
             return 'https://%s/repos/%s/' % \
-                (self.cfg.secureHost, self._getHostname(platform))
+                (self.cfg.secureHost, hostname)
         else:
-            hostname = self._getHostname(platform)
             # XXX Don't leave this hard-coded forever
             if hostname == 'centos.rpath.com':
                 return 'https://centos.rpath.com/nocapsules/'
@@ -598,12 +597,15 @@ class Platforms(object):
 
         # Get the projectId to see if this platform has already been
         # associated with an external project.
-        projectId = self._getProjectId(platformId)
+        projectId = self._getUsableProject(platformId, hostname)
 
         if not projectId:
-            projectId = self._getUsableProject(platformId, hostname,
-                            domainname, url, authInfo, mirror)
+            projectId = self._getUsableProject(platformId, hostname)
             if projectId:
+                if projectId:
+                    # Add the project to our platform
+                    self.db.db.platforms.update(platformId, 
+                        projectId=projectId)
                 project = self.db.db.projects.get(projectId)
                 if project['external'] == 1:
                     self._setupExternalProject(hostname, domainname, 
