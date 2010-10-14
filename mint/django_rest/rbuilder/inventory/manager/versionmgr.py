@@ -132,12 +132,12 @@ class VersionManager(base.BaseManager):
         return self._cclient
 
     def _checkCacheExpired(self, trove):
+        one_day = datetime.timedelta(1)
         return (trove.last_available_update_refresh + one_day) < \
             datetime.datetime.now(tz.tzutc())
 
     @base.exposed
     def set_available_updates(self, trove, force=False):
-        one_day = datetime.timedelta(1)
 
         # Hack to make sure utc is set as the timezone on
         # last_available_update_refresh.
