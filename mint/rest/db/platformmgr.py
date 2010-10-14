@@ -568,7 +568,7 @@ class Platforms(object):
 
         if local:
             return 'https://%s/repos/%s/' % \
-                (self.cfg.secureHost, platform.label)
+                (self.cfg.secureHost, self._getHostname(platform))
         else:
             hostname = self._getHostname(platform)
             # XXX Don't leave this hard-coded forever
