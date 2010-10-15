@@ -33,7 +33,6 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN
 from mint.server import deriveBaseFunc
 from mint.django_rest.rbuilder.inventory import manager
 import mint.mint_error
-from conary.conarycfg import ConaryConfiguration
 from conary import conaryclient
 from factory_test.factorydatatest import basicXmlDef
 import pcreator
