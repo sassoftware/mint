@@ -108,7 +108,7 @@ class ContentSourceTypes(object):
     def _listFromCfg(self):
         allTypesMap = dict()
         allTypes = []
-        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable in self.platforms._iterConfigPlatforms():
+        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable, abstract in self.platforms._iterConfigPlatforms():
             for t, isSingleton in sourceTypes:
                 if t not in allTypes:
                     allTypes.append(t)
@@ -247,9 +247,10 @@ class Platforms(object):
             enabled = 0
 
             configurable = platformLabel in self.cfg.configurablePlatforms
+            abstract = platformLabel in self.cfg.abstractPlatforms
 
             yield (platformLabel, platformName, platformUsageTerms,
-                platformBuildTypes, enabled, types, configurable)
+                platformBuildTypes, enabled, types, configurable, abstract)
 
     def _platformModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
@@ -262,6 +263,7 @@ class Platforms(object):
         platformBuildTypes = kw.get('platformBuildTypes', [])
         enabled = kw.get('enabled', None)
         configurable = kw.get('configurable', None)
+        abstract = kw.get('abstract', None)
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
         platformUsageTerms = kw.get('platformUsageTerms')
@@ -269,7 +271,7 @@ class Platforms(object):
                 platformName=platformName, enabled=enabled,
                 platformUsageTerms=platformUsageTerms,
                 configurable=configurable, mode=mode,
-                repositoryHostname=fqdn)
+                repositoryHostname=fqdn, abstract=abstract)
         platform._sourceTypes = sourceTypes
         platform._buildTypes = platformBuildTypes
         return platform
@@ -335,7 +337,7 @@ class Platforms(object):
         cfgLabels = [p.label for p in cfgPlatforms]
 
         fields = ['platformName', 'platformUsageTerms', 'hostname',
-                  '_sourceTypes', '_buildTypes', 'configurable']
+                  '_sourceTypes', '_buildTypes', 'configurable', 'abstract']
 
         platforms = []
 
@@ -390,13 +392,13 @@ class Platforms(object):
 
     def _listFromCfg(self):
         platforms = []
-        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
+        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable, abstract in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
                                 platformName=name,
                                 platformUsageTerms=usageTerms,
                                 platformBuildTypes=buildTypes,
                                 enabled=enabled, configurable=configurable,
-                                sourceTypes=sourceTypes)
+                                abstract=abstract, sourceTypes=sourceTypes)
             platforms.append(platform)
         return platforms
 

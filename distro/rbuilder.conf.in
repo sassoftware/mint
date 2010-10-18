@@ -85,11 +85,15 @@ acceptablePlatforms     rap.rpath.com@rpath:linux-1-devel
 acceptablePlatforms     ubuntu.rpath.com@rpath:ubuntu-hardy
 acceptablePlatforms     scientific.rpath.com@rpath:sl-5
 
+# Platforms that require user configuration
 configurablePlatforms   rhel.rpath.com@rpath:rhel-4-as
 configurablePlatforms   rhel.rpath.com@rpath:rhel-5-server
 configurablePlatforms   rhel.rpath.com@rpath:rhel-5-client-workstation
 configurablePlatforms   sles.rpath.com@rpath:sles-10sp3
 configurablePlatforms	centos.rpath.com@rpath:centos-5e
+
+# Platforms that are used to create custom platforms but cannot be used themselves.
+abstractPlatforms       windows.rpath.com@rpath:windows-common
 
 platformSources          redhatnetwork
 platformSourceUrls       https://rhn.redhat.com
