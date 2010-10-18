@@ -2716,12 +2716,13 @@ class SystemVersionsTestCase(XMLTestCase):
         response = self._get('/api/inventory/systems/%s/' % system.pk,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
-            testsxml.system_version_xml % \
-            (self.trove.last_available_update_refresh.isoformat(),
-             self.trove2.last_available_update_refresh.isoformat(),
-             system.networks.all()[0].created_date.isoformat(),
-             system.created_date.isoformat()),
+        expected = (testsxml.system_version_xml % (
+                self.trove.last_available_update_refresh.isoformat(),
+                self.trove2.last_available_update_refresh.isoformat(),
+                system.networks.all()[0].created_date.isoformat(),
+                system.created_date.isoformat())).replace(
+             'installed_software/', 'installed_software')
+        self.assertXMLEquals(response.content, expected,
             ignoreNodes = [ 'created_date' ])
 
     def testGetInstalledSoftwareRest(self):

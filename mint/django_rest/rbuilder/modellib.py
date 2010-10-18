@@ -896,6 +896,21 @@ class XObjModel(models.Model):
                 except exceptions.ObjectDoesNotExist:
                     setattr(xobj_model, accessorName, None)
 
+    def _m2m_buildXobjModel(self, request, m2m_accessor):
+        dmodel = type_map.get(m2m_accessor)
+        if dmodel is not None:
+            m2m_accessor_model = dmodel._xobjClass()
+            _xobj = getattr(dmodel, '_xobj', None)
+            if _xobj is not None:
+                m2m_accessor_model._xobj = _xobj
+                if 'id' in _xobj.attributes:
+                    m = dmodel()
+                    m2m_accessor_model.id = m.get_absolute_url(request,
+                        parents=[self])
+        else:
+            m2m_accessor_model = type(m2m_accessor, (object,), {})()
+        return m2m_accessor_model
+
     def serialize_m2m_accessors(self, xobj_model, m2m_accessors, request,
             values=None):
         """
@@ -913,7 +928,7 @@ class XObjModel(models.Model):
             var_name = self.getM2MName(m2model)
 
             # Simple object to create for our m2m_accessor
-            m2m_accessor_model = type(m2m_accessor, (object,), {})()
+            m2m_accessor_model = self._m2m_buildXobjModel(request, m2m_accessor)
 
             # In django, m2m_accessors are always lists of other models.
             accessorModelValues = []

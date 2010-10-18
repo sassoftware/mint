@@ -602,12 +602,19 @@ class SystemTargetCredentials(modellib.XObjModel):
     credentials = modellib.ForeignKey(rbuildermodels.TargetCredentials,
         null=False, related_name = 'systems')
 
-class InstalledSoftware(modellib.XObjModel):
+class InstalledSoftware(modellib.XObjIdModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='installed_software')
+                tag='installed_software',
+                attributes=dict(id = str))
     list_fields = ['trove']
+
+    def get_absolute_url(self, request, parents=None, model=None):
+        if parents:
+            return modellib.XObjIdModel.get_absolute_url(self, request,
+                parents=parents, model=model)
+        return request.build_absolute_uri(request.get_full_path())
 
 class EventType(modellib.XObjIdModel):
     class Meta:

@@ -284,7 +284,7 @@ system_type_systems_xml="""
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
     <hostname/>
-    <installed_software/>
+    <installed_software id="http://testserver/api/inventory/systems/3/installed_software"/>
     <jobs id="http://testserver/api/inventory/systems/3/jobs">
       <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
       <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
@@ -504,7 +504,7 @@ management_nodes_xml = """\
     <launching_user/>
     <launch_date/>
     <local>true</local>
-    <installed_software/>
+    <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
     <jobs id="http://testserver/api/inventory/systems/1/jobs">
       <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
       <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
@@ -574,7 +574,7 @@ management_node_xml = """\
   <launching_user/>
   <launch_date/>
   <local>true</local>
-  <installed_software/>
+  <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
     <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
@@ -685,7 +685,7 @@ management_node_post_response_xml = """\
   <launching_user/>
   <launch_date/>
   <local>true</local>
-  <installed_software/>
+  <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <description>test management node desc</description>
   <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -782,7 +782,7 @@ management_node_zone_post_response_xml = """\
   <launching_user/>
   <launch_date/>
   <local>true</local>
-  <installed_software/>
+  <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
     <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
@@ -834,7 +834,7 @@ systems_xml = """\
     <generated_uuid/>
     <has_active_jobs>False</has_active_jobs>
     <hostname/>
-    <installed_software/>
+    <installed_software id="http://testserver/api/inventory/systems/2/installed_software"/>
     <jobs id="http://testserver/api/inventory/systems/2/jobs">
       <completed_jobs href="http://testserver/api/inventory/systems/2/job_states/3/jobs"/>
       <failed_jobs href="http://testserver/api/inventory/systems/2/job_states/4/jobs"/>
@@ -894,7 +894,7 @@ systems_xml = """\
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
     <hostname/>
-    <installed_software/>
+    <installed_software id="http://testserver/api/inventory/systems/3/installed_software"/>
     <jobs id="http://testserver/api/inventory/systems/3/jobs">
       <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
       <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
@@ -1083,7 +1083,7 @@ system_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
-  <installed_software/>
+  <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
     <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
@@ -1284,7 +1284,7 @@ system_post_xml_response = """\
   <system_id>1</system_id>
   <launching_user/>
   <launch_date/>
-  <installed_software/>
+  <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
     <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
@@ -1394,7 +1394,7 @@ system_target_xml = """\
   <system_id>1</system_id>
   <launching_user/>
   <launch_date/>
-  <installed_software/>
+  <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
     <failed_jobs href="http://testserver/api/inventory/systems/1/job_states/4/jobs"/>
@@ -1537,7 +1537,7 @@ systems_log_xml = """\
 """
 
 get_installed_software_xml = """\
-  <installed_software>
+  <installed_software id="http://testserver/api/inventory/systems/3/installed_software/">
     <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%%3D/clover.eng.rpath.com%%40rpath%%3Aclover-1-devel/1-2-1%%5B%%7E%%21dom0%%2C%%7E%%21domU%%2Cvmware%%2C%%7E%%21xen%%20is%%3A%%20x86%%28i486%%2Ci586%%2Ci686%%2Csse%%2Csse2%%29%%5D">
       <available_updates>
         <version>
@@ -1850,7 +1850,7 @@ system_available_updates_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port>5989</agent_port>
   <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
-  <installed_software>
+  <installed_software id="http://testserver/api/inventory/systems/3/installed_software">
     <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%3D/clover.eng.rpath.com%40rpath%3Aclover-1-devel/1-2-1%5B%7E%21dom0%2C%7E%21domU%2Cvmware%2C%7E%21xen%20is%3A%20x86%28i486%2Ci586%2Ci686%2Csse%2Csse2%29%5D">
       <name>group-clover-appliance</name>
       <trove_id>1</trove_id>
@@ -2160,7 +2160,7 @@ system_with_target = """\
   <launching_user/>
   <launch_date/>
   <ssl_client_certificate/>
-  <installed_software/>
+  <installed_software id="http://testserver/api/inventory/systems/4/installed_software"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <jobs id="http://testserver/api/inventory/systems/4/jobs">
