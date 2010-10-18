@@ -568,6 +568,9 @@ class SystemsManager(BaseManager):
         model = self.model()
         return None, model
 
+class InstalledSoftwareManager(SystemsManager):
+    pass
+
 class XObjModel(models.Model):
     """
     Common model class all models should inherit from.  Overrides the default

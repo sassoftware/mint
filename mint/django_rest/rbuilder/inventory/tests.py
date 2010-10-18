@@ -3638,6 +3638,41 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.methodsCalled,
             [])
 
+    def testUpdateCim(self):
+        event = self._setupEvent(models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
+        event.delete()
+
+        url = "/api/inventory/systems/%s/installed_software" % self.system2.pk
+        xml = """
+<installed_software>
+    <trove>
+      <name>group-chater-appliance</name>
+      <version>
+        <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
+        <ordering>1234567890.12</ordering>
+        <flavor>is: x86</flavor>
+      </version>
+      <flavor>is: x86</flavor>
+    </trove>
+    <trove>
+      <name>vim</name>
+      <version>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <ordering>1272410163.98</ordering>
+        <flavor>desktop is: x86_64</flavor>
+      </version>
+      <flavor>desktop is: x86_64</flavor>
+    </trove>
+</installed_software>
+"""
+
+        response = self._put(url, data=xml,
+            username="testuser", password="password")
+        self.failUnlessEqual(response.status_code, 200)
+
+        # We can't mock something past django's handler, so there's no
+        # validation that we can do at this point
+
 class TargetSystemImportTest(XMLTestCase):
     fixtures = ['users', 'targets']
 

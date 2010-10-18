@@ -609,6 +609,7 @@ class InstalledSoftware(modellib.XObjIdModel):
                 tag='installed_software',
                 attributes=dict(id = str))
     list_fields = ['trove']
+    objects = modellib.InstalledSoftwareManager()
 
     def get_absolute_url(self, request, parents=None, model=None):
         if parents:

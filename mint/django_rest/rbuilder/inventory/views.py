@@ -437,6 +437,15 @@ class InventorySystemsInstalledSoftwareService(AbstractInventoryService):
         installedSoftware.trove = system.installed_software.all()
         return installedSoftware
 
+    @requires('installed_software')
+    @return_xml
+    def rest_PUT(self, request, system_id, installed_software):
+        """Initiate a software update on the system, in order to install the
+        specified software"""
+        self.mgr.updateInstalledSoftware(system_id, installed_software.trove)
+        installedSoftware = models.InstalledSoftware()
+        return installedSoftware
+
 class InventorySystemCredentialsServices(AbstractInventoryService):
 
     @access.admin

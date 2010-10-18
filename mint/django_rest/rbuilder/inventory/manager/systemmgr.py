@@ -742,7 +742,7 @@ class SystemManager(base.BaseManager):
         # XXX This will have to change and be done in modellib, most likely.
         if self.checkAndApplyShutdown(system):
             return
-        self.check_system_versions(system)
+        self.checkInstalledSoftware(system)
         last_job = getattr(system, 'lastJob', None)
         if last_job and last_job.job_state.name == models.JobState.COMPLETED:
             # This will update the system state as a side-effect
@@ -764,8 +764,7 @@ class SystemManager(base.BaseManager):
                 self.scheduleSystemPollNowEvent(system)
         """
 
-    def check_system_versions(self, system):
-        # TODO: check for system.event_uuid
+    def checkInstalledSoftware(self, system):
         # If there is an event_uuid set on system, assume we're just updating
         # the DB with the results of a job, otherwise, update the actual
         # installed software on the system.
@@ -773,22 +772,18 @@ class SystemManager(base.BaseManager):
             return
         troveSpecs = ["%s=%s[%s]" % x.getNVF()
             for x in system.new_versions ]
-        if system.event_uuid:
-            if troveSpecs:
-                msg = "Setting installed software to: %s" % (
-                    ', '.join(troveSpecs), )
-            else:
-                msg = "Deleting all installed software"
-            self.log_system(system, msg)
-            self.mgr.setInstalledSoftware(system, system.new_versions)
+        # This isn't technically needed anymore, but for now it will prevent
+        # clients from inadvertently overwriting the software if they still
+        # PUT a system model and expect that to trigger a software update
+        if not system.event_uuid:
+            return
+        if troveSpecs:
+            msg = "Setting installed software to: %s" % (
+                ', '.join(troveSpecs), )
         else:
-            if troveSpecs:
-                msg = "Initiating software update to: %s" % (
-                    ', '.join(troveSpecs), )
-            else:
-                msg = "Initiating software update, deleting everything"
-            self.log_system(system, msg)
-            self.mgr.updateInstalledSoftware(system, system.new_versions)
+            msg = "Deleting all installed software"
+        self.log_system(system, msg)
+        self.mgr.setInstalledSoftware(system, system.new_versions)
 
     def checkAndApplyShutdown(self, system):
         currentStateName = system.current_state.name
