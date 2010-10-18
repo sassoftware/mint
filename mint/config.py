@@ -238,6 +238,7 @@ class MintConfig(ConfigFile):
     availablePlatformNames  = (CfgList(CfgString), [])
     availablePlatforms      = (CfgList(CfgString), [])
     configurablePlatforms   = (CfgList(CfgString), [])
+    abstractPlatforms       = (CfgList(CfgString), [])
     # Parallel lists of platform sources
     platformSourceNames      = (CfgList(CfgString), [])
     platformSourceUrls       = (CfgList(CfgString), [])
