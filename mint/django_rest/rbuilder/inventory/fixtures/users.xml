@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="2" model="rbuilder.users">
+    <field type="CharField" name="username">JeanValjean1</field>
+    <field type="CharField" name="fullname"/>
+    <field type="TextField" name="salt">\\371B\\237)</field>
+    <field type="CharField" name="passwd">01e4b0db27f22eedd63dfeff68166228</field>
+    <field type="CharField" name="email">JeanValjean1@rpath.com</field>
+    <field type="TextField" name="displayemail"/>
+    <field type="DecimalField" name="timecreated">1283529921.387</field>
+    <field type="DecimalField" name="timeaccessed">1283530359.041</field>
+    <field type="SmallIntegerField" name="active">1</field>
+    <field type="TextField" name="blurb">null</field>
+  </object>
+  <object pk="3" model="rbuilder.users">
+    <field type="CharField" name="username">JeanValjean2</field>
+    <field type="CharField" name="fullname"/>
+    <field type="TextField" name="salt">\\371B\\237)</field>
+    <field type="CharField" name="passwd">01e4b0db27f22eedd63dfeff68166228</field>
+    <field type="CharField" name="email">JeanValjean2@rpath.com</field>
+    <field type="TextField" name="displayemail"/>
+    <field type="DecimalField" name="timecreated">1283529921.387</field>
+    <field type="DecimalField" name="timeaccessed">1283530359.041</field>
+    <field type="SmallIntegerField" name="active">1</field>
+    <field type="TextField" name="blurb">null</field>
+  </object>
+  <object pk="4" model="rbuilder.users">
+    <field type="CharField" name="username">JeanValjean3</field>
+    <field type="CharField" name="fullname"/>
+    <field type="TextField" name="salt">\\371B\\237)</field>
+    <field type="CharField" name="passwd">01e4b0db27f22eedd63dfeff68166228</field>
+    <field type="CharField" name="email">JeanValjean3@rpath.com</field>
+    <field type="TextField" name="displayemail"/>
+    <field type="DecimalField" name="timecreated">1283529921.387</field>
+    <field type="DecimalField" name="timeaccessed">1283530359.041</field>
+    <field type="SmallIntegerField" name="active">1</field>
+    <field type="TextField" name="blurb">null</field>
+  </object>
+  <object pk="3" model="rbuilder.usergroups">
+    <field type="CharField" name="usergroup">JeanValjean1</field>
+  </object>
+  <object pk="4" model="rbuilder.usergroups">
+    <field type="CharField" name="usergroup">JeanValjean2</field>
+  </object>
+  <object pk="5" model="rbuilder.usergroups">
+    <field type="CharField" name="usergroup">JeanValjean3</field>
+  </object>
+  <object pk="2" model="rbuilder.usergroupmembers">
+    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">3</field>
+    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2</field>
+  </object>
+  <object pk="3" model="rbuilder.usergroupmembers">
+    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">4</field>
+    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">3</field>
+  </object>
+  <object pk="4" model="rbuilder.usergroupmembers">
+    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">5</field>
+    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">4</field>
+  </object>
+</django-objects>

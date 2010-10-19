@@ -129,6 +129,7 @@ class Platform(Model):
     mode = fields.CharField()
     enabled = fields.BooleanField()
     configurable = fields.BooleanField()
+    abstract = fields.BooleanField()
     mirrorPermission = fields.BooleanField()
     repositoryUrl = _RepositoryUrlField()
     # contentSources = fields.ModelField(SourceRefs)

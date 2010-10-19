@@ -177,10 +177,12 @@ class BuildsTable(database.KeyedTable):
                              bd.value AS amiId'''
             extraJoin += ''' LEFT OUTER JOIN
                              (SELECT tuc.userId AS userId,
-                                     tuc.credentials AS creds
+                                     tc.credentials AS creds
                                 FROM Targets
                                 JOIN TargetUserCredentials AS tuc
                                      ON (Targets.targetId = tuc.targetId)
+                                JOIN TargetCredentials AS tc
+                                     ON (tuc.targetCredentialsId = tc.targetCredentialsId)
                                WHERE Targets.targetType = '%s'
                                  AND Targets.targetName = '%s') as subq
                               ON (b.createdBy = subq.userId)

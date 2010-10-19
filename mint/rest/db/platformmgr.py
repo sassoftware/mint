@@ -108,7 +108,7 @@ class ContentSourceTypes(object):
     def _listFromCfg(self):
         allTypesMap = dict()
         allTypes = []
-        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable in self.platforms._iterConfigPlatforms():
+        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable, abstract in self.platforms._iterConfigPlatforms():
             for t, isSingleton in sourceTypes:
                 if t not in allTypes:
                     allTypes.append(t)
@@ -247,9 +247,10 @@ class Platforms(object):
             enabled = 0
 
             configurable = platformLabel in self.cfg.configurablePlatforms
+            abstract = platformLabel in self.cfg.abstractPlatforms
 
             yield (platformLabel, platformName, platformUsageTerms,
-                platformBuildTypes, enabled, types, configurable)
+                platformBuildTypes, enabled, types, configurable, abstract)
 
     def _platformModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
@@ -262,6 +263,7 @@ class Platforms(object):
         platformBuildTypes = kw.get('platformBuildTypes', [])
         enabled = kw.get('enabled', None)
         configurable = kw.get('configurable', None)
+        abstract = kw.get('abstract', None)
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
         platformUsageTerms = kw.get('platformUsageTerms')
@@ -269,7 +271,7 @@ class Platforms(object):
                 platformName=platformName, enabled=enabled,
                 platformUsageTerms=platformUsageTerms,
                 configurable=configurable, mode=mode,
-                repositoryHostname=fqdn)
+                repositoryHostname=fqdn, abstract=abstract)
         platform._sourceTypes = sourceTypes
         platform._buildTypes = platformBuildTypes
         return platform
@@ -335,7 +337,7 @@ class Platforms(object):
         cfgLabels = [p.label for p in cfgPlatforms]
 
         fields = ['platformName', 'platformUsageTerms', 'hostname',
-                  '_sourceTypes', '_buildTypes', 'configurable']
+                  '_sourceTypes', '_buildTypes', 'configurable', 'abstract']
 
         platforms = []
 
@@ -390,13 +392,13 @@ class Platforms(object):
 
     def _listFromCfg(self):
         platforms = []
-        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable in self._iterConfigPlatforms():
+        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable, abstract in self._iterConfigPlatforms():
             platform = self._platformModelFactory(label=label,
                                 platformName=name,
                                 platformUsageTerms=usageTerms,
                                 platformBuildTypes=buildTypes,
                                 enabled=enabled, configurable=configurable,
-                                sourceTypes=sourceTypes)
+                                abstract=abstract, sourceTypes=sourceTypes)
             platforms.append(platform)
         return platforms
 
@@ -506,8 +508,11 @@ class Platforms(object):
         plat = self.db.db.platforms.get(platformId)
         return plat.get('projectId', None)
 
-    def _getUsableProject(self, platformId, hostname, domainname, url,
-                          authInfo, mirror):
+    def _getUsableProject(self, platformId, hostname):
+        projectId = self._getProjectId(platformId)
+        if projectId:
+            return projectId
+
         # See if there is project already setup that shares
         # the fqdn of the platform.
         try:
@@ -515,31 +520,24 @@ class Platforms(object):
         except mint_error.ItemNotFound, e:
             projectId = None
 
-        if projectId:
-            # Check if the project is external.
-            project = self.db.db.projects.get(projectId)
-            external = project['external'] == 1 and True or False
-
-            if external:
-                # Look up any repo maps from the labels table.
-                labelIdMap, repoMap, userMap, entMap = \
-                    self.db.db.labels.getLabelsForProject(projectId) 
-                url = repoMap.get(hostname, url)
-
-                if mirror:
-                    # Check if there is a mirror set up.
-                    try:
-                        mirrorId = self.db.db.inboundMirrors.getIdByColumn(
-                                    'targetProjectId', projectId)
-                    except mint_error.ItemNotFound, e:
-                        # Add an inboud mirror for this external project.
-                        self.db.productMgr.reposMgr.addIncomingMirror(
-                            projectId, hostname, domainname, url, authInfo, True)
-
-            # Add the project to our platform
-            self.db.db.platforms.update(platformId, projectId=projectId)
-
         return projectId
+
+    def _setupExternalProject(self, hostname, domainname, authInfo, 
+                              url, projectId, mirror):
+        # Look up any repo maps from the labels table.
+        labelIdMap, repoMap, userMap, entMap = \
+            self.db.db.labels.getLabelsForProject(projectId) 
+        url = repoMap.get(hostname, url)
+
+        if mirror:
+            # Check if there is a mirror set up.
+            try:
+                mirrorId = self.db.db.inboundMirrors.getIdByColumn(
+                            'targetProjectId', projectId)
+            except mint_error.ItemNotFound, e:
+                # Add an inboud mirror for this external project.
+                self.db.productMgr.reposMgr.addIncomingMirror(
+                    projectId, hostname, domainname, url, authInfo, True)
 
     def _getHostname(self, platform):
         label = versions.Label(platform.label)
@@ -563,10 +561,21 @@ class Platforms(object):
 
     def _getUrl(self, platform):
         hostname = self._getHostname(platform)
-        # XXX Don't leave this hard-coded forever
-        if hostname == 'centos.rpath.com':
-            return 'https://centos.rpath.com/nocapsules/'
-        return 'https://%s/conary/' % (hostname)
+        projectId = self._getUsableProject(platform.platformId, hostname)
+        if projectId:
+            project = self.db.db.projects.get(projectId)
+            local = not(project['external'] == 1)
+        else:
+            local = False
+
+        if local:
+            return 'https://%s/repos/%s/' % \
+                (self.cfg.secureHost, hostname)
+        else:
+            # XXX Don't leave this hard-coded forever
+            if hostname == 'centos.rpath.com':
+                return 'https://centos.rpath.com/nocapsules/'
+            return 'https://%s/conary/' % (hostname)
 
     def _getAuthInfo(self):
         # Use the entitlement from /srv/rbuilder/data/authorization.xml
@@ -588,19 +597,28 @@ class Platforms(object):
 
         authInfo = self._getAuthInfo()
 
-        # Get the productId to see if this platform has already been
-        # associated with an external product.
-        projectId = self._getProjectId(platformId)
+        # Get the projectId to see if this platform has already been
+        # associated with an external project.
+        projectId = self._getUsableProject(platformId, hostname)
 
         if not projectId:
-            projectId = self._getUsableProject(platformId, hostname,
-                            domainname, url, authInfo, mirror)
+            projectId = self._getUsableProject(platformId, hostname)
+            if projectId:
+                if projectId:
+                    # Add the project to our platform
+                    self.db.db.platforms.update(platformId, 
+                        projectId=projectId)
+                project = self.db.db.projects.get(projectId)
+                if project['external'] == 1:
+                    self._setupExternalProject(hostname, domainname, 
+                        authInfo, url, projectId, mirror)
 
         if not projectId:            
             # Still no project, we need to create a new one.
             try:
-                projectId = self.db.productMgr.createExternalProduct(platformName, host, 
-                                domainname, url, authInfo, mirror=mirror)
+                projectId = self.db.productMgr.createExternalProduct(
+                    platformName, host, domainname, url, authInfo,
+                    mirror=mirror)
             except mint_error.RepositoryAlreadyExists, e:
                 projectId = self.db.db.projects.getProjectIdByFQDN(hostname)
 
@@ -844,8 +862,6 @@ class ContentSources(object):
                     contentSourceType=typeName,
                     orderIndex=source.orderIndex)
         except mint_error.DuplicateItem, e:
-            log.error("Error creating content source %s, it must already "
-                      "exist: %s" % (source.shortName, e))
             return self.db.db.platformSources.getIdFromShortName(source.shortName)
 
         cu = self.db.cursor()

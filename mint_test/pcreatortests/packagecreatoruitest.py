@@ -31,8 +31,8 @@ from mint import helperfuncs
 from mint.web import whizzyupload
 from mint_rephelp import MINT_HOST, MINT_DOMAIN
 from mint.server import deriveBaseFunc
+from mint.django_rest.rbuilder.inventory import manager
 import mint.mint_error
-from conary.conarycfg import ConaryConfiguration
 from conary import conaryclient
 from factory_test.factorydatatest import basicXmlDef
 import pcreator
@@ -109,7 +109,8 @@ class PkgCreatorTest(fixtures.FixturedUnitTest):
 
         wd = packagecreator.getUploadDir(self.cfg, self.uploadSes)
 
-        pc = packagecreator.getPackageCreatorClient(self.cfg, ('owner', "%dpass" % data['owner']))
+        pc = packagecreator.getPackageCreatorClient(self.cfg, ('owner', "%dpass" % data['owner']), 
+            djangoManager=manager.Manager())
         project = self.client.getProject(data['projectId'])
         cfg = project.getConaryConfig()
         cfg['name'] = 'owner'
@@ -461,7 +462,6 @@ content-type=text/plain
         self.mock(pcreator.backend.BaseBackend, '_startSession', startSession)
         client = self.getClient('owner')
         sesH = client.startPackageCreatorSession(1, '3', 'yournamespace', 'foo', 'bar.baz.com@yournamespace:baz-3-devel')
-
 
 class PkgCreatorReposTest(mint_rephelp.MintRepositoryHelper):
     def _createProductVersion(self, mintclient, project, version, namespace, description=''):
@@ -825,7 +825,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             self.mintCfg.packageCreatorURL = url
             client, userId = self.quickMintUser('testuser', 'testpass')
             pClient = packagecreator.getPackageCreatorClient(self.mintCfg,
-                    ('testuser', 'testpass'))
+                    ('testuser', 'testpass'), djangoManager=manager.Manager())
             mincfg = packagecreator.MinimalConaryConfiguration(self.cfg)
             sesH = pClient.startSession(pDefDict, mincfg)
             tarFile = 'logrotate-3.7.1.tar.gz'
