@@ -731,7 +731,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <platformId>2</platformId>
   <platformTroveName>platform-definition</platformTroveName>
   <label>localhost@rpath:plat-2</label>
-  <platformVersion>4.1-1</platformVersion>
+  <platformVersion>4.2-1</platformVersion>
   <productVersion>1.0</productVersion>
   <platformName>Crowbar Linux 2</platformName>
   <enabled>false</enabled>
