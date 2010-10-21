@@ -435,9 +435,14 @@ class System(modellib.XObjIdModel):
     credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
     type = D(modellib.SerializedForeignKey(SystemType, null=False, related_name='systems'),
         "the type of the system")
-    stage = modellib.ForeignKey("Stage", null=True, text_field='name')
-    major_version = modellib.ForeignKey(rbuildermodels.Versions, null=True,
-        text_field='name')
+    stage = D(modellib.ForeignKey("Stage", null=True, text_field='name'),
+        "the appliance stage of the system")
+    major_version = D(modellib.ForeignKey(rbuildermodels.Versions, null=True,
+        text_field='name'),
+        "the appliance major version of the system")
+    appliance = D(modellib.ForeignKey(rbuildermodels.Products, null=True,
+        text_field='shortname'),
+        "the appliance of the system")
 
     load_fields = [local_uuid]
 

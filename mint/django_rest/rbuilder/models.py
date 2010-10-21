@@ -83,6 +83,7 @@ class Products(modellib.XObjModel):
     creatorid = models.ForeignKey(Users, db_column='creatorid', related_name='creator', null=True)
     members = models.ManyToManyField(Users, through="Members", related_name='members')
     
+    view_name = 'Projects'
     
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
@@ -93,6 +94,11 @@ class Products(modellib.XObjModel):
         
     def _attributes(self):
         return ({'id': self.hostname})
+
+    def get_absolute_url(self, request=None, parents=None, values=None):
+        parents = [Pk(self.shortname)]
+        return modellib.XObjModel.get_absolute_url(self, request, parents,
+            values)
 
 class Members(modellib.XObjModel):
     productId = models.ForeignKey(Products, db_column='projectid', related_name='product')
@@ -121,9 +127,10 @@ class Versions(modellib.XObjIdModel):
     def __unicode__(self):
         return self.name
         
-    def get_absolute_url(self, request, *args, **kwargs):
+    def get_absolute_url(self, request=None, parents=None, values=None):
         parents = [Pk(self.productId.shortname), Pk(self.name)]
-        return modellib.XObjIdModel.get_absolute_url(self, request, parents)
+        return modellib.XObjIdModel.get_absolute_url(self, request, parents,
+            values)
 
     def serialize(self, request=None, values=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request, values)
@@ -205,7 +212,7 @@ class Targets(modellib.XObjModel):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targets'
 
-    def get_absolute_url(self, request):
+    def get_absolute_url(self, request=None, parents=None, values=None):
         path = '/catalog/clouds/%s/instances/%s' % \
             (self.targettype, self.targetname)
         if request:

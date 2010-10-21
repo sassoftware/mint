@@ -94,6 +94,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     </field>
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
+    <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">2</field>
   </object>
 
   <object pk="1" model="inventory.version">

@@ -109,6 +109,7 @@ class VersionManager(base.BaseManager):
         for system in trove.system_set.all():
             system.stage = stage
             system.major_version = majorVersion
+            system.appliance = project
             system.save()
 
     @base.exposed

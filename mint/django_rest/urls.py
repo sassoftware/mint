@@ -171,4 +171,9 @@ urlpatterns = patterns('',
     url(r'^api/products/(\w|\.)*/versions/(\w|\.)*/stages/(\w)*/?$',
         inventoryviews.RestDbPassthrough(),
         name='Stages'),
+
+    # Projects
+    url(r'^api/products/(\w|\.)*/?$',
+        inventoryviews.RestDbPassthrough(),
+        name='Projects'),
 )
