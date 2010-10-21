@@ -830,8 +830,7 @@ class ReposTests(mint_rephelp.MintRepositoryHelper):
             sesH = pClient.startSession(pDefDict, mincfg)
             tarFile = 'logrotate-3.7.1.tar.gz'
             filePath = os.path.join(pathManager.getPath('CONARY_ARCHIVE_PATH'), tarFile)
-            pClient.uploadData(sesH, tarFile, open(filePath),
-                    'application/x-rpm')
+            pClient.uploadData(sesH, tarFile, filePath, 'application/x-rpm')
             res = pClient.getCandidateBuildFactories(sesH)
             self.assertEquals([x[0] for x in res],
                     ['archive=/localhost@rpath:factories/1.0-1-1'])
