@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 12)
+    Version = (51, 13)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1686,6 +1686,43 @@ class MigrateTo_51(SchemaMigration):
         cu.execute("""update inventory_management_interface set credentials_descriptor=? where name='cim'""" , schema.cim_credentials_descriptor)
         
         return True
+
+    def migrate13(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        if 'inventory_stage' not in db.tables:
+            cu.execute("""
+                CREATE TABLES "inventory_stage" (
+                    "stage_id" %(PRIMARYKEY)s,
+                    "name" varchar(256) NOT NULL,
+                    "label" text NOT NULL,
+                    "major_version_id" REFERENCES
+                        "ProductVersions" ("productVersionId")
+                )""" % db.keywords)
+            db.tables['inventory_stage'] = []
+            changed = True
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            ADD "stage_id" REFERENCES "inventory_stage" ("stage_id")
+            NOT NULL
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            ADD "major_version_id" REFERENCES "ProductVersions" ("productVersionId")
+            NOT NULL
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            ADD "appliance_id" REFERENCES "Projects" ("projectId")
+            NOT NULL
+        """)
+
+        return changed
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -274,6 +274,7 @@ system_type_systems_xml="""
   <event_types href="http://testserver/api/inventory/system_types/1/event_types"/>
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
+    <appliance/>
     <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Initial synchronization pending</description>
@@ -475,6 +476,7 @@ management_nodes_xml = """\
 <management_nodes>
   <management_node id="http://testserver/api/inventory/management_nodes/1">
     <agent_port>5989</agent_port>
+    <appliance/>
     <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <out_of_date>False</out_of_date>
@@ -547,6 +549,7 @@ management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port> 
+  <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
@@ -655,6 +658,7 @@ management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port> 
+  <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
@@ -763,6 +767,7 @@ management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port>
+  <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
@@ -835,6 +840,7 @@ systems_xml = """\
   <event_types href="http://testserver/api/inventory/event_types"/>
   <system id="http://testserver/api/inventory/systems/2">
     <agent_port/>
+    <appliance/>
     <credentials href="http://testserver/api/inventory/systems/2/credentials"/>
     <out_of_date>False</out_of_date>
     <registration_date/>
@@ -897,6 +903,7 @@ systems_xml = """\
   </system>
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
+    <appliance/>
     <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
     <out_of_date>False</out_of_date>
     <registration_date/>
@@ -1106,6 +1113,7 @@ system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
+  <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
   <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
@@ -1288,6 +1296,7 @@ system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
+  <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
@@ -1402,6 +1411,7 @@ system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
+  <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
@@ -1686,6 +1696,7 @@ system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port>5989</agent_port>
+  <appliance/>
   <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
   %s
   <jobs id="http://testserver/api/inventory/systems/3/jobs">
@@ -1891,6 +1902,7 @@ system_available_updates_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port>5989</agent_port>
+  <appliance/>
   <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
   <installed_software id="http://testserver/api/inventory/systems/3/installed_software">
     <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%3D/clover.eng.rpath.com%40rpath%3Aclover-1-devel/1-2-1%5B%7E%21dom0%2C%7E%21domU%2Cvmware%2C%7E%21xen%20is%3A%20x86%28i486%2Ci586%2Ci686%2Csse%2Csse2%29%5D">
@@ -2220,6 +2232,7 @@ system_with_target = """\
   <target_system_name/>
   <has_active_jobs>False</has_active_jobs>
   <agent_port/>
+  <appliance/>
   <credentials href="http://testserver/api/inventory/systems/4/credentials"/>
   <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
