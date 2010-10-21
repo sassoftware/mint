@@ -2823,7 +2823,6 @@ class SystemVersionsTestCase(XMLTestCase):
             headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         # Weak attempt to see if the response is XML
         exp = '<system id="http://testserver/api/inventory/systems/%s">' % system.pk
-        import epdb; epdb.st()  
         self.failUnless(exp in response.content)
 
         nsystem = models.System.objects.get(system_id=system.pk)

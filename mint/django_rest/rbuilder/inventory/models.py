@@ -1002,6 +1002,7 @@ class Stage(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_stage'
     view_name = 'Stages'
+    _xobj = xobj.XObjMetadata(tag='stage')
     _xobj_hidden_accessors = set(['version_set',])
 
     stage_id = models.AutoField(primary_key=True)

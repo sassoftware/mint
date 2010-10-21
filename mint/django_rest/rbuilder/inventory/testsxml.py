@@ -294,6 +294,7 @@ system_type_systems_xml="""
     <launch_date/>
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
+    <major_version/>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
@@ -315,6 +316,7 @@ system_type_systems_xml="""
     <registration_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+    <stage/>
     <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
     <system_id>3</system_id>
     <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
@@ -497,6 +499,7 @@ management_nodes_xml = """\
     <node_jid>superduperjid2@rbuilder.rpath</node_jid>
     <ssl_client_certificate>test management node client cert</ssl_client_certificate>
     <ssl_server_certificate>test management node server cert</ssl_server_certificate>
+    <stage/>
     <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>
     <hostname/>
     <name>test management node</name>
@@ -527,6 +530,7 @@ management_nodes_xml = """\
     <zone href="http://testserver/api/inventory/zones/2"/>
     <system_ptr href="http://testserver/api/inventory/systems/1"/>
     <local_uuid>test management node luuid</local_uuid>
+    <major_version/>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <created_date>%s</created_date>
@@ -567,6 +571,7 @@ management_node_xml = """\
   <node_jid>superduperjid2@rbuilder.rpath</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
+  <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>
   <hostname/>
   <name>test management node</name>
@@ -597,6 +602,7 @@ management_node_xml = """\
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
@@ -630,6 +636,7 @@ management_node_post_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
+  <stage/>
   <zone href="http://testserver/api/inventory/zones/1"/>
   <managing_zone href="http://testserver/api/inventory/zones/1"/>
   <hostname>myhostname</hostname>
@@ -640,6 +647,7 @@ management_node_post_xml = """\
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <local_uuid>test management node luuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </management_node>"""
 
@@ -672,6 +680,7 @@ management_node_post_response_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
+  <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
@@ -701,6 +710,7 @@ management_node_post_response_xml = """\
   <target/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
@@ -734,6 +744,7 @@ management_node_zone_post_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
+  <stage/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <system_id>1</system_id>
@@ -743,6 +754,7 @@ management_node_zone_post_xml = """\
   <description>test management node desc</description>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <managing_zone href="http://testserver/api/inventory/zones/1"/>
 </management_node>"""
@@ -775,6 +787,7 @@ management_node_zone_post_response_xml = """\
   <node_jid>abcd</node_jid>
   <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
+  <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname>myhostname</hostname>
   <name>test management node</name>
@@ -805,6 +818,7 @@ management_node_zone_post_response_xml = """\
   <zone href="http://testserver/api/inventory/zones/2"/>
   <system_ptr href="http://testserver/api/inventory/systems/1"/>
   <local_uuid>test management node luuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <created_date>%s</created_date>
@@ -844,6 +858,7 @@ systems_xml = """\
     <launch_date/>
     <launching_user/>
     <local_uuid/>
+    <major_version/>
     <management_interface/>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
@@ -864,6 +879,7 @@ systems_xml = """\
     </networks>
     <ssl_client_certificate/>
     <ssl_server_certificate/>
+    <stage/>
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <system_id>2</system_id>
     <system_log href="http://testserver/api/inventory/systems/2/system_log"/>
@@ -904,6 +920,7 @@ systems_xml = """\
     <launch_date/>
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
+    <major_version/>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
@@ -924,6 +941,7 @@ systems_xml = """\
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+    <stage/>
     <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
     <system_id>3</system_id>
     <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
@@ -965,6 +983,7 @@ systems_put_xml = """\
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+    <stage/>
     <launch_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
@@ -982,6 +1001,7 @@ systems_put_xml = """\
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystemlocaluuid</local_uuid>
+    <major_version/>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Initial synchronization pending</description>
@@ -1010,6 +1030,7 @@ systems_put_xml = """\
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+    <stage/>
     <launch_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
@@ -1027,6 +1048,7 @@ systems_put_xml = """\
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <name>testsystemname</name>
     <local_uuid>testsystem2localuuid</local_uuid>
+    <major_version/>
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Initial synchronization pending</description>
@@ -1059,6 +1081,7 @@ systems_put_mothball_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1070,6 +1093,7 @@ systems_put_mothball_xml = """\
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/10">
     <description>Retired</description>
@@ -1113,6 +1137,7 @@ system_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <system_id>1</system_id>
   <launching_user/>
   <launch_date/>
@@ -1132,6 +1157,7 @@ system_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Initial synchronization pending</description>
@@ -1163,6 +1189,7 @@ system_post_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1173,6 +1200,7 @@ system_post_xml = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </system>"""
 
@@ -1198,6 +1226,7 @@ system_mgmt_interface_put_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1208,6 +1237,7 @@ system_mgmt_interface_put_xml = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
 </system>"""
 
@@ -1233,6 +1263,7 @@ system_delete_mgmt_interface_put_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1249,6 +1280,7 @@ system_delete_mgmt_interface_put_xml = """\
   </type>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface/>
 </system>"""
 
@@ -1279,6 +1311,7 @@ system_post_xml_response = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>1</system_id>
@@ -1306,6 +1339,7 @@ system_post_xml_response = """\
   <name>testsystemname</name>
   <target/>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Initial synchronization pending</description>
@@ -1345,6 +1379,7 @@ system_post_xml_dup = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <launch_date/>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
@@ -1355,6 +1390,7 @@ system_post_xml_dup = """\
   <target_system_state/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </system>"""
 
@@ -1389,6 +1425,7 @@ system_target_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>1</system_id>
@@ -1416,6 +1453,7 @@ system_target_xml = """\
   <name>testsystemname</name>
   <target href="http://testserver/catalog/clouds/testtargettype/instances/testtargetname">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Initial synchronization pending</description>
@@ -1679,6 +1717,7 @@ system_version_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
@@ -1698,6 +1737,7 @@ system_version_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Initial synchronization pending</description>
@@ -1816,6 +1856,7 @@ system_version_put_response_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <system_id>2</system_id>
   <launching_user/>
   <launch_date/>
@@ -1835,6 +1876,7 @@ system_version_put_response_xml = """\
   <target/>
   <name/>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Initial synchronization pending</description>
@@ -1927,6 +1969,7 @@ system_available_updates_xml = """\
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>3</system_id>
@@ -1949,6 +1992,7 @@ system_available_updates_xml = """\
   <target/>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
+  <major_version/>
   <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <description>Initial synchronization pending</description>
@@ -2154,6 +2198,7 @@ system_with_target = """\
     </network>
   </networks>
   <ssl_server_certificate/>
+  <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>4</system_id>
@@ -2179,6 +2224,7 @@ system_with_target = """\
   <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
   <local_uuid/>
+  <major_version/>
   <management_interface/>
   <target_system_state/>
   <type id="http://testserver/api/inventory/system_types/1">
