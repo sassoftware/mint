@@ -96,8 +96,8 @@ class VersionManager(base.BaseManager):
             return
 
         stage = stage[0]
-        project = rbuildermodels.Products.objects.get(hostname=hostname)
         try:
+            project = rbuildermodels.Products.objects.get(hostname=hostname)
             majorVersion = rbuildermodels.Versions.objects.get(productId=project,
                 name=majorVersionName)
         except ObjectDoesNotExist:
@@ -106,8 +106,10 @@ class VersionManager(base.BaseManager):
         stage, created = models.Stage.objects.get_or_create(major_version=majorVersion,
             label=trove.version.label, name=stage.name)
 
-        trove.version.stage = stage
-        trove.version.save()
+        for system in trove.system_set.all():
+            system.stage = stage
+            system.major_version = majorVersion
+            system.save()
 
     @base.exposed
     def updateInstalledSoftware(self, system_id, new_versions):

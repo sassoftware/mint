@@ -92,6 +92,8 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
       <object pk="1"/>
     </field>
+    <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
+    <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
   </object>
 
   <object pk="1" model="inventory.version">
@@ -100,7 +102,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="TextField" name="revision">1-3-1</field>
     <field type="TextField" name="ordering">1234567891.13</field>
     <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
-    <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="inventory.version">
     <field type="TextField" name="full">/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</field>
@@ -108,7 +109,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="TextField" name="revision">1-4-1</field>
     <field type="TextField" name="ordering">1234567892.14</field>
     <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
-    <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
   </object>
 
   <object pk="1" model="inventory.trove">

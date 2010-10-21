@@ -107,18 +107,17 @@ class Pk(object):
         self.pk = pk
 
 class Versions(modellib.XObjIdModel):
-    productVersionId = XObjHidden(models.AutoField(primary_key=True))
-    productId = XObjHidden(models.ForeignKey(Products, db_column='projectid'))
-    namespace = XObjHidden(models.CharField(max_length=16))
-    name = XObjHidden(models.CharField(max_length=16))
-    description = XObjHidden(models.TextField())
-    timecreated = XObjHidden(models.DecimalField(max_digits=14, decimal_places=3))
+    productVersionId = models.AutoField(primary_key=True)
+    productId = models.ForeignKey(Products, db_column='projectid')
+    namespace = models.CharField(max_length=16)
+    name = models.CharField(max_length=16)
+    description = models.TextField()
+    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'productversions'
     view_name = 'MajorVersions'
-    _xobj_hidden_accessors = set(['stage_set', 'images_set'])
-        
+
     def __unicode__(self):
         return self.name
         

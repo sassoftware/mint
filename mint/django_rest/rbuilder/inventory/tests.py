@@ -2811,11 +2811,19 @@ class SystemVersionsTestCase(XMLTestCase):
 
         data = testsxml.system_version_put_xml
 
+        self.mockStages.append(restmodels.Stage(
+            label='chater.eng.rpath.com@rpath:chater-1-devel',
+            name='Development',
+            hostname='chater.eng.rpath.com',
+            version='1',
+            isPromotable=True))
+
         url = '/api/inventory/systems/%s/' % system.pk
         response = self._put(url, data=data,
             headers = { 'X-rBuilder-Event-UUID' : eventUuid })
         # Weak attempt to see if the response is XML
         exp = '<system id="http://testserver/api/inventory/systems/%s">' % system.pk
+        import epdb; epdb.st()  
         self.failUnless(exp in response.content)
 
         nsystem = models.System.objects.get(system_id=system.pk)
