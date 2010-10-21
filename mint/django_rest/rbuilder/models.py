@@ -14,6 +14,8 @@ from django.conf import settings
 
 from mint.django_rest.rbuilder import modellib
 
+XObjHidden = modellib.XObjHidden
+
 class DatabaseVersion(modellib.XObjModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
@@ -100,20 +102,34 @@ class Members(modellib.XObjModel):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'projectusers'
         
-class Versions(modellib.XObjModel):
-    productVersionId = models.AutoField(primary_key=True)
-    productId = models.ForeignKey(Products, db_column='projectid')
-    namespace = models.CharField(max_length=16)
-    name = models.CharField(max_length=16)
-    description = models.TextField()
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
+class Pk(object):
+    def __init__(self, pk):
+        self.pk = pk
+
+class Versions(modellib.XObjIdModel):
+    productVersionId = XObjHidden(models.AutoField(primary_key=True))
+    productId = XObjHidden(models.ForeignKey(Products, db_column='projectid'))
+    namespace = XObjHidden(models.CharField(max_length=16))
+    name = XObjHidden(models.CharField(max_length=16))
+    description = XObjHidden(models.TextField())
+    timecreated = XObjHidden(models.DecimalField(max_digits=14, decimal_places=3))
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'productversions'
+    view_name = 'MajorVersions'
+    _xobj_hidden_accessors = set(['stage_set', 'images_set'])
         
     def __unicode__(self):
         return self.name
         
+    def get_absolute_url(self, request, *args, **kwargs):
+        parents = [Pk(self.productId.shortname), Pk(self.name)]
+        return modellib.XObjIdModel.get_absolute_url(self, request, parents)
+
+    def serialize(self, request=None, values=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+        xobj_model._xobj.text = self.name
+        return xobj_model
 
 class Releases(modellib.XObjModel):
     pubreleaseid = models.AutoField(primary_key=True)

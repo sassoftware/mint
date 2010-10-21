@@ -161,4 +161,14 @@ urlpatterns = patterns('',
     url(r'^api/inventory/job_states/(?P<job_state_id>[a-zA-Z0-9]+)/jobs/?$',
         inventoryviews.InventoryJobStatesJobsService(),
         name='JobStateJobs'),
+
+    # Major Versions
+    url(r'^api/products/(\w|\.)*/versions/(\w|\.)*/?$',
+        inventoryviews.RestDbPassthrough(),
+        name='MajorVersions'),
+
+    # Stages
+    url(r'^api/products/(\w|\.)*/versions/(\w|\.)*/stages/(\w)*/?$',
+        inventoryviews.RestDbPassthrough(),
+        name='Stages'),
 )

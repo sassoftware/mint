@@ -21,8 +21,11 @@ from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
 from mint.lib import x509
+from mint.rest.api import models as restmodels
+from mint.rest.db import database as restdatabase
 
 from testrunner import testcase
+from testutils import mock
 
 class XML(object):
     class OrderedDict(dict):
@@ -2617,7 +2620,16 @@ class SystemVersionsTestCase(XMLTestCase):
         manager.versionmgr.VersionManager.set_available_updates = \
             self.mock_set_available_updates
         models.Job.getRmakeJob = self.mockGetRmakeJob
-        
+
+        self.mockGetStagesCalled = False
+        self.mockStages = []
+        manager.versionmgr.VersionManager.getStages = \
+            self.mockGetStages
+
+    def mockGetStages(self, *args, **kwargs):
+        self.mockGetStagesCalled = True
+        return self.mockStages
+
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
 

@@ -565,7 +565,36 @@ class System(modellib.XObjIdModel):
                 out_of_date = True
         xobj_model.out_of_date = out_of_date
 
+        if self.installed_software.all():
+            topLevelGroups = [g for g in self.installed_software.all() \
+                if g.is_top_level]
+            if len(topLevelGroups) == 1:
+                topLevelGroup = topLevelGroups[0]
+                stage = topLevelGroup.version.stage
+                if stage:
+                    majorVersion = stage.major_version
+                    project = stage.major_version.productId
+                    xobj_model.major_version = majorVersion.serialize(request)
+                    xobj_model.stage = stage.serialize(request)
+                    # xobj_model.project = project.serialize(request)
+
         return xobj_model
+
+class Pk(object):
+    def __init__(self, pk):
+        self.pk = pk
+
+class UrlParentResolver(modellib.XObjModel):
+    view_name = None
+    
+    def __init__(self, *args):
+        self.parents = [Pk(a) for a in args]
+
+    def get_absolute_url(self, request):
+        return modellib.XObjModel.get_absolute_url(self, request, self.parents)
+
+class MajorVersion(UrlParentResolver):
+    view_name = 'MajorVersions'
 
 class ManagementNode(System):
     class Meta:
@@ -981,11 +1010,36 @@ class Trove(modellib.XObjIdModel):
             return None
         return versions.Label(self.version.label)
 
+    def getHost(self):
+        return self.getLabel().getHost()
+
     def getVersion(self):
         return self.version.conaryVersion
 
     def getNVF(self):
         return self.name, self.version.conaryVersion, self.getFlavor()
+
+class Stage(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_stage'
+    view_name = 'Stages'
+    _xobj_hidden_accessors = set(['version_set',])
+
+    stage_id = XObjHidden(models.AutoField(primary_key=True))
+    major_version = XObjHidden(models.ForeignKey(rbuildermodels.Versions))
+    name = XObjHidden(models.CharField(max_length=256))
+    label = XObjHidden(models.TextField(unique=True))
+
+    def get_absolute_url(self, request, *args, **kwargs):
+        parents = [Pk(self.major_version.productId.shortname),
+            Pk(self.major_version.name), Pk(self.name)]
+        return modellib.XObjIdModel.get_absolute_url(
+            self, request, parents)
+
+    def serialize(self, request=None, values=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+        xobj_model._xobj.text = self.name
+        return xobj_model
 
 class Version(modellib.XObjModel):
     serialize_accessors = False
@@ -1003,6 +1057,7 @@ class Version(modellib.XObjModel):
     revision = models.TextField()
     ordering = models.TextField()
     flavor = models.TextField()
+    stage = XObjHidden(models.ForeignKey(Stage, null=True))
 
     load_fields = [ full, ordering, flavor ]
 

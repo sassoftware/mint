@@ -14,6 +14,7 @@ import traceback
 from dateutil import tz
 
 from django.db import connection
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 from mint.lib import uuid, x509
@@ -169,8 +170,10 @@ class SystemManager(base.BaseManager):
         system = models.System.objects.get(pk=system_id)
         # Recalculate available updates for each trove on the system, if
         # needed.  This call honors the 24 hour cache.
-        for trove in system.installed_software.all():
-            self.mgr.versionMgr.set_available_updates(trove)
+        # We only want to do this if we're not running in local mode.
+        if not settings.MANAGE_RBUILDER_MODELS:
+            for trove in system.installed_software.all():
+                self.mgr.versionMgr.set_available_updates(trove)
         return system
 
     @base.exposed

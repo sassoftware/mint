@@ -812,6 +812,8 @@ class XObjModel(models.Model):
         """
         for fieldName in fields:
             field = fields[fieldName]
+            if getattr(field, 'XObjHidden', False):
+                continue
             if isinstance(field, related.RelatedField):
                 if values is None:
                     val = getattr(self, fieldName)

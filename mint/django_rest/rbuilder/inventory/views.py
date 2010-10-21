@@ -22,6 +22,9 @@ def undefined(function):
     function.undefined = True
     return function
 
+class RestDbPassthrough(resource.Resource):
+    pass
+
 class AbstractInventoryService(resource.Resource):
 
     def __init__(self):

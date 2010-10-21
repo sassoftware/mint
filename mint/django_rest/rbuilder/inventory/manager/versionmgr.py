@@ -12,7 +12,10 @@ from conary import conaryclient
 from conary import versions
 from conary.errors import RepositoryError
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder import models as rbuildermodels
 
 import base
 
@@ -61,6 +64,7 @@ class VersionManager(base.BaseManager):
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
+            self.setStage(trove)
         for trove in system.installed_software.all():
             self.set_available_updates(trove, force=True)
         system.save()
@@ -70,6 +74,40 @@ class VersionManager(base.BaseManager):
         if flavor is None:
             return ''
         return str(flavor)
+
+    def getStages(self, hostname, majorVersionName):
+        stages = self.rest_db.getProductVersionStages(hostname,
+            majorVersionName)
+        return stages.stages
+
+    def setStage(self, trove):
+        if not trove.is_top_level:
+            return
+
+        hostname = trove.getHost()
+        revision = trove.version.conaryVersion.trailingRevision()
+        majorVersionName = revision.version
+
+        stages = self.getStages(hostname,
+            majorVersionName)
+        stage = [s for s in stages \
+            if s.label == trove.version.label]
+        if not stage:
+            return
+
+        stage = stage[0]
+        project = rbuildermodels.Products.objects.get(hostname=hostname)
+        try:
+            majorVersion = rbuildermodels.Versions.objects.get(productId=project,
+                name=majorVersionName)
+        except ObjectDoesNotExist:
+            return
+
+        stage, created = models.Stage.objects.get_or_create(major_version=majorVersion,
+            label=trove.version.label, name=stage.name)
+
+        trove.version.stage = stage
+        trove.version.save()
 
     @base.exposed
     def updateInstalledSoftware(self, system_id, new_versions):
