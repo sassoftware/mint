@@ -22,10 +22,8 @@ from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
 from mint.lib import x509
 from mint.rest.api import models as restmodels
-from mint.rest.db import database as restdatabase
 
 from testrunner import testcase
-from testutils import mock
 
 class XML(object):
     class OrderedDict(dict):
