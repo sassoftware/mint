@@ -222,7 +222,9 @@ class SystemManager(base.BaseManager):
         for fk in baseCls.iterForeignKeys():
             cls = self._getClassName(fk.rel.to)
             dbTable = fk.rel.to._meta.db_table
-            dbColumn = fk.rel.field_name
+            dbColumn = fk.rel.get_related_field().db_column
+            if not dbColumn:
+                dbColumn = fk.rel.field_name
             # Because this is a pure FK, we lose track of the source object,
             # so we add it as an extra select
             objects = cls.objects.extra(
