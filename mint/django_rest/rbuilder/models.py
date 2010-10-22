@@ -113,7 +113,8 @@ class Pk(object):
         self.pk = pk
 
 class Versions(modellib.XObjIdModel):
-    productVersionId = models.AutoField(primary_key=True)
+    productVersionId = models.AutoField(primary_key=True,
+        db_column='productversions')
     productId = models.ForeignKey(Products, db_column='projectid')
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
