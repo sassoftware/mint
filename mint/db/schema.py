@@ -1116,6 +1116,18 @@ def _createInventorySchema(db, cfg):
         changed |= _addSystemTypes(db)
         changed = True
 
+    if 'inventory_stage' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "inventory_stage" (
+                "stage_id" %(PRIMARYKEY)s,
+                "name" varchar(256) NOT NULL,
+                "label" text NOT NULL,
+                "major_version_id" integer
+                    REFERENCES ProductVersions (productVersionId)
+            )""" % db.keywords)
+        db.tables['inventory_stage'] = []
+        changed = True
+
     if 'inventory_system' not in db.tables:
         cu.execute("""
             CREATE TABLE "inventory_system" (
@@ -1148,9 +1160,12 @@ def _createInventorySchema(db, cfg):
                 "type_id" integer 
                     REFERENCES "inventory_system_type" ("system_type_id"),
                 "credentials" text,
-                "stage_id" integer REFERENCES "inventory_stage" ("stage_id"),
-                "major_version_id" integer REFERENCES "ProductVersions" ("productVersionId"),
-                "appliance_id" integer REFERENCES "Projects" ("projectId")
+                "stage_id" integer 
+                    REFERENCES "inventory_stage" ("stage_id"),
+                "major_version_id" integer 
+                    REFERENCES ProductVersions (productVersionId),
+                "appliance_id" integer 
+                    REFERENCES Projects (projectId)
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system'] = []
         changed = True
