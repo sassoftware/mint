@@ -1693,32 +1693,29 @@ class MigrateTo_51(SchemaMigration):
 
         if 'inventory_stage' not in db.tables:
             cu.execute("""
-                CREATE TABLES "inventory_stage" (
+                CREATE TABLE "inventory_stage" (
                     "stage_id" %(PRIMARYKEY)s,
                     "name" varchar(256) NOT NULL,
                     "label" text NOT NULL,
-                    "major_version_id" REFERENCES
-                        "ProductVersions" ("productVersionId")
+                    "major_version_id" INTEGER REFERENCES
+                        ProductVersions (productVersionId)
                 )""" % db.keywords)
             db.tables['inventory_stage'] = []
             changed = True
 
         cu.execute("""
             ALTER TABLE "inventory_system"
-            ADD "stage_id" REFERENCES "inventory_stage" ("stage_id")
-            NOT NULL
+            ADD "stage_id" INTEGER REFERENCES "inventory_stage" ("stage_id")
         """)
 
         cu.execute("""
             ALTER TABLE "inventory_system"
-            ADD "major_version_id" REFERENCES "ProductVersions" ("productVersionId")
-            NOT NULL
+            ADD "major_version_id" INTEGER REFERENCES ProductVersions (productVersionId)
         """)
 
         cu.execute("""
             ALTER TABLE "inventory_system"
-            ADD "appliance_id" REFERENCES "Projects" ("projectId")
-            NOT NULL
+            ADD "appliance_id" INTEGER REFERENCES Projects (projectId)
         """)
 
         return changed
