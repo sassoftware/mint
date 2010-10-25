@@ -17,6 +17,7 @@ from mint.db import database
 from mint import config
 from catalogService import storage
 from catalogService.rest.database import RestDatabase
+from catalogService.rest.api import clouds
 from mint.lib import scriptlibrary
 
 from mint import users
@@ -77,7 +78,7 @@ class Script(scriptlibrary.SingletonScript):
         mgr.importTargetSystems(targetDrivers)
 
     def loadTargetDriverClasses(self):
-        for driverName in [ 'ec2', 'vmware', 'vws', 'xenent' ]:
+        for driverName in clouds.SUPPORTED_MODULES:
             driverClass = __import__('catalogService.rest.drivers.%s' % (driverName),
                                       {}, {}, ['driver']).driver
             yield driverClass
