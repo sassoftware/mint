@@ -88,7 +88,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="TextField" name="credentials">
       <None/>
     </field>
-    <field to="inventory.systemtype" name="type" rel="ManyToOneRel">1</field>
+    <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
     <field to="inventory.trove" name="installed_software" rel="ManyToManyRel">
       <object pk="1"/>
     </field>

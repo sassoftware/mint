@@ -499,7 +499,7 @@ class SystemManager(base.BaseManager):
             models.SystemState.UNMANAGED)
         system.managing_zone = self.getLocalZone()
         system.management_interface = models.ManagementInterface.objects.get(pk=1)
-        system.type = self.getWindowsBuildServiceSystemType()
+        system.system_type = self.getWindowsBuildServiceSystemType()
         system.save()
 
         network = models.Network()
@@ -567,7 +567,7 @@ class SystemManager(base.BaseManager):
             return
 
         try:
-            if system.type.name == models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE:
+            if system.system_type.name == models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE:
                 return self.addManagementNode(system)
         except ObjectDoesNotExist:
             pass # will default later on
@@ -702,7 +702,7 @@ class SystemManager(base.BaseManager):
                 # We really see this system the first time with its proper
                 # uuids. We'll assume it's been registered with rpath-register
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
-            if not system.type.infrastructure:
+            if not system.system_type.infrastructure:
                 # Schedule a poll event in the future
                 self.scheduleSystemPollEvent(system)
                 # And schedule one immediately

@@ -464,11 +464,11 @@ class System(modellib.XObjIdModel):
         if not self.agent_port and self.management_interface:
             self.agent_port = self.management_interface.port
         try:
-            if not self.type:
-                self.type = SystemType.objects.get(
+            if not self.system_type:
+                self.system_type = SystemType.objects.get(
                     name = SystemType.INVENTORY)
         except ObjectDoesNotExist:
-            self.type = SystemType.objects.get(
+            self.system_type = SystemType.objects.get(
                     name = SystemType.INVENTORY)
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
@@ -601,10 +601,10 @@ class ManagementNode(System):
     
     def save(self, *args, **kw):
         try:
-            self.type = SystemType.objects.get(
+            self.system_type = SystemType.objects.get(
                 name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         except ObjectDoesNotExist:
-            self.type = SystemType.objects.get(
+            self.system_type = SystemType.objects.get(
                 name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         System.save(self, *args, **kw)
 

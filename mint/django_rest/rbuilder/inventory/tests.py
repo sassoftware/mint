@@ -217,7 +217,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             models.SystemState.REGISTERED)
         system.managing_zone = self.localZone
         system.management_interface = models.ManagementInterface.objects.get(pk=1)
-        system.type = models.SystemType.objects.get(pk=1)
+        system.system_type = models.SystemType.objects.get(pk=1)
         system.save()
 
         network = models.Network()
@@ -621,7 +621,8 @@ class SystemTypesTestCase(XMLTestCase):
         
     def testGetSystemTypeSystems(self):
         system = self._saveSystem()
-        response = self._get('/api/inventory/system_types/%d/systems/' % system.type.system_type_id,
+        response = self._get('/api/inventory/system_types/%d/systems/' % \
+            system.system_type.system_type_id,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
@@ -662,7 +663,7 @@ class SystemTypesTestCase(XMLTestCase):
         network = self.mgr.sysMgr.extractNetworkToUse(system)
         assert(system.name =="myname")
         assert(system.description == "mydesc")
-        assert(system.type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
+        assert(system.system_type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
         assert(network.dns_name == "1.1.1.1")
         
     def testGetWindowsBuildServiceNodes(self):
@@ -676,7 +677,7 @@ class SystemTypesTestCase(XMLTestCase):
         system.description = 'testsystemdescription'
         system.managing_zone = self.localZone
         system.management_interface = models.ManagementInterface.objects.get(pk=1)
-        system.type = st
+        system.system_type = st
         system.save()
 
         network = models.Network()
@@ -972,11 +973,11 @@ class ManagementNodesTestCase(XMLTestCase):
         
     def testAddManagementNodeSave(self):
         management_node = self._saveManagementNode()
-        management_node.type = models.SystemType.objects.get(
+        management_node.system_type = models.SystemType.objects.get(
             name = models.SystemType.INVENTORY)
         # now save, which should automatically set management_node
         management_node.save()
-        assert(management_node.type == models.SystemType.objects.get(
+        assert(management_node.system_type == models.SystemType.objects.get(
             name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE))
         
     def testPostManagementNodeForZoneAuth(self):
@@ -1407,12 +1408,12 @@ class SystemsTestCase(XMLTestCase):
         
     def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
-        type = models.SystemType.objects.get(
+        system_type = models.SystemType.objects.get(
             name = models.SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         # create the system
         system = self.newSystem(name="mgoblue",
             description="best appliance ever",
-            type=type,
+            system_type=system_type,
             local_uuid='123', generated_uuid='456')
         system.zone = zone
         new_system = self.mgr.addSystem(system)
