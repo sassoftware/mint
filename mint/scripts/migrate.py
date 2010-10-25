@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 13)
+    Version = (51, 15)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1719,6 +1719,28 @@ class MigrateTo_51(SchemaMigration):
         """)
 
         return changed
+
+    def migrate14(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_type"
+            ALTER "infrastructure" SET NOT NULL
+        """)
+
+        return True
+
+    def migrate15(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            RENAME "type_id" to "system_type_id"
+        """)
+
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################

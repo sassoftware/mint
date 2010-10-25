@@ -214,7 +214,7 @@
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
-        <field to="inventory.systemtype" name="type" rel="ManyToOneRel">2</field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">2</field>
     </object>
   <object pk="2" model="inventory.managementnode">
         <field type="NullBooleanField" name="local"><None></None></field>

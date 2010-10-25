@@ -80,6 +80,8 @@ class Inventory(modellib.XObjModel):
         self.event_types = modellib.XObjHrefModel('event_types')
         self.system_states = modellib.XObjHrefModel('system_states')
         self.job_states = modellib.XObjHrefModel('job_states')
+        self.inventory_systems = modellib.XObjHrefModel('inventory_systems')
+        self.infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
 
 class Systems(modellib.XObjModel):
     class Meta:
@@ -346,7 +348,7 @@ class SystemType(modellib.XObjIdModel):
     name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the system type")
     description = D(models.CharField(max_length=8092), "the description of the system type")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the system type was added to inventory (UTC)")
-    infrastructure = D(models.NullBooleanField(), "whether or not the system type is infrastructure")
+    infrastructure = D(models.BooleanField(), "whether or not the system type is infrastructure")
 
     load_fields = [ name ]
 
@@ -433,7 +435,8 @@ class System(modellib.XObjIdModel):
     management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
     credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
-    type = D(modellib.SerializedForeignKey(SystemType, null=False, related_name='systems'),
+    system_type = D(modellib.ForeignKey(SystemType, null=False,
+        related_name='systems', text_field='description'),
         "the type of the system")
     stage = D(modellib.ForeignKey("Stage", null=True, text_field='name'),
         "the appliance stage of the system")

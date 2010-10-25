@@ -334,6 +334,24 @@ class InventorySystemsService(AbstractInventoryService):
         systems = self.mgr.addSystems(systems.system)
         return self.mgr.getSystems(request)
 
+class InventoryInventorySystemsService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getInventorySystems()
+
+class InventoryInfrastructureSystemsService(AbstractInventoryService):
+    
+    @return_xml
+    def rest_GET(self, request):
+        return self.get()
+
+    def get(self):
+        return self.mgr.getInfrastructureSystems()
+
 class InventorySystemsSystemService(AbstractInventoryService):
     
     @return_xml

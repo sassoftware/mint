@@ -360,6 +360,20 @@ class SystemManager(base.BaseManager):
         return ret
     
     @base.exposed
+    def getInventorySystems(self):
+        systems = models.Systems()
+        systems.system = \
+            models.System.objects.filter(system_type__infrastructure=False)
+        return systems
+
+    @base.exposed
+    def getInfrastructureSystems(self):
+        systems = models.Systems()
+        systems.system = \
+            models.System.objects.filter(system_type__infrastructure=True)
+        return systems
+
+    @base.exposed
     def getManagementInterface(self, management_interface_id):
         managementInterface = models.ManagementInterface.objects.get(pk=management_interface_id)
         return managementInterface
