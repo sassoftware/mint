@@ -62,6 +62,15 @@ def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     msg['To'] = toEmail
 
     s = smtplib.SMTP()
+    try:
+        rAPA = xmlrpclib.ServerProxy('http://localhost:8004/xmlrpc/')
+        config = rAPA.configure.Notify.index()
+        s = smtplib.SMTP(host=config['mailRelay'])               
+    except:
+        # This simply means that we couldn't contact rAPA to get the relay,
+        # and so we attempt to send mail directly
+        pass
+
     s.connect()
     s.sendmail(fromEmail, [toEmail], msg.as_string())
     s.close()
