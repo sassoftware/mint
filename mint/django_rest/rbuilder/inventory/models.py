@@ -520,7 +520,18 @@ class System(modellib.XObjIdModel):
         return False
 
     def hasRunningJobs(self):
-        return bool(self.jobs.filter(job_state__name='Running'))
+        return bool(self.jobs.filter(job_state__name=JobState.RUNNING))
+
+    _runningJobState = None
+    @property
+    def runningJobState(self):
+        if self._runningJobState is None:
+            self.__class__._runningJobState = \
+                Cache.get(JobState, name=JobState.RUNNING)
+        return self.__class__._runningJobState
+
+    def areJobsRunning(self, jobs):
+        return bool([j for j in jobs if j.job_state == self.runningJobState])
 
     def serialize(self, request=None, values=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
@@ -535,7 +546,7 @@ class System(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request,
             values=values)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
-        xobj_model.has_running_jobs = self.hasRunningJobs()
+        xobj_model.has_running_jobs = self.areJobsRunning(jobs)
 
         if request:
             class CredentialsHref(object): 
