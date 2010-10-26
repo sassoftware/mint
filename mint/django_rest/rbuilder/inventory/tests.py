@@ -2933,8 +2933,13 @@ class SystemEventTestCase(XMLTestCase):
         models.SystemEvent.objects.all().delete()
         
         self.mock_dispatchSystemEvent_called = False
-        self.oldDispatchSystemEvent = self.mgr.sysMgr.dispatchSystemEvent
         self.mgr.sysMgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
+
+        self.old_DispatchSystemEvent = manager.systemmgr.SystemManager._dispatchSystemEvent
+
+    def tearDown(self):
+        manager.systemmgr.SystemManager._dispatchSystemEvent = self.old_DispatchSystemEvent
+        XMLTestCase.tearDown(self)
 
     def mock_dispatchSystemEvent(self, event):
         self.mock_dispatchSystemEvent_called = True
@@ -3149,9 +3154,7 @@ class SystemEventTestCase(XMLTestCase):
             ignoreNodes=['time_created', 'time_enabled'])
         
     def testSecondRunningJobBlocked(self):
-        self._dispatchSystemEventCalled = False
         def mock__dispatchSystemEvent(self, event):
-            self._dispatchSystemEventCalled = True
             system = event.system
             job = models.Job(job_uuid='aaaaa', 
                 job_state=models.JobState.objects.get(name='Running'),
@@ -3160,9 +3163,8 @@ class SystemEventTestCase(XMLTestCase):
             systemJob = models.SystemJob(job=job, system=system,
                 event_uuid='bbbbb')
             systemJob.save()
-        # self.mgr.sysMgr.dispatchSystemEvent = self.oldDispatchSystemEvent
+
         manager.systemmgr.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
-        # self.mgr.sysMgr._dispatchSystemEvent = mock__dispatchSystemEvent
 
         url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
         response = self._post(url,
