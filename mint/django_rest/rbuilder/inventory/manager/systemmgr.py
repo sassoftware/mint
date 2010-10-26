@@ -1087,7 +1087,17 @@ class SystemManager(base.BaseManager):
             self.dispatchSystemEvent(event)
 
     def dispatchSystemEvent(self, event):
-        log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % (event.event_type.name, event.system_event_id, event.time_enabled, event.system.name, event.system.system_id))
+        # Check if the system has any active jobs before creating the event.
+        if event.system.hasRunningJobs():
+            log.info("Not Dispatching %s event (id %d, enabled %s) for system "
+                " %s (id %d).  The system already has a running job." % \
+                (event.event_type.name, event.system_event_id, event.time_enabled, 
+                event.system.name, event.system.system_id))
+            raise errors.JobsAlreadyRunning
+
+        log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % \
+            (event.event_type.name, event.system_event_id, event.time_enabled, 
+            event.system.name, event.system.system_id))
         
         self._dispatchSystemEvent(event)
 

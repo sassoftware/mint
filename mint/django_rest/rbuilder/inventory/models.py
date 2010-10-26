@@ -518,6 +518,9 @@ class System(modellib.XObjIdModel):
                 return True
         return False
 
+    def hasRunningJobs(self):
+        return bool(self.jobs.filter(job_state__name='Running'))
+
     def serialize(self, request=None, values=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
         # the jobs m2m relationship as hidden, or else the bulk load fails
@@ -531,6 +534,7 @@ class System(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request,
             values=values)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
+        xobj_model.has_running_jobs = self.hasRunningJobs()
 
         if request:
             class CredentialsHref(object): 

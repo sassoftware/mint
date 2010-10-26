@@ -25,3 +25,6 @@ class InvalidNetworkInformation(InventoryError):
 
 class UnknownEventType(InventoryError):
     "An unknown even type was specified: %(eventType)s"
+
+class JobsAlreadyRunning(InventoryError):
+    "The system already has running jobs.  New jobs can not be started on the system."
