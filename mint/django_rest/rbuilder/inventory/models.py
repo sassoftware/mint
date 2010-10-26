@@ -531,7 +531,8 @@ class System(modellib.XObjIdModel):
         return self.__class__._runningJobState
 
     def areJobsRunning(self, jobs):
-        return bool([j for j in jobs if j.job_state == self.runningJobState])
+        return bool([j for j in jobs \
+            if j.job_state_id == self.runningJobState.job_state_id])
 
     def serialize(self, request=None, values=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
