@@ -247,6 +247,9 @@ system_types_xml="""\
     <description>bar</description>
     <name>foo</name>
     <created_date>2010-10-07T00:42:33.634913+00:00</created_date>
+    <creation_descriptor>
+      <foo/>
+    </creation_descriptor>
   </system_type>
 </system_types>"""
 
@@ -258,6 +261,9 @@ system_type_xml="""\
   <description>bar</description>
   <name>foo</name>
   <created_date>2010-10-07T00:42:33.634913+00:00</created_date>
+  <creation_descriptor>
+    <foo/>
+  </creation_descriptor>
 </system_type>"""
 
 system_types_put_xml="""\

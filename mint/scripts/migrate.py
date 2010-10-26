@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 15)
+    Version = (51, 16)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1740,6 +1740,19 @@ class MigrateTo_51(SchemaMigration):
             RENAME "type_id" to "system_type_id"
         """)
 
+        return True
+    
+    def migrate16(self):
+        cu = self.db.cursor()
+
+        cu.execute("alter table inventory_system_type ADD COLUMN creation_descriptor text")
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+            schema.inventory_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+            schema.management_node_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+            schema.windows_build_node_creation_descriptor)
+        
         return True
 
 
