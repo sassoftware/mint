@@ -11,6 +11,7 @@ import socket
 from email import MIMEText
 
 from mint.mint_error import MailError
+import xmlrpclib
 
 def digMX(hostname):
     try:
