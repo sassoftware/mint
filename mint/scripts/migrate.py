@@ -1744,7 +1744,6 @@ class MigrateTo_51(SchemaMigration):
     
     def migrate16(self):
         cu = self.db.cursor()
-        db = self.db
 
         cu.execute("alter table inventory_system_type ADD COLUMN creation_descriptor text")
         cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
