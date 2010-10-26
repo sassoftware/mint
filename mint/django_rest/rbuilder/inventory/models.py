@@ -776,8 +776,8 @@ class Job(modellib.XObjIdModel):
     job_uuid = models.CharField(max_length=64, unique=True)
     job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
         related_name='jobs')
-    status_code = models.IntegerField(null=False, default=100)
-    status_text = models.TextField(null=False, default='Initializing')
+    status_code = models.IntegerField(default=100)
+    status_text = models.TextField(default='Initializing')
     status_detail = XObjHidden(models.TextField(null=True))
     event_type = APIReadOnly(modellib.InlinedForeignKey(EventType,
         visible='name'))

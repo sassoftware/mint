@@ -17,6 +17,7 @@ from django.test.client import Client, MULTIPART_CONTENT
 
 from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
@@ -2932,6 +2933,7 @@ class SystemEventTestCase(XMLTestCase):
         models.SystemEvent.objects.all().delete()
         
         self.mock_dispatchSystemEvent_called = False
+        self.oldDispatchSystemEvent = self.mgr.sysMgr.dispatchSystemEvent
         self.mgr.sysMgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
 
     def mock_dispatchSystemEvent(self, event):
@@ -3146,6 +3148,37 @@ class SystemEventTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, system_event_xml,
             ignoreNodes=['time_created', 'time_enabled'])
         
+    def testSecondRunningJobBlocked(self):
+        self._dispatchSystemEventCalled = False
+        def mock__dispatchSystemEvent(self, event):
+            self._dispatchSystemEventCalled = True
+            system = event.system
+            job = models.Job(job_uuid='aaaaa', 
+                job_state=models.JobState.objects.get(name='Running'),
+                event_type=models.EventType.objects.get(name='immediate system apply update'))
+            job.save()
+            systemJob = models.SystemJob(job=job, system=system,
+                event_uuid='bbbbb')
+            systemJob.save()
+        # self.mgr.sysMgr.dispatchSystemEvent = self.oldDispatchSystemEvent
+        manager.systemmgr.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
+        # self.mgr.sysMgr._dispatchSystemEvent = mock__dispatchSystemEvent
+
+        url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
+        response = self._post(url,
+            data=testsxml.system_event_immediate_poll_post_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        # Schedule another immediate poll, the previous one should still be
+        # running.
+        response = self._post(url,
+            data=testsxml.system_event_immediate_poll_post_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue('<fault>' in response.content)
+        self.assertTrue('The system already has running jobs' in response.content)
+
 class SystemEventProcessingTestCase(XMLTestCase):
     
     # do not load other fixtures for this test case as it is very data order dependent

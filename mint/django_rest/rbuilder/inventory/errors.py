@@ -28,3 +28,4 @@ class UnknownEventType(InventoryError):
 
 class JobsAlreadyRunning(InventoryError):
     "The system already has running jobs.  New jobs can not be started on the system."
+    status = 200

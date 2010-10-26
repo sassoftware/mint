@@ -36,7 +36,7 @@ class ExceptionLoggerMiddleware(object):
         msg = str(ei[1])
         self.logError(request, ei[0], ei[1], ei[2])
 
-        code = 500
+        code = getattr(ei[1], 'status', 500)
         fault = models.Fault(code=code, message=msg, traceback=tb)
         response = HttpResponse(status=code, content_type='text/xml')
         response.content = fault.to_xml(request)

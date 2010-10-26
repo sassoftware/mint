@@ -1457,6 +1457,15 @@ system_event_post_xml = """\
 </system_event>
 """
 
+system_event_immediate_poll_post_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system_event>
+    <event_type href="http://testserver/api/inventory/event_types/2"/>
+    <system href="http://testserver/api/inventory/systems/2"/>
+    <priority>50</priority>
+</system_event>
+"""
+
 system_log_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_log id="http://testserver/api/inventory/systems/1/system_log">
