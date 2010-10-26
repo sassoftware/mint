@@ -590,7 +590,7 @@ class SystemTypesTestCase(XMLTestCase):
 
     def testGetSystemTypes(self):
         models.SystemType.objects.all().delete()
-        si = models.SystemType(name="foo", description="bar")
+        si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
         response = self._get('/api/inventory/system_types/',
             username="testuser", password="password")
@@ -611,7 +611,7 @@ class SystemTypesTestCase(XMLTestCase):
 
     def testGetSystemType(self):
         models.SystemType.objects.all().delete()
-        si = models.SystemType(name="foo", description="bar")
+        si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
         response = self._get('/api/inventory/system_types/1/',
             username="testuser", password="password")
@@ -647,7 +647,7 @@ class SystemTypesTestCase(XMLTestCase):
         APIReadOnly fields of which name on SystemType is.
         """
         models.SystemType.objects.all().delete()
-        si = models.SystemType(name="foo", description="bar")
+        si = models.SystemType(name="foo", description="bar", creation_descriptor="<foo></foo>")
         si.save()
         self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.system_types_put_xml)
         response = self._put('/api/inventory/system_types/1',
@@ -670,7 +670,8 @@ class SystemTypesTestCase(XMLTestCase):
         models.SystemType.objects.all().delete()
         models.SystemType.objects.all().delete()
         st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE, 
-            description=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC, infrastructure=True)
+            description=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC, infrastructure=True,
+            creation_descriptor="<foo></foo>")
         st.save()
         system = models.System()
         system.name = 'testsystemname'
@@ -690,7 +691,8 @@ class SystemTypesTestCase(XMLTestCase):
         network.save()
         
         st2 = models.SystemType(name=models.SystemType.INVENTORY, 
-            description=models.SystemType.INVENTORY_DESC, infrastructure=True)
+            description=models.SystemType.INVENTORY_DESC, infrastructure=True,
+            creation_descriptor="<foo></foo>")
         st2.save()
         
         system2 = models.System()

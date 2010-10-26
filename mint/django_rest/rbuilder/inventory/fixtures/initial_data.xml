@@ -134,18 +134,197 @@
         <field type="CharField" name="description">Inventory</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
         <field type="NullBooleanField" name="infrastructure">False</field>
-    </object>
+        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@System_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this system</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@System_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this system</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@System_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this system</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+    <field>
+      <name>requiredNetwork</name>
+      <help lang="en_US">@System_creation_required_net@</help>
+      <required>false</required>
+      <multiple>True</multiple>
+      <descriptions>
+        <desc>Manage Via this Address Only</desc>
+      </descriptions>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc></desc>
+          </descriptions>
+          <key>true</key>
+        </describedValue>
+      </enumeratedType>
+      <default>false</default>
+    </field>
+  </dataFields> 
+</descriptor>]]></field>
+  </object>
     <object pk="2" model="inventory.systemtype">
         <field type="CharField" name="name">infrastructure-management-node</field>
         <field type="CharField" name="description">rPath Update Service (Infrastructure)</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
         <field type="NullBooleanField" name="infrastructure">True</field>
+        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@Management_node_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this management service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@Management_node_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this management service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@Management_node_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this management service</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+    <field> 
+      <name>zoneName</name> 
+      <help lang="en_US">@Management_node_zone_creation_name@</help>
+      <descriptions> 
+        <desc>Zone Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for the zone</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>zoneDescription</name> 
+      <help lang="en_US">@Management_node_zone_creation_description@</help>
+      <descriptions> 
+        <desc>Zone Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for the zone</desc>
+      </prompt>
+    </field>
+  </dataFields> 
+</descriptor>]]></field>
     </object>
     <object pk="3" model="inventory.systemtype">
         <field type="CharField" name="name">infrastructure-windows-build-node</field>
         <field type="CharField" name="description">rPath Windows Build Service (Infrastructure)"</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
         <field type="NullBooleanField" name="infrastructure">True</field>
+        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@Windows_build_node_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this Windows build service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@Windows_build_node_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this Windows build service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@Windows_build_node_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this Windows build service</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+  </dataFields> 
+</descriptor>]]></field>
     </object>
     <object pk="1" model="inventory.eventtype">
         <field type="CharField" name="name">system registration</field>
