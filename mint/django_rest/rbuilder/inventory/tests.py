@@ -17,7 +17,6 @@ from django.test.client import Client, MULTIPART_CONTENT
 
 from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
