@@ -349,6 +349,7 @@ class SystemType(modellib.XObjIdModel):
     description = D(models.CharField(max_length=8092), "the description of the system type")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the system type was added to inventory (UTC)")
     infrastructure = D(models.BooleanField(), "whether or not the system type is infrastructure")
+    creation_descriptor = D(models.XMLField(), "the descriptor of required fields to create systems of this type")
 
     load_fields = [ name ]
 

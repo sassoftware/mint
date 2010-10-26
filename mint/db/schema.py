@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 15)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 16)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1110,7 +1110,8 @@ def _createInventorySchema(db, cfg):
                 "name" varchar(8092) NOT NULL UNIQUE,
                 "description" varchar(8092) NOT NULL,
                 "created_date" timestamp with time zone NOT NULL,
-                "infrastructure" bool NOT NULL
+                "infrastructure" bool NOT NULL,
+                "creation_descriptor" text NOT NULL
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['inventory_system_type'] = []
         changed |= _addSystemTypes(db)
@@ -1601,6 +1602,188 @@ def _addManagementInterfaces(db):
     
     return changed
 
+inventory_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@System_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this system</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@System_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this system</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@System_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this system</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+    <field>
+      <name>requiredNetwork</name>
+      <help lang="en_US">@System_creation_required_net@</help>
+      <required>false</required>
+      <multiple>True</multiple>
+      <descriptions>
+        <desc>Manage Via this Address Only</desc>
+      </descriptions>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc></desc>
+          </descriptions>
+          <key>true</key>
+        </describedValue>
+      </enumeratedType>
+      <default>false</default>
+    </field>
+  </dataFields> 
+</descriptor>"""
+
+management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@Management_node_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this management service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@Management_node_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this management service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@Management_node_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this management service</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+    <field> 
+      <name>zoneName</name> 
+      <help lang="en_US">@Management_node_zone_creation_name@</help>
+      <descriptions> 
+        <desc>Zone Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for the zone</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>zoneDescription</name> 
+      <help lang="en_US">@Management_node_zone_creation_description@</help>
+      <descriptions> 
+        <desc>Zone Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for the zone</desc>
+      </prompt>
+    </field>
+  </dataFields> 
+</descriptor>"""
+
+windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@Windows_build_node_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this Windows build service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@Windows_build_node_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this Windows build service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@Windows_build_node_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this Windows build service</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+  </dataFields> 
+</descriptor>"""
+
 def _addSystemTypes(db):
     changed = False
     
@@ -1608,21 +1791,24 @@ def _addSystemTypes(db):
             [dict(name='inventory',
                   description='Inventory',
                   created_date=str(datetime.datetime.now(tz.tzutc())),
-                  infrastructure=False
+                  infrastructure=False,
+                  creation_descriptor=inventory_creation_descriptor
             )])
     
     changed |= _addTableRows(db, 'inventory_system_type', 'name',
             [dict(name='infrastructure-management-node',
                   description='rPath Update Service (Infrastructure)',
                   created_date=str(datetime.datetime.now(tz.tzutc())),
-                  infrastructure=True
+                  infrastructure=True,
+                  creation_descriptor=management_node_creation_descriptor
             )])
     
     changed |= _addTableRows(db, 'inventory_system_type', 'name',
             [dict(name='infrastructure-windows-build-node',
                   description='rPath Windows Build Service (Infrastructure)',
                   created_date=str(datetime.datetime.now(tz.tzutc())),
-                  infrastructure=True
+                  infrastructure=True,
+                  creation_descriptor=windows_build_node_creation_descriptor
             )])
     
     return changed
