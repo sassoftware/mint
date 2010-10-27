@@ -61,6 +61,7 @@ availablePlatforms      rhel.rpath.com@rpath:rhel-4-as
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-server
 availablePlatforms      rhel.rpath.com@rpath:rhel-5-client-workstation
 availablePlatforms      sles.rpath.com@rpath:sles-10sp3
+availablePlatforms      sles.rpath.com@rpath:sles-11sp1
 availablePlatforms      centos.rpath.com@rpath:centos-5e
 availablePlatforms      conary.rpath.com@rpl:2
 
@@ -68,8 +69,9 @@ availablePlatforms      conary.rpath.com@rpl:2
 availablePlatformNames  Red Hat Enterprise Linux 4
 availablePlatformNames  Red Hat Enterprise Linux 5
 availablePlatformNames  Red Hat Enterprise Linux Desktop Workstation 5
-availablePlatformNames  Encapsulated SLES 10 Delivered by rPath
-availablePlatformNames  Encapsulated CentOS 5 Delivered by rPath
+availablePlatformNames  SLES 10 SP3
+availablePlatformNames  SLES 11 SP1 
+availablePlatformNames  CentOS 5 
 availablePlatformNames  rPath Linux 2
 
 # Acceptable platforms (these are *allowed* but cannot be normally chosen)
@@ -87,6 +89,7 @@ configurablePlatforms   rhel.rpath.com@rpath:rhel-4-as
 configurablePlatforms   rhel.rpath.com@rpath:rhel-5-server
 configurablePlatforms   rhel.rpath.com@rpath:rhel-5-client-workstation
 configurablePlatforms   sles.rpath.com@rpath:sles-10sp3
+configurablePlatforms   sles.rpath.com@rpath:sles-11sp1
 configurablePlatforms	centos.rpath.com@rpath:centos-5e
 
 platformSources          redhatnetwork
