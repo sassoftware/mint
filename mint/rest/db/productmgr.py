@@ -139,7 +139,11 @@ class ProductManager(manager.Manager):
             clauses.append(('(UPPER(p.shortname) LIKE UPPER(?) OR UPPER(p.name) LIKE UPPER(?))', (search, search,)))
 
         if prodtype:
-            clauses.append(('(UPPER(p.prodtype) = UPPER(?))', (prodtype, )))
+            if prodtype.lower() == 'appliance':
+                # search for PlatformFoundation types also
+                clauses.append(('(UPPER(p.prodtype) = UPPER(?) or UPPER(p.prodtype) = ?)', (prodtype, 'PLATFORMFOUNDATION' )))
+            else:
+                clauses.append(('(UPPER(p.prodtype) = UPPER(?))', (prodtype, )))
 
         ret = models.ProductSearchResultList()
         ret.products = self._getProducts(clauses, limit, start)
