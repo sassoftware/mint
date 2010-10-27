@@ -1069,6 +1069,27 @@ class PlatformManager(manager.Manager):
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
 
+    def createPlatform(self, platform):
+        platformLabel = platform.label
+        pd = proddef.ProductDefinition()
+        pd.setBaseLabel(platformLabel)
+
+        client = self._reposMgr.getAdminClient(write=True)
+        pd.loadFromRepository(client)
+        pl = pd.toPlatformDefinition()
+        pl.saveToRepository(client, platformLabel,
+            message="rBuilder generated\n")
+        # Now save the platform
+        cu = self.db.db.cursor()
+        cu.execute("SELECT platformId FROM Platforms WHERE label = ?", (platformLabel, ))
+        row = cu.fetchone()
+        if not row:
+            # Need to create this platform
+            platId = self.db.db.platforms.new(label=platformLabel, enabled=0)
+        else:
+            platId = row[0]
+        return self.getPlatform(platId)
+
     def getPlatformByName(self, platformName):
         return self.platforms.getByName(platformName)
 

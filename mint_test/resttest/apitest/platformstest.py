@@ -33,7 +33,7 @@ from rpath_proddef import api1 as proddef
 
 ResponseError = restClient.ResponseError
 
-class PlatformsTest(restbase.BaseRestTest):
+class BaseTest(restbase.BaseRestTest):
     architectures = [
            # ('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)'),
            # ('x86_64', 'x86 (64-bit)', 'is:x86_64 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
@@ -53,6 +53,7 @@ class PlatformsTest(restbase.BaseRestTest):
         mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
                         True)
 
+class PlatformsTest(BaseTest):
     def testGetPlatforms(self):
         return self._testGetPlatforms()
 
@@ -371,6 +372,22 @@ class PlatformsTest(restbase.BaseRestTest):
 
         rpath_job.BackgroundRunner.backgroundRun = oldBackgroundRunner
         
+
+class NewPlatformTest(BaseTest):
+
+    def testCreatePlatform(self):
+        # Create a platform from a product
+        pdLabel = self.productDefinition.getProductDefinitionLabel()
+        uri = "/platforms"
+        xml = "<platform><label>%s</label></platform>" % pdLabel
+        client = self.getRestClient()
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.label, pdLabel)
+        self.failUnlessEqual(plat.platformId, '1')
+
+        # Post again, should not change anything
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.platformId, '1')
 
 if __name__ == "__main__":
         testsetup.main()

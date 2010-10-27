@@ -234,6 +234,25 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.failUnlessEqual([x.contentSourceType \
             for x in newPlatSources.instance], ['RHN', 'RHN'])
 
+    def testPlatformsNoCfg(self):
+        # Make sure that simply adding the platform to the DB will
+        # successfully expose it
+        plats = self.db.getPlatforms()
+        self.failUnlessEqual(sorted(x.label for x in plats.platforms),
+            ['localhost@rpath:plat-1', 'localhost@rpath:plat-2'])
+
+        self.setupPlatform3InDb()
+        plats = self.db.getPlatforms()
+        self.failUnlessEqual(sorted(x.label for x in plats.platforms),
+            ['localhost@rpath:plat-1', 'localhost@rpath:plat-2',
+            'localhost@rpath:plat-3'])
+
+    def setupPlatform3InDb(self):
+        pl = self.setupPlatform3()
+        platformId = self.db.db.platforms.new(label='localhost@rpath:plat-3',
+            enabled=0)
+        return pl
+
     def testGetDescriptor(self):
         rc = self.getRestClient()
         for cst in platformmgr.contentsources.contentSourceTypes:

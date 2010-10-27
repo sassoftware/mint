@@ -154,6 +154,10 @@ class PlatformController(base.BaseController):
     def get(self, request, platformId):        
         return self.db.getPlatform(platformId)
 
+    @requires('platform', models.Platform)
+    def create(self, request, platform):
+        return self.db.createPlatform(platform)
+
     @auth.admin
     @requires('platform', models.Platform)
     def update(self, request, platformId, platform):

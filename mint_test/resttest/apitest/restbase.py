@@ -212,6 +212,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl1.addArchitecture('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
         pl1.addFlavorSet('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware')
         pl1.saveToRepository(self.cclient, platformLabel1)
+        return pl1
 
     def getConaryClient(self):
         return conaryclient.ConaryClient(self.cfg)

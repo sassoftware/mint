@@ -739,6 +739,10 @@ class Database(DBInterface):
     def getPlatform(self, platformId):
         return self.platformMgr.getPlatform(platformId)
 
+    @commitafter
+    def createPlatform(self, platform):
+        return self.platformMgr.createPlatform(platform)
+
     @readonly
     def getPlatformImageTypeDefs(self, request, platformId):
         return self.platformMgr.getPlatformImageTypeDefs(request, platformId)
