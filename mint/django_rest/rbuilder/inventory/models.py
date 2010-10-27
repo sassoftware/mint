@@ -519,6 +519,21 @@ class System(modellib.XObjIdModel):
                 return True
         return False
 
+    def hasRunningJobs(self):
+        return bool(self.jobs.filter(job_state__name=JobState.RUNNING))
+
+    _runningJobState = None
+    @property
+    def runningJobState(self):
+        if self._runningJobState is None:
+            self.__class__._runningJobState = \
+                Cache.get(JobState, name=JobState.RUNNING)
+        return self.__class__._runningJobState
+
+    def areJobsRunning(self, jobs):
+        return bool([j for j in jobs \
+            if j.job_state_id == self.runningJobState.job_state_id])
+
     def serialize(self, request=None, values=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
         # the jobs m2m relationship as hidden, or else the bulk load fails
@@ -532,6 +547,7 @@ class System(modellib.XObjIdModel):
         xobj_model = modellib.XObjIdModel.serialize(self, request,
             values=values)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
+        xobj_model.has_running_jobs = self.areJobsRunning(jobs)
 
         if request:
             class CredentialsHref(object): 
@@ -773,8 +789,8 @@ class Job(modellib.XObjIdModel):
     job_uuid = models.CharField(max_length=64, unique=True)
     job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
         related_name='jobs')
-    status_code = models.IntegerField(null=False, default=100)
-    status_text = models.TextField(null=False, default='Initializing')
+    status_code = models.IntegerField(default=100)
+    status_text = models.TextField(default='Initializing')
     status_detail = XObjHidden(models.TextField(null=True))
     event_type = APIReadOnly(modellib.InlinedForeignKey(EventType,
         visible='name'))

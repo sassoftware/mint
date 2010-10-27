@@ -292,6 +292,7 @@ system_type_systems_xml="""
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
+    <has_running_jobs>False</has_running_jobs>
     <hostname/>
     <installed_software id="http://testserver/api/inventory/systems/3/installed_software"/>
     <jobs id="http://testserver/api/inventory/systems/3/jobs">
@@ -486,6 +487,7 @@ management_nodes_xml = """\
     <registration_date/>
     <generated_uuid>test management node guuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
+    <has_running_jobs>False</has_running_jobs>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">
         <active/>
@@ -554,6 +556,7 @@ management_node_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -658,6 +661,7 @@ management_node_post_response_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -762,6 +766,7 @@ management_node_zone_post_response_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -836,6 +841,7 @@ systems_xml = """\
     <description>Local rPath Update Service</description>
     <generated_uuid/>
     <has_active_jobs>False</has_active_jobs>
+    <has_running_jobs>False</has_running_jobs>
     <hostname/>
     <installed_software id="http://testserver/api/inventory/systems/2/installed_software"/>
     <jobs id="http://testserver/api/inventory/systems/2/jobs">
@@ -894,6 +900,7 @@ systems_xml = """\
     <description>testsystemdescription</description>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
+    <has_running_jobs>False</has_running_jobs>
     <hostname/>
     <installed_software id="http://testserver/api/inventory/systems/3/installed_software"/>
     <jobs id="http://testserver/api/inventory/systems/3/jobs">
@@ -1089,6 +1096,7 @@ system_xml = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <networks>
@@ -1256,6 +1264,7 @@ system_post_xml_response = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1366,6 +1375,7 @@ system_target_xml = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1458,6 +1468,15 @@ system_event_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system_event>
     <event_type href="http://testserver/api/inventory/event_types/3"/>
+    <system href="http://testserver/api/inventory/systems/2"/>
+    <priority>50</priority>
+</system_event>
+"""
+
+system_event_immediate_poll_post_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system_event>
+    <event_type href="http://testserver/api/inventory/event_types/2"/>
     <system href="http://testserver/api/inventory/systems/2"/>
     <priority>50</priority>
 </system_event>
@@ -1652,6 +1671,7 @@ system_version_xml = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <networks>
@@ -1897,6 +1917,7 @@ system_available_updates_xml = """\
   <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
       <active/>
@@ -2159,6 +2180,7 @@ system_with_target = """\
   <target_system_id>vsphere1-002</target_system_id>
   <target_system_name/>
   <has_active_jobs>False</has_active_jobs>
+  <has_running_jobs>False</has_running_jobs>
   <agent_port/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/4/credentials"/>
