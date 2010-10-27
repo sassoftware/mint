@@ -1118,18 +1118,16 @@ class SystemManager(base.BaseManager):
             return models.ManagementInterface.CIM
         return system.management_interface.name
 
-    @classmethod
-    def _computeDispatcherMethodParams(cls, repClient, system, destination, eventUuid):
+    def _computeDispatcherMethodParams(self, repClient, system, destination, eventUuid):
         methodMap = {
-            models.ManagementInterface.CIM : cls._cimParams,
-            models.ManagementInterface.WMI : cls._wmiParams,
+            models.ManagementInterface.CIM : self._cimParams,
+            models.ManagementInterface.WMI : self._wmiParams,
         }
-        mgmtInterfaceName = cls.getSystemManagementInterfaceName(system)
+        mgmtInterfaceName = self.getSystemManagementInterfaceName(system)
         method = methodMap[mgmtInterfaceName]
         return method(repClient, system, destination, eventUuid)
 
-    @classmethod
-    def _cimParams(cls, repClient, system, destination, eventUuid):
+    def _cimParams(self, repClient, system, destination, eventUuid):
         if system.target_id is not None:
             targetName = system.target.targetname
             targetType = system.target.targettype
