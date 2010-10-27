@@ -249,8 +249,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
 
     def setupPlatform3InDb(self):
         pl = self.setupPlatform3()
-        platformId = self.db.db.platforms.new(label='localhost@rpath:plat-3',
-            enabled=0)
+        self.db.db.platforms.new(label='localhost@rpath:plat-3', enabled=0)
         return pl
 
     def testGetDescriptor(self):
