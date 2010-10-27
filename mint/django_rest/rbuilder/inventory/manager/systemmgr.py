@@ -1144,7 +1144,8 @@ class SystemManager(base.BaseManager):
             # XXX These three do not belong to cimParams
             instanceId=system.target_system_id,
             targetName=targetName,
-            targetType=targetType)
+            targetType=targetType,
+            launchWaitTime=self.cfg.launchWaitTime)
         if None in [cimParams.clientKey, cimParams.clientCert]:
             # This is most likely a new system.
             # Get a cert that is likely to work

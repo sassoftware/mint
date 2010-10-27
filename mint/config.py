@@ -264,7 +264,8 @@ class MintConfig(ConfigFile):
                         "The number of days after which a non-responsive system is marked as dead")
     mothballedStateTimeout = (CfgInt, 30,
                         "The number of days after which a dead system is marked as mothballed")
-
+    launchWaitTime = (CfgInt, 300,
+                        "The number of seconds to wait for a launched system's network information to become available")
 
 
     # *** BEGIN DEPRECATED VALUES ***
