@@ -195,7 +195,7 @@ class ProductManager(manager.Manager):
                 fqdn='%s.%s' % (hostname, domainname),
                 database=self.cfg.defaultDatabase,
                 namespace=namespace,
-                isAppliance=int(prodtype == 'Appliance'), 
+                isAppliance=int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'), 
                 projecturl=projecturl,
                 timeModified=createTime, 
                 timeCreated=createTime,
@@ -231,7 +231,7 @@ class ProductManager(manager.Manager):
                       timeModified=time.time())
         if prodtype is not None:
             params['prodtype'] = prodtype
-            params['isAppliance'] = int(prodtype == 'Appliance')
+            params['isAppliance'] = int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
         if namespace is not None:
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
@@ -421,7 +421,7 @@ class ProductManager(manager.Manager):
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
 
-        if product.prodtype == 'Appliance':
+        if product.prodtype == 'Appliance' or product.prodtype == 'PlatformFoundation':
             groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
             className = util.convertPackageNameToClassName(groupName)
             # convert from unicode

@@ -360,7 +360,7 @@ class Database(DBInterface):
         prodtype = product.prodtype
         if not prodtype:
             prodtype = 'Appliance'
-        elif prodtype not in ('Appliance', 'Component', 'Platform', 'Repository'):
+        elif prodtype not in ('Appliance', 'Component', 'Platform', 'Repository', 'PlatformFoundation'):
             raise mint_error.InvalidProdType
 
         fqdn = ".".join((product.hostname, product.domainname))
