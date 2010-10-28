@@ -1154,12 +1154,11 @@ class SystemManager(base.BaseManager):
                 cimParams.clientKey = outCert.pkey_pem
         return cimParams
 
-    @classmethod
-    def _wmiParams(cls, repClient, system, destination, eventUuid):
+    def _wmiParams(self, repClient, system, destination, eventUuid):
         kwargs = {}
         credentialsString = system.credentials
         if credentialsString:
-            kwargs.update(cls.unmarshalCredentials(credentialsString))
+            kwargs.update(self.unmarshalCredentials(credentialsString))
         kwargs.update(
             host=destination,
             port=system.agent_port,
@@ -1170,6 +1169,7 @@ class SystemManager(base.BaseManager):
         return wmiParams
 
     def _dispatchSystemEvent(self, event):
+        import epdb; epdb.serve()  
         repClient = self.mgr.repeaterMgr.repeaterClient
         if repClient is None:
             log.info("Failed loading repeater client, expected in local mode only")

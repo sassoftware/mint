@@ -1268,7 +1268,10 @@ class PlatformDefCache(persistentcache.PersistentCache):
 
             try:
                 from mint.db import repository as reposdb
-                entitlement = reposMgr.db.siteAuth.entitlementKey
+                if reposMgr.db.siteAuth:
+                    entitlement = reposMgr.db.siteAuth.entitlementKey
+                else:
+                    entitlement = None
                 serverProxy = reposMgr.reposManager.getServerProxy(host,
                     sourceUrl, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
