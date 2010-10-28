@@ -128,6 +128,11 @@ class ContentSourceTypes(object):
         stype = [t for t in stypes.contentSourceTypes
                  if t.contentSourceType == sourceTypeName]
 
+        if not stype:
+            # A content source type defined in the config, could not be found
+            # in the platform definitions.
+            raise errors.ContentSourceTypeNotDefined(sourceTypeName)
+
         return stype[0]
 
     def getIdByName(self, sourceTypeName):
@@ -853,7 +858,15 @@ class ContentSources(object):
         return cu
 
     def _create(self, source):
-        typeName = self.contentSourceTypes.getIdByName(source.contentSourceType)
+        try:
+            typeName = self.contentSourceTypes.getIdByName(source.contentSourceType)
+        except errors.ContentSourceTypeNotDefined, e:
+            log.error("Failed to create content source %s defined in the config "
+                "file.  The content source type was not defined by any platforms. "
+                "This usually means a platform definition could not be read." % source.name)
+            log.error(str(e))
+            return False
+            
         try:
             sourceId = self.db.db.platformSources.new(
                     name=source.name,
