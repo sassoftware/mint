@@ -50,8 +50,6 @@ class BaseTest(restbase.BaseRestTest):
         restbase.BaseRestTest.setUp(self)
         self.setupProduct()
         self.setupPlatforms()
-        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
-                        True)
 
 class PlatformsTest(BaseTest):
     def testGetPlatforms(self):
@@ -71,6 +69,7 @@ class PlatformsTest(BaseTest):
         return req, platforms
 
     def _getPlatforms(self):
+        self._disableAllPlatforms()
         req, platforms = self._getPlatformModels()
         return self._toXml(platforms, self.client, req)
 
@@ -78,11 +77,13 @@ class PlatformsTest(BaseTest):
         xml = self._getPlatforms()
         self.assertXMLEquals(platformsXml, xml)
 
-    def testGetPlatform(self):
-        # we already have a platform, so we must assume they've already been
-        # created in the db.  call getPlatforms to create them for this test.
-        self._getPlatforms()
+    def _disableAllPlatforms(self):
+        restdb = self.openRestDatabase()
+        restdb.db.cursor().execute("UPDATE Platforms SET enabled=0")
+        restdb.db.commit()
 
+    def testGetPlatform(self):
+        self._disableAllPlatforms()
         uri = '/platforms/1'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
@@ -90,9 +91,6 @@ class PlatformsTest(BaseTest):
         self.assertXMLEquals(platformXml, xml)
 
     def testGetImageTypeDefinitions(self):
-        # we already have a platform, so we must assume they've already been
-        # created in the db.  call getPlatforms to create them for this test.
-        self._getPlatforms()
         uri = '/platforms/1/imageTypeDefinitions'
         client = self.getRestClient()
         req, platform = client.call('GET', uri)
@@ -383,11 +381,11 @@ class NewPlatformTest(BaseTest):
         client = self.getRestClient()
         req, plat = client.call('POST', uri, body=xml)
         self.failUnlessEqual(plat.label, pdLabel)
-        self.failUnlessEqual(plat.platformId, '1')
+        platformId = plat.platformId
 
         # Post again, should not change anything
         req, plat = client.call('POST', uri, body=xml)
-        self.failUnlessEqual(plat.platformId, '1')
+        self.failUnlessEqual(plat.platformId, platformId)
 
 if __name__ == "__main__":
         testsetup.main()

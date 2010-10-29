@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 16)
+    Version = (51, 17)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1755,6 +1755,20 @@ class MigrateTo_51(SchemaMigration):
         
         return True
 
+    def migrate17(self):
+        # Add platformName as nullable, fill it in with the label, then set to
+        # not null
+        add_columns(self.db, 'Platforms',
+            'platformName    varchar(1024)',
+            'configurable    boolean NOT NULL DEFAULT false',
+            'abstract        boolean NOT NULL DEFAULT false',
+            'time_refreshed  timestamp with time zone NOT NULL DEFAULT current_timestamp',
+        )
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE Platforms SET platformName = label")
+        cu.execute("ALTER TABLE Platforms ALTER COLUMN platformName SET NOT NULL")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

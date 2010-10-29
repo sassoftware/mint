@@ -319,7 +319,7 @@ contentSourcesXml = """\
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
     <defaultSource>true</defaultSource>
-    <orderIndex>0</orderIndex>
+    <orderIndex>1</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
@@ -330,7 +330,7 @@ contentSourcesXml = """\
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
     <defaultSource>true</defaultSource>
-    <orderIndex>0</orderIndex>
+    <orderIndex>2</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
@@ -346,7 +346,7 @@ contentSourceXml = """\
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
-  <orderIndex>0</orderIndex>
+  <orderIndex>1</orderIndex>
   <contentSourceType>RHN</contentSourceType>
   <enabled>false</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
@@ -374,7 +374,7 @@ contentSourcesByPlatformXml = """\
     <name>Platform 2 Source 0</name>
     <shortname>plat2source0</shortname>
     <defaultSource>true</defaultSource>
-    <orderIndex>0</orderIndex>
+    <orderIndex>1</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
@@ -385,7 +385,7 @@ contentSourcesByPlatformXml = """\
     <name>Platform 2 Source 1</name>
     <shortname>plat2source1</shortname>
     <defaultSource>true</defaultSource>
-    <orderIndex>0</orderIndex>
+    <orderIndex>2</orderIndex>
     <contentSourceType>RHN</contentSourceType>
     <enabled>false</enabled>
     <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source1/status"/>
@@ -420,7 +420,7 @@ contentSourcePUTXml = """\
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
-  <orderIndex>0</orderIndex>
+  <orderIndex>1</orderIndex>
   <contentSourceType>RHN</contentSourceType>
   <enabled>true</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
@@ -437,7 +437,7 @@ contentSourcePUTXml2 = """\
   <name>Platform 2 Source 0</name>
   <shortname>plat2source0</shortname>
   <defaultSource>true</defaultSource>
-  <orderIndex>0</orderIndex>
+  <orderIndex>1</orderIndex>
   <contentSourceType>RHN</contentSourceType>
   <enabled>true</enabled>
   <contentSourceStatus href="http://localhost:8000/api/contentSources/RHN/instances/plat2source0/status"/>
@@ -483,7 +483,7 @@ sourcePOSTXml = """\
 sourcePOSTRespXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/RHN/instances/plat2source2">
-  <contentSourceId>1</contentSourceId>
+  <contentSourceId>4</contentSourceId>
   <name>Platform 2 Source 2</name>
   <shortname>plat2source2</shortname>
   <defaultSource>false</defaultSource>
@@ -510,7 +510,7 @@ sourcePOST2Xml = """\
 sourcePOSTResp2Xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSource id="http://localhost:8000/api/contentSources/satellite/instances/plat2source2">
-  <contentSourceId>1</contentSourceId>
+  <contentSourceId>4</contentSourceId>
   <name>Platform 2 Source 2</name>
   <shortname>plat2source2</shortname>
   <defaultSource>false</defaultSource>

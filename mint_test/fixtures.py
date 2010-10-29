@@ -101,12 +101,6 @@ class FixtureCache(object):
         cfg.ec2PublicKey = 'publicKey'
         cfg.ec2PrivateKey = 'secretKey'
 
-        cfg.availablePlatforms = ['localhost@rpath:plat-1',
-                                  'localhost@rpath:plat-2']
-
-        cfg.configurablePlatforms = ['localhost@rpath:plat-1',
-                                     'localhost@rpath:plat-2']
-
         cfg.platformSources      = ['plat1source', 'plat2source0', 'plat2source1']
         cfg.platformSourceTypes  = ['satellite', 'RHN', 'RHN']
         cfg.platformSourceUrls   = ['http://plat1source.example.com',

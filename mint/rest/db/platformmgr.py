@@ -108,7 +108,8 @@ class ContentSourceTypes(object):
     def _listFromCfg(self):
         allTypesMap = dict()
         allTypes = []
-        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable, abstract in self.platforms._iterConfigPlatforms():
+        for platform in self.platforms.iterPlatforms():
+            sourceTypes = platform._sourceTypes
             for t, isSingleton in sourceTypes:
                 if t not in allTypes:
                     allTypes.append(t)
@@ -213,49 +214,46 @@ class Platforms(object):
             os.path.join(self.cfg.dataPath, 'jobs'))
         self.loader = LoadRunner(self._load)
 
-    def _listFromDb(self):
+    def iterPlatforms(self):
         platforms = []
         dbPlatforms = self.db.db.platforms.getAll()
         for platform in dbPlatforms:
-            platforms.append(self._platformModelFactory(**dict(platform)))
+            platforms.append(self.getPlatformModelFromRow(platform))
+        return platforms
 
-        return platforms            
+    def getPlatformModelFromRow(self, platformRow):
+        platform = self._platformModelFactory(**platformRow)
+        return self.getPlatformModel(platform)
 
-    def _iterConfigPlatforms(self):
-        apnLength = len(self.cfg.availablePlatformNames)
-        for i, platformLabel in enumerate(self.cfg.availablePlatforms):
-            platDef = self.platformCache.get(platformLabel)
-            if not platDef:
-                # Fall back to the platform label, if
-                # self.cfg.availablePlatformNames is incomplete
-                platformName = platformLabel
-                if i < apnLength:
-                    platformName = self.cfg.availablePlatformNames[i]
+    def getPlatformModel(self, platform):
+        platformDef = self.platformCache.get(platform.label)
+        self._updatePlatformFromPlatformDefinition(platform, platformDef)
+        return platform
 
+    def _updatePlatformFromPlatformDefinition(self, platformModel, platformDef):
+        if platformDef is None:
+            platformName = platformModel.platformName
             platformUsageTerms = None
-            if platDef:
-                platformName = platDef.getPlatformName()
-                platformUsageTerms = platDef.getPlatformUsageTerms()
-                platformProv = platDef.getContentProvider()
-                if platformProv:
-                    types = [(t.name, t.isSingleton)
-                        for t in platformProv.contentSourceTypes]
-                else:
-                    types = []
-                platformBuildTypes = platDef.getBuildTemplates()
+            platformBuildTypes = []
+            types = []
+        else:
+            platformName = platformDef.getPlatformName()
+            platformUsageTerms = platformDef.getPlatformUsageTerms()
+            platformProv = platformDef.getContentProvider()
+            if platformProv:
+                types = [(t.name, t.isSingleton)
+                    for t in platformProv.contentSourceTypes]
             else:
                 types = []
-                platformBuildTypes = []
-            
-            # Platforms are not enabled by default, they have to be
-            # explicitly enabled in the db.
-            enabled = 0
-
-            configurable = platformLabel in self.cfg.configurablePlatforms
-            abstract = platformLabel in self.cfg.abstractPlatforms
-
-            yield (platformLabel, platformName, platformUsageTerms,
-                platformBuildTypes, enabled, types, configurable, abstract)
+            platformBuildTypes = platformDef.getBuildTemplates()
+        platformModel.updateFields(
+            platformName=platformName,
+            platformUsageTerms=platformUsageTerms,
+            _sourceTypes=types,
+            _buildTypes=platformBuildTypes,
+        )
+        self._addComputedFields(platformModel)
+        return platformModel
 
     def _platformModelFactory(self, *args, **kw):
         kw = sqllib.CaselessDict(kw)
@@ -281,37 +279,67 @@ class Platforms(object):
         platform._buildTypes = platformBuildTypes
         return platform
 
-    def _create(self, platform):
+    def _create(self, platformModel, platformDef):
+        params = dict(
+            configurable=(platformModel.configurable or False),
+            label=platformModel.label,
+        )
+        if platformModel.enabled is not None:
+            params.update(enabled=platformModel.enabled)
+
+        if platformDef is not None:
+            platformName = platformDef.getPlatformName()
+        else:
+            platformName = platformModel.platformName
+        params.update(platformName=platformName)
+
         try:
-            platformId = self.db.db.platforms.new(label=platform.label,
-                                                  enabled=0)
+            platformId = self.db.db.platforms.new(**params)
         except mint_error.DuplicateItem, e:
             platformId = self.db.db.platforms.getIdByColumn('label',
-                            platform.label)
+                            platformModel.label)
             log.error("Error creating platform %s, it must already "
-                      "exist: %s" % (platform.label, e))
+                      "exist: %s" % (platformModel.label, e))
 
-        for sourceType, isSingleton in platform._sourceTypes:
-            typeName = self.contentSourceTypes.getIdByName(sourceType)
-            try:
-                self.db.db.platformsContentSourceTypes.new(platformId=platformId,
-                                contentSourceType=typeName)
-            except mint_error.DuplicateItem, e:
-                # No need to raise this, the data is already created.
-                pass
+        platformModel.platformId = platformId
 
-        return platform
+        self._updatePlatformFromPlatformDefinition(platformModel, platformDef)
+        self._updateDatabasePlatformSources(platformModel)
+        return platformModel
 
-    def _syncDb(self, dbPlatforms, cfgPlatforms):
-        changed = False
-        dbPlatformLabels = [d.label for d in dbPlatforms]
+    def _update(self, platformModel, platformDef):
+        platformId = platformModel.platformId
+        cu = self.db.db.cursor()
+        sql = """UPDATE Platforms
+            SET platformName = ?,
+                time_refreshed = current_timestamp
+            WHERE platformId = ?"""
+        cu.execute(sql, platformDef.getPlatformName(),
+            platformId)
+        self._updateDatabasePlatformSources(platformModel)
+        self._addComputedFields(platformModel)
 
-        for cfgPlatform in cfgPlatforms:
-            if cfgPlatform.label not in dbPlatformLabels:
-                changed = True
-                self._create(cfgPlatform)
+    def _addComputedFields(self, platformModel):
+        # Also check for mirroring permissions for configurable platforms.
+        # This is the best place to do this, since this method always gets
+        # called when fetching a platform.
+        if self.db.siteAuth:
+            if platformModel.configurable:
+                platformModel.mirrorPermission = self._checkMirrorPermissions(
+                    platformModel)
+            else:
+                platformModel.mirrorPermission = False
 
-        return changed                
+    def _updateDatabasePlatformSources(self, platformModel):
+        platformId = platformModel.platformId
+        for sourceType, isSingleton in platformModel._sourceTypes:
+            contentSourceType = self.mgr.contentSourceTypes.getIdByName(sourceType)
+            self._linkToSourceType(platformId, contentSourceType)
+
+            contentSources = self.mgr.contentSources.listByType(
+                contentSourceType)
+            for s in contentSources.instance:
+                self._linkToSource(platformId, s.contentSourceId)
 
     def _linkToSource(self, platformId, contentSourceId):
         platformId = int(platformId)
@@ -337,52 +365,6 @@ class Platforms(object):
         self.db.db.platformsContentSourceTypes.new(platformId=platformId,
             contentSourceType=contentSourceType)
 
-    def _populateFromCfg(self, dbPlatforms, cfgPlatforms):
-        dbLabels = [p.label for p in dbPlatforms]
-        cfgLabels = [p.label for p in cfgPlatforms]
-
-        fields = ['platformName', 'platformUsageTerms', 'hostname',
-                  '_sourceTypes', '_buildTypes', 'configurable', 'abstract']
-
-        platforms = []
-
-        # For each platform in cfgPlatform, populate any of it's attributes
-        # onto the models that were loaded from the db.
-        for i, c in enumerate(cfgLabels):
-            if c in dbLabels:
-                for f in fields:
-                    dIndex = dbLabels.index(c)
-                    setattr(dbPlatforms[dIndex], f,
-                            getattr(cfgPlatforms[i], f, None))
-                platforms.append(dbPlatforms[dIndex])                            
-
-        # Append any other platforms not found in the cfg onto our new list.
-        for i, d in enumerate(dbLabels):
-            if d not in cfgLabels:
-                platforms.append(dbPlatforms[i])
-
-        # Link the platforms to all of it's source types and sources.
-        for p in platforms:
-            for sourceType, isSingleton in p._sourceTypes:
-                contentSourceType = self.mgr.contentSourceTypes.getIdByName(sourceType)
-                self._linkToSourceType(p.platformId, contentSourceType)
-                contentSources = self.mgr.contentSources.listByType(
-                                    contentSourceType, createPlatforms=False)
-                for s in contentSources.instance:
-                    self._linkToSource(p.platformId, s.contentSourceId)
-
-        # Also check for mirroring permissions for configurable platforms.
-        # This is the best place to do this, since this method always gets
-        # called when fetching a platform.
-        if self.db.siteAuth:
-            for p in platforms:
-                if p.label in self.cfg.configurablePlatforms:
-                    p.mirrorPermission = self._checkMirrorPermissions(p)
-                else:
-                    p.mirrorPermission = False
-
-        return platforms
-
     def _checkMirrorPermissions(self, platform):
         try:
             self.db.productMgr.reposMgr.checkExternalRepositoryAccess(
@@ -394,18 +376,6 @@ class Platforms(object):
             return False
         else:
             return True
-
-    def _listFromCfg(self):
-        platforms = []
-        for label, name, usageTerms, buildTypes, enabled, sourceTypes, configurable, abstract in self._iterConfigPlatforms():
-            platform = self._platformModelFactory(label=label,
-                                platformName=name,
-                                platformUsageTerms=usageTerms,
-                                platformBuildTypes=buildTypes,
-                                enabled=enabled, configurable=configurable,
-                                abstract=abstract, sourceTypes=sourceTypes)
-            platforms.append(platform)
-        return platforms
 
     def backgroundRun(self, function, *args, **kw):
         pid = os.fork()
@@ -598,7 +568,7 @@ class Platforms(object):
         host = self._getHost(platform)
         url = self._getUrl(platform)
         domainname = self._getDomainname(platform)
-        mirror = platform.label in self.cfg.configurablePlatforms
+        mirror = platform.configurable
 
         authInfo = self._getAuthInfo()
 
@@ -635,21 +605,13 @@ class Platforms(object):
         if platform.enabled:
             self._setupPlatform(platform)
 
-        self.db.db.platforms.update(platformId, enabled=int(platform.enabled))
-        self.db.db.platforms.update(platformId, mode=platform.mode)
+        self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
+            mode=platform.mode, configurable=int(platform.configurable))
 
         return self.getById(platformId)
 
     def list(self):
-        dbPlatforms = self._listFromDb()
-        cfgPlatforms = self._listFromCfg()
-        changed = self._syncDb(dbPlatforms, cfgPlatforms)
-        if changed:
-            dbPlatforms = self._listFromDb()
-
-        dbPlatforms = self._populateFromCfg(dbPlatforms, cfgPlatforms)            
-            
-        return models.Platforms(dbPlatforms)
+        return models.Platforms(self.iterPlatforms())
 
     def _getStatus(self, platform):
         platStatus = models.PlatformSourceStatus()
@@ -773,10 +735,7 @@ class Platforms(object):
 
     def getById(self, platformId):
         platform = self.db.db.platforms.get(platformId)
-        platform = self._platformModelFactory(**dict(platform))
-        platforms = self._populateFromCfg([platform], self._listFromCfg())
-
-        return platforms[0]
+        return self.getPlatformModelFromRow(platform)
 
     def getByName(self, platformName):
         platforms = self.list()
@@ -905,21 +864,12 @@ class ContentSources(object):
         changed = False
         dbNames = [s.shortName for s in dbSources]
 
-        createdPlatforms = False or not createPlatforms
         for cfgSource in cfgSources:
             if cfgSource.shortName not in dbNames:
-
-                # Before creating a source (which links sources to platforms),
-                # we need to make sure all platforms exist in the db (by
-                # calling list()).  Save a flag so we only do it once.
-                if not createdPlatforms:
-                    self.platforms.list()
-                    createdPlatforms = True
-
                 self._create(cfgSource)
                 changed = True
 
-        return changed                
+        return changed
 
     def _listFromDb(self):
         sources = []
@@ -939,7 +889,7 @@ class ContentSources(object):
                                 name=self.cfg.platformSourceNames[i],
                                 contentSourceType=self.cfg.platformSourceTypes[i],
                                 defaultSource='1',
-                                orderIndex='0')
+                                orderIndex=i)
             sources.append(source)
 
         return sources
@@ -1078,7 +1028,7 @@ class PlatformManager(manager.Manager):
 
     def getPlatforms(self, platformId=None):
         return self.platforms.list()
-        
+
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
 
@@ -1097,10 +1047,11 @@ class PlatformManager(manager.Manager):
         cu.execute("SELECT platformId FROM Platforms WHERE label = ?", (platformLabel, ))
         row = cu.fetchone()
         if not row:
-            # Need to create this platform
-            platId = self.db.db.platforms.new(label=platformLabel, enabled=0)
+            platId = self.platforms._create(platform, pl).platformId
         else:
             platId = row[0]
+            platform =  self.platforms.getById(platId)
+            self.platforms._update(platform, pl)
         return self.getPlatform(platId)
 
     def getPlatformByName(self, platformName):

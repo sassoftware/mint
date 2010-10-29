@@ -41,7 +41,10 @@ class PlatformsTable(database.KeyedTable):
                'label',
                'mode',
                'enabled',
-               'projectId' ]
+               'projectId',
+               'platformName',
+               'configurable',
+               ]
 
     def __init__(self, db, cfg):
         self.cfg = cfg
@@ -52,8 +55,10 @@ class PlatformsTable(database.KeyedTable):
         sql = """
             SELECT
                 platforms.platformId,
+                platforms.platformName,
                 platforms.label,
                 platforms.enabled,
+                platforms.configurable,
                 platforms.mode
             FROM
                 platforms
@@ -144,6 +149,7 @@ class PlatformSourcesTable(database.KeyedTable):
             AND
                 platformsPlatformSources.platformSourceId =
                 platformSources.platformSourceId
+            ORDER BY platformSources.orderIndex
         """
         cu.execute(sql, platformId)
         return cu.fetchall()

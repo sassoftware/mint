@@ -26,8 +26,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.setDbUser(self.db, 'admin')
-        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
-                        True)
 
     def _getPlatform(self):
         # Set up the platforms in the db before enabling it.
@@ -40,6 +38,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
                             label='localhost@rpath:plat-1',
                             mode='manual',
                             platformId=platformId,
+                            configurable=True,
                             enabled=1)
         return p                            
 
@@ -179,7 +178,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
 
         mock.mock(platformmgr.log, 'error')
         
-        self.db.platformMgr.platforms._create(p)
+        self.db.platformMgr.platforms._create(p, None)
         platformmgr.log.error._mock.assertCalled('Error creating platform '
             'localhost@rpath:plat-1, it must already exist: Duplicate '
             'item in platforms')
@@ -201,8 +200,9 @@ class PlatformManagerTest(restbase.BaseRestTest):
 
         self.db.platformMgr.getPlatforms()
 
-        self.assertEquals(3,
-            len(platformmgr.PlatformDefCache._getPlatDef._mock.calls))
+        self.assertEquals(
+            len(platformmgr.PlatformDefCache._getPlatDef._mock.calls),
+            2)
 
     def testProxySettingsPropagated(self):
         proxies = dict(http = "http://blah.com:1234",
@@ -215,12 +215,12 @@ class PlatformManagerTest(restbase.BaseRestTest):
     def testPlatformsLinkedToSources(self):
         # list platforms and sources so they're created
         plats = self.db.getPlatforms()
-        sources = self.db.getSources('RHN')
-        sources = self.db.getSources('satellite')
+        # This adds the sources
+        self.db.getSources('RHN')
+        self.db.getSources('satellite')
 
         # add a new platform
         platformId = 3
-        self.mintCfg.availablePlatforms.append('localhost@rpath:plat-3')
         self.setupPlatform3()
 
         # get the new platform
@@ -230,7 +230,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         newPlatSources = self.db.getSourcesByPlatform(newPlatform.platformId)
         
         # verify the added platform was linked to sources
-        self.failUnlessEqual(len(newPlatSources.instance), 2)
         self.failUnlessEqual([x.contentSourceType \
             for x in newPlatSources.instance], ['RHN', 'RHN'])
 
@@ -241,16 +240,11 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.failUnlessEqual(sorted(x.label for x in plats.platforms),
             ['localhost@rpath:plat-1', 'localhost@rpath:plat-2'])
 
-        self.setupPlatform3InDb()
+        self.setupPlatform3()
         plats = self.db.getPlatforms()
         self.failUnlessEqual(sorted(x.label for x in plats.platforms),
             ['localhost@rpath:plat-1', 'localhost@rpath:plat-2',
             'localhost@rpath:plat-3'])
-
-    def setupPlatform3InDb(self):
-        pl = self.setupPlatform3()
-        self.db.db.platforms.new(label='localhost@rpath:plat-3', enabled=0)
-        return pl
 
     def testGetDescriptor(self):
         rc = self.getRestClient()

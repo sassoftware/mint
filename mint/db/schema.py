@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 16)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 17)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -776,7 +776,12 @@ def _createPlatforms(db):
                 mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
                 enabled     smallint NOT NULL DEFAULT 1,
                 projectId   smallint 
-                    REFERENCES Projects ON DELETE SET NULL
+                    REFERENCES Projects ON DELETE SET NULL,
+                platformName    varchar(1024) NOT NULL,
+                configurable    boolean NOT NULL DEFAULT false,
+                abstract        boolean NOT NULL DEFAULT false,
+                time_refreshed  timestamp with time zone NOT NULL
+                                DEFAULT current_timestamp
             ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Platforms'] = []
         changed = True
