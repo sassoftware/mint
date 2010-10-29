@@ -1169,7 +1169,6 @@ class SystemManager(base.BaseManager):
         return wmiParams
 
     def _dispatchSystemEvent(self, event):
-        import epdb; epdb.serve()  
         repClient = self.mgr.repeaterMgr.repeaterClient
         if repClient is None:
             log.info("Failed loading repeater client, expected in local mode only")
