@@ -19,6 +19,7 @@ install: default-install httpd-sysconfig
 	# rBuilder config
 	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
+	sed -i "s/python2.4/python$(PYVER)/g" $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
 	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
 	# rBuilder entitlement
 	install -D -m0644 entitlements.xml $(DESTDIR)/etc/conary/entitlements.xml
