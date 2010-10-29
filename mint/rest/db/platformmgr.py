@@ -222,7 +222,7 @@ class Platforms(object):
         return platforms
 
     def getPlatformModelFromRow(self, platformRow):
-        platform = self._platformModelFactory(**platformRow)
+        platform = self._platformModelFactory(**dict(platformRow))
         return self.getPlatformModel(platform)
 
     def getPlatformModel(self, platform):
