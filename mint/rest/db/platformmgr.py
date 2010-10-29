@@ -606,7 +606,7 @@ class Platforms(object):
             self._setupPlatform(platform)
 
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
-            mode=platform.mode, configurable=int(platform.configurable))
+            mode=platform.mode, configurable=bool(platform.configurable))
 
         return self.getById(platformId)
 
