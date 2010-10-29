@@ -23,12 +23,15 @@ from mint import helperfuncs
 from mint import users
 from mint.mint_error import UserAlreadyExists
 from mint.rest.api import site
+from mint.rest.db import platformmgr
 from mint.rest.middleware import auth
 from mint.rest.middleware import formatter
 from mint.rest.modellib import converter
 from rpath_proddef import api1 as proddef
 
 from mint_test import mint_rephelp
+
+from testutils import mock
 
 URLQUOTE_RE = re.compile('%([A-Z0-9]{2})')
 
@@ -49,6 +52,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
     productVersionDescription = 'Version description'
     productDomainName = mint_rephelp.MINT_PROJECT_DOMAIN
     productHostname = "%s.%s" % (productShortName, productDomainName)
+
+    availablePlatforms = [ 'localhost@rpath:plat-1', 'localhost@rpath:plat-2', ]
 
     def setUp(self):
         try:
@@ -168,11 +173,20 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         self.mock(proddef.PlatformDefinition, 'loadFromRepository',
             newLoadFromRepository)
 
+    def _addPlatform(self, label, platformDef):
+        restdb = self.openRestDatabase()
+        plat = restdb.platformMgr.platforms._platformModelFactory(label=label,
+            configurable=True, enabled=True)
+        restdb.platformMgr.platforms._create(plat, platformDef)
+        restdb.commit()
+
     def setupPlatforms(self):
+        mock.mock(platformmgr.Platforms, '_checkMirrorPermissions',
+                        True)
         repos = self.openRepository()
         self.cclient = self.getConaryClient()
         self.cclient.repos = repos
-        platformLabel1 = self.mintCfg.availablePlatforms[0]
+        platformLabel1 = self.availablePlatforms[0]
         pl1 = self.productDefinition.toPlatformDefinition()
         cst = pl1.newContentSourceType('RHN', 'RHN', isSingleton = True)
         cst2 = pl1.newContentSourceType('satellite', 'satellite')
@@ -187,8 +201,9 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl1.addContainerTemplate(pl1.imageType('vmwareEsxImage', {'autoResolve':'false', 'natNetworking':'true', 'baseFileName':'', 'vmSnapshots':'false', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}))
         pl1.addContainerTemplate(pl1.imageType('xenOvaImage', {'autoResolve':'false', 'baseFileName':'', 'swapSize':'512', 'vmMemory':'256', 'installLabelPath':'', 'freespace':'1024'}))
         pl1.saveToRepository(self.cclient, platformLabel1)
+        self._addPlatform(platformLabel1, pl1)
 
-        platformLabel2 = self.mintCfg.availablePlatforms[1]
+        platformLabel2 = self.availablePlatforms[1]
         pl2 = self.productDefinition.toPlatformDefinition()
         cst = pl1.newContentSourceType('RHN', 'RHN')
         ds = pl1.newDataSource('Channel 1', 'Channel 1')
@@ -196,6 +211,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl2.setPlatformName('Crowbar Linux 2')
         pl2.setPlatformUsageTerms('Terms of Use 2')
         pl2.saveToRepository(self.cclient, platformLabel2)
+        self._addPlatform(platformLabel2, pl2)
 
     def setupPlatform3(self):
         repos = self.openRepository()
@@ -212,6 +228,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl1.addArchitecture('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
         pl1.addFlavorSet('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware')
         pl1.saveToRepository(self.cclient, platformLabel1)
+        self._addPlatform(platformLabel1, pl1)
         return pl1
 
     def getConaryClient(self):
