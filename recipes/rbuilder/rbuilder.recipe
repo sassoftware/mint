@@ -79,12 +79,12 @@ class rBuilderProduct(CPackageRecipe):
       ]
 
     def setup(r):
-        r.macros.pyver = '2.4'
         r.macros.sitepkg = '%(libdir)s/python%(pyver)s/site-packages'
         r.unpack()
         r.build()
         r.install()
         r.policy()
+        r.macros.pgver = ('platform_label' in r.macros and '9.0') or '8.4'
 
     def unpack(r):
         r.addMercurialSnapshot()
@@ -116,7 +116,7 @@ class rBuilderProduct(CPackageRecipe):
         r.Make('install DESTDIR=%(destdir)s ' + \
             'VERSION=%s SHORTVER=%s ' % (r.version, r.macros.shortVersion) + \
             'PRODUCT_SUBDIRS=%s ' % (not Flags.rbo and "product" or "") + \
-            'LIBDIR=%(libdir)s ')
+            'LIBDIR=%(libdir)s POSTGRES_VERSION=%(pgver)s')
 
         # Create apache-owned dirs
         for path, (mode, (user, group)) in rbuilder_dirs.items():
