@@ -285,7 +285,7 @@ class Platforms(object):
             label=platformModel.label,
         )
         if platformModel.enabled is not None:
-            params.update(enabled=platformModel.enabled)
+            params.update(enabled=int(platformModel.enabled))
 
         if platformDef is not None:
             platformName = platformDef.getPlatformName()
