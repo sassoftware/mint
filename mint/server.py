@@ -4358,6 +4358,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 manip = ret.setdefault(pDefDict['version'], dict())
                 manipns = manip.setdefault(pDefDict['namespace'], dict())
                 manipns[n] = data
+                
+            if v.trailingRevision():
+                data['stageLabel'] += '/%s' % v.trailingRevision()
+                
         return ret
 
     @requiresAuth
