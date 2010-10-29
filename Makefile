@@ -14,6 +14,7 @@ export PREFIX =		/usr
 export lib =		$(shell uname -m | sed -r '/x86_64|ppc64|s390x|sparc64/{s/.*/lib64/;q};s/.*/lib/')
 export LIBDIR =		$(PREFIX)/$(lib)
 export PYVER =		"`python -c 'import sys; print sys.version[0:3]'`"
+export POSTGRES_VERSION = 8.4
 
 # from here on shouldn't need overriding
 export PYTHON = /usr/bin/python$(PYVER)
