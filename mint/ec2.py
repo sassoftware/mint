@@ -430,7 +430,7 @@ class EC2Wrapper(object):
         amiS3ManifestName = '%s/%s' % (bucketName,
             os.path.basename(manifestName))
         try:
-            amiId = str(self.ec2conn.register_image(amiS3ManifestName))
+            amiId = str(self.ec2conn.register_image(image_location=amiS3ManifestName))
             if ec2LaunchGroups:
                 self.ec2conn.modify_image_attribute(amiId,
                     attribute='launchPermission',
