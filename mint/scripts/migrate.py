@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 18)
+    Version = (51, 19)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1769,12 +1769,6 @@ class MigrateTo_51(SchemaMigration):
         cu.execute("UPDATE Platforms SET platformName = label")
         cu.execute("ALTER TABLE Platforms ALTER COLUMN platformName SET NOT NULL")
         return True
-    
-    def migrate18(self):
-        cu = self.db.cursor()
-        
-        cu.execute("ALTER TABLE inventory_system ADD COLUMN configuration text")
-        return True
 
     def migrate18(self):
         # Add isFromDisk, by default false - set to True only for platforms
@@ -1831,6 +1825,12 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         for label, plat in platforms.items():
             cu.execute(sql, (plat.platformName, bool(plat.abstract),
                 bool(plat.configurable), plat.isFromDisk, label))
+        return True
+    
+    def migrate19(self):
+        cu = self.db.cursor()
+        
+        cu.execute("ALTER TABLE inventory_system ADD COLUMN configuration text")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
