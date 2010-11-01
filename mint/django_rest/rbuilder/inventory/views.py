@@ -496,6 +496,36 @@ class InventorySystemCredentialsServices(AbstractInventoryService):
 
     def get(self, system_id):
         return self.mgr.getSystemCredentials(system_id)
+    
+class InventorySystemConfigurationServices(AbstractInventoryService):
+
+    @access.admin
+    @return_xml
+    def rest_GET(self, request, system_id):
+        return self.get(system_id)
+
+    @access.admin
+    @return_xml
+    @requires('configuration')
+    def rest_PUT(self, request, system_id, configuration):
+        configDict = {}
+        for k, v in configuration.__dict__.items():
+            if not k.startswith('_'):
+                configDict[k] = v
+        return self.mgr.addSystemConfiguration(system_id, configDict)
+
+    @access.admin
+    @return_xml
+    @requires('configuration')
+    def rest_POST(self, request, system_id, configuration):
+        configDict = {}
+        for k, v in configuration.__dict__.items():
+            if not k.startswith('_'):
+                configDict[k] = v
+        return self.mgr.addSystemConfiguration(system_id, configDict)
+
+    def get(self, system_id):
+        return self.mgr.getSystemConfiguration(system_id)
 
 class InventoryEventTypesService(AbstractInventoryService):
     

@@ -284,6 +284,7 @@ system_type_systems_xml="""
     <agent_port>5989</agent_port>
     <appliance/>
     <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
     <current_state id="http://testserver/api/inventory/system_states/2">
       <description>Initial synchronization pending</description>
       <name>registered</name>
@@ -482,6 +483,7 @@ management_nodes_xml = """\
     <agent_port>5989</agent_port>
     <appliance/>
     <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
+    <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
     <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
     <out_of_date>False</out_of_date>
     <registration_date/>
@@ -551,6 +553,7 @@ management_node_xml = """\
   <agent_port>5989</agent_port> 
   <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
+  <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -656,6 +659,7 @@ management_node_post_response_xml = """\
   <agent_port>5989</agent_port> 
   <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
+  <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -761,6 +765,7 @@ management_node_zone_post_response_xml = """\
   <agent_port>5989</agent_port>
   <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
+  <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -830,6 +835,7 @@ systems_xml = """\
     <agent_port/>
     <appliance/>
     <credentials href="http://testserver/api/inventory/systems/2/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/2/configuration"/>
     <out_of_date>False</out_of_date>
     <registration_date/>
     <created_date>2010-08-18T22:28:26+00:00</created_date>
@@ -889,6 +895,7 @@ systems_xml = """\
     <agent_port>5989</agent_port>
     <appliance/>
     <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
     <out_of_date>False</out_of_date>
     <registration_date/>
     <created_date>%s</created_date>
@@ -1085,6 +1092,7 @@ system_xml = """\
   <agent_port>5989</agent_port>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
+  <configuration href="http://testserver/api/inventory/systems/1/configuration"/>
   <installed_software id="http://testserver/api/inventory/systems/1/installed_software"/>
   <jobs id="http://testserver/api/inventory/systems/1/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/1/job_states/3/jobs"/>
@@ -1259,6 +1267,7 @@ system_post_xml_response = """\
   <agent_port>5989</agent_port>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
+  <configuration href="http://testserver/api/inventory/systems/1/configuration"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -1370,6 +1379,7 @@ system_target_xml = """\
   <agent_port>5989</agent_port>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
+  <configuration href="http://testserver/api/inventory/systems/1/configuration"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -1660,6 +1670,7 @@ system_version_xml = """\
   <agent_port>5989</agent_port>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
+  <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
   %s
   <jobs id="http://testserver/api/inventory/systems/3/jobs">
     <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
@@ -1857,6 +1868,7 @@ system_available_updates_xml = """\
   <agent_port>5989</agent_port>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
+  <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
   <installed_software id="http://testserver/api/inventory/systems/3/installed_software">
     <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%3D/clover.eng.rpath.com%40rpath%3Aclover-1-devel/1-2-1%5B%7E%21dom0%2C%7E%21domU%2Cvmware%2C%7E%21xen%20is%3A%20x86%28i486%2Ci586%2Ci686%2Csse%2Csse2%29%5D">
       <name>group-clover-appliance</name>
@@ -2184,6 +2196,7 @@ system_with_target = """\
   <agent_port/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/4/credentials"/>
+  <configuration href="http://testserver/api/inventory/systems/4/configuration"/>
   <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
   <local_uuid/>
@@ -2264,4 +2277,32 @@ credentials_wmi_put_resp_xml = """\
   <user>testUserChanged</user>
   <password>testPasswordChanged</password>
 </credentials>
+"""
+
+configuration_post_xml = """\
+<?xml version="1.0"?>
+<configuration>
+  <http_port>89</http_port>
+</configuration>
+"""
+
+configuration_post_resp_xml = """\
+<?xml version="1.0"?>
+<configuration id="http://testserver/api/inventory/systems/3/configuration">
+  <http_port>89</http_port>
+</configuration>
+"""
+
+configuration_put_xml = """\
+<?xml version="1.0"?>
+<configuration>
+  <http_port>890</http_port>
+</configuration>
+"""
+
+configuration_put_resp_xml = """\
+<?xml version="1.0"?>
+<configuration id="http://testserver/api/inventory/systems/3/configuration">
+  <http_port>890</http_port>
+</configuration>
 """

@@ -984,14 +984,14 @@ class SystemManager(base.BaseManager):
 
     @classmethod
     def unmarshalCredentials(cls, credentialsString):
-        creds = mintdata.unmarshalTargetUserCredentials(credentialsString)
+        creds = mintdata.unmarshalGenericData(credentialsString)
         # Keys should be strings, not unicode
         creds = dict((str(k), v) for (k, v) in creds.iteritems())
         return creds
 
     @classmethod
     def marshalCredentials(cls, credentialsDict):
-        return mintdata.marshalTargetUserCredentials(credentialsDict)
+        return mintdata.marshalGenericData(credentialsDict)
 
     @base.exposed
     def getSystemCredentials(self, system_id):
@@ -1012,6 +1012,41 @@ class SystemManager(base.BaseManager):
         # credentials.
         self.scheduleSystemRegistrationEvent(system)
         return self._getCredentialsModel(system, credentials)
+    
+    @base.exposed
+    def getSystemConfiguration(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        if system.configuration is None:
+            systemConfig = {}
+        else:
+            systemConfig = self.unmarshalConfiguration(system.configuration)
+        return self._getConfigurationModel(system, systemConfig)
+
+    @base.exposed
+    def addSystemConfiguration(self, system_id, configuration):
+        system = models.System.objects.get(pk=system_id)
+        systemConfig = self.marshalConfiguration(configuration)
+        system.configuration = systemConfig
+        system.save()
+        # TDOD:  send config to system
+        return self._getConfigurationModel(system, configuration)
+    
+    def _getConfigurationModel(self, system, configDict):
+        config = models.Configuration(system)
+        for k, v in configDict.items():
+            setattr(config, k, v)
+        return config
+
+    @classmethod
+    def unmarshalConfiguration(cls, configString):
+        config = mintdata.unmarshalGenericData(configString)
+        # Keys should be strings, not unicode
+        config = dict((str(k), v) for (k, v) in config.iteritems())
+        return config
+
+    @classmethod
+    def marshalConfiguration(cls, configDict):
+        return mintdata.marshalGenericData(configDict)
 
     @base.exposed
     def getSystemEvent(self, event_id):

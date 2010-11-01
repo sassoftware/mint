@@ -1679,6 +1679,31 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.credentials_wmi_put_resp_xml)
+        
+    def testSystemConfiguration(self):
+        system = self._saveSystem()
+        response = self._post('/api/inventory/systems/%s/configuration' % \
+            system.pk,
+            data=testsxml.configuration_post_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.configuration_post_resp_xml)
+
+        response = self._get('/api/inventory/systems/%s/configuration' % \
+            system.pk,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.configuration_post_resp_xml)
+
+        response = self._put('/api/inventory/systems/%s/configuration' % \
+            system.pk,
+            data=testsxml.configuration_put_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.configuration_put_resp_xml)
 
     def testGetSystemLogAuth(self):
         """
@@ -2312,6 +2337,14 @@ class SystemsTestCase(XMLTestCase):
         creds = self.mgr.getSystemCredentials(system.pk)
         self.assertXMLEquals(creds.to_xml(),
             '<credentials id="/api/inventory/systems/%s/credentials"/>' %
+                system.pk)
+        
+    def testGetConfigurationWhenMissing(self):
+        system = self.newSystem(name="blah")
+        system.save()
+        config = self.mgr.getSystemConfiguration(system.pk)
+        self.assertXMLEquals(config.to_xml(),
+            '<configuration id="/api/inventory/systems/%s/configuration"/>' %
                 system.pk)
 
 class SystemCertificateTestCase(XMLTestCase):
