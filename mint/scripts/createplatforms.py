@@ -17,7 +17,6 @@ from mint.db import database
 from mint import config
 from mint.lib import scriptlibrary
 
-from mint import users
 from mint.rest.db.database import Database as RestDatabase
 from mint.rest.api.models.platforms import Platform
 from mint.rest.modellib import converter
