@@ -1796,7 +1796,7 @@ class MigrateTo_51(SchemaMigration):
             SET platformName=?, abstract=?, configurable=?, isFromDisk=?
             WHERE label=?
         """
-        platforms = """
+        platformsString = """
 rhel.rpath.com@rpath:rhel-4-as,Red Hat Enterprise Linux 4,0,1
 rhel.rpath.com@rpath:rhel-5-server,Red Hat Enterprise Linux 5,0,1
 rhel.rpath.com@rpath:rhel-5-client-workstation,Red Hat Enterprise Linux Desktop Workstation 5,0,1
@@ -1806,7 +1806,7 @@ conary.rpath.com@rpl:2,rPath Linux 2,0,0
 windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
 """
         platforms = {}
-        for row in platforms.split('\n'):
+        for row in platformsString.split('\n'):
             row = row.strip()
             if not row:
                 continue
@@ -1829,8 +1829,8 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
                 continue
             plat.abstract = True
         for label, plat in platforms.items():
-            cu.execute(sql, (plat.platformName, plat.abstract, plat.configurable,
-                plat.isFromDisk, label))
+            cu.execute(sql, (plat.platformName, bool(plat.abstract),
+                bool(plat.configurable), plat.isFromDisk, label))
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
