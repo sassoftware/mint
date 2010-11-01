@@ -55,7 +55,7 @@ class Script(scriptlibrary.SingletonScript):
             onDiskPlatforms.add(platformModel.label)
         # Fetch all on-disk platforms from the db
         cu = self.restdb.db.cursor()
-        cu.execute("select label from Platforms where isOnDisk=true")
+        cu.execute("select label from Platforms where isFromDisk=true")
         inDb = set(x[0] for x in cu)
         sql = "delete from Platforms where label = ?"
         for label in inDb - onDiskPlatforms:
