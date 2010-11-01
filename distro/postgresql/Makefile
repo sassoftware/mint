@@ -15,6 +15,7 @@ install: default-install
 	install -D -m0644 postgresql.chkconfig ${DESTDIR}/etc/chkconfig.d/postgresql
 	install -D -m0644 postgresql.conf ${DESTDIR}/etc/postgresql.conf.rbuilder
 	install -D -m0644 postgresql-rbuilder.sysconfig ${DESTDIR}/etc/sysconfig/pgsql/postgresql-rbuilder
+	sed -i "s/@POSTGRES_VERSION@/$(POSTGRES_VERSION)/g" ${DESTDIR}/etc/sysconfig/pgsql/postgresql-rbuilder
 	mkdir -p ${DESTDIR}/etc/init.d
 	ln -sf /opt/postgresql-$(POSTGRES_VERSION)/etc/init.d/postgresql ${DESTDIR}/etc/init.d/postgresql-rbuilder
 
