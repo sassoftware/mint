@@ -1776,6 +1776,63 @@ class MigrateTo_51(SchemaMigration):
         cu.execute("ALTER TABLE inventory_system ADD COLUMN configuration text")
         return True
 
+    def migrate18(self):
+        # Add isFromDisk, by default false - set to True only for platforms
+        # provided by the rbuilder
+        add_columns(self.db, 'Platforms',
+            'isFromDisk      boolean NOT NULL DEFAULT false',
+        )
+
+        class Plat(object):
+            __slots__ = ['platformName', 'abstract', 'configurable',
+                'isFromDisk']
+            def __init__(self, **kwargs):
+                for slotName in self.__slots__:
+                    setattr(self, slotName, kwargs.get(slotName, None))
+                self.isFromDisk = False
+
+        cu = self.db.cursor()
+        sql = """UPDATE Platforms
+            SET platformName=?, abstract=?, configurable=?, isFromDisk=?
+            WHERE label=?
+        """
+        platforms = """
+rhel.rpath.com@rpath:rhel-4-as,Red Hat Enterprise Linux 4,0,1
+rhel.rpath.com@rpath:rhel-5-server,Red Hat Enterprise Linux 5,0,1
+rhel.rpath.com@rpath:rhel-5-client-workstation,Red Hat Enterprise Linux Desktop Workstation 5,0,1
+sles.rpath.com@rpath:sles-10sp3,Encapsulated SLES 10 Delivered by rPath,0,1
+centos.rpath.com@rpath:centos-5e,Encapsulated CentOS 5 Delivered by rPath,0,1
+conary.rpath.com@rpl:2,rPath Linux 2,0,0
+windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
+"""
+        platforms = {}
+        for row in platforms.split('\n'):
+            row = row.strip()
+            if not row:
+                continue
+            arr = [ x.strip() for x in row.split(',') ]
+            label, platformName, abstract, configurable = (arr[0], arr[1],
+                bool(int(arr[2])), bool(int(arr[3])))
+            platforms[label] = Plat(platformName=platformName,
+                abstract=abstract, configurable=configurable, isFromDisk=True)
+        for label, platformName in zip(self.cfg.availablePlatforms,
+                                               self.cfg.availablePlatformNames):
+            platforms[label] = Plat(platformName=platformName)
+        for label in self.cfg.configurablePlatforms:
+            plat = platforms.get(label, None)
+            if plat is None:
+                continue
+            plat.configurable = True
+        for label in self.cfg.abstractPlatforms:
+            plat = platforms.get(label, None)
+            if plat is None:
+                continue
+            plat.abstract = True
+        for label, plat in platforms.items():
+            cu.execute(sql, (plat.platformName, plat.abstract, plat.configurable,
+                plat.isFromDisk, label))
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

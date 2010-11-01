@@ -1,0 +1,6 @@
+<platform>
+  <label>sles.rpath.com@rpath:sles-10sp3</label>
+  <platformName>Encapsulated SLES 10 Delivered by rPath</platformName>
+  <abstract>false</abstract>
+  <configurable>true</configurable>
+</platform>

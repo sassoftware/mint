@@ -11,6 +11,7 @@ static_files =				\
 	apply-proxy-settings		\
 	auth-generate			\
 	check-repository		\
+	create-platforms		\
 	deleteproject			\
 	ec2-terminator			\
 	enable-platforms	\

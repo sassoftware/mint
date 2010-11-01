@@ -217,6 +217,7 @@ then
     service rmake-node start
     service mcp-dispatcher start
     service jobmaster start
+    /usr/share/rbuilder/scripts/create-platforms
 fi
 
 # Fix notifications with a bad GUID

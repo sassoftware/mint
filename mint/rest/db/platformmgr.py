@@ -281,7 +281,8 @@ class Platforms(object):
 
     def _create(self, platformModel, platformDef):
         params = dict(
-            configurable=(platformModel.configurable or False),
+            abstract=bool(platformModel.abstract),
+            configurable=bool(platformModel.configurable),
             label=platformModel.label,
         )
         if platformModel.enabled is not None:
@@ -292,6 +293,9 @@ class Platforms(object):
         else:
             platformName = platformModel.platformName
         params.update(platformName=platformName)
+        # isFromDisk is a field that's not exposed in the API, so treat it
+        # differently
+        params.update(isFromDisk=getattr(platformModel, 'isFromDisk', False))
 
         try:
             platformId = self.db.db.platforms.new(**params)
@@ -309,13 +313,20 @@ class Platforms(object):
 
     def _update(self, platformModel, platformDef):
         platformId = platformModel.platformId
+        if platformDef is None:
+            platformName = platformModel.platformName
+        else:
+            platformName = platformDef.getPlatformName()
+        abstract = bool(platformModel.abstract)
+        configurable = bool(platformModel.configurable)
         cu = self.db.db.cursor()
         sql = """UPDATE Platforms
             SET platformName = ?,
+                abstract = ?,
+                configurable = ?,
                 time_refreshed = current_timestamp
             WHERE platformId = ?"""
-        cu.execute(sql, platformDef.getPlatformName(),
-            platformId)
+        cu.execute(sql, platformName, abstract, configurable, platformId)
         self._updateDatabasePlatformSources(platformModel)
         self._addComputedFields(platformModel)
 
@@ -1034,14 +1045,27 @@ class PlatformManager(manager.Manager):
 
     def createPlatform(self, platform):
         platformLabel = platform.label
+
+        # If there is a product definition, this call will publish it as a
+        # platform
         pd = proddef.ProductDefinition()
         pd.setBaseLabel(platformLabel)
 
         client = self._reposMgr.getAdminClient(write=True)
-        pd.loadFromRepository(client)
-        pl = pd.toPlatformDefinition()
-        pl.saveToRepository(client, platformLabel,
-            message="rBuilder generated\n")
+        try:
+            pd.loadFromRepository(client)
+            pl = pd.toPlatformDefinition()
+            pl.saveToRepository(client, platformLabel,
+                message="rBuilder generated\n")
+            pl.loadFromRepository(client, platformLabel)
+        except proddef.ProductDefinitionError:
+            # Could not find a product. Look for the platform
+            pl = proddef.PlatformDefinition()
+            try:
+                pl.loadFromRepository(client, platformLabel)
+            except proddef.ProductDefinitionError:
+                pl = None
+
         # Now save the platform
         cu = self.db.db.cursor()
         cu.execute("SELECT platformId FROM Platforms WHERE label = ?", (platformLabel, ))
@@ -1050,8 +1074,15 @@ class PlatformManager(manager.Manager):
             platId = self.platforms._create(platform, pl).platformId
         else:
             platId = row[0]
-            platform =  self.platforms.getById(platId)
-            self.platforms._update(platform, pl)
+            platformModel = self.platforms.getById(platId)
+            platformFieldVals = ((x, getattr(platform, x))
+                for x in platform._fields)
+            platformModel.updateFields(**dict((fname, fval)
+                for (fname, fval) in platformFieldVals
+                    if fval is not None))
+            # Make sure the XML can't override internal fields
+            platformModel.platformId = platId
+            self.platforms._update(platformModel, pl)
         return self.getPlatform(platId)
 
     def getPlatformByName(self, platformName):

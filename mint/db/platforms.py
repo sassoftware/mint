@@ -43,6 +43,7 @@ class PlatformsTable(database.KeyedTable):
                'enabled',
                'projectId',
                'platformName',
+               'abstract',
                'configurable',
                ]
 
@@ -58,6 +59,7 @@ class PlatformsTable(database.KeyedTable):
                 platforms.platformName,
                 platforms.label,
                 platforms.enabled,
+                platforms.abstract,
                 platforms.configurable,
                 platforms.mode
             FROM

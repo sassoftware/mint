@@ -168,7 +168,9 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         def newLoadFromRepository(slf, *args, **kw):
             oldClient = args[0]
             label = args[1]
-            return oldLoadFromRepository(slf, self.cclient, label)
+            if label.startswith('localhost@'):
+                return oldLoadFromRepository(slf, self.cclient, label)
+            return oldLoadFromRepository(slf, oldClient, label)
 
         self.mock(proddef.PlatformDefinition, 'loadFromRepository',
             newLoadFromRepository)
@@ -213,7 +215,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl2.saveToRepository(self.cclient, platformLabel2)
         self._addPlatform(platformLabel2, pl2)
 
-    def setupPlatform3(self):
+    def setupPlatform3(self, repositoryOnly=False):
         repos = self.openRepository()
         self.cclient = self.getConaryClient()
         self.cclient.repos = repos
@@ -228,7 +230,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         pl1.addArchitecture('x86', 'x86', 'is:x86 x86(~i486, ~i586, ~i686, ~cmov, ~mmx, ~sse, ~sse2)')
         pl1.addFlavorSet('xen', 'Xen DomU', '~xen, ~domU, ~!dom0, ~!vmware')
         pl1.saveToRepository(self.cclient, platformLabel1)
-        self._addPlatform(platformLabel1, pl1)
+        if not repositoryOnly:
+            self._addPlatform(platformLabel1, pl1)
         return pl1
 
     def getConaryClient(self):

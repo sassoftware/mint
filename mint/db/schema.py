@@ -780,6 +780,7 @@ def _createPlatforms(db):
                 platformName    varchar(1024) NOT NULL,
                 configurable    boolean NOT NULL DEFAULT false,
                 abstract        boolean NOT NULL DEFAULT false,
+                isFromDisk      boolean NOT NULL DEFAULT false,
                 time_refreshed  timestamp with time zone NOT NULL
                                 DEFAULT current_timestamp
             ) %(TABLEOPTS)s""" % db.keywords)

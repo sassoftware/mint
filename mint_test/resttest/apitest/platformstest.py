@@ -377,15 +377,56 @@ class NewPlatformTest(BaseTest):
         # Create a platform from a product
         pdLabel = self.productDefinition.getProductDefinitionLabel()
         uri = "/platforms"
-        xml = "<platform><label>%s</label></platform>" % pdLabel
+        xml = "<platform><label>%s</label><platformName>ignored</platformName></platform>" % pdLabel
         client = self.getRestClient()
         req, plat = client.call('POST', uri, body=xml)
         self.failUnlessEqual(plat.label, pdLabel)
+        self.failUnlessEqual(plat.platformName, 'Project 1')
         platformId = plat.platformId
 
         # Post again, should not change anything
         req, plat = client.call('POST', uri, body=xml)
         self.failUnlessEqual(plat.platformId, platformId)
+
+    def testCreatePlatform_NoProduct(self):
+        # Create a platform when there is no product
+        self.setupPlatform3(repositoryOnly=True)
+        pdLabel = 'localhost@rpath:plat-3'
+
+        uri = "/platforms"
+        xml = "<platform><label>%s</label><platformName>ignored</platformName></platform>" % pdLabel
+        client = self.getRestClient()
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.label, pdLabel)
+        self.failUnlessEqual(plat.platformName, 'Crowbar Linux 3')
+        platformId = plat.platformId
+
+        # Post again, should not change anything
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.platformId, platformId)
+
+    def testCreatePlatform_NoPlatform(self):
+        # Create a platform when there is no product or platform
+        self.setupPlatform3(repositoryOnly=True)
+        pdLabel = 'localhost@rpath:plat-4'
+
+        uri = "/platforms"
+        xml = "<platform><label>%s</label><platformName>Platform 4</platformName><abstract>true</abstract><configurable>true</configurable></platform>" % pdLabel
+        client = self.getRestClient()
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.label, pdLabel)
+        self.failUnlessEqual(plat.platformName, 'Platform 4')
+        self.failUnlessEqual(plat.abstract, True)
+        self.failUnlessEqual(plat.configurable, True)
+        platformId = plat.platformId
+
+        xml = xml.replace('<abstract>true</abstract>',
+            '<abstract>false</abstract>')
+
+        # Post again, make sure fields got updated
+        req, plat = client.call('POST', uri, body=xml)
+        self.failUnlessEqual(plat.platformId, platformId)
+        self.failUnlessEqual(plat.abstract, False)
 
 if __name__ == "__main__":
         testsetup.main()
