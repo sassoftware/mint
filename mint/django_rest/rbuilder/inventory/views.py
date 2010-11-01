@@ -526,6 +526,16 @@ class InventorySystemConfigurationServices(AbstractInventoryService):
 
     def get(self, system_id):
         return self.mgr.getSystemConfiguration(system_id)
+    
+class InventorySystemConfigurationDescriptorServices(AbstractInventoryService):
+
+    @access.admin
+    def rest_GET(self, request, system_id):
+        response = HttpResponse(status=200, content=self.get(system_id))
+        return response
+    
+    def get(self, system_id):
+        return self.mgr.getSystemConfigurationDescriptor(system_id)
 
 class InventoryEventTypesService(AbstractInventoryService):
     

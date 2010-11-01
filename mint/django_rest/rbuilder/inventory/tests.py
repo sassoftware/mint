@@ -1704,6 +1704,21 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, 
             testsxml.configuration_put_resp_xml)
+        
+    def _getSystemConfigurationDescriptor(self, system_id):
+        return testsxml.configuration_descriptor_xml
+        
+    def testSystemConfigurationDescriptor(self):
+        system = self._saveSystem()
+        
+        self.mgr.sysMgr.getSystemConfigurationDescriptor = self._getSystemConfigurationDescriptor(system.pk)
+
+        response = self._get('/api/inventory/systems/%s/configuration_descriptor' % \
+            system.pk,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, 
+            testsxml.configuration_descriptor_xml)
 
     def testGetSystemLogAuth(self):
         """

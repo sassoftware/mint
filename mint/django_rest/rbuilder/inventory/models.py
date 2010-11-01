@@ -204,6 +204,24 @@ class Configuration(modellib.XObjIdModel):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
+    
+class ConfigurationDescriptor(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'configuration_descriptor',
+                attributes = {'id':str})
+    objects = modellib.ConfigurationDescriptorManager()
+    view_name = 'SystemConfigurationDescriptor'
+
+    def __init__(self, system, *args, **kwargs):
+        self._system = system
+        modellib.XObjIdModel.__init__(self, *args, **kwargs)
+
+    def to_xml(self, request=None):
+        self.id = self.get_absolute_url(request, model=self,
+            parents=[self._system])
+        return xobj.toxml(self)
 
 class Zone(modellib.XObjIdModel):
     LOCAL_ZONE = "Local rBuilder"
@@ -466,6 +484,7 @@ class System(modellib.XObjIdModel):
         text_field='shortname'),
         "the appliance of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
+    configuration_descriptor = APIReadOnly(models.TextField(null=True))
 
     load_fields = [local_uuid]
 
@@ -584,12 +603,23 @@ class System(modellib.XObjIdModel):
 
                 def __init__(self, href):
                     self.href = href
+                    
+            class ConfigurationDescriptorHref(object): 
+                _xobj = xobj.XObjMetadata(
+                            tag='configuration_descriptor',
+                            attributes={'href':str})
+
+                def __init__(self, href):
+                    self.href = href
 
             xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
                 '%s/credentials' % self.get_absolute_url(request)))
             
             xobj_model.configuration = ConfigurationHref(request.build_absolute_uri(
                 '%s/configuration' % self.get_absolute_url(request)))
+            
+            xobj_model.configuration_descriptor = ConfigurationDescriptorHref(request.build_absolute_uri(
+                '%s/configuration_descriptor' % self.get_absolute_url(request)))
 
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',

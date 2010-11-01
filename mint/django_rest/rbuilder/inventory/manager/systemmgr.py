@@ -1014,6 +1014,34 @@ class SystemManager(base.BaseManager):
         return self._getCredentialsModel(system, credentials)
     
     @base.exposed
+    def getSystemConfigurationDescriptor(self, system_id):
+        hack_xml = """<descriptor>
+                <metadata>
+                  <displayName>Apache HTTPd Configuration</displayName>
+                  <descriptions>
+                    <desc>This is the example descriptor for configuration of httpd</desc>
+                  </descriptions>
+                </metadata>
+                <dataFields>
+                  <field>
+                    <name>org_apache_httpd_port</name>
+                    <descriptions>
+                      <desc>HTTP port number</desc>
+                    </descriptions>
+                    <prompt>
+                      <desc>Apache will listen for HTTP connections on this port number</desc>
+                    </prompt>
+                    <type>str</type>
+                    <constraints>
+                      <length>5</length>
+                    </constraints>
+                    <required>true</required>
+                  </field>
+                </dataFields>
+            </descriptor>"""
+        return hack_xml
+    
+    @base.exposed
     def getSystemConfiguration(self, system_id):
         system = models.System.objects.get(pk=system_id)
         if system.configuration is None:

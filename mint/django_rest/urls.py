@@ -130,6 +130,9 @@ urlpatterns = patterns('',
     url(r'^api/inventory/systems/(?P<system_id>\d+)/configuration/?$',
         inventoryviews.InventorySystemConfigurationServices(),
         name='SystemConfiguration'),
+    url(r'^api/inventory/systems/(?P<system_id>\d+)/configuration_descriptor/?$',
+        inventoryviews.InventorySystemConfigurationDescriptorServices(),
+        name='SystemConfigurationDescriptor'),
 
     # System Events
     url(r'^api/inventory/system_events/?$',
