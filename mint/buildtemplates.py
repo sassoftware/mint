@@ -208,6 +208,14 @@ class amiHugeDiskMountpoint(StringOption):
 class platformName(StringOption):
     default = ''
     prompt = 'platform-name'
+    
+class windowsIsoTest(BooleanOption):
+    default = True
+    prompt = "Apply progress to ISO"
+    
+class windowsWimTest(BooleanOption):
+    default = True
+    prompt = "Apply progress to WIM"
 
 ###
 # Templates
@@ -296,6 +304,14 @@ class ApplianceISOTemplate(Template):
                  'mediaTemplateTrove', 'anacondaCustomTrove',
                  'anacondaTemplatesTrove', 'buildOVF10']
     id = buildtypes.APPLIANCE_ISO
+    
+class WindowsISOTemplate(Template):
+    __slots__ = ['windowsIsoTest']
+    id = buildtypes.WINDOWS_ISO
+    
+class WindowsWIMTemplate(Template):
+    __slots__ = ['windowsWimTest']
+    id = buildtypes.WINDOWS_WIM
 
 class ImagelessTemplate(Template):
     __slots__ = []

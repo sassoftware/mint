@@ -27,6 +27,8 @@ validBuildTypes = {
     'APPLIANCE_ISO'     : 16,
     'IMAGELESS'         : 17,
     'VMWARE_OVF_IMAGE'  : 18,
+    'WINDOWS_ISO'       : 19,
+    'WINDOWS_WIM'       : 20,
 }
 
 TYPES = validBuildTypes.values()
@@ -89,6 +91,8 @@ typeNames = {
     AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    WINDOWS_ISO:        "Windows Installable ISO",
+    WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update"
 }
 
@@ -109,6 +113,8 @@ typeNamesShort = {
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
+    WINDOWS_ISO:        "Windows Inst",
+    WINDOWS_WIM:        "Windows WIM",
     IMAGELESS:          "Online Update",
     VMWARE_OVF_IMAGE:   "VMware (R) OVF",
 }
@@ -142,8 +148,8 @@ xmlTagNameImageTypeMap = {
     'vmwareOvfImage':      VMWARE_OVF_IMAGE,
     'xenOvaImage':         XEN_OVA,
     'imageless':           IMAGELESS,
-    'windowsIsoImage':     APPLIANCE_ISO,
-    'wimImage':            RAW_FS_IMAGE, 
+    'windowsIsoImage':     WINDOWS_ISO,
+    'wimImage':            WINDOWS_WIM, 
 }
 
 imageTypeXmlTagNameMap = dict([(v,k) for k,v in xmlTagNameImageTypeMap.iteritems()])
@@ -166,6 +172,8 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    WINDOWS_ISO:        "Windows Installable ISO",
+    WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update",
 
     # flavor flags here
