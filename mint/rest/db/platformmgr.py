@@ -1043,9 +1043,7 @@ class PlatformManager(manager.Manager):
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
 
-    def createPlatform(self, platform):
-        platformLabel = platform.label
-
+    def _lookupFromRepository(self, platformLabel):
         # If there is a product definition, this call will publish it as a
         # platform
         pd = proddef.ProductDefinition()
@@ -1065,6 +1063,15 @@ class PlatformManager(manager.Manager):
                 pl.loadFromRepository(client, platformLabel)
             except proddef.ProductDefinitionError:
                 pl = None
+        return pl
+
+    def createPlatform(self, platform, withRepositoryLookups=True):
+        platformLabel = platform.label
+
+        if withRepositoryLookups:
+            pl = self._lookupFromRepository(platformLabel)
+        else:
+            pl = None
 
         # Now save the platform
         cu = self.db.db.cursor()
