@@ -156,10 +156,10 @@ imageTypeXmlTagNameMap = dict([(v,k) for k,v in xmlTagNameImageTypeMap.iteritems
 
 typeNamesMarketing = {
     NETBOOT_IMAGE:      "Netboot Image",
-    INSTALLABLE_ISO:    "Installable CD/DVD",
+    INSTALLABLE_ISO:    "Legacy Installable CD/DVD",
     RAW_FS_IMAGE:       "Mountable Filesystem",
     STUB_IMAGE:         "Stub Image",
-    RAW_HD_IMAGE:       "Parallels(R), QEMU (Raw Hard Disk)",
+    RAW_HD_IMAGE:       "KVM/Parallels/QEMU/Raw Hard Disk",
     VMWARE_IMAGE:       "VMware(R) Virtual Appliance",
     VMWARE_ESX_IMAGE:   "VMware(R) ESX(R) Server Virtual Appliance",
     VMWARE_OVF_IMAGE:   "VMware(R) Virtual Appliance OVF",
@@ -172,7 +172,7 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
-    WINDOWS_ISO:        "Windows Installable ISO",
+    WINDOWS_ISO:        "Installable CD/DVD (ISO)",
     WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update",
 
