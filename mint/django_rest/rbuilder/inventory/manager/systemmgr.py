@@ -1015,7 +1015,7 @@ class SystemManager(base.BaseManager):
     
     @base.exposed
     def getSystemConfigurationDescriptor(self, system_id):
-        hack_xml = """<descriptor>
+        hack_descriptor_xml = """<descriptor>
                 <metadata>
                   <displayName>Apache HTTPd Configuration</displayName>
                   <descriptions>
@@ -1039,7 +1039,7 @@ class SystemManager(base.BaseManager):
                   </field>
                 </dataFields>
             </descriptor>"""
-        return hack_xml
+        return "<configuration_descriptor>%s</configuration_descriptor>" % hack_descriptor_xml
     
     @base.exposed
     def getSystemConfiguration(self, system_id):

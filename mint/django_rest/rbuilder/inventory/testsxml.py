@@ -2321,7 +2321,7 @@ configuration_put_resp_xml = """\
 """
 
 configuration_descriptor_xml = """\
-<descriptor>
+<configuration_descriptor><descriptor>
     <metadata>
       <displayName>Apache HTTPd Configuration</displayName>
       <descriptions>
@@ -2344,4 +2344,4 @@ configuration_descriptor_xml = """\
         <required>true</required>
       </field>
     </dataFields>
-</descriptor>"""
+</descriptor></configuration_descriptor>"""
