@@ -484,7 +484,7 @@ class System(modellib.XObjIdModel):
         text_field='shortname'),
         "the appliance of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
-    configuration_descriptor = APIReadOnly(models.TextField(null=True))
+    configuration_descriptor = APIReadOnly(modellib.SyntheticField())
 
     load_fields = [local_uuid]
 
