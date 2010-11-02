@@ -286,8 +286,6 @@ class Platforms(object):
             label=platformModel.label,
             enabled=int(platformModel.enabled or 0),
         )
-        if platformModel.enabled is not None:
-            params.update(enabled=int(platformModel.enabled))
 
         if platformDef is not None:
             platformName = platformDef.getPlatformName()
@@ -328,8 +326,8 @@ class Platforms(object):
                 time_refreshed = current_timestamp
             WHERE platformId = ?"""
         cu.execute(sql, platformName, abstract, configurable, platformId)
-        self._updateDatabasePlatformSources(platformModel)
-        self._addComputedFields(platformModel)
+        if platformModel.enabled:
+            self._updateDatabasePlatformSources(platformModel)
 
     def _addComputedFields(self, platformModel):
         # Also check for mirroring permissions for configurable platforms.
