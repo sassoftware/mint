@@ -14,7 +14,6 @@ from mint import maintenance
 from mint import shimclient
 from mint.rest.api import models
 from mint.rest.modellib import converter
-from mint.session import SqlSession
 from mint.rest import errors
 
 # Decorator for public (unauthenticated) methods/functions
@@ -98,6 +97,7 @@ class AuthenticationCallback(object):
         sessionClient = shimclient.ShimMintClient(cfg,
                 (cfg.authUser, cfg.authPass), db=self.db.db.db)
 
+        from mint.session import SqlSession
         session = SqlSession(req, sessionClient,
             sid = sid,
             secret = cfg.cookieSecretKey,
