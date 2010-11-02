@@ -284,6 +284,7 @@ class Platforms(object):
             abstract=bool(platformModel.abstract),
             configurable=bool(platformModel.configurable),
             label=platformModel.label,
+            enabled=int(platformModel.enabled or 0),
         )
         if platformModel.enabled is not None:
             params.update(enabled=int(platformModel.enabled))
