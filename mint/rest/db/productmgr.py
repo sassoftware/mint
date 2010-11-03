@@ -402,7 +402,7 @@ class ProductManager(manager.Manager):
         projects._validateProductVersion(version)
 
         # initial product definition
-        prodDef = helperfuncs.sanitizeProductDefinition(product.shortname,
+        prodDef = helperfuncs.sanitizeProductDefinition(product.name,
                         description, product.hostname, product.domainname, 
                         product.shortname, version,
                         '', namespace)
