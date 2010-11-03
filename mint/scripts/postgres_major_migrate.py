@@ -15,10 +15,12 @@ import logging
 import optparse
 import os
 import psycopg2
+import pwd
 import subprocess
 import sys
 import tempfile
 import time
+import traceback
 from conary.lib import util as cny_util
 from psycopg2 import extensions as psy_ext
 
@@ -104,7 +106,7 @@ class Postmaster(subprocutil.Subprocess, DummyCluster):
             '--auth=trust',
             '--encoding=UTF8',
             '--locale=C',
-            ])
+            ], preexec_fn=self.copyUIDs)
         log.info("Cluster initialized at %s", self.dataDir)
 
     def start(self):
@@ -122,7 +124,17 @@ class Postmaster(subprocutil.Subprocess, DummyCluster):
                 ]
         if not self.fsync:
             args.append('-F')
+        self.copyUIDs()
         os.execl(path, *args)
+
+    # pre-exec helper for initdb
+    def copyUIDs(self):
+        """Copy EUID/EGID to UID/GID"""
+        uid, gid = os.geteuid(), os.getegid()
+        if uid != 0 and os.getuid() == 0:
+            os.seteuid(0)
+            os.setgid(gid)
+            os.setuid(uid)
 
 
 class Script(scriptlibrary.GenericScript):
@@ -139,6 +151,7 @@ class Script(scriptlibrary.GenericScript):
         parser.add_option('--from-datadir')
         parser.add_option('--to-bindir')
         parser.add_option('--to-datadir')
+        parser.add_option('--user')
         options, args = parser.parse_args()
 
         if not options.to_bindir or not options.to_datadir:
@@ -151,11 +164,20 @@ class Script(scriptlibrary.GenericScript):
         self.loadConfig(options.config_file)
         self.resetLogging(quiet=options.quiet)
 
+        self.uidgid = None
+        if options.user:
+            _, _, uid, gid = pwd.getpwnam(options.user)[:4]
+            self.uidgid = uid, gid
+
         if os.path.exists(os.path.join(options.to_datadir, 'PG_VERSION')):
             sys.exit("Target dir %s already exists!" % options.to_datadir)
 
         tempDir = tempfile.mkdtemp(dir=os.path.dirname(options.to_datadir))
         try:
+            if self.uidgid:
+                os.chown(tempDir, uid, gid)
+            self.dropPrivs()
+
             # Source cluster
             if options.from_bindir and options.from_datadir:
                 self.cluster1 = Postmaster(dataDir=options.from_datadir,
@@ -176,12 +198,20 @@ class Script(scriptlibrary.GenericScript):
                 self.cluster1.wait()
                 self.cluster2.wait()
 
+            self.restorePrivs()
             os.rename(tempDir, options.to_datadir)
 
         finally:
-            if os.path.isdir(tempDir):
-                log.info("Cleaning up temporary target dir")
-                cny_util.rmtree(tempDir)
+            try:
+                if os.path.isdir(tempDir):
+                    try:
+                        self.restorePrivs()
+                    except:
+                        traceback.print_exc()
+                    log.info("Cleaning up temporary target dir")
+                    cny_util.rmtree(tempDir)
+            except:
+                traceback.print_exc()
 
     def migrate(self):
         self.cluster2.initdb()
@@ -267,7 +297,7 @@ class Script(scriptlibrary.GenericScript):
             '--port=' + str(self.cluster1.port),
             '--format=custom',
             '--compress=0',
-            '--verbose', # FIXME
+            '--verbose',  # FIXME
             database,
             ], shell=False, stdout=subprocess.PIPE)
         target = subprocess.Popen([
@@ -276,7 +306,7 @@ class Script(scriptlibrary.GenericScript):
             '--dbname=' + database,
             '--port=65001',
             '--single-transaction',
-            '--verbose', # FIXME
+            '--verbose',  # FIXME
             ], shell=False, stdin=subprocess.PIPE)
         cny_util.copyfileobj(source.stdout, target.stdin)
         if source.wait():
@@ -286,6 +316,24 @@ class Script(scriptlibrary.GenericScript):
         if target.wait():
             raise RuntimeError("psql failed with exit code %s" %
                     target.returncode)
+
+    def dropPrivs(self, permanent=False):
+        if not self.uidgid:
+            return
+        uid, gid = self.uidgid
+        if permanent:
+            self.restorePrivs()
+            os.setgid(gid)
+            os.setuid(uid)
+        else:
+            os.setegid(gid)
+            os.seteuid(uid)
+
+    def restorePrivs(self):
+        if not self.uidgid:
+            return
+        os.setegid(0)
+        os.seteuid(0)
 
 
 def escape_identifier(value):

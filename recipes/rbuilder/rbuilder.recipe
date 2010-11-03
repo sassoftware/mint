@@ -84,7 +84,7 @@ class rBuilderProduct(CPackageRecipe):
         r.build()
         r.install()
         r.policy()
-        r.macros.pgver = ('platform_label' in r.macros and '9.0') or '8.4'
+        r.macros.pgver = '9.0'
 
     def unpack(r):
         r.addMercurialSnapshot()
