@@ -1015,32 +1015,6 @@ class SystemManager(base.BaseManager):
     
     @base.exposed
     def getSystemConfigurationDescriptor(self, system_id):
-        hack_descriptor_xml = """<descriptor>
-                <metadata>
-                  <displayName>Apache HTTPd Configuration</displayName>
-                  <descriptions>
-                    <desc>This is the example descriptor for configuration of httpd</desc>
-                  </descriptions>
-                </metadata>
-                <dataFields>
-                  <field>
-                    <name>org_apache_httpd_port</name>
-                    <descriptions>
-                      <desc>HTTP port number</desc>
-                    </descriptions>
-                    <prompt>
-                      <desc>Apache will listen for HTTP connections on this port number</desc>
-                    </prompt>
-                    <type>str</type>
-                    <constraints>
-                      <length>5</length>
-                    </constraints>
-                    <required>true</required>
-                  </field>
-                </dataFields>
-            </descriptor>"""
-        # Uncomment this to re-enable the hack
-        # return "<configuration_descriptor>%s</configuration_descriptor>" % hack_descriptor_xml
         system = models.System.objects.get(pk=system_id)
         return self.mgr.getConfigurationDescriptor(system)
     

@@ -283,6 +283,10 @@ class VersionManager(base.BaseManager):
 
     @base.exposed
     def getConfigurationDescriptor(self, system):
+        
+        # remove this when you want it to work for real
+        return open('/srv/www/html/config/config_pony.xml').read()
+        
         descriptors = []
         for trove in system.installed_software.all():
             descriptors.append(self._getTroveConfigDescriptor(trove))
