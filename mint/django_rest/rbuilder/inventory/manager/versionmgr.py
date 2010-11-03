@@ -5,11 +5,14 @@
 #
 
 import datetime
+import itertools
 import logging
+import xml
 from dateutil import tz
+from xml.dom import minidom
 
-from conary import conaryclient
-from conary import versions
+from conary import conaryclient, versions
+from conary import trove as conarytrove
 from conary.errors import RepositoryError
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -277,3 +280,88 @@ class VersionManager(base.BaseManager):
         # Always add the current version as an available update, this is so
         # that remediation will work.
         trove.available_updates.add(trove.version)
+
+    @base.exposed
+    def getConfigurationDescriptor(self, system):
+        descriptors = []
+        for trove in system.installed_software.all():
+            descriptors.append(self._getTroveConfigDescriptor(trove))
+        return self._combineConfigDescriptors(descriptors)
+
+    def _getTroveConfigDescriptor(self, trove):
+        kw = {}
+        client = self.get_conary_client()
+        troveSource = client.getRepos()
+        label = trove.getLabel()
+        troveTups = troveSource.findTrove(label, (trove.name, None , None))
+        colls = [ x for x in troveTups if conarytrove.troveIsCollection(x[0])]
+        troves = troveSource.getTroves(colls, withFiles=False)
+        troveCache = dict(itertools.izip(colls, troves))
+        childTups = list(itertools.chain(*( x.iterTroveList(strongRefs=True) for x in troves if x)))
+        _check = lambda x: (conarytrove.troveIsCollection(x[0]) and not conarytrove.troveIsPackage(x[0]))
+        colls = set(x for x in troveTups if _check(x))
+        childColls = [ x for x in childTups if _check(x)]
+        troves = troveSource.getTroves(childColls, withFiles=False, **kw)
+        troveCache.update(itertools.izip(childColls, troves))
+        allTups = troveTups + childTups
+        require = []
+        provide = []
+        # Zip together tups and metadata so we can make one call
+        #md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, childTups)
+        #only do children for now
+        confDict = {}
+        for tup in childTups:
+            dom = None
+            md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, [tup])
+            try: doc = minidom.parseString(md[0].get()['shortDesc'])
+            #it is possible we will run into real descriptions, so just ignore them
+            # WARNING: this will not generate error if bad XML
+            except xml.parsers.expat.ExpatError:
+                continue
+            #epdb.st()
+            for fields in doc.getElementsByTagName('dataFields'):
+              for field in fields.getElementsByTagName('field'):
+                # depend on schema to enforce only one name
+                # arguably, all of this should be attributes of the field
+                # TODO establish constants to replace these strings
+                name = field.getElementsByTagName('name')[0].lastChild.data
+                required = field.getElementsByTagName('required')[0].lastChild
+                # WARNING: if there are overlapping named fields, which one wins?
+                confDict[name] = field
+                assert required.nodeType == minidom.Node.TEXT_NODE
+                # We can build requires and provides tables here
+                #if field.getElementsByTagName('sense')[0].data == 'required':
+                #    require += [name]
+                #else:
+                #    provides += [name]
+        # Reconcile provides/requires
+        # Reconcile bindings
+
+        impl = minidom.getDOMImplementation()
+
+        newdoc = impl.createDocument(None, 'configurationDescriptor', None)
+        top = newdoc.documentElement
+        dataFields = newdoc.createElement('dataFields')
+        top.appendChild(dataFields)
+        for x in confDict:
+            dataFields.appendChild(confDict[x])
+        return newdoc.toxml()
+        # Retrieve all trove tuples in group
+        ## Retrieve all trove metadata
+        ## Zip tuples and metadata
+        # Iterate through tuples constructing concatinated metadata
+        # Add wrapper tag to concatinated data
+        # parse dom
+        # iterate through concatinated config descriptors
+        # iterate through fields in config descriptors
+        # extract appropriate data
+        # zip extracted data with field node
+        # reconcile provides/requires
+        # reconcile bindings
+
+        # produce unified configDescriptor
+        descriptors = []
+        self._combineConfigDescriptors(descriptors)
+
+    def _combineConfigDescriptors(self, descriptors):
+        return descriptors

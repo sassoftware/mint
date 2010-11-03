@@ -1039,7 +1039,10 @@ class SystemManager(base.BaseManager):
                   </field>
                 </dataFields>
             </descriptor>"""
-        return "<configuration_descriptor>%s</configuration_descriptor>" % hack_descriptor_xml
+        # Uncomment this to re-enable the hack
+        # return "<configuration_descriptor>%s</configuration_descriptor>" % hack_descriptor_xml
+        system = models.System.objects.get(pk=system_id)
+        return self.mgr.getConfigurationDescriptor(system)
     
     @base.exposed
     def getSystemConfiguration(self, system_id):
