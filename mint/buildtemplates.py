@@ -41,6 +41,7 @@ optionNameMap = {
     'anacondaCustomTrove': 'anaconda-custom',
     'anacondaTemplatesTrove': 'anaconda-templates',
     'mediaTemplateTrove': 'media-template',
+    'isoKitTrove': 'platform-isokit'
 }
 
 reversedOptionNameMap = dict([(v,k) for k,v in optionNameMap.iteritems()])
@@ -209,13 +210,9 @@ class platformName(StringOption):
     default = ''
     prompt = 'platform-name'
     
-class windowsIsoTest(BooleanOption):
-    default = True
-    prompt = "Apply progress to ISO"
-    
-class windowsWimTest(BooleanOption):
-    default = True
-    prompt = "Apply progress to WIM"
+class isoKitTrove(TroveOption):
+    default = ''
+    prompt  = 'Custom platform ISO kit'
 
 ###
 # Templates
@@ -306,11 +303,11 @@ class ApplianceISOTemplate(Template):
     id = buildtypes.APPLIANCE_ISO
     
 class WindowsISOTemplate(Template):
-    __slots__ = ['windowsIsoTest']
+    __slots__ = ['baseFileName', 'mediaTemplateTrove', 'isoKitTrove']
     id = buildtypes.WINDOWS_ISO
     
 class WindowsWIMTemplate(Template):
-    __slots__ = ['windowsWimTest']
+    __slots__ = ['baseFileName', 'mediaTemplateTrove', 'isoKitTrove']
     id = buildtypes.WINDOWS_WIM
 
 class ImagelessTemplate(Template):
