@@ -10,6 +10,7 @@ platformsXml = """\
     <mode>manual</mode>
     <enabled>false</enabled>
     <configurable>true</configurable>
+    <abstract>false</abstract>
     <mirrorPermission>true</mirrorPermission>
     <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
@@ -27,6 +28,7 @@ platformsXml = """\
     <mode>manual</mode>
     <enabled>false</enabled>
     <configurable>true</configurable>
+    <abstract>false</abstract>
     <mirrorPermission>true</mirrorPermission>
     <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
     <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
@@ -49,6 +51,7 @@ platformXml = """\
   <mode>manual</mode>
   <enabled>false</enabled>
   <configurable>true</configurable>
+  <abstract>false</abstract>
   <mirrorPermission>true</mirrorPermission>
   <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
@@ -458,6 +461,7 @@ platformPUTXml = """\
   <mode>manual</mode>
   <enabled>true</enabled>
   <configurable>true</configurable>
+  <abstract>false</abstract>
   <mirrorPermission>true</mirrorPermission>
   <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
