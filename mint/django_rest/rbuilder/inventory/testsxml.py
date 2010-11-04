@@ -20,7 +20,7 @@ inventory_xml = """\
 event_type_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <event_type id="http://testserver/api/inventory/event_types/1">
-  <description>on-demand registration event</description>
+  <description>System registration</description>
   <priority>110</priority>
   <job_set/>
   <event_type_id>1</event_type_id>
@@ -36,7 +36,7 @@ event_types_xml="""\
     <priority>110</priority>
     <job_set/>
     <event_type_id>1</event_type_id>
-    <description>on-demand registration event</description>
+    <description>System registration</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/2">
@@ -44,7 +44,7 @@ event_types_xml="""\
     <priority>105</priority>
     <job_set/>
     <event_type_id>2</event_type_id>
-    <description>on-demand polling event</description>
+    <description>On-demand system synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/3">
@@ -52,11 +52,11 @@ event_types_xml="""\
     <priority>50</priority>
     <job_set/>
     <event_type_id>3</event_type_id>
-    <description>standard polling event</description>
+    <description>System synchronization</description>
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/4">
-    <description>apply an update to a system</description>
+    <description>Scheduled system update</description>
     <event_type_id>4</event_type_id>
     <job_set/>
     <name>system apply update</name>
@@ -64,7 +64,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/5">
-    <description>on-demand apply an update to a system</description>
+    <description>System update</description>
     <event_type_id>5</event_type_id>
     <job_set/>
     <name>immediate system apply update</name>
@@ -72,7 +72,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/6">
-    <description>shutdown a system</description>
+    <description>Scheduled system shutdown</description>
     <event_type_id>6</event_type_id>
     <job_set/>
     <name>system shutdown</name>
@@ -80,7 +80,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/7">
-    <description>on-demand shutdown a system</description>
+    <description>System shutdown</description>
     <event_type_id>7</event_type_id>
     <job_set/>
     <name>immediate system shutdown</name>
@@ -88,7 +88,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/8">
-    <description>wait for a launched system's network information</description>
+    <description>Launched system network data discovery</description>
     <event_type_id>8</event_type_id>
     <job_set/>
     <name>system launch wait</name>
@@ -96,7 +96,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/9">
-    <description>detect a system's management interface</description>
+    <description>System management interface detection</description>
     <event_type_id>9</event_type_id>
     <job_set/>
     <name>system detect management interface</name>
@@ -104,7 +104,7 @@ event_types_xml="""\
     <system_events/>
   </event_type>
   <event_type id="http://testserver/api/inventory/event_types/10">
-    <description>on-demand detect a system's management interface</description>
+    <description>On-demand system management interface detection</description>
     <event_type_id>10</event_type_id>
     <job_set/>
     <name>immediate system detect management interface</name>
@@ -116,7 +116,7 @@ event_types_xml="""\
 event_type_put_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <event_type id="http://testserver/api/inventory/event_types/1">
-  <description>on-demand registration event</description>
+  <description>System registration</description>
   <priority>1</priority>
   <job_set/>
   <event_type_id>1</event_type_id>
@@ -127,7 +127,7 @@ event_type_put_xml="""\
 event_type_put_name_change_xml="""\
 <?xml version="1.0" encoding="UTF-8"?>
 <event_type id="http://testserver/api/inventory/event_types/1">
-  <description>on-demand registration event</description>
+  <description>System registration</description>
   <priority>110</priority>
   <job_set/>
   <event_type_id>1</event_type_id>
@@ -1539,7 +1539,7 @@ systems_log_xml = """\
     <system_log_entry_id>1</system_log_entry_id>
   </system_log_entry>
    <system_log_entry>
-    <entry>Unable to register event 'on-demand detect a system's management interface': no networking information</entry>
+    <entry>Unable to register event 'On-demand system management interface detection': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
      <system_log_entry_id>2</system_log_entry_id>
    </system_log_entry>
@@ -1549,7 +1549,7 @@ systems_log_xml = """\
      <system_log_entry_id>3</system_log_entry_id>
    </system_log_entry>
   <system_log_entry>
-    <entry>Unable to register event 'on-demand detect a system's management interface': no networking information</entry>
+    <entry>Unable to register event 'On-demand system management interface detection': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
     <system_log_entry_id>4</system_log_entry_id>
   </system_log_entry>
@@ -1559,7 +1559,7 @@ systems_log_xml = """\
     <system_log_entry_id>5</system_log_entry_id>
   </system_log_entry>
   <system_log_entry>
-    <entry>Unable to register event 'on-demand detect a system's management interface': no networking information</entry>
+    <entry>Unable to register event 'On-demand system management interface detection': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/5/system_log"/>
     <system_log_entry_id>6</system_log_entry_id>
   </system_log_entry>
@@ -2043,6 +2043,7 @@ jobs_xml = """\
 <?xml version="1.0"?>
 <jobs id="http://testserver/api/inventory/jobs/">
   <job id="http://testserver/api/inventory/jobs/1">
+    <job_description>System registration</job_description>
     <time_updated>2010-09-16T13:36:25.939154+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system registration</job_type>
@@ -2054,6 +2055,7 @@ jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
+    <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system poll</job_type>
@@ -2065,6 +2067,7 @@ jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
+    <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>immediate system poll</job_type>
@@ -2080,6 +2083,7 @@ jobs_xml = """\
 job_xml = """\
 <?xml version="1.0"?>
 <job id="http://testserver/api/inventory/jobs/1">
+  <job_description>System registration</job_description>
   <time_updated>2010-09-16T13:53:18.402208+00:00</time_updated>
   <job_state>Running</job_state>
   <job_type>system registration</job_type>
@@ -2128,6 +2132,7 @@ systems_jobs_xml = """\
 <?xml version="1.0"?>
 <jobs id="http://testserver/api/inventory/systems/3/jobs/">
   <job id="http://testserver/api/inventory/jobs/1">
+    <job_description>System registration</job_description>
     <time_updated>2010-09-16T20:13:13.325788+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system registration</job_type>
@@ -2139,6 +2144,7 @@ systems_jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
+    <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system poll</job_type>
@@ -2150,6 +2156,7 @@ systems_jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
+    <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>immediate system poll</job_type>

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 19)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 20)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1277,32 +1277,34 @@ def _createInventorySchema(db, cfg):
         changed = True
         changed |= _addTableRows(db, tableName, 'name',
             [dict(name="system registration",
-                  description='on-demand system registration event', 
+                  description='System registration',
                   priority=110),
              dict(name="system poll",
-                  description='standard system polling event', 
+                  description='System synchronization',
                   priority=50),
              dict(name="immediate system poll",
-                  description='on-demand system polling event', 
+                  description='On-demand system synchronization',
                   priority=105),
              dict(name="system apply update",
-                  description='apply an update to a system', priority=50),
+                  description='Scheduled system update', 
+                  priority=50),
              dict(name="immediate system apply update",
-                  description='on-demand apply an update to a system', 
+                  description='System update',
                   priority=105),
              dict(name="system shutdown",
-                  description='shutdown a system', priority=50),
+                  description='Scheduled system shutdown',
+                  priority=50),
              dict(name="immediate system shutdown", 
-                  description='on-demand shutdown a system', 
+                  description='System shutdown',
                   priority=105),
-             dict(name="system launch wait",
-                  description="wait for a launched system's network information",
+             dict(name='system launch wait',
+                  description='Launched system network data discovery',
                   priority=105),
              dict(name="system detect management interface",
-                  description="detect a system''s management interface",
+                  description="System management interface detection",
                   priority=50),
              dict(name="immediate system detect management interface",
-                  description="on-demand detect a system''s management interface",
+                  description="On-demand system management interface detection",
                   priority=105),
             ])
         
