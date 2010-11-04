@@ -2043,6 +2043,7 @@ jobs_xml = """\
 <?xml version="1.0"?>
 <jobs id="http://testserver/api/inventory/jobs/">
   <job id="http://testserver/api/inventory/jobs/1">
+    <job_description>System registration</job_description>
     <time_updated>2010-09-16T13:36:25.939154+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system registration</job_type>
@@ -2054,6 +2055,7 @@ jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
+    <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system poll</job_type>
@@ -2065,6 +2067,7 @@ jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
+    <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>immediate system poll</job_type>
@@ -2080,6 +2083,7 @@ jobs_xml = """\
 job_xml = """\
 <?xml version="1.0"?>
 <job id="http://testserver/api/inventory/jobs/1">
+  <job_description>System registration</job_description>
   <time_updated>2010-09-16T13:53:18.402208+00:00</time_updated>
   <job_state>Running</job_state>
   <job_type>system registration</job_type>
@@ -2128,6 +2132,7 @@ systems_jobs_xml = """\
 <?xml version="1.0"?>
 <jobs id="http://testserver/api/inventory/systems/3/jobs/">
   <job id="http://testserver/api/inventory/jobs/1">
+    <job_description>System registration</job_description>
     <time_updated>2010-09-16T20:13:13.325788+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system registration</job_type>
@@ -2139,6 +2144,7 @@ systems_jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/2">
+    <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>system poll</job_type>
@@ -2150,6 +2156,7 @@ systems_jobs_xml = """\
     <status_text>Initializing</status_text>
   </job>
   <job id="http://testserver/api/inventory/jobs/3">
+    <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
     <job_state>Running</job_state>
     <job_type>immediate system poll</job_type>

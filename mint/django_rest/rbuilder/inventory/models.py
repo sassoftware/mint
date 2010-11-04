@@ -856,6 +856,8 @@ class Job(modellib.XObjIdModel):
         visible='name'))
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
+    job_type = modellib.SyntheticField()
+    job_description = modellib.SyntheticField()
 
     load_fields = [ job_uuid ]
 
@@ -904,6 +906,8 @@ class Job(modellib.XObjIdModel):
             values=values)
         xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
             pk=self.event_type_id).name
+        xobj_model.job_description = modellib.Cache.get(
+            self.event_type.__class__, pk=self.event_type_id).description
         xobj_model.event_type = None
         return xobj_model
 
