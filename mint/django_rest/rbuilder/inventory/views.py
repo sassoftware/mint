@@ -7,11 +7,14 @@
 import os
 import time
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound
 from django_restapi import resource
 
-from django.core.exceptions import ObjectDoesNotExist
-from mint.django_rest.deco import requires, return_xml, access, ACCESS, HttpAuthenticationRequired, getHeaderValue
+from mint import users
+from mint.db import database
+from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
+    HttpAuthenticationRequired, getHeaderValue
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import manager
@@ -83,8 +86,7 @@ class AbstractInventoryService(resource.Resource):
             if not getattr(getattr(cls, 'rest_%s' % x), 'undefined', False) ]
         
 
-    @classmethod
-    def _auth(cls, method, request, *args, **kwargs):
+    def _auth(self, method, request, *args, **kwargs):
         """
         Verify authentication and run the specified method
         """
@@ -106,12 +108,13 @@ class AbstractInventoryService(resource.Resource):
                     system__pk=systemId, event_uuid=eventUuid)
                 if not sjobs:
                     return HttpAuthenticationRequired
-            elif cls._check_not_authenticated(request, access) \
-                    or cls._check_not_admin(request, access):
+                self._setMintAuth()
+            elif self._check_not_authenticated(request, access) \
+                    or self._check_not_admin(request, access):
                 return HttpAuthenticationRequired
-        elif cls._check_not_authenticated(request, access):
+        elif self._check_not_authenticated(request, access):
             return HttpAuthenticationRequired
-        elif cls._check_not_admin(request, access):
+        elif self._check_not_admin(request, access):
             return HttpAuthenticationRequired
         return method(request, *args, **kwargs)
 
@@ -122,6 +125,19 @@ class AbstractInventoryService(resource.Resource):
     @classmethod
     def _check_not_admin(cls, request, access):
         return access & ACCESS.ADMIN and not request._is_admin
+
+    def _setMintAuth(self):
+        db = database.Database(self.mgr.cfg)
+        authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
+        mintAdminGroupId = db.userGroups.getMintAdminId()
+        cu = db.cursor()
+        cu.execute("SELECT MIN(userId) from userGroupMembers "
+           "WHERE userGroupId = ?", mintAdminGroupId)
+        ret = cu.fetchall()
+        userId = ret[0][0]
+        mintAuth = users.Authorization(username=self.mgr.cfg.authUser,
+            token=authToken, admin=True, userId=userId)
+        self.mgr._auth = mintAuth
 
 class InventoryService(AbstractInventoryService):
 

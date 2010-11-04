@@ -6,11 +6,13 @@
 
 import weakref
 
+from mint import users
 from mint.django_rest.rbuilder import rbuilder_manager
 
 from mint.db.database import Database
 from mint.rest.db.database import Database as RestDatabase
 
+from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.inventory.manager import systemmgr
 from mint.django_rest.rbuilder.inventory.manager import versionmgr
 from mint.django_rest.rbuilder.inventory.manager import repeatermgr
@@ -48,4 +50,5 @@ class Manager(rbuilder_manager.RbuilderDjangoManager):
                     settings.DATABASE_PORT, settings.DATABASE_NAME)
             mint_db = Database(self.cfg)
             self._rest_db = RestDatabase(self.cfg, mint_db)
+            self._rest_db.setAuth(self._auth, self._auth.getToken())
         return self._rest_db
