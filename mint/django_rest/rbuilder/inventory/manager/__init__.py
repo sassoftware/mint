@@ -6,13 +6,11 @@
 
 import weakref
 
-from mint import users
 from mint.django_rest.rbuilder import rbuilder_manager
 
 from mint.db.database import Database
 from mint.rest.db.database import Database as RestDatabase
 
-from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.inventory.manager import systemmgr
 from mint.django_rest.rbuilder.inventory.manager import versionmgr
 from mint.django_rest.rbuilder.inventory.manager import repeatermgr
