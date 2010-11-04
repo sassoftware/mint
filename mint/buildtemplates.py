@@ -41,7 +41,7 @@ optionNameMap = {
     'anacondaCustomTrove': 'anaconda-custom',
     'anacondaTemplatesTrove': 'anaconda-templates',
     'mediaTemplateTrove': 'media-template',
-    'isoKitTrove': 'platform-isokit'
+    'platformIsoKitTrove': 'platform-isokit'
 }
 
 reversedOptionNameMap = dict([(v,k) for k,v in optionNameMap.iteritems()])
