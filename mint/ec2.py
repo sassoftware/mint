@@ -261,6 +261,8 @@ class S3Wrapper(object):
                 self.sizeCurrent + currentBytes, self.sizeTotal)
 
     def createBucket(self, bucketName):
+        # boto 2.0 enforces that bucket names don't have upper case
+        bucketName = bucketName.lower()
         bucket = self.s3conn.create_bucket(bucketName)
         return bucket
 
