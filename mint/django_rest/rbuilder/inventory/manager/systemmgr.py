@@ -48,6 +48,9 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
         models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
     ])
+    SystemConfigurationEvents = set([
+        # XXX TODO murf: add events here
+    ])
 
     TZ = tz.tzutc()
     X509 = x509.X509
@@ -1254,6 +1257,11 @@ class SystemManager(base.BaseManager):
             method = getattr(repClient, "update_" + mgmtInterfaceName)
             self._runSystemEvent(event, method, params,
                 resultsLocation, zone=zone, sources=data)
+        elif eventType in self.SystemConfigurationEvents:
+            data = cPickle.loads(event.event_data)
+            method = getattr(repClient, "configuration_" + mgmtInterfaceName)
+            self._runSystemEvent(event, method, params,
+                resultsLocation, zone=zone, configuration=data)
         elif eventType in self.ShutdownEvents:
             method = getattr(repClient, "shutdown_" + mgmtInterfaceName)
             self._runSystemEvent(event, method,
