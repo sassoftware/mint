@@ -17,6 +17,7 @@ from django.test.client import Client, MULTIPART_CONTENT
 
 from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.inventory import views
 from mint.django_rest.rbuilder.inventory import manager
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
@@ -128,6 +129,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.mgr = manager.Manager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
         manager.repeatermgr.repeater_client = None
+        views.AbstractInventoryService._setMintAuth = lambda *args: None
 
     def tearDown(self):
         TestCase.tearDown(self)
