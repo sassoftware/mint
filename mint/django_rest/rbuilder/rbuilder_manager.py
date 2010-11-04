@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 class RbuilderDjangoManager(object):
     def __init__(self, cfg=None, userName=None):
         self.cfg = cfg
+        self._auth = None
         
         if not self.cfg:
             try:

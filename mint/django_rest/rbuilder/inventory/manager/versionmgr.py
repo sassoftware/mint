@@ -54,7 +54,7 @@ class VersionManager(base.BaseManager):
             nvf = trove.getNVF()
             isInst = oldInstalled.pop(nvf, None)
             if isInst is None:
-                toAdd.append(trove)
+                toAdd.append(self._trove(trove))
             newInstalled.append(nvf)
 
         return oldInstalled, newInstalled, toAdd
@@ -67,7 +67,7 @@ class VersionManager(base.BaseManager):
             system.installed_software.remove(trove)
         for trove in toAdd:
             system.installed_software.add(trove)
-            self.setStage(trove)
+            self.setStage(system, trove)
         for trove in system.installed_software.all():
             self.set_available_updates(trove, force=True)
         system.save()
@@ -83,7 +83,7 @@ class VersionManager(base.BaseManager):
             majorVersionName)
         return stages.stages
 
-    def setStage(self, trove):
+    def setStage(self, system, trove):
         if not trove.is_top_level:
             return
 
@@ -100,7 +100,7 @@ class VersionManager(base.BaseManager):
 
         stage = stage[0]
         try:
-            project = rbuildermodels.Products.objects.get(hostname=hostname)
+            project = rbuildermodels.Products.objects.get(repositoryHostName=hostname)
             majorVersion = rbuildermodels.Versions.objects.get(productId=project,
                 name=majorVersionName)
         except ObjectDoesNotExist:
@@ -109,11 +109,9 @@ class VersionManager(base.BaseManager):
         stage, created = models.Stage.objects.get_or_create(major_version=majorVersion,
             label=trove.version.label, name=stage.name)
 
-        for system in trove.system_set.all():
-            system.stage = stage
-            system.major_version = majorVersion
-            system.appliance = project
-            system.save()
+        system.stage = stage
+        system.major_version = majorVersion
+        system.appliance = project
 
     @base.exposed
     def updateInstalledSoftware(self, system_id, new_versions):
@@ -155,13 +153,14 @@ class VersionManager(base.BaseManager):
         If the trove is new, save it to the db, otherwise return the existing
         one
         """
-        # XXX unused
         # First, make sure the flavor is part of the version object
         if not trove.version.flavor:
             trove.version.flavor = trove.flavor
         created, version = models.Version.objects.load_or_create(trove.version)
         trove.version = version
         created, trove = models.Trove.objects.load_or_create(trove)
+        # Need to call save again so that is_top_level gets reset
+        trove.save()
         return trove
 
     def cache_available_update(self, nvf, update_nvf):
