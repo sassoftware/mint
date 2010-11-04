@@ -2222,8 +2222,8 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(
             [ x.entry for x in entries ],
             [
-                "Unable to register event 'on-demand polling event': no networking information",
-                "Unable to register event 'standard polling event': no networking information",
+                "Unable to register event 'On-demand system synchronization': no networking information",
+                "Unable to register event 'System synchronization': no networking information",
             ])
 
     def testAgentPort(self):

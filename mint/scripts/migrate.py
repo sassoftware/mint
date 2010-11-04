@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 19)
+    Version = (51, 20)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1831,6 +1831,62 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         cu = self.db.cursor()
         
         cu.execute("ALTER TABLE inventory_system ADD COLUMN configuration text")
+        return True
+
+    def migrate20(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System registration'
+            WHERE "name" = 'system registration'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System sychnorization'
+            WHERE "name" = 'system poll'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'On-demand system synchronization'
+            WHERE "name" = 'immediate system poll'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'Scheduled system update'
+            WHERE "name" = 'system apply update'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System update'
+            WHERE "name" = 'immediate system apply update'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'Scheduled system shutdown'
+            WHERE "name" = 'system shutdown'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System shutdown'
+            WHERE "name" = 'immediate system shutdown'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'Launched system network data discovery'
+            WHERE "name" = 'system launch wait'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'System management interface detection'
+            WHERE "name" = 'system detect management interface'
+        """)
+        cu.execute("""
+            UPDATE "inventory_event_type"
+            SET "description" = 'On-demand system management interface detection'
+            WHERE "name" = 'immediate system detect management interface'
+        """)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

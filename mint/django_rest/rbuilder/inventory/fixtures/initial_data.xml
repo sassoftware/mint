@@ -328,52 +328,52 @@
     </object>
     <object pk="1" model="inventory.eventtype">
         <field type="CharField" name="name">system registration</field>
-        <field type="CharField" name="description">on-demand registration event</field>
+        <field type="CharField" name="description">System registration</field>
         <field type="SmallIntegerField" name="priority">110</field>
     </object>
     <object pk="2" model="inventory.eventtype">
         <field type="CharField" name="name">immediate system poll</field>
-        <field type="CharField" name="description">on-demand polling event</field>
+        <field type="CharField" name="description">On-demand system synchronization</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
     <object pk="3" model="inventory.eventtype">
         <field type="CharField" name="name">system poll</field>
-        <field type="CharField" name="description">standard polling event</field>
+        <field type="CharField" name="description">System synchronization</field>
         <field type="SmallIntegerField" name="priority">50</field>
     </object>
     <object pk="4" model="inventory.eventtype">
         <field type="CharField" name="name">system apply update</field>
-        <field type="CharField" name="description">apply an update to a system</field>
+        <field type="CharField" name="description">Scheduled system update</field>
         <field type="SmallIntegerField" name="priority">50</field>
     </object>
     <object pk="5" model="inventory.eventtype">
         <field type="CharField" name="name">immediate system apply update</field>
-        <field type="CharField" name="description">on-demand apply an update to a system</field>
+        <field type="CharField" name="description">System update</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
     <object pk="6" model="inventory.eventtype">
         <field type="CharField" name="name">system shutdown</field>
-        <field type="CharField" name="description">shutdown a system</field>
+        <field type="CharField" name="description">Scheduled system shutdown</field>
         <field type="SmallIntegerField" name="priority">50</field>
     </object>
     <object pk="7" model="inventory.eventtype">
         <field type="CharField" name="name">immediate system shutdown</field>
-        <field type="CharField" name="description">on-demand shutdown a system</field>
+        <field type="CharField" name="description">System shutdown</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
     <object pk="8" model="inventory.eventtype">
         <field type="CharField" name="name">system launch wait</field>
-        <field type="CharField" name="description">wait for a launched system's network information</field>
+        <field type="CharField" name="description">Launched system network data discovery</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
     <object pk="9" model="inventory.eventtype">
         <field type="CharField" name="name">system detect management interface</field>
-        <field type="CharField" name="description">detect a system's management interface</field>
+        <field type="CharField" name="description">System management interface detection</field>
         <field type="SmallIntegerField" name="priority">50</field>
     </object>
     <object pk="10" model="inventory.eventtype">
         <field type="CharField" name="name">immediate system detect management interface</field>
-        <field type="CharField" name="description">on-demand detect a system's management interface</field>
+        <field type="CharField" name="description">On-demand system management interface detection</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
   <object pk="2" model="inventory.system">

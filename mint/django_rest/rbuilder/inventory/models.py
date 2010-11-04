@@ -721,46 +721,46 @@ class EventType(modellib.XObjIdModel):
     
     SYSTEM_POLL = "system poll"
     SYSTEM_POLL_PRIORITY = 50
-    SYSTEM_POLL_DESC = "standard system polling event"
+    SYSTEM_POLL_DESC = "System synchronization"
     
     SYSTEM_POLL_IMMEDIATE = "immediate system poll"
     SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_POLL_IMMEDIATE_DESC = "on-demand system polling event"
+    SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
     
     SYSTEM_REGISTRATION = "system registration"
     SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE + 10
-    SYSTEM_REGISTRATION_DESC = "on-demand system registration event"
+    SYSTEM_REGISTRATION_DESC = "System registration"
 
     SYSTEM_APPLY_UPDATE = 'system apply update'
     SYSTEM_APPLY_UPDATE_PRIORITY = 50
-    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'apply an update to a system'
+    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'Scheduled system update'
         
     SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
     SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
-        'on-demand apply an update to a system'
+        'System update'
 
     SYSTEM_SHUTDOWN = 'system shutdown'
     SYSTEM_SHUTDOWN_PRIORITY = 50
-    SYSTEM_SHUTDOWN_DESCRIPTION = 'shutdown a system'
+    SYSTEM_SHUTDOWN_DESCRIPTION = 'Scheduled system shutdown'
 
     SYSTEM_DETECT_MANAGEMENT_INTERFACE = 'system detect management interface'
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_PRIORITY = 50
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC = \
-        "detect a system's management interface"
+        "System management interface detection"
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE = \
         'immediate system detect management interface'
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_PRIORITY = 105
     SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC = \
-        "on-demand detect a system's management interface"
+        "On-demand system management interface detection"
 
     SYSTEM_SHUTDOWN_IMMEDIATE = 'immediate system shutdown'
     SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
     SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
-        'on-demand shutdown a system'
+        'System shutdown'
 
     LAUNCH_WAIT_FOR_NETWORK = 'system launch wait'
-    LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION = "wait for a launched system's network information"
+    LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION = "Launched system network data discovery"
     LAUNCH_WAIT_FOR_NETWORK_PRIORITY = ON_DEMAND_BASE + 5
         
     event_type_id = models.AutoField(primary_key=True)
