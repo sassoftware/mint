@@ -210,7 +210,7 @@ class platformName(StringOption):
     default = ''
     prompt = 'platform-name'
     
-class isoKitTrove(TroveOption):
+class platformIsoKitTrove(TroveOption):
     default = ''
     prompt  = 'Custom platform ISO kit'
 
@@ -303,11 +303,11 @@ class ApplianceISOTemplate(Template):
     id = buildtypes.APPLIANCE_ISO
     
 class WindowsISOTemplate(Template):
-    __slots__ = ['baseFileName', 'mediaTemplateTrove', 'isoKitTrove']
+    __slots__ = ['baseFileName', 'mediaTemplateTrove', 'platformIsoKitTrove']
     id = buildtypes.WINDOWS_ISO
     
 class WindowsWIMTemplate(Template):
-    __slots__ = ['baseFileName', 'mediaTemplateTrove', 'isoKitTrove']
+    __slots__ = ['baseFileName']
     id = buildtypes.WINDOWS_WIM
 
 class ImagelessTemplate(Template):
