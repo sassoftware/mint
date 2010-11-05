@@ -1055,6 +1055,9 @@ class PlatformManager(manager.Manager):
             pl.saveToRepository(client, platformLabel,
                 message="rBuilder generated\n")
             pl.loadFromRepository(client, platformLabel)
+            # Invalidate the platform cache, we know we need to reload this
+            # platform
+            self.platformCache.clear()
         except proddef.ProductDefinitionError:
             # Could not find a product. Look for the platform
             pl = proddef.PlatformDefinition()
