@@ -1,11 +1,13 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
 #
 
 # may be adjusted by recipe (via make commandline)
 export DESTDIR =	/
 export PRODUCT =	rbuilder
-export VERSION =	5.6.3
+export VERSION =	5.7.0
 export SHORTVER =	$(VERSION)
 export TOPDIR =		$(shell pwd)
 export DISTNAME =	$(PRODUCT)-$(SHORTVER)
@@ -20,7 +22,7 @@ export POSTGRES_VERSION = 8.4
 export PYTHON = /usr/bin/python$(PYVER)
 export PYDIR = $(LIBDIR)/python$(PYVER)/site-packages
 
-SUBDIRS = mint scripts raaplugins doc distro
+SUBDIRS = mint scripts raaplugins rmake_plugins doc distro
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 

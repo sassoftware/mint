@@ -1,8 +1,10 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
 #
+
+# pyflakes=ignore-file
 
 import sys
 from conary.deps import deps
@@ -40,6 +42,11 @@ sys.modules[__name__].__dict__.update(validBuildTypes)
 deprecatedBuildTypes = {
     'QEMU_IMAGE' : RAW_HD_IMAGE
     }
+
+windowsBuildTypes = set([
+    WINDOWS_ISO,
+    WINDOWS_WIM,
+    ])
 
 #
 # These are identifying pieces of information that we can extract from the

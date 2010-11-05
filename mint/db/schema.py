@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 21)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 22)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -269,6 +269,7 @@ def _createBuilds(db):
             pubReleaseId         integer
                 REFERENCES PublishedReleases ON DELETE SET NULL,
             buildType            integer,
+            uuid                 uuid,
             name                 varchar(255),
             description          text,
             troveName            varchar(128),

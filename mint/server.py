@@ -56,6 +56,7 @@ from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.imagegen.wig import client as wig_client
 from mint import packagecreator
 
 from conary import changelog
@@ -3081,6 +3082,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.builds.update(buildId, status=jobstatus.FINISHED,
                     statusMessage="Job Finished")
             return '0' * 32
+        elif buildType in buildtypes.windowsBuildTypes:
+            return self.startWindowsImageJob(buildId, buildDict)
         else:
             jobData = self.serializeBuild(buildId)
             try:
@@ -3093,6 +3096,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 self.db.builds.update(buildId, status=jobstatus.FAILED,
                         statusMessage="Failed to start image job - check logs")
                 raise
+
+    def startWindowsImageJob(self, buildId, buildDict):
+        """Direct Windows image builds to rMake 3."""
+        cli = wig_client.WigClient(self._getRmakeClient())
+        job = cli.createJob(buildDict, subscribe=False)
+        log.info("Created Windows image job, UUID %s", job.job_uuid)
+        self.builds.update(buildId, uuid=str(job.job_uuid))
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):

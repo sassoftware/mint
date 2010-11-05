@@ -47,8 +47,8 @@ class Script(GenericScript):
         cu = db.transaction()
         cu2 = db.cursor()
         cu.execute("""
-            SELECT b.buildId, b.timeCreated,
-                u.value AS uuid, f.title, a.value AS amiId, status
+            SELECT b.buildId, b.timeCreated, b.uuid,
+                u.value AS mcp_uuid, f.title, a.value AS amiId, status
             FROM Builds b
                 LEFT JOIN BuildFiles f USING ( buildId )
                 LEFT JOIN BuildData u ON ( b.buildId = u.buildId
@@ -63,14 +63,19 @@ class Script(GenericScript):
         # the job is created and when it is submitted to the dispatcher.
         cutoff = time.time() - 60
 
-        for buildId, timeCreated, uuid, title, amiId, status in cu:
+        for (buildId, timeCreated, rmk_uuid, mcp_uuid, title, amiId, status,
+                ) in cu:
             if timeCreated > cutoff:
                 continue
             newStatus = jobstatus.FAILED
             newMessage = 'Unknown error'
 
-            if uuid:
-                if uuid in jobs:
+            if rmk_uuid:
+                # TODO: check rMake image jobs
+                continue
+
+            elif mcp_uuid:
+                if mcp_uuid in jobs:
                     # Job is running.
                     continue
                 # Job is definitely dead.
