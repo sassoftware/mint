@@ -1361,39 +1361,36 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
-        poll_event = self.eventType(models.EventType.SYSTEM_POLL)
-        self.createSystemEvent(system, poll_event)
+        return self._scheduleEvent(system, models.EventType.SYSTEM_POLL)
 
     @base.exposed
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
-        enable_time = self.now()
-        event_type = self.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
-        self.createSystemEvent(system, event_type, enable_time)
+        return self._scheduleEvent(system,
+            models.EventType.SYSTEM_POLL_IMMEDIATE,
+            enableTime=self.now())
 
     @base.exposed
     def scheduleSystemRegistrationEvent(self, system):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
-        enable_time = self.now()
-        registration_event_type = self.eventType(
-            models.EventType.SYSTEM_REGISTRATION)
-        self.createSystemEvent(system, registration_event_type, enable_time)
+        return self._scheduleEvent(system,
+            models.EventType.SYSTEM_REGISTRATION,
+            enableTime=self.now())
 
     @base.exposed
     def scheduleSystemApplyUpdateEvent(self, system, sources):
         '''Schedule an event for the system to be updated'''
-        apply_update_event_type = models.EventType.objects.get(
-            name=models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
-        self.createSystemEvent(system, apply_update_event_type, data=sources)
+        return self._scheduleEvent(system,
+            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+            eventData=sources)
 
     @base.exposed
     def scheduleSystemShutdownEvent(self, system):
         '''Schedule an event to shutdown the system.'''
-        shutdown_event_type = models.EventType.objects.get(
-            name=models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
-        self.createSystemEvent(system, shutdown_event_type)
+        return self._scheduleEvent(system,
+            models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
 
     @base.exposed
     def scheduleLaunchWaitForNetworkEvent(self, system):
@@ -1402,10 +1399,9 @@ class SystemManager(base.BaseManager):
         become available, or sees that the system has registered via
         rpath-tools.
         """
-        enable_time = self.now()
-        launch_wait_for_network_event_type = self.eventType(
-            models.EventType.LAUNCH_WAIT_FOR_NETWORK)
-        self.createSystemEvent(system, launch_wait_for_network_event_type, enable_time)
+        return self._scheduleEvent(system,
+            models.EventType.LAUNCH_WAIT_FOR_NETWORK,
+            enableTime=self.now())
 
     @base.exposed
     def scheduleSystemDetectMgmtInterfaceEvent(self, system):
@@ -1413,35 +1409,45 @@ class SystemManager(base.BaseManager):
         Schedule an immediate event that detects the management interface
         on the system.
         """
-        enable_time = self.now()
-        detMgmtInterfaceEventType = self.eventType(
-            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
-        self.createSystemEvent(system, detMgmtInterfaceEventType, enable_time)
+        return self._scheduleEvent(system,
+            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
+            enableTime=self.now())
+
+    def _scheduleEvent(self, system, eventType, enableTime=None,
+            eventData=None):
+        eventTypeObject = self.eventType(eventType)
+        self.createSystemEvent(system, eventTypeObject, enableTime=enableTime,
+            eventData=eventData)
 
     @base.exposed
-    def createSystemEvent(self, system, event_type, enable_time=None, 
-                          data=None):
+    def createSystemEvent(self, system, eventType, enableTime=None,
+                          eventData=None):
         event = None
         # do not create events for systems that we cannot possibly contact
         if self.getSystemHasHostInfo(system) or \
-            event_type.name in self.LaunchWaitForNetworkEvents:
-            if not enable_time:
-                enable_time = self.now() + datetime.timedelta(minutes=self.cfg.systemEventsPollDelay)
-            pickledData = cPickle.dumps(data)
-            event = models.SystemEvent(system=system, event_type=event_type, 
-                priority=event_type.priority, time_enabled=enable_time,
+                eventType.name in self.LaunchWaitForNetworkEvents:
+            if not enableTime:
+                enableTime = self.now() + datetime.timedelta(
+                    minutes=self.cfg.systemEventsPollDelay)
+            if eventData is not None and not isinstance(eventData, basestring):
+                pickledData = cPickle.dumps(eventData)
+            else:
+                pickledData = eventData
+            event = models.SystemEvent(system=system, event_type=eventType,
+                priority=eventType.priority, time_enabled=enableTime,
                 event_data=pickledData)
             event.save()
-            self.logSystemEvent(event, enable_time)
+            self.logSystemEvent(event, enableTime)
             
             if event.dispatchImmediately():
                 self.dispatchSystemEvent(event)
         else:
             systemName = system.name or system.hostname or system.target_system_name
-            log.info("System %s (%s) '%s' cannot be registered because there is no host information" % (system.pk, systemName, event_type.description))
+            log.info("System %s (%s) '%s' cannot be registered because there is no host information" %
+                (system.pk, systemName, eventType.description))
             self.log_system(system,
                 "Unable to register event '%s': no networking information" %
-                    event_type.description)
+                    eventType.description)
 
         return event
 
