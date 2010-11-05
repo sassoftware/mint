@@ -286,17 +286,40 @@ class VersionManager(base.BaseManager):
         # remove this when you want it to work for real
         return open('/srv/www/html/config/config_pony.xml').read()
         
-        descriptors = []
-        for trove in system.installed_software.all():
-            descriptors.append(self._getTroveConfigDescriptor(trove))
-        return self._combineConfigDescriptors(descriptors)
+        # Create master configuration DOM and add configDicts to dataFields
+        impl = minidom.getDOMImplementation()
+        newdoc = impl.createDocument(None, 'configurationDescriptor', None)
+        top = newdoc.documentElement
+        dataFields = newdoc.createElement('dataFields')
+        top.appendChild(dataFields)
+        # We are just adding all 
+        confDict = {}
+        # WARNING: No control over ordering! Last to iterate will override prior field keys
+        # HARDCODE FOR TESTING
+        #for trove in system.installed_software.all():
+        #    confDict.update(self._getTroveConfigDescriptor(trove))
+        trove = None
+        confDict.update(self._getTroveConfigDescriptor(trove))
+        for x in confDict:
+            dataFields.appendChild(confDict[x])
+        # WARNING: If we reconcile provides/requires here, then we can easily get to
+        #          unresolved state if user adds a trove with configuration descriptor
+        #          with unresolved config deps
+        # Should we only provide config for the group or all troves returned?
+        # Where should the config dep resolution happen, here or in the _getTroveConfigDescriptor?
+        
+        return newdoc.toxml()
 
     def _getTroveConfigDescriptor(self, trove):
         kw = {}
         client = self.get_conary_client()
         troveSource = client.getRepos()
-        label = trove.getLabel()
-        troveTups = troveSource.findTrove(label, (trove.name, None , None))
+        from conary import versions
+        label = versions.Label('achasen.eng.rpath.com@rpath:achasen-1-devel')
+        # HARDCODE FOR TESTING
+        #label = trove.getLabel()
+        #troveTups = troveSource.findTrove(label, (trove.name, None , None))
+        troveTups = troveSource.findTrove(label, ('group-achasen-appliance', None , None))
         colls = [ x for x in troveTups if conarytrove.troveIsCollection(x[0])]
         troves = troveSource.getTroves(colls, withFiles=False)
         troveCache = dict(itertools.izip(colls, troves))
@@ -307,48 +330,46 @@ class VersionManager(base.BaseManager):
         troves = troveSource.getTroves(childColls, withFiles=False, **kw)
         troveCache.update(itertools.izip(childColls, troves))
         allTups = troveTups + childTups
-        require = []
-        provide = []
+        #require = []
+        #provide = []
         # Zip together tups and metadata so we can make one call
         #md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, childTups)
         #only do children for now
         confDict = {}
         for tup in childTups:
             dom = None
+            # TODO This is super inefficient, see above about ziping tups and metadata
             md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, [tup])
-            try: doc = minidom.parseString(md[0].get()['shortDesc'])
-            #it is possible we will run into real descriptions, so just ignore them
-            # WARNING: this will not generate error if bad XML
-            except xml.parsers.expat.ExpatError:
+            # Some metadata is set to None, don't process those
+            try: troveXml = md[0].get()['shortDesc']
+            # WARNING: This is not the proper way to deal with NoneType md[0]
+            except:
                 continue
-            #epdb.st()
-            for fields in doc.getElementsByTagName('dataFields'):
-              for field in fields.getElementsByTagName('field'):
-                # depend on schema to enforce only one name
-                # arguably, all of this should be attributes of the field
-                # TODO establish constants to replace these strings
-                name = field.getElementsByTagName('name')[0].lastChild.data
-                required = field.getElementsByTagName('required')[0].lastChild
-                # WARNING: if there are overlapping named fields, which one wins?
-                confDict[name] = field
-                assert required.nodeType == minidom.Node.TEXT_NODE
-                # We can build requires and provides tables here
-                #if field.getElementsByTagName('sense')[0].data == 'required':
-                #    require += [name]
-                #else:
-                #    provides += [name]
+            if troveXml:
+                try: doc = minidom.parseString(troveXml)
+                #it is possible we will run into real descriptions, so just ignore them
+                # WARNING: this will not generate error if bad XML
+                except xml.parsers.expat.ExpatError:
+                    continue
+                for fields in doc.getElementsByTagName('dataFields'):
+                  for field in fields.getElementsByTagName('field'):
+                    # depend on schema to enforce only one name
+                    # arguably, all of this should be attributes of the field
+                    # TODO establish constants to replace these strings
+                    name = field.getElementsByTagName('name')[0].lastChild.data
+                    required = field.getElementsByTagName('required')[0].lastChild
+                    # WARNING: if there are overlapping named fields, latest iteration wins
+                    confDict[name] = field
+                    assert required.nodeType == minidom.Node.TEXT_NODE
+                    # We can build requires and provides tables here
+                    #if field.getElementsByTagName('sense')[0].data == 'required':
+                    #    require += [name]
+                    #else:
+                    #    provides += [name]
         # Reconcile provides/requires
         # Reconcile bindings
 
-        impl = minidom.getDOMImplementation()
-
-        newdoc = impl.createDocument(None, 'configurationDescriptor', None)
-        top = newdoc.documentElement
-        dataFields = newdoc.createElement('dataFields')
-        top.appendChild(dataFields)
-        for x in confDict:
-            dataFields.appendChild(confDict[x])
-        return newdoc.toxml()
+        return confDict
         # Retrieve all trove tuples in group
         ## Retrieve all trove metadata
         ## Zip tuples and metadata
@@ -361,10 +382,3 @@ class VersionManager(base.BaseManager):
         # zip extracted data with field node
         # reconcile provides/requires
         # reconcile bindings
-
-        # produce unified configDescriptor
-        descriptors = []
-        self._combineConfigDescriptors(descriptors)
-
-    def _combineConfigDescriptors(self, descriptors):
-        return descriptors
