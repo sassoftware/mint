@@ -56,7 +56,7 @@ from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
 from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
-from mint.imagegen.wig import client as wig_client
+from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 
 from conary import changelog
