@@ -1891,7 +1891,6 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
     
     def migrate21(self):
         cu = self.db.cursor()
-        db = self.db
 
         cu.execute("""
             INSERT INTO "inventory_event_type" 
