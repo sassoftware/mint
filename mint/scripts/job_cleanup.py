@@ -47,7 +47,7 @@ class Script(GenericScript):
         cu = db.transaction()
         cu2 = db.cursor()
         cu.execute("""
-            SELECT b.buildId, b.timeCreated, b.uuid,
+            SELECT b.buildId, b.timeCreated, b.job_uuid,
                 u.value AS mcp_uuid, f.title, a.value AS amiId, status
             FROM Builds b
                 LEFT JOIN BuildFiles f USING ( buildId )

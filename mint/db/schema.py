@@ -269,7 +269,7 @@ def _createBuilds(db):
             pubReleaseId         integer
                 REFERENCES PublishedReleases ON DELETE SET NULL,
             buildType            integer,
-            uuid                 uuid,
+            jod_uuid             uuid,
             name                 varchar(255),
             description          text,
             troveName            varchar(128),
