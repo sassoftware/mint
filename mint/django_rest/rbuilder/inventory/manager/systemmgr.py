@@ -49,7 +49,7 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
     ])
     SystemConfigurationEvents = set([
-        # XXX TODO murf: add events here
+        models.EventType.SYSTEM_CONFIG_IMMEDIATE,
     ])
 
     TZ = tz.tzutc()

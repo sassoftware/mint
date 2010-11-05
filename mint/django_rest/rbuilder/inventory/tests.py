@@ -3157,6 +3157,17 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
         assert(self.mock_dispatchSystemEvent_called)
         
+    def testAddSystemConfigNowEvent(self):
+        # poll now event should be dispatched now
+        config_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_CONFIG_IMMEDIATE)
+        systemEvent = models.SystemEvent(system=self.system, 
+            event_type=config_event, priority=config_event.priority,
+            time_enabled=datetime.datetime.now(tz.tzutc()))
+        systemEvent.save()
+        assert(systemEvent is not None)
+        self.mgr.addSystemSystemEvent(self.system.system_id, systemEvent)
+        assert(self.mock_dispatchSystemEvent_called)
+        
     def testAddSystemPollNowEvent(self):
         # poll now event should be dispatched now
         poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
