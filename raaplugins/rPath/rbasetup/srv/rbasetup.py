@@ -24,6 +24,7 @@ from mint import notices_callbacks
 from mint import rmake_setup
 from mint import shimclient
 from mint.lib.siteauth import SiteAuthorization
+from mint.scripts import createplatforms
 
 from mint.mint_error import (RmakeRepositoryExistsError, UserAlreadyExists,
         UserAlreadyAdmin)
@@ -215,6 +216,19 @@ class rBASetup(rAASrvPlugin):
             log.error("Failed to generate entitlement: %s" % str(e))
             return { 'errors': [ str(e), ] }
 
+    def _createPlatforms(self):
+        log.info("Creating platforms...")
+        try:
+            script = createplatforms.Script()
+            script.run()
+            msg = "Platforms successfully created.\n"
+            log.info(msg)
+            return dict(message=msg)
+        except Exception, e:
+            log.error("Failed to create platforms: %s" % str(e))
+            return { 'errors': [ str(e), ] }
+
+
     def _setupExternalProjects(self):
         """
         Sets up a set of canned external projects.
@@ -347,6 +361,14 @@ class rBASetup(rAASrvPlugin):
                 return { 'errors': ret['errors'], 'step': step, 'message': self.message }
             self.message += ret.get('message', '\n')
             self.reportMessage(execId, self.message)
+
+        self.message += "Creating platforms... "
+        self.reportMessage(execId, self.message)
+        ret = self._createPlatforms()
+        if ret.has_key('errors'):
+            return { 'errors': ret['errors'], 'step': step, 'message': self.message }
+        self.message += ret.get('message', '\n')
+        self.reportMessage(execId, self.message)
 
         # Setup the initial external projects
         step = lib.FTS_STEP_INITEXTERNAL

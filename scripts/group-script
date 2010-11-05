@@ -217,10 +217,10 @@ then
     service rmake-node start
     service mcp-dispatcher start
     service jobmaster start
-fi
 
-# Create initial platforms
-/usr/share/rbuilder/scripts/create-platforms
+    # Create initial platforms
+    /usr/share/rbuilder/scripts/create-platforms
+fi
 
 # Fix notifications with a bad GUID
 #   -- 5.1.1 - 2009-04-24
