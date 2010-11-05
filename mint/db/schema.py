@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 20)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 21)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1305,6 +1305,9 @@ def _createInventorySchema(db, cfg):
                   priority=50),
              dict(name="immediate system detect management interface",
                   description="On-demand system management interface detection",
+                  priority=105),
+             dict(name="immediate system configuration",
+                  description="Update system configuration",
                   priority=105),
             ])
         

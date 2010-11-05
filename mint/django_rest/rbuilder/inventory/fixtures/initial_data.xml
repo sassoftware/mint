@@ -376,6 +376,11 @@
         <field type="CharField" name="description">On-demand system management interface detection</field>
         <field type="SmallIntegerField" name="priority">105</field>
     </object>
+    <object pk="11" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system configuration</field>
+        <field type="CharField" name="description">Update system configuration</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>

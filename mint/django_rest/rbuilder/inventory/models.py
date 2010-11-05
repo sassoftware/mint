@@ -762,6 +762,10 @@ class EventType(modellib.XObjIdModel):
     LAUNCH_WAIT_FOR_NETWORK = 'system launch wait'
     LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION = "Launched system network data discovery"
     LAUNCH_WAIT_FOR_NETWORK_PRIORITY = ON_DEMAND_BASE + 5
+    
+    SYSTEM_CONFIG_IMMEDIATE = 'immediate system configuration'
+    SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION = "Update system configuration"
+    SYSTEM_CONFIG_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
         
     event_type_id = models.AutoField(primary_key=True)
     EVENT_TYPES = (
@@ -781,6 +785,8 @@ class EventType(modellib.XObjIdModel):
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC),
         (SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
          SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
+        (SYSTEM_CONFIG_IMMEDIATE,
+         SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
     )
     name = APIReadOnly(models.CharField(max_length=8092, unique=True,
         choices=EVENT_TYPES))

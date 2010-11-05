@@ -111,6 +111,14 @@ event_types_xml="""\
     <priority>105</priority>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/inventory/event_types/11">
+    <description>Update system configuration</description>
+    <event_type_id>11</event_type_id>
+    <job_set/>
+    <name>immediate system configuration</name>
+    <priority>105</priority>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\

@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 20)
+    Version = (51, 21)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1887,6 +1887,21 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
             WHERE "name" = 'immediate system detect management interface'
         """)
 
+        return True
+    
+    def migrate21(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        cu.execute("""
+            INSERT INTO "inventory_event_type" 
+                ("name", "description", "priority")
+            VALUES
+                ('immediate system configuration',
+                 'Update system configuration',
+                 105)
+        """)
+        
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
