@@ -1036,7 +1036,7 @@ class SystemManager(base.BaseManager):
         systemConfig = self.marshalConfiguration(configuration)
         system.configuration = systemConfig
         system.save()
-        # TDOD:  send config to system
+        self.scheduleSystemConfigurationEvent(system)
         return self._getConfigurationModel(system, configuration)
     
     def _getConfigurationModel(self, system, configDict):
@@ -1258,7 +1258,7 @@ class SystemManager(base.BaseManager):
             self._runSystemEvent(event, method, params,
                 resultsLocation, zone=zone, sources=data)
         elif eventType in self.SystemConfigurationEvents:
-            data = cPickle.loads(event.event_data)
+            data = event.event_data
             method = getattr(repClient, "configuration_" + mgmtInterfaceName)
             self._runSystemEvent(event, method, params,
                 resultsLocation, zone=zone, configuration=data)
@@ -1411,6 +1411,14 @@ class SystemManager(base.BaseManager):
         """
         return self._scheduleEvent(system,
             models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
+            enableTime=self.now())
+
+    @base.exposed
+    def scheduleSystemConfigurationEvent(self, system):
+        '''Schedule an event for the system to be configured'''
+        # registration events happen on demand, so enable now
+        return self._scheduleEvent(system,
+            models.EventType.SYSTEM_CONFIG_IMMEDIATE,
             enableTime=self.now())
 
     def _scheduleEvent(self, system, eventType, enableTime=None,
