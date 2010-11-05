@@ -334,10 +334,9 @@ class VersionManager(base.BaseManager):
         #provide = []
         # Zip together tups and metadata so we can make one call
         #md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, childTups)
-        #only do children for now
         confDict = {}
-        for tup in childTups:
-            dom = None
+        for tup in allTups:
+            doc = None
             # TODO This is super inefficient, see above about ziping tups and metadata
             md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, [tup])
             # Some metadata is set to None, don't process those
