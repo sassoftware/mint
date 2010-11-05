@@ -55,11 +55,11 @@ class WigBackendClient(object):
         job = self.image.imageJob
 
         # Fetch results
-        result = job.resultResource
-        if not result.elements:
+        results = job.resultResource
+        if not results.elements:
             raise RuntimeError("No files in job result")
 
-        for resFile in result:
+        for resFile in results.resultFiles:
             name = resFile._root.path
             size = int(resFile.size)
             infile = resFile.path
