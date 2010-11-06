@@ -5,7 +5,6 @@
 import time
 import os
 import md5
-import simplejson
 import re
 import socket
 import urllib

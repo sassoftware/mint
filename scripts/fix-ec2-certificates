@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import optparse
 import re
-import simplejson
+import json
 import sys
 from conary import dbstore
 from mint import config
@@ -27,7 +27,7 @@ def main(args):
     found = False
     for targetId, name, value in cu:
         found = True
-        value = simplejson.loads(value)
+        value = json.loads(value)
         if '\n' in value:
             print "Field %r on target %d is OK" % (name, targetId)
             continue
@@ -45,7 +45,7 @@ def main(args):
             body = body[76:]
         newValue += trailer + '\n'
 
-        newValue = simplejson.dumps(newValue)
+        newValue = json.dumps(newValue)
         cu2.execute("""UPDATE TargetData SET value = ?
                 WHERE targetId = ? AND name = ?""",
                 newValue, targetId, name)

@@ -14,7 +14,7 @@ import testsuite
 testsuite.setup()
 
 import os, signal
-import simplejson
+import json
 import SimpleHTTPServer
 
 import StringIO
@@ -455,7 +455,7 @@ content-type=text/plain
     def testMinCfgData(self, db, data):
         @pcreator.backend.public
         def startSession(*args):
-            cfgArgs = simplejson.loads(args[2])
+            cfgArgs = json.loads(args[2])
             proxyLines = [x for x in cfgArgs if x.startswith('conaryProxy')]
             self.failUnless(proxyLines, "Local conary proxy was not set")
             return 'asdfasdfasdfasdfsdf'
@@ -850,7 +850,7 @@ class RecipeManipulationTest(fixtures.FixturedUnitTest):
         modePath = os.path.join(dataPath, 'mode')
         for mode in ('package-creator', 'appliance-creator'):
             f = open(modePath, 'w')
-            f.write(simplejson.dumps(mode))
+            f.write(json.dumps(mode))
             f.close()
             isDefault, recipe = client.getPackageCreatorRecipe(sesH)
             self.failUnless('asserts no copyright claim on this interface' \

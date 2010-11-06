@@ -5,7 +5,7 @@
 #
 
 import logging
-import simplejson
+import json
 from conary import conarycfg
 from conary import conaryclient
 from conary.repository import errors
@@ -436,8 +436,8 @@ class AdminHandler(WebHandler):
                            'mirrorSources': not set(mirror.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
                            'useReleases': int(obm['useReleases']),
                            'allLabels': obm['allLabels'],
-                           'selectedLabels': simplejson.dumps(obm['targetLabels'].split()),
-                           'selectedGroups': simplejson.dumps(obmg),
+                           'selectedLabels': json.dumps(obm['targetLabels'].split()),
+                           'selectedGroups': json.dumps(obmg),
                            'mirrorBy': obmg and 'group' or 'label',
                            'selectedTargets': [x[0] for x in obmt],
                            'allTargets': allTargets})
@@ -446,8 +446,8 @@ class AdminHandler(WebHandler):
                            'mirrorSources': 0,
                            'useReleases': 1,
                            'allLabels': 1,
-                           'selectedLabels': simplejson.dumps([]),
-                           'selectedGroups': simplejson.dumps([]),
+                           'selectedLabels': json.dumps([]),
+                           'selectedGroups': json.dumps([]),
                            'mirrorBy': 'label',
                            'selectedTargets': [],
                            'allTargets': allTargets})
@@ -509,7 +509,7 @@ class AdminHandler(WebHandler):
     @boolFields(confirmed = False)
     def removeOutbound(self, remove, confirmed, **yesArgs):
         if confirmed:
-            remove = simplejson.loads(yesArgs['removeJSON'])
+            remove = json.loads(yesArgs['removeJSON'])
             for outboundMirrorId in remove:
                 self.client.delOutboundMirror(int(outboundMirrorId))
             self._redirectHttp("admin/outbound")
@@ -520,7 +520,7 @@ class AdminHandler(WebHandler):
             message = 'Are you sure you want to remove the outbound mirror(s)?'
             noLink = 'outbound'
             yesArgs = {'func': 'removeOutbound', 'confirmed': 1,
-                    'removeJSON': simplejson.dumps(remove)}
+                    'removeJSON': json.dumps(remove)}
             return self._write('confirm', message=message, noLink=noLink,
                                yesArgs=yesArgs)
 
@@ -599,7 +599,7 @@ class AdminHandler(WebHandler):
     @boolFields(confirmed = False)
     def removeUpdateServices(self, remove, confirmed, **yesArgs):
         if confirmed:
-            remove = simplejson.loads(yesArgs['removeJSON'])
+            remove = json.loads(yesArgs['removeJSON'])
             for updateServiceId in remove:
                 self.client.delUpdateService(int(updateServiceId))
             self._setInfo("Update service(s) removed")
@@ -611,7 +611,7 @@ class AdminHandler(WebHandler):
             message = 'Are you sure you want to remove the update service(s)?'
             noLink = 'updateServices'
             yesArgs = {'func': 'removeUpdateServices', 'confirmed': 1,
-                    'removeJSON': simplejson.dumps(remove)}
+                    'removeJSON': json.dumps(remove)}
             return self._write('confirm', message=message, noLink=noLink,
                                yesArgs=yesArgs)
 

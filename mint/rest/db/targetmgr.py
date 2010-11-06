@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 import base64
-import simplejson
+import json
 import logging
 
 from mint import mint_error
@@ -52,7 +52,7 @@ class TargetManager(manager.Manager):
         cu = self.db.cursor()
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
-            value = simplejson.dumps(value)
+            value = json.dumps(value)
             cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                     targetId, name, value)
 
@@ -65,7 +65,7 @@ class TargetManager(manager.Manager):
              WHERE targetType = ? AND targetName = ?
         """, targetType, targetName)
         res = {}
-        return dict((k, self._stripUnicode(simplejson.loads(v)))
+        return dict((k, self._stripUnicode(json.loads(v)))
             for (k, v) in cu)
 
     @classmethod
@@ -85,7 +85,7 @@ class TargetManager(manager.Manager):
         ret = {}
         for targetName, key, value in cu:
             ret.setdefault(targetName, {})[key] = self._stripUnicode(
-                simplejson.loads(value))
+                json.loads(value))
         return ret
 
     def getTargetsForUser(self, targetType, userName):

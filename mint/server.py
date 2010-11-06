@@ -11,7 +11,7 @@ import inspect
 import logging
 import os
 import re
-import simplejson
+import json
 import socket
 import stat
 import sys
@@ -2665,7 +2665,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
 
-        return simplejson.dumps(r)
+        return json.dumps(r)
 
     #
     # published releases 
@@ -4351,7 +4351,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         ret = dict()
 
         for (n, v, f), sjdata in troves:
-            data = simplejson.loads(sjdata)
+            data = json.loads(sjdata)
             # First version
             # We expect data to look like {'productDefinition':
             # dict(hostname='repo.example.com', shortname='repo',

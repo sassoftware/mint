@@ -3,7 +3,7 @@
 #
 
 import os
-import simplejson
+import json
 import time
 
 from conary.lib import util
@@ -178,7 +178,7 @@ class TargetConversion(object):
         cu = self.db.cursor()
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
-            value = simplejson.dumps(value)
+            value = json.dumps(value)
             cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                     targetId, name, value)
 

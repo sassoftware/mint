@@ -513,12 +513,12 @@ class MigrateTo_45(SchemaMigration):
                 if amiData.get(key):
                     configured = True
             if configured:
-                import simplejson
+                import json
                 cu.execute("""INSERT INTO Targets (targetType, targetName)
                         VALUES('ec2', 'aws')""")
                 targetId = cu.lastid()
                 for name, value in amiData.iteritems():
-                    value = simplejson.dumps(value)
+                    value = json.dumps(value)
                     cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                             targetId, name, value)
 

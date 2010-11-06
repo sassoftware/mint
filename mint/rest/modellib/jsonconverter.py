@@ -1,4 +1,4 @@
-import simplejson
+import json
 
 from mint.rest.modellib import converter
 
@@ -71,11 +71,11 @@ class JSONConverterFactory(converter.Converter):
 
     def toText(self, modelInstance, context):
         d = self.getDictFromModel(modelInstance, context)
-        return simplejson.dumps(d)
+        return json.dumps(d)
 
     def fromText(self, text, modelClass, context):
         className = modelClass._meta.name
-        d = simplejson.loads(text)
+        d = json.loads(text)
         return self.getModelFromDict(d[className], modelClass, context)
 
         

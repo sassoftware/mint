@@ -11,7 +11,7 @@ import re
 import sys
 import time
 import tempfile
-import simplejson
+import json
 from testutils import mock
 
 from mint_rephelp import MintRepositoryHelper
@@ -898,7 +898,7 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         serialized = build.serialize()
 
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
 
         self.failIf(buildDict['protocolVersion'] != 1,
                     "Serial Version 1 was not honored")
@@ -925,7 +925,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         build = client.getBuild(data['pubReleaseFinalId'])
 
         serialized = build.serialize()
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
         UUID = str(buildDict['UUID'])
 
         hname = '%s.%s' % (MINT_HOST, MINT_DOMAIN)
@@ -933,7 +933,7 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         # repeat the serialize process to ensure the build count gets bumped
         serialized = build.serialize()
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
         UUID = str(buildDict['UUID'])
 
         self.assertEquals(UUID, '%s-build-2-2' % (hname,))
@@ -961,7 +961,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         f.close()
 
         serialized = build.serialize()
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
 
         self.failUnless('amiData' in buildDict.keys())
 
@@ -982,7 +982,7 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         serialized = build.serialize()
 
-        buildDict = simplejson.loads(serialized)
+        buildDict = json.loads(serialized)
         assert(buildDict['amiData']['ec2LaunchUsers'] == ['3234'])
 
     @fixtures.fixture('Full')
@@ -1008,13 +1008,13 @@ class BuildTest(fixtures.FixturedUnitTest):
         otherProject = nobody.getProject(otherProjectId)
         FQDN = otherProject.getFQDN()
 
-        buildDict = simplejson.loads(build.serialize())
+        buildDict = json.loads(build.serialize())
         self.failIf(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should not be in conaryrc')
 
         # Now add developer to bar and make sure bar appears in their builds
         otherProject.addMemberById(data['developer'], userlevels.DEVELOPER)
-        buildDict = simplejson.loads(build.serialize())
+        buildDict = json.loads(build.serialize())
         self.failUnless(FQDN in buildDict['project']['conaryCfg'],
             'Project "bar" should be in conaryrc')
 
@@ -1241,7 +1241,7 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
         build = client.getBuild(buildIds[0])
         self.assertEquals(build.getDataDict().get('showMediaCheck'), True)
 
-        data = simplejson.loads(client.server.serializeBuild(buildIds[0]))
+        data = json.loads(client.server.serializeBuild(buildIds[0]))
         self.assertEquals(data['proddefLabel'], 'foo.rpath.local2@ns:foo-FooV1')
 
     @fixtures.fixture('Full')
