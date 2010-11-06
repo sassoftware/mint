@@ -12,7 +12,6 @@ import sys
 import time
 import tempfile
 import json
-from testutils import mock
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN

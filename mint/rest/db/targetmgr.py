@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-import base64
 import json
 import logging
 
@@ -64,7 +63,6 @@ class TargetManager(manager.Manager):
               JOIN TargetData AS td USING (targetId)
              WHERE targetType = ? AND targetName = ?
         """, targetType, targetName)
-        res = {}
         return dict((k, self._stripUnicode(json.loads(v)))
             for (k, v) in cu)
 

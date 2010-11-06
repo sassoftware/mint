@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 
-import base64
 import json
 
 from mint import mint_error
