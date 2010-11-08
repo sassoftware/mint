@@ -29,7 +29,7 @@ class BuildsTable(database.KeyedTable):
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
               'buildCount', 'productVersionId', 'stageName',
-              'status', 'statusMessage', 'uuid',
+              'status', 'statusMessage', 'job_uuid',
               ]
 
     # Not the ideal place to put these, but I wanted to easily find them later

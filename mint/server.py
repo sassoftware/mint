@@ -3102,7 +3102,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cli = wig_client.WigClient(self._getRmakeClient())
         job = cli.createJob(buildDict, subscribe=False)
         log.info("Created Windows image job, UUID %s", job.job_uuid)
-        self.builds.update(buildId, uuid=str(job.job_uuid))
+        self.builds.update(buildId, job_uuid=str(job.job_uuid))
 
     @typeCheck(int, str, list)
     def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
