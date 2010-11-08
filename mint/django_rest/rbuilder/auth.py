@@ -70,20 +70,18 @@ def isAuthenticated(user):
 class rBuilderBackend:
 
     def authenticate(self, username=None, password=None):
-        from django.contrib.auth.models import User
         try:
        	    user = Users.objects.get(username=username)
             m = md5(user.salt + password)
             if (m.hexdigest() == user.passwd):
        	        return user
-        except User.DoesNotExist:
+        except Users.DoesNotExist:
             pass
 
         return None
 
     def get_user(self, user_id):
-        from django.contrib.auth.models import User
         try:
             return Users.objects.get(pk=user_id)
-        except User.DoesNotExist:
+        except Users.DoesNotExist:
             return None
