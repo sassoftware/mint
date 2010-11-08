@@ -355,10 +355,11 @@ class VersionManager(base.BaseManager):
                     # arguably, all of this should be attributes of the field
                     # TODO establish constants to replace these strings
                     name = field.getElementsByTagName('name')[0].lastChild.data
-                    required = field.getElementsByTagName('required')[0].lastChild
+                    # we are not doing config dep resolution so we don't care
+                    #required = field.getElementsByTagName('required')[0].lastChild
                     # WARNING: if there are overlapping named fields, latest iteration wins
                     confDict[name] = field
-                    assert required.nodeType == minidom.Node.TEXT_NODE
+                    #assert required.nodeType == minidom.Node.TEXT_NODE
                     # We can build requires and provides tables here
                     #if field.getElementsByTagName('sense')[0].data == 'required':
                     #    require += [name]
