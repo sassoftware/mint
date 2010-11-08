@@ -5,11 +5,10 @@
 #
 
 from mint.django_rest.rbuilder.models import Users, UserGroups, Sessions
-import md5
+from hashlib import md5
 import base64
 import cPickle
 
-from mod_python import Cookie
 
 def getCookieAuth(request):
     # the pysid cookie contains the session reference that we can use to
@@ -71,17 +70,19 @@ def isAuthenticated(user):
 class rBuilderBackend:
 
     def authenticate(self, username=None, password=None):
+        from django.contrib.auth.models import User
         try:
        	    user = Users.objects.get(username=username)
-            m = md5.new(user.salt + password)
+            m = md5(user.salt + password)
             if (m.hexdigest() == user.passwd):
        	        return user
-        except Users.DoesNotExist:
+        except User.DoesNotExist:
             pass
 
         return None
 
     def get_user(self, user_id):
+        from django.contrib.auth.models import User
         try:
             return Users.objects.get(pk=user_id)
         except User.DoesNotExist:
