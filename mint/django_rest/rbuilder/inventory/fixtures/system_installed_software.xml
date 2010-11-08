@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
+  <object pk="1" model="inventory.stage">
+    <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="name">Development</field>
+    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
+  </object>
+
   <object pk="3" model="inventory.system">
     <field type="CharField" name="name">testsystemname</field>
     <field type="CharField" name="description">testsystemdescription</field>
@@ -152,11 +158,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field type="DecimalField" name="timecreated">0</field>
   </object>
 
-  <object pk="1" model="inventory.stage">
-    <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
-    <field type="CharField" name="name">Development</field>
-    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
-  </object>
     
 </django-objects>
 
