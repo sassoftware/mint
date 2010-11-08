@@ -284,22 +284,25 @@ class VersionManager(base.BaseManager):
     def getConfigurationDescriptor(self, system):
         
         # remove this when you want it to work for real
-        return open('/srv/www/html/config/config_pony.xml').read()
+        #return open('/srv/www/html/config/config_pony.xml').read()
         
         # Create master configuration DOM and add configDicts to dataFields
         impl = minidom.getDOMImplementation()
-        newdoc = impl.createDocument(None, 'configurationDescriptor', None)
+        newdoc = impl.createDocument(None, 'configuration_descriptor', None)
         top = newdoc.documentElement
+        metadata = newdoc.createElement('metadata')
+        descriptor = newdoc.createElement('descriptor')
         dataFields = newdoc.createElement('dataFields')
-        top.appendChild(dataFields)
+        top.appendChild(descriptor)
+        descriptor.appendChild(dataFields)
+        descriptor.appendChild(metadata)
         # We are just adding all 
         confDict = {}
         # WARNING: No control over ordering! Last to iterate will override prior field keys
-        # HARDCODE FOR TESTING
-        #for trove in system.installed_software.all():
-        #    confDict.update(self._getTroveConfigDescriptor(trove))
-        trove = None
-        confDict.update(self._getTroveConfigDescriptor(trove))
+        for trove in system.installed_software.all():
+            confDict.update(self._getTroveConfigDescriptor(trove))
+        #trove = None
+        #confDict.update(self._getTroveConfigDescriptor(trove))
         for x in confDict:
             dataFields.appendChild(confDict[x])
         # WARNING: If we reconcile provides/requires here, then we can easily get to
@@ -308,18 +311,14 @@ class VersionManager(base.BaseManager):
         # Should we only provide config for the group or all troves returned?
         # Where should the config dep resolution happen, here or in the _getTroveConfigDescriptor?
         
-        return newdoc.toxml()
+        # (03:07:56 PM) slagle: but, if you wanted to tack on an id attribute, you would do it in InventorySystemConfigurationDescriptorServices in views.py
+        return top.toxml()
 
     def _getTroveConfigDescriptor(self, trove):
         kw = {}
         client = self.get_conary_client()
         troveSource = client.getRepos()
-        from conary import versions
-        label = versions.Label('achasen.eng.rpath.com@rpath:achasen-1-devel')
-        # HARDCODE FOR TESTING
-        #label = trove.getLabel()
-        #troveTups = troveSource.findTrove(label, (trove.name, None , None))
-        troveTups = troveSource.findTrove(label, ('group-achasen-appliance', None , None))
+        troveTups = [trove.getNVF()]
         colls = [ x for x in troveTups if conarytrove.troveIsCollection(x[0])]
         troves = troveSource.getTroves(colls, withFiles=False)
         troveCache = dict(itertools.izip(colls, troves))
