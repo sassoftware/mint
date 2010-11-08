@@ -188,8 +188,8 @@ class ContentSourceTypes(object):
 
         return descriptor
 
-class PlatformJobStore(rpath_job.JobStore):
-    _storageSubdir = 'platform-load-jobs'
+class PlatformJobStore(rpath_job.SqlJobStore):
+    jobType = 'platform-load'
 
 class LoadRunner(rpath_job.BackgroundRunner):
     def handleError(self, exc_info):
@@ -210,8 +210,7 @@ class Platforms(object):
                                               self._reposMgr)
         self.contentSourceTypes = ContentSourceTypes(db, cfg, self)
         self.mgr = mgr
-        self.jobStore = PlatformJobStore(
-            os.path.join(self.cfg.dataPath, 'jobs'))
+        self.jobStore = PlatformJobStore(self.db)
         self.loader = LoadRunner(self._load)
 
     def iterPlatforms(self):
