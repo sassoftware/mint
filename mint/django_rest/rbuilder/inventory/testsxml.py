@@ -1624,6 +1624,7 @@ get_installed_software_xml = """\
       </available_updates>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
       <is_top_level>true</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>group-clover-appliance</name>
       <trove_id>1</trove_id>
@@ -1640,6 +1641,7 @@ get_installed_software_xml = """\
       <available_updates/>
       <flavor>desktop is: x86_64</flavor>
       <is_top_level>false</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>emacs</name>
       <trove_id>2</trove_id>
@@ -1678,6 +1680,7 @@ installed_software_xml = """\
       </available_updates>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
       <is_top_level>true</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>group-clover-appliance</name>
       <trove_id>1</trove_id>
@@ -1694,6 +1697,7 @@ installed_software_xml = """\
       <available_updates/>
       <flavor>desktop is: x86_64</flavor>
       <is_top_level>false</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>emacs</name>
       <trove_id>2</trove_id>
@@ -1814,6 +1818,7 @@ installed_software_response_xml = """
       <available_updates/>
       <flavor>is: x86</flavor>
       <is_top_level>True</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>XXX</last_available_update_refresh>
       <name>group-chater-appliance</name>
       <trove_id>3</trove_id>
@@ -1830,6 +1835,7 @@ installed_software_response_xml = """
       <available_updates/>
       <flavor>desktop is: x86_64</flavor>
       <is_top_level>False</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>XXX</last_available_update_refresh>
       <name>vim</name>
       <trove_id>4</trove_id>
@@ -1948,6 +1954,7 @@ system_available_updates_xml = """\
       </version>
       <last_available_update_refresh>2010-08-27T12:21:59.802463+00:00</last_available_update_refresh>
       <is_top_level>true</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/emacs%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
@@ -1964,6 +1971,7 @@ system_available_updates_xml = """\
       </version>
       <last_available_update_refresh>2010-08-27T12:21:59.815100+00:00</last_available_update_refresh>
       <is_top_level>false</is_top_level>
+      <is_top_level_item>True</is_top_level_item>
       <flavor>desktop is: x86_64</flavor>
     </trove>
   </installed_software>

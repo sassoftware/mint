@@ -1093,6 +1093,11 @@ class Trove(modellib.XObjIdModel):
     def getNVF(self):
         return self.name, self.version.conaryVersion, self.getFlavor()
 
+    def serialize(self, *args, **kwargs):
+        xobj_model = modellib.XObjIdModel.serialize(self, *args, **kwargs)
+        xobj_model.is_top_level_item = True
+        return xobj_model
+
 class Stage(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_stage'
