@@ -52,6 +52,31 @@ class SystemManager(base.BaseManager):
         models.EventType.SYSTEM_CONFIG_IMMEDIATE,
     ])
 
+    IncompatibleEvents = {
+        # All events are incompatible with themselves (enforced in
+        # checkEventCompatibility)
+        # Can't shutdown and update at the same time
+        # Can't shutdown and configure at the same time
+
+        models.EventType.SYSTEM_APPLY_UPDATE:\
+            [models.EventType.SYSTEM_SHUTDOWN,
+             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE:\
+            [models.EventType.SYSTEM_SHUTDOWN,
+             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        models.EventType.SYSTEM_SHUTDOWN:\
+            [models.EventType.SYSTEM_APPLY_UPDATE,
+             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+             models.EventType.SYSTEM_CONFIG_IMMEDIATE],
+        models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
+            [models.EventType.SYSTEM_APPLY_UPDATE,
+             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+             models.EventType.SYSTEM_CONFIG_IMMEDIATE],
+        models.EventType.SYSTEM_CONFIG_IMMEDIATE:\
+            [models.EventType.SYSTEM_SHUTDOWN,
+             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+    }
+
     TZ = tz.tzutc()
     X509 = x509.X509
 
@@ -1129,14 +1154,32 @@ class SystemManager(base.BaseManager):
         for event in events:
             self.dispatchSystemEvent(event)
 
+    def checkEventCompatibility(self, event):
+        runningJobs = event.system.jobs.filter(job_state__name=models.JobState.RUNNING) 
+        runningEventTypes = [j.event_type.name for j in runningJobs]
+
+        # Event types are incompatible with themselves
+        if event.event_type.name in runningEventTypes:
+            raise errors.IncompatibleSameEvent(eventType=event.event_type.name)
+
+        # Check other incompatible event types
+        incompatibleEvents = self.IncompatibleEvents.get(
+            event.event_type.name, None)
+        if incompatibleEvents:
+            for runningEventType in runningEventTypes:
+                if runningEventType in incompatibleEvents:
+                    raise errors.IncompatibleEvents(
+                        firstEventType=runningEventType,
+                        secondEventType=event.event_type.name)
+
     def dispatchSystemEvent(self, event):
         # Check if the system has any active jobs before creating the event.
         if event.system.hasRunningJobs():
-            log.info("Not Dispatching %s event (id %d, enabled %s) for system "
-                " %s (id %d).  The system already has a running job." % \
-                (event.event_type.name, event.system_event_id, event.time_enabled, 
-                event.system.name, event.system.system_id))
-            raise errors.JobsAlreadyRunning
+            try:
+                self.checkEventCompatibility(event)
+            except errors.IncompatibleEvent, e:
+                log.error(str(e))
+                raise e
 
         log.info("Dispatching %s event (id %d, enabled %s) for system %s (id %d)" % \
             (event.event_type.name, event.system_event_id, event.time_enabled, 

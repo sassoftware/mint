@@ -2,6 +2,7 @@ import base64
 import cPickle
 import datetime
 import os
+import random
 import shutil
 import tempfile
 import time
@@ -3218,15 +3219,15 @@ class SystemEventTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, system_event_xml,
             ignoreNodes=['time_created', 'time_enabled'])
         
-    def testSecondRunningJobBlocked(self):
+    def testIncompatibleEvents(self):
         def mock__dispatchSystemEvent(self, event):
             system = event.system
-            job = models.Job(job_uuid='aaaaa', 
+            job = models.Job(job_uuid=str(random.random()),
                 job_state=models.JobState.objects.get(name='Running'),
-                event_type=models.EventType.objects.get(name='immediate system apply update'))
+                event_type=event.event_type)
             job.save()
             systemJob = models.SystemJob(job=job, system=system,
-                event_uuid='bbbbb')
+                event_uuid=str(random.random()))
             systemJob.save()
 
         manager.systemmgr.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
@@ -3237,15 +3238,31 @@ class SystemEventTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
 
-        # Schedule another immediate poll, the previous one should still be
-        # running.
+        # Schedule another poll, should fail, can't poll twice at the same
+        # time
         response = self._post(url,
             data=testsxml.system_event_immediate_poll_post_xml,
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' in response.content)
-        self.assertTrue('The system already has running jobs' in response.content)
 
+        # Clear system events
+        [j.delete for j in self.system.systemjob_set.all()]
+
+        # Schedule an update, should succeed
+        response = self._post(url,
+            data=testsxml.system_event_immediate_update_post_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue('<fault>' not in response.content)
+
+        # Schedule a shutdown, should fail
+        response = self._post(url,
+            data=testsxml.system_event_immediate_shutdown_post_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue('<fault>' in response.content)
+        
 class SystemEventProcessingTestCase(XMLTestCase):
     
     # do not load other fixtures for this test case as it is very data order dependent
