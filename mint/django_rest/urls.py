@@ -176,16 +176,16 @@ urlpatterns = patterns('',
 
     # Major Versions
     url(r'^api/products/(\w|\.)*/versions/(\w|\.)*/?$',
-        inventoryviews.RestDbPassthrough(),
+        inventoryviews.MajorVersionService(),
         name='MajorVersions'),
 
     # Stages
     url(r'^api/products/(\w|\.)*/versions/(\w|\.)*/stages/(\w)*/?$',
-        inventoryviews.RestDbPassthrough(),
+        inventoryviews.StageService(),
         name='Stages'),
 
     # Projects
     url(r'^api/products/(\w|\.)*/?$',
-        inventoryviews.RestDbPassthrough(),
+        inventoryviews.ApplianceService(),
         name='Projects'),
 )

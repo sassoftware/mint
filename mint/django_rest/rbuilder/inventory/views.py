@@ -28,6 +28,18 @@ def undefined(function):
 class RestDbPassthrough(resource.Resource):
     pass
 
+class StageService(RestDbPassthrough):
+    def get(self, project, majorVersion, stage):
+        return None
+
+class MajorVersionService(RestDbPassthrough):
+    def get(self, project, majorVersion):
+        return None
+
+class ApplianceService(RestDbPassthrough):
+    def get(self, project):
+        return None
+
 class AbstractInventoryService(resource.Resource):
 
     def __init__(self):
