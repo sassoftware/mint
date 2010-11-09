@@ -3247,7 +3247,7 @@ class SystemEventTestCase(XMLTestCase):
         self.assertTrue('<fault>' in response.content)
 
         # Clear system events
-        [j.delete for j in self.system.systemjob_set.all()]
+        [j.delete() for j in self.system.systemjob_set.all()]
 
         # Schedule an update, should succeed
         response = self._post(url,
@@ -3263,6 +3263,23 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertTrue('<fault>' in response.content)
         
+        # Clear system events
+        [j.delete() for j in self.system.systemjob_set.all()]
+
+        # Schedule a registration, should succeed
+        response = self._post(url,
+            data=testsxml.system_event_immediate_registration_post_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue('<fault>' not in response.content)
+
+        # Schedule a poll, should succeed
+        response = self._post(url,
+            data=testsxml.system_event_immediate_poll_post_xml,
+            username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue('<fault>' not in response.content)
+
 class SystemEventProcessingTestCase(XMLTestCase):
     
     # do not load other fixtures for this test case as it is very data order dependent
