@@ -3083,7 +3083,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     statusMessage="Job Finished")
             return '0' * 32
         elif buildType in buildtypes.windowsBuildTypes:
-            return self.startWindowsImageJob(buildId, buildDict)
+            return self.startWindowsImageJob(buildId)
         else:
             jobData = self.serializeBuild(buildId)
             try:
@@ -3097,10 +3097,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         statusMessage="Failed to start image job - check logs")
                 raise
 
-    def startWindowsImageJob(self, buildId, buildDict):
+    def startWindowsImageJob(self, buildId):
         """Direct Windows image builds to rMake 3."""
+        jobData = self.serializeBuild(buildId)
         cli = wig_client.WigClient(self._getRmakeClient())
-        job_uuid, job = cli.createJob(buildDict, subscribe=False)
+        job_uuid, job = cli.createJob(jobData, subscribe=False)
         log.info("Created Windows image job, UUID %s", job_uuid)
         self.builds.update(buildId, job_uuid=str(job_uuid))
 

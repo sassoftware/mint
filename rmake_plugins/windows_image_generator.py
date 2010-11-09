@@ -22,4 +22,4 @@ from mint.image_gen.wig import task as wig_task
 class Plugin(plug_dispatcher.DispatcherPlugin, plug_worker.WorkerPlugin):
 
     handlerClasses = (wig_handler.WigHandler,)
-    workerClasses = (wig_task.WigTask,)
+    taskClasses = (wig_task.WigTask,)
