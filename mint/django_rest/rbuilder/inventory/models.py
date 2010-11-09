@@ -475,14 +475,14 @@ class System(modellib.XObjIdModel):
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name'),
-        "the appliance stage of the system"))
+    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name')),
+        "the appliance stage of the system")
     major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, null=True,
-        text_field='name'),
-        "the appliance major version of the system"))
+        text_field='name')),
+        "the appliance major version of the system")
     appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, null=True,
-        text_field='shortname'),
-        "the appliance of the system"))
+        text_field='shortname')),
+        "the appliance of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = APIReadOnly(modellib.SyntheticField())
 
