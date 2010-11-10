@@ -874,7 +874,7 @@ class ManagementNodesTestCase(XMLTestCase):
 
     def testPutManagementNodes(self):
         management_node0 = self._saveManagementNode()
-        management_node1 = self._saveManagementNode(idx=1)
+        self._saveManagementNode(idx=1)
         dataTempl = """
 <management_nodes>
 %s
