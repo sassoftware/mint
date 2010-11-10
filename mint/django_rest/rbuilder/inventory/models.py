@@ -15,7 +15,6 @@ from conary.deps import deps
 from django.conf import settings
 from django.db import connection, models
 from django.db.backends import signals
-from django.core.exceptions import ObjectDoesNotExist
 
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
@@ -502,13 +501,9 @@ class System(modellib.XObjIdModel):
             self.name = self.hostname and self.hostname or ''
         if not self.agent_port and self.management_interface:
             self.agent_port = self.management_interface.port
-        try:
-            if not self.system_type:
-                self.system_type = SystemType.objects.get(
-                    name = SystemType.INVENTORY)
-        except ObjectDoesNotExist:
+        if self.system_type_id is None:
             self.system_type = SystemType.objects.get(
-                    name = SystemType.INVENTORY)
+                name = SystemType.INVENTORY)
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
 
@@ -677,12 +672,8 @@ class ManagementNode(System):
     objects = modellib.ManagementNodeManager()
     
     def save(self, *args, **kw):
-        try:
-            self.system_type = SystemType.objects.get(
-                name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
-        except ObjectDoesNotExist:
-            self.system_type = SystemType.objects.get(
-                name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
+        self.system_type = SystemType.objects.get(
+            name = SystemType.INFRASTRUCTURE_MANAGEMENT_NODE)
         System.save(self, *args, **kw)
 
 class SystemTargetCredentials(modellib.XObjModel):
