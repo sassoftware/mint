@@ -152,10 +152,8 @@ class rBuilderProduct(CPackageRecipe):
         r.Install('EULA.txt', '%(thisdocdir)s/')
 
         # remove the monkey from the product release
-        # also, remove the ec2-terminator
         if not Flags.rbo:
             r.Remove('%(datadir)s/rbuilder/scripts/amazon-s3-processor')
-            r.Remove('%(datadir)s/rbuilder/scripts/ec2-terminator')
 
             # rbas allow any package to be built using package creator
             r.Create('/srv/rbuilder/config/pcreator.d/20_rba.conf', 
