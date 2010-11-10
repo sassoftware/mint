@@ -188,8 +188,14 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                val = field.related.parent_model.objects.load_from_href(
-                    getattr(val, 'href', None))
+                href = getattr(val, 'href', None)
+                parentModel = field.related.parent_model
+                if href is not None:
+                    val = parentModel.objects.load_from_href(href)
+                else:
+                    # Maybe the object was inlined for convenience?
+                    val = parentModel.objects.load_from_object(val, request,
+                        save=save)
             elif isinstance(field, (djangofields.BooleanField,
                                     djangofields.NullBooleanField)):
                 val = str(val)
@@ -572,6 +578,27 @@ class ManagementNodeManager(SystemManager):
     Overridden because management nodes have several checks required to
     determine if the system already exists.
     """
+    def load_from_db(self, model_inst, accessors):
+        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+        if loaded_model:
+            if loaded_model.managing_zone_id is None:
+                loaded_model.managing_zone = loaded_model.zone
+            return oldModel, loaded_model
+        model = self.model()
+        model.managing_zone = model_inst.zone
+        model.zone = model_inst.zone
+        model.save()
+        return None, model
+
+    def getZone(self, zoneName):
+        zclass = type_map['zone']
+        zones = zclass.objects.filter(name=zoneName)
+        if len(zones):
+            return zones[0]
+        # Create the zone
+        zone = zclass(name=zoneName)
+        zone.save()
+        return zone
 
 class SystemsManager(BaseManager):
     def load(self, model_inst, accessors=None):
@@ -581,6 +608,9 @@ class SystemsManager(BaseManager):
         """
         model = self.model()
         return None, model
+
+class ManagementNodesManager(SystemsManager):
+    pass
 
 class InstalledSoftwareManager(SystemsManager):
     pass

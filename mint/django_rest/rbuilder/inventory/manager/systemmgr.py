@@ -447,6 +447,22 @@ class SystemManager(base.BaseManager):
         return managementNode
 
     @base.exposed
+    def synchronizeZones(self, managementNodes):
+        # Grab all existing management nodes
+        newhash = set(x.pk for x in managementNodes.management_node)
+        oldNodes = models.ManagementNode.objects.all()
+        for node in oldNodes:
+            if node.pk not in newhash:
+                # Ideally we want to disassociate the management node from the
+                # zone, but zone_id is not nullable
+                # For now, leave the system around until RBL-7703 is fixed
+                continue
+        # For good measure, save the nodes, since things like the jid may have
+        # changed
+        for x in managementNodes.management_node:
+            x.save()
+
+    @base.exposed
     def getManagementNodeForZone(self, zone_id, management_node_id):
         zone = models.Zone.objects.get(pk=zone_id)
         managementNode = models.ManagementNode.objects.get(zone=zone, pk=management_node_id)

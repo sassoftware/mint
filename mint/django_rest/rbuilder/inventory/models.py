@@ -116,6 +116,8 @@ class ManagementNodes(modellib.XObjModel):
     list_fields = ['management_node']
     management_node = []
 
+    objects = modellib.ManagementNodesManager()
+
     def save(self):
         return [s.save() for s in self.management_node]
     
@@ -664,7 +666,8 @@ class ManagementNode(System):
     local = models.NullBooleanField()
     zone = modellib.ForeignKey(Zone, related_name='management_nodes')
     node_jid = models.CharField(max_length=64, null=True)
-    
+    load_fields = [ node_jid ]
+
     # ignore auto generated ptr from inheritance
     load_ignore_fields = ["system_ptr"]
     

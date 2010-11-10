@@ -108,7 +108,16 @@ class AbstractInventoryService(resource.Resource):
         # we're allowing anonymous access
         if request._auth != (None, None) and not request._is_authenticated:
             return HttpAuthenticationRequired
-        if access & ACCESS.EVENT_UUID:
+        # For now, localhost cannot be combined with admin - this can change
+        # in the future
+        if access & ACCESS.LOCALHOST:
+            headerName = 'X-rPath-Repeater'
+            headerValue = getHeaderValue(request, headerName)
+            if headerValue is not None:
+                return HttpAuthenticationRequired
+            if self._check_not_localhost(request):
+                return HttpAuthenticationRequired
+        elif access & ACCESS.EVENT_UUID:
             # Event UUID authentication is special - it can be compounded with
             # regular authentication or admin
             headerName = 'X-rBuilder-Event-UUID'
@@ -137,6 +146,9 @@ class AbstractInventoryService(resource.Resource):
     @classmethod
     def _check_not_admin(cls, request, access):
         return access & ACCESS.ADMIN and not request._is_admin
+
+    def _check_not_localhost(cls, request):
+        return request.META['REMOTE_ADDR'] != '127.0.0.1'
 
     def _setMintAuth(self):
         db = database.Database(self.mgr.cfg)
@@ -226,14 +238,21 @@ class InventoryManagementNodeService(AbstractInventoryService):
             return self.mgr.getManagementNode(management_node_id)
         else:
             return self.mgr.getManagementNodes()
-        
+
     @access.admin
     @requires('management_node')
     @return_xml
     def rest_POST(self, request, management_node):
         managementNode = self.mgr.addManagementNode(management_node)
         return managementNode
-    
+
+    @access.localhost
+    @requires('management_nodes')
+    @return_xml
+    def rest_PUT(self, request, management_nodes):
+        self.mgr.synchronizeZones(management_nodes)
+        return self.mgr.getManagementNodes()
+
 class InventoryManagementInterfaceService(AbstractInventoryService):
     
     @return_xml
