@@ -773,14 +773,14 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
   </object>
   <object pk="1" model="rbuilder.products">
-    <field type="CharField" name="hostname">chater.eng.rpath.com</field>
-    <field type="CharField" name="name">chater</field>
+    <field type="CharField" name="hostname">chater-foo.eng.rpath.com</field>
+    <field type="CharField" name="name">chater-foo</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">chater</field>
+    <field type="CharField" name="shortname">chater-foo</field>
     <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">chater.eng.rpath.com</field>
-    <field type="TextField" name="description">chater</field>
+    <field type="CharField" name="repositoryHostName">chater-foo.eng.rpath.com</field>
+    <field type="TextField" name="description">chater-foo</field>
     <field type="CharField" name="prodtype">1</field>
     <field type="CharField" name="commitemail">a@a.com</field>
     <field type="SmallIntegerField" name="backupexternal">0</field>

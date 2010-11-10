@@ -2949,9 +2949,9 @@ class SystemVersionsTestCase(XMLTestCase):
         data = testsxml.system_version_put_xml
 
         self.mockStages.append(restmodels.Stage(
-            label='chater.eng.rpath.com@rpath:chater-1-devel',
+            label='chater-foo.eng.rpath.com@rpath:chater-foo-1-devel',
             name='Development',
-            hostname='chater.eng.rpath.com',
+            hostname='chater-foo.eng.rpath.com',
             version='1',
             isPromotable=True))
 
@@ -2968,11 +2968,11 @@ class SystemVersionsTestCase(XMLTestCase):
                 x.version.label, x.version.revision), x.flavor)
                 for x in nsystem.installed_software.all() ],
             [
-                ('group-chater-appliance',
-                 ('/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1',
+                ('group-chater-foo-appliance',
+                 ('/chater-foo.eng.rpath.com@rpath:chater-foo-1-devel/1-2-1',
                      '1234567890.12',
                      'is: x86',
-                     'chater.eng.rpath.com@rpath:chater-1-devel',
+                     'chater-foo.eng.rpath.com@rpath:chater-foo-1-devel',
                      '1-2-1'),
                  'is: x86'),
                 ('vim',
@@ -2998,6 +2998,11 @@ class SystemVersionsTestCase(XMLTestCase):
 
         system = models.System.objects.get(pk=system.pk)
         self.failUnlessEqual(system.name, "testsystemname")
+
+        response = self._get(url, username="testuser", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+            testsxml.system_installed_software_version_stage_xml)
 
 class EventTypeTestCase(XMLTestCase):
 

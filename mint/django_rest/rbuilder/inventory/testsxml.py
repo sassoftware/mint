@@ -1781,9 +1781,9 @@ system_version_xml = """\
 installed_software_post_xml = """\
   <installed_software>
     <trove>
-      <name>group-chater-appliance</name>
+      <name>group-chater-foo-appliance</name>
       <version>
-        <full>/chater.eng.rpath.com@rpath:chater-1-devel/1-2-1</full>
+        <full>/chater-foo.eng.rpath.com@rpath:chater-foo-1-devel/1-2-1</full>
         <ordering>1234567890.12</ordering>
         <flavor>is: x86</flavor>
       </version>
@@ -2395,3 +2395,120 @@ configuration_descriptor_xml = """\
       </field>
     </dataFields>
 </descriptor></configuration_descriptor>"""
+
+system_installed_software_version_stage_xml = """\
+<?xml version="1.0"?>
+<system id="http://testserver/api/inventory/systems/3">
+  <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
+  <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
+  <appliance href="http://testserver/api/products/chater-foo">chater-foo</appliance>
+  <configuration_descriptor href="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
+  <has_running_jobs>True</has_running_jobs>
+  <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+  <generated_uuid>testsystemgenerateduuid</generated_uuid>
+  <networks>
+    <network id="http://testserver/api/inventory/networks/2">
+      <ipv6_address/>
+      <network_id>2</network_id>
+      <dns_name>testnetwork.example.com</dns_name>
+      <required/>
+      <system href="http://testserver/api/inventory/systems/3"/>
+      <device_name>eth0</device_name>
+      <netmask>255.255.255.0</netmask>
+      <port_type>lan</port_type>
+      <created_date>2010-11-10T22:52:26.350321+00:00</created_date>
+      <active/>
+      <ip_address>1.1.1.1</ip_address>
+    </network>
+  </networks>
+  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+  <hostname/>
+  <system_id>3</system_id>
+  <launching_user/>
+  <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
+  <installed_software id="http://testserver/api/inventory/systems/3/installed_software">
+    <trove id="http://testserver/repos/chater-foo/api/trove/group-chater-foo-appliance%3D/chater-foo.eng.rpath.com%40rpath%3Achater-foo-1-devel/1-2-1%5Bis%3A%20x86%5D">
+      <name>group-chater-foo-appliance</name>
+      <is_top_level_item>True</is_top_level_item>
+      <trove_id>3</trove_id>
+      <available_updates/>
+      <version>
+        <flavor>is: x86</flavor>
+        <full>/chater-foo.eng.rpath.com@rpath:chater-foo-1-devel/1-2-1</full>
+        <label>chater-foo.eng.rpath.com@rpath:chater-foo-1-devel</label>
+        <ordering>1234567890.12</ordering>
+        <revision>1-2-1</revision>
+        <version_id>5</version_id>
+      </version>
+      <last_available_update_refresh/>
+      <is_top_level>true</is_top_level>
+      <flavor>is: x86</flavor>
+    </trove>
+    <trove id="http://testserver/repos/contrib/api/trove/vim%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
+      <name>vim</name>
+      <is_top_level_item>True</is_top_level_item>
+      <trove_id>4</trove_id>
+      <available_updates/>
+      <version>
+        <flavor>desktop is: x86_64</flavor>
+        <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <ordering>1272410163.98</ordering>
+        <revision>23.0.60cvs20080523-1-0.1</revision>
+        <version_id>6</version_id>
+      </version>
+      <last_available_update_refresh/>
+      <is_top_level>false</is_top_level>
+      <flavor>desktop is: x86_64</flavor>
+    </trove>
+    <trove id="http://testserver/repos/contrib/api/trove/info-sfcb%3D/contrib.rpath.org%40rpl%3A2/1-1-1%5B%5D">
+      <name>info-sfcb</name>
+      <is_top_level_item>True</is_top_level_item>
+      <trove_id>5</trove_id>
+      <available_updates/>
+      <version>
+        <flavor/>
+        <full>/contrib.rpath.org@rpl:2/1-1-1</full>
+        <label>contrib.rpath.org@rpl:2</label>
+        <ordering>1263856871.03</ordering>
+        <revision>1-1-1</revision>
+        <version_id>7</version_id>
+      </version>
+      <last_available_update_refresh/>
+      <is_top_level>false</is_top_level>
+      <flavor/>
+    </trove>
+  </installed_software>
+  <target_system_id/>
+  <jobs id="http://testserver/api/inventory/systems/3/jobs">
+    <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs"/>
+    <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
+    <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
+    <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
+  </jobs>
+  <description>testsystemdescription</description>
+  <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
+  <registration_date/>
+  <has_active_jobs>True</has_active_jobs>
+  <target_system_name/>
+  <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
+  <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
+  <agent_port>5989</agent_port>
+  <stage href="http://testserver/api/products/chater-foo/versions/1/stages/Development">Development</stage>
+  <out_of_date>False</out_of_date>
+  <name>testsystemname</name>
+  <local_uuid>testsystemlocaluuid</local_uuid>
+  <target_system_state/>
+  <major_version href="http://testserver/api/products/chater-foo/versions/1">1</major_version>
+  <current_state id="http://testserver/api/inventory/system_states/2">
+    <system_state_id>2</system_state_id>
+    <description>Initial synchronization pending</description>
+    <name>registered</name>
+    <created_date>2010-11-10T22:52:26.167013+00:00</created_date>
+  </current_state>
+  <target/>
+  <target_system_description/>
+  <created_date>2010-11-10T22:52:26.343993+00:00</created_date>
+</system>"""
