@@ -17,6 +17,7 @@ class ACCESS(object):
     AUTHENTICATED = 2
     ADMIN = 4
     EVENT_UUID = 8
+    LOCALHOST = 16
 
 def D(field, docstring):
     field.docstring = docstring
@@ -121,6 +122,14 @@ class access(object):
         Decorator that verifies a valid event id
         """
         function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.EVENT_UUID
+        return function
+
+    @classmethod
+    def localhost(cls, function):
+        """
+        Decorator that verifies localhost access (for management interfaces)
+        """
+        function.ACCESS = getattr(function, 'ACCESS', 0) | ACCESS.LOCALHOST
         return function
 
 def return_xml(function):

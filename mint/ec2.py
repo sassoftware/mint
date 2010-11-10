@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -19,35 +19,11 @@ except ImportError:
 import xml.dom.minidom
 from conary.lib import util
 
-from mint.db import ec2
-from mint.lib import database
 from mint.helperfuncs import urlSplit
 from mint import mint_error
 from rpath_xmllib import api1 as xmllib
 
 
-class LaunchedAMI(database.TableObject):
-
-    __slots__ = ec2.LaunchedAMIsTable.fields
-
-    def getItem(self, id):
-        return self.server.getLaunchedAMI(id)
-
-    def save(self):
-        return self.server.updateLaunchedAMI(self.launchedAMIId,
-                self.getDataAsDict())
-
-class BlessedAMI(database.TableObject):
-
-    __slots__ = ec2.BlessedAMIsTable.fields
-
-    def getItem(self, id):
-        return self.server.getBlessedAMI(id)
-
-    def save(self):
-        return self.server.updateBlessedAMI(self.blessedAMIId,
-                self.getDataAsDict())
-        
 class ErrorResponseObject(xmllib.BaseNode):
     """
     A object that maps to the EC2 XML response error from boto.

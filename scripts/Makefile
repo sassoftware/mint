@@ -13,7 +13,6 @@ static_files =				\
 	check-repository		\
 	create-platforms		\
 	deleteproject			\
-	ec2-terminator			\
 	enable-platforms	\
 	fix-ec2-certificates		\
 	generate-certs.sh		\

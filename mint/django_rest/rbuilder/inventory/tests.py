@@ -198,12 +198,18 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         authStr = "%s:%s" % (username, password)
         return ("Authorization", "Basic %s" % base64.b64encode(authStr))
 
-    def _saveZone(self):
-        zone = models.Zone()
-        zone.name = "Local Zone"
-        zone.description = "Some local zone"
+    def _saveZone(self, zoneName=None, zoneDescription=None):
+        if zoneName is None:
+            zoneName = "Local Zone"
+        zones = models.Zone.objects.filter(name=zoneName)
+        if len(zones) > 0:
+            zone = zones[0]
+        else:
+            zone = models.Zone()
+            zone.name = zoneName
+        zone.description = zoneDescription or "Some local zone"
         zone.save()
-        
+
         return zone
 
     def _saveSystem(self):
@@ -234,30 +240,36 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
         return system
     
-    def _saveManagementNode(self):
-        zone = self._saveZone();
-        
+    def _saveManagementNode(self, zoneName=None, idx=0):
+        zone = self._saveZone(zoneName=zoneName);
+
+        if idx == 0:
+            suffix = ''
+            nodeJid = "superduperjid2@rbuilder.rpath"
+        else:
+            suffix = ' %02d' % idx
+            nodeJid = "node%02d@rbuilder.rpath" % idx
         management_node = models.ManagementNode()
         management_node.zone = zone
         management_node.managing_zone = zone
-        management_node.name = 'test management node'
-        management_node.description = 'test management node desc'
-        management_node.local_uuid = 'test management node luuid'
-        management_node.generated_uuid = 'test management node guuid'
-        management_node.ssl_client_certificate = 'test management node client cert'
-        management_node.ssl_client_key = 'test management node client key'
-        management_node.ssl_server_certificate = 'test management node server cert'
+        management_node.name = 'test management node' + suffix
+        management_node.description = 'test management node desc' + suffix
+        management_node.local_uuid = 'test management node luuid' + suffix
+        management_node.generated_uuid = 'test management node guuid' + suffix
+        management_node.ssl_client_certificate = 'test management node client cert' + suffix
+        management_node.ssl_client_key = 'test management node client key' + suffix
+        management_node.ssl_server_certificate = 'test management node server cert' + suffix
         management_node.registered = True
         management_node.current_state = self.mgr.sysMgr.systemState(
             models.SystemState.REGISTERED)
         management_node.local = True
         management_node.management_interface = models.ManagementInterface.objects.get(pk=1)
         management_node.type = models.SystemType.objects.get(pk=2)
-        management_node.node_jid = "superduperjid2@rbuilder.rpath"
+        management_node.node_jid = nodeJid
         management_node.save()
 
         network = models.Network()
-        network.ip_address = '2.2.2.2'
+        network.ip_address = '2.2.2.%d' % (2 + idx)
         network.device_name = 'eth0'
         network.dns_name = 'testnetwork.example.com'
         network.netmask = '255.255.255.0'
@@ -859,6 +871,76 @@ class ManagementNodesTestCase(XMLTestCase):
             testsxml.management_nodes_xml % (management_node.networks.all()[0].created_date.isoformat(),
                                              management_node.current_state.created_date.isoformat(),
                                              management_node.created_date.isoformat()))
+
+    def testPutManagementNodes(self):
+        management_node0 = self._saveManagementNode()
+        self._saveManagementNode(idx=1)
+        dataTempl = """
+<management_nodes>
+%s
+</management_nodes>"""
+
+        nodeTempl = """<management_node>
+<node_jid>%s</node_jid>
+<zone_name>%s</zone_name>
+</management_node>
+"""
+
+        nodeTempl = """<management_node>
+<node_jid>%(jid)s</node_jid>
+<zone><name>%(zoneName)s</name></zone>
+<networks><network><ip_address>%(ipAddress)s</ip_address><dns_name>%(ipAddress)s</dns_name><device_name>eth0</device_name></network></networks>
+</management_node>
+"""
+
+
+        # Old node in new zone
+        # Make sure we don't overwrite the IP address
+        nodes = [ dict(jid=management_node0.node_jid, zoneName='new zone 0',
+            ipAddress='2.2.2.210') ]
+        # New node in old zone
+        nodes.append(dict(jid='node1@host1/node1', zoneName='Local Zone',
+            ipAddress='2.2.2.3'))
+        # New node in new zone
+        nodes.append(dict(jid='node2@host2/node2', zoneName='new zone 2',
+            ipAddress='2.2.2.4'))
+        # management_node1 is gone
+
+        data = dataTempl % ''.join(nodeTempl % x for x in nodes)
+        # First, check that we enforce localhost auth
+        response = self._put('/api/inventory/management_nodes',
+            headers={'X-rPath-Repeater' : 'does not matter'},
+            data=data)
+        self.failUnlessEqual(response.status_code, 401)
+
+        # Now a valid PUT
+        response = self._put('/api/inventory/management_nodes',
+            data=data)
+        self.failUnlessEqual(response.status_code, 200)
+
+        obj = xobj.parse(response.content)
+        nodes = obj.management_nodes.management_node
+        zone0 = models.Zone.objects.get(name='new zone 0')
+        zone2 = models.Zone.objects.get(name='new zone 2')
+        exp = [(management_node0.node_jid, zone0.zone_id),
+            # RBL-7703: this should go away
+            ('node01@rbuilder.rpath', management_node0.zone_id),
+            ('node1@host1/node1', management_node0.zone_id),
+            ('node2@host2/node2', zone2.zone_id)
+        ]
+        self.failUnlessEqual(
+            [ (str(x.node_jid), int(os.path.basename(x.zone.href))) for x in nodes ],
+            exp)
+
+        node = models.ManagementNode.objects.get(pk=management_node0)
+        self.failUnlessEqual(
+            [ x.ip_address for x in node.networks.all() ],
+            [ '2.2.2.210' ])
+
+        node = models.ManagementNode.objects.get(node_jid='node1@host1/node1')
+        self.failUnlessEqual(
+            [ x.ip_address for x in node.networks.all() ],
+            [ '2.2.2.3' ])
 
     def testGetManagementNodeAuth(self):
         """

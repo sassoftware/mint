@@ -563,16 +563,10 @@ class FixtureCache(object):
         hiddenProjPubPubReleaseId = pubRelease.id
         buildId6 = build.id
 
-        amiIds = []
-        for i in range(0,7):
-            amiIds.append(client.createBlessedAMI('ami-%08d' % i,
-                    "This is test AMI instance %d" % i))
-
         return cfg, { 'adminId': adminId,
                       'developerId': developerId,
                       'normalUserId': normalUserId,
                       'someOtherDeveloperId': someOtherDeveloperId,
-                      'amiIds': amiIds,
                       'projectId': projectId,
                       'otherProjectId': otherProjectId,
                       'hiddenProjectId': hiddenProjectId,

@@ -1,4 +1,8 @@
-import sys
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
+#
 
 from conary import dbstore
 from conary.dbstore import sqlerrors
@@ -9,7 +13,6 @@ from mint.db import schema
 
 from mint.db import builds
 from mint.db import communityids
-from mint.db import ec2
 from mint.db import jobs
 from mint.db import news
 from mint.db import mirror
@@ -55,8 +58,6 @@ class TableCache(object):
         self.popularProjects = selections.PopularProjectsTable(db)
         self.latestCommit = selections.LatestCommitTable(db)
         self.publishedReleases = pubreleases.PublishedReleasesTable(db)
-        self.blessedAMIs = ec2.BlessedAMIsTable(db)
-        self.launchedAMIs = ec2.LaunchedAMIsTable(db)
         self.communityIds = communityids.CommunityIdsTable(db)
         self.productVersions = projects.ProductVersionsTable(db, cfg)
 
@@ -120,8 +121,6 @@ class Database(object):
         self.popularProjects = tables.popularProjects
         self.latestCommit = tables.latestCommit
         self.publishedReleases = tables.publishedReleases
-        self.blessedAMIs = tables.blessedAMIs
-        self.launchedAMIs = tables.launchedAMIs
         self.communityIds = tables.communityIds
         self.productVersions = tables.productVersions
         self.platforms = tables.platforms

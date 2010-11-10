@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 22)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 23)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -626,54 +626,6 @@ def _createFrontPageStats(db):
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['TopProjects'] = []
         changed = True
-
-    return changed
-
-
-def _createEC2Data(db):
-    cu = db.cursor()
-    changed = False
-
-    if 'BlessedAMIs' not in db.tables:
-        cu.execute("""
-        CREATE TABLE BlessedAMIs (
-            blessedAMIId        %(PRIMARYKEY)s,
-            ec2AMIId            varchar(12) NOT NULL,
-            buildId             integer,
-            shortDescription    varchar(128),
-            helptext            text,
-            instanceTTL         integer NOT NULL,
-            mayExtendTTLBy      integer,
-            isAvailable         integer NOT NULL DEFAULT 1,
-            userDataTemplate    text,
-            CONSTRAINT ba_fk_b FOREIGN KEY (buildId)
-                REFERENCES Builds(buildId) ON DELETE SET NULL
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['BlessedAMIs'] = []
-        changed = True
-    changed |= db.createIndex('BlessedAMIs', 'BlessedAMIEc2AMIIdIdx', 'ec2AMIId')
-
-    if 'LaunchedAMIs' not in db.tables:
-        cu.execute("""
-        CREATE Table LaunchedAMIs (
-            launchedAMIId       %(PRIMARYKEY)s,
-            blessedAMIId        integer NOT NULL,
-            launchedFromIP      varchar(15) NOT NULL,
-            ec2InstanceId       varchar(10) NOT NULL,
-            raaPassword         varchar(8) NOT NULL,
-            launchedAt          numeric(14,0) NOT NULL,
-            expiresAfter        numeric(14,0) NOT NULL,
-            isActive            integer NOT NULL DEFAULT 1,
-            userData            text,
-            CONSTRAINT la_bai_fk FOREIGN KEY (blessedAMIId)
-                REFERENCES BlessedAMIs(blessedAMIId) ON DELETE RESTRICT
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['LaunchedAMIs'] = []
-        changed = True
-    changed |= db.createIndex('LaunchedAMIs', 'LaunchedAMIsExpiresActive',
-            'isActive,expiresAfter')
-    changed |= db.createIndex('LaunchedAMIs', 'LaunchedAMIsIPsActive',
-            'isActive,launchedFromIP')
 
     return changed
 
@@ -2015,7 +1967,6 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createRepNameMap(db)
     changed |= _createApplianceSpotlight(db)
     changed |= _createFrontPageStats(db)
-    changed |= _createEC2Data(db)
     changed |= _createSessions(db)
     changed |= _createTargets(db)
     changed |= _createPlatforms(db)

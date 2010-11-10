@@ -7,7 +7,6 @@
 import os
 import robj
 import time
-from conary.lib import util as cny_util
 from robj.lib import xutil
 from xobj import xobj
 
@@ -19,16 +18,12 @@ class WigBackendClient(object):
         self.api = robj.connect(url, logging=False, maxClients=1)
         self.image = None
 
-    def startJob(self, files):
-        """Start a new image build job."""
+    def createJob(self):
         # Create image resource
         self.api.images.append({'createdBy': 'nobody'})
         self.image = self.api.images[-1]
 
-        # Upload image files
-        for path, filetype in files:
-            self.addFile(path, filetype)
-
+    def startJob(self):
         # Initiate job
         self.image.imageJob = self.dataFromObject({
             'type': 'image',
@@ -50,28 +45,22 @@ class WigBackendClient(object):
             time.sleep(1)
             job.refresh(force=True)
 
-    def finishJob(self):
-        """Retrieve image results and clean up job."""
-        job = self.image.imageJob
-
-        # Fetch results
-        results = job.resultResource
+    def getResults(self):
+        """Return a file handle to the result image."""
+        results = self.image.imageJob.resultResource
         if not results.elements:
             raise RuntimeError("No files in job result")
 
-        for resFile in results.resultFiles:
-            name = resFile._root.path
-            size = int(resFile.size)
-            infile = resFile.path
-            outfile = open(name, 'wb')
-            copied = cny_util.copyfileobj(infile, outfile)
-            if copied != size:
-                raise RuntimeError("File %r is wrong size: expected %s, got %s"
-                        % (name, size, copied))
+        resFile = results.resultFiles[0]
+        name = resFile._root.path
+        size = int(resFile.size)
+        fobj = resFile.path
+        return name, size, fobj
 
-        # Cleanup
-        job.delete()
+    def cleanup(self):
+        self.image.imageJob.delete()
         self.image.delete()
+        self.image = None
 
     def dataFromObject(self, data, tag, method='POST',
             contentType='application/xml'):
@@ -81,9 +70,12 @@ class WigBackendClient(object):
 
     def addFile(self, path, filetype):
         name = os.path.basename(path)
-        print 'Adding file', name
         fobj = open(path, 'rb')
         size = os.fstat(fobj.fileno()).st_size
+        self.addFileStream(fobj, filetype, name, size)
+
+    def addFileStream(self, fobj, filetype, name, size):
+        print 'Adding file', name
 
         # Create file resource
         self.image.files.append({
