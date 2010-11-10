@@ -143,7 +143,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
     def assertXMLEquals(self, first, second, ignoreNodes=None):
         if ignoreNodes is None:
             ignoreNodes = ['time_created', 'time_updated', 'created_date',
-                'last_available_update_refresh', 'time_enabled']
+                'last_available_update_refresh', 'time_enabled',
+                'registration_date']
         from lxml import etree
         X = XML(orderedChildren=True, ignoreNodes=ignoreNodes)
         tree0 = X.normalize(etree.fromstring(first.strip()))
