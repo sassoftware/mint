@@ -175,17 +175,17 @@ urlpatterns = patterns('',
         name='JobStateJobs'),
 
     # Major Versions
-    url(r'^api/products/(\w|\.)*/versions/(\w|\.)*/?$',
+    url(r'^api/products/(\w|\-)*/versions/(\w|\.)*/?$',
         inventoryviews.MajorVersionService(),
         name='MajorVersions'),
 
     # Stages
-    url(r'^api/products/(\w|\.)*/versions/(\w|\.)*/stages/(\w)*/?$',
+    url(r'^api/products/(\w|\-)*/versions/(\w|\.)*/stages/(\w)*/?$',
         inventoryviews.StageService(),
         name='Stages'),
 
     # Projects
-    url(r'^api/products/(\w|\.)*/?$',
+    url(r'^api/products/(\w|\-)*/?$',
         inventoryviews.ApplianceService(),
         name='Projects'),
 )
