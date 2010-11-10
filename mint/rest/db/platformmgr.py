@@ -192,6 +192,15 @@ class PlatformJobStore(rpath_job.SqlJobStore):
     jobType = 'platform-load'
 
 class LoadRunner(rpath_job.BackgroundRunner):
+
+    def __init__(self, func, db):
+        rpath_job.BackgroundRunner.__init__(self, func)
+        self.db = db
+
+    def postFork(self):
+        """Unshare database connection with parent process."""
+        self.db.db.reopen_fork()
+
     def handleError(self, exc_info):
         log.error("Unhandled error in platform slice manual load:",
                 exc_info=exc_info)
@@ -211,7 +220,7 @@ class Platforms(object):
         self.contentSourceTypes = ContentSourceTypes(db, cfg, self)
         self.mgr = mgr
         self.jobStore = PlatformJobStore(self.db)
-        self.loader = LoadRunner(self._load)
+        self.loader = LoadRunner(self._load, self.db)
 
     def iterPlatforms(self):
         platforms = []
@@ -385,35 +394,6 @@ class Platforms(object):
             return False
         else:
             return True
-
-    def backgroundRun(self, function, *args, **kw):
-        pid = os.fork()
-        if pid:
-            os.waitpid(pid, 0)
-            return
-        try:
-            try:
-                pid = os.fork()
-                if pid:
-                    # The first child exits and is waited by the parent
-                    # the finally part will do the os._exit
-                    return
-
-                os.chdir('/')
-                self.db.db.reopen_fork()
-                function(*args, **kw)
-            except:
-                try:
-                    exc_info = sys.exc_info()
-                    if hasattr(function, 'error'):
-                        function.error(self, exc_info)
-                    else:
-                        log.error("Unhandled error in background operation:",
-                                exc_info=exc_info)
-                finally:
-                    os._exit(1)
-        finally:
-            os._exit(0)
 
     def load(self, platformId, platformLoad):
         platform = self.getById(platformId)
