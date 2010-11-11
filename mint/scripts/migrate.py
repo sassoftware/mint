@@ -1925,7 +1925,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         
         return True
 
-     def migrate25(self):
+    def migrate25(self):
         cu = self.db.cursor()
         db = self.db
 
