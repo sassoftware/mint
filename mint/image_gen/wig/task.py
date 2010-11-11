@@ -111,6 +111,10 @@ class WigTask(plug_worker.TaskHandler):
             name = os.path.basename(path)
 
             if kind == 'msi':
+                # Use the digest as the name so there aren't conflicts, e.g.
+                # two different packages providing Setup.msi
+                name = fileInfo.contents.sha1().encode('hex') + '.msi'
+
                 # MSI install job, to be put in servicing.xml
                 msiInfo = otherInfo
                 pkgXml = E.package(
