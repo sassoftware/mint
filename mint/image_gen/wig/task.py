@@ -20,7 +20,6 @@ from conary.deps import deps as cny_deps
 from lxml import builder
 from lxml import etree
 from rmake3.worker import plug_worker
-from xml.etree import ElementTree as ET
 
 from mint.image_gen import constants as iconst
 from mint.image_gen.wig import backend
@@ -250,15 +249,15 @@ class WigTask(plug_worker.TaskHandler):
         ctx = hashlib.sha1()
         self._postFileObject('PUT', name, fobj, ctx)
 
-        # FIXME: copypasta from jobslave, replace with robj
-        root = ET.Element('files')
-        fileElem = ET.SubElement(root, 'file')
-        ET.SubElement(fileElem, 'title').text = "Windows Image (WIM)"
-        ET.SubElement(fileElem, 'size').text = str(size)
-        ET.SubElement(fileElem, 'sha1').text = ctx.hexdigest()
-        ET.SubElement(fileElem, 'fileName').text = name
-
-        self._post('PUT', 'files', body=ET.tostring(root))
+        E = builder.ElementMaker()
+        root = E.files(E.file(
+            E.title("Windows Image (WIM)"),
+            E.size(str(size)),
+            E.sha1(ctx.hexdigest()),
+            E.fileName(name),
+            ))
+        doc = etree.tostring(root)
+        self._post('PUT', 'files', body=etree.tostring(root))
 
         self.wigClient.cleanup()
 
