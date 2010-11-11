@@ -145,7 +145,7 @@ class WigTask(plug_worker.TaskHandler):
         self.wigClient.addFileStream(sio, 'xml', 'servicing.xml', len(doc))
 
         # Send registry keys for the rTIS service.
-        doc = RTIS_REG_2003_X86.encode('utf-16-le')
+        doc = RTIS_REG_2003_X86.encode('utf-16')
         sio = StringIO.StringIO(doc)
         self.wigClient.addFileStream(sio, 'reg', 'rTIS.reg', len(doc))
 
