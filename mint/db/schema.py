@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 24)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 25)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1395,6 +1395,31 @@ def _createInventorySchema(db, cfg):
                 UNIQUE ("system_id", "credentials_id")
             )""" % db.keywords)
         db.tables['inventory_system_target_credentials'] = []
+        changed = True
+
+    if 'django_site' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "django_site" (
+                "id" %(PRIMARYKEY)s,
+                "domain" VARCHAR(100) NOT NULL UNIQUE,
+                "name" VARCHAR(100) NOT NULL UNIQUE
+            )""" % db.keywords)
+        db.tables['django_site'] = []
+        changed = True
+        changed |= _addTableRows(db, 'django_site', 'name',
+            [
+                dict(id=1, domain="rbuilder.inventory", name="rBuilder Inventory")])
+
+    if 'django_redirect' not in db.tables:
+        cu.execute("""
+            CREATE TABLE "django_redirect" (
+                "id" %(PRIMARYKEY)s,
+                "site_id" INTEGER NOT NULL UNIQUE
+                    REFERENCES "django_site" ("id"),
+                "old_path" VARCHAR(200) NOT NULL UNIQUE,
+                "new_path" VARCHAR(200) NOT NULL 
+            )""" % db.keywords)
+        db.tables['django_redirect'] = []
         changed = True
 
     return changed

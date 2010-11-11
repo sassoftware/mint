@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 24)
+    Version = (51, 25)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1923,6 +1923,37 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
             schema.windows_build_node_creation_descriptor)
         
+        return True
+
+     def migrate25(self):
+        cu = self.db.cursor()
+        db = self.db
+
+        if 'django_site' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "django_site" (
+                    "id" %(PRIMARYKEY)s,
+                    "domain" VARCHAR(100) NOT NULL UNIQUE,
+                    "name" VARCHAR(100) NOT NULL UNIQUE
+                )""" % db.keywords)
+            db.tables['django_site'] = []
+            changed = True
+            changed |= schema._addTableRows(db, 'django_site', 'name',
+                [
+                    dict(id=1, domain="rbuilder.inventory", name="rBuilder Inventory")])
+
+        if 'django_redirect' not in db.tables:
+            cu.execute("""
+                CREATE TABLE "django_redirect" (
+                    "id" %(PRIMARYKEY)s,
+                    "site_id" INTEGER NOT NULL UNIQUE
+                        REFERENCES "django_site" ("id"),
+                    "old_path" VARCHAR(200) NOT NULL UNIQUE,
+                    "new_path" VARCHAR(200) NOT NULL 
+                )""" % db.keywords)
+            db.tables['django_redirect'] = []
+            changed = True
+
         return True
 
 

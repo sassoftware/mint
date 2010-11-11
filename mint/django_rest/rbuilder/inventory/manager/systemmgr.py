@@ -15,6 +15,8 @@ from dateutil import tz
 
 from django.db import connection
 from django.conf import settings
+from django.contrib.redirects import models as redirectmodels
+from django.contrib.sites import models as sitemodels
 from django.core.exceptions import ObjectDoesNotExist
 
 from mint.lib import uuid, x509
@@ -196,6 +198,7 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
+
         # Recalculate available updates for each trove on the system, if
         # needed.  This call honors the 24 hour cache.
         # We only want to do this if we're not running in local mode.
@@ -654,7 +657,8 @@ class SystemManager(base.BaseManager):
             key = lambda x: x.pk)
         log.info("Merging 2 systems, id %s will be kept, id %s will be "
             "removed." % (systemToKeep.pk, systemToRemove.pk))
-        return self._merge(systemToKeep, systemToRemove)
+        system = self._merge(systemToKeep, systemToRemove)
+        return system
 
     def _merge(self, system, other):
         # We don't want to overwrite the name and description
@@ -697,6 +701,13 @@ class SystemManager(base.BaseManager):
             """, [ system.pk, other.pk ])
 
         self._mergeLogs(cu, system, other)
+
+        # Add a redirect from the deleted system to the saved system
+        redirect = redirectmodels.Redirect(
+            site=sitemodels.Site.objects.get(pk=settings.SITE_ID),
+            new_path=system.get_absolute_url(),
+            old_path=other.get_absolute_url())
+        redirect.save()
 
         # Remove the other system before saving this one, or else we may stop
         # over some unique constraints (like the one on generated_uuid)
