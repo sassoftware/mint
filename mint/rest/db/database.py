@@ -87,7 +87,13 @@ class DBInterface(object):
         raise NotImplementedError
 
     def reopen(self):
+        self._holdCommits = False
         self.db = self.open()
+
+    def reopen_fork(self):
+        self._holdCommits = False
+        if self.db:
+            self.db.reopen_fork()
 
     def close(self):
         self.db.close()
