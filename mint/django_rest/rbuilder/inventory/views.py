@@ -579,6 +579,7 @@ class InventorySystemConfigurationDescriptorServices(AbstractInventoryService):
     @access.admin
     def rest_GET(self, request, system_id):
         response = HttpResponse(status=200, content=self.get(system_id))
+        response['Content-Type'] = 'text/xml'
         return response
     
     def get(self, system_id):
