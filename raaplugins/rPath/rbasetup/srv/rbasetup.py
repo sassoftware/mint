@@ -105,14 +105,12 @@ class rBASetup(rAASrvPlugin):
         pid = os.fork()
         if not pid: # child
             rc = -3
+            os.close(rdfd)
+            os.close(rdfd2)
+            logWriter = os.fdopen(wrfd, 'w')
+            errorWriter = os.fdopen(wrfd2, 'w')
             try:
-                errorWriter = None
                 try:
-                    os.close(rdfd)
-                    os.close(rdfd2)
-                    logWriter = os.fdopen(wrfd, 'w')
-                    errorWriter = os.fdopen(wrfd, 'w')
-
                     # Reset logging in the child
                     childLog = logging.getLogger('setupRMake')
                     childLog.addHandler(logging.StreamHandler(logWriter))
@@ -142,6 +140,8 @@ class rBASetup(rAASrvPlugin):
                     childLog.error(traceback.format_exc())
                     rc = -2
             finally:
+                logWriter.close()
+                errorWriter.close()
                 os._exit(rc)
         else: # parent
             # close the child log
@@ -161,7 +161,7 @@ class rBASetup(rAASrvPlugin):
             log.info("Parent waiting on PID %d", pid)
             childStatus = os.waitpid(pid,0)[1]
             childRC = os.WEXITSTATUS(childStatus)
-            os.close(rdfd)
+
             if not os.WIFEXITED(childStatus) or (childRC and childRC != 255):
                 log.info("Child exited with code %d", childRC)
                 try:
