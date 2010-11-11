@@ -4,6 +4,7 @@
 # All rights reserved.
 #
 
+import logging
 import hashlib
 import json
 import os
@@ -21,6 +22,8 @@ from xml.etree import ElementTree as ET
 from mint.image_gen import constants as iconst
 from mint.image_gen.wig import backend
 
+log = logging.getLogger('wig')
+
 
 class WigTask(plug_worker.TaskHandler):
 
@@ -32,14 +35,18 @@ class WigTask(plug_worker.TaskHandler):
         self.setConfiguration()
         self.makeJob()
 
-        self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image {2/4}")
-        self.runJob()
+        self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image {2/4;0%}")
+        ok, message = self.runJob()
+        if ok:
+            self.sendStatus(iconst.WIG_JOB_UPLOADING,
+                    "Transferring image result {3/4}")
+            self.postResults()
 
-        self.sendStatus(iconst.WIG_JOB_UPLOADING,
-                "Transferring image result {3/4}")
-        self.postResults()
-
-        self.sendStatus(iconst.WIG_JOB_DONE, "Image built {4/4}")
+            self.sendStatus(iconst.WIG_JOB_DONE, "Image built {4/4}")
+        else:
+            self.wigClient.cleanup()
+            self.sendStatus(iconst.WIG_JOB_FAILED, "Build failed: %s" %
+                    (message,))
 
     def setConfiguration(self):
         data = json.loads(self.getData())
@@ -79,7 +86,7 @@ class WigTask(plug_worker.TaskHandler):
         jobList = self.getTroveJobList()
 
         # Fetch all trove contents in one go (for now)
-        print 'Retrieving image contents'
+        log.info("Retrieving contents for %d troves", len(jobList))
         repos = self.conaryClient.getRepos()
         cs = repos.createChangeSet(jobList, recurse=False, withFiles=True,
                 withFileContents=True)
@@ -88,7 +95,8 @@ class WigTask(plug_worker.TaskHandler):
 
         self.wigClient.createJob()
         for pathId, fileId, path, kind, fileInfo in sorted(interestingFiles):
-            print pathId.encode('hex'), fileId.encode('hex'), path
+            log.info("Sending file: pathid=%s fileid=%s path=%s",
+                    pathId.encode('hex'), fileId.encode('hex'), path)
             size = fileInfo.contents.size()
             name = os.path.basename(path)
             contType, contents = cs.getFileContents(pathId, fileId)
@@ -121,8 +129,8 @@ class WigTask(plug_worker.TaskHandler):
                         interestingFiles.append((pathId, fileId, path, ext,
                             fileInfo))
                     else:
-                        print "Don't know what to do with capsule file %r" % (
-                                path,)
+                        log.warning("Ignoring capsule file %r -- don't know "
+                                "what it is", path)
                         continue
                 else:
                     # Regular file -- rTIS.exe is interesting
@@ -131,15 +139,15 @@ class WigTask(plug_worker.TaskHandler):
                         interestingFiles.append((pathId, fileId, path, 'rtis',
                             fileInfo))
                     else:
-                        print "Don't know what to do with regular file %r" % (
-                                path,)
+                        log.warning("Ignoring regular file %r -- don't know "
+                                "what it is", path)
                         continue
 
         return interestingFiles
 
     def getTroveJobList(self):
         """Get list of byDefault troves"""
-        print 'Retrieving trove list'
+        log.info("Retrieving trove list for %s", self.troveTup)
         repos = self.conaryClient.getRepos()
         trv = repos.getTrove(*self.troveTup, withFiles=False)
         subtroves = sorted(set( [tup for (tup, isDefault, isStrong)
@@ -148,11 +156,18 @@ class WigTask(plug_worker.TaskHandler):
 
     def runJob(self):
         self.wigClient.startJob()
-        for status in self.wigClient.watchJob():
-            print status
+        log.info("Job started: %s", self.wigClient.getJobUrl())
+        for status, message, progress in self.wigClient.watchJob():
+            log.info("Job status: %03d %s: %s", progress, status,
+                    message)
+            self.sendStatus(iconst.WIG_JOB_RUNNING,
+                    "Processing image {2/4;%d%%}" % (progress,))
+        ok = status == 'Completed'
+        return ok, message
 
     def _post(self, method, path, contentType='application/xml', body=None):
-        # FIXME: copypata from jobslave, obsoleted by using robj in postResults()
+        # FIXME: copypasta from jobslave, obsoleted by using robj in
+        # postResults()
         headers = {
                 'Content-Type': contentType,
                 'X-rBuilder-OutputToken': self.imageToken,
