@@ -652,6 +652,8 @@ class SystemManager(base.BaseManager):
             return system
         systemToKeep, systemToRemove = sorted([system, systemByUuid],
             key = lambda x: x.pk)
+        log.info("Merging 2 systems, id %s will be kept, id %s will be " + \
+            "removed." % (systemToKeep.pk, systemToRemove.pk))
         return self._merge(systemToKeep, systemToRemove)
 
     def _merge(self, system, other):
