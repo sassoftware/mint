@@ -10,6 +10,7 @@ import json
 import os
 import restlib.client
 import StringIO
+import time
 from conary import conarycfg
 from conary import conaryclient
 from conary import files as cny_files
@@ -33,21 +34,19 @@ class WigTask(plug_worker.TaskHandler):
 
     def run(self):
         self.sendStatus(iconst.WIG_JOB_FETCHING,
-                "Retrieving image contents {1/4}")
+                "Retrieving image contents {1/5}")
         self.setConfiguration()
         self.makeJob()
 
-        self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image {2/4;0%}")
+        self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image {3/5;0%}")
         ok, message = self.runJob()
         if ok:
-            self.sendStatus(iconst.WIG_JOB_UPLOADING,
-                    "Transferring image result {3/4}")
             self.postResults()
 
-            self.sendStatus(iconst.WIG_JOB_DONE, "Image built {4/4}")
+            self.sendStatus(iconst.WIG_JOB_DONE, "Image built")
         else:
             self.wigClient.cleanup()
-            self.sendStatus(iconst.WIG_JOB_FAILED, "Build failed: %s" %
+            self.sendStatus(iconst.WIG_JOB_FAILED, "Image failed: %s" %
                     (message,))
 
     def setConfiguration(self):
@@ -101,7 +100,7 @@ class WigTask(plug_worker.TaskHandler):
         E = builder.ElementMaker()
         self.wigClient.createJob()
         packageList = []
-        for key, value in sorted(interestingFiles):
+        for n, (key, value) in enumerate(sorted(interestingFiles)):
             # General trove info
             pathId, fileId = key
             path, kind, trvCs, fileInfo, otherInfo = value
@@ -131,12 +130,23 @@ class WigTask(plug_worker.TaskHandler):
                         )
                 packageList.append(pkgXml)
 
+            # Report progress for file upload.
+            def callback(transferred):
+                if size:
+                    percent = int(100.0 * transferred / size)
+                else:
+                    percent = 0
+                self.sendStatus(iconst.WIG_JOB_SENDING,
+                        "Transferring file %s {2/5;%d/%d;%d%%}" % (name, n,
+                            len(interestingFiles), percent))
+
             # Upload file contents to the build service.
             log.info("Sending file: pathid=%s fileid=%s path=%s",
                     pathId.encode('hex'), fileId.encode('hex'), path)
             contType, contents = cs.getFileContents(pathId, fileId)
             fobj = contents.get()
-            self.wigClient.addFileStream(fobj, kind, name, size)
+            wrapper = FileWithProgress(fobj, callback)
+            self.wigClient.addFileStream(wrapper, kind, name, size)
 
         # Finish assembling servicing.xml and send it to the build service.
         root = E.update(E.updateJobs(E.updateJob(
@@ -217,7 +227,7 @@ class WigTask(plug_worker.TaskHandler):
             log.info("Job status: %03d %s: %s", progress, status,
                     message)
             self.sendStatus(iconst.WIG_JOB_RUNNING,
-                    "Processing image {2/4;%d%%}" % (progress,))
+                    "Processing image {3/5;%d%%}" % (progress,))
         ok = status == 'Completed'
         return ok, message
 
@@ -250,8 +260,19 @@ class WigTask(plug_worker.TaskHandler):
         name, size, fobj = self.wigClient.getResults()
         name = name.decode('utf8', 'ignore')
 
+        # Report progress for file upload.
+        def callback(transferred):
+            if size:
+                percent = int(100.0 * transferred / size)
+            else:
+                percent = 0
+            self.sendStatus(iconst.WIG_JOB_UPLOADING,
+                    "Transferring image result {4/5;%d%%}" % (percent,))
+        wrapper = FileWithProgress(fobj, callback)
+
+        # Also calculate SHA-1 digest as it uploads.
         ctx = hashlib.sha1()
-        self._postFileObject('PUT', name, fobj, ctx)
+        self._postFileObject('PUT', name, wrapper, ctx)
 
         E = builder.ElementMaker()
         root = E.files(E.file(
@@ -263,6 +284,32 @@ class WigTask(plug_worker.TaskHandler):
         self._post('PUT', 'files', body=etree.tostring(root))
 
         self.wigClient.cleanup()
+
+
+class FileWithProgress(object):
+
+    interval = 2
+
+    def __init__(self, fobj, callback):
+        self.fobj = fobj
+        self.callback = callback
+        self.total = 0
+        self.last = 0
+
+    _SIGIL = object()
+    def read(self, size=_SIGIL):
+        if size is self._SIGIL:
+            data = self.fobj.read()
+        else:
+            data = self.fobj.read(size)
+        self.total += len(data)
+
+        now = time.time()
+        if now - self.last >= self.interval:
+            self.last = now
+            self.callback(self.total)
+
+        return data
 
 
 # FIXME: copypasta from jobslave
