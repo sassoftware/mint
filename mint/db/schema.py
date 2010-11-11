@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 23)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 24)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1645,7 +1645,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <default></default>
       <required>true</required>
       <prompt>
-        <desc>Enter a name for this management service</desc>
+        <desc>Enter a name for this system</desc>
       </prompt>
     </field>
     <field> 
@@ -1658,7 +1658,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <default></default>
       <required>false</required>
       <prompt>
-        <desc>Enter a description for this management service</desc>
+        <desc>Enter a description for this system</desc>
       </prompt>
     </field>
     <field> 
@@ -1668,7 +1668,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
         <desc>Network Address</desc> 
       </descriptions> 
       <prompt>
-        <desc>Enter a DNS name or IP address for this management service</desc>
+        <desc>Enter a DNS name or IP address for this system</desc>
       </prompt>
       <type>str</type> 
       <default></default> 
@@ -1684,7 +1684,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <default></default>
       <required>true</required>
       <prompt>
-        <desc>Enter a name for the zone</desc>
+        <desc>Enter a name for this system's zone</desc>
       </prompt>
     </field>
     <field> 
@@ -1697,7 +1697,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <default></default>
       <required>false</required>
       <prompt>
-        <desc>Enter a description for the zone</desc>
+        <desc>Enter a description for this system's zone</desc>
       </prompt>
     </field>
   </dataFields> 
@@ -1717,7 +1717,7 @@ windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.
       <default></default>
       <required>true</required>
       <prompt>
-        <desc>Enter a name for this Windows build service</desc>
+        <desc>Enter a name for this system</desc>
       </prompt>
     </field>
     <field> 
@@ -1730,7 +1730,7 @@ windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.
       <default></default>
       <required>false</required>
       <prompt>
-        <desc>Enter a description for this Windows build service</desc>
+        <desc>Enter a description for this system</desc>
       </prompt>
     </field>
     <field> 
@@ -1740,7 +1740,7 @@ windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.
         <desc>Network Address</desc> 
       </descriptions> 
       <prompt>
-        <desc>Enter a DNS name or IP address for this Windows build service</desc>
+        <desc>Enter a DNS name or IP address for this system</desc>
       </prompt>
       <type>str</type> 
       <default></default> 
