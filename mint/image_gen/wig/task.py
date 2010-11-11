@@ -256,7 +256,6 @@ class WigTask(plug_worker.TaskHandler):
             E.sha1(ctx.hexdigest()),
             E.fileName(name),
             ))
-        doc = etree.tostring(root)
         self._post('PUT', 'files', body=etree.tostring(root))
 
         self.wigClient.cleanup()
