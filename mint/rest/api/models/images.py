@@ -72,6 +72,7 @@ class Release(Model):
     timeMirrored = fields.DateTimeField(editable=False) # not modifiable
     timeUpdated = fields.DateTimeField(editable=False) # not modifiable
     shouldMirror = fields.BooleanField()
+    imageCount = fields.IntegerField()
 
     def get_absolute_url(self):
         return ('products.releases', self.hostname, str(self.releaseId))
