@@ -11,6 +11,7 @@ from xobj import xobj
 
 from conary import versions
 
+from django.contrib.redirects import models as redirectmodels
 from django.db import connection
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
@@ -2058,6 +2059,7 @@ class SystemsTestCase(XMLTestCase):
 
         systemToKeep, systemRemoved = sorted([ system0, system1 ],
             key = lambda x: x.pk)
+        systemRemovedUrl = systemRemoved.get_absolute_url()
         system = models.System.objects.get(pk=systemToKeep.pk)
 
         # At this point, properties from system1 should have copied over
@@ -2073,6 +2075,13 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(list(models.System.objects.filter(
             pk=systemRemoved.pk)),
             [])
+
+        # A redirect should have been created
+        redirect = redirectmodels.Redirect.objects.filter(
+            new_path=systemToKeep.get_absolute_url(),
+            old_path=systemRemovedUrl)
+        self.assertEquals(len(redirect), 1)
+
         return system, systemRemoved
 
     def testCurrentStateUpdateApi(self):
