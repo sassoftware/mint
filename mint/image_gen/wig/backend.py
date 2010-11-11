@@ -35,15 +35,19 @@ class WigBackendClient(object):
     def watchJob(self):
         """Yield status updates until the image job is done."""
         job = self.image.imageJob
-        lastStatus = None
+        last = None
         while True:
-            if job.status != lastStatus:
-                lastStatus = job.status
-                yield job.status
+            next = (job.status, job.message, int(job.progress))
+            if last != next:
+                last = next
+                yield next
             if job.status not in ('Queued', 'Running'):
                 break
             time.sleep(1)
             job.refresh(force=True)
+
+    def getJobUrl(self):
+        return self.image.imageJob.id
 
     def getResults(self):
         """Return a file handle to the result image."""
@@ -75,8 +79,6 @@ class WigBackendClient(object):
         self.addFileStream(fobj, filetype, name, size)
 
     def addFileStream(self, fobj, filetype, name, size):
-        print 'Adding file', name
-
         # Create file resource
         self.image.files.append({
             'path': name,

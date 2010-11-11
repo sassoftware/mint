@@ -4,10 +4,12 @@
 # All rights reserved.
 #
 
+import logging
 import hashlib
 import json
 import os
 import restlib.client
+import StringIO
 from conary import conarycfg
 from conary import conaryclient
 from conary import files as cny_files
@@ -15,11 +17,14 @@ from conary import trove as cny_trove
 from conary import trovetup
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
+from lxml import builder
+from lxml import etree
 from rmake3.worker import plug_worker
-from xml.etree import ElementTree as ET
 
 from mint.image_gen import constants as iconst
 from mint.image_gen.wig import backend
+
+log = logging.getLogger('wig')
 
 
 class WigTask(plug_worker.TaskHandler):
@@ -32,14 +37,18 @@ class WigTask(plug_worker.TaskHandler):
         self.setConfiguration()
         self.makeJob()
 
-        self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image {2/4}")
-        self.runJob()
+        self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image {2/4;0%}")
+        ok, message = self.runJob()
+        if ok:
+            self.sendStatus(iconst.WIG_JOB_UPLOADING,
+                    "Transferring image result {3/4}")
+            self.postResults()
 
-        self.sendStatus(iconst.WIG_JOB_UPLOADING,
-                "Transferring image result {3/4}")
-        self.postResults()
-
-        self.sendStatus(iconst.WIG_JOB_DONE, "Image built {4/4}")
+            self.sendStatus(iconst.WIG_JOB_DONE, "Image built {4/4}")
+        else:
+            self.wigClient.cleanup()
+            self.sendStatus(iconst.WIG_JOB_FAILED, "Build failed: %s" %
+                    (message,))
 
     def setConfiguration(self):
         data = json.loads(self.getData())
@@ -76,29 +85,77 @@ class WigTask(plug_worker.TaskHandler):
         self.imageToken = data['outputToken'].encode('ascii')
 
     def makeJob(self):
+        # FIXME: This whole function needs to be rewritten to build an update
+        # job so that the packages are ordered correctly.
         jobList = self.getTroveJobList()
 
         # Fetch all trove contents in one go (for now)
-        print 'Retrieving image contents'
+        # FIXME: fetch files separately. It might be streamable that way.
+        log.info("Retrieving contents for %d troves", len(jobList))
         repos = self.conaryClient.getRepos()
         cs = repos.createChangeSet(jobList, recurse=False, withFiles=True,
                 withFileContents=True)
 
         interestingFiles = self.filterFiles(cs)
 
+        E = builder.ElementMaker()
         self.wigClient.createJob()
-        for pathId, fileId, path, kind, fileInfo in sorted(interestingFiles):
-            print pathId.encode('hex'), fileId.encode('hex'), path
+        packageList = []
+        for key, value in sorted(interestingFiles):
+            # General trove info
+            pathId, fileId = key
+            path, kind, trvCs, fileInfo, otherInfo = value
+            trvName, trvVersion, trvFlavor = trvCs.getNewNameVersionFlavor()
+            manifest = '%s=%s[%s]' % (trvName, trvVersion.freeze(), trvFlavor)
             size = fileInfo.contents.size()
             name = os.path.basename(path)
+
+            if kind == 'msi':
+                # MSI install job, to be put in servicing.xml
+                msiInfo = otherInfo
+                pkgXml = E.package(
+                        E.type('msi'),
+                        E.sequence(str(len(packageList))),
+                        E.logFile('install.log'),
+                        E.operation('install'),
+                        E.productCode(msiInfo.productCode()),
+                        E.productName(msiInfo.name()),
+                        E.productVerson(msiInfo.version()),
+                        E.file(name),
+                        E.manifestEntry(manifest),
+                        E.previousManifestEntry(''),
+                        )
+                packageList.append(pkgXml)
+
+            # Upload file contents to the build service.
+            log.info("Sending file: pathid=%s fileid=%s path=%s",
+                    pathId.encode('hex'), fileId.encode('hex'), path)
             contType, contents = cs.getFileContents(pathId, fileId)
             fobj = contents.get()
             self.wigClient.addFileStream(fobj, kind, name, size)
+
+        # Finish assembling servicing.xml and send it to the build service.
+        root = E.update(E.updateJobs(E.updateJob(
+            E.sequence('0'),
+            E.logFile('setup.log'),
+            E.packages(*packageList),
+            )))
+        doc = etree.tostring(root)
+        sio = StringIO.StringIO(doc)
+        self.wigClient.addFileStream(sio, 'xml', 'servicing.xml', len(doc))
+
+        # Send registry keys for the rTIS service.
+        doc = RTIS_REG_2003_X86.encode('utf-16')
+        sio = StringIO.StringIO(doc)
+        self.wigClient.addFileStream(sio, 'reg', 'rTIS.reg', len(doc))
 
     def filterFiles(self, cs):
         # Select files that can be given to the windows build service.
         interestingFiles = []
         for trvCs in cs.iterNewTroveList():
+            if trvCs.getName() == 'rTIS:msi':
+                # HACK: Telling rTIS to update itself will kill rTIS.
+                continue
             for pathId, path, fileId, fileVer in trvCs.getNewFileList():
                 fileStream = cs.getFileChange(None, fileId)
                 if not cny_files.frozenFileHasContents(fileStream):
@@ -115,31 +172,34 @@ class WigTask(plug_worker.TaskHandler):
                         and not flags.isCapsuleOverride()):
                     # No contents
                     continue
+
+                key = pathId, fileId
                 if pathId == cny_trove.CAPSULE_PATHID:
                     # Capsule file -- MSI and WIM are interesting
-                    if ext in ('msi', 'wim'):
-                        interestingFiles.append((pathId, fileId, path, ext,
-                            fileInfo))
+                    if ext == 'msi':
+                        otherInfo = trvCs.getTroveInfo().capsule.msi
+                    elif ext == 'wim':
+                        otherInfo = None
                     else:
-                        print "Don't know what to do with capsule file %r" % (
-                                path,)
+                        log.warning("Ignoring capsule file %r -- don't know "
+                                "what it is", path)
                         continue
                 else:
                     # Regular file -- rTIS.exe is interesting
                     if path.lower() == '/rtis.exe':
-                        continue  # FIXME
-                        interestingFiles.append((pathId, fileId, path, 'rtis',
-                            fileInfo))
+                        otherInfo = None
                     else:
-                        print "Don't know what to do with regular file %r" % (
-                                path,)
+                        log.warning("Ignoring regular file %r -- don't know "
+                                "what it is", path)
                         continue
+                value = path, ext, trvCs, fileInfo, otherInfo
+                interestingFiles.append((key, value))
 
         return interestingFiles
 
     def getTroveJobList(self):
         """Get list of byDefault troves"""
-        print 'Retrieving trove list'
+        log.info("Retrieving trove list for %s", self.troveTup)
         repos = self.conaryClient.getRepos()
         trv = repos.getTrove(*self.troveTup, withFiles=False)
         subtroves = sorted(set( [tup for (tup, isDefault, isStrong)
@@ -148,11 +208,18 @@ class WigTask(plug_worker.TaskHandler):
 
     def runJob(self):
         self.wigClient.startJob()
-        for status in self.wigClient.watchJob():
-            print status
+        log.info("Job started: %s", self.wigClient.getJobUrl())
+        for status, message, progress in self.wigClient.watchJob():
+            log.info("Job status: %03d %s: %s", progress, status,
+                    message)
+            self.sendStatus(iconst.WIG_JOB_RUNNING,
+                    "Processing image {2/4;%d%%}" % (progress,))
+        ok = status == 'Completed'
+        return ok, message
 
     def _post(self, method, path, contentType='application/xml', body=None):
-        # FIXME: copypata from jobslave, obsoleted by using robj in postResults()
+        # FIXME: copypasta from jobslave, obsoleted by using robj in
+        # postResults()
         headers = {
                 'Content-Type': contentType,
                 'X-rBuilder-OutputToken': self.imageToken,
@@ -182,15 +249,14 @@ class WigTask(plug_worker.TaskHandler):
         ctx = hashlib.sha1()
         self._postFileObject('PUT', name, fobj, ctx)
 
-        # FIXME: copypasta from jobslave, replace with robj
-        root = ET.Element('files')
-        fileElem = ET.SubElement(root, 'file')
-        ET.SubElement(fileElem, 'title').text = "Windows Image (WIM)"
-        ET.SubElement(fileElem, 'size').text = str(size)
-        ET.SubElement(fileElem, 'sha1').text = ctx.hexdigest()
-        ET.SubElement(fileElem, 'fileName').text = name
-
-        self._post('PUT', 'files', body=ET.tostring(root))
+        E = builder.ElementMaker()
+        root = E.files(E.file(
+            E.title("Windows Image (WIM)"),
+            E.size(str(size)),
+            E.sha1(ctx.hexdigest()),
+            E.fileName(name),
+            ))
+        self._post('PUT', 'files', body=etree.tostring(root))
 
         self.wigClient.cleanup()
 
@@ -239,3 +305,52 @@ class FilePutter(restlib.client.Client):
             raise restlib.client.ResponseError(resp.status, resp.reason,
                     resp.msg, resp)
         return resp
+
+
+# FIXME: this should come from the platform, probably, but definitely doesn't
+# belong here.
+RTIS_REG_2003_X86 = r"""Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\MountedSYSTEM\ControlSet001\services\rPath Install Manager]
+"Type"=dword:00000010
+"Start"=dword:00000002
+"ErrorControl"=dword:00000001
+"ImagePath"=hex(2):25,00,53,00,79,00,73,00,74,00,65,00,6d,00,52,00,6f,00,6f,00,\
+  74,00,25,00,5c,00,72,00,70,00,6d,00,61,00,6e,00,2e,00,65,00,78,00,65,00,00,\
+  00
+"DisplayName"="rPath Install Manager"
+"DependOnService"=hex(7):52,00,50,00,43,00,53,00,53,00,00,00,00,00
+"ObjectName"="LocalSystem"
+"Description"="Manages Unattended Installations"
+
+[HKEY_LOCAL_MACHINE\MountedSYSTEM\ControlSet001\services\eventlog\Application\RPMAN]
+"EventMessageFile"="%SystemRoot%\\rpman.exe"
+"TypesSupported"=dword:00000007
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\AppID\{8D7E466B-F0FF-44d5-A66C-D725878C7648}]
+@="RPMAN"
+"LocalService"="RPMAN"
+"ServiceParameters"="-Service"
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\AppID\RPMAN.EXE]
+"AppID"="{8D7E466B-F0FF-44d5-A66C-D725878C7648}"
+
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}]
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0]
+@="RPMAN 1.0 Type Library"
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\0]
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\0\win32]
+@="%SystemRoot%\\rpman.exe"
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\FLAGS]
+@="0"
+
+[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\HELPDIR]
+@="%SystemRoot%"
+
+
+"""

@@ -6,13 +6,14 @@
 
 import logging
 import json
+from lxml import builder
+from lxml import etree
 from rmake3.core import handler as rmk_handler
 from rmake3.core import types as rmk_types
 from rmake3.lib import logger
 from twisted.internet import defer
 from twisted.web import client as tw_web_client
 from twisted.web import http_headers
-from xml.etree import ElementTree as ET
 
 from mint import jobstatus
 from mint.image_gen import constants as iconst
@@ -62,7 +63,7 @@ class WigHandler(rmk_handler.JobHandler):
         self._uploadStatus(status)
 
     def _uploadStatus(self, status):
-        root = ET.Element('imageStatus')
+        E = builder.ElementMaker()
         if status.code == iconst.WIG_JOB_QUEUED:
             code = jobstatus.WAITING
         elif status.code < 200:
@@ -71,11 +72,12 @@ class WigHandler(rmk_handler.JobHandler):
             code = jobstatus.FINISHED
         else:
             code = jobstatus.FAILED
-        ET.SubElement(root, 'code').text = str(code)
-        ET.SubElement(root, 'message').text = status.text
+        root = E.imageStatus(
+                E.code(str(code)),
+                E.message(status.text),
+                )
         # TODO: send status detail (e.g. tracebacks) to job log for posterity
-        body = ET.tostring(root)
-        self._upload('PUT', 'status', body)
+        self._upload('PUT', 'status', etree.tostring(root))
 
     def _upload(self, method, path, body, contentType='application/xml'):
         url = self.imageBase + path

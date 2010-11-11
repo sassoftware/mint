@@ -48,5 +48,6 @@ class Manager(rbuilder_manager.RbuilderDjangoManager):
                     settings.DATABASE_PORT, settings.DATABASE_NAME)
             mint_db = Database(self.cfg)
             self._rest_db = RestDatabase(self.cfg, mint_db)
-            self._rest_db.setAuth(self._auth, self._auth.getToken())
+            if self._auth:
+                self._rest_db.setAuth(self._auth, self._auth.getToken())
         return self._rest_db

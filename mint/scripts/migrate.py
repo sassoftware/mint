@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 23)
+    Version = (51, 24)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1910,6 +1910,19 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
 
     def migrate23(self):
         drop_tables(self.db, 'LaunchedAMIs', 'BlessedAMIs')
+        return True
+    
+    def migrate24(self):
+        cu = self.db.cursor()
+
+        # descriptors were updated
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+            schema.inventory_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+            schema.management_node_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+            schema.windows_build_node_creation_descriptor)
+        
         return True
 
 

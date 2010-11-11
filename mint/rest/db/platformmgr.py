@@ -199,7 +199,7 @@ class LoadRunner(rpath_job.BackgroundRunner):
 
     def postFork(self):
         """Unshare database connection with parent process."""
-        self.db.db.reopen_fork()
+        self.db.reopen_fork()
 
     def handleError(self, exc_info):
         log.error("Unhandled error in platform slice manual load:",
@@ -416,11 +416,14 @@ class Platforms(object):
         platLoad.platformId = platformId
         platLoad.uri = platformLoad.uri
 
-        self.loader(platform, job, inFile, outFilePath, uri, repos)
+        self.loader(platform, job.id, inFile, outFilePath, uri, repos)
 
         return platLoad
 
-    def _load(self, platform, job, inFile, outFilePath, uri, repos):
+    def _load(self, platform, jobId, inFile, outFilePath, uri, repos):
+        # Open the job and commit after each state change
+        job = self.jobStore.get(jobId, commitAfterChange = True)
+        job.setFields([('pid', os.getpid()), ('status', job.STATUS_RUNNING) ])
         platformId = platform.platformId
         callback = PlatformLoadCallback(self.db, platformId, job, None)
         # Save a reference to the callback so that we have access to it in the
