@@ -88,21 +88,21 @@ class WigTask(plug_worker.TaskHandler):
         # job so that the packages are ordered correctly.
         jobList = self.getTroveJobList()
 
-        # Fetch all trove contents in one go (for now)
-        # FIXME: fetch files separately. It might be streamable that way.
-        log.info("Retrieving contents for %d troves", len(jobList))
+        # Fetch file list but no contents, this way we can stream the files
+        # individually.
+        log.info("Retrieving metadata for %d troves", len(jobList))
         repos = self.conaryClient.getRepos()
         cs = repos.createChangeSet(jobList, recurse=False, withFiles=True,
-                withFileContents=True)
-
+                withFileContents=False)
         interestingFiles = self.filterFiles(cs)
+        totalFiles = len(interestingFiles)
 
         E = builder.ElementMaker()
         self.wigClient.createJob()
         packageList = []
         for n, (key, value) in enumerate(sorted(interestingFiles)):
             # General trove info
-            pathId, fileId = key
+            pathId, fileId, fileVer = key
             path, kind, trvCs, fileInfo, otherInfo = value
             trvName, trvVersion, trvFlavor = trvCs.getNewNameVersionFlavor()
             manifest = '%s=%s[%s]' % (trvName, trvVersion.freeze(), trvFlavor)
@@ -130,6 +130,11 @@ class WigTask(plug_worker.TaskHandler):
                         )
                 packageList.append(pkgXml)
 
+            # Retrieve contents
+            self.sendStatus(iconst.WIG_JOB_SENDING,
+                    "Transferring file %s {2/5;%d/%d}" % (name, n, totalFiles))
+            fobj = repos.getFileContents( [(fileId, fileVer)] )[0].get()
+
             # Report progress for file upload.
             def callback(transferred):
                 if size:
@@ -138,13 +143,11 @@ class WigTask(plug_worker.TaskHandler):
                     percent = 0
                 self.sendStatus(iconst.WIG_JOB_SENDING,
                         "Transferring file %s {2/5;%d/%d;%d%%}" % (name, n,
-                            len(interestingFiles), percent))
+                            totalFiles, percent))
 
             # Upload file contents to the build service.
             log.info("Sending file: pathid=%s fileid=%s path=%s",
                     pathId.encode('hex'), fileId.encode('hex'), path)
-            contType, contents = cs.getFileContents(pathId, fileId)
-            fobj = contents.get()
             wrapper = FileWithProgress(fobj, callback)
             self.wigClient.addFileStream(wrapper, kind, name, size)
 
@@ -170,6 +173,12 @@ class WigTask(plug_worker.TaskHandler):
             if trvCs.getName() == 'rTIS:msi':
                 # HACK: Telling rTIS to update itself will kill rTIS.
                 continue
+            elif trvCs.getName() == 'platform-isokit:runtime':
+                # Sort of hacky: right now we find isokit by baking it into the
+                # group and looking by name. This function doesn't deal with it
+                # though, so skip.
+                continue
+
             for pathId, path, fileId, fileVer in trvCs.getNewFileList():
                 fileStream = cs.getFileChange(None, fileId)
                 if not cny_files.frozenFileHasContents(fileStream):
@@ -187,20 +196,26 @@ class WigTask(plug_worker.TaskHandler):
                     # No contents
                     continue
 
-                key = pathId, fileId
+                key = pathId, fileId, fileVer
                 if pathId == cny_trove.CAPSULE_PATHID:
-                    # Capsule file -- MSI and WIM are interesting
+                    # Capsule file
                     if ext == 'msi':
+                        # MSI package to be installed
                         otherInfo = trvCs.getTroveInfo().capsule.msi
                     elif ext == 'wim':
+                        # Base platform WIM
                         otherInfo = None
                     else:
                         log.warning("Ignoring capsule file %r -- don't know "
                                 "what it is", path)
                         continue
                 else:
-                    # Regular file -- rTIS.exe is interesting
+                    # Regular file
                     if path.lower() == '/rtis.exe':
+                        # rTIS bootstrap executable
+                        otherInfo = None
+                    elif path.lower() == '/platform-isokit.zip':
+                        # WinPE and associated ISO generation tools
                         otherInfo = None
                     else:
                         log.warning("Ignoring regular file %r -- don't know "
