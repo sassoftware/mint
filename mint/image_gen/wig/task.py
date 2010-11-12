@@ -8,7 +8,6 @@ import logging
 import hashlib
 import json
 import os
-import restlib.client
 import StringIO
 import time
 from conary import conarycfg
@@ -20,6 +19,7 @@ from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
 from lxml import builder
 from lxml import etree
+from restlib import client as rl_client
 from rmake3.worker import plug_worker
 
 from mint.image_gen import constants as iconst
@@ -243,6 +243,11 @@ class WigTask(plug_worker.TaskHandler):
                     message)
             self.sendStatus(iconst.WIG_JOB_RUNNING,
                     "Processing image {3/5;%d%%}" % (progress,))
+
+        # TODO: send logs upstream to rMake as well
+        logs = self.wigClient.getLog()
+        self.sendLog(logs)
+
         ok = status == 'Completed'
         return ok, message
 
@@ -255,7 +260,7 @@ class WigTask(plug_worker.TaskHandler):
                 }
         url = self.imageBase + path
 
-        client = restlib.client.Client(url, headers)
+        client = rl_client.Client(url, headers)
         client.connect()
         return client.request(method, body)
 
@@ -270,6 +275,13 @@ class WigTask(plug_worker.TaskHandler):
         client = FilePutter(url, headers)
         client.connect()
         return client.putFileObject(method, fobj, digest)
+
+    def sendLog(self, data):
+        try:
+            self._post('POST', 'buildLog', contentType='text/plain', body=data)
+        except rl_client.ResponseError, err:
+            if err.status != 204:  # No Content
+                raise
 
     def postResults(self):
         name, size, fobj = self.wigClient.getResults()
@@ -328,7 +340,7 @@ class FileWithProgress(object):
 
 
 # FIXME: copypasta from jobslave
-class FilePutter(restlib.client.Client):
+class FilePutter(rl_client.Client):
     CHUNK_SIZE = 16 * 1024
 
     def putFile(self, method, filePath, digest):
@@ -368,7 +380,7 @@ class FilePutter(restlib.client.Client):
 
         resp = conn.getresponse()
         if resp.status != 200:
-            raise restlib.client.ResponseError(resp.status, resp.reason,
+            raise rl_client.ResponseError(resp.status, resp.reason,
                     resp.msg, resp)
         return resp
 

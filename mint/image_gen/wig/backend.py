@@ -61,6 +61,10 @@ class WigBackendClient(object):
         fobj = resFile.path
         return name, size, fobj
 
+    def getLog(self):
+        """Return contents of the job log."""
+        return self.image.imageJob.logs.read()
+
     def cleanup(self):
         self.image.imageJob.delete()
         self.image.delete()
