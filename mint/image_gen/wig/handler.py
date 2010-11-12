@@ -59,8 +59,11 @@ class WigHandler(rmk_handler.JobHandler):
         else:
             assert text is not None
             status = rmk_types.JobStatus(codeOrStatus, text, detail)
-        self.setStatus(status)
+        # Always send status to mint before updating rMake's own database. This
+        # prevents a race with job-cleanup, which will shoot any builds which
+        # rMake thinks are done but mint thinks are still running.
         self._uploadStatus(status)
+        self.setStatus(status)
 
     def _uploadStatus(self, status):
         E = builder.ElementMaker()

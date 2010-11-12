@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All rights reserved.
 #
@@ -18,8 +18,12 @@ from mint import config
 from mint import jobstatus
 from mint.db import database
 from mint.lib.scriptlibrary import GenericScript
+from rmake3 import errors as rmk_errors
+from rmake3 import client as rmk_client
 
 log = logging.getLogger(__name__)
+
+JOB_LOST = "Job terminated unexpectedly"
 
 
 class Script(GenericScript):
@@ -42,6 +46,9 @@ class Script(GenericScript):
         except BuildSystemUnreachableError:
             log.warning("Build system is unreachable; not doing job cleanup")
             return
+
+        # FIXME: hardcoded localhost
+        rmake = rmk_client.RmakeClient('http://localhost:9998')
 
         db = database.Database(self.cfg).db
         cu = db.transaction()
@@ -71,15 +78,29 @@ class Script(GenericScript):
             newMessage = 'Unknown error'
 
             if rmk_uuid:
-                # TODO: check rMake image jobs
-                continue
+                try:
+                    job = rmake.getJob(rmk_uuid)
+                except rmk_errors.OpenError, err:
+                    # rMake is down. , assume the job is gone.
+                    log.warning("rMake is unreachable: %s", str(err))
+                except:
+                    # Can't connect to rMake for some other reason, so defer
+                    # flagging the build for now.
+                    log.warning("rMake is unreachable:", exc_info=1)
+                    continue
+                else:
+                    if job and not job.status.final:
+                        # Job is running.
+                        continue
+                # Job is unknown or is not running.
+                newMessage = JOB_LOST
 
             elif mcp_uuid:
                 if mcp_uuid in jobs:
                     # Job is running.
                     continue
                 # Job is definitely dead.
-                newMessage = 'Job terminated unexpectedly'
+                newMessage = JOB_LOST
 
             elif status in (jobstatus.UNKNOWN, jobstatus.NO_JOB):
                 # Migrate from previous versions.
