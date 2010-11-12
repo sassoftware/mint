@@ -22,6 +22,7 @@ from lxml import etree
 from restlib import client as rl_client
 from rmake3.worker import plug_worker
 
+from mint import buildtypes
 from mint.image_gen import constants as iconst
 from mint.image_gen.wig import backend
 
@@ -58,6 +59,8 @@ class WigTask(plug_worker.TaskHandler):
         flavor = cny_deps.ThawFlavor(data['troveFlavor'].encode('ascii'))
         self.troveTup = trovetup.TroveTuple(name, version, flavor)
 
+        self.imageType = data['buildType']
+
         # Conary configuration
         self.conaryCfg = ccfg = conarycfg.ConaryConfiguration(False)
         for line in data['project']['conaryCfg'].encode('utf-8').splitlines():
@@ -84,6 +87,8 @@ class WigTask(plug_worker.TaskHandler):
         self.imageToken = data['outputToken'].encode('ascii')
 
     def makeJob(self):
+        E = builder.ElementMaker()
+
         # FIXME: This whole function needs to be rewritten to build an update
         # job so that the packages are ordered correctly.
         jobList = self.getTroveJobList()
@@ -97,8 +102,11 @@ class WigTask(plug_worker.TaskHandler):
         interestingFiles = self.filterFiles(cs)
         totalFiles = len(interestingFiles)
 
-        E = builder.ElementMaker()
         self.wigClient.createJob()
+
+        # Choose between WIM and ISO output.
+        self.wigClient.setIsIso(self.imageType == buildtypes.WINDOWS_ISO)
+
         packageList = []
         for n, (key, value) in enumerate(sorted(interestingFiles)):
             # General trove info
@@ -173,11 +181,6 @@ class WigTask(plug_worker.TaskHandler):
             if trvCs.getName() == 'rTIS:msi':
                 # HACK: Telling rTIS to update itself will kill rTIS.
                 continue
-            elif trvCs.getName() == 'platform-isokit:runtime':
-                # Sort of hacky: right now we find isokit by baking it into the
-                # group and looking by name. This function doesn't deal with it
-                # though, so skip.
-                continue
 
             for pathId, path, fileId, fileVer in trvCs.getNewFileList():
                 fileStream = cs.getFileChange(None, fileId)
@@ -216,6 +219,8 @@ class WigTask(plug_worker.TaskHandler):
                         otherInfo = None
                     elif path.lower() == '/platform-isokit.zip':
                         # WinPE and associated ISO generation tools
+                        if self.imageType != buildtypes.WINDOWS_ISO:
+                            continue
                         otherInfo = None
                     else:
                         log.warning("Ignoring regular file %r -- don't know "
@@ -284,6 +289,9 @@ class WigTask(plug_worker.TaskHandler):
                 raise
 
     def postResults(self):
+        self.sendStatus(iconst.WIG_JOB_UPLOADING,
+                "Transferring image result {4/5}")
+
         name, size, fobj = self.wigClient.getResults()
         name = name.decode('utf8', 'ignore')
 
@@ -301,9 +309,16 @@ class WigTask(plug_worker.TaskHandler):
         ctx = hashlib.sha1()
         self._postFileObject('PUT', name, wrapper, ctx)
 
+        if name.lower().endswith('.wim'):
+            title = "Windows Image (WIM)"
+        elif name.lower().endswith('.iso'):
+            title = "Installable CD/DVD (ISO)"
+        else:
+            title = "???"
+
         E = builder.ElementMaker()
         root = E.files(E.file(
-            E.title("Windows Image (WIM)"),
+            E.title(title),
             E.size(str(size)),
             E.sha1(ctx.hexdigest()),
             E.fileName(name),

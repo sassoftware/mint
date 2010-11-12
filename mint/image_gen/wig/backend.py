@@ -55,8 +55,12 @@ class WigBackendClient(object):
         if not results.elements:
             raise RuntimeError("No files in job result")
 
-        resFile = results.resultFiles[0]
-        name = resFile._root.path
+        for resFile in results.resultFiles:
+            name = resFile._root.path
+            if name.lower().endswith('.iso'):
+                # Prefer ISO to WIM
+                break
+
         size = int(resFile.size)
         fobj = resFile.path
         return name, size, fobj
@@ -64,6 +68,11 @@ class WigBackendClient(object):
     def getLog(self):
         """Return contents of the job log."""
         return self.image.imageJob.logs.read()
+
+    def setIsIso(self, isIso=True):
+        config = self.image.jobConfig
+        config.iso = 'true' if isIso else 'false'
+        config.persist()
 
     def cleanup(self):
         self.image.imageJob.delete()
