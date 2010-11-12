@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 25)
+    Version = (51, 26)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1955,6 +1955,23 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
             changed = True
 
         return True
+
+    def migrate26(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE inventory_system_target 
+            DROP CONSTRAINT inventory_system_target_id_fkey
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_system_target 
+            ADD CONSTRAINT inventory_system_target_id_fkey
+            FOREIGN KEY (target_id) 
+            REFERENCES targets(targetid) ON DELETE SET NULL
+        """)
+
+        return True
+
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
