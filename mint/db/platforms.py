@@ -14,6 +14,7 @@
 
 from mint.lib import data
 from mint.lib import database
+from mint import mint_error
 
 dbReader = database.dbReader
 dbWriter = database.dbWriter
@@ -33,6 +34,33 @@ class PlatformsContentSourceTypesTable(database.DatabaseTable):
         cu.execute(sql, platformId)
 
         return cu.fetchall()
+
+    @dbWriter
+    def delete(self, cu, platformId, contentSourceType):
+        sql = """
+            DELETE
+              FROM platformsContentSourceTypes
+             WHERE platformId = ?
+               AND contentSourceType = ?
+        """
+        cu.execute(sql, platformId, contentSourceType)
+
+    @dbWriter
+    def sync(self, cu, platformId, contentSourceTypes):
+        if contentSourceTypes is None:
+            return
+        oldCST = set(x['contentSourceType'] for x in self.getAllByPlatformId(platformId))
+        toAdd = set(contentSourceTypes).difference(oldCST)
+        toDelete = oldCST.difference(contentSourceTypes)
+        for contentSourceType in toAdd:
+            try:
+                self.new(
+                    platformId=platformId, contentSourceType=contentSourceType)
+            except mint_error.DuplicateItem:
+                # No need to raise this, the data is already created.
+                pass
+        for contentSourceType in toDelete:
+            self.delete(platformId, contentSourceType)
 
 class PlatformsTable(database.KeyedTable):
     name = 'platforms'
@@ -166,6 +194,7 @@ class PlatformsPlatformSourcesTable(database.DatabaseTable):
 
     @dbReader
     def getAllByPlatformId(self, cu, platformId):
+        platformId = int(platformId)
         sql = """
             SELECT platformId, platformSourceId
             FROM platformsPlatformSources
@@ -175,4 +204,13 @@ class PlatformsPlatformSourcesTable(database.DatabaseTable):
 
         return cu.fetchall()
 
-
+    @dbWriter
+    def sync(self, cu, platformId, platformSourceIds):
+        platformId = int(platformId)
+        newIds = set(int(x) for x in platformSourceIds)
+        oldIds = set(x['platformSourceId']
+            for x in self.getAllByPlatformId(platformId))
+        for platformSourceId in newIds.difference(oldIds):
+            self.new(platformId=platformId,
+                platformSourceId=platformSourceId)
+        # XXX is removal necessary?
