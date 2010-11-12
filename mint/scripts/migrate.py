@@ -1960,11 +1960,11 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         cu = self.db.cursor()
 
         cu.execute("""
-            ALTER TABLE inventory_system_target 
+            ALTER TABLE inventory_system
             DROP CONSTRAINT inventory_system_target_id_fkey
         """)
         cu.execute("""
-            ALTER TABLE inventory_system_target 
+            ALTER TABLE inventory_system
             ADD CONSTRAINT inventory_system_target_id_fkey
             FOREIGN KEY (target_id) 
             REFERENCES targets(targetid) ON DELETE SET NULL
