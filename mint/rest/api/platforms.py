@@ -156,7 +156,8 @@ class PlatformController(base.BaseController):
 
     @requires('platform', models.Platform)
     def create(self, request, platform):
-        return self.db.createPlatform(platform)
+        platformId =  self.db.createPlatform(platform)
+        return self.db.getPlatform(platformId)
 
     @auth.admin
     @requires('platform', models.Platform)

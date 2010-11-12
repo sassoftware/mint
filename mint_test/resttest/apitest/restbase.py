@@ -177,8 +177,10 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
     def _addPlatform(self, label, platformDef):
         restdb = self.openRestDatabase()
-        plat = restdb.platformMgr.platforms._platformModelFactory(label=label,
-            configurable=True, enabled=True)
+        platformName = platformDef.getPlatformName()
+        plat = restdb.platformMgr.platforms._platformModelFactory(
+            platformName=platformName,
+            label=label, configurable=True, enabled=True)
         restdb.platformMgr.platforms._create(plat, platformDef)
         restdb.commit()
 
