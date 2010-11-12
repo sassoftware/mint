@@ -231,18 +231,22 @@ class Platforms(object):
                 withRepositoryLookups=withRepositoryLookups))
         return platforms
 
-    def getPlatformModelFromRow(self, platformRow, withRepositoryLookups=True):
+    def getPlatformModelFromRow(self, platformRow, withRepositoryLookups=True,
+            withComputedFields=True):
         platform = self._platformModelFactory(**dict(platformRow))
         return self.getPlatformModel(platform,
-            withRepositoryLookups=withRepositoryLookups)
+            withRepositoryLookups=withRepositoryLookups,
+            withComputedFields=withComputedFields)
 
-    def getPlatformModel(self, platform, withRepositoryLookups=True):
+    def getPlatformModel(self, platform, withRepositoryLookups=True,
+            withComputedFields=True):
         if withRepositoryLookups:
             platformDef = self.platformCache.get(str(platform.label))
         else:
             platformDef = None
         self._updatePlatformFromPlatformDefinition(platform, platformDef)
-        self._addComputedFields(platform)
+        if withComputedFields:
+            self._addComputedFields(platform)
         return platform
 
     def _updatePlatformFromPlatformDefinition(self, platformModel, platformDef):
@@ -709,9 +713,10 @@ class Platforms(object):
         status.set_status(code, message)
         return status
 
-    def getById(self, platformId):
+    def getById(self, platformId, withComputedFields=True):
         platform = self.db.db.platforms.get(platformId)
-        return self.getPlatformModelFromRow(platform)
+        return self.getPlatformModelFromRow(platform,
+            withComputedFields=withComputedFields)
 
     def getByName(self, platformName):
         platforms = self.list()
@@ -1049,7 +1054,8 @@ class PlatformManager(manager.Manager):
             platId = self.platforms._create(platform, pl)
         else:
             platId = row[0]
-            platformModel = self.platforms.getById(platId)
+            platformModel = self.platforms.getById(platId,
+                withComputedFields=False)
             platformFieldVals = ((x, getattr(platform, x))
                 for x in platform._fields)
             platformModel.updateFields(**dict((fname, fval)
