@@ -108,18 +108,25 @@ class AbstractInventoryService(resource.Resource):
         # we're allowing anonymous access
         if request._auth != (None, None) and not request._is_authenticated:
             return HttpAuthenticationRequired
-        # For now, localhost cannot be combined with admin - this can change
-        # in the future
+        if not self._auth_filter(request, access, kwargs):
+            return HttpAuthenticationRequired
+        return method(request, *args, **kwargs)
+
+    def _auth_filter(self, request, access, kwargs):
+        """Return C{True} if the request passes authentication checks."""
+        # Access flags are permissive -- if a function specifies more than one
+        # method, the authentication is successful if any of those methods
+        # succeed.
+
         if access & ACCESS.LOCALHOST:
+            # Ignore requests that are forwarded through the repeater since
+            # they are not trustworthy.
             headerName = 'X-rPath-Repeater'
             headerValue = getHeaderValue(request, headerName)
-            if headerValue is not None:
-                return HttpAuthenticationRequired
-            if self._check_not_localhost(request):
-                return HttpAuthenticationRequired
-        elif access & ACCESS.EVENT_UUID:
-            # Event UUID authentication is special - it can be compounded with
-            # regular authentication or admin
+            if headerValue is None and not self._check_not_localhost(request):
+                return True
+
+        if access & ACCESS.EVENT_UUID:
             headerName = 'X-rBuilder-Event-UUID'
             eventUuid = getHeaderValue(request, headerName)
             if eventUuid:
@@ -127,17 +134,18 @@ class AbstractInventoryService(resource.Resource):
                 systemId = kwargs['system_id']
                 sjobs = models.SystemJob.objects.filter(
                     system__pk=systemId, event_uuid=eventUuid)
-                if not sjobs:
-                    return HttpAuthenticationRequired
-                self._setMintAuth()
-            elif self._check_not_authenticated(request, access) \
-                    or self._check_not_admin(request, access):
-                return HttpAuthenticationRequired
-        elif self._check_not_authenticated(request, access):
-            return HttpAuthenticationRequired
-        elif self._check_not_admin(request, access):
-            return HttpAuthenticationRequired
-        return method(request, *args, **kwargs)
+                if sjobs:
+                    self._setMintAuth()
+                    return True
+
+        if access & ACCESS.ADMIN:
+            return request._is_admin
+        if access & ACCESS.AUTHENTICATED:
+            return request._is_authenticated
+        if access & ACCESS.ANONYMOUS:
+            return True
+
+        return False
 
     @classmethod
     def _check_not_authenticated(cls, request, access):
@@ -391,7 +399,9 @@ class InventoryInventorySystemsService(AbstractInventoryService):
         return self.mgr.getInventorySystems()
 
 class InventoryInfrastructureSystemsService(AbstractInventoryService):
-    
+
+    @access.authenticated
+    @access.localhost
     @return_xml
     def rest_GET(self, request):
         return self.get()
