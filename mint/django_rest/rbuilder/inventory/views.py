@@ -123,16 +123,10 @@ class AbstractInventoryService(resource.Resource):
                 return True
 
         if access & ACCESS.EVENT_UUID:
-            headerName = 'X-rBuilder-Event-UUID'
-            eventUuid = getHeaderValue(request, headerName)
-            if eventUuid:
-                # Check if this system has such an event uuid
-                systemId = kwargs['system_id']
-                sjobs = models.SystemJob.objects.filter(
-                    system__pk=systemId, event_uuid=eventUuid)
-                if sjobs:
-                    self._setMintAuth()
-                    return True
+            ret = self._check_event_uuid(request)
+            if ret is not None:
+                # A bad event UUID should fail the auth check
+                return ret
 
         if access & ACCESS.ADMIN:
             return request._is_admin
@@ -142,6 +136,20 @@ class AbstractInventoryService(resource.Resource):
             return True
 
         return False
+
+    def _check_event_uuid(cls, request):
+        headerName = 'X-rBuilder-Event-UUID'
+        eventUuid = getHeaderValue(request, headerName)
+        if not eventUuid:
+            return None
+        # Check if this system has such an event uuid
+        systemId = kwargs['system_id']
+        sjobs = models.SystemJob.objects.filter(
+            system__pk=systemId, event_uuid=eventUuid)
+        if not sjobs:
+            return False
+        self._setMintAuth()
+        return True
 
     @classmethod
     def _check_localhost(cls, request):
