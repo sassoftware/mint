@@ -875,8 +875,9 @@ class ManagementNodesTestCase(XMLTestCase):
                                              management_node.created_date.isoformat()))
 
     def testPutManagementNodes(self):
-        management_node0 = self._saveManagementNode()
-        self._saveManagementNode(idx=1)
+        lz = models.Zone.LOCAL_ZONE
+        management_node0 = self._saveManagementNode(zoneName=lz)
+        self._saveManagementNode(idx=1, zoneName=lz)
         dataTempl = """
 <management_nodes>
 %s
@@ -890,6 +891,7 @@ class ManagementNodesTestCase(XMLTestCase):
 
         nodeTempl = """<management_node>
 <node_jid>%(jid)s</node_jid>
+<local>%(local)s</local>
 <zone><name>%(zoneName)s</name></zone>
 <networks><network><ip_address>%(ipAddress)s</ip_address><dns_name>%(ipAddress)s</dns_name><device_name>eth0</device_name></network></networks>
 </management_node>
@@ -899,13 +901,13 @@ class ManagementNodesTestCase(XMLTestCase):
         # Old node in new zone
         # Make sure we don't overwrite the IP address
         nodes = [ dict(jid=management_node0.node_jid, zoneName='new zone 0',
-            ipAddress='2.2.2.210') ]
+            ipAddress='2.2.2.210', local=False) ]
         # New node in old zone
-        nodes.append(dict(jid='node1@host1/node1', zoneName='Local Zone',
-            ipAddress='2.2.2.3'))
+        nodes.append(dict(jid='node1@host1/node1', zoneName=lz,
+            ipAddress='2.2.2.3', local=True))
         # New node in new zone
         nodes.append(dict(jid='node2@host2/node2', zoneName='new zone 2',
-            ipAddress='2.2.2.4'))
+            ipAddress='2.2.2.4', local=False))
         # management_node1 is gone
 
         data = dataTempl % ''.join(nodeTempl % x for x in nodes)
@@ -924,14 +926,16 @@ class ManagementNodesTestCase(XMLTestCase):
         nodes = obj.management_nodes.management_node
         zone0 = models.Zone.objects.get(name='new zone 0')
         zone2 = models.Zone.objects.get(name='new zone 2')
-        exp = [(management_node0.node_jid, zone0.zone_id),
+        exp = [(management_node0.node_jid, zone0.zone_id, 'false'),
             # RBL-7703: this should go away
-            ('node01@rbuilder.rpath', management_node0.zone_id),
-            ('node1@host1/node1', management_node0.zone_id),
-            ('node2@host2/node2', zone2.zone_id)
+            ('node01@rbuilder.rpath', management_node0.zone_id, 'true'),
+            ('node1@host1/node1', management_node0.zone_id, 'true'),
+            ('node2@host2/node2', zone2.zone_id, 'false')
         ]
         self.failUnlessEqual(
-            [ (str(x.node_jid), int(os.path.basename(x.zone.href))) for x in nodes ],
+            [ (str(x.node_jid), int(os.path.basename(x.zone.href)),
+                    str(x.local))
+                for x in nodes ],
             exp)
 
         node = models.ManagementNode.objects.get(pk=management_node0)
