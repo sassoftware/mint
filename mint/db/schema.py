@@ -1491,12 +1491,6 @@ def _addManagementZone(db, cfg):
                       dns_name='127.0.0.1', 
                       active=True,
                       created_date=str(datetime.datetime.now(tz.tzutc())))])
-            # add the management node
-            changed |= _addTableRows(db, 'inventory_zone_management_node', 'system_ptr_id',
-                    [dict(system_ptr_id=systemId,
-                          local='true', 
-                          zone_id=zoneId)])
-    
     return changed
 
 cim_credentials_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
