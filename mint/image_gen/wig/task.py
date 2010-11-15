@@ -67,18 +67,15 @@ class WigTask(plug_worker.TaskHandler):
             if not line:
                 continue
             ccfg.configLine(line)
-        # FIXME: hardcoded localhost
         ccfg.configLine('conaryProxy http http://localhost/conary/')
         ccfg.configLine('conaryProxy https http://localhost/conary/')
         self.conaryClient = conaryclient.ConaryClient(self.conaryCfg)
 
         # WIG service
-        # FIXME: hardcoded hostname
-        self.wigServiceUrl = 'http://dhcp209.eng.rpath.com/api'
+        self.wigServiceUrl = data['windowsBuildService']
         self.wigClient = backend.WigBackendClient(self.wigServiceUrl)
 
         # Mint service
-        # FIXME: hardcoded localhost
         self.imageBase = ('http://localhost/api/products/%s/images/%d/' % (
                 data['project']['hostname'], data['buildId'])
                 ).encode('utf8')

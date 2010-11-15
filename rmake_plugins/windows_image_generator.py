@@ -15,6 +15,7 @@
 from rmake3.core import plug_dispatcher
 from rmake3.worker import plug_worker
 
+from mint.image_gen.wig import coordinator
 from mint.image_gen.wig import handler as wig_handler
 from mint.image_gen.wig import task as wig_task
 
@@ -23,3 +24,7 @@ class Plugin(plug_dispatcher.DispatcherPlugin, plug_worker.WorkerPlugin):
 
     handlerClasses = (wig_handler.WigHandler,)
     taskClasses = (wig_task.WigTask,)
+
+    def dispatcher_pre_setup(self, dispatcher):
+        super(Plugin, self).dispatcher_pre_setup(dispatcher)
+        coordinator.start(dispatcher)

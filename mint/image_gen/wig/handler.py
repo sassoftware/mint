@@ -26,19 +26,26 @@ class WigHandler(rmk_handler.JobHandler):
     jobType = iconst.WIG_JOB
     firstState = 'run'
 
-    def run(self):
+    def setup(self):
         # Collect parameters needed for pushing status updates to rBuilder API.
-        jobData = self.getData()
-        contents = json.loads(jobData)
+        self.jobData = jobData = json.loads(self.getData())
         self.imageBase = ('http://localhost/api/products/%s/images/%d/' % (
-                contents['project']['hostname'], contents['buildId'])
-                ).encode('utf8')
-        self.imageToken = contents['outputToken'].encode('ascii')
+            jobData['project']['hostname'], jobData['buildId'])).encode('utf8')
+        self.imageToken = jobData['outputToken'].encode('ascii')
 
-        self._setImageStatus(iconst.WIG_JOB_QUEUED,
-                "Waiting for processing {0/4}")
+    def run(self):
+        self.setStatus(iconst.WIG_JOB_QUEUED, "Waiting for processing {0/4}")
 
-        task = self.newTask('image', iconst.WIG_TASK, jobData)
+        # Find a build service to run the job on
+        d = self.dispatcher.wig_coordinator.getBuildService()
+        d.addCallback(self._run_gotService)
+        return d
+
+    def _run_gotService(self, url):
+        self.jobData['windowsBuildService'] = url
+        blob = json.dumps(self.jobData)
+        task = self.newTask('image', iconst.WIG_TASK, blob)
+
         # Copy task status changes to job status
         self.watchTask(task, self._mirrorTaskStatus)
         # Exit job handler when task completes
@@ -48,9 +55,9 @@ class WigHandler(rmk_handler.JobHandler):
 
     def _mirrorTaskStatus(self, task):
         """Copy task status to job status when task is updated."""
-        self._setImageStatus(task.status)
+        self.setStatus(task.status)
 
-    def _setImageStatus(self, codeOrStatus, text=None, detail=None):
+    def setStatus(self, codeOrStatus, text=None, detail=None):
         """Set job status, and upload same to mint database."""
         if isinstance(codeOrStatus, rmk_types.FrozenJobStatus):
             status = codeOrStatus.thaw()
@@ -63,7 +70,7 @@ class WigHandler(rmk_handler.JobHandler):
         # prevents a race with job-cleanup, which will shoot any builds which
         # rMake thinks are done but mint thinks are still running.
         self._uploadStatus(status)
-        self.setStatus(status)
+        return rmk_handler.JobHandler.setStatus(self, status)
 
     def _uploadStatus(self, status):
         E = builder.ElementMaker()

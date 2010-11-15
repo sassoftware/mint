@@ -288,7 +288,9 @@ class InventoryManagementInterfaceService(AbstractInventoryService):
         return self.get(management_interface_id)
     
 class InventorySystemTypeService(AbstractInventoryService):
-    
+
+    @access.authenticated
+    @access.localhost
     @return_xml
     def rest_GET(self, request, system_type_id=None):
         return self.get(system_type_id)
