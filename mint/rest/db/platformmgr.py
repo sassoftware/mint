@@ -111,7 +111,7 @@ class ContentSourceTypes(object):
         pIter = self.platforms.iterPlatforms(withRepositoryLookups=True)
         for platform in pIter:
             sourceTypes = platform._sourceTypes
-            for t, isSingleton in sourceTypes:
+            for t, isSingleton in sourceTypes or []:
                 if t not in allTypes:
                     allTypes.append(t)
                     allTypesMap[t] = isSingleton
