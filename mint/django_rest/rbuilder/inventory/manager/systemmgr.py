@@ -825,20 +825,7 @@ class SystemManager(base.BaseManager):
             self.addSystem(system, generateCertificates=False,
                 withManagementInterfaceDetection=False)
         self.setSystemStateFromJob(system)
-        self.check_system_last_job(system)
         system.save()
-
-    def check_system_last_job(self, system):
-        # This is not the place to schedule an event, since rpath-tools may
-        # not have come back yet. Leaving the code commented out as an example
-        """"
-        last_job = getattr(system, 'lastJob', None)
-        if last_job and last_job.job_state.name == models.JobState.COMPLETED:
-            if last_job.event_type.name in \
-               (models.EventType.SYSTEM_APPLY_UPDATE,
-                models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE):
-                self.scheduleSystemPollNowEvent(system)
-        """
 
     def checkInstalledSoftware(self, system):
         # If there is an event_uuid set on system, assume we're just updating
