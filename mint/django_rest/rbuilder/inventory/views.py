@@ -123,7 +123,7 @@ class AbstractInventoryService(resource.Resource):
                 return True
 
         if access & ACCESS.EVENT_UUID:
-            ret = self._check_event_uuid(request)
+            ret = self._check_event_uuid(request, kwargs)
             if ret is not None:
                 # A bad event UUID should fail the auth check
                 return ret
@@ -137,7 +137,7 @@ class AbstractInventoryService(resource.Resource):
 
         return False
 
-    def _check_event_uuid(cls, request):
+    def _check_event_uuid(self, request, kwargs):
         headerName = 'X-rBuilder-Event-UUID'
         eventUuid = getHeaderValue(request, headerName)
         if not eventUuid:
