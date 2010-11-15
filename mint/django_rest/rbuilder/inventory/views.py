@@ -119,11 +119,7 @@ class AbstractInventoryService(resource.Resource):
         # succeed.
 
         if access & ACCESS.LOCALHOST:
-            # Ignore requests that are forwarded through the repeater since
-            # they are not trustworthy.
-            headerName = 'X-rPath-Repeater'
-            headerValue = getHeaderValue(request, headerName)
-            if headerValue is None and not self._check_not_localhost(request):
+            if self._check_localhost(request):
                 return True
 
         if access & ACCESS.EVENT_UUID:
@@ -148,15 +144,13 @@ class AbstractInventoryService(resource.Resource):
         return False
 
     @classmethod
-    def _check_not_authenticated(cls, request, access):
-        return access & ACCESS.AUTHENTICATED and not request._is_authenticated
-
-    @classmethod
-    def _check_not_admin(cls, request, access):
-        return access & ACCESS.ADMIN and not request._is_admin
-
-    def _check_not_localhost(cls, request):
-        return request.META['REMOTE_ADDR'] != '127.0.0.1'
+    def _check_localhost(cls, request):
+        # Ignore requests that are forwarded through the repeater since
+        # they are not trustworthy.
+        headerName = 'X-rPath-Repeater'
+        headerValue = getHeaderValue(request, headerName)
+        return (headerValue is None and
+            request.META['REMOTE_ADDR'] == '127.0.0.1')
 
     def _setMintAuth(self):
         db = database.Database(self.mgr.cfg)
