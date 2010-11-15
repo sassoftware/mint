@@ -52,12 +52,13 @@ class WigBackendClient(object):
     def getResults(self):
         """Return a file handle to the result image."""
         results = self.image.imageJob.resultResource
-        if not results.elements:
+        if not results.resultFiles.resultFile:
             raise RuntimeError("No files in job result")
 
-        for resFile in results.resultFiles:
-            name = resFile._root.path
-            if name.lower().endswith('.iso'):
+        for resFile, resXobj in zip(results.resultFiles,
+                results.resultFiles.resultFile):
+            name = resXobj.path
+            if resFile.type == 'iso':
                 # Prefer ISO to WIM
                 break
 
