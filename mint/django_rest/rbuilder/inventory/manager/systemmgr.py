@@ -957,10 +957,18 @@ class SystemManager(base.BaseManager):
         # Look up the credentials for this user
         credentials = self._getCredentialsForUser(system.target)
         assert credentials is not None, "User should have credentials"
-        # Add link to SystemTargetCredentials
-        stc = models.SystemTargetCredentials(system=system,
-            credentials=credentials)
-        stc.save()
+
+        # Check if system target creds have already been set.  This can happen
+        # if the target systems import script has run in between launching the
+        # instance and adding it to inventory.
+        stcs = models.SystemTargetCredentials.objects.filter(
+            system=system, credentials=credentials)
+        if not stcs:
+            # Not already set.  Create the link.
+            stc = models.SystemTargetCredentials(system=system,
+                credentials=credentials)
+            stc.save()
+
         if dnsName:
             network = models.Network(dns_name=dnsName,
                             active=True)
