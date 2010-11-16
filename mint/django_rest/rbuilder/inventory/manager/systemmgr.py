@@ -1048,23 +1048,34 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystemCredentials(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        if system.management_interface.name == 'wmi':
-            if system.credentials is None:
-                systemCreds = {}
+        systemCreds = {}
+        if system.management_interface:
+            if system.management_interface.name == 'wmi':
+                if system.credentials is None:
+                    systemCreds = {}
+                else:
+                    systemCreds = self.unmarshalCredentials(system.credentials)
             else:
-                systemCreds = self.unmarshalCredentials(system.credentials)
-        else:
-            systemCreds = dict(
-                ssl_client_certificate=system.ssl_client_certificate,
-                ssl_client_key=system.ssl_client_key)
+                systemCreds = dict(
+                    ssl_client_certificate=system.ssl_client_certificate,
+                    ssl_client_key=system.ssl_client_key)
 
         return self._getCredentialsModel(system, systemCreds)
 
     @base.exposed
     def addSystemCredentials(self, system_id, credentials):
         system = models.System.objects.get(pk=system_id)
-        systemCreds = self.marshalCredentials(credentials)
-        system.credentials = systemCreds
+        if system.management_interface:
+            if system.management_interface.name == 'wmi':
+                systemCreds = self.marshalCredentials(credentials)
+                system.credentials = systemCreds
+            else:
+                if credentials.has_key('ssl_client_certificate'):
+                    system.ssl_client_certificate = \
+                        credentials['ssl_client_certificate']
+                if credentials.has_key('ssl_client_key'):
+                    system.ssl_client_key = credentials['ssl_client_key']
+
         system.save()
         # Schedule a system registration event after adding/updating
         # credentials.
