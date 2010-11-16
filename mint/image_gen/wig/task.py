@@ -6,6 +6,7 @@
 
 import logging
 import hashlib
+import itertools
 import json
 import os
 import StringIO
@@ -69,6 +70,7 @@ class WigTask(plug_worker.TaskHandler):
             ccfg.configLine(line)
         ccfg.configLine('conaryProxy http http://localhost/conary/')
         ccfg.configLine('conaryProxy https http://localhost/conary/')
+        ccfg.dbPath = ':memory:'
         self.conaryClient = conaryclient.ConaryClient(self.conaryCfg)
 
         # WIG service
@@ -229,13 +231,14 @@ class WigTask(plug_worker.TaskHandler):
         return interestingFiles
 
     def getTroveJobList(self):
-        """Get list of byDefault troves"""
+        """Return a set of trove install jobs in dependency order."""
         log.info("Retrieving trove list for %s", self.troveTup)
-        repos = self.conaryClient.getRepos()
-        trv = repos.getTrove(*self.troveTup, withFiles=False)
-        subtroves = sorted(set( [tup for (tup, isDefault, isStrong)
-            in trv.iterTroveListInfo() if isDefault] ))
-        return [(n, (None, None), (v, f), True) for (n, v, f) in subtroves]
+        job = self.conaryClient.newUpdateJob()
+        self.conaryClient.prepareUpdateJob(job,
+                [(self.troveTup.name, (None, None), (self.troveTup.version,
+                    self.troveTup.flavor), True)],
+                checkPathConflicts=False)
+        return list(itertools.chain(*job.jobs))
 
     def runJob(self):
         self.wigClient.startJob()
