@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 26)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 27)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1156,7 +1156,7 @@ def _createInventorySchema(db, cfg):
                     ON DELETE CASCADE,
                 "created_date" timestamp with time zone NOT NULL,
                 "ip_address" varchar(15),
-                "ipv6_address" varchar(32),
+                "ipv6_address" text,
                 "device_name" varchar(255),
                 "dns_name" varchar(255) NOT NULL,
                 "netmask" varchar(20),
