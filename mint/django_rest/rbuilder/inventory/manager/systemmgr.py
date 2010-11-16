@@ -1133,7 +1133,16 @@ class SystemManager(base.BaseManager):
         if not system_id or not systemEvent:
             return
         
-        systemEvent.system = models.System.objects.get(pk=system_id)
+        system = models.System.objects.get(pk=system_id)
+
+        # If this systemEvent requires that a management interface be set on
+        # the system and one is not, instead schedule an event to detect the
+        # interface.
+        if systemEvent.event_type.requiresManagementInterface:
+            if not system.management_interface:
+                return self.scheduleSystemDetectMgmtInterfaceEvent(system) 
+
+        systemEvent.system = system
         systemEvent.save()
         
         enable_time = None
@@ -1483,7 +1492,7 @@ class SystemManager(base.BaseManager):
     def _scheduleEvent(self, system, eventType, enableTime=None,
             eventData=None):
         eventTypeObject = self.eventType(eventType)
-        self.createSystemEvent(system, eventTypeObject, enableTime=enableTime,
+        return self.createSystemEvent(system, eventTypeObject, enableTime=enableTime,
             eventData=eventData)
 
     @base.exposed

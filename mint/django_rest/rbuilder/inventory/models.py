@@ -787,6 +787,22 @@ class EventType(modellib.XObjIdModel):
     description = models.CharField(max_length=8092)
     priority = models.SmallIntegerField(db_index=True)
 
+    @property
+    def requiresManagementInterface(self):
+        if self.name in \
+            [self.SYSTEM_REGISTRATION,
+             self.SYSTEM_POLL_IMMEDIATE,
+             self.SYSTEM_POLL,
+             self.SYSTEM_APPLY_UPDATE,
+             self.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+             self.SYSTEM_SHUTDOWN,
+             self.SYSTEM_SHUTDOWN_IMMEDIATE,
+             self.SYSTEM_CONFIG_IMMEDIATE,
+            ]:
+            return True
+        else:
+            return False
+
 class JobStates(modellib.XObjModel):
     class Meta:
         abstract = True

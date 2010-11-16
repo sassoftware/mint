@@ -3078,7 +3078,9 @@ class SystemEventTestCase(XMLTestCase):
 
         # need a system
         network = models.Network(ip_address='1.1.1.1')
-        self.system = self.newSystem(name="mgoblue", description="best appliance ever")
+        self.system = self.newSystem(name="mgoblue", 
+            description="best appliance ever",
+            management_interface=models.ManagementInterface.objects.get(name='cim'))
         self.system.save()
         network.system = self.system
         self.system.networks.add(network)
