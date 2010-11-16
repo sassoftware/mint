@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 27)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 28)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1415,7 +1415,7 @@ def _createInventorySchema(db, cfg):
         cu.execute("""
             CREATE TABLE "django_redirect" (
                 "id" %(PRIMARYKEY)s,
-                "site_id" INTEGER NOT NULL UNIQUE
+                "site_id" INTEGER NOT NULL 
                     REFERENCES "django_site" ("id"),
                 "old_path" VARCHAR(200) NOT NULL UNIQUE,
                 "new_path" VARCHAR(200) NOT NULL 
