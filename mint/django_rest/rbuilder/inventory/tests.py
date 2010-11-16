@@ -619,7 +619,8 @@ class SystemTypesTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        response = self._get('/api/inventory/system_types/')
+        response = self._get('/api/inventory/system_types/',
+            username='baduser', password='badpass')
         self.assertEquals(response.status_code, 401)
         
         response = self._get('/api/inventory/system_types/',
