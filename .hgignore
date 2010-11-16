@@ -31,6 +31,8 @@
 
 ^mint/mint-local.db$
 ^mint/django_rest/mint-local.db$
+^mint/test-mint-local.db$
+^mint/test-mint-local.db-journal$
 
 ^.*project$
 ^.*pydevproject$
