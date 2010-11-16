@@ -2267,14 +2267,16 @@ system_with_target = """\
 credentials_xml = """\
 <?xml version="1.0"?>
 <credentials>
-  <serverCert>testServerCert</serverCert>
+  <ssl_client_certificate>newsslclientcertificate</ssl_client_certificate>
+  <ssl_client_key>newsslclientkey</ssl_client_key>
 </credentials>
 """
 
 credentials_put_xml = """\
 <?xml version="1.0"?>
 <credentials>
-  <serverCert>testServerCertChanged</serverCert>
+  <ssl_client_certificate>updatedsslclientcertificate</ssl_client_certificate>
+  <ssl_client_key>updatedsslclientkey</ssl_client_key>
 </credentials>
 """
 
@@ -2299,14 +2301,16 @@ credentials_wmi_put_xml = """\
 credentials_resp_xml = """\
 <?xml version="1.0"?>
 <credentials id="http://testserver/api/inventory/systems/3/credentials">
-  <serverCert>testServerCert</serverCert>
+  <ssl_client_certificate>newsslclientcertificate</ssl_client_certificate>
+  <ssl_client_key>newsslclientkey</ssl_client_key>
 </credentials>
 """
 
 credentials_put_resp_xml = """\
 <?xml version="1.0"?>
 <credentials id="http://testserver/api/inventory/systems/3/credentials">
-  <serverCert>testServerCertChanged</serverCert>
+  <ssl_client_certificate>updatedsslclientcertificate</ssl_client_certificate>
+  <ssl_client_key>updatedsslclientkey</ssl_client_key>
 </credentials>
 """
 
