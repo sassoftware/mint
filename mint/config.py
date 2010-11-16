@@ -267,6 +267,8 @@ class MintConfig(ConfigFile):
     launchWaitTime = (CfgInt, 300,
                         "The number of seconds to wait for a launched system's network information to become available")
 
+    # inventory - configuration
+    inventoryConfigurationEnabled = (CfgBool, False)
 
     # *** BEGIN DEPRECATED VALUES ***
     # These values are no longer in active use but must remain here so that

@@ -57,6 +57,7 @@ class RbuilderRestServer(RestController):
                                      isExternalRba=self.cfg.rBuilderExternal, 
                                      identity=identity,
                                      maintMode=maintMode,
+                                     inventoryConfigurationEnabled=self.cfg.inventoryConfigurationEnabled,
                                      proddefSchemaVersion=proddefSchemaVersion)
 
     def url(self, request, *args, **kw):

@@ -45,6 +45,7 @@ class RbuilderStatus(Model):
     moduleHooks             = fields.UrlField('moduleHooks', None)
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
+    inventoryConfigurationEnabled   = fields.BooleanField()
 
     def get_absolute_url(self):
         return '',
