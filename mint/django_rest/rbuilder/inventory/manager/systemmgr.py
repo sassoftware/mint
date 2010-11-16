@@ -1048,10 +1048,16 @@ class SystemManager(base.BaseManager):
     @base.exposed
     def getSystemCredentials(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        if system.credentials is None:
-            systemCreds = {}
+        if system.management_interface.name == 'wmi':
+            if system.credentials is None:
+                systemCreds = {}
+            else:
+                systemCreds = self.unmarshalCredentials(system.credentials)
         else:
-            systemCreds = self.unmarshalCredentials(system.credentials)
+            systemCreds = dict(
+                ssl_client_certificate=system.ssl_client_certificate,
+                ssl_client_key=system.ssl_client_key)
+
         return self._getCredentialsModel(system, systemCreds)
 
     @base.exposed
