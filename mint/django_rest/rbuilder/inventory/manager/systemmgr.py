@@ -1165,7 +1165,16 @@ class SystemManager(base.BaseManager):
         # interface.
         if systemEvent.event_type.requiresManagementInterface:
             if not system.management_interface:
-                return self.scheduleSystemDetectMgmtInterfaceEvent(system) 
+                if self.getSystemHasHostInfo(system):
+                    return self.scheduleSystemDetectMgmtInterfaceEvent(system) 
+                else:
+                    log.info("Event cannot be created for system %s (%s) '%s' "
+                        "because there is no host information" % \
+                        (system.pk, systemName, eventType.description))
+                    self.log_system(system,
+                        "Unable to create event '%s': no networking information" %
+                            systemEvent.event_type.description)
+                    raise errors.InvalidNetworkInformation
 
         systemEvent.system = system
         systemEvent.save()
@@ -1544,10 +1553,11 @@ class SystemManager(base.BaseManager):
                 self.dispatchSystemEvent(event)
         else:
             systemName = system.name or system.hostname or system.target_system_name
-            log.info("System %s (%s) '%s' cannot be registered because there is no host information" %
+            log.info("Event cannot be created for system %s (%s) '%s' because "
+                "there is no host information" % \
                 (system.pk, systemName, eventType.description))
             self.log_system(system,
-                "Unable to register event '%s': no networking information" %
+                "Unable to create event '%s': no networking information" %
                     eventType.description)
 
         return event
@@ -1628,7 +1638,7 @@ class SystemManager(base.BaseManager):
             targetSystem.userNames)
         if created:
             t1 = time.time()
-            self.scheduleSystemRegistrationEvent(system)
+            self.scheduleSystemDetectMgmtInterfaceEvent(system)
             log.info("    Scheduling action completed in %.2f seconds" %
                 (time.time() - t1, ))
         log.info("  Importing system %s (%s) completed in %.2f seconds" %
