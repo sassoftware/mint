@@ -126,8 +126,6 @@ class EventTypes(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'event_types')
-    # hide jobs, see https://issues.rpath.com/browse/RBL-7151
-    _xobj_hidden_accessors = set(['jobs'])
     list_fields = ['event_type']
     event_type = []
 
@@ -710,6 +708,9 @@ class EventType(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_event_type'
     _xobj = xobj.XObjMetadata(tag='event_type')
+    
+     # hide jobs, see https://issues.rpath.com/browse/RBL-7151
+    _xobj_hidden_accessors = set(['jobs'])
 
     # on-demand events need to be > 100 to be dispatched immediately
     # DO NOT CHANGE POLL PRIORITIES HERE WITHOUT CHANGING IN schema.py also
