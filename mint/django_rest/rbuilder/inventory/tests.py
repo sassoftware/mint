@@ -2315,8 +2315,8 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(
             [ x.entry for x in entries ],
             [
-                "Unable to register event 'On-demand system synchronization': no networking information",
-                "Unable to register event 'System synchronization': no networking information",
+                "Unable to create event 'On-demand system synchronization': no networking information",
+                "Unable to create event 'System synchronization': no networking information",
             ])
 
     def testAgentPort(self):
@@ -4119,7 +4119,7 @@ class TargetSystemImportTest(XMLTestCase):
                 'vsphere1.eng.rpath.com (vmware): using dnsName1-004 as primary contact address',
                 'System added as part of target vsphere1.eng.rpath.com (vmware)',
             ])
-        self.failUnless(entries[0].entry.startswith("Event type 'system registration' registered and will be enabled on "))
+        self.failUnless(entries[0].entry.startswith("Event type 'immediate system detect management interface' registered and will be enabled on "))
         # Make sure the zone is set
         self.failUnlessEqual(system.managing_zone.name, 'Local rBuilder')
         # Make sure we did set name, description etc

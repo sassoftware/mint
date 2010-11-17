@@ -1546,7 +1546,7 @@ systems_log_xml = """\
     <system_log_entry_id>1</system_log_entry_id>
   </system_log_entry>
    <system_log_entry>
-    <entry>Unable to register event 'On-demand system management interface detection': no networking information</entry>
+    <entry>Unable to create event 'On-demand system management interface detection': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
      <system_log_entry_id>2</system_log_entry_id>
    </system_log_entry>
@@ -1556,7 +1556,7 @@ systems_log_xml = """\
      <system_log_entry_id>3</system_log_entry_id>
    </system_log_entry>
   <system_log_entry>
-    <entry>Unable to register event 'On-demand system management interface detection': no networking information</entry>
+    <entry>Unable to create event 'On-demand system management interface detection': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
     <system_log_entry_id>4</system_log_entry_id>
   </system_log_entry>
@@ -1566,7 +1566,7 @@ systems_log_xml = """\
     <system_log_entry_id>5</system_log_entry_id>
   </system_log_entry>
   <system_log_entry>
-    <entry>Unable to register event 'On-demand system management interface detection': no networking information</entry>
+    <entry>Unable to create event 'On-demand system management interface detection': no networking information</entry>
     <system_log href="http://testserver/api/inventory/systems/5/system_log"/>
     <system_log_entry_id>6</system_log_entry_id>
   </system_log_entry>
