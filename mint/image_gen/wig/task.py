@@ -23,6 +23,7 @@ from lxml import builder
 from lxml import etree
 from restlib import client as rl_client
 from rmake3.worker import plug_worker
+from xobj import xobj
 
 from mint import buildtypes
 from mint.image_gen import constants as iconst
@@ -102,13 +103,17 @@ class WigTask(plug_worker.TaskHandler):
         repos = self.conaryClient.getRepos()
         cs = repos.createChangeSet(jobList, recurse=False, withFiles=True,
                 withFileContents=False)
-        interestingFiles = self.filterFiles(cs)
+        interestingFiles, fileMap = self.filterFiles(cs)
         totalFiles = len(interestingFiles)
 
         self.wigClient.createJob()
 
         # Choose between WIM and ISO output.
         self.wigClient.setIsIso(self.imageType == buildtypes.WINDOWS_ISO)
+
+        # Select a rTIS registry bootstrap file.
+        regFile = self.selectRegFile(fileMap)
+        interestingFiles.append(regFile)
 
         packageList = []
         for n, data in enumerate(sorted(interestingFiles)):
@@ -129,11 +134,6 @@ class WigTask(plug_worker.TaskHandler):
         doc = etree.tostring(root)
         sio = StringIO.StringIO(doc)
         self.wigClient.addFileStream(sio, 'xml', 'servicing.xml', len(doc))
-
-        # Send registry keys for the rTIS service.
-        doc = RTIS_REG_2003_X86.encode('utf-16')
-        sio = StringIO.StringIO(doc)
-        self.wigClient.addFileStream(sio, 'reg', 'rTIS.reg', len(doc))
 
     def sendContents(self, name, data, seq, total):
         """Transfer file from repository to build service."""
@@ -165,6 +165,7 @@ class WigTask(plug_worker.TaskHandler):
     def filterFiles(self, cs):
         # Select files that can be given to the windows build service.
         interestingFiles = []
+        fileMap = {}
         for trvCs in cs.iterNewTroveList():
             if trvCs.getName() == 'rTIS:msi':
                 # HACK: Telling rTIS to update itself will kill rTIS.
@@ -178,7 +179,8 @@ class WigTask(plug_worker.TaskHandler):
                 if '.' not in path:
                     # Only files with extensions are interesting
                     continue
-                ext = path.split('.')[-1].lower()
+                name = os.path.basename(path)
+                ext = name.split('.')[-1].lower()
 
                 fileInfo = cny_files.ThawFile(fileStream, pathId)
                 flags = fileInfo.flags
@@ -193,9 +195,12 @@ class WigTask(plug_worker.TaskHandler):
 
                 data = FileData(pathId, fileId, fileVer, path, ext, trvCs,
                         fileInfo, otherInfo)
-                interestingFiles.append(data)
+                if ext != 'reg':
+                    # Reg files are added later
+                    interestingFiles.append(data)
+                fileMap.setdefault(ext, []).append(data)
 
-        return interestingFiles
+        return interestingFiles, fileMap
 
     def filterFile(self, pathId, path, ext, trvCs):
         """Is the file interesting, and what other metadata is there?"""
@@ -215,6 +220,9 @@ class WigTask(plug_worker.TaskHandler):
             # Regular file
             if path.lower() == '/rtis.exe':
                 # rTIS bootstrap executable
+                return True, None
+            elif ext == 'reg':
+                # rTIS bootstrap registry entry
                 return True, None
             elif path.lower() == '/platform-isokit.zip':
                 # WinPE and associated ISO generation tools
@@ -253,6 +261,47 @@ class WigTask(plug_worker.TaskHandler):
                 )
 
         return pkgXml, name
+
+    def selectRegFile(self, fileMap):
+        wimFiles = fileMap.get('wim', [])
+        if len(wimFiles) != 1:
+            raise RuntimeError("Appliance groups must contain exactly one "
+                    "WIM capsule.")
+        wimData = wimFiles[0].otherInfo
+        imgIdx = str(wimData.volumeIndex())
+        wimXml = xobj.parse(wimData.infoXml())
+
+        images = wimXml.WIM.IMAGE
+        if not isinstance(images, list):
+            images = [images]
+        for image in images:
+            if image.INDEX == imgIdx:
+                break
+        else:
+            raise RuntimeError("Image index %s was not found." % (imgIdx,))
+
+        arch = image.WINDOWS.ARCH
+        if arch == '0':
+            archPart = 'x86'
+        elif arch == '9':
+            archPart = 'x64'
+        else:
+            raise RuntimeError("WIM has unsupported architecture %r" % (arch,))
+
+        version = [int(x) for x in wimData.version().split('.')][:2]
+        if version >= [6, 0]:
+            # Windows Server 2008 (and later, including R2)
+            verPart = '2008'
+        else:
+            # Windows Server 2003
+            verPart = '2003'
+
+        regPath = '/%s%s.reg' % (verPart, archPart)
+        for fileData in fileMap.get('reg', []):
+            if fileData.path == regPath:
+                return fileData
+        raise RuntimeError("The rTIS package does not contain the "
+                "required registry file %r" % (regPath,))
 
     def getTroveJobList(self):
         """Return a set of trove install jobs in dependency order."""
@@ -422,52 +471,3 @@ class FilePutter(rl_client.Client):
             raise rl_client.ResponseError(resp.status, resp.reason,
                     resp.msg, resp)
         return resp
-
-
-# FIXME: this should come from the platform, probably, but definitely doesn't
-# belong here.
-RTIS_REG_2003_X86 = r"""Windows Registry Editor Version 5.00
-
-[HKEY_LOCAL_MACHINE\MountedSYSTEM\ControlSet001\services\rPath Install Manager]
-"Type"=dword:00000010
-"Start"=dword:00000002
-"ErrorControl"=dword:00000001
-"ImagePath"=hex(2):25,00,53,00,79,00,73,00,74,00,65,00,6d,00,52,00,6f,00,6f,00,\
-  74,00,25,00,5c,00,72,00,70,00,6d,00,61,00,6e,00,2e,00,65,00,78,00,65,00,00,\
-  00
-"DisplayName"="rPath Install Manager"
-"DependOnService"=hex(7):52,00,50,00,43,00,53,00,53,00,00,00,00,00
-"ObjectName"="LocalSystem"
-"Description"="Manages Unattended Installations"
-
-[HKEY_LOCAL_MACHINE\MountedSYSTEM\ControlSet001\services\eventlog\Application\RPMAN]
-"EventMessageFile"="%SystemRoot%\\rpman.exe"
-"TypesSupported"=dword:00000007
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\AppID\{8D7E466B-F0FF-44d5-A66C-D725878C7648}]
-@="RPMAN"
-"LocalService"="RPMAN"
-"ServiceParameters"="-Service"
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\AppID\RPMAN.EXE]
-"AppID"="{8D7E466B-F0FF-44d5-A66C-D725878C7648}"
-
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}]
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0]
-@="RPMAN 1.0 Type Library"
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\0]
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\0\win32]
-@="%SystemRoot%\\rpman.exe"
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\FLAGS]
-@="0"
-
-[HKEY_LOCAL_MACHINE\MountedSOFTWARE\Classes\TypeLib\{1E26D002-D078-4879-B3FF-80883F12A3A1}\1.0\HELPDIR]
-@="%SystemRoot%"
-
-
-"""
