@@ -1168,9 +1168,9 @@ class SystemManager(base.BaseManager):
                 if self.getSystemHasHostInfo(system):
                     return self.scheduleSystemDetectMgmtInterfaceEvent(system) 
                 else:
-                    log.info("Event cannot be created for system %s (%s) '%s' "
+                    log.info("Event cannot be created for system id %s '%s' "
                         "because there is no host information" % \
-                        (system.pk, systemName, eventType.description))
+                        (system.pk, systemEvent.event_type.description))
                     self.log_system(system,
                         "Unable to create event '%s': no networking information" %
                             systemEvent.event_type.description)
