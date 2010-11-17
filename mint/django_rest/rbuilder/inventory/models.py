@@ -126,6 +126,8 @@ class EventTypes(modellib.XObjModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'event_types')
+    # hide jobs, see https://issues.rpath.com/browse/RBL-7151
+    _xobj_hidden_accessors = set(['jobs'])
     list_fields = ['event_type']
     event_type = []
 
@@ -869,7 +871,7 @@ class Job(modellib.XObjIdModel):
     status_text = models.TextField(default='Initializing')
     status_detail = XObjHidden(models.TextField(null=True))
     event_type = APIReadOnly(modellib.InlinedForeignKey(EventType,
-        visible='name'))
+        visible='name', related_name="jobs"))
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
     job_type = modellib.SyntheticField()

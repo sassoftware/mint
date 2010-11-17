@@ -22,7 +22,7 @@ event_type_xml="""\
 <event_type id="http://testserver/api/inventory/event_types/1">
   <description>System registration</description>
   <priority>110</priority>
-  <job_set/>
+  <jobs/>
   <event_type_id>1</event_type_id>
   <name>system registration</name>
   <system_events/>
@@ -34,7 +34,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/1">
     <name>system registration</name>
     <priority>110</priority>
-    <job_set/>
+    <jobs/>
     <event_type_id>1</event_type_id>
     <description>System registration</description>
     <system_events/>
@@ -42,7 +42,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/2">
     <name>immediate system poll</name>
     <priority>105</priority>
-    <job_set/>
+    <jobs/>
     <event_type_id>2</event_type_id>
     <description>On-demand system synchronization</description>
     <system_events/>
@@ -50,7 +50,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/3">
     <name>system poll</name>
     <priority>50</priority>
-    <job_set/>
+    <jobs/>
     <event_type_id>3</event_type_id>
     <description>System synchronization</description>
     <system_events/>
@@ -58,7 +58,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/4">
     <description>Scheduled system update</description>
     <event_type_id>4</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>system apply update</name>
     <priority>50</priority>
     <system_events/>
@@ -66,7 +66,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/5">
     <description>System update</description>
     <event_type_id>5</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>immediate system apply update</name>
     <priority>105</priority>
     <system_events/>
@@ -74,7 +74,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/6">
     <description>Scheduled system shutdown</description>
     <event_type_id>6</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>system shutdown</name>
     <priority>50</priority>
     <system_events/>
@@ -82,7 +82,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/7">
     <description>System shutdown</description>
     <event_type_id>7</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>immediate system shutdown</name>
     <priority>105</priority>
     <system_events/>
@@ -90,7 +90,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/8">
     <description>Launched system network data discovery</description>
     <event_type_id>8</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>system launch wait</name>
     <priority>105</priority>
     <system_events/>
@@ -98,7 +98,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/9">
     <description>System management interface detection</description>
     <event_type_id>9</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>system detect management interface</name>
     <priority>50</priority>
     <system_events/>
@@ -106,7 +106,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/10">
     <description>On-demand system management interface detection</description>
     <event_type_id>10</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>immediate system detect management interface</name>
     <priority>105</priority>
     <system_events/>
@@ -114,7 +114,7 @@ event_types_xml="""\
   <event_type id="http://testserver/api/inventory/event_types/11">
     <description>Update system configuration</description>
     <event_type_id>11</event_type_id>
-    <job_set/>
+    <jobs/>
     <name>immediate system configuration</name>
     <priority>105</priority>
     <system_events/>
@@ -126,7 +126,7 @@ event_type_put_xml="""\
 <event_type id="http://testserver/api/inventory/event_types/1">
   <description>System registration</description>
   <priority>1</priority>
-  <job_set/>
+  <jobs/>
   <event_type_id>1</event_type_id>
   <name>system registration</name>
   <system_events/>
@@ -137,7 +137,7 @@ event_type_put_name_change_xml="""\
 <event_type id="http://testserver/api/inventory/event_types/1">
   <description>System registration</description>
   <priority>110</priority>
-  <job_set/>
+  <jobs/>
   <event_type_id>1</event_type_id>
   <name>foobar</name>
   <system_events/>
