@@ -11,6 +11,7 @@ import json
 import os
 import StringIO
 import time
+from collections import namedtuple
 from conary import conarycfg
 from conary import conaryclient
 from conary import files as cny_files
@@ -28,6 +29,11 @@ from mint.image_gen import constants as iconst
 from mint.image_gen.wig import backend
 
 log = logging.getLogger('wig')
+
+
+FileData = namedtuple('FileInfo',
+        'pathId fileId fileVer '
+        'path kind trvCs fileInfo otherInfo')
 
 
 class WigTask(plug_worker.TaskHandler):
@@ -88,8 +94,6 @@ class WigTask(plug_worker.TaskHandler):
     def makeJob(self):
         E = builder.ElementMaker()
 
-        # FIXME: This whole function needs to be rewritten to build an update
-        # job so that the packages are ordered correctly.
         jobList = self.getTroveJobList()
 
         # Fetch file list but no contents, this way we can stream the files
@@ -107,56 +111,14 @@ class WigTask(plug_worker.TaskHandler):
         self.wigClient.setIsIso(self.imageType == buildtypes.WINDOWS_ISO)
 
         packageList = []
-        for n, (key, value) in enumerate(sorted(interestingFiles)):
-            # General trove info
-            pathId, fileId, fileVer = key
-            path, kind, trvCs, fileInfo, otherInfo = value
-            trvName, trvVersion, trvFlavor = trvCs.getNewNameVersionFlavor()
-            manifest = '%s=%s[%s]' % (trvName, trvVersion.freeze(), trvFlavor)
-            size = fileInfo.contents.size()
-            name = os.path.basename(path)
+        for n, data in enumerate(sorted(interestingFiles)):
+            name = os.path.basename(data.path)
 
-            if kind == 'msi':
-                # Use the digest as the name so there aren't conflicts, e.g.
-                # two different packages providing Setup.msi
-                name = fileInfo.contents.sha1().encode('hex') + '.msi'
-
-                # MSI install job, to be put in servicing.xml
-                msiInfo = otherInfo
-                pkgXml = E.package(
-                        E.type('msi'),
-                        E.sequence(str(len(packageList))),
-                        E.logFile('install.log'),
-                        E.operation('install'),
-                        E.productCode(msiInfo.productCode()),
-                        E.productName(msiInfo.name()),
-                        E.productVerson(msiInfo.version()),
-                        E.file(name),
-                        E.manifestEntry(manifest),
-                        E.previousManifestEntry(''),
-                        )
+            if data.kind == 'msi':
+                pkgXml, name = self.processMSI(data, seq=len(packageList))
                 packageList.append(pkgXml)
 
-            # Retrieve contents
-            self.sendStatus(iconst.WIG_JOB_SENDING,
-                    "Transferring file %s {2/5;%d/%d}" % (name, n, totalFiles))
-            fobj = repos.getFileContents( [(fileId, fileVer)] )[0].get()
-
-            # Report progress for file upload.
-            def callback(transferred):
-                if size:
-                    percent = int(100.0 * transferred / size)
-                else:
-                    percent = 0
-                self.sendStatus(iconst.WIG_JOB_SENDING,
-                        "Transferring file %s {2/5;%d/%d;%d%%}" % (name, n,
-                            totalFiles, percent))
-
-            # Upload file contents to the build service.
-            log.info("Sending file: pathid=%s fileid=%s path=%s",
-                    pathId.encode('hex'), fileId.encode('hex'), path)
-            wrapper = FileWithProgress(fobj, callback)
-            self.wigClient.addFileStream(wrapper, kind, name, size)
+            self.sendContents(name, data, n, totalFiles)
 
         # Finish assembling servicing.xml and send it to the build service.
         root = E.update(E.updateJobs(E.updateJob(
@@ -172,6 +134,33 @@ class WigTask(plug_worker.TaskHandler):
         doc = RTIS_REG_2003_X86.encode('utf-16')
         sio = StringIO.StringIO(doc)
         self.wigClient.addFileStream(sio, 'reg', 'rTIS.reg', len(doc))
+
+    def sendContents(self, name, data, seq, total):
+        """Transfer file from repository to build service."""
+        repos = self.conaryClient.getRepos()
+        size = data.fileInfo.contents.size()
+
+        # Retrieve contents
+        self.sendStatus(iconst.WIG_JOB_SENDING,
+                "Transferring file %s {2/5;%d/%d}" % (name, seq, total))
+        fobj = repos.getFileContents( [(data.fileId, data.fileVer)] )[0].get()
+
+        # Report progress for file upload.
+        def callback(transferred):
+            if size:
+                percent = int(100.0 * transferred / size)
+            else:
+                percent = 0
+            self.sendStatus(iconst.WIG_JOB_SENDING,
+                    "Transferring file %s {2/5;%d/%d;%d%%}" % (name, seq,
+                        total, percent))
+
+        # Upload file contents to the build service.
+        log.info("Sending file: pathid=%s fileid=%s path=%s",
+                data.pathId.encode('hex'), data.fileId.encode('hex'),
+                data.path)
+        wrapper = FileWithProgress(fobj, callback)
+        self.wigClient.addFileStream(wrapper, data.kind, name, size)
 
     def filterFiles(self, cs):
         # Select files that can be given to the windows build service.
@@ -198,37 +187,72 @@ class WigTask(plug_worker.TaskHandler):
                     # No contents
                     continue
 
-                key = pathId, fileId, fileVer
-                if pathId == cny_trove.CAPSULE_PATHID:
-                    # Capsule file
-                    if ext == 'msi':
-                        # MSI package to be installed
-                        otherInfo = trvCs.getTroveInfo().capsule.msi
-                    elif ext == 'wim':
-                        # Base platform WIM
-                        otherInfo = None
-                    else:
-                        log.warning("Ignoring capsule file %r -- don't know "
-                                "what it is", path)
-                        continue
-                else:
-                    # Regular file
-                    if path.lower() == '/rtis.exe':
-                        # rTIS bootstrap executable
-                        otherInfo = None
-                    elif path.lower() == '/platform-isokit.zip':
-                        # WinPE and associated ISO generation tools
-                        if self.imageType != buildtypes.WINDOWS_ISO:
-                            continue
-                        otherInfo = None
-                    else:
-                        log.warning("Ignoring regular file %r -- don't know "
-                                "what it is", path)
-                        continue
-                value = path, ext, trvCs, fileInfo, otherInfo
-                interestingFiles.append((key, value))
+                keep, otherInfo = self.filterFile(pathId, path, ext, trvCs)
+                if not keep:
+                    continue
+
+                data = FileData(pathId, fileId, fileVer, path, ext, trvCs,
+                        fileInfo, otherInfo)
+                interestingFiles.append(data)
 
         return interestingFiles
+
+    def filterFile(self, pathId, path, ext, trvCs):
+        """Is the file interesting, and what other metadata is there?"""
+        if pathId == cny_trove.CAPSULE_PATHID:
+            # Capsule file
+            if ext == 'msi':
+                # MSI package to be installed
+                return True, trvCs.getTroveInfo().capsule.msi
+            elif ext == 'wim':
+                # Base platform WIM
+                return True, trvCs.getTroveInfo().capsule.wim
+            else:
+                log.warning("Ignoring capsule file %r -- don't know "
+                        "what it is", path)
+                return False, None
+        else:
+            # Regular file
+            if path.lower() == '/rtis.exe':
+                # rTIS bootstrap executable
+                return True, None
+            elif path.lower() == '/platform-isokit.zip':
+                # WinPE and associated ISO generation tools
+                if self.imageType != buildtypes.WINDOWS_ISO:
+                    return False, None
+                return True, None
+            else:
+                log.warning("Ignoring regular file %r -- don't know "
+                        "what it is", path)
+                return False, None
+
+    def processMSI(self, data, seq):
+        """Return install job XML for a MSI package."""
+        E = builder.ElementMaker()
+
+        # Use the digest as the name so there aren't conflicts, e.g.
+        # two different packages providing Setup.msi
+        name = data.fileInfo.contents.sha1().encode('hex') + '.msi'
+
+        # MSI install job, to be put in servicing.xml
+        trvName, trvVersion, trvFlavor = data.trvCs.getNewNameVersionFlavor()
+        manifest = '%s=%s[%s]' % (trvName, trvVersion.freeze(),
+                trvFlavor)
+        msiInfo = data.otherInfo
+        pkgXml = E.package(
+                E.type('msi'),
+                E.sequence(str(seq)),
+                E.logFile('install.log'),
+                E.operation('install'),
+                E.productCode(msiInfo.productCode()),
+                E.productName(msiInfo.name()),
+                E.productVerson(msiInfo.version()),
+                E.file(name),
+                E.manifestEntry(manifest),
+                E.previousManifestEntry(''),
+                )
+
+        return pkgXml, name
 
     def getTroveJobList(self):
         """Return a set of trove install jobs in dependency order."""
