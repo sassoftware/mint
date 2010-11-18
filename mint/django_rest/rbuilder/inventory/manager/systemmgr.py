@@ -463,6 +463,8 @@ class SystemManager(base.BaseManager):
         # For good measure, save the nodes, since things like the jid may have
         # changed
         for x in managementNodes.management_node:
+            # Management nodes live in the same zone they manage
+            x.managing_zone_id = x.zone_id
             x.save()
 
     @base.exposed

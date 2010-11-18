@@ -891,6 +891,7 @@ class ManagementNodesTestCase(XMLTestCase):
 """
 
         nodeTempl = """<management_node>
+<hostname>boo!</hostname>
 <node_jid>%(jid)s</node_jid>
 <local>%(local)s</local>
 <zone><name>%(zoneName)s</name></zone>
@@ -927,15 +928,20 @@ class ManagementNodesTestCase(XMLTestCase):
         nodes = obj.management_nodes.management_node
         zone0 = models.Zone.objects.get(name='new zone 0')
         zone2 = models.Zone.objects.get(name='new zone 2')
-        exp = [(management_node0.node_jid, zone0.zone_id, 'false'),
+        exp = [(management_node0.node_jid, zone0.zone_id, 'false',
+                'test management node', zone0.zone_id,),
             # RBL-7703: this should go away
-            ('node01@rbuilder.rpath', management_node0.zone_id, 'true'),
-            ('node1@host1/node1', management_node0.zone_id, 'true'),
-            ('node2@host2/node2', zone2.zone_id, 'false')
+            ('node01@rbuilder.rpath', management_node0.zone_id, 'true',
+                'test management node 01', management_node0.zone_id,),
+            ('node1@host1/node1', management_node0.zone_id, 'true',
+                'boo!', management_node0.zone_id,),
+            ('node2@host2/node2', zone2.zone_id, 'false',
+                'boo!', zone2.zone_id,)
         ]
         self.failUnlessEqual(
             [ (str(x.node_jid), int(os.path.basename(x.zone.href)),
-                    str(x.local))
+                    str(x.local), str(x.name),
+                    int(os.path.basename(x.managing_zone.href)))
                 for x in nodes ],
             exp)
 
