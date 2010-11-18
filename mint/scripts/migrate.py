@@ -2006,6 +2006,14 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         
         return True
 
+    def migrate29(self):
+        cu = self.db.cursor()
+
+        cu.execute("""
+            ALTER TABLE "inventory_system_network"
+            DROP CONSTRAINT "inventory_system_network_system_id_dns_name_key"
+        """)
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
