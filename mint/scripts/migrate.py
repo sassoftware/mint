@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 29)
+    Version = (51, 30)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -2006,7 +2006,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         
         return True
 
-    def migrate29(self):
+    def migrate30(self):
         cu = self.db.cursor()
 
         cu.execute("""
