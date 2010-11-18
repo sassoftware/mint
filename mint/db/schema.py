@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(51, 28)
+RBUILDER_DB_VERSION = sqllib.DBversion(51, 29)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1595,13 +1595,13 @@ inventory_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/
       <name>name</name> 
       <help lang="en_US">@System_creation_name@</help>
       <descriptions> 
-        <desc>Name</desc> 
+        <desc>System Name</desc> 
       </descriptions> 
       <type>str</type> 
       <default></default>
       <required>true</required>
       <prompt>
-        <desc>Enter a name for this system</desc>
+        <desc>Enter the system name</desc>
       </prompt>
     </field>
     <field> 
@@ -1614,7 +1614,7 @@ inventory_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/
       <default></default>
       <required>false</required>
       <prompt>
-        <desc>Enter a description for this system</desc>
+        <desc>Enter the system description</desc>
       </prompt>
     </field>
     <field> 
@@ -1624,7 +1624,7 @@ inventory_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/
         <desc>Network Address</desc> 
       </descriptions> 
       <prompt>
-        <desc>Enter a DNS name or IP address for this system</desc>
+        <desc>Enter the system network address</desc>
       </prompt>
       <type>str</type> 
       <default></default> 
@@ -1659,13 +1659,13 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <name>name</name> 
       <help lang="en_US">@Management_node_creation_name@</help>
       <descriptions> 
-        <desc>Name</desc> 
+        <desc>System Name</desc> 
       </descriptions> 
       <type>str</type> 
       <default></default>
       <required>true</required>
       <prompt>
-        <desc>Enter a name for this system</desc>
+        <desc>Enter the system name</desc>
       </prompt>
     </field>
     <field> 
@@ -1678,7 +1678,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <default></default>
       <required>false</required>
       <prompt>
-        <desc>Enter a description for this system</desc>
+        <desc>Enter the system description</desc>
       </prompt>
     </field>
     <field> 
@@ -1688,7 +1688,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
         <desc>Network Address</desc> 
       </descriptions> 
       <prompt>
-        <desc>Enter a DNS name or IP address for this system</desc>
+        <desc>Enter the system network address</desc>
       </prompt>
       <type>str</type> 
       <default></default> 
@@ -1704,7 +1704,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <default></default>
       <required>true</required>
       <prompt>
-        <desc>Enter a name for this system's zone</desc>
+        <desc>Enter the name of the zone</desc>
       </prompt>
     </field>
     <field> 
@@ -1717,7 +1717,7 @@ management_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org
       <default></default>
       <required>false</required>
       <prompt>
-        <desc>Enter a description for this system's zone</desc>
+        <desc>Enter a description of the zone</desc>
       </prompt>
     </field>
   </dataFields> 
@@ -1731,13 +1731,13 @@ windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.
       <name>name</name> 
       <help lang="en_US">@Windows_build_node_creation_name@</help>
       <descriptions> 
-        <desc>Name</desc> 
+        <desc>System Name</desc> 
       </descriptions> 
       <type>str</type> 
       <default></default>
       <required>true</required>
       <prompt>
-        <desc>Enter a name for this system</desc>
+        <desc>Enter the system name.</desc>
       </prompt>
     </field>
     <field> 
@@ -1750,7 +1750,7 @@ windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.
       <default></default>
       <required>false</required>
       <prompt>
-        <desc>Enter a description for this system</desc>
+        <desc>Enter the system description</desc>
       </prompt>
     </field>
     <field> 
@@ -1760,7 +1760,7 @@ windows_build_node_creation_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.
         <desc>Network Address</desc> 
       </descriptions> 
       <prompt>
-        <desc>Enter a DNS name or IP address for this system</desc>
+        <desc>Enter the system network address</desc>
       </prompt>
       <type>str</type> 
       <default></default> 

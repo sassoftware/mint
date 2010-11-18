@@ -1496,7 +1496,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 28)
+    Version = (51, 29)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1991,6 +1991,19 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
             DROP CONSTRAINT "django_redirect_site_id_key"
         """)
 
+        return True
+    
+    def migrate29(self):
+        cu = self.db.cursor()
+
+        # descriptors were updated
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='inventory'""", 
+            schema.inventory_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-management-node'""", 
+            schema.management_node_creation_descriptor)
+        cu.execute("""update inventory_system_type set creation_descriptor=? where name='infrastructure-windows-build-node'""", 
+            schema.windows_build_node_creation_descriptor)
+        
         return True
 
 
