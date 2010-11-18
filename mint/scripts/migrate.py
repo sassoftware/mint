@@ -2014,6 +2014,8 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
             DROP CONSTRAINT "inventory_system_network_system_id_dns_name_key"
         """)
 
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
