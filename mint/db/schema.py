@@ -1455,43 +1455,6 @@ def _addManagementZone(db, cfg):
             [dict(name=zoneName,
                   description=zoneDescription,
                   created_date=str(datetime.datetime.now(tz.tzutc())))])
-    
-    # get the zone id
-    cu = db.cursor()
-    cu.execute("SELECT zone_id from inventory_zone where name=?", zoneName)
-    ids = cu.fetchall()
-    if len(ids) == 1:
-        zoneId = ids[0][0]
-        
-        # get the system type id
-        cu.execute("SELECT system_type_id from inventory_system_type where name='infrastructure-management-node'")
-        ids = cu.fetchall()
-        systemTypeId = ids[0][0]
-    
-        cu.execute("SELECT system_state_id FROM inventory_system_state WHERE name = 'unmanaged'")
-        stateId = cu.fetchone()[0]
-        # add the system
-        changed |= _addTableRows(db, 'inventory_system', 'name',
-                [dict(name="rPath Update Service", 
-                      description='Local rPath Update Service',
-                      current_state_id=stateId,
-                      managing_zone_id=zoneId,
-                      system_type_id=systemTypeId,
-                      created_date=str(datetime.datetime.now(tz.tzutc())))])
-        
-        # get the system id
-        cu = db.cursor()
-        cu.execute("SELECT system_id from inventory_system where name='rPath Update Service'")
-        ids = cu.fetchall()
-        if len(ids) == 1:
-            systemId = ids[0][0]
-            # add the network
-            changed |= _addTableRows(db, 'inventory_system_network', 'dns_name',
-                [dict(system_id=systemId, 
-                      dns_name='127.0.0.1', 
-                      active=True,
-                      created_date=str(datetime.datetime.now(tz.tzutc())))])
-    return changed
 
 cim_credentials_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <metadata></metadata>
