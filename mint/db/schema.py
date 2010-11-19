@@ -1455,6 +1455,8 @@ def _addManagementZone(db, cfg):
                   description=zoneDescription,
                   created_date=str(datetime.datetime.now(tz.tzutc())))])
 
+    return changed
+
 cim_credentials_descriptor=r"""<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
   <metadata></metadata>
   <dataFields>
