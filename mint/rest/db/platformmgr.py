@@ -1013,38 +1013,49 @@ class PlatformManager(manager.Manager):
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
 
-    def _lookupFromRepository(self, platformLabel):
+    def _lookupFromRepository(self, platformLabel, createPlatDef):
         # If there is a product definition, this call will publish it as a
         # platform
         pd = proddef.ProductDefinition()
         pd.setBaseLabel(platformLabel)
 
         client = self._reposMgr.getAdminClient(write=True)
-        try:
-            pd.loadFromRepository(client)
-            pl = pd.toPlatformDefinition()
-            pl.saveToRepository(client, platformLabel,
-                message="rBuilder generated\n")
-            pl.loadFromRepository(client, platformLabel)
-            # Invalidate the platform cache, we know we need to reload this
-            # platform
-            self.platformCache.clear()
-        except proddef.ProductDefinitionError:
-            # Could not find a product. Look for the platform
+        if createPlatDef:
+            try:
+                pd.loadFromRepository(client)
+                pl = pd.toPlatformDefinition()
+                pl.saveToRepository(client, platformLabel,
+                    message="rBuilder generated\n")
+                pl.loadFromRepository(client, platformLabel)
+                log.info("Platform definition created for %s during platform "
+                    "enablement." % platformLabel)
+                # Invalidate the platform cache, we know we need to reload this
+                # platform
+                self.platformCache.clear()
+            except proddef.ProductDefinitionError:
+                # Could not find a product. Look for the platform
+                pl = proddef.PlatformDefinition()
+                try:
+                    pl.loadFromRepository(client, platformLabel)
+                except proddef.ProductDefinitionError:
+                    pl = None
+                    log.warning("Platform definition not found for %s during "
+                        "platform enablement." % platformLabel)
+        else:
             pl = proddef.PlatformDefinition()
             try:
                 pl.loadFromRepository(client, platformLabel)
             except proddef.ProductDefinitionError:
+                log.warning("Platform definition not found for %s during "
+                    "platform enablement." % platformLabel)
                 pl = None
+           
         return pl
 
-    def createPlatform(self, platform, withRepositoryLookups=True):
+    def createPlatform(self, platform, createPlatDef=True):
         platformLabel = platform.label
 
-        if withRepositoryLookups:
-            pl = self._lookupFromRepository(platformLabel)
-        else:
-            pl = None
+        pl = self._lookupFromRepository(platformLabel, createPlatDef)
 
         # Now save the platform
         cu = self.db.db.cursor()

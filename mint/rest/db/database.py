@@ -746,8 +746,8 @@ class Database(DBInterface):
         return self.platformMgr.getPlatform(platformId)
 
     @commitafter
-    def createPlatform(self, platform, withRepositoryLookups=True):
-        return self.platformMgr.createPlatform(platform, withRepositoryLookups)
+    def createPlatform(self, platform, createPlatDef=True):
+        return self.platformMgr.createPlatform(platform, createPlatDef)
 
     @readonly
     def getPlatformImageTypeDefs(self, request, platformId):

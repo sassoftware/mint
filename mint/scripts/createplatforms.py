@@ -51,7 +51,7 @@ class Script(scriptlibrary.SingletonScript):
         onDiskPlatforms = set()
         for platformFile in self.listPlatforms():
             platformModel = self.loadPlatform(platformFile)
-            self.restdb.createPlatform(platformModel, withRepositoryLookups=False)
+            self.restdb.createPlatform(platformModel, createPlatDef=False)
             onDiskPlatforms.add(platformModel.label)
         # Fetch all on-disk platforms from the db
         cu = self.restdb.db.cursor()
