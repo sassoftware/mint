@@ -12,6 +12,7 @@ import os
 import time
 import traceback
 from dateutil import tz
+from xobj import xobj
 
 from django.db import connection
 from django.conf import settings
@@ -1104,7 +1105,7 @@ class SystemManager(base.BaseManager):
         systemConfig = self.marshalConfiguration(configuration)
         system.configuration = systemConfig
         system.save()
-        self.scheduleSystemConfigurationEvent(system)
+        self.scheduleSystemConfigurationEvent(system, configuration)
         return self._getConfigurationModel(system, configuration)
     
     def _getConfigurationModel(self, system, configDict):
@@ -1518,12 +1519,19 @@ class SystemManager(base.BaseManager):
             enableTime=self.now())
 
     @base.exposed
-    def scheduleSystemConfigurationEvent(self, system):
+    def scheduleSystemConfigurationEvent(self, system, configuration):
         '''Schedule an event for the system to be configured'''
         # registration events happen on demand, so enable now
+        configData = self.configDictToXml(configuration)
         return self._scheduleEvent(system,
             models.EventType.SYSTEM_CONFIG_IMMEDIATE,
-            enableTime=self.now())
+            enableTime=self.now(),
+            eventData=configData)
+
+    @classmethod
+    def configDictToXml(cls, configuration):
+        obj = Configuration(**configuration)
+        return xobj.toxml(obj, prettyPrint=False, xml_declaration=False)
 
     def _scheduleEvent(self, system, eventType, enableTime=None,
             eventData=None):
@@ -1850,3 +1858,9 @@ class SystemManager(base.BaseManager):
             models.SystemLogEntry.objects.all().order_by('entry_date')
         systemsLog.system_log_entry = list(systemLogEntries)
         return systemsLog
+
+class Configuration(object):
+    _xobj = xobj.XObjMetadata(
+        tag = 'configuration')
+    def __init__(self, **kwargs):
+        self.__dict__ = kwargs
