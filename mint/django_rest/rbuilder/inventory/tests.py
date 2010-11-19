@@ -3948,14 +3948,12 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.system2.configuration = self.mgr.sysMgr.marshalCredentials(
             configDict)
 
-        event = self.mgr.sysMgr.scheduleSystemConfigurationEvent(self.system2,
+        self.mgr.sysMgr.scheduleSystemConfigurationEvent(self.system2,
             configDict)
 
         repClient = self.mgr.repeaterMgr.repeaterClient
         cimParams = repClient.CimParams
         resLoc = repClient.ResultsLocation
-
-        cimData = {}
 
         eventUuid = models.SystemJob.objects.all()[0].event_uuid
         self.failUnlessEqual(repClient.methodsCalled,
