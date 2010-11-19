@@ -104,7 +104,6 @@ class WigTask(plug_worker.TaskHandler):
         cs = repos.createChangeSet(jobList, recurse=False, withFiles=True,
                 withFileContents=False)
         interestingFiles, fileMap = self.filterFiles(cs)
-        totalFiles = len(interestingFiles)
 
         self.wigClient.createJob()
 
@@ -116,12 +115,15 @@ class WigTask(plug_worker.TaskHandler):
         interestingFiles.append(regFile)
 
         packageList = []
+        totalFiles = len(interestingFiles)
         for n, data in enumerate(sorted(interestingFiles)):
             name = os.path.basename(data.path)
 
             if data.kind == 'msi':
                 pkgXml, name = self.processMSI(data, seq=len(packageList))
                 packageList.append(pkgXml)
+            elif data.kind == 'reg':
+                name = 'rTIS.reg'
 
             self.sendContents(name, data, n, totalFiles)
 
