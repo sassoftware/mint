@@ -3592,6 +3592,12 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             def register_wmi(slf, *args, **kwargs):
                 return slf._action('register_wmi', *args, **kwargs)
 
+            def configuration_cim(slf, *args, **kwargs):
+                return slf._action('configuration_cim', *args, **kwargs)
+
+            def configuration_wmi(slf, *args, **kwargs):
+                return slf._action('configuration_wmi', *args, **kwargs)
+
             def poll_cim(slf, *args, **kwargs):
                 return slf._action('poll_cim', *args, **kwargs)
 
@@ -3635,7 +3641,10 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         event = models.SystemEvent(system=self.system2,
             event_type=eventType, priority=eventType.priority)
         if eventData:
-            event.event_data = cPickle.dumps(eventData)
+            if isinstance(eventData, basestring):
+                event.event_data = eventData
+            else:
+                event.event_data = cPickle.dumps(eventData)
         event.save()
         return event
 
@@ -3930,6 +3939,47 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
         # We can't mock something past django's handler, so there's no
         # validation that we can do at this point
+
+    def testDispatchConfigurationCim(self):
+        cimInt = models.Cache.get(models.ManagementInterface,
+            name=models.ManagementInterface.CIM)
+        self.system2.management_interface = cimInt
+        configDict = dict(a='1', b='2')
+        self.system2.configuration = self.mgr.sysMgr.marshalCredentials(
+            configDict)
+
+        event = self.mgr.sysMgr.scheduleSystemConfigurationEvent(self.system2,
+            configDict)
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        cimParams = repClient.CimParams
+        resLoc = repClient.ResultsLocation
+
+        cimData = {}
+
+        eventUuid = models.SystemJob.objects.all()[0].event_uuid
+        self.failUnlessEqual(repClient.methodsCalled,
+            [
+                ('configuration_cim',
+                    (
+                        cimParams(host='3.3.3.3',
+                            port=None,
+                            eventUuid=eventUuid,
+                            clientKey=testsxml.pkey_pem,
+                            clientCert=testsxml.x509_pem,
+                            targetName=None,
+                            targetType=None,
+                            instanceId=None,
+                            launchWaitTime=300),
+                        resLoc(path='/api/inventory/systems/%s' %
+                                self.system2.pk, port=80),
+                    ),
+                    dict(
+                        zone='Local rBuilder',
+                        configuration='<configuration><a>1</a><b>2</b></configuration>',
+                    ),
+                ),
+            ])
 
 class TargetSystemImportTest(XMLTestCase):
     fixtures = ['users', 'targets']
