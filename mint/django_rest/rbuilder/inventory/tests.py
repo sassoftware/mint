@@ -2464,6 +2464,28 @@ class SystemsTestCase(XMLTestCase):
             '<configuration id="/api/inventory/systems/%s/configuration"/>' %
                 system.pk)
 
+    def testMarkSystemShutdown(self):
+        p = dict(local_uuid="abc", generated_uuid="def")
+        system = self.newSystem(name="blah", **p)
+        system.save()
+
+        p.update(currentState = "non-responsive-shutdown")
+
+        url = '/api/inventory/systems'
+        xml = """
+<system>
+  <local_uuid>%(local_uuid)s</local_uuid>
+  <generated_uuid>%(generated_uuid)s</generated_uuid>
+  <current_state><name>%(currentState)s</name></current_state>
+</system>
+"""
+        response = self._post(url, data=xml % p)
+        self.failUnlessEqual(response.status_code, 200)
+
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(system.current_state.name,
+            p['currentState'])
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",

@@ -768,7 +768,10 @@ class SystemManager(base.BaseManager):
                 # And schedule one immediately
                 self.scheduleSystemPollNowEvent(system)
         elif system.isRegistered:
-            if system.current_state.system_state_id != registeredState.system_state_id:
+            # If the API changed the state, do not try to change it back
+            if (system.oldModel is not None and
+                    system.oldModel.current_state.system_state_id == system.current_state_id and
+                    system.current_state.system_state_id != registeredState.system_state_id):
                 system.current_state = registeredState
                 system.save()
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
