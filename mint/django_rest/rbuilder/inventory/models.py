@@ -327,7 +327,7 @@ class ManagementInterface(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'management_interface',
                 attributes = {'id':str})
-        
+
     CIM = "cim"
     CIM_DESC = "Common Information Model (CIM)"
     CIM_PORT = 8443
@@ -348,6 +348,8 @@ class ManagementInterface(modellib.XObjIdModel):
     credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
     credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
     
+    load_fields = [name]
+
 class SystemTypes(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -443,8 +445,8 @@ class System(modellib.XObjIdModel):
         "a UUID that is randomly generated")
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile")
-    ssl_client_certificate = D(XObjHidden(APIReadOnly(models.CharField(
-            max_length=8092, null=True))),
+    ssl_client_certificate = D(APIReadOnly(models.CharField(
+            max_length=8092, null=True)),
         "an x509 certificate of an authorized client that can use the system's CIM broker")
     ssl_client_key = D(XObjHidden(APIReadOnly(models.CharField(
         max_length=8092, null=True))),

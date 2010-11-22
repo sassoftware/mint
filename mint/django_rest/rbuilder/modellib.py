@@ -56,8 +56,19 @@ class BaseManager(models.Manager):
 
         Override this method for more specific behavior for a given model.
         """
+        keyFieldVal = None
+        if model_inst._meta.has_auto_field:
+            autoField = model_inst._meta.auto_field
+            keyFieldName = autoField.name
+            keyFieldVal = getattr(model_inst, keyFieldName, None)
+
         try:
-            loaded_model = self.get(**model_inst.load_fields_dict())
+            if keyFieldVal:
+                loaded_model = self.get(pk=keyFieldVal)
+            elif model_inst.load_fields:   
+                loaded_model = self.get(**model_inst.load_fields_dict())
+            else:
+                return None, None
             oldModel = loaded_model.serialize()
             return oldModel, loaded_model
         except exceptions.ObjectDoesNotExist:
