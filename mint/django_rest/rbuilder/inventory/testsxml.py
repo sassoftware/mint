@@ -334,6 +334,7 @@ system_type_systems_xml="""
     </networks>
     <out_of_date>False</out_of_date>
     <registration_date/>
+    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <stage/>
     <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
@@ -515,6 +516,7 @@ management_nodes_xml = """\
       </network>
     </networks>
     <node_jid>superduperjid2@rbuilder.rpath</node_jid>
+    <ssl_client_certificate>test management node client cert</ssl_client_certificate>
     <ssl_server_certificate>test management node server cert</ssl_server_certificate>
     <stage/>
     <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>
@@ -585,6 +587,7 @@ management_node_xml = """\
     </network>
   </networks>
   <node_jid>superduperjid2@rbuilder.rpath</node_jid>
+  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/2">Local Zone</managing_zone>
@@ -644,6 +647,7 @@ management_node_post_xml = """\
     </network>
   </networks>
   <node_jid>abcd</node_jid>
+  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <stage/>
   <zone href="http://testserver/api/inventory/zones/1"/>
@@ -653,6 +657,7 @@ management_node_post_xml = """\
   <system_id>1</system_id>
   <launching_user/>
   <local>True</local>
+  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <local_uuid>test management node luuid</local_uuid>
   <major_version/>
@@ -690,6 +695,7 @@ management_node_post_response_xml = """\
   </networks>
   <zone href="http://testserver/api/inventory/zones/1"/>
   <node_jid>abcd</node_jid>
+  <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
@@ -748,6 +754,7 @@ management_node_zone_post_xml = """\
     </network>
   </networks>
   <node_jid>abcd</node_jid>
+  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <stage/>
   <hostname>myhostname</hostname>
@@ -755,6 +762,7 @@ management_node_zone_post_xml = """\
   <system_id>1</system_id>
   <launching_user/>
   <local>True</local>
+  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <zone href="http://testserver/api/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
@@ -793,6 +801,7 @@ management_node_zone_post_response_xml = """\
     </network>
   </networks>
   <node_jid>abcd</node_jid>
+  <ssl_client_certificate/>
   <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
@@ -883,6 +892,7 @@ systems_xml = """\
         <system href="http://testserver/api/inventory/systems/2"/>
       </network>
     </networks>
+    <ssl_client_certificate/>
     <ssl_server_certificate/>
     <stage/>
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
@@ -943,6 +953,7 @@ systems_xml = """\
         <system href="http://testserver/api/inventory/systems/3"/>
       </network>
     </networks>
+    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <stage/>
     <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
@@ -979,9 +990,11 @@ systems_put_xml = """\
         <required/>
       </network>
     </networks>
+    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <stage/>
     <launch_date/>
+    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
     <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
     <target_system_id/>
@@ -1019,9 +1032,11 @@ systems_put_xml = """\
         <required/>
       </network>
     </networks>
+    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <stage/>
     <launch_date/>
+    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
     <system_log href="http://testserver/api/inventory/systems/2/system_log"/>
     <target_system_id/>
@@ -1063,9 +1078,11 @@ systems_put_mothball_xml = """\
       <required/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1121,6 +1138,7 @@ system_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <system_id>1</system_id>
@@ -1167,9 +1185,11 @@ system_post_xml = """\
       <required/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1202,9 +1222,11 @@ system_mgmt_interface_put_xml = """\
       <required/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1237,9 +1259,11 @@ system_delete_mgmt_interface_put_xml = """\
       <required/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1282,6 +1306,7 @@ system_post_xml_response = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
@@ -1344,9 +1369,11 @@ system_post_xml_dup = """\
       <required/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log href="http://testserver/api/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1392,6 +1419,7 @@ system_target_xml = """\
       <system href="http://testserver/api/inventory/systems/1"/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
@@ -1722,6 +1750,7 @@ system_version_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <system_id>3</system_id>
@@ -1857,11 +1886,13 @@ system_version_put_response_xml = """\
       <system href="http://testserver/api/inventory/systems/2"/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <system_id>2</system_id>
   <launching_user/>
   <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log href="http://testserver/api/inventory/systems/2/system_log"/>
   <target_system_id/>
@@ -1969,6 +2000,7 @@ system_available_updates_xml = """\
       <system href="http://testserver/api/inventory/systems/3"/>
     </network>
   </networks>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <stage/>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
@@ -2207,6 +2239,7 @@ system_with_target = """\
   <system_id>4</system_id>
   <launching_user/>
   <launch_date/>
+  <ssl_client_certificate/>
   <installed_software id="http://testserver/api/inventory/systems/4/installed_software"/>
   <out_of_date>False</out_of_date>
   <registration_date/>
@@ -2248,16 +2281,14 @@ system_with_target = """\
 credentials_xml = """\
 <?xml version="1.0"?>
 <credentials>
-  <ssl_client_certificate>newsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>newsslclientkey</ssl_client_key>
+  <serverCert>testServerCert</serverCert>
 </credentials>
 """
 
 credentials_put_xml = """\
 <?xml version="1.0"?>
 <credentials>
-  <ssl_client_certificate>updatedsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>updatedsslclientkey</ssl_client_key>
+  <serverCert>testServerCertChanged</serverCert>
 </credentials>
 """
 
@@ -2282,16 +2313,14 @@ credentials_wmi_put_xml = """\
 credentials_resp_xml = """\
 <?xml version="1.0"?>
 <credentials id="http://testserver/api/inventory/systems/3/credentials">
-  <ssl_client_certificate>newsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>newsslclientkey</ssl_client_key>
+  <serverCert>testServerCert</serverCert>
 </credentials>
 """
 
 credentials_put_resp_xml = """\
 <?xml version="1.0"?>
 <credentials id="http://testserver/api/inventory/systems/3/credentials">
-  <ssl_client_certificate>updatedsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>updatedsslclientkey</ssl_client_key>
+  <serverCert>testServerCertChanged</serverCert>
 </credentials>
 """
 
@@ -2398,6 +2427,7 @@ system_installed_software_version_stage_xml = """\
   <system_id>3</system_id>
   <launching_user/>
   <launch_date/>
+  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <installed_software id="http://testserver/api/inventory/systems/3/installed_software">
     <trove id="http://testserver/repos/chater-foo/api/trove/group-chater-foo-appliance%3D/chater-foo.eng.rpath.com%40rpath%3Achater-foo-1-devel/1-2-1%5Bis%3A%20x86%5D">
       <name>group-chater-foo-appliance</name>
