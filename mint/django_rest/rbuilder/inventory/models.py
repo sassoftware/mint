@@ -443,8 +443,8 @@ class System(modellib.XObjIdModel):
         "a UUID that is randomly generated")
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile")
-    ssl_client_certificate = D(XObjHidden(APIReadOnly(models.CharField(
-            max_length=8092, null=True))),
+    ssl_client_certificate = D(APIReadOnly(models.CharField(
+            max_length=8092, null=True)),
         "an x509 certificate of an authorized client that can use the system's CIM broker")
     ssl_client_key = D(XObjHidden(APIReadOnly(models.CharField(
         max_length=8092, null=True))),
