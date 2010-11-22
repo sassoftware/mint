@@ -4,13 +4,11 @@
 
 import cgi
 import cgitb
-import mimetypes
 import os
 import shutil
 import signal
 import sys
 import tempfile
-import urllib
 import urllib2
 
 from mint import config
