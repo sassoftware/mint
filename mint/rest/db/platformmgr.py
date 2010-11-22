@@ -1055,6 +1055,13 @@ class PlatformManager(manager.Manager):
     def createPlatform(self, platform, createPlatDef=True):
         platformLabel = platform.label
 
+        # If the platform is already a platform, we want to make sure we
+        # aren't trying to create a platform definition.
+        # This is the case where you adding a label as a platform where it is
+        # already a platform.
+        if platform.isPlatform and createPlatDef:
+            createPlatDef = False
+
         pl = self._lookupFromRepository(platformLabel, createPlatDef)
 
         # Now save the platform

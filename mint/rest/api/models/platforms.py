@@ -143,6 +143,7 @@ class Platform(Model):
     load = fields.UrlField('platforms.load', ['platformId'])
     imageTypeDefinitions = fields.UrlField('platforms.imageTypeDefinitions',
                                          ['platformId'])
+    isPlatform = fields.BooleanField()
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
