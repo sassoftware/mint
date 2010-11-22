@@ -327,7 +327,7 @@ class ManagementInterface(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'management_interface',
                 attributes = {'id':str})
-        
+
     CIM = "cim"
     CIM_DESC = "Common Information Model (CIM)"
     CIM_PORT = 8443
@@ -348,6 +348,8 @@ class ManagementInterface(modellib.XObjIdModel):
     credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
     credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
     
+    load_fields = [name]
+
 class SystemTypes(modellib.XObjModel):
     class Meta:
         abstract = True
