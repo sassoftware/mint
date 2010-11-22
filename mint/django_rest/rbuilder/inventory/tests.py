@@ -1633,6 +1633,14 @@ class SystemsTestCase(XMLTestCase):
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'ssl_client_certificate',
                             'time_created', 'time_updated'])
+        # Unfortunately, we can't mock modules since we don't control Django's
+        # class loading. So we ignore the cert in the previous step and we
+        # test it with xobj (it is different every time)
+        obj = xobj.parse(response.content)
+        xobjmodel = obj.system
+        self.failUnless(xobjmodel.ssl_client_certificate.startswith(
+            '-----BEGIN CERTIFICATE-----'),
+            repr(xobjmodel.ssl_client_certificate))
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
@@ -1729,6 +1737,7 @@ class SystemsTestCase(XMLTestCase):
             testsxml.credentials_put_resp_xml)
 
         system = models.System.objects.get(pk=system.pk)
+        self.failIf(system.credentials is None)
 
         creds = system.credentials
         # Do a simple PUT on systems
@@ -1746,8 +1755,6 @@ class SystemsTestCase(XMLTestCase):
 
     def testSystemWmiCredentials(self):
         system = self._saveSystem()
-        system.management_interface = models.ManagementInterface.objects.get(name='wmi')
-        system.save()
         response = self._post('/api/inventory/systems/%s/credentials' % \
             system.pk,
             data=testsxml.credentials_wmi_xml,
