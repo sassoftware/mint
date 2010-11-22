@@ -55,8 +55,11 @@ class WigBackendClient(object):
         if not results.resultFiles.resultFile:
             raise RuntimeError("No files in job result")
 
-        for resFile, resXobj in zip(results.resultFiles,
-                results.resultFiles.resultFile):
+        xobjList = results.resultFiles.resultFile
+        if not isinstance(xobjList, list):
+            xobjList = [xobjList]
+
+        for resFile, resXobj in zip(results.resultFiles, xobjList):
             name = resXobj.path
             if resFile.type == 'iso':
                 # Prefer ISO to WIM
