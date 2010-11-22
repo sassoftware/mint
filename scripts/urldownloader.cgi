@@ -20,16 +20,8 @@ def cancel_signal(num, frame):
 
 signal.signal(signal.SIGUSR1, cancel_signal)
 
-class UrlForm(cgi.FieldStorage):
-    pass
-
 def getUrl():
     url =  cgi.parse_qs(os.environ['QUERY_STRING'])['fileUrl'][0]
-    # urlForm = UrlForm()
-    # if 'url' in urlForm:
-        # return urlForm['url'].value
-    # else:
-        # raise Exception("Url not found in form input")
     return url
 
 def writeManifest(manifest, fieldname, filename, tempfilename):
