@@ -13,9 +13,6 @@
 <xsl:copy-of select="$inventory_methods" />
 </xsl:variable>
 
-<!--    <job_states href="https://dhcp171.eng.rpath.com/api/inventory/job_states" />-->
-<!--    <management_interfaces href="https://dhcp171.eng.rpath.com/api/inventory/management_interfaces" /> -->
-
 <xsl:variable name="inventory_model"><![CDATA[
 Description:
   A node listing the entry points into the inventory API
