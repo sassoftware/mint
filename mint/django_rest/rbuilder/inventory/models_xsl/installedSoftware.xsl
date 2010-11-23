@@ -20,15 +20,15 @@ Trove Properties:
   trove_id - the database ID for the trove
   is_top_level - whether or not the trove is a top-level group
   is_top_level_item - whether or not the trove is a top-level item (group or package)
-  available_updates - a collection of trove versions representing updates to the trove (see below for more information)
+  available_updates - a collection of trove versions representing updates to the trove (see below for available_updates properties)
   last_available_update_refresh - the last time the collection of available updates was refreshed
   flavor - the flavor of the trove
   
 Available Updates Properties:
-  version - a trove version resource (see below for more information)
+  version - a trove version resource (see below for version properties)
   
 Trove Version Properties:
-  version_id - the database ID for the trove version
+  version_id - the inventory database ID for the trove version
   flavor - the flavor of the trove version
   full - the full trovespec of the trove version
   label - the label of the trove version
