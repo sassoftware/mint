@@ -9,6 +9,7 @@
 <xsl:import href="models_xsl/system.xsl"/>
 <xsl:import href="models_xsl/systemState.xsl"/>
 <xsl:import href="models_xsl/systemType.xsl"/>
+<xsl:import href="models_xsl/managementInterface.xsl"/>
 <xsl:import href="models_xsl/zone.xsl"/>
 
 <!--  Import collection resource objects -->
@@ -19,6 +20,7 @@
 <xsl:import href="models_xsl/systems.xsl"/>
 <xsl:import href="models_xsl/systemStates.xsl"/>
 <xsl:import href="models_xsl/systemTypes.xsl"/>
+<xsl:import href="models_xsl/managementInterfaces.xsl"/>
 <xsl:import href="models_xsl/zones.xsl"/>
 
 </xsl:stylesheet>

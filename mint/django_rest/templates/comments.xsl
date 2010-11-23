@@ -147,6 +147,20 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/management_interfaces">
+<xsl:comment>
+<xsl:copy-of select="$managementInterfaces_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/management_interface">
+<xsl:comment>
+<xsl:copy-of select="$managementInterface_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <xsl:template match="/systems">
 <xsl:comment>
 <xsl:copy-of select="$systems_info" />

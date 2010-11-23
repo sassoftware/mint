@@ -28,6 +28,7 @@ Inventory Properties:
   systems - an entry point into the collection of all systems
   inventory_systems - an entry point into the collection of inventory systems
   infrastructure_systems - an entry point into the collection of infrastructure systems
+  management_interfaces - an entry point into the collection of management interfaces
   job_states -  an entry point into the inventory job states collection
   zones - an entry point into the inventory management zones collection
   management_nodes - an entry point into the inventory management nodes collection
