@@ -59,7 +59,7 @@ class WigTask(plug_worker.TaskHandler):
                     (message,))
 
     def setConfiguration(self):
-        data = json.loads(self.getData())
+        data = self.jobData = json.loads(self.getData())
 
         # Image trove tuple
         name = data['troveName'].encode('ascii')
@@ -384,19 +384,25 @@ class WigTask(plug_worker.TaskHandler):
         ctx = hashlib.sha1()
         self._postFileObject('PUT', name, wrapper, ctx)
 
+        tmpl = "%s-%s" % (data['project']['hostname'],
+                data['buildId'])
         if kind == 'wim':
             title = "Windows Image (WIM)"
+            fileName = "%s.wim" % tmpl
         elif kind == 'iso':
             title = "Installable CD/DVD (ISO)"
+            data = self.jobData
+            fileName = "%s.iso" % tmpl
         else:
             title = "???"
+            fileName = name
 
         E = builder.ElementMaker()
         root = E.files(E.file(
             E.title(title),
             E.size(str(size)),
             E.sha1(ctx.hexdigest()),
-            E.fileName(name),
+            E.fileName(fileName),
             ))
         self._post('PUT', 'files', body=etree.tostring(root))
 
