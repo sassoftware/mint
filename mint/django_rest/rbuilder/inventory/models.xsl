@@ -9,6 +9,7 @@
 <xsl:import href="models_xsl/network.xsl"/>
 <xsl:import href="models_xsl/jobState.xsl"/>
 <xsl:import href="models_xsl/system.xsl"/>
+<xsl:import href="models_xsl/systemLog.xsl"/>
 <xsl:import href="models_xsl/systemState.xsl"/>
 <xsl:import href="models_xsl/systemType.xsl"/>
 <xsl:import href="models_xsl/managementInterface.xsl"/>

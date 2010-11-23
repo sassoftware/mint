@@ -189,6 +189,13 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/system_log">
+<xsl:comment>
+<xsl:copy-of select="$systemLog_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <!-- Catchall if the content does not match any of the above -->
 <xsl:template match="/*">
 

@@ -42,6 +42,7 @@ System Properties:]]>
    ssl_server_certificate - an x509 public certificate of the system's CIM broker
    stage - the appliance stage of the system
    system_id - the database ID for the system
+   system_log - an entry point into the log data for this system
    system_type - the type of the system
    target - the virtual target the system was deployed to (only applies if system is on a virtual target)
    target_system_description - the system description as reported by its target (only applies if system is on a virtual target)
