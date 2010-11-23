@@ -119,6 +119,20 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/job_states">
+<xsl:comment>
+<xsl:copy-of select="$jobStates_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/job_state">
+<xsl:comment>
+<xsl:copy-of select="$jobState_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <xsl:template match="/systems">
 <xsl:comment>
 <xsl:copy-of select="$systems_info" />

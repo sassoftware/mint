@@ -13,6 +13,10 @@
 <xsl:copy-of select="$inventory_methods" />
 </xsl:variable>
 
+<!--    <job_states href="https://dhcp171.eng.rpath.com/api/inventory/job_states" />-->
+<!--    <management_interfaces href="https://dhcp171.eng.rpath.com/api/inventory/management_interfaces" /> -->
+<!--    <system_types href="https://dhcp171.eng.rpath.com/api/inventory/system_types" /> -->
+
 <xsl:variable name="inventory_model"><![CDATA[
 Description:
   A node listing the entry points into the inventory API
@@ -21,10 +25,13 @@ Inventory Properties:
   event_types - an entry point into inventory event types
   log - an entry point into inventory logging
   system_states - an entry point into the inventory system states collection
-  systems - an entry point into the inventory systems collection
-  zones - an entry point into inventory management zones collection
-  management_nodes - an entry point into inventory management nodes collection
-  networks - an entry point into inventory system networks collection]]>
+  systems - an entry point into the collection of all systems
+  inventory_systems - an entry point into the collection of inventory systems
+  infrastructure_systems - an entry point into the collection of infrastructure systems
+  job_states -  an entry point into the inventory job states collection
+  zones - an entry point into the inventory management zones collection
+  management_nodes - an entry point into the inventory management nodes collection
+  networks - an entry point into the inventory system networks collection]]>
 <xsl:copy-of select="$event_types_href_model" />
 <xsl:copy-of select="$log_href_model" />
 <xsl:copy-of select="$system_states_href_model" />
