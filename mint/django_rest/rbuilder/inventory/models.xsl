@@ -7,6 +7,7 @@
 <xsl:import href="models_xsl/inventory.xsl"/>
 <xsl:import href="models_xsl/managementNode.xsl"/>
 <xsl:import href="models_xsl/network.xsl"/>
+<xsl:import href="models_xsl/job.xsl"/>
 <xsl:import href="models_xsl/jobState.xsl"/>
 <xsl:import href="models_xsl/system.xsl"/>
 <xsl:import href="models_xsl/systemLog.xsl"/>
@@ -19,6 +20,7 @@
 <xsl:import href="models_xsl/eventTypes.xsl"/>
 <xsl:import href="models_xsl/managementNodes.xsl"/>
 <xsl:import href="models_xsl/networks.xsl"/>
+<xsl:import href="models_xsl/jobs.xsl"/>
 <xsl:import href="models_xsl/jobStates.xsl"/>
 <xsl:import href="models_xsl/systems.xsl"/>
 <xsl:import href="models_xsl/systemStates.xsl"/>

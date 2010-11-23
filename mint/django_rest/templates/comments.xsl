@@ -196,6 +196,20 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/jobs">
+<xsl:comment>
+<xsl:copy-of select="$jobs_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/job">
+<xsl:comment>
+<xsl:copy-of select="$job_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <!-- Catchall if the content does not match any of the above -->
 <xsl:template match="/*">
 
