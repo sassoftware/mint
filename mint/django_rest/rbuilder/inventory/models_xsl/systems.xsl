@@ -38,7 +38,7 @@ Methods:
   POST:
     Authentication: none
     Required Fields:
-      Technically only the name field is required.  This could result in duplicate entries in the inventory though. 
+      Technically only the name field is required.  This could result in duplicate entries in the inventory. 
       The recommended way is to include network information for the system so it can be contacted to initiate the registration process.
     Example:
       <system>

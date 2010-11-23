@@ -14,6 +14,7 @@
 <xsl:import href="models_xsl/systemState.xsl"/>
 <xsl:import href="models_xsl/systemType.xsl"/>
 <xsl:import href="models_xsl/managementInterface.xsl"/>
+<xsl:import href="models_xsl/installedSoftware.xsl"/>
 <xsl:import href="models_xsl/zone.xsl"/>
 
 <!--  Import collection resource objects -->
