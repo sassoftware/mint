@@ -20,20 +20,20 @@
 
 <xsl:variable name="inventory_model"><![CDATA[
 Description:
-  A node listing the entry points into the inventory API
+  A list of the entry points into the inventory API
   
 Inventory Properties:
-  event_types - an entry point into inventory event types
+  event_types - an entry point into the inventory events collection
   log - an entry point into inventory logging
   system_types - an entry point into the inventory system types collection
   system_states - an entry point into the inventory system states collection
-  systems - an entry point into the collection of all systems
-  inventory_systems - an entry point into the collection of inventory systems
-  infrastructure_systems - an entry point into the collection of infrastructure systems
-  management_interfaces - an entry point into the collection of management interfaces
+  systems - an entry point into the collection of all systems (all systems in inventory_systems and infrastructure systems combined)
+  inventory_systems - an entry point into the collection of inventory systems (all systems visible in the UI under Systems)
+  infrastructure_systems - an entry point into the collection of infrastructure systems (all systems visible in the UI under Infrastructure)
+  management_interfaces - an entry point into the collection of management interfaces (CIM, WMI, etc.)
   job_states -  an entry point into the inventory job states collection
   zones - an entry point into the inventory management zones collection
-  management_nodes - an entry point into the inventory management nodes collection
+  management_nodes - an entry point into the inventory management nodes collection (rPath Update Services)
   networks - an entry point into the inventory system networks collection]]>
 <xsl:copy-of select="$event_types_href_model" />
 <xsl:copy-of select="$log_href_model" />
