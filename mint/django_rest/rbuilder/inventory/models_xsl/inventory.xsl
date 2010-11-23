@@ -15,7 +15,6 @@
 
 <!--    <job_states href="https://dhcp171.eng.rpath.com/api/inventory/job_states" />-->
 <!--    <management_interfaces href="https://dhcp171.eng.rpath.com/api/inventory/management_interfaces" /> -->
-<!--    <system_types href="https://dhcp171.eng.rpath.com/api/inventory/system_types" /> -->
 
 <xsl:variable name="inventory_model"><![CDATA[
 Description:
@@ -24,6 +23,7 @@ Description:
 Inventory Properties:
   event_types - an entry point into inventory event types
   log - an entry point into inventory logging
+  system_types - an entry point into the inventory system types collection
   system_states - an entry point into the inventory system states collection
   systems - an entry point into the collection of all systems
   inventory_systems - an entry point into the collection of inventory systems

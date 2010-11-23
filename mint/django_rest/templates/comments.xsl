@@ -133,6 +133,20 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/system_types">
+<xsl:comment>
+<xsl:copy-of select="$systemTypes_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/system_type">
+<xsl:comment>
+<xsl:copy-of select="$systemType_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <xsl:template match="/systems">
 <xsl:comment>
 <xsl:copy-of select="$systems_info" />
