@@ -55,19 +55,15 @@ class WigBackendClient(object):
         if not results.resultFiles.resultFile:
             raise RuntimeError("No files in job result")
 
-        xobjList = results.resultFiles.resultFile
-        if not isinstance(xobjList, list):
-            xobjList = [xobjList]
-
-        for resFile, resXobj in zip(results.resultFiles, xobjList):
-            name = resXobj.path
+        for resFile in results.resultFiles:
             if resFile.type == 'iso':
                 # Prefer ISO to WIM
                 break
 
         size = int(resFile.size)
         fobj = resFile.path
-        return name, size, fobj
+        kind = resFile.type.decode('utf8', 'ignore')
+        return kind, size, fobj
 
     def getLog(self):
         """Return contents of the job log."""
