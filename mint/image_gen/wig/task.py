@@ -384,6 +384,7 @@ class WigTask(plug_worker.TaskHandler):
         ctx = hashlib.sha1()
         self._postFileObject('PUT', name, wrapper, ctx)
 
+        data = self.jobData
         tmpl = "%s-%s" % (data['project']['hostname'],
                 data['buildId'])
         if kind == 'wim':
@@ -391,7 +392,6 @@ class WigTask(plug_worker.TaskHandler):
             fileName = "%s.wim" % tmpl
         elif kind == 'iso':
             title = "Installable CD/DVD (ISO)"
-            data = self.jobData
             fileName = "%s.iso" % tmpl
         else:
             title = "???"
