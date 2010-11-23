@@ -1,9 +1,14 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
 <xsl:import href="eventTypesHref.xsl"/>
+<xsl:import href="systemTypesHref.xsl"/>
 <xsl:import href="logHref.xsl"/>
 <xsl:import href="systemStatesHref.xsl"/>
 <xsl:import href="systemsHref.xsl"/>
+<xsl:import href="infrastructureSystemsHref.xsl"/>
+<xsl:import href="inventorySystemsHref.xsl"/>
+<xsl:import href="managementInterfacesHref.xsl"/>
+<xsl:import href="jobStatesHref.xsl"/>
 <xsl:import href="zonesHref.xsl"/>
 <xsl:import href="managementNodesHref.xsl"/>
 <xsl:import href="networksHref.xsl"/>
@@ -32,8 +37,13 @@ Inventory Properties:
   networks - an entry point into the inventory system networks collection]]>
 <xsl:copy-of select="$event_types_href_model" />
 <xsl:copy-of select="$log_href_model" />
+<xsl:copy-of select="$system_types_href_model" />
 <xsl:copy-of select="$system_states_href_model" />
 <xsl:copy-of select="$systems_href_model" />
+<xsl:copy-of select="$inventory_systems_href_model" />
+<xsl:copy-of select="$infrastructure_systems_href_model" />
+<xsl:copy-of select="$management_interfaces_href_model" />
+<xsl:copy-of select="$job_states_href_model" />
 <xsl:copy-of select="$zones_href_model" />
 <xsl:copy-of select="$management_nodes_href_model" />
 <xsl:copy-of select="$networks_href_model" />
