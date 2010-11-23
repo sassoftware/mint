@@ -17,7 +17,7 @@ System Properties:]]>
 <xsl:copy-of select="$system_model_properties_no_description" />
 </xsl:variable>
 
-<xsl:variable name="system_model_properties_no_description"><![CDATA[   agent_port - the port used by the system's CIM broker
+<xsl:variable name="system_model_properties_no_description"><![CDATA[   agent_port - the port used by the system's management interface
    appliance - the appliance of the system
    credentials - an entry point into the credentials data for this system
    configuration - an entry point into the configuration data for this system

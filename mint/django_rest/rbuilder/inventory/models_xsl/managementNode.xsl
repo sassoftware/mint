@@ -14,10 +14,11 @@ Description:
 </xsl:variable>
 
 <xsl:variable name="management_node_model_properties"><![CDATA[
-ManagementNode Properties (extends System resource):]]><xsl:copy-of select="$system_model_properties_no_description" /><![CDATA[  local - whether or not this management node is local to the rBuilder
-  system_ptr - a link to the management node's underlying system
-  zone - the zone the management node lives in
-  node_jid - the Jabber ID the management node is using]]>
+ManagementNode Properties (extends System resource):]]>
+<xsl:copy-of select="$system_model_properties_no_description" /><![CDATA[   local - whether or not this management node is local to the rBuilder
+   system_ptr - a link to the management node's underlying system
+   zone - the zone the management node lives in
+   node_jid - the Jabber ID the management node is using]]>
 </xsl:variable>
 
 <xsl:variable name="management_node_methods"><![CDATA[

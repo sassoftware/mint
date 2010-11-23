@@ -39,7 +39,7 @@ Methods:
       <management_node>
         <name>East Datacenter Node 1</name>
         <description>Management node 1 for east datacenter</description>
-        <zone href="http://hostname/api/inventory/zones/1/">
+        <zone href="http://hostname/api/inventory/zones/1/"/>
       </management_node>
     
   PUT:
