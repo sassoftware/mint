@@ -1,6 +1,8 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
 <!--  Import resource objects -->
+<xsl:import href="models_xsl/credentials.xsl"/>
+<xsl:import href="models_xsl/configuration.xsl"/>
 <xsl:import href="models_xsl/eventType.xsl"/>
 <xsl:import href="models_xsl/inventory.xsl"/>
 <xsl:import href="models_xsl/managementNode.xsl"/>

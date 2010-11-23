@@ -175,6 +175,20 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/credentials">
+<xsl:comment>
+<xsl:copy-of select="$credentials_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
+<xsl:template match="/configuration">
+<xsl:comment>
+<xsl:copy-of select="$configuration_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <!-- Catchall if the content does not match any of the above -->
 <xsl:template match="/*">
 

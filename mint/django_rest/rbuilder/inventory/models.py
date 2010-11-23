@@ -345,7 +345,7 @@ class ManagementInterface(modellib.XObjIdModel):
     description = D(models.CharField(max_length=8092), "the description of the management interface")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the management interface was added to inventory (UTC)")
     port = D(models.IntegerField(null=False), "the port used by the management interface")
-    credentials_descriptor = D(models.XMLField(), "the descriptor of required fields to set credentials for the management interface")
+    credentials_descriptor = D(models.XMLField(), "the descriptor of available fields to set credentials for the management interface")
     credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
     
     load_fields = [name]
@@ -388,7 +388,7 @@ class SystemType(modellib.XObjIdModel):
     description = D(models.CharField(max_length=8092), "the description of the system type")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the system type was added to inventory (UTC)")
     infrastructure = D(models.BooleanField(), "whether or not the system type is infrastructure")
-    creation_descriptor = D(models.XMLField(), "the descriptor of required fields to create systems of this type")
+    creation_descriptor = D(models.XMLField(), "the descriptor of available fields to create systems of this type")
 
     load_fields = [ name ]
 
@@ -487,7 +487,8 @@ class System(modellib.XObjIdModel):
         text_field='shortname')),
         "the appliance of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
-    configuration_descriptor = APIReadOnly(modellib.SyntheticField())
+    configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
+        "the descriptor of available fields to set system configuration parameters")
 
     load_fields = [local_uuid]
 

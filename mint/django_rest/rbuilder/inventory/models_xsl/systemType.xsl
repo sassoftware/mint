@@ -18,7 +18,7 @@ SystemType Properties:
   description - the description of the system type
   created_date - the date the system type was added to inventory (UTC)
   infrastructure - whether or not the system type is infrastructure
-  creation_descriptor - the descriptor of required fields to create systems of this type]]>
+  creation_descriptor - the descriptor of available fields to create systems of this type]]>
 </xsl:variable>
 
 <xsl:variable name="systemType_methods"><![CDATA[
