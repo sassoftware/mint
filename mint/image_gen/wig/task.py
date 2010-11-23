@@ -367,8 +367,9 @@ class WigTask(plug_worker.TaskHandler):
         self.sendStatus(iconst.WIG_JOB_UPLOADING,
                 "Transferring image result {4/5}")
 
+        data = self.jobData
         kind, size, fobj = self.wigClient.getResults()
-        name = 'image.' + kind
+        name = '%s-%s.%s' % (data['project']['hostname'], data['buildId'], kind)
 
         # Report progress for file upload.
         def callback(transferred):
@@ -384,25 +385,19 @@ class WigTask(plug_worker.TaskHandler):
         ctx = hashlib.sha1()
         self._postFileObject('PUT', name, wrapper, ctx)
 
-        data = self.jobData
-        tmpl = "%s-%s" % (data['project']['hostname'],
-                data['buildId'])
         if kind == 'wim':
             title = "Windows Image (WIM)"
-            fileName = "%s.wim" % tmpl
         elif kind == 'iso':
             title = "Installable CD/DVD (ISO)"
-            fileName = "%s.iso" % tmpl
         else:
             title = "???"
-            fileName = name
 
         E = builder.ElementMaker()
         root = E.files(E.file(
             E.title(title),
             E.size(str(size)),
             E.sha1(ctx.hexdigest()),
-            E.fileName(fileName),
+            E.fileName(name),
             ))
         self._post('PUT', 'files', body=etree.tostring(root))
 
