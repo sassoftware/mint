@@ -29,6 +29,7 @@ System Properties:]]>
    has_active_jobs - whether or not there are any jobs pending (queued or running) for this system
    has_running_jobs - whether or not there are any jobs running for this system
    hostname - the system hostname
+   installed_software - an entry point into the collection of software installed on this system
    jobs - a collection of all jobs for this system
    launch_date - the date the system was deployed (only applies if system is on a virtual target)
    launching_user - the user that deployed the system (only applies if system is on a virtual target)

@@ -210,6 +210,13 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
+<xsl:template match="/installed_software">
+<xsl:comment>
+<xsl:copy-of select="$installedSoftware_info" />
+</xsl:comment>
+<xsl:copy-of select="/"/>
+</xsl:template>
+
 <!-- Catchall if the content does not match any of the above -->
 <xsl:template match="/*">
 
