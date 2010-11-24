@@ -318,6 +318,10 @@ class WigTask(plug_worker.TaskHandler):
     def runJob(self):
         self.wigClient.startJob()
         log.info("Job started: %s", self.wigClient.getJobUrl())
+        # KLUDGE: This can go away once rMake's build logs are actually piped
+        # somewhere.
+        self.sendLog("Job started, URL is: %s\n" % self.wigClient.getJobUrl())
+
         for status, message, progress in self.wigClient.watchJob():
             log.info("Job status: %03d %s: %s", progress, status,
                     message)
