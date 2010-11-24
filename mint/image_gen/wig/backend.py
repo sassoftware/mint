@@ -36,6 +36,8 @@ class WigBackendClient(object):
         """Yield status updates until the image job is done."""
         job = self.image.imageJob
         last = None
+        errors = 0
+        maxErrors = 10
         while True:
             next = (job.status, job.message, int(job.progress))
             if last != next:
@@ -44,7 +46,12 @@ class WigBackendClient(object):
             if job.status not in ('Queued', 'Running'):
                 break
             time.sleep(10)
-            job.refresh(force=True)
+            try:
+                job.refresh(force=True)
+            except:
+                if errors >= maxErrors:
+                    raise
+                errors += 1
 
     def getJobUrl(self):
         return self.image.imageJob.id
