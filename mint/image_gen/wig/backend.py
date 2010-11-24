@@ -43,7 +43,7 @@ class WigBackendClient(object):
                 yield next
             if job.status not in ('Queued', 'Running'):
                 break
-            time.sleep(1)
+            time.sleep(10)
             job.refresh(force=True)
 
     def getJobUrl(self):
