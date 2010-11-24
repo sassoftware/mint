@@ -772,11 +772,14 @@ class MintServer(object):
         except socket.error, e:
             raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
                                                            str(e[1]))
-        else:
-            if not mirrorPassword or isinstance(mirrorPassword, dict):
-                raise mint_error.UpdateServiceUnknownError(urlhostname)
 
-        return (mirrorUser, mirrorPassword)
+        if mirrorPassword == '':
+            # rUS is in proxy mode
+            return 'proxy_mode', ''
+        elif isinstance(mirrorPassword, dict):
+            raise mint_error.UpdateServiceUnknownError(urlhostname)
+        else:
+            return (mirrorUser, mirrorPassword)
 
     def _createGroupTemplate(self, project, buildLabel, version,
                              groupName=None, groupApplianceLabel=None):
