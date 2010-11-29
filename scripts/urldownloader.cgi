@@ -11,7 +11,10 @@ import sys
 import tempfile
 import urllib2
 
+from conary.lib import util
 from mint import config
+
+CHUNKSIZE = 512 * 1024
 
 def cancel_signal(num, frame):
     print "Status: 200 Ok\n"
@@ -50,8 +53,13 @@ def uploadUrl(path, basedir, prefix, fileName):
     #connect to the working directory
     basewkdir = os.path.join(basedir, prefix + id)
 
+    # Create the dir if it doesn't exist
+    if not os.path.exists(basewkdir):
+        util.mkdirChain(basewkdir)
+
     filePath = os.path.join(basewkdir, os.path.basename(path))
     shutil.copyfile(path, filePath)
+    os.path.unlink(path)
     indexfile = open(os.path.join(basewkdir, 'uploadfile-index'), 'wt')
     writeManifest(indexfile, 'uploadfile', fileName,
         filePath)
@@ -65,7 +73,15 @@ def downloadUrl(url, workDir):
 
     tempFilePath = tempfile.mktemp(suffix='.ccs', dir=workDir)
     tempFile = open(tempFilePath, 'w+b')
-    tempFile.write(urllib2.urlopen(url).read())
+
+    openUrl = urllib2.urlopen(url)
+
+    while 1:
+        data = openUrl.read(CHUNKSIZE)
+        if data:
+            tempFile.write(data)
+        else:
+            break
     tempFile.close()
 
     return tempFilePath
@@ -74,13 +90,20 @@ def main():
     cgitb.enable()
 
     mintCfg = config.MintConfig()
+    docRoot = os.environ.get('DOCUMENT_ROOT', '')
+    cfgPath = os.path.join(docRoot, 'rbuilder.conf')
+
+    if docRoot and os.path.exists(cfgPath):
+        mintCfg.read(cfgPath)
+    else:
+        mintCfg.read(config.RBUILDER_CONFIG)
+
     workDir = os.path.join(mintCfg.dataPath, 'tmp')
     
     url = getUrl()
     fileName = os.path.basename(url)
 
     downloadedUrlPath = downloadUrl(url, workDir)
-    # html = getFormHtml(downloadedUrlPath)
 
     return uploadUrl(downloadedUrlPath, workDir, 'rb-pc-upload-', fileName)
 
