@@ -61,39 +61,15 @@ die() {
 # Shut down apache, if it's running
 shutdown_apache
 
-# Restart postgresql since it does not like the rPL 1 -> rPL 2
-# migration and probably does not like being run post-update either.
-#   -- 5.0.0 - 2009-01-08
-function waitForPg()
-{
-    echo "Waiting for postgres to start"
-    ready="false"
-    retries=4
-    while true
-    do
-        psql -U postgres -l >/dev/null 2>&1
-        rc=$?
-        if [ "$rc" -eq 0 ]
-        then
-            break
-        elif [[ "$rc" -eq 2 && "$retries" -ne 0 ]]
-        then
-            retries=$(( $retries - 1 ))
-            sleep 4
-        else
-            echo "Failed waiting for PostgreSQL to start"
-            exit 1
-        fi
-    done
-}
-
-service postgresql-rbuilder condstop
-# postgres attaches shared memory to its pidfile; if it shuts down uncleanly it
-# can subsequently refuse to start because of this. Unlinking the pidfile is a
-# simple workaround.
-rm -f $PGDATA/postmaster.pid
-service postgresql-rbuilder start
-waitForPg
+# Shut down postgres, and migrate to the latest major version if required.
+# Then start it and wait for it to return.
+if [ "x$is_chrooted" == "x1" ]
+then
+    # Initial install
+    updateargs="--init"
+fi
+"$scriptdir"/postgres-auto-update $updateargs \
+    || die "Migration failed, check /var/log/rbuilder/scripts.log"
 
 service pgbouncer restart
 

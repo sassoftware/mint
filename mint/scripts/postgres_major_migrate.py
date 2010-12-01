@@ -40,14 +40,15 @@ class DummyCluster(object):
 
     timeout = 60
 
-    def __init__(self, port):
+    def __init__(self, port, user=None):
         self.port = port
+        self.user = user
 
     def start(self):
         pass
 
     def connect(self):
-        db = psycopg2.connect(port=self.port)
+        db = psycopg2.connect(port=self.port, user=self.user)
         # CREATE DATABASE cannot run in a transaction, so don't start one.
         db.set_isolation_level(psy_ext.ISOLATION_LEVEL_AUTOCOMMIT)
         return db
@@ -111,6 +112,12 @@ class Postmaster(subprocutil.Subprocess, DummyCluster):
 
     def start(self):
         log.info("Starting postmaster on port %s", self.port)
+        pidfile = os.path.join(self.dataDir, 'postmaster.pid')
+        if os.path.exists(pidfile):
+            # postgres attaches shared memory to its pidfile; if it shuts down
+            # uncleanly it can subsequently refuse to start because of this.
+            # Unlinking the pidfile is a simple workaround.
+            os.unlink(pidfile)
         subprocutil.Subprocess.start(self)
 
     # subprocutil implementation
@@ -163,31 +170,35 @@ class Script(scriptlibrary.GenericScript):
 
         self.loadConfig(options.config_file)
         self.resetLogging(quiet=options.quiet)
+        return self.runMigration(
+                options.from_bindir, options.from_datadir, options.from_port,
+                options.to_bindir, options.to_datadir, options.user)
 
+    def runMigration(self, from_bindir, from_datadir, from_port, to_bindir,
+            to_datadir, user=None):
         self.uidgid = None
-        if options.user:
-            _, _, uid, gid = pwd.getpwnam(options.user)[:4]
-            self.uidgid = uid, gid
+        if user:
+            self.loadPrivs(user)
 
-        if os.path.exists(os.path.join(options.to_datadir, 'PG_VERSION')):
-            sys.exit("Target dir %s already exists!" % options.to_datadir)
+        if os.path.exists(os.path.join(to_datadir, 'PG_VERSION')):
+            sys.exit("Target dir %s already exists!" % to_datadir)
 
-        tempDir = tempfile.mkdtemp(dir=os.path.dirname(options.to_datadir))
+        tempDir = tempfile.mkdtemp(dir=os.path.dirname(to_datadir))
         try:
             if self.uidgid:
-                os.chown(tempDir, uid, gid)
+                os.chown(tempDir, self.uidgid[0], self.uidgid[1])
             self.dropPrivs()
 
             # Source cluster
-            if options.from_bindir and options.from_datadir:
-                self.cluster1 = Postmaster(dataDir=options.from_datadir,
-                        binDir=options.from_bindir, port=65000)
+            if from_bindir and from_datadir:
+                self.cluster1 = Postmaster(dataDir=from_datadir,
+                        binDir=from_bindir, port=65000)
             else:
-                self.cluster1 = DummyCluster(port=options.from_port)
+                self.cluster1 = DummyCluster(port=from_port)
 
             # Target cluster
             self.cluster2 = Postmaster(dataDir=tempDir,
-                    binDir=options.to_bindir, port=65001, fsync=False)
+                    binDir=to_bindir, port=65001, fsync=False)
 
             try:
                 self.migrate()
@@ -199,7 +210,7 @@ class Script(scriptlibrary.GenericScript):
                 self.cluster2.wait()
 
             self.restorePrivs()
-            os.rename(tempDir, options.to_datadir)
+            os.rename(tempDir, to_datadir)
 
         finally:
             try:
@@ -316,6 +327,10 @@ class Script(scriptlibrary.GenericScript):
         if target.wait():
             raise RuntimeError("psql failed with exit code %s" %
                     target.returncode)
+
+    def loadPrivs(self, user):
+        _, _, uid, gid = pwd.getpwnam(user)[:4]
+        self.uidgid = uid, gid
 
     def dropPrivs(self, permanent=False):
         if not self.uidgid:
