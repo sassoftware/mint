@@ -666,7 +666,18 @@ class SystemManager(base.BaseManager):
     def _merge(self, system, other):
         # We don't want to overwrite the name and description
         other.name = other.description = None
+
+        responsiveState = self.systemState(models.SystemState.RESPONSIVE)
+        savedState = None
+        currentState = self.systemState(
+            getattr(getattr(system, 'oldModel', system), 'current_state').name)
+        if currentState == responsiveState:
+            savedState = currentState
+
         models.System.objects.copyFields(system, other, withReadOnly=True)
+
+        if savedState:
+            system.current_state = savedState
 
         # XXX maybe we should merge instead of simply updating, since we may
         # step over a unique constraint? -- misa
