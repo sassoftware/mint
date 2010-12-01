@@ -135,7 +135,10 @@ class Script(postgres_major_migrate.Script):
         """Create a new postgres cluster at the given location."""
         assert not os.path.exists(meta.dataDir)
         self.loadPrivs(user=self.user)
-        tempDir = tempfile.mkdtemp(dir=os.path.dirname(meta.dataDir))
+        parentDir = os.path.dirname(meta.dataDir)
+        if not os.path.isdir(parentDir):
+            os.makedirs(parentDir)
+        tempDir = tempfile.mkdtemp(dir=parentDir)
         try:
             os.chown(tempDir, self.uidgid[0], self.uidgid[1])
             self.dropPrivs()
