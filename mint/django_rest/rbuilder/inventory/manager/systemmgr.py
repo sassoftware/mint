@@ -669,10 +669,11 @@ class SystemManager(base.BaseManager):
 
         responsiveState = self.systemState(models.SystemState.RESPONSIVE)
         savedState = None
-        currentState = self.systemState(
-            getattr(getattr(system, 'oldModel', system), 'current_state').name)
-        if currentState == responsiveState:
-            savedState = currentState
+        oldModel = getattr(system, 'oldModel', None)
+        if oldModel:
+            currentState = self.systemState(oldModel.current_state.name)
+            if currentState == responsiveState:
+                savedState = currentState
 
         models.System.objects.copyFields(system, other, withReadOnly=True)
 
