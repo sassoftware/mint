@@ -48,7 +48,10 @@ class DummyCluster(object):
         pass
 
     def connect(self):
-        db = psycopg2.connect(port=self.port, user=self.user)
+        args = dict(port=self.port)
+        if self.user:
+            args['user'] = self.user
+        db = psycopg2.connect(**args)
         # CREATE DATABASE cannot run in a transaction, so don't start one.
         db.set_isolation_level(psy_ext.ISOLATION_LEVEL_AUTOCOMMIT)
         return db
