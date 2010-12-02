@@ -859,6 +859,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
     def migrate2(self):
+        db = self.db
         cu = self.db.cursor()
         if 'inventory_managed_system' not in self.db.tables:
             cu.execute("""
@@ -1002,7 +1003,98 @@ class MigrateTo_49(SchemaMigration):
             """)
             self.db.tables['inventory_cpu'] = []
 
-        schema._createJobsSchema(self.db)
+        createTable(db, """
+            CREATE TABLE job_types
+            (
+                job_type_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE,
+                description VARCHAR NOT NULL
+            )""")
+        schema._addTableRows(db, 'job_types', 'name',
+            [ dict(name="instance-launch", description='Instance Launch'),
+              dict(name="platform-load", description='Platform Load'),
+              dict(name="software-version-refresh", description='Software Version Refresh'), ])
+
+        createTable(db, """
+            CREATE TABLE job_states
+            (
+                job_state_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
+            dict(name='Running'), dict(name='Completed'), dict(name='Failed') ])
+
+        createTable(db, """
+            CREATE TABLE rest_methods
+            (
+                rest_method_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
+            dict(name='PUT'), dict(name='DELETE') ])
+
+        createTable(db, """
+            CREATE TABLE jobs
+            (
+                job_id      %(PRIMARYKEY)s,
+                job_type_id INTEGER NOT NULL
+                    REFERENCES job_types ON DELETE CASCADE,
+                job_state_id INTEGER NOT NULL
+                    REFERENCES job_states ON DELETE CASCADE,
+                created_by   INTEGER NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                created     NUMERIC(14,4) NOT NULL,
+                modified    NUMERIC(14,4) NOT NULL,
+                expiration  NUMERIC(14,4),
+                ttl         INTEGER,
+                pid         INTEGER,
+                message     VARCHAR,
+                error_response VARCHAR,
+                rest_uri    VARCHAR,
+                rest_method_id INTEGER
+                    REFERENCES rest_methods ON DELETE CASCADE,
+                rest_args   VARCHAR
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_history
+            (
+                job_history_id  %(PRIMARYKEY)s,
+                -- job_history_type needed
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                timestamp   NUMERIC(14,3) NOT NULL,
+                content     VARCHAR NOT NULL
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_results
+            (
+                job_result_id   %(PRIMARYKEY)s,
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                data    VARCHAR NOT NULL
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_target
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                targetId    INTEGER NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_managed_system
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                managed_system_id  INTEGER NOT NULL
+                    REFERENCES inventory_managed_system ON DELETE CASCADE
+            )""")
+
+        db.loadSchema()
         return True
 
     def migrate3(self):
