@@ -28,7 +28,7 @@ from mint import config
 from mint.lib import scriptlibrary
 from mint.lib import subprocutil
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('postgres_migrate')
 
 
 class DummyCluster(object):
@@ -92,11 +92,12 @@ class DummyCluster(object):
 class Postmaster(subprocutil.Subprocess, DummyCluster):
     """Full postmaster harness for starting/stopping a cluster."""
 
-    def __init__(self, dataDir, binDir, port, fsync=True):
+    def __init__(self, dataDir, binDir, port, fsync=True, logPath=None):
         DummyCluster.__init__(self, port)
         self.dataDir = dataDir
         self.binDir = binDir
         self.fsync = fsync
+        self.logPath = logPath
         self.procName = 'postmaster:%s' % port
 
     # External methods
@@ -105,12 +106,17 @@ class Postmaster(subprocutil.Subprocess, DummyCluster):
 
     def initdb(self):
         log.info("Initializing cluster at %s", self.dataDir)
+        logFile = None
+        if self.logPath:
+            logFile = open(self.logPath, 'a')
+            os.fchmod(logFile.fileno(), 0600)
         subprocutil.logCall([self.bin('initdb'),
             '--pgdata', self.dataDir,
             '--auth=trust',
             '--encoding=UTF8',
             '--locale=C',
-            ], preexec_fn=self.copyUIDs)
+            ], preexec_fn=self.copyUIDs, logLevel=logging.DEBUG,
+            stdout=logFile, stderr=logFile)
         log.info("Cluster initialized at %s", self.dataDir)
 
     def start(self):
@@ -135,6 +141,18 @@ class Postmaster(subprocutil.Subprocess, DummyCluster):
         if not self.fsync:
             args.append('-F')
         self.copyUIDs()
+
+        # Re-open file descriptors
+        null = open('/dev/null', 'r')
+        os.dup2(null.fileno(), 0)
+        null.close()
+        if self.logPath:
+            logFile = open(self.logPath, 'a')
+            os.fchmod(logFile.fileno(), 0600)
+            os.dup2(logFile.fileno(), 1)
+            os.dup2(logFile.fileno(), 2)
+            logFile.close()
+
         os.execl(path, *args)
 
     # pre-exec helper for initdb
@@ -195,13 +213,15 @@ class Script(scriptlibrary.GenericScript):
             # Source cluster
             if from_bindir and from_datadir:
                 self.cluster1 = Postmaster(dataDir=from_datadir,
-                        binDir=from_bindir, port=65000)
+                        binDir=from_bindir, port=65000,
+                        logPath='/tmp/postgres-migration-source.log')
             else:
                 self.cluster1 = DummyCluster(port=from_port)
 
             # Target cluster
             self.cluster2 = Postmaster(dataDir=tempDir,
-                    binDir=to_bindir, port=65001, fsync=False)
+                    binDir=to_bindir, port=65001, fsync=False,
+                    logPath='/tmp/postgres-migration-target.log')
 
             try:
                 self.migrate()
@@ -239,23 +259,34 @@ class Script(scriptlibrary.GenericScript):
         self.migrateGlobals()
         self.migrateDatabases()
 
+    def _openLog(self, name):
+        # Open a logfile in /tmp for appending
+        f = open('/tmp/postgres-migration-%s.log' % (name,), 'a')
+        os.fchmod(f.fileno(), 0600)
+        return f
+
     def migrateGlobals(self):
         log.info("Migrating global data")
+        sourceLog = self._openLog('dump')
+        targetLog = self._openLog('restore')
         source = subprocess.Popen([
             self.cluster2.bin('pg_dumpall'),
             '--username=postgres',
             '--port=' + str(self.cluster1.port),
             '--globals-only',
             '--no-tablespaces',
-            ], shell=False, stdout=subprocess.PIPE)
+            ], shell=False, stdout=subprocess.PIPE, stderr=sourceLog)
         target = subprocess.Popen([
             self.cluster2.bin('psql'),
             '--username=postgres',
             '--dbname=postgres',
             '--port=65001',
             '--no-psqlrc',
-            ], shell=False, stdin=subprocess.PIPE)
+            ], shell=False, stdin=subprocess.PIPE,
+            stdout=targetLog, stderr=targetLog)
         cny_util.copyfileobj(source.stdout, target.stdin)
+        sourceLog.close()
+        targetLog.close()
         if source.wait():
             raise RuntimeError("pg_dumpall failed with exit code %s" %
                     source.returncode)
@@ -284,7 +315,8 @@ class Script(scriptlibrary.GenericScript):
             log.info("Creating database %s (%d/%d)", database, n + 1,
                     len(databases))
             if database in existing:
-                log.info("Database already exists. Skipping creation.")
+                log.info("Database %s already exists. Skipping creation.",
+                        database)
                 continue
             cu2.execute("""CREATE DATABASE %(database)s
                 OWNER %(owner)s
@@ -305,24 +337,29 @@ class Script(scriptlibrary.GenericScript):
             self.migrateOneDatabase(database)
 
     def migrateOneDatabase(self, database):
+        sourceLog = self._openLog('dump')
+        targetLog = self._openLog('restore')
         source = subprocess.Popen([
             self.cluster2.bin('pg_dump'),
             '--username=postgres',
             '--port=' + str(self.cluster1.port),
             '--format=custom',
             '--compress=0',
-            '--verbose',  # FIXME
+            '--verbose',
             database,
-            ], shell=False, stdout=subprocess.PIPE)
+            ], shell=False, stdout=subprocess.PIPE, stderr=sourceLog)
         target = subprocess.Popen([
             self.cluster2.bin('pg_restore'),
             '--username=postgres',
             '--dbname=' + database,
             '--port=65001',
             '--single-transaction',
-            '--verbose',  # FIXME
-            ], shell=False, stdin=subprocess.PIPE)
+            '--verbose',
+            ], shell=False, stdin=subprocess.PIPE,
+            stdout=targetLog, stderr=targetLog)
         cny_util.copyfileobj(source.stdout, target.stdin)
+        sourceLog.close()
+        targetLog.close()
         if source.wait():
             raise RuntimeError("pg_dumpall failed with exit code %s" %
                     source.returncode)

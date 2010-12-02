@@ -22,7 +22,7 @@ from conary.lib import util as cny_util
 from mint import config
 from mint.scripts import postgres_major_migrate
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('auto_update')
 
 
 class PostgresMeta(cfgmod.ConfigFile):
@@ -65,6 +65,7 @@ class Script(postgres_major_migrate.Script):
 
     def stopPostgres(self):
         """Kill postgres by checking its UNIX socket."""
+        log.info("Stopping PostgreSQL on port %s", self.port)
         sockPath = '/tmp/.s.PGSQL.%s' % self.port
         # Send progressively more aggressive sigals until it dies.
         signals = (['-TERM'] * 3) + (['-QUIT'] * 3) + ['-KILL']
@@ -133,6 +134,7 @@ class Script(postgres_major_migrate.Script):
 
     def initdb(self, meta):
         """Create a new postgres cluster at the given location."""
+        log.info("Initializing PostgreSQL %s cluster", meta.version)
         assert not os.path.exists(meta.dataDir)
         self.loadPrivs(user=self.user)
         parentDir = os.path.dirname(meta.dataDir)
@@ -144,7 +146,8 @@ class Script(postgres_major_migrate.Script):
             self.dropPrivs()
 
             cluster = postgres_major_migrate.Postmaster(dataDir=tempDir,
-                    binDir=meta.binDir, port=65000)
+                    binDir=meta.binDir, port=65000,
+                    logPath='/tmp/postgres-initdb.log')
             cluster.initdb()
 
             self.restorePrivs()
@@ -164,6 +167,8 @@ class Script(postgres_major_migrate.Script):
 
     def migrateMeta(self, currentMeta, nextMeta):
         """Migrate postgres cluster to a new version and datadir."""
+        log.info("Migrating PostgreSQL from %s to %s", currentMeta.version,
+                nextMeta.version)
         assert currentMeta.dataDir != nextMeta.dataDir
         if os.path.exists(nextMeta.dataDir):
             # Nuke any existing data directory -- either an explicit meta file
