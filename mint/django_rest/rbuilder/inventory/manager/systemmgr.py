@@ -786,13 +786,18 @@ class SystemManager(base.BaseManager):
                 system.current_state = registeredState
                 self.scheduleSystemPollNowEvent(system)
                 system.save()
-            # We're already registered and no need to re-syncrhonize, if the
-            # old state was online, preserve it.
+            # Already registered and no need to re-syncrhonize, if the
+            # old state was online, and the new state is registered, we must
+            # be coming in through rpath-tools, so preserve the online state.
             elif (system.oldModel is not None and 
                     system.oldModel.current_state.system_state_id == \
-                    onlineState.system_state_id):
+                    onlineState.system_state_id and
+                    system.current_state.system_state_id == \
+                    registeredState.system_state_id):
                 system.current_state = onlineState
                 system.save()
+            elif system.current_state == registeredState:
+                self.scheduleSystemPollNowEvent(system)
         elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
