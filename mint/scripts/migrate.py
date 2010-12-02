@@ -1369,22 +1369,22 @@ class MigrateTo_50(SchemaMigration):
                     UNIQUE ("system_id", "trove_id")
                 )"""  % db.keywords)
 
-        if 'inventory_system_target_credentials' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_target_credentials" (
-                    "id" %(PRIMARYKEY)s,
-                    "system_id" INTEGER NOT NULL
-                        REFERENCES "inventory_system" ("system_id")
-                        ON DELETE CASCADE,
-                    "credentials_id" INTEGER NOT NULL
-                        REFERENCES TargetCredentials (targetCredentialsId)
-                        ON DELETE CASCADE,
-                )""" % db.keywords)
-            db.tables['inventory_system_target_credentials'] = []
-            changed = db.createIndex(
-                'inventory_system_target_credentials_system_id_credentials_uq',
-                'system_id', 'credentials_id', unique=True)
-            changed = True
+        createTable(db, """
+                CREATE TABLE TargetCredentials (
+                    targetCredentialsId     %(PRIMARYKEY)s,
+                    credentials             text NOT NULL UNIQUE
+                )""")
+
+        createTable(db, """
+            CREATE TABLE "inventory_system_target_credentials" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "credentials_id" INTEGER NOT NULL
+                    REFERENCES TargetCredentials (targetCredentialsId)
+                    ON DELETE CASCADE
+            )""")
 
         createTable(db, """
             CREATE TABLE pki_certificates (
@@ -1400,12 +1400,6 @@ class MigrateTo_50(SchemaMigration):
                 time_issued             timestamptz NOT NULL,
                 time_expired            timestamptz NOT NULL
             )""")
-
-        changed |= createTable(db, 'TargetCredentials', """
-                CREATE TABLE TargetCredentials (
-                    targetCredentialsId     %(PRIMARYKEY)s,
-                    credentials             text NOT NULL UNIQUE
-                ) %(TABLEOPTS)s""")
 
         self._migrateTargetUserCredentials(cu)
         return True
