@@ -1105,7 +1105,7 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_state'] = []
             changed = True
-            changed |= schema._addSystemStates(db, self.cfg)
+            changed |= self._addSystemStates0()
 
         if 'inventory_system' not in db.tables:
             cu.execute("""
@@ -1404,6 +1404,28 @@ class MigrateTo_50(SchemaMigration):
         self._migrateTargetUserCredentials(cu)
         return True
 
+    def _addSystemStates0(self):
+        db = self.db
+        changed = False
+        changed |= schema._addTableRows(db, 'inventory_system_state', 'name',
+                [
+                    dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-unknown", description="Not responding: Unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-net", description="Not responding: Network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-host", description="Not responding: Host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-shutdown", description="Not responding: Shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-suspended", description="Not responding: Suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
+                ])
+        
+        return changed
+
+
     def _migrateTargetUserCredentials(self, cu):
         # Add a serial primary key, drop the old pk, add it as unique
         cu.execute("""
@@ -1566,6 +1588,33 @@ class MigrateTo_51(SchemaMigration):
         cu.execute("ALTER TABLE inventory_system ADD COLUMN credentials text")
         
         return True
+
+    def _addSystemTypes5(self):
+        db = self.db
+        changed = False
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='inventory',
+                      description='Inventory',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=False,
+                )])
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='infrastructure-management-node',
+                      description='rPath Update Service (Infrastructure)',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=True,
+                )])
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='infrastructure-windows-build-node',
+                      description='rPath Windows Build Service (Infrastructure)',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=True,
+                )])
+        
+        return changed
     
     def migrate5(self):
         cu = self.db.cursor()
@@ -1581,7 +1630,7 @@ class MigrateTo_51(SchemaMigration):
                     "infrastructure" bool
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             self.db.tables['inventory_system_type'] = []
-            changed |= schema._addSystemTypes(self.db)
+            changed |= self._addSystemTypes5()
             changed = True
             
         cu.execute("""
@@ -1627,26 +1676,10 @@ class MigrateTo_51(SchemaMigration):
         return True
 
     def migrate9(self):
-        cu = self.db.cursor()
-        
-        cu.execute("""
-            INSERT INTO "inventory_system_state" 
-                ("name", "description", "created_date")
-            VALUES
-                ('credentials-required',
-                 'Invalid credentials',
-                 ?)
-        """, str(datetime.datetime.now(tz.tzutc())))
-        
-        cu.execute("""
-            INSERT INTO "inventory_system_state" 
-                ("name", "description", "created_date")
-            VALUES
-                ('non-responsive-credentials',
-                 'Not responding: invalid credentials',
-                 ?)
-        """, str(datetime.datetime.now(tz.tzutc())))
-
+        schema._addTableRows(self.db, 'inventory_system_state', 'name',
+                [
+                    dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                ])
         return True
 
     def migrate10(self):
@@ -1658,19 +1691,10 @@ class MigrateTo_51(SchemaMigration):
         return True
     
     def migrate11(self):
-        cu = self.db.cursor()
-        
-        cu.execute("""DELETE FROM inventory_system_state where name='credentials-required'""")
-        
-        cu.execute("""
-            INSERT INTO "inventory_system_state" 
-                ("name", "description", "created_date")
-            VALUES
-                ('unmanaged-credentials',
-                 'Unmanaged: Invalid credentials',
-                 ?)
-        """, str(datetime.datetime.now(tz.tzutc())))
-
+        schema._addTableRows(self.db, 'inventory_system_state', 'name',
+                [
+                    dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                ])
         return True
     
     def migrate12(self):
