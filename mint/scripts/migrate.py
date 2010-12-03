@@ -732,7 +732,9 @@ class MigrateTo_48(SchemaMigration):
     # - Create missing roles for repositories. (RBL-5019)
     def migrate3(self):
         manager = repository.RepositoryManager(self.cfg, self.db, bypass=True)
-        for repos in manager.iterRepositories():
+        # contentSources=False is required here because the content sources
+        # table hasn't been created yet.
+        for repos in manager._iterRepositories('', (), contentSources=False):
             if not repos.hasDatabase:
                 continue
             log.info("Checking repository %s for standardized roles",
@@ -769,7 +771,68 @@ class MigrateTo_48(SchemaMigration):
     # - Platforms / PlatformSources / PlatformSourceData tables will be
     # created.
     def migrate4(self):
-        schema._createPlatforms(self.db)
+        db = self.db
+        cu = self.db.cursor()
+
+        cu.execute("""
+            CREATE TABLE Platforms (
+                platformId  %(PRIMARYKEY)s,
+                label       varchar(255)    NOT NULL UNIQUE,
+                mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
+                enabled     smallint NOT NULL DEFAULT 1,
+                projectId   smallint
+                    REFERENCES Projects ON DELETE SET NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['Platforms'] = []
+
+        cu.execute("""
+            CREATE TABLE PlatformsContentSourceTypes (
+                platformId  integer NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                contentSourceType  varchar(255) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsContentSourceTypes'] = []
+        db.createIndex('PlatformsContentSourceTypes',
+                'PlatformsContentSourceTypes_platformId_contentSourceType_uq',
+                'platformId,contentSourceType', unique = True)
+
+        cu.execute("""
+            CREATE TABLE PlatformSources (
+                platformSourceId  %(PRIMARYKEY)s,
+                name       varchar(255)    NOT NULL,
+                shortName  varchar(255)    NOT NULL UNIQUE,
+                defaultSource    smallint  NOT NULL DEFAULT 0,
+                contentSourceType  varchar(255) NOT NULL,
+                orderIndex  smallint NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformSources'] = []
+        db.createIndex('PlatformSources',
+                'PlatformSources_platformSourceId_defaultSource_uq',
+                'platformSourceId,defaultSource', unique = True)
+        db.createIndex('PlatformSources',
+                'PlatformSources_platformSourceId_orderIndex_uq',
+                'platformSourceId,orderIndex', unique = True)
+
+        cu.execute("""
+            CREATE TABLE PlatformSourceData (
+                platformSourceId    integer         NOT NULL
+                    REFERENCES PlatformSources ON DELETE CASCADE,
+                name                varchar(32)     NOT NULL,
+                value               text            NOT NULL,
+                dataType            smallint        NOT NULL,
+                PRIMARY KEY ( platformSourceId, name )
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['PlatformSourceData'] = []
+
+        cu.execute("""
+            CREATE TABLE PlatformsPlatformSources (
+                platformId          integer         NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                platformSourceId    integer         NOT NULL
+                    REFERENCES platformSources ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsPlatformSources'] = []
+
         return True
 
     # 48.5
@@ -880,11 +943,12 @@ class MigrateTo_49(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
 
-        from mint import config
-        from mint.scripts import migrate_catalog_data
-        cfg = config.getConfig()
-        conv = migrate_catalog_data.TargetConversion(cfg, self.db)
-        conv.run()
+        if self.cfg:
+            from mint import config
+            from mint.scripts import migrate_catalog_data
+            cfg = config.getConfig()
+            conv = migrate_catalog_data.TargetConversion(cfg, self.db)
+            conv.run()
 
         # Drop uniq constraint on targetName
         cu = self.db.cursor()
