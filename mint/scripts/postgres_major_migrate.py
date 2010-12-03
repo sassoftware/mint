@@ -48,7 +48,7 @@ class DummyCluster(object):
         pass
 
     def connect(self):
-        args = dict(port=self.port)
+        args = dict(port=self.port, database='postgres')
         if self.user:
             args['user'] = self.user
         db = psycopg2.connect(**args)

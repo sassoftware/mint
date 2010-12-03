@@ -134,6 +134,42 @@ def createTable(db, definition):
     return schema.createTable(db, None, definition)
 
 
+def columnExists(db, table, name):
+    cu = db.cursor()
+    cu.execute("""
+        SELECT COUNT(*)
+        FROM pg_attribute a
+        JOIN pg_class t ON t.oid = a.attrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE t.relkind = 'r' AND n.nspname = 'public'
+        AND t.relname = ? AND a.attname = ?
+        """, table, name)
+    return bool(cu.fetchone()[0])
+
+
+def constraintExists(db, table, name):
+    cu = db.cursor()
+    cu.execute("""
+        SELECT COUNT(*)
+        FROM pg_constraint r
+        JOIN pg_class t ON t.oid = r.conrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE t.relkind = 'r' AND n.nspname = 'public'
+        AND t.relname = ? AND r.conname = ?
+        """, table, name)
+    return bool(cu.fetchone()[0])
+
+
+def renameConstraint(db, table, oldName, newDefinition, conditional=False):
+    if constraintExists(db, table, oldName):
+        cu = db.cursor()
+        cu.execute('ALTER TABLE "%s" DROP CONSTRAINT "%s", %s' % (table,
+            oldName, newDefinition))
+    elif not conditional:
+        raise RuntimeError("Constraint %r on table %r does not exist" %
+                (oldName, table))
+
+
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
 
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
@@ -1265,7 +1301,8 @@ class MigrateTo_50(SchemaMigration):
                     "port_type" varchar(32),
                     "active" bool,
                     "required" bool,
-                    UNIQUE ("system_id", "dns_name"),
+                    CONSTRAINT "inventory_system_network_system_id_dns_name_key"
+                        UNIQUE ("system_id", "dns_name"),
                     UNIQUE ("system_id", "ip_address"),
                     UNIQUE ("system_id", "ipv6_address")
                 ) %(TABLEOPTS)s""" % db.keywords)
@@ -1604,7 +1641,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 30)
+    Version = (51, 31)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1887,6 +1924,10 @@ class MigrateTo_51(SchemaMigration):
             'isFromDisk      boolean NOT NULL DEFAULT false',
         )
 
+        if self.cfg is None:
+            # Skip data mangling in migration tests
+            return True
+
         class Plat(object):
             __slots__ = ['platformName', 'abstract', 'configurable',
                 'isFromDisk']
@@ -2124,6 +2165,41 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
             DROP CONSTRAINT "inventory_system_network_system_id_dns_name_key"
         """)
 
+        return True
+
+    def migrate31(self):
+        """Post-5.8.0 schema fixups"""
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_system_type
+            ALTER creation_descriptor SET NOT NULL
+            """)
+        cu.execute("""
+            UPDATE inventory_event_type
+            SET description = 'System synchronization'
+            WHERE name = 'system poll'
+            """)
+
+        if not columnExists(self.db, "inventory_system_event", "event_data"):
+            cu.execute("""
+                ALTER TABLE inventory_system_event
+                ADD event_data varchar
+                """)
+        if not constraintExists(self.db, "inventory_system_target_credentials",
+                "inventory_system_target_credentials_system_id_key"):
+            cu.execute("""
+                ALTER TABLE inventory_system_target_credentials
+                ADD CONSTRAINT inventory_system_target_credentials_system_id_key
+                UNIQUE ( system_id, credentials_id )
+                """)
+        renameConstraint(self.db, table="inventory_system",
+                oldName="inventory_system_type_id_fkey",
+                newDefinition="""
+                ADD CONSTRAINT inventory_system_system_type_id_fkey
+                    FOREIGN KEY ( system_type_id )
+                    REFERENCES inventory_system_type
+                """,
+                conditional=True)
         return True
 
 
