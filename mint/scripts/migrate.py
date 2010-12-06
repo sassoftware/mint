@@ -945,13 +945,13 @@ class MigrateTo_49(SchemaMigration):
 
         # These tables were added later in the schema cycle, but we need them
         # for the data conversion.
-        createTable(db, """
+        createTable(self.db, """
                 CREATE TABLE TargetCredentials (
                     targetCredentialsId     %(PRIMARYKEY)s,
                     credentials             text NOT NULL UNIQUE
                 ) %(TABLEOPTS)s""")
 
-        createTable(db, 'TargetUserCredentials', """
+        createTable(self.db, 'TargetUserCredentials', """
                 CREATE TABLE TargetUserCredentials (
                     id              %(PRIMARYKEY)s,
                     targetId        integer             NOT NULL
