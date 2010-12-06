@@ -63,7 +63,7 @@ shutdown_apache
 
 # If not chrooted, stop cron, to prevent bad things from happening while we're
 # migrating (RBL-7973)
-[ "x$is_chrooted" == "x" ] && service crond stop
+[ -e /var/lock/subsys/crond ] && service crond stop
 
 # Shut down postgres, and migrate to the latest major version if required.
 # Then start it and wait for it to return.
