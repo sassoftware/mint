@@ -61,6 +61,10 @@ die() {
 # Shut down apache, if it's running
 shutdown_apache
 
+# If not chrooted, stop cron, to prevent bad things from happening while we're
+# migrating (RBL-7973)
+[ "x$is_chrooted" == "x" ] && service crond stop
+
 # Shut down postgres, and migrate to the latest major version if required.
 # Then start it and wait for it to return.
 if [ "x$is_chrooted" == "x1" ]
@@ -193,6 +197,9 @@ then
 
     # Create initial platforms
     /usr/share/rbuilder/scripts/create-platforms
+
+    # Start cron back (RBL-7973)
+    service crond start
 fi
 
 # Fix notifications with a bad GUID
