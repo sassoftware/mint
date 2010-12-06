@@ -943,14 +943,6 @@ class MigrateTo_49(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
 
-        # These tables were added later in the schema cycle, but we need them
-        # for the data conversion.
-        createTable(self.db, """
-                CREATE TABLE TargetCredentials (
-                    targetCredentialsId     %(PRIMARYKEY)s,
-                    credentials             text NOT NULL UNIQUE
-                ) %(TABLEOPTS)s""")
-
         if self.cfg:
             from mint import config
             from mint.scripts import migrate_catalog_data
