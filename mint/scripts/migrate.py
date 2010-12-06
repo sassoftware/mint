@@ -951,18 +951,6 @@ class MigrateTo_49(SchemaMigration):
                     credentials             text NOT NULL UNIQUE
                 ) %(TABLEOPTS)s""")
 
-        createTable(self.db, 'TargetUserCredentials', """
-                CREATE TABLE TargetUserCredentials (
-                    id              %(PRIMARYKEY)s,
-                    targetId        integer             NOT NULL
-                        REFERENCES Targets ON DELETE CASCADE,
-                    userId          integer             NOT NULL
-                        REFERENCES Users ON DELETE CASCADE,
-                    targetCredentialsId integer         NOT NULL
-                        REFERENCES TargetCredentials ON DELETE CASCADE,
-                    UNIQUE ( targetId, userId )
-                ) %(TABLEOPTS)s""")
-
         if self.cfg:
             from mint import config
             from mint.scripts import migrate_catalog_data
@@ -1664,7 +1652,7 @@ class MigrateTo_50(SchemaMigration):
             UPDATE TargetUserCredentials AS a
             SET targetCredentialsId = (
                 SELECT targetCredentialsId
-                  FROM TargetUserCredentials
+                  FROM TargetCredentials
                  WHERE credentials = a.credentials)
         """)
         cu.execute("""
