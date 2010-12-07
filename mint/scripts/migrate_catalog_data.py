@@ -49,6 +49,9 @@ class TargetConversion(object):
                 if not cfg:
                     self.cfgStore.delete(target)
                     continue
+                # Add a description to EC2 targets
+                if target == 'ec2/aws':
+                    cfg['description'] = "Amazon Elastic Compute Cloud"
                 # drop target name from list, it's the same as the key
                 cfg.pop('name', None)
                 # Extract target name
@@ -156,13 +159,9 @@ class TargetConversion(object):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
         data = mintdata.marshalTargetUserCredentials(credentials)
-        cu.execute("""INSERT INTO TargetCredentials (credentials) VALUES (?)""",
-            data)
-        targetCredentialsId = cu.lastid()
         cu.execute("""
-            INSERT INTO TargetUserCredentials
-                (targetId, userId, targetCredentialsId)
-            VALUES (?, ?, ?)""", targetId, userId, targetCredentialsId)
+            INSERT INTO TargetUserCredentials (targetId, userId, credentials)
+            VALUES (?, ?, ?)""", targetId, userId, data)
 
     def _addTarget(self, targetType, targetName):
         cu = self.db.cursor()

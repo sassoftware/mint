@@ -134,6 +134,42 @@ def createTable(db, definition):
     return schema.createTable(db, None, definition)
 
 
+def columnExists(db, table, name):
+    cu = db.cursor()
+    cu.execute("""
+        SELECT COUNT(*)
+        FROM pg_attribute a
+        JOIN pg_class t ON t.oid = a.attrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE t.relkind = 'r' AND n.nspname = 'public'
+        AND t.relname = ? AND a.attname = ?
+        """, table, name)
+    return bool(cu.fetchone()[0])
+
+
+def constraintExists(db, table, name):
+    cu = db.cursor()
+    cu.execute("""
+        SELECT COUNT(*)
+        FROM pg_constraint r
+        JOIN pg_class t ON t.oid = r.conrelid
+        JOIN pg_namespace n ON n.oid = t.relnamespace
+        WHERE t.relkind = 'r' AND n.nspname = 'public'
+        AND t.relname = ? AND r.conname = ?
+        """, table, name)
+    return bool(cu.fetchone()[0])
+
+
+def renameConstraint(db, table, oldName, newDefinition, conditional=False):
+    if constraintExists(db, table, oldName):
+        cu = db.cursor()
+        cu.execute('ALTER TABLE "%s" DROP CONSTRAINT "%s", %s' % (table,
+            oldName, newDefinition))
+    elif not conditional:
+        raise RuntimeError("Constraint %r on table %r does not exist" %
+                (oldName, table))
+
+
 #### SCHEMA MIGRATIONS BEGIN HERE ###########################################
 
 # SCHEMA VERSION 37.0 - DUMMY MIGRATION
@@ -696,7 +732,9 @@ class MigrateTo_48(SchemaMigration):
     # - Create missing roles for repositories. (RBL-5019)
     def migrate3(self):
         manager = repository.RepositoryManager(self.cfg, self.db, bypass=True)
-        for repos in manager.iterRepositories():
+        # contentSources=False is required here because the content sources
+        # table hasn't been created yet.
+        for repos in manager._iterRepositories('', (), contentSources=False):
             if not repos.hasDatabase:
                 continue
             log.info("Checking repository %s for standardized roles",
@@ -733,7 +771,68 @@ class MigrateTo_48(SchemaMigration):
     # - Platforms / PlatformSources / PlatformSourceData tables will be
     # created.
     def migrate4(self):
-        schema._createPlatforms(self.db)
+        db = self.db
+        cu = self.db.cursor()
+
+        cu.execute("""
+            CREATE TABLE Platforms (
+                platformId  %(PRIMARYKEY)s,
+                label       varchar(255)    NOT NULL UNIQUE,
+                mode varchar(255) NOT NULL DEFAULT 'manual' check (mode in ('auto', 'manual')),
+                enabled     smallint NOT NULL DEFAULT 1,
+                projectId   smallint
+                    REFERENCES Projects ON DELETE SET NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['Platforms'] = []
+
+        cu.execute("""
+            CREATE TABLE PlatformsContentSourceTypes (
+                platformId  integer NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                contentSourceType  varchar(255) NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsContentSourceTypes'] = []
+        db.createIndex('PlatformsContentSourceTypes',
+                'PlatformsContentSourceTypes_platformId_contentSourceType_uq',
+                'platformId,contentSourceType', unique = True)
+
+        cu.execute("""
+            CREATE TABLE PlatformSources (
+                platformSourceId  %(PRIMARYKEY)s,
+                name       varchar(255)    NOT NULL,
+                shortName  varchar(255)    NOT NULL UNIQUE,
+                defaultSource    smallint  NOT NULL DEFAULT 0,
+                contentSourceType  varchar(255) NOT NULL,
+                orderIndex  smallint NOT NULL
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformSources'] = []
+        db.createIndex('PlatformSources',
+                'PlatformSources_platformSourceId_defaultSource_uq',
+                'platformSourceId,defaultSource', unique = True)
+        db.createIndex('PlatformSources',
+                'PlatformSources_platformSourceId_orderIndex_uq',
+                'platformSourceId,orderIndex', unique = True)
+
+        cu.execute("""
+            CREATE TABLE PlatformSourceData (
+                platformSourceId    integer         NOT NULL
+                    REFERENCES PlatformSources ON DELETE CASCADE,
+                name                varchar(32)     NOT NULL,
+                value               text            NOT NULL,
+                dataType            smallint        NOT NULL,
+                PRIMARY KEY ( platformSourceId, name )
+            ) %(TABLEOPTS)s """ % db.keywords)
+        db.tables['PlatformSourceData'] = []
+
+        cu.execute("""
+            CREATE TABLE PlatformsPlatformSources (
+                platformId          integer         NOT NULL
+                    REFERENCES platforms ON DELETE CASCADE,
+                platformSourceId    integer         NOT NULL
+                    REFERENCES platformSources ON DELETE CASCADE
+            ) %(TABLEOPTS)s""" % db.keywords)
+        db.tables['PlatformsPlatformSources'] = []
+
         return True
 
     # 48.5
@@ -844,11 +943,12 @@ class MigrateTo_49(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
 
-        from mint import config
-        from mint.scripts import migrate_catalog_data
-        cfg = config.getConfig()
-        conv = migrate_catalog_data.TargetConversion(cfg, self.db)
-        conv.run()
+        if self.cfg:
+            from mint import config
+            from mint.scripts import migrate_catalog_data
+            cfg = config.getConfig()
+            conv = migrate_catalog_data.TargetConversion(cfg, self.db)
+            conv.run()
 
         # Drop uniq constraint on targetName
         cu = self.db.cursor()
@@ -859,6 +959,7 @@ class MigrateTo_49(SchemaMigration):
         return True
 
     def migrate2(self):
+        db = self.db
         cu = self.db.cursor()
         if 'inventory_managed_system' not in self.db.tables:
             cu.execute("""
@@ -1002,7 +1103,98 @@ class MigrateTo_49(SchemaMigration):
             """)
             self.db.tables['inventory_cpu'] = []
 
-        schema._createJobsSchema(self.db)
+        createTable(db, """
+            CREATE TABLE job_types
+            (
+                job_type_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE,
+                description VARCHAR NOT NULL
+            )""")
+        schema._addTableRows(db, 'job_types', 'name',
+            [ dict(name="instance-launch", description='Instance Launch'),
+              dict(name="platform-load", description='Platform Load'),
+              dict(name="software-version-refresh", description='Software Version Refresh'), ])
+
+        createTable(db, """
+            CREATE TABLE job_states
+            (
+                job_state_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, 'job_states', 'name', [ dict(name='Queued'),
+            dict(name='Running'), dict(name='Completed'), dict(name='Failed') ])
+
+        createTable(db, """
+            CREATE TABLE rest_methods
+            (
+                rest_method_id %(PRIMARYKEY)s,
+                name VARCHAR NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, 'rest_methods', 'name', [ dict(name='POST'),
+            dict(name='PUT'), dict(name='DELETE') ])
+
+        createTable(db, """
+            CREATE TABLE jobs
+            (
+                job_id      %(PRIMARYKEY)s,
+                job_type_id INTEGER NOT NULL
+                    REFERENCES job_types ON DELETE CASCADE,
+                job_state_id INTEGER NOT NULL
+                    REFERENCES job_states ON DELETE CASCADE,
+                created_by   INTEGER NOT NULL
+                    REFERENCES Users ON DELETE CASCADE,
+                created     NUMERIC(14,4) NOT NULL,
+                modified    NUMERIC(14,4) NOT NULL,
+                expiration  NUMERIC(14,4),
+                ttl         INTEGER,
+                pid         INTEGER,
+                message     VARCHAR,
+                error_response VARCHAR,
+                rest_uri    VARCHAR,
+                rest_method_id INTEGER
+                    REFERENCES rest_methods ON DELETE CASCADE,
+                rest_args   VARCHAR
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_history
+            (
+                job_history_id  %(PRIMARYKEY)s,
+                -- job_history_type needed
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                timestamp   NUMERIC(14,3) NOT NULL,
+                content     VARCHAR NOT NULL
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_results
+            (
+                job_result_id   %(PRIMARYKEY)s,
+                job_id          INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                data    VARCHAR NOT NULL
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_target
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                targetId    INTEGER NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE
+            )""")
+
+        createTable(db, """
+            CREATE TABLE job_managed_system
+            (
+                job_id      INTEGER NOT NULL
+                    REFERENCES jobs ON DELETE CASCADE,
+                managed_system_id  INTEGER NOT NULL
+                    REFERENCES inventory_managed_system ON DELETE CASCADE
+            )""")
+
+        db.loadSchema()
         return True
 
     def migrate3(self):
@@ -1105,7 +1297,7 @@ class MigrateTo_50(SchemaMigration):
                 ) %(TABLEOPTS)s""" % db.keywords)
             db.tables['inventory_system_state'] = []
             changed = True
-            changed |= schema._addSystemStates(db, self.cfg)
+            changed |= self._addSystemStates0()
 
         if 'inventory_system' not in db.tables:
             cu.execute("""
@@ -1173,7 +1365,8 @@ class MigrateTo_50(SchemaMigration):
                     "port_type" varchar(32),
                     "active" bool,
                     "required" bool,
-                    UNIQUE ("system_id", "dns_name"),
+                    CONSTRAINT "inventory_system_network_system_id_dns_name_key"
+                        UNIQUE ("system_id", "dns_name"),
                     UNIQUE ("system_id", "ip_address"),
                     UNIQUE ("system_id", "ipv6_address")
                 ) %(TABLEOPTS)s""" % db.keywords)
@@ -1369,22 +1562,22 @@ class MigrateTo_50(SchemaMigration):
                     UNIQUE ("system_id", "trove_id")
                 )"""  % db.keywords)
 
-        if 'inventory_system_target_credentials' not in db.tables:
-            cu.execute("""
-                CREATE TABLE "inventory_system_target_credentials" (
-                    "id" %(PRIMARYKEY)s,
-                    "system_id" INTEGER NOT NULL
-                        REFERENCES "inventory_system" ("system_id")
-                        ON DELETE CASCADE,
-                    "credentials_id" INTEGER NOT NULL
-                        REFERENCES TargetCredentials (targetCredentialsId)
-                        ON DELETE CASCADE,
-                )""" % db.keywords)
-            db.tables['inventory_system_target_credentials'] = []
-            changed = db.createIndex(
-                'inventory_system_target_credentials_system_id_credentials_uq',
-                'system_id', 'credentials_id', unique=True)
-            changed = True
+        createTable(db, """
+                CREATE TABLE TargetCredentials (
+                    targetCredentialsId     %(PRIMARYKEY)s,
+                    credentials             text NOT NULL UNIQUE
+                )""")
+
+        createTable(db, """
+            CREATE TABLE "inventory_system_target_credentials" (
+                "id" %(PRIMARYKEY)s,
+                "system_id" INTEGER NOT NULL
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE,
+                "credentials_id" INTEGER NOT NULL
+                    REFERENCES TargetCredentials (targetCredentialsId)
+                    ON DELETE CASCADE
+            )""")
 
         createTable(db, """
             CREATE TABLE pki_certificates (
@@ -1401,14 +1594,30 @@ class MigrateTo_50(SchemaMigration):
                 time_expired            timestamptz NOT NULL
             )""")
 
-        changed |= createTable(db, 'TargetCredentials', """
-                CREATE TABLE TargetCredentials (
-                    targetCredentialsId     %(PRIMARYKEY)s,
-                    credentials             text NOT NULL UNIQUE
-                ) %(TABLEOPTS)s""")
-
         self._migrateTargetUserCredentials(cu)
         return True
+
+    def _addSystemStates0(self):
+        db = self.db
+        changed = False
+        changed |= schema._addTableRows(db, 'inventory_system_state', 'name',
+                [
+                    dict(name="unmanaged", description="Unmanaged", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="registered", description="Initial synchronization pending", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="responsive", description="Online", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-unknown", description="Not responding: Unknown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-net", description="Not responding: Network unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-host", description="Not responding: Host unreachable", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-shutdown", description="Not responding: Shutdown", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-suspended", description="Not responding: Suspended", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="dead", description="Stale", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                    dict(name="mothballed", description="Retired", created_date=str(datetime.datetime.now(tz.tzutc())))
+                ])
+        
+        return changed
+
 
     def _migrateTargetUserCredentials(self, cu):
         # Add a serial primary key, drop the old pk, add it as unique
@@ -1435,7 +1644,7 @@ class MigrateTo_50(SchemaMigration):
             UPDATE TargetUserCredentials AS a
             SET targetCredentialsId = (
                 SELECT targetCredentialsId
-                  FROM TargetUserCredentials
+                  FROM TargetCredentials
                  WHERE credentials = a.credentials)
         """)
         cu.execute("""
@@ -1496,7 +1705,7 @@ class MigrateTo_50(SchemaMigration):
         return True
 
 class MigrateTo_51(SchemaMigration):
-    Version = (51, 30)
+    Version = (51, 31)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -1572,6 +1781,33 @@ class MigrateTo_51(SchemaMigration):
         cu.execute("ALTER TABLE inventory_system ADD COLUMN credentials text")
         
         return True
+
+    def _addSystemTypes5(self):
+        db = self.db
+        changed = False
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='inventory',
+                      description='Inventory',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=False,
+                )])
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='infrastructure-management-node',
+                      description='rPath Update Service (Infrastructure)',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=True,
+                )])
+        
+        changed |= schema._addTableRows(db, 'inventory_system_type', 'name',
+                [dict(name='infrastructure-windows-build-node',
+                      description='rPath Windows Build Service (Infrastructure)',
+                      created_date=str(datetime.datetime.now(tz.tzutc())),
+                      infrastructure=True,
+                )])
+        
+        return changed
     
     def migrate5(self):
         cu = self.db.cursor()
@@ -1587,7 +1823,7 @@ class MigrateTo_51(SchemaMigration):
                     "infrastructure" bool
                 ) %(TABLEOPTS)s""" % self.db.keywords)
             self.db.tables['inventory_system_type'] = []
-            changed |= schema._addSystemTypes(self.db)
+            changed |= self._addSystemTypes5()
             changed = True
             
         cu.execute("""
@@ -1633,26 +1869,10 @@ class MigrateTo_51(SchemaMigration):
         return True
 
     def migrate9(self):
-        cu = self.db.cursor()
-        
-        cu.execute("""
-            INSERT INTO "inventory_system_state" 
-                ("name", "description", "created_date")
-            VALUES
-                ('credentials-required',
-                 'Invalid credentials',
-                 ?)
-        """, str(datetime.datetime.now(tz.tzutc())))
-        
-        cu.execute("""
-            INSERT INTO "inventory_system_state" 
-                ("name", "description", "created_date")
-            VALUES
-                ('non-responsive-credentials',
-                 'Not responding: invalid credentials',
-                 ?)
-        """, str(datetime.datetime.now(tz.tzutc())))
-
+        schema._addTableRows(self.db, 'inventory_system_state', 'name',
+                [
+                    dict(name="non-responsive-credentials", description="Not responding: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                ])
         return True
 
     def migrate10(self):
@@ -1664,19 +1884,10 @@ class MigrateTo_51(SchemaMigration):
         return True
     
     def migrate11(self):
-        cu = self.db.cursor()
-        
-        cu.execute("""DELETE FROM inventory_system_state where name='credentials-required'""")
-        
-        cu.execute("""
-            INSERT INTO "inventory_system_state" 
-                ("name", "description", "created_date")
-            VALUES
-                ('unmanaged-credentials',
-                 'Unmanaged: Invalid credentials',
-                 ?)
-        """, str(datetime.datetime.now(tz.tzutc())))
-
+        schema._addTableRows(self.db, 'inventory_system_state', 'name',
+                [
+                    dict(name="unmanaged-credentials", description="Unmanaged: Invalid credentials", created_date=str(datetime.datetime.now(tz.tzutc()))),
+                ])
         return True
     
     def migrate12(self):
@@ -1776,6 +1987,10 @@ class MigrateTo_51(SchemaMigration):
         add_columns(self.db, 'Platforms',
             'isFromDisk      boolean NOT NULL DEFAULT false',
         )
+
+        if self.cfg is None:
+            # Skip data mangling in migration tests
+            return True
 
         class Plat(object):
             __slots__ = ['platformName', 'abstract', 'configurable',
@@ -2014,6 +2229,41 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
             DROP CONSTRAINT "inventory_system_network_system_id_dns_name_key"
         """)
 
+        return True
+
+    def migrate31(self):
+        """Post-5.8.0 schema fixups"""
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_system_type
+            ALTER creation_descriptor SET NOT NULL
+            """)
+        cu.execute("""
+            UPDATE inventory_event_type
+            SET description = 'System synchronization'
+            WHERE name = 'system poll'
+            """)
+
+        if not columnExists(self.db, "inventory_system_event", "event_data"):
+            cu.execute("""
+                ALTER TABLE inventory_system_event
+                ADD event_data varchar
+                """)
+        if not constraintExists(self.db, "inventory_system_target_credentials",
+                "inventory_system_target_credentials_system_id_key"):
+            cu.execute("""
+                ALTER TABLE inventory_system_target_credentials
+                ADD CONSTRAINT inventory_system_target_credentials_system_id_key
+                UNIQUE ( system_id, credentials_id )
+                """)
+        renameConstraint(self.db, table="inventory_system",
+                oldName="inventory_system_type_id_fkey",
+                newDefinition="""
+                ADD CONSTRAINT inventory_system_system_type_id_fkey
+                    FOREIGN KEY ( system_type_id )
+                    REFERENCES inventory_system_type
+                """,
+                conditional=True)
         return True
 
 

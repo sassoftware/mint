@@ -92,8 +92,20 @@ class RepositoryManager(object):
         Generate a sequence of L{RepositoryHandle}s matching a given
         query.
         """
+        return self._iterRepositories(whereClause, args, contentSources=True)
+
+    def _iterRepositories(self, whereClause, args, contentSources):
         if whereClause:
             whereClause = 'WHERE ' + whereClause
+        if contentSources:
+            sourceClause = """
+                EXISTS (
+                    SELECT * FROM PlatformsContentSourceTypes
+                    JOIN Platforms AS plat USING (platformId)
+                    WHERE plat.projectId = projectId
+                )"""
+        else:
+            sourceClause = "false"
 
         cu = self.db.cursor()
         cu.execute("""
@@ -101,15 +113,10 @@ class RepositoryManager(object):
                     EXISTS ( SELECT * FROM InboundMirrors
                         WHERE projectId = targetProjectId
                         ) AS localMirror,
-                    commitEmail, %s, url, authType, username, password,
-                    entitlement, EXISTS (
-                        SELECT * FROM PlatformsContentSourceTypes
-                            JOIN Platforms AS plat USING (platformId)
-                        WHERE plat.projectId = projectId) AS hasContentSources
+                    commitEmail, database, url, authType, username, password,
+                    entitlement, %s AS hasContentSources
                 FROM Projects LEFT JOIN Labels USING ( projectId )
-                %s ORDER BY projectId ASC""" % (
-                    (self.db.driver == 'mysql' and '`database`' or 'database'),
-                    whereClause),
+                %s ORDER BY projectId ASC""" % (sourceClause, whereClause),
                 *args)
 
         for row in cu:

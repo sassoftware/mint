@@ -308,6 +308,10 @@ def call(cmd, ignoreErrors=False, logCmd=True, logLevel=logging.INFO,
     kw.setdefault('stderr', pipe)
     p = subprocess.Popen(cmd, **kw)
 
+    if not p.stdout and not p.stderr:
+        # Can't grab output if we don't have any pipes.
+        captureOutput = False
+
     stdout = stderr = ''
     if captureOutput:
         while p.poll() is None:

@@ -684,10 +684,16 @@ class MintServer(object):
                 common=fqdn,
                 conditional=True,
                 )
-        ret = sp.rusconf.RusConf.pushConfiguration({
+        confDict = {
             'x509_pem': x509_pem,
             'pkey_pem': pkey_pem,
-            })
+            }
+
+        rbuilder_ip = procutil.getNetName()
+        if rbuilder_ip != 'localhost':
+            confDict['xmpp_host'] = rbuilder_ip
+
+        ret = sp.rusconf.RusConf.pushConfiguration(confDict)
         if 'errors' in ret:
             # Too old to have a sputnik installation.
             if ('method "pushConfiguration" is not supported'
