@@ -2271,7 +2271,7 @@ class MigrateTo_52(SchemaMigration):
 
     def migrate(self):
         # FIRST SCHEMA MIGRATION CAN GO HERE SINCE .0 WAS A NO-OP
-        pass
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
