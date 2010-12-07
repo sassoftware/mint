@@ -168,16 +168,19 @@ class TargetConversion(object):
         cu = self.db.cursor()
         targetId = self.getTargetId(targetType, targetName)
         if targetId:
-            raise mint_error.TargetExists( \
-                    "Target named '%s' of type '%s' already exists",
-                    targetName, targetType)
+            return targetId
         cu.execute("INSERT INTO Targets (targetType, targetName) VALUES(?, ?)", targetType, targetName)
         return cu.lastid()
 
     def _addTargetData(self, targetId, targetData):
         cu = self.db.cursor()
+        cu.execute("SELECT name FROM TargetData WHERE targetId = ?",
+            targetId)
+        existingSet = set(x[0] for x in cu)
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
+            if name in existingSet:
+                continue
             value = json.dumps(value)
             cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                     targetId, name, value)
