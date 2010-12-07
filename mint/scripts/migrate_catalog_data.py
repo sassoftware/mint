@@ -49,6 +49,9 @@ class TargetConversion(object):
                 if not cfg:
                     self.cfgStore.delete(target)
                     continue
+                # Add a description to EC2 targets
+                if target == 'ec2/aws':
+                    cfg['description'] = "Amazon Elastic Compute Cloud"
                 # drop target name from list, it's the same as the key
                 cfg.pop('name', None)
                 # Extract target name
