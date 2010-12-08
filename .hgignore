@@ -34,9 +34,6 @@
 ^mint/test-mint-local.db$
 ^mint/test-mint-local.db-journal$
 
-^.*project$
-^.*pydevproject$
-
 ^\.coverage$
 ^mint_test/(raa-tests/)?\.(times|coverage)$
 ^mint_test/archive/macrosc$
