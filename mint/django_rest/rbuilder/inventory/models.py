@@ -324,6 +324,11 @@ class ManagementInterface(modellib.XObjIdModel):
     XSL = "managementInterface.xsl"
     class Meta:
         db_table = 'inventory_management_interface'
+        
+    # Don't inline all the systems now.  Do not remove this code!
+    # See https://issues.rpath.com/browse/RBL-7883 for more info
+    _xobj_hidden_accessors = set(['systems',])
+        
     _xobj = xobj.XObjMetadata(
                 tag = 'management_interface',
                 attributes = {'id':str})
