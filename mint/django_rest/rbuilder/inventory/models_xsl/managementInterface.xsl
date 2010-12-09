@@ -19,8 +19,7 @@ ManagementInterface Properties:
   created_date - "the date the management interface was added to inventory (UTC)
   port - the port used by the management interface
   credentials_descriptor - the descriptor of available fields to set credentials for the management interface
-  credentials_readonly - whether or not the management interface has readonly credentials
-  systems - a collections of systems that use this management interface]]>
+  credentials_readonly - whether or not the management interface has readonly credentials]]>
 </xsl:variable>
 
 <xsl:variable name="managementInterface_methods"><![CDATA[

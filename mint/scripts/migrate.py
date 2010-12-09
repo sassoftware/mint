@@ -2266,6 +2266,12 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
                 conditional=True)
         return True
 
+class MigrateTo_52(SchemaMigration):
+    Version = (52, 0)
+
+    def migrate(self):
+        # FIRST SCHEMA MIGRATION CAN GO HERE SINCE .0 WAS A NO-OP
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

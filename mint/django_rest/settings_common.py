@@ -60,7 +60,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'mint.django_rest.middleware.RequestSanitizationMiddleware',
     'mint.django_rest.middleware.SetMintAuthMiddleware',
     'mint.django_rest.middleware.SetMethodRequestMiddleware',
@@ -69,6 +68,7 @@ MIDDLEWARE_CLASSES = (
     'mint.django_rest.middleware.SetMintConfigMiddleware',
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
     'mint.django_rest.middleware.AddCommentsMiddleware',
+    'mint.django_rest.middleware.RedirectMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
 )
 

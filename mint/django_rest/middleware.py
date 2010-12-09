@@ -12,6 +12,7 @@ import libxml2
 import libxslt
 
 from django.contrib.auth import authenticate
+from django.contrib.redirects import middleware as redirectsmiddleware
 from django.http import HttpResponseBadRequest, HttpResponse
 
 from mint import config
@@ -75,7 +76,7 @@ class SetMethodRequestMiddleware(object):
         if request.REQUEST.has_key('_method'):
             request_method = request.REQUEST['_method'].upper()
             allowable_methods = ['GET','POST','PUT','DELETE',]
-                
+
             if request_method in allowable_methods:
                 try:
                     request.method = request_method
@@ -168,3 +169,17 @@ class AddCommentsMiddleware(object):
                 pass
 
         return response 
+
+class NoParamsRequest(object):
+
+    def __init__(self, request):
+        self.request = request
+
+    def get_full_path(self):
+        return self.request.path
+
+class RedirectMiddleware(redirectsmiddleware.RedirectFallbackMiddleware):
+    def process_response(self, request, response):
+        nPRequest = NoParamsRequest(request)
+        return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
+
