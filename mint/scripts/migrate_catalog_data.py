@@ -46,6 +46,10 @@ class TargetConversion(object):
                 if target == 'ec2/aws' and cfg.pop('enabled', '0') != '1':
                     self.cfgStore.delete(target)
                     continue
+                # Add alias/description to EC2 targets
+                if target == 'ec2/aws':
+                    cfg.setdefault('alias', "ec2")
+                    cfg.setdefault('description', "Amazon Elastic Compute Cloud")
                 if not cfg:
                     self.cfgStore.delete(target)
                     continue
@@ -156,28 +160,27 @@ class TargetConversion(object):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
         data = mintdata.marshalTargetUserCredentials(credentials)
-        cu.execute("""INSERT INTO TargetCredentials (credentials) VALUES (?)""",
-            data)
-        targetCredentialsId = cu.lastid()
         cu.execute("""
-            INSERT INTO TargetUserCredentials
-                (targetId, userId, targetCredentialsId)
-            VALUES (?, ?, ?)""", targetId, userId, targetCredentialsId)
+            INSERT INTO TargetUserCredentials (targetId, userId, credentials)
+            VALUES (?, ?, ?)""", targetId, userId, data)
 
     def _addTarget(self, targetType, targetName):
         cu = self.db.cursor()
         targetId = self.getTargetId(targetType, targetName)
         if targetId:
-            raise mint_error.TargetExists( \
-                    "Target named '%s' of type '%s' already exists",
-                    targetName, targetType)
+            return targetId
         cu.execute("INSERT INTO Targets (targetType, targetName) VALUES(?, ?)", targetType, targetName)
         return cu.lastid()
 
     def _addTargetData(self, targetId, targetData):
         cu = self.db.cursor()
+        cu.execute("SELECT name FROM TargetData WHERE targetId = ?",
+            targetId)
+        existingSet = set(x[0] for x in cu)
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
+            if name in existingSet:
+                continue
             value = json.dumps(value)
             cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                     targetId, name, value)

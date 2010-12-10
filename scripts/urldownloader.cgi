@@ -58,8 +58,7 @@ def uploadUrl(path, basedir, prefix, fileName):
         util.mkdirChain(basewkdir)
 
     filePath = os.path.join(basewkdir, os.path.basename(path))
-    shutil.copyfile(path, filePath)
-    os.path.unlink(path)
+    shutil.move(path, filePath)
     indexfile = open(os.path.join(basewkdir, 'uploadfile-index'), 'wt')
     writeManifest(indexfile, 'uploadfile', fileName,
         filePath)

@@ -666,7 +666,19 @@ class SystemManager(base.BaseManager):
     def _merge(self, system, other):
         # We don't want to overwrite the name and description
         other.name = other.description = None
+
+        responsiveState = self.systemState(models.SystemState.RESPONSIVE)
+        savedState = None
+        oldModel = getattr(system, 'oldModel', None)
+        if oldModel:
+            currentState = self.systemState(oldModel.current_state.name)
+            if currentState == responsiveState:
+                savedState = currentState
+
         models.System.objects.copyFields(system, other, withReadOnly=True)
+
+        if savedState:
+            system.current_state = savedState
 
         # XXX maybe we should merge instead of simply updating, since we may
         # step over a unique constraint? -- misa
@@ -754,6 +766,7 @@ class SystemManager(base.BaseManager):
         if system.oldModel is None:
             self.log_system(system, models.SystemLogEntry.ADDED)
         registeredState = self.systemState(models.SystemState.REGISTERED)
+        onlineState = self.systemState(models.SystemState.RESPONSIVE)
         if system.isNewRegistration:
             system.registration_date = self.now()
             system.current_state = registeredState
@@ -768,13 +781,23 @@ class SystemManager(base.BaseManager):
                 # And schedule one immediately
                 self.scheduleSystemPollNowEvent(system)
         elif system.isRegistered:
-            # If the API changed the state, do not try to change it back
-            if (system.oldModel is not None and
-                    system.oldModel.current_state.system_state_id == system.current_state_id and
-                    system.current_state.system_state_id != registeredState.system_state_id):
+            # See if a new poll is required
+            if self.needsNewSynchronization(system):
                 system.current_state = registeredState
+                self.scheduleSystemPollNowEvent(system)
                 system.save()
-                self.log_system(system, models.SystemLogEntry.REGISTERED)
+            # Already registered and no need to re-syncrhonize, if the
+            # old state was online, and the new state is registered, we must
+            # be coming in through rpath-tools, so preserve the online state.
+            elif (system.oldModel is not None and 
+                    system.oldModel.current_state.system_state_id == \
+                    onlineState.system_state_id and
+                    system.current_state.system_state_id == \
+                    registeredState.system_state_id):
+                system.current_state = onlineState
+                system.save()
+            elif system.current_state == registeredState:
+                self.scheduleSystemPollNowEvent(system)
         elif withManagementInterfaceDetection:
             # Need to dectect the management interface on the system
             self.scheduleSystemDetectMgmtInterfaceEvent(system)
@@ -1400,7 +1423,10 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def extractNetworkToUse(self, system):
-        networks = system.networks.all()
+        if hasattr(system.networks, 'all'):
+            networks = system.networks.all()
+        else:
+            networks = system.networks.network
 
         # first look for user required nets
         nets = [ x for x in networks if x.required ]
@@ -1416,6 +1442,33 @@ class SystemManager(base.BaseManager):
         if len(networks) == 1:
             return networks[0]
         return None
+
+    def needsNewSynchronization(self, system):
+        """
+        Relies on the presence of oldModel.  Look to see if any pertinent
+        fields have changed that would cause a new synchronization to be
+        needed.
+        """
+        oldModel = getattr(system, 'oldModel', None)
+        if not oldModel:
+            return False
+
+        oldNetwork = self.extractNetworkToUse(oldModel)
+        if not oldNetwork:
+            return False
+        newNetwork = self.extractNetworkToUse(system)
+        
+        oldIp = oldNetwork.ip_address or oldNetwork.dns_name
+        newIp = newNetwork.ip_address or newNetwork.dns_name
+        if oldIp != newIp:
+            return True
+
+        oldServerCert = getattr(oldModel, 'ssl_server_certificate', None)
+        if not oldServerCert:
+            return False
+
+        if oldServerCert != system.ssl_server_certificate:
+            return True
 
     @classmethod
     def _runSystemEvent(cls, event, method, params, resultsLocation=None,
