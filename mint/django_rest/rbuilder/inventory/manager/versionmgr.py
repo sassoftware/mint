@@ -317,7 +317,6 @@ class VersionManager(base.BaseManager):
     def _getTroveConfigDescriptor(self, trove):
         client = self.get_conary_client()
         repos = client.getRepos()
-
         n, v, f = trove.getNVF()
 
         trvList = repos.getTroves([(n, v, f)])
@@ -341,6 +340,6 @@ class VersionManager(base.BaseManager):
 
                 for field in doc.getElementsByTagName('field'):
                     name = field.getElementsByTagName('name')[0].lastChild.data
-                    confDict[name] = field
+                    configDict[name] = field
 
         return configDict
