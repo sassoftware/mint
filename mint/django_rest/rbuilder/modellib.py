@@ -641,6 +641,20 @@ class XObjModel(models.Model):
             underscoreName = mintutils.Transformations.strToUnderscore(
                 name[0].lower() + name[1:])
             ret._xobjClass = type(underscoreName, (object, ), {})
+
+            retXObj = getattr(ret, '_xobj', None)
+            if retXObj:
+                for base in bases:
+                    _xobj = getattr(base, '_xobj', None)
+                    if not _xobj:
+                        continue
+                    newAttrs = _xobj.attributes.copy()
+                    newAttrs.update(ret._xobj.attributes)
+                    ret._xobj.attributes = newAttrs
+
+                    for elem in _xobj.elements:
+                        if elem not in ret._xobj.elements:
+                            ret._xobj.elements.append(elem)
             return ret
 
     class Meta:
@@ -1046,6 +1060,10 @@ class XObjModel(models.Model):
         xobjModelClass = self._xobjClass
         xobj_model = xobjModelClass()
 
+        _xobj = getattr(self, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj = _xobj
+
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
 
@@ -1086,32 +1104,56 @@ class XObjIdModel(XObjModel):
 
     def serialize(self, request=None, values=None):
         xobj_model = XObjModel.serialize(self, request, values=values)
-        xobj_model._xobj = xobj.XObjMetadata(
-                            attributes = {'id':str})
+        _xobj = getattr(xobj_model, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj.attributes['id'] = str
+        else:
+            xobj_model._xobj = xobj.XObjMetadata(
+                                attributes = {'id':str})
         xobj_model.id = self.get_absolute_url(request, model=xobj_model)
         return xobj_model
 
-class PaginationData(XObjModel):
+class CollectionPaginator(paginator.Paginator):
+    def validate_number(self, number):
+        if number == 0:
+            return number
+        else:
+            return paginator.Paginator.validate_number(self, number)
 
-    class Meta:
-        abstract = True
+    def page(self, number):
+        number = self.validate_number(number)
+        bottom = number * self.per_page
+        top = bottom + self.per_page
+        if top + self.orphans >= self.count:
+            top = self.count
+        return CollectionPage(self.object_list[bottom:top], number, self)
 
-    per_page = models.IntegerField()
-    start_index = models.IntegerField()
-    end_index = models.IntegerField()
-    num_pages = models.IntegerField()
+class CollectionPage(paginator.Page):
+    def start_index(self):
+        # Special case, return zero if no items.
+        if self.paginator.count == 0:
+            return 0
+        return (self.paginator.per_page * self.number)
 
-    def __init__(self, pagination, page):
-        XObjModel.__init__(self)
-        self.pagination = pagination
-        self.page = page
-        self.per_page = self.pagination.per_page
-        self.start_index = self.page.start_index()
-        self.end_index = self.page.end_index()
-        self.num_pages = self.pagination.num_pages
+    def end_index(self):
+        if self.number == self.paginator.num_pages:
+            return self.paginator.count
+        return (self.paginator.per_page * (self.number + 1)) - 1
 
+class Collection(XObjIdModel):
 
-class CollectionData(XObjModel):
+    _xobj = xobj.XObjMetadata(
+        attributes = {
+            'count' : int,
+            'full_collection' : str,
+            'per_page' : str,
+            'start_index' : str,
+            'end_index' : str,
+            'num_pages' : str,
+            'next_page' : str,
+            'previous_page' : str,
+        }
+    )
 
     class Meta:
         abstract = True
@@ -1119,102 +1161,56 @@ class CollectionData(XObjModel):
     count = models.IntegerField()
     full_collection = models.TextField()
 
-    def __init__(self, pagination, page):
-        XObjModel.__init__(self)
-        self.pagination = pagination
-        self.page = page
-        self.count = self.pagination.count
-
-    def serialize(self, request=None, values=None):
-        xobj_model = XObjModel.serialize(self, request, values)
-        pagination_data = PaginationData(self.pagination, self.page)
-        xobj_model.pagination_data = pagination_data.serialize(request, values)
-        return xobj_model
-
-class UrlIdModel(XObjIdModel):
-
-    class Meta:
-        abstract = True
-
-    def __init__(self, url):
-        XObjIdModel.__init__(self)
-        self.url = url
-
-    def get_absolute_url(self, *args, **kwargs):
-        return self.url
-
-class Page(UrlIdModel):
-    pass
-
-class NextPage(UrlIdModel):
-    pass
-
-class PreviousPage(UrlIdModel):
-    pass
-
-class FullCollection(UrlIdModel):
-    pass
-
-class Collection(XObjIdModel):
-
-    class Meta:
-        abstract = True
+    per_page = models.IntegerField()
+    start_index = models.IntegerField()
+    end_index = models.IntegerField()
+    num_pages = models.IntegerField()
+    next_page = models.TextField()
+    previous_page = models.TextField()
 
     def get_absolute_url(self, request=None, parents=None, model=None,
-                         page=None):
+                         page=None, full=None):
         url = XObjIdModel.get_absolute_url(self, request, parents, model)
-        if not page:
+        if not page and not full:
             page = getattr(self, 'page', None)
         if page:
             limit = request.GET.get('limit', settings.PER_PAGE)
-            url += ':start_index=%s&limit=%s' % (page.start_index(), limit)
+            url += ':start_index=%s;limit=%s' % (page.start_index(), limit)
         return url
 
     def serialize(self, request=None, values=None):
         for listField in self.list_fields:
             modelList = getattr(self, listField)
 
-            pagination = paginator.Paginator(modelList, settings.PER_PAGE) 
-            pageNumber = request.GET.get('page', 1)
+            startIndex = int(request.GET.get('start_index', 0))
+            limit = int(request.GET.get('limit', settings.PER_PAGE))
+            pagination = CollectionPaginator(modelList, limit) 
+            pageNumber = startIndex/limit
             page = pagination.page(pageNumber)
 
             self.page = page
             setattr(self, listField, page.object_list)
 
-            xobj_model = XObjIdModel.serialize(self, request, values)
-
-            collection_data = CollectionData(pagination, page)
-            collection_data.full_collection = FullCollection(
-                self.get_absolute_url(request, page=False)).serialize(request,
-                values)
-            xobj_model.collection_data = collection_data.serialize(request, values)
-
-            current_page = Page(
-                self.get_absolute_url(request,
-                page=page))
+            self.count = pagination.count
+            self.full_collection = self.get_absolute_url(request, full=True)
+            self.per_page = pagination.per_page
+            self.start_index = page.start_index()
+            self.end_index = page.end_index()
+            self.num_pages = pagination.num_pages
 
             if page.has_next():
                 nextPage = pagination.page(page.next_page_number())
-                next_page = NextPage(
-                    self.get_absolute_url(request,
-                    page=nextPage))
+                self.next_page = self.get_absolute_url(request, page=nextPage)
             else:
-                next_page = NextPage('')
+                self.next_page = ''
 
             if page.has_previous():
                 previousPage = pagination.page(page.previous_page_number())
-                previous_page = PreviousPage(
-                    self.get_absolute_url(request,
-                    page=previousPage))
+                self.previous_page = self.get_absolute_url(request, page=previousPage)
             else:
-                previous_page = PreviousPage('')
+                self.previous_page = ''
 
-            xobj_model.collection_data.pagination_data.next_page = \
-                next_page.serialize(request, values)
-            xobj_model.collection_data.pagination_data.previous_page = \
-                previous_page.serialize(request, values)
-            xobj_model.collection_data.pagination_data.page = \
-                current_page.serialize(request, values)
+        xobj_model = XObjIdModel.serialize(self, request, values)
 
         return xobj_model
 
