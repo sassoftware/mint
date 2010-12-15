@@ -11,7 +11,9 @@ from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
+from django.conf import settings
 from django.core import exceptions
+from django.core import paginator
 from django.core import urlresolvers 
 
 from xobj import xobj
@@ -765,8 +767,11 @@ class XObjModel(models.Model):
         # system parent can be sent in, such that the result is
         # /api/inventory/systems/1/networks, where 1 is the system pk.
         if not parents:
-            url_key = getattr(self, 'pk', [])
-            url_key = [str(url_key)]
+            url_key = getattr(self, 'pk', None)
+            if url_key:
+                url_key = [str(url_key)]
+            else:
+                url_key = []
         else:
             url_key = []
             for parent in parents:
@@ -1056,7 +1061,6 @@ class XObjModel(models.Model):
 
         return xobj_model
 
-
 class SyntheticField(object):
     """A field that has no database storage, but is de-serialized"""
 
@@ -1085,6 +1089,133 @@ class XObjIdModel(XObjModel):
         xobj_model._xobj = xobj.XObjMetadata(
                             attributes = {'id':str})
         xobj_model.id = self.get_absolute_url(request, model=xobj_model)
+        return xobj_model
+
+class PaginationData(XObjModel):
+
+    class Meta:
+        abstract = True
+
+    per_page = models.IntegerField()
+    start_index = models.IntegerField()
+    end_index = models.IntegerField()
+    num_pages = models.IntegerField()
+
+    def __init__(self, pagination, page):
+        XObjModel.__init__(self)
+        self.pagination = pagination
+        self.page = page
+        self.per_page = self.pagination.per_page
+        self.start_index = self.page.start_index()
+        self.end_index = self.page.end_index()
+        self.num_pages = self.pagination.num_pages
+
+
+class CollectionData(XObjModel):
+
+    class Meta:
+        abstract = True
+
+    count = models.IntegerField()
+    full_collection = models.TextField()
+
+    def __init__(self, pagination, page):
+        XObjModel.__init__(self)
+        self.pagination = pagination
+        self.page = page
+        self.count = self.pagination.count
+
+    def serialize(self, request=None, values=None):
+        xobj_model = XObjModel.serialize(self, request, values)
+        pagination_data = PaginationData(self.pagination, self.page)
+        xobj_model.pagination_data = pagination_data.serialize(request, values)
+        return xobj_model
+
+class UrlIdModel(XObjIdModel):
+
+    class Meta:
+        abstract = True
+
+    def __init__(self, url):
+        XObjIdModel.__init__(self)
+        self.url = url
+
+    def get_absolute_url(self, *args, **kwargs):
+        return self.url
+
+class Page(UrlIdModel):
+    pass
+
+class NextPage(UrlIdModel):
+    pass
+
+class PreviousPage(UrlIdModel):
+    pass
+
+class FullCollection(UrlIdModel):
+    pass
+
+class Collection(XObjIdModel):
+
+    class Meta:
+        abstract = True
+
+    def get_absolute_url(self, request=None, parents=None, model=None,
+                         page=None):
+        url = XObjIdModel.get_absolute_url(self, request, parents, model)
+        if not page:
+            page = getattr(self, 'page', None)
+        if page:
+            limit = request.GET.get('limit', settings.PER_PAGE)
+            url += ':start_index=%s&limit=%s' % (page.start_index(), limit)
+        return url
+
+    def serialize(self, request=None, values=None):
+        for listField in self.list_fields:
+            modelList = getattr(self, listField)
+
+            pagination = paginator.Paginator(modelList, settings.PER_PAGE) 
+            pageNumber = request.GET.get('page', 1)
+            page = pagination.page(pageNumber)
+
+            self.page = page
+            setattr(self, listField, page.object_list)
+
+            xobj_model = XObjIdModel.serialize(self, request, values)
+
+            collection_data = CollectionData(pagination, page)
+            collection_data.full_collection = FullCollection(
+                self.get_absolute_url(request, page=False)).serialize(request,
+                values)
+            xobj_model.collection_data = collection_data.serialize(request, values)
+
+            current_page = Page(
+                self.get_absolute_url(request,
+                page=page))
+
+            if page.has_next():
+                nextPage = pagination.page(page.next_page_number())
+                next_page = NextPage(
+                    self.get_absolute_url(request,
+                    page=nextPage))
+            else:
+                next_page = NextPage('')
+
+            if page.has_previous():
+                previousPage = pagination.page(page.previous_page_number())
+                previous_page = PreviousPage(
+                    self.get_absolute_url(request,
+                    page=previousPage))
+            else:
+                previous_page = PreviousPage('')
+
+            xobj_model.collection_data.pagination_data.next_page = \
+                next_page.serialize(request, values)
+            xobj_model.collection_data.pagination_data.previous_page = \
+                previous_page.serialize(request, values)
+            xobj_model.collection_data.pagination_data.page = \
+                current_page.serialize(request, values)
+
         return xobj_model
 
 class XObjHrefModel(XObjModel):

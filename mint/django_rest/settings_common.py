@@ -60,6 +60,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'mint.django_rest.middleware.QueryParameterMiddleware',
     'mint.django_rest.middleware.RequestSanitizationMiddleware',
     'mint.django_rest.middleware.SetMintAuthMiddleware',
     'mint.django_rest.middleware.SetMethodRequestMiddleware',
@@ -99,3 +100,6 @@ AUTHENTICATION_BACKENDS = (
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = False
+
+# Custom settings for pagination
+PER_PAGE = 10
