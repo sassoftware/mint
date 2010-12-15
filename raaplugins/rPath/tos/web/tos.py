@@ -4,7 +4,6 @@
 #
 import time
 import os
-import md5
 
 from gettext import gettext as _
 from time import time
