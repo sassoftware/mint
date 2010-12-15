@@ -1251,6 +1251,7 @@ class SystemsTestCase(XMLTestCase):
         class Request(object):
             def build_absolute_uri(slf, href=None):
                 return "blah%s" % href
+            GET = {}
         request = Request()
         from django.db import settings
         settings.DEBUG = True
