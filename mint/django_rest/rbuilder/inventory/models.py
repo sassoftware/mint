@@ -250,7 +250,7 @@ class SystemState(modellib.XObjIdModel):
         db_table = 'inventory_system_state'
         
     _xobj = xobj.XObjMetadata(
-                tag = 'currentState',
+                tag = 'current_state',
                 attributes = {'id':str})
 
     UNMANAGED = "unmanaged"
