@@ -99,3 +99,6 @@ AUTHENTICATION_BACKENDS = (
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = False
+
+# Custom settings for pagination
+PER_PAGE = 10

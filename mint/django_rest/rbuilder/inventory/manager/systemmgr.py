@@ -222,15 +222,6 @@ class SystemManager(base.BaseManager):
         else:
             return None
 
-    @base.exposed
-    def XXXgetSystems(self):
-        Systems = models.Systems()
-        qs = models.System.objects.select_related(
-            'current_state', 'target', 'launching_user', 'managing_zone',
-            'management_node', )
-        Systems.system = list(qs)
-        return Systems
-
     @classmethod
     def _getClassName(cls, field):
         xobj = getattr(field, '_xobj', None)

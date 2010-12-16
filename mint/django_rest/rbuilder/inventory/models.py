@@ -54,7 +54,6 @@ class Pk(object):
     def __init__(self, pk):
         self.pk = pk
 
-
 class Fault(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -82,7 +81,7 @@ class Inventory(modellib.XObjModel):
         self.inventory_systems = modellib.XObjHrefModel('inventory_systems')
         self.infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
 
-class Systems(modellib.XObjModel):
+class Systems(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -92,6 +91,7 @@ class Systems(modellib.XObjModel):
     objects = modellib.SystemsManager()
 
     def __init__(self):
+        modellib.Collection.__init__(self)
         self.event_types = modellib.XObjHrefModel('../event_types')
 
     def save(self):
@@ -250,7 +250,7 @@ class SystemState(modellib.XObjIdModel):
         db_table = 'inventory_system_state'
         
     _xobj = xobj.XObjMetadata(
-                tag = 'currentState',
+                tag = 'current_state',
                 attributes = {'id':str})
 
     UNMANAGED = "unmanaged"

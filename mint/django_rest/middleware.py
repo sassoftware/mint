@@ -11,6 +11,7 @@ import traceback
 import libxml2
 import libxslt
 
+from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
 from django.http import HttpResponseBadRequest, HttpResponse
@@ -135,7 +136,7 @@ class SetMintConfigMiddleware(object):
 
         return None
 
-class SetMintConfigLocalMiddleware(object):
+class LocalSetMintConfigMiddleware(object):
 
     def process_request(self, request):
         cfg = config.MintConfig()
@@ -179,7 +180,21 @@ class NoParamsRequest(object):
         return self.request.path
 
 class RedirectMiddleware(redirectsmiddleware.RedirectFallbackMiddleware):
+    """
+    Middleware that process redirects irregardless of any query parameters
+    specified.  Overrides default django redirect middleware functionality.
+    """
     def process_response(self, request, response):
         nPRequest = NoParamsRequest(request)
         return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
 
+class LocalQueryParameterMiddleware(object):
+
+    def process_request(self, request):
+        path = request.get_full_path()
+        if ':' in path:
+            if path.endswith('/'):
+                path = path[:-1]
+            request.path, params = path.split(':')
+            request.path_info = request.path
+            request.GET = http.QueryDict(params)
