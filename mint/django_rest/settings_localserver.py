@@ -32,7 +32,7 @@ MIDDLEWARE_CLASSES = tuple(
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
     ('mint.django_rest.middleware.LocalSetMintAdminMiddleware',
      'mint.django_rest.middleware.LocalSetMintConfigMiddleware',
-     'mint.django_rest.middleware.LocalQueryParameterMiddleware')
+     'mint.django_rest.middleware.LocalQueryParameterMiddleware',)
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True

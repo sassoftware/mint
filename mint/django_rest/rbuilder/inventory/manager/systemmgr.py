@@ -340,7 +340,7 @@ class SystemManager(base.BaseManager):
 
     @base.exposed
     def getSystems(self, request):
-        profiling = True
+        profiling = False
         if profiling:
             from django.db import settings
             settings.DEBUG = True
