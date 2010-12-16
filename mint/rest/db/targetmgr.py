@@ -5,6 +5,7 @@
 #
 import json
 import logging
+import subprocess
 
 from mint import mint_error
 from mint.lib import data as mintdata
@@ -149,13 +150,20 @@ class TargetManager(manager.Manager):
             cmap[(tName, uCredsId)] = ent
         return sorted(cmap.values())
 
+    def importTargetSystems(self, targetType, targetName):
+        log.info('Importing systems for target %s.' % targetName)
+        cmd = ['/usr/share/rbuilder/scripts/target-systems-import']
+        subprocess.Popen(cmd)
+
     def setTargetCredentialsForUser(self, targetType, targetName, userName,
                                     credentials):
         userId = self.getUserId(userName)
         if userId is None:
             raise mint_error.IllegalUsername(userName)
-        return self.setTargetCredentialsForUserId(targetType, targetName,
+        self.setTargetCredentialsForUserId(targetType, targetName,
             userId, credentials)
+        if self.db.auth.isAdmin:
+            self.importTargetSystems(targetType, targetName)
 
     def setTargetCredentialsForUserId(self, targetType, targetName, userId,
             credentials):
