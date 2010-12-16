@@ -84,8 +84,7 @@ def _injectZone(request, xobjModel, modelName, modelClass):
     # Inject zone into xobjModel
     zone = zones[0]
     propName = 'managing_zone'
-    zclass = modellib.type_map['zone']
-    mzone = zclass._xobjClass()
+    mzone = zoneClass._xobjClass()
     mzone.href = zone.get_absolute_url(request)
     setattr(xobjModel, propName, mzone)
 

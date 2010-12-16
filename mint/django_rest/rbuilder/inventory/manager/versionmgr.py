@@ -315,69 +315,31 @@ class VersionManager(base.BaseManager):
         return top.toxml()
 
     def _getTroveConfigDescriptor(self, trove):
-        kw = {}
         client = self.get_conary_client()
-        troveSource = client.getRepos()
-        troveTups = [trove.getNVF()]
-        colls = [ x for x in troveTups if conarytrove.troveIsCollection(x[0])]
-        troves = troveSource.getTroves(colls, withFiles=False)
-        troveCache = dict(itertools.izip(colls, troves))
-        childTups = list(itertools.chain(*( x.iterTroveList(strongRefs=True) for x in troves if x)))
-        _check = lambda x: (conarytrove.troveIsCollection(x[0]) and not conarytrove.troveIsPackage(x[0]))
-        colls = set(x for x in troveTups if _check(x))
-        childColls = [ x for x in childTups if _check(x)]
-        troves = troveSource.getTroves(childColls, withFiles=False, **kw)
-        troveCache.update(itertools.izip(childColls, troves))
-        allTups = troveTups + childTups
-        #require = []
-        #provide = []
-        # Zip together tups and metadata so we can make one call
-        #md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, childTups)
-        confDict = {}
-        for tup in allTups:
-            doc = None
-            # TODO This is super inefficient, see above about ziping tups and metadata
-            md = troveSource.getTroveInfo(conarytrove._TROVEINFO_TAG_METADATA, [tup])
-            # Some metadata is set to None, don't process those
-            try: troveXml = md[0].get()['shortDesc']
-            # WARNING: This is not the proper way to deal with NoneType md[0]
-            except:
-                continue
-            if troveXml:
-                try: doc = minidom.parseString(troveXml)
-                #it is possible we will run into real descriptions, so just ignore them
-                # WARNING: this will not generate error if bad XML
+        repos = client.getRepos()
+        n, v, f = trove.getNVF()
+
+        trvList = repos.getTroves([(n, v, f)])
+
+        referencedByDefault = []
+        for trv in trvList:
+            referencedByDefault += [ nvf for nvf, byDefault, strongRef in
+                trv.iterTroveListInfo() if byDefault ]
+
+        properties = repos.getTroveInfo(conarytrove._TROVEINFO_TAG_PROPERTIES,
+            referencedByDefault)
+
+        configDict = {}
+        for propSet in properties:
+            for singleProperty in propSet.iter():
+                troveXml = singleProperty.definition()
+                try: 
+                    doc = minidom.parseString(troveXml)
                 except xml.parsers.expat.ExpatError:
                     continue
-                for fields in doc.getElementsByTagName('dataFields'):
-                  for field in fields.getElementsByTagName('field'):
-                    # depend on schema to enforce only one name
-                    # arguably, all of this should be attributes of the field
-                    # TODO establish constants to replace these strings
-                    name = field.getElementsByTagName('name')[0].lastChild.data
-                    # we are not doing config dep resolution so we don't care
-                    #required = field.getElementsByTagName('required')[0].lastChild
-                    # WARNING: if there are overlapping named fields, latest iteration wins
-                    confDict[name] = field
-                    #assert required.nodeType == minidom.Node.TEXT_NODE
-                    # We can build requires and provides tables here
-                    #if field.getElementsByTagName('sense')[0].data == 'required':
-                    #    require += [name]
-                    #else:
-                    #    provides += [name]
-        # Reconcile provides/requires
-        # Reconcile bindings
 
-        return confDict
-        # Retrieve all trove tuples in group
-        ## Retrieve all trove metadata
-        ## Zip tuples and metadata
-        # Iterate through tuples constructing concatinated metadata
-        # Add wrapper tag to concatinated data
-        # parse dom
-        # iterate through concatinated config descriptors
-        # iterate through fields in config descriptors
-        # extract appropriate data
-        # zip extracted data with field node
-        # reconcile provides/requires
-        # reconcile bindings
+                for field in doc.getElementsByTagName('field'):
+                    name = field.getElementsByTagName('name')[0].lastChild.data
+                    configDict[name] = field
+
+        return configDict

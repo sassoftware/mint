@@ -34,8 +34,10 @@ log = logging.getLogger('wig')
 
 FileData = namedtuple('FileInfo',
         'pathId fileId fileVer '
-        'path kind trvCs fileInfo otherInfo')
+        'path kind trvCs fileInfo otherInfo '
+        'critical')
 
+CRITICAL_PACKAGES = set(('rTIS:msi',))
 
 class WigTask(plug_worker.TaskHandler):
 
@@ -114,25 +116,49 @@ class WigTask(plug_worker.TaskHandler):
         regFile = self.selectRegFile(fileMap)
         interestingFiles.append(regFile)
 
+        criticalPackageList = []
         packageList = []
         totalFiles = len(interestingFiles)
         for n, data in enumerate(sorted(interestingFiles)):
             name = os.path.basename(data.path)
 
             if data.kind == 'msi':
-                pkgXml, name = self.processMSI(data, seq=len(packageList))
-                packageList.append(pkgXml)
+                if data.critical:
+                    pkgXml, name = self.processMSI(data,
+                                                   seq=len(criticalPackageList),
+                                                   critical=data.critical)
+                    criticalPackageList.append(pkgXml)
+                else:
+                    pkgXml, name = self.processMSI(data, seq=len(packageList),
+                                                   critical=data.critical)
+                    packageList.append(pkgXml)
             elif data.kind == 'reg':
                 name = 'rTIS.reg'
 
             self.sendContents(name, data, n, totalFiles)
 
         # Finish assembling servicing.xml and send it to the build service.
-        root = E.update(E.updateJobs(E.updateJob(
-            E.sequence('0'),
-            E.logFile('setup.log'),
-            E.packages(*packageList),
-            )))
+        sysModel = 'install %s=%s' % (
+            self.troveTup.name, str(self.troveTup.version))
+        pollingManifest = '%s=%s[%s]' % (
+            self.troveTup.name, self.troveTup.version.freeze(),
+            str(self.troveTup.flavor))
+        root = E.update(
+            E.logFile('install.log'),
+            E.systemModel(sysModel),
+            E.pollingManifest(pollingManifest),
+            E.updateJobs(
+                E.updateJob(
+                    E.sequence('0'),
+                    E.logFile('install.log'),
+                    E.packages(*criticalPackageList),
+                    ),
+                E.updateJob(
+                    E.sequence('1'),
+                    E.logFile('install.log'),
+                    E.packages(*packageList),
+                    ),
+                ))
         doc = etree.tostring(root)
         sio = StringIO.StringIO(doc)
         self.wigClient.addFileStream(sio, 'xml', 'servicing.xml', len(doc))
@@ -169,9 +195,7 @@ class WigTask(plug_worker.TaskHandler):
         interestingFiles = []
         fileMap = {}
         for trvCs in cs.iterNewTroveList():
-            if trvCs.getName() == 'rTIS:msi':
-                # HACK: Telling rTIS to update itself will kill rTIS.
-                continue
+            critical = (trvCs.getName() in CRITICAL_PACKAGES)
 
             for pathId, path, fileId, fileVer in trvCs.getNewFileList():
                 fileStream = cs.getFileChange(None, fileId)
@@ -196,7 +220,7 @@ class WigTask(plug_worker.TaskHandler):
                     continue
 
                 data = FileData(pathId, fileId, fileVer, path, ext, trvCs,
-                        fileInfo, otherInfo)
+                        fileInfo, otherInfo, critical)
                 if ext != 'reg':
                     # Reg files are added later
                     interestingFiles.append(data)
@@ -236,7 +260,7 @@ class WigTask(plug_worker.TaskHandler):
                         "what it is", path)
                 return False, None
 
-    def processMSI(self, data, seq):
+    def processMSI(self, data, seq, critical=False):
         """Return install job XML for a MSI package."""
         E = builder.ElementMaker()
 
@@ -260,6 +284,7 @@ class WigTask(plug_worker.TaskHandler):
                 E.file(name),
                 E.manifestEntry(manifest),
                 E.previousManifestEntry(''),
+                E.critical(str(critical).lower()),
                 )
 
         return pkgXml, name
