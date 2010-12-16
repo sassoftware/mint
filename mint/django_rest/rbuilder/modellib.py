@@ -1140,6 +1140,12 @@ class CollectionPage(paginator.Page):
             return self.paginator.count
         return (self.paginator.per_page * (self.number + 1)) - 1
 
+    def has_next(self):
+        return (self.number + 1) < self.paginator.num_pages
+
+    def has_previous(self):
+        return self.number > 0
+
 class Collection(XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
