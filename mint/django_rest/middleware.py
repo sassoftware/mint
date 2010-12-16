@@ -136,7 +136,7 @@ class SetMintConfigMiddleware(object):
 
         return None
 
-class SetMintConfigLocalMiddleware(object):
+class LocalSetMintConfigMiddleware(object):
 
     def process_request(self, request):
         cfg = config.MintConfig()
@@ -188,11 +188,13 @@ class RedirectMiddleware(redirectsmiddleware.RedirectFallbackMiddleware):
         nPRequest = NoParamsRequest(request)
         return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
 
-class QueryParameterMiddleware(object):
+class LocalQueryParameterMiddleware(object):
 
     def process_request(self, request):
         path = request.get_full_path()
         if ':' in path:
+            if path.endswith('/'):
+                path = path[:-1]
             request.path, params = path.split(':')
             request.path_info = request.path
             request.GET = http.QueryDict(params)
