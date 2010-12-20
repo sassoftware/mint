@@ -23,6 +23,16 @@ from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.inventory import models
 from mint.lib import mintutils
 
+try:
+    # The mod_python version is more efficient, so try importing it first.
+    from mod_python.util import parse_qsl # pyflakes=ignore
+except ImportError:
+    from cgi import parse_qsl # pyflakes=ignore
+
+from django import http
+from django.core.handlers import modpython
+
+
 log = logging.getLogger(__name__)
 
 class ExceptionLoggerMiddleware(object):
