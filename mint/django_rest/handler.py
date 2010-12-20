@@ -8,7 +8,7 @@ try:
     # The mod_python version is more efficient, so try importing it first.
     from mod_python.util import parse_qsl
 except ImportError:
-    from cgi import parse_qsl
+    from cgi import parse_qsl #pyflakes=ignore
 
 from django import http
 from django.core.handlers import modpython
