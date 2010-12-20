@@ -76,6 +76,12 @@ class Script(scriptlibrary.SingletonScript):
         mgr = manager.Manager()
         targetDrivers = self.loadTargetDrivers(restdb)
         mgr.importTargetSystems(targetDrivers)
+        self.resetLogFilePerms(self)
+
+    def resetLogFilePerms(self):
+        groupId = grp.getgrnam('apache').gr_gid
+        os.chown(self.logPath, 0, groupId)
+        os.chmod(self.logPath, 0664)
 
     def loadTargetDriverClasses(self):
         for driverName in clouds.SUPPORTED_MODULES:
