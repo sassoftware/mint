@@ -8,6 +8,7 @@
 This script can be used to import running systems from predefined targets
 """
 
+import grp
 import os
 import sys
 import logging
