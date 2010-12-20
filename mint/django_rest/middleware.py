@@ -29,10 +29,6 @@ try:
 except ImportError:
     from cgi import parse_qsl # pyflakes=ignore
 
-from django import http
-from django.core.handlers import modpython
-
-
 log = logging.getLogger(__name__)
 
 class ExceptionLoggerMiddleware(object):
