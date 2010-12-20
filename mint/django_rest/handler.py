@@ -18,21 +18,16 @@ class MintDjangoRequest(modpython.ModPythonRequest):
     def __init__(self, req):
         modpython.ModPythonRequest.__init__(self, req)
 
-        if '?' in self.path:
-            url, questionParams = self.path.split('?', 1)
-            questionParams = parse_qsl(questionParams)
-        else:
-            questionParams = []
-            url = self.path
+        questionParams = parse_qsl(req.args)
 
-        if ';' in url:
-            self.path, semiColonParams = url.split(';', 1)
+        if ';' in self.path:
+            self.path, semiColonParams = self.path.split(';', 1)
             self.path_info = self.path
             semiColonParams = parse_qsl(semiColonParams)
         else:
-            semiColonParms = []
+            semiColonParams = []
 
-        params = questionParams + semiColonParms
+        params = questionParams + semiColonParams
         self.params = ['%s=%s' % (k, v) for k, v in params]
         self.params = ';'.join(self.params)
 
