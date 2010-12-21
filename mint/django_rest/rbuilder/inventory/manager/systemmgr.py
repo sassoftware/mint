@@ -232,7 +232,7 @@ class SystemManager(base.BaseManager):
         return models.modellib.type_map[clsName]
 
     @base.exposed
-    def getSystems(self, request):
+    def getSystems(self):
         systems = models.Systems()
         systems.system = models.System.objects.all()
         return systems
