@@ -8,8 +8,8 @@
 This script can be used to import running systems from predefined targets
 """
 
-import grp
 import os
+import pwd
 import sys
 import logging
 
@@ -80,8 +80,8 @@ class Script(scriptlibrary.SingletonScript):
         self.resetLogFilePerms()
 
     def resetLogFilePerms(self):
-        groupId = grp.getgrnam('apache').gr_gid
-        os.chown(self.logPath, 0, groupId)
+        apache = pwd.getpwnam("apache")
+        os.chown(self.logPath, apache.pw_uid, apache.pw_gid)
         os.chmod(self.logPath, 0664)
 
     def loadTargetDriverClasses(self):
