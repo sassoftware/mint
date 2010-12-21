@@ -143,7 +143,7 @@ def return_xml(function):
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
         request = args[1]
-        response.write(ret_val.to_xml(request))
+        response.xobj_model = ret_val.serialize(request)
         return response
 
     return inner

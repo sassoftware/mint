@@ -759,11 +759,12 @@ class XObjModel(models.Model):
             fields_dict[f.name] = getattr(self, f.name, None)
         return fields_dict
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         """
         Returns the xml serialization of this model.
         """
-        xobj_model = self.serialize(request)
+        if not xobj_model:
+            xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
     def get_absolute_url(self, request=None, parents=None, model=None):

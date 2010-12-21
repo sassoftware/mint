@@ -183,7 +183,7 @@ class Credentials(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -201,7 +201,7 @@ class Configuration(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -219,7 +219,7 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)

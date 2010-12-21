@@ -11,6 +11,8 @@ import traceback
 import libxml2
 import libxslt
 
+from debug_toolbar import middleware
+
 from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
@@ -21,7 +23,10 @@ from mint import logerror
 from mint import mint_error
 from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils
+
+from xobj import xobj
 
 try:
     # The mod_python version is more efficient, so try importing it first.
@@ -217,3 +222,55 @@ class LocalQueryParameterMiddleware(object):
         if method:
             request.params += ';_method=%s' % method
         request.GET = http.QueryDict(request.params)
+
+class PerformanceMiddleware(middleware.DebugToolbarMiddleware):
+
+    def process_request(self, request):
+        metrics = request.GET.get('metrics', None)
+        if metrics:
+            middleware.DebugToolbarMiddleware.process_request(self, request)
+
+    def process_response(self, request, response):
+        metrics = request.GET.get('metrics', None)
+        if not metrics:
+            return response
+
+        debugToolbar = self.debug_toolbars.get(request, None)
+        if debugToolbar:
+            response = middleware.DebugToolbarMiddleware.process_response(
+                self, request, response)
+
+            metricsModel = metricsmodels.Metrics()
+
+            for panel in debugToolbar.panels:
+                if hasattr(panel, 'get_context'):
+                    model = metricsmodels.panelModels[panel.__class__]
+                    modelInst = model(panel.get_context())
+                    tag = getattr(model._xobj, 'tag', model.__class__.__name__)
+                    setattr(metricsModel, tag, modelInst)
+
+            response.xobj_model.metrics = metricsModel.serialize(request)
+            response.content = ''
+            response.write(xobj.toxml(response.xobj_model,
+                response.xobj_model._xobj.tag))
+
+            return response
+        else:
+            if hasattr(response, 'xobj_model'):
+                response.write(xobj.toxml(response.xobj_model,
+                    response.xobj_model._xobj.tag))
+            return response
+
+
+class SerializeXmlMiddleware(object):
+    def process_response(self, request, response):
+        if hasattr(response, 'xobj_model'):
+            metrics = request.GET.get('metrics', None)
+            if metrics:
+                return response
+
+            response.write(xobj.toxml(response.xobj_model,
+                response.xobj_model._xobj.tag))
+
+        return response
+        
