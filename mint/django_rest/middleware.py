@@ -214,6 +214,8 @@ class LocalQueryParameterMiddleware(object):
             request.path, semiColonParams = url.split(';', 1)
             request.path_info = request.path
             semiColonParams = parse_qsl(semiColonParams)
+        else:
+            semiColonParams = []
 
         params = questionParams + semiColonParams
         request.params = ['%s=%s' % (k, v) for k, v in params]
