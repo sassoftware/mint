@@ -2,7 +2,6 @@ import sys
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
 from django.db import models
-from debug_toolbar import panels
 from debug_toolbar.panels import version, timer
 
 class Metrics(modellib.XObjModel):
