@@ -77,7 +77,7 @@ class Script(scriptlibrary.SingletonScript):
         mgr = manager.Manager()
         targetDrivers = self.loadTargetDrivers(restdb)
         mgr.importTargetSystems(targetDrivers)
-        self.resetLogFilePerms(self)
+        self.resetLogFilePerms()
 
     def resetLogFilePerms(self):
         groupId = grp.getgrnam('apache').gr_gid
