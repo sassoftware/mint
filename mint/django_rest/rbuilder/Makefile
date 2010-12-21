@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory
+SUBDIRS = platforms reporting inventory metrics
 
 python_files = $(wildcard *.py)
 
