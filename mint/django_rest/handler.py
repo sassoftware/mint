@@ -18,7 +18,11 @@ class MintDjangoRequest(modpython.ModPythonRequest):
     def __init__(self, req):
         modpython.ModPythonRequest.__init__(self, req)
 
-        questionParams = parse_qsl(req.args)
+        if req.args:
+            args = req.args
+        else:
+            args = ''
+        questionParams = parse_qsl(args)
 
         if ';' in self.path:
             self.path, semiColonParams = self.path.split(';', 1)
