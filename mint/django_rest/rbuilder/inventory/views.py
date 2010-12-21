@@ -391,7 +391,7 @@ class InventorySystemsService(AbstractInventoryService):
             system = self.mgr.addSystem(system, generateCertificates=True)
             return system
         systems = self.mgr.addSystems(systems.system)
-        return self.mgr.getSystems(request)
+        return self.mgr.getSystems()
 
 class InventoryInventorySystemsService(AbstractInventoryService):
     
