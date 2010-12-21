@@ -377,10 +377,10 @@ class InventorySystemsService(AbstractInventoryService):
 
     @return_xml
     def rest_GET(self, request):
-        return self.mgr.getSystems(request)
+        return self.get()
 
     def get(self):
-        return self.mgr.getSystems(request=None)
+        return self.mgr.getSystems()
 
     # this must remain public for rpath-tools
     @access.anonymous

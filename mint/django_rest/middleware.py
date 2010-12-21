@@ -23,6 +23,12 @@ from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.inventory import models
 from mint.lib import mintutils
 
+try:
+    # The mod_python version is more efficient, so try importing it first.
+    from mod_python.util import parse_qsl # pyflakes=ignore
+except ImportError:
+    from cgi import parse_qsl # pyflakes=ignore
+
 log = logging.getLogger(__name__)
 
 class ExceptionLoggerMiddleware(object):
@@ -188,13 +194,26 @@ class RedirectMiddleware(redirectsmiddleware.RedirectFallbackMiddleware):
         nPRequest = NoParamsRequest(request)
         return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
 
+
 class LocalQueryParameterMiddleware(object):
 
     def process_request(self, request):
-        path = request.get_full_path()
-        if ':' in path:
-            if path.endswith('/'):
-                path = path[:-1]
-            request.path, params = path.split(':')
+        if '?' in request.path:
+            url, questionParams = request.path.split('?', 1)
+            questionParams = parse_qsl(questionParams)
+        else:
+            questionParams = []
+            url = request.path
+
+        if ';' in url:
+            request.path, semiColonParams = url.split(';', 1)
             request.path_info = request.path
-            request.GET = http.QueryDict(params)
+            semiColonParams = parse_qsl(semiColonParams)
+
+        params = questionParams + semiColonParams
+        request.params = ['%s=%s' % (k, v) for k, v in params]
+        request.params = ';'.join(request.params)
+        method = request.GET.get('_method', None)
+        if method:
+            request.params += ';_method=%s' % method
+        request.GET = http.QueryDict(request.params)
