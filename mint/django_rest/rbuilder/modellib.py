@@ -1159,6 +1159,7 @@ class Collection(XObjIdModel):
             'num_pages' : str,
             'next_page' : str,
             'previous_page' : str,
+            'order_by' : str,
         }
     )
 
@@ -1174,6 +1175,7 @@ class Collection(XObjIdModel):
     num_pages = models.IntegerField()
     next_page = models.TextField()
     previous_page = models.TextField()
+    order_by = models.TextField()
 
     def get_absolute_url(self, request=None, parents=None, model=None,
                          page=None, full=None):
@@ -1182,12 +1184,24 @@ class Collection(XObjIdModel):
             page = getattr(self, 'page', None)
         if page:
             limit = request.GET.get('limit', settings.PER_PAGE)
-            url += ':start_index=%s;limit=%s' % (page.start_index(), limit)
+            url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
+            if self.order_by:
+                url += ';order_by=%s' % self.order_by
         return url
 
     def serialize(self, request=None, values=None):
         for listField in self.list_fields:
             modelList = getattr(self, listField)
+
+            orderBy = request.GET.get('order_by', None)
+            if orderBy:
+                try:
+                    orderParams = orderBy.split(',')
+                    modelList = modelList.order_by(*orderParams)
+                except exceptions.FieldError:
+                    orderBy = None
+
+            self.order_by = orderBy
 
             startIndex = int(request.GET.get('start_index', 0))
             limit = int(request.GET.get('limit', settings.PER_PAGE))
