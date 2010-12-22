@@ -33,7 +33,7 @@ class MintDjangoRequest(modpython.ModPythonRequest):
 
         params = questionParams + semiColonParams
         self.params = ['%s=%s' % (k, v) for k, v in params]
-        self.params = ';'.join(self.params)
+        self.params = ';' + ';'.join(self.params)
 
     def _get_get(self):
         if not hasattr(self, '_get'):

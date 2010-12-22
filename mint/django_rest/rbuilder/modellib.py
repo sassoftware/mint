@@ -10,6 +10,7 @@ from mint.lib import mintutils
 from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
+from django.db.models import Q
 from django.db.models.fields import related
 from django.conf import settings
 from django.core import exceptions
@@ -1147,6 +1148,21 @@ class CollectionPage(paginator.Page):
     def has_previous(self):
         return self.number > 0
 
+filterTermMap = {
+    'EQUAL' : 'exact',
+    'NOT_EQUAL' : '!exact',
+    'LESS_THAN' : 'lt',
+    'LESS_THAN_OR_EQUAL' : 'lte',
+    'GREATER_THAN' : 'gt',
+    'GREATER_THAN_OR_EQUAL' : 'gte',
+    'LIKE' : 'contains',
+    'NOT_LIKE' : '!contains',
+    'IN' : 'in',
+    'NOT_IN' : '!in',
+    'MATCHING' : '',
+    'NOT_MATCHING' : '',
+}
+
 class Collection(XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
@@ -1160,6 +1176,7 @@ class Collection(XObjIdModel):
             'next_page' : str,
             'previous_page' : str,
             'order_by' : str,
+            'filter_by' : str,
         }
     )
 
@@ -1176,6 +1193,7 @@ class Collection(XObjIdModel):
     next_page = models.TextField()
     previous_page = models.TextField()
     order_by = models.TextField()
+    filter_by = models.TextField()
 
     def get_absolute_url(self, request=None, parents=None, model=None,
                          page=None, full=None):
@@ -1187,6 +1205,8 @@ class Collection(XObjIdModel):
             url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
             if self.order_by:
                 url += ';order_by=%s' % self.order_by
+            if self.filter_by:
+                url += ';filter_by=%s' % self.filter_by
         return url
 
     def serialize(self, request=None, values=None):
@@ -1200,8 +1220,26 @@ class Collection(XObjIdModel):
                     modelList = modelList.order_by(*orderParams)
                 except exceptions.FieldError:
                     orderBy = None
-
             self.order_by = orderBy
+
+            filterBy = request.GET.get('filter_by')
+            if filterBy:
+                self.filter_by = filterBy
+                filters = {}
+                qFilters = {}
+                for filt in filterBy.split(']'):
+                    if not filt.startswith('['):
+                        continue
+                    filtString = filt.strip(',').strip('[').strip(']')
+                    field, oper, value = filtString.split(',', 3)
+                    if oper.startswith('NOT_'):
+                        oper = oper.strip('NOT_')
+                        k = '%s__%s' % (field, filterTermMap[oper])
+                        qFilters[k] = value
+                    else:
+                        k = '%s__%s' % (field, filterTermMap[oper])
+                        filters[k] = value
+            modelList = modelList.filter(~Q(**qFilters), **filters)
 
             startIndex = int(request.GET.get('start_index', 0))
             limit = int(request.GET.get('limit', settings.PER_PAGE))
