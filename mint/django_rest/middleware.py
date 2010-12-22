@@ -251,28 +251,26 @@ class PerformanceMiddleware(middleware.DebugToolbarMiddleware):
                     tag = getattr(model._xobj, 'tag', model.__class__.__name__)
                     setattr(metricsModel, tag, modelInst)
 
-            response.xobj_model.metrics = metricsModel.serialize(request)
+            xobj_model = response.model.serialize(request)
+            xobj_model.metrics = metricsModel.serialize(request)
             response.content = ''
-            response.write(xobj.toxml(response.xobj_model,
-                response.xobj_model._xobj.tag))
+            response.write(response.model.toxml(request, xobj_model))
 
             return response
         else:
-            if hasattr(response, 'xobj_model'):
-                response.write(xobj.toxml(response.xobj_model,
-                    response.xobj_model._xobj.tag))
+            if hasattr(response, 'model'):
+                response.write(response.model.to_xml(request))
             return response
 
 
 class SerializeXmlMiddleware(object):
     def process_response(self, request, response):
-        if hasattr(response, 'xobj_model'):
+        if hasattr(response, 'model'):
             metrics = request.GET.get('metrics', None)
             if metrics:
                 return response
 
-            response.write(xobj.toxml(response.xobj_model,
-                response.xobj_model._xobj.tag))
+            response.write(response.model.to_xml(request))
 
         return response
         

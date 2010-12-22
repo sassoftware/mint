@@ -656,6 +656,7 @@ class XObjModel(models.Model):
                     for elem in _xobj.elements:
                         if elem not in ret._xobj.elements:
                             ret._xobj.elements.append(elem)
+
             return ret
 
     class Meta:
@@ -1239,7 +1240,7 @@ class Collection(XObjIdModel):
                     else:
                         k = '%s__%s' % (field, filterTermMap[oper])
                         filters[k] = value
-            modelList = modelList.filter(~Q(**qFilters), **filters)
+                modelList = modelList.filter(~Q(**qFilters), **filters)
 
             startIndex = int(request.GET.get('start_index', 0))
             limit = int(request.GET.get('limit', settings.PER_PAGE))

@@ -136,7 +136,7 @@ class SystemsLog(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='systemsLog')
+                tag='systems_log')
     list_fields = ['system_log_entry']
     system_log_entry = []
 
@@ -175,7 +175,11 @@ class Credentials(modellib.XObjIdModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'credentials',
-                attributes = {'id':str})
+                attributes = {'id':str},
+                elements = [
+                    'ssl_client_certificate',
+                    'ssl_client_key',
+                ])
     objects = modellib.CredentialsManager()
     view_name = 'SystemCredentials'
 
@@ -250,7 +254,6 @@ class SystemState(modellib.XObjIdModel):
         db_table = 'inventory_system_state'
         
     _xobj = xobj.XObjMetadata(
-                tag = 'current_state',
                 attributes = {'id':str})
 
     UNMANAGED = "unmanaged"
