@@ -27,6 +27,8 @@
 # rMake XMLRPC and messagebus
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 9999 -j ACCEPT
 -A INPUT -m state --state NEW -m tcp -p tcp --dport 50900 -j ACCEPT
+# rMake chroot sessions
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 63000:64000 -j ACCEPT
 # Reject anything that hasn't been allowed yet
 -A INPUT -j REJECT --reject-with adm-prohibited
 

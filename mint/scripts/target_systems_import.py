@@ -9,6 +9,7 @@ This script can be used to import running systems from predefined targets
 """
 
 import os
+import pwd
 import sys
 import logging
 
@@ -76,6 +77,12 @@ class Script(scriptlibrary.SingletonScript):
         mgr = manager.Manager()
         targetDrivers = self.loadTargetDrivers(restdb)
         mgr.importTargetSystems(targetDrivers)
+        self.resetLogFilePerms()
+
+    def resetLogFilePerms(self):
+        apache = pwd.getpwnam("apache")
+        os.chown(self.logPath, apache.pw_uid, apache.pw_gid)
+        os.chmod(self.logPath, 0664)
 
     def loadTargetDriverClasses(self):
         for driverName in clouds.SUPPORTED_MODULES:
