@@ -1248,18 +1248,7 @@ class Collection(XObjIdModel):
 
         return modelList
 
-    def serialize(self, request=None, values=None):
-        # We only support one list field right now
-        if self.list_fields:
-            listField = self.list_fields[0]
-        else:
-            return XObjIdModel.serialize(self, request, values)
-
-        modelList = getattr(self, listField)
-
-        modelList = self.filterBy(request, modelList)
-        modelList = self.orderBy(request, modelList)
-
+    def paginate(self, request, modelList):
         startIndex = int(request.GET.get('start_index', 0))
         limit = int(request.GET.get('limit', settings.PER_PAGE))
         pagination = CollectionPaginator(modelList, limit) 
@@ -1287,6 +1276,20 @@ class Collection(XObjIdModel):
             self.previous_page = self.get_absolute_url(request, page=previousPage)
         else:
             self.previous_page = ''
+
+    def serialize(self, request=None, values=None):
+        # We only support one list field right now
+        if self.list_fields:
+            listField = self.list_fields[0]
+        else:
+            return XObjIdModel.serialize(self, request, values)
+
+        modelList = getattr(self, listField)
+
+        modelList = self.filterBy(request, modelList)
+        modelList = self.orderBy(request, modelList)
+
+        self.paginate(request, modelList)
 
         xobj_model = XObjIdModel.serialize(self, request, values)
 
