@@ -1151,15 +1151,15 @@ class CollectionPage(paginator.Page):
 
 filterTermMap = {
     'EQUAL' : 'exact',
-    'NOT_EQUAL' : '!exact',
+    'NOT_EQUAL' : 'exact',
     'LESS_THAN' : 'lt',
     'LESS_THAN_OR_EQUAL' : 'lte',
     'GREATER_THAN' : 'gt',
     'GREATER_THAN_OR_EQUAL' : 'gte',
     'LIKE' : 'contains',
-    'NOT_LIKE' : '!contains',
+    'NOT_LIKE' : 'contains',
     'IN' : 'in',
-    'NOT_IN' : '!in',
+    'NOT_IN' : 'in',
     'MATCHING' : '',
     'NOT_MATCHING' : '',
 }
@@ -1226,21 +1226,25 @@ class Collection(XObjIdModel):
             filterBy = request.GET.get('filter_by')
             if filterBy:
                 self.filter_by = filterBy
-                filters = {}
-                qFilters = {}
+                filters = []
+                qFilters = []
                 for filt in filterBy.split(']'):
-                    if not filt.startswith('['):
-                        continue
+                    if not (filt.startswith('[') or filt.startswith(',[')):
+                            continue
                     filtString = filt.strip(',').strip('[').strip(']')
                     field, oper, value = filtString.split(',', 3)
                     if oper.startswith('NOT_'):
-                        oper = oper.strip('NOT_')
                         k = '%s__%s' % (field, filterTermMap[oper])
-                        qFilters[k] = value
+                        qFilters.append({k:value})
                     else:
                         k = '%s__%s' % (field, filterTermMap[oper])
-                        filters[k] = value
-                modelList = modelList.filter(~Q(**qFilters), **filters)
+                        filters.append({k:value})
+
+                for qFilter in qFilters:
+                    modelList = modelList.filter(~Q(**qFilter))
+
+                for filt in filters:
+                    modelList = modelList.filter(**filt)
 
             startIndex = int(request.GET.get('start_index', 0))
             limit = int(request.GET.get('limit', settings.PER_PAGE))
