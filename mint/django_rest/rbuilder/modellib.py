@@ -1248,7 +1248,7 @@ class Collection(XObjIdModel):
 
         return modelList
 
-    def paginate(self, request, modelList):
+    def paginate(self, request, listField, modelList):
         startIndex = int(request.GET.get('start_index', 0))
         limit = int(request.GET.get('limit', settings.PER_PAGE))
         pagination = CollectionPaginator(modelList, limit) 
@@ -1289,7 +1289,7 @@ class Collection(XObjIdModel):
         modelList = self.filterBy(request, modelList)
         modelList = self.orderBy(request, modelList)
 
-        self.paginate(request, modelList)
+        self.paginate(request, listField, modelList)
 
         xobj_model = XObjIdModel.serialize(self, request, values)
 
