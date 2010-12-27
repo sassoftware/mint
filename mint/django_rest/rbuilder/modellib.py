@@ -1210,69 +1210,83 @@ class Collection(XObjIdModel):
                 url += ';filter_by=%s' % self.filter_by
         return url
 
+    def orderBy(self, request, modelList):
+        orderBy = request.GET.get('order_by', None)
+        if orderBy:
+            try:
+                orderParams = orderBy.split(',')
+                modelList = modelList.order_by(*orderParams)
+            except exceptions.FieldError:
+                orderBy = None
+        self.order_by = orderBy
+
+        return modelList
+
+    def filterBy(self, request, modelList):
+        filterBy = request.GET.get('filter_by')
+        if filterBy:
+            self.filter_by = filterBy
+            filters = []
+            qFilters = []
+            for filt in filterBy.split(']'):
+                if not (filt.startswith('[') or filt.startswith(',[')):
+                        continue
+                filtString = filt.strip(',').strip('[').strip(']')
+                field, oper, value = filtString.split(',', 3)
+                if oper.startswith('NOT_'):
+                    k = '%s__%s' % (field, filterTermMap[oper])
+                    qFilters.append({k:value})
+                else:
+                    k = '%s__%s' % (field, filterTermMap[oper])
+                    filters.append({k:value})
+
+            for qFilter in qFilters:
+                modelList = modelList.filter(~Q(**qFilter))
+
+            for filt in filters:
+                modelList = modelList.filter(**filt)
+
+        return modelList
+
     def serialize(self, request=None, values=None):
-        for listField in self.list_fields:
-            modelList = getattr(self, listField)
+        # We only support one list field right now
+        if self.list_fields:
+            listField = self.list_fields[0]
+        else:
+            return XObjIdModel.serialize(self, request, values)
 
-            orderBy = request.GET.get('order_by', None)
-            if orderBy:
-                try:
-                    orderParams = orderBy.split(',')
-                    modelList = modelList.order_by(*orderParams)
-                except exceptions.FieldError:
-                    orderBy = None
-            self.order_by = orderBy
+        modelList = getattr(self, listField)
 
-            filterBy = request.GET.get('filter_by')
-            if filterBy:
-                self.filter_by = filterBy
-                filters = []
-                qFilters = []
-                for filt in filterBy.split(']'):
-                    if not (filt.startswith('[') or filt.startswith(',[')):
-                            continue
-                    filtString = filt.strip(',').strip('[').strip(']')
-                    field, oper, value = filtString.split(',', 3)
-                    if oper.startswith('NOT_'):
-                        k = '%s__%s' % (field, filterTermMap[oper])
-                        qFilters.append({k:value})
-                    else:
-                        k = '%s__%s' % (field, filterTermMap[oper])
-                        filters.append({k:value})
+        modelList = self.filterBy(request, modelList)
+        modelList = self.orderBy(request, modelList)
 
-                for qFilter in qFilters:
-                    modelList = modelList.filter(~Q(**qFilter))
+        startIndex = int(request.GET.get('start_index', 0))
+        limit = int(request.GET.get('limit', settings.PER_PAGE))
+        pagination = CollectionPaginator(modelList, limit) 
+        pageNumber = startIndex/limit
+        page = pagination.page(pageNumber)
 
-                for filt in filters:
-                    modelList = modelList.filter(**filt)
+        self.page = page
+        setattr(self, listField, page.object_list)
 
-            startIndex = int(request.GET.get('start_index', 0))
-            limit = int(request.GET.get('limit', settings.PER_PAGE))
-            pagination = CollectionPaginator(modelList, limit) 
-            pageNumber = startIndex/limit
-            page = pagination.page(pageNumber)
+        self.count = pagination.count
+        self.full_collection = self.get_absolute_url(request, full=True)
+        self.per_page = pagination.per_page
+        self.start_index = page.start_index()
+        self.end_index = page.end_index()
+        self.num_pages = pagination.num_pages
 
-            self.page = page
-            setattr(self, listField, page.object_list)
+        if page.has_next():
+            nextPage = pagination.page(page.next_page_number())
+            self.next_page = self.get_absolute_url(request, page=nextPage)
+        else:
+            self.next_page = ''
 
-            self.count = pagination.count
-            self.full_collection = self.get_absolute_url(request, full=True)
-            self.per_page = pagination.per_page
-            self.start_index = page.start_index()
-            self.end_index = page.end_index()
-            self.num_pages = pagination.num_pages
-
-            if page.has_next():
-                nextPage = pagination.page(page.next_page_number())
-                self.next_page = self.get_absolute_url(request, page=nextPage)
-            else:
-                self.next_page = ''
-
-            if page.has_previous():
-                previousPage = pagination.page(page.previous_page_number())
-                self.previous_page = self.get_absolute_url(request, page=previousPage)
-            else:
-                self.previous_page = ''
+        if page.has_previous():
+            previousPage = pagination.page(page.previous_page_number())
+            self.previous_page = self.get_absolute_url(request, page=previousPage)
+        else:
+            self.previous_page = ''
 
         xobj_model = XObjIdModel.serialize(self, request, values)
 
