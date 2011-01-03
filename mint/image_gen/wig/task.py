@@ -138,9 +138,9 @@ class WigTask(plug_worker.TaskHandler):
             self.sendContents(name, data, n, totalFiles)
 
         # Finish assembling servicing.xml and send it to the build service.
-        sysModel = 'install %s=%s' % (
+        sysModel = 'install %s=%s\n' % (
             self.troveTup.name, str(self.troveTup.version))
-        pollingManifest = '%s=%s[%s]' % (
+        pollingManifest = '%s=%s[%s]\n' % (
             self.troveTup.name, self.troveTup.version.freeze(),
             str(self.troveTup.flavor))
 
