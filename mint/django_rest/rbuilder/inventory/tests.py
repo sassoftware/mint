@@ -4278,3 +4278,23 @@ class Jobs2TestCase(BaseJobsTest):
             [101, 299, 404])
         self.failUnlessEqual([ x.status_text for x in jobs ],
             ["text 101", "text 299", "text 404"])
+
+class CollectionTest(XMLTestCase):
+    fixtures = ['system_collection']
+
+    def testGetDefaultCollection(self):
+        response = self._get('/api/inventory/inventory_systems/',
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        self.assertEquals(systems.count, '200')
+        self.assertEquals(systems.per_page, '10')
+        self.assertEquals(systems.start_index, '0')
+        self.assertEquals(systems.end_index, '9')
+        self.assertEquals(systems.num_pages, '20')
+        self.assertTrue(systems.next_page.endswith('/api/inventory/systems;start_index=10;limit=10'))
+        self.assertEquals(systems.previous_page, '')
+        self.assertEquals(systems.order_by, '')
+        self.assertEquals(systems.filter_by, '')
+
+
