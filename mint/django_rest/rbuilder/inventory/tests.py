@@ -5,7 +5,6 @@ import os
 import random
 import shutil
 import tempfile
-import time
 import urlparse
 from dateutil import tz
 from xobj import xobj
