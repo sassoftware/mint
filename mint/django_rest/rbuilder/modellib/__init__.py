@@ -4,6 +4,7 @@
 #
 # All rights reserved.
 #
+# pyflakes=ignore-file
 
-from mint.django_rest.rbuilder.modellib.basemodels import * #pyflakes=ignore
-from mint.django_rest.rbuilder.modellib.collections import * #pyflakes=ignore
+from mint.django_rest.rbuilder.modellib.basemodels import * 
+from mint.django_rest.rbuilder.modellib.collections import *
