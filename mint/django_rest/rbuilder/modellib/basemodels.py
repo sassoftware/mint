@@ -16,6 +16,7 @@ from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
+from django.core import exceptions
 from django.core import urlresolvers 
 
 from xobj import xobj
