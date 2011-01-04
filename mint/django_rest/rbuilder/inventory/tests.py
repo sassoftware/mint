@@ -4293,6 +4293,7 @@ class CollectionTest(XMLTestCase):
     def testGetDefaultCollection(self):
         response = self._get('/api/inventory/systems/',
             username="admin", password="password")
+        self.assertXMLEquals(response.content, testsxml.systems_collection_xml)
         xobjModel = xobj.parse(response.content)
         systems = xobjModel.systems
         self.assertEquals(systems.count, '201')

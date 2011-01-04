@@ -2500,3 +2500,743 @@ system_installed_software_version_stage_xml = """\
   <target_system_description/>
   <created_date>2010-11-10T22:52:26.343993+00:00</created_date>
 </system>"""
+
+systems_collection_xml = """\
+<?xml version="1.0"?>
+<!--
+Description:
+  A collection of systems in inventory
+  
+Systems Properties:
+  event_types - an entry point into system inventory event types
+  system - a system resource
+  
+EventTypes Properties:
+  href - the URL to the location of the event types collection
+
+System Properties:
+   agent_port - the port used by the system's management interface (CIM, WMI, etc.)
+   appliance - the appliance of the system
+   credentials - an entry point into the credentials data used for authentication with the system
+   configuration - an entry point into the configuration data for this system
+   configuration_descriptor - the descriptor of available fields to set system configuration parameters
+   created_date - the date the system was added to inventory (UTC)
+   current_state - the current state of the system
+   description - the system description
+   generated_uuid - a UUID that is randomly generated
+   has_active_jobs - whether or not there are any jobs pending (queued or running) for this system
+   has_running_jobs - whether or not there are any jobs running for this system
+   hostname - the hostname reported by the system
+   installed_software - an entry point into the collection of software installed on this system
+   jobs - a collection of all jobs for this system
+   launch_date - the date the system was deployed (only applies if system is on a virtual target)
+   launching_user - the user that deployed the system (only applies if system is on a virtual target)
+   local_uuid - a UUID created from the system hardware profile
+   major_version - the appliance major version of the system
+   management_interface - the management interface used to communicate with the system (CIM, WMI, etc.)
+   managing_zone - a link to the management zone in which this system resides
+   name - the name assigned when system was added to the inventory
+   registration_date - the date the system was registered in inventory (UTC)
+   ssl_client_certificate - an x509 certificate of an authorized client that can use the system's CIM broker
+   ssl_client_key - an x509 private key of an authorized client that can use the system's CIM broker
+   ssl_server_certificate - an x509 public certificate of the system's CIM broker
+   stage - the appliance stage of the system
+   system_id - the database ID for the system
+   system_log - an entry point into the log data for this system
+   system_type - the type of the system
+   target - the virtual target the system was deployed to (only applies if system is on a virtual target)
+   target_system_description - the system description as reported by its target (only applies if system is on a virtual target)
+   target_system_id - the system ID as reported by its target (only applies if system is on a virtual target)
+   target_system_name - the system name as reported by its target (only applies if system is on a virtual target)
+   target_system_state - the system state as reported by its target (only applies if system is on a virtual target)
+
+Identification of Duplicate System Inventory Entries:
+  Because systems can enter inventory in a number of different ways, a single system may initially appear in the inventory multiple times.
+  The following information is used to identify these duplicate inventory entries:
+    1)  local_uuid and generated_uuid - Systems with identical local and generated UUIDs are guaranteed unique.
+    2)  target and target_system_id - Virtual targets report a unique ID for each system and thus the combination
+           of target and target system ID is guaranteed unique.
+    3)  event_uuid - Event UUIDs are used to match system events with an incoming event response and can thus be used
+           to lookup a specific system.
+
+Methods: 
+  GET:
+    Authentication: user
+    Response Format:
+      <systems>
+        <event_types href="http://hostname/api/inventory/event_types/"/>
+        <system id="http://hostname/api/inventory/systems/1/">
+          ...
+        </system>
+        <system id="http://hostname/api/inventory/systems/2/">
+          ...
+        </system>
+      </systems>
+
+  POST:
+    Authentication: none
+    Required Fields:
+      Technically only the name field is required.  This could result in duplicate entries in the inventory. 
+      The recommended way is to include network information for the system so it can be contacted to initiate the registration process.
+    Example:
+      <system>
+        <name>Billing System Application Server</name>
+        <description>The app server for the HR billing system</description>
+        <networks>
+          <network>
+            <dns_name>192.168.1.192</dns_name>
+          </network>
+        </networks>
+      </system>
+    
+  PUT:
+    Authentication: none
+    Example:
+      <systems>
+        <system>
+          <name>Billing System Application Server</name>
+          <description>The app server for the HR billing system</description>
+          <networks>
+            <network>
+              <dns_name>192.168.1.192</dns_name>
+            </network>
+          </networks>
+        </system>
+        <system>
+          <name>Billing System File Server</name>
+          <description>The file server for the HR billing system</description>
+          <networks>
+            <network>
+              <dns_name>192.168.1.193</dns_name>
+            </network>
+          </networks>
+        </system>
+      <systems>
+      
+  DELETE:
+    not supported
+-->
+<systems count="201" next_page="http://testserver/api/inventory/systems;start_index=10;limit=10" num_pages="21" previous_page="" full_collection="http://testserver/api/inventory/systems" end_index="9" order_by="" per_page="10" filter_by="" id="http://testserver/api/inventory/systems;start_index=0;limit=10" start_index="0">
+  <system id="http://testserver/api/inventory/systems/2">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/1">
+        <ipv6_address/>
+        <network_id>1</network_id>
+        <dns_name>127.0.0.1</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/2"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/2/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
+    <generated_uuid/>
+    <ssl_server_certificate/>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>2</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/2/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/2/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/2/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/2/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/2/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/2/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/2/job_states/4/jobs"/>
+    </jobs>
+    <description>Local rPath Update Service</description>
+    <ssl_client_certificate/>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/2/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/2/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>rPath Update Service</name>
+    <local_uuid/>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-08-23T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/3">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/3">
+        <ipv6_address/>
+        <network_id>3</network_id>
+        <dns_name>127.0.0.3</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/3"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-3-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-3-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>3</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/3/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/3/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/3/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/3/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/3/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/3/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/3/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 3</description>
+    <ssl_client_certificate>system-3-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 3</name>
+    <local_uuid>system-3-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/4">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/4">
+        <ipv6_address/>
+        <network_id>4</network_id>
+        <dns_name>127.0.0.4</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/4"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/4/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/4/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-4-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-4-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>4</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/4/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/4/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/4/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/4/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/4/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/4/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/4/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 4</description>
+    <ssl_client_certificate>system-4-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/4/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/4/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 4</name>
+    <local_uuid>system-4-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/5">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/5">
+        <ipv6_address/>
+        <network_id>5</network_id>
+        <dns_name>127.0.0.5</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/5"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/5/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/5/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-5-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-5-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>5</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/5/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/5/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/5/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/5/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/5/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/5/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/5/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 5</description>
+    <ssl_client_certificate>system-5-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/5/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/5/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 5</name>
+    <local_uuid>system-5-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/6">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/6">
+        <ipv6_address/>
+        <network_id>6</network_id>
+        <dns_name>127.0.0.6</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/6"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/6/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/6/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-6-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-6-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>6</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/6/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/6/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/6/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/6/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/6/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/6/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/6/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 6</description>
+    <ssl_client_certificate>system-6-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/6/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/6/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 6</name>
+    <local_uuid>system-6-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/7">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/7">
+        <ipv6_address/>
+        <network_id>7</network_id>
+        <dns_name>127.0.0.7</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/7"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/7/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/7/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-7-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-7-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>7</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/7/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/7/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/7/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/7/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/7/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/7/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/7/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 7</description>
+    <ssl_client_certificate>system-7-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/7/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/7/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 7</name>
+    <local_uuid>system-7-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/8">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/8">
+        <ipv6_address/>
+        <network_id>8</network_id>
+        <dns_name>127.0.0.8</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/8"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/8/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/8/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-8-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-8-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>8</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/8/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/8/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/8/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/8/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/8/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/8/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/8/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 8</description>
+    <ssl_client_certificate>system-8-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/8/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/8/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 8</name>
+    <local_uuid>system-8-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/9">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/9">
+        <ipv6_address/>
+        <network_id>9</network_id>
+        <dns_name>127.0.0.9</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/9"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/9/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/9/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-9-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-9-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>9</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/9/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/9/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/9/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/9/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/9/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/9/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/9/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 9</description>
+    <ssl_client_certificate>system-9-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/9/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/9/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 9</name>
+    <local_uuid>system-9-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/10">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/10">
+        <ipv6_address/>
+        <network_id>10</network_id>
+        <dns_name>127.0.0.10</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/10"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/10/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/10/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-10-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-10-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>10</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/10/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/10/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/10/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/10/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/10/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/10/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/10/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 10</description>
+    <ssl_client_certificate>system-10-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/10/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/10/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 10</name>
+    <local_uuid>system-10-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <system id="http://testserver/api/inventory/systems/11">
+    <networks>
+      <network id="http://testserver/api/inventory/networks/11">
+        <ipv6_address/>
+        <network_id>11</network_id>
+        <dns_name>127.0.0.11</dns_name>
+        <required/>
+        <system href="http://testserver/api/inventory/systems/11"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://testserver/api/inventory/systems/11/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://testserver/api/inventory/systems/11/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
+    <generated_uuid>system-11-generated-uuid</generated_uuid>
+    <ssl_server_certificate>system-11-ssl-server-certificate</ssl_server_certificate>
+    <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <system_id>11</system_id>
+    <launching_user/>
+    <launch_date/>
+    <system_log href="http://testserver/api/inventory/systems/11/system_log"/>
+    <installed_software id="http://testserver/api/inventory/systems/11/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://testserver/api/inventory/systems/11/jobs">
+      <queued_jobs href="http://testserver/api/inventory/systems/11/job_states/1/jobs"/>
+      <completed_jobs href="http://testserver/api/inventory/systems/11/job_states/3/jobs"/>
+      <running_jobs href="http://testserver/api/inventory/systems/11/job_states/2/jobs"/>
+      <failed_jobs href="http://testserver/api/inventory/systems/11/job_states/4/jobs"/>
+    </jobs>
+    <description>System description 11</description>
+    <ssl_client_certificate>system-11-ssl-client-certificate</ssl_client_certificate>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://testserver/api/inventory/systems/11/credentials"/>
+    <configuration href="http://testserver/api/inventory/systems/11/configuration"/>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <name>System name 11</name>
+    <local_uuid>system-11-local-uuid</local_uuid>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://testserver/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-12-06T22:11:00+00:00</created_date>
+  </system>
+  <event_types href="http://testserver/api/inventory/event_types"/>
+</systems>
+"""
