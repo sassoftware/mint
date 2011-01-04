@@ -20,7 +20,7 @@ from django.test.client import Client, MULTIPART_CONTENT
 from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import views
-from mint.django_rest.rbuilder.inventory import manager
+from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
 from mint.lib import x509
@@ -128,9 +128,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
         self.client = Client()
-        self.mgr = manager.Manager()
+        self.mgr = rbuildermanager.RbuilderManager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
-        manager.repeatermgr.repeater_client = None
+        rbuildermanager.repeatermgr.repeater_client = None
         views.AbstractInventoryService._setMintAuth = lambda *args: None
 
     def tearDown(self):
@@ -2699,13 +2699,13 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mock_set_available_updates_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
-        manager.versionmgr.VersionManager.set_available_updates = \
+        rbuildermanager.versionmgr.VersionManager.set_available_updates = \
             self.mock_set_available_updates
         models.Job.getRmakeJob = self.mockGetRmakeJob
 
         self.mockGetStagesCalled = False
         self.mockStages = []
-        manager.versionmgr.VersionManager.getStages = \
+        rbuildermanager.versionmgr.VersionManager.getStages = \
             self.mockGetStages
 
     def mockGetStages(self, *args, **kwargs):
@@ -2791,7 +2791,7 @@ class SystemVersionsTestCase(XMLTestCase):
         def mock_set_available_updates(self, trove, *args, **kwargs):
             trove.available_updates.add(version_update3)
 
-        manager.versionmgr.VersionManager.set_available_updates = \
+        rbuildermanager.versionmgr.VersionManager.set_available_updates = \
             mock_set_available_updates
 
         self.mgr.versionMgr.refreshCachedUpdates(name, label)
@@ -3024,10 +3024,10 @@ class SystemEventTestCase(XMLTestCase):
         self.mock_dispatchSystemEvent_called = False
         self.mgr.sysMgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
 
-        self.old_DispatchSystemEvent = manager.systemmgr.SystemManager._dispatchSystemEvent
+        self.old_DispatchSystemEvent = rbuildermanager.systemmgr.SystemManager._dispatchSystemEvent
 
     def tearDown(self):
-        manager.systemmgr.SystemManager._dispatchSystemEvent = self.old_DispatchSystemEvent
+        rbuildermanager.systemmgr.SystemManager._dispatchSystemEvent = self.old_DispatchSystemEvent
         XMLTestCase.tearDown(self)
 
     def mock_dispatchSystemEvent(self, event):
@@ -3264,7 +3264,7 @@ class SystemEventTestCase(XMLTestCase):
                 event_uuid=str(random.random()))
             systemJob.save()
 
-        manager.systemmgr.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
+        rbuildermanager.systemmgr.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
 
         url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
         response = self._post(url,
