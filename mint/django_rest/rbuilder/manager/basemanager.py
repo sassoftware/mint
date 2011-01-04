@@ -15,6 +15,10 @@ from mint.rest.db.database import Database as RestDatabase
 
 log = logging.getLogger(__name__)
 
+def exposed(fn):
+    fn.exposed = True
+    return fn
+
 class BaseManager(object):
     def __init__(self, cfg=None, userName=None):
         self.cfg = cfg

@@ -1,8 +1,10 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # All Rights Reserved
 #
+
+from mint.django_rest.rbuilder.manager.basemanager import exposed
 
 class BaseManager(object):
     def __init__(self, mgr):
@@ -22,6 +24,4 @@ class BaseManager(object):
     def user(self):
         return self.mgr.user
 
-def exposed(fn):
-    fn.exposed = True
-    return fn
+
