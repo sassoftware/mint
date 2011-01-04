@@ -15,11 +15,7 @@ from mint.lib import mintutils
 from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
-from django.db.models import Q
 from django.db.models.fields import related
-from django.conf import settings
-from django.core import exceptions
-from django.core import paginator
 from django.core import urlresolvers 
 
 from xobj import xobj
