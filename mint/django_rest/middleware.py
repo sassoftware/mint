@@ -217,7 +217,13 @@ class LocalQueryParameterMiddleware(object):
         else:
             semiColonParams = []
 
-        params = questionParams + semiColonParams
+        qs = request.environ.get('QUERY_STRING', [])
+        if qs:
+            qs = parse_qsl(qs)
+        else:
+            qs = []
+
+        params = questionParams + semiColonParams + qs
         request.params = ['%s=%s' % (k, v) for k, v in params]
         request.params = ';' + ';'.join(request.params)
         method = request.GET.get('_method', None)

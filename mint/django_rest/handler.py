@@ -44,8 +44,6 @@ class MintDjangoRequest(modpython.ModPythonRequest):
         return modpython.ModPythonRequest._set_get(self, *args, **kwargs)
 
     GET = property(_get_get, _set_get)
-        
-
 
 class MintDjangoHandler(modpython.ModPythonHandler):
     request_class = MintDjangoRequest

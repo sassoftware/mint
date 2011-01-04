@@ -6,6 +6,7 @@ import random
 import shutil
 import tempfile
 import time
+import urlparse
 from dateutil import tz
 from xobj import xobj
 
@@ -175,6 +176,13 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         return extra
 
     def _get(self, path, data={}, username=None, password=None, follow=False, headers=None):
+
+        parsed = urlparse.urlparse(path)
+        if parsed.params:
+            for param in parsed.params.split(';'):
+                k, v = param.split('=')
+                data[k] = v
+
         extra = self._addRequestAuth(username, password)
         extra.update(headers or {})
         return self.client.get(path, data, follow, **extra)
@@ -4283,17 +4291,39 @@ class CollectionTest(XMLTestCase):
     fixtures = ['system_collection']
 
     def testGetDefaultCollection(self):
-        response = self._get('/api/inventory/inventory_systems/',
+        response = self._get('/api/inventory/systems/',
             username="admin", password="password")
         xobjModel = xobj.parse(response.content)
         systems = xobjModel.systems
-        self.assertEquals(systems.count, '200')
+        self.assertEquals(systems.count, '201')
         self.assertEquals(systems.per_page, '10')
         self.assertEquals(systems.start_index, '0')
         self.assertEquals(systems.end_index, '9')
-        self.assertEquals(systems.num_pages, '20')
-        self.assertTrue(systems.next_page.endswith('/api/inventory/systems;start_index=10;limit=10'))
+        self.assertEquals(systems.num_pages, '21')
+        self.assertTrue(systems.next_page.endswith(
+            '/api/inventory/systems;start_index=10;limit=10'))
         self.assertEquals(systems.previous_page, '')
+        self.assertEquals(systems.order_by, '')
+        self.assertEquals(systems.filter_by, '')
+
+    def testGetNextPage(self):
+        response = self._get('/api/inventory/systems/',
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        response = self._get(systems.next_page,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        self.assertEquals(systems.count, '201')
+        self.assertEquals(systems.per_page, '10')
+        self.assertEquals(systems.start_index, '10')
+        self.assertEquals(systems.end_index, '19')
+        self.assertEquals(systems.num_pages, '21')
+        self.assertTrue(systems.next_page.endswith(
+            '/api/inventory/systems;start_index=20;limit=10'))
+        self.assertTrue(systems.previous_page.endswith(
+            '/api/inventory/systems;start_index=0;limit=10'))
         self.assertEquals(systems.order_by, '')
         self.assertEquals(systems.filter_by, '')
 
