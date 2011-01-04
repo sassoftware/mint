@@ -176,15 +176,16 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def _get(self, path, data={}, username=None, password=None, follow=False, headers=None):
 
+        params = data.copy()
         parsed = urlparse.urlparse(path)
         if parsed.params:
             for param in parsed.params.split(';'):
                 k, v = param.split('=')
-                data[k] = v
+                params[k] = v
 
         extra = self._addRequestAuth(username, password)
         extra.update(headers or {})
-        return self.client.get(path, data, follow, **extra)
+        return self.client.get(path, params, follow, **extra)
 
     def _post(self, path, data={}, content_type='application/xml',
              username=None, password=None, follow=False, headers=None):
