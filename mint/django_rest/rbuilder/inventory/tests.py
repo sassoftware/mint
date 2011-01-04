@@ -131,7 +131,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.mgr = rbuildermanager.RbuilderManager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
         rbuildermanager.repeatermgr.repeater_client = None
-        views.AbstractInventoryService._setMintAuth = lambda *args: None
+        views.BaseInventoryService._setMintAuth = lambda *args: None
 
     def tearDown(self):
         TestCase.tearDown(self)
