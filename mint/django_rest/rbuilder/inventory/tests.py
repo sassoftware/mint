@@ -4327,4 +4327,28 @@ class CollectionTest(XMLTestCase):
         self.assertEquals(systems.order_by, '')
         self.assertEquals(systems.filter_by, '')
 
+    def testGetPreviousPage(self):
+        response = self._get('/api/inventory/systems/',
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        response = self._get(systems.next_page,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        response = self._get(systems.previous_page,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        self.assertEquals(systems.count, '201')
+        self.assertEquals(systems.per_page, '10')
+        self.assertEquals(systems.start_index, '0')
+        self.assertEquals(systems.end_index, '9')
+        self.assertEquals(systems.num_pages, '21')
+        self.assertTrue(systems.next_page.endswith(
+            '/api/inventory/systems;start_index=10;limit=10'))
+        self.assertEquals(systems.previous_page, '')
+        self.assertEquals(systems.order_by, '')
+        self.assertEquals(systems.filter_by, '')
+
 
