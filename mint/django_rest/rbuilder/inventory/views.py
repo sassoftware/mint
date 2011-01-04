@@ -17,9 +17,9 @@ from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
     HttpAuthenticationRequired, getHeaderValue
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.inventory import manager
+from mint.django_rest.rbuilder.manager import rbuildermanager
 
-MANAGER_CLASS = manager.Manager
+MANAGER_CLASS = rbuildermanager.RbuilderManager
 
 def undefined(function):
     function.undefined = True

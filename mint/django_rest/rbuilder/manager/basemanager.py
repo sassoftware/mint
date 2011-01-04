@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -11,8 +11,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 
 log = logging.getLogger(__name__)
 
-
-class RbuilderDjangoManager(object):
+class BaseManager(object):
     def __init__(self, cfg=None, userName=None):
         self.cfg = cfg
         self._auth = None
