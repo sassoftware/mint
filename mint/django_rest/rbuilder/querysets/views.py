@@ -14,12 +14,12 @@ class BaseQuerySetService(service.BaseService):
 class QuerySetService(BaseQuerySetService):
 
     @return_xml
-    def rest_GET(self, request, querySetId=None):
-        return self.get(querySetId)
+    def rest_GET(self, request, query_set_id=None):
+        return self.get(query_set_id)
 
-    def get(self, querySetId):
-        if querySetId:
-            return self.mgr.getQuerySet(querySetId)
+    def get(self, query_set_id):
+        if query_set_id:
+            return self.mgr.getQuerySet(query_set_id)
         else:
             return self.mgr.getQuerySets()
         
@@ -27,3 +27,22 @@ class QuerySetService(BaseQuerySetService):
     @return_xml
     def rest_POST(self, request, query_set):
         return self.mgr.addQuerySet(query_set)
+
+class QuerySetAllResultService(BaseQuerySetService):
+    
+    @return_xml
+    def rest_GET(self, request, query_set_id):
+        return self.mgr.getQuerySetAllResult(query_set_id)
+
+
+class QuerySetChosenResultService(BaseQuerySetService):
+
+    @return_xml
+    def rest_GET(self, request, query_set_id):
+        return self.mgr.getQuerySetChosenResult(query_set_id)
+
+class QuerySetFilteredResultService(BaseQuerySetService):
+
+    @return_xml
+    def rest_GET(self, request, query_set_id):
+        return self.mgr.getQuerySetFilteredResult(query_set_id)

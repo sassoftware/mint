@@ -36,6 +36,18 @@ class QuerySet(modellib.XObjIdModel):
     filter_entries = models.ManyToManyField("FilterEntry")
     resource_type = models.TextField()
 
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request, values)
+
+        self.view_name = 'QuerySetAllResult'
+        xobjModel.allMembers = self.get_absolute_url(request)
+        self.view_name = 'QuerySetChosenResult'
+        xobjModel.chosenMembers = self.get_absolute_url(request)
+        self.view_name = 'QuerySetFilteredResult'
+        xobjModel.filteredMembers = self.get_absolute_url(request)
+
+        return xobjModel
+
 class FilterEntry(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "filter_entry")
