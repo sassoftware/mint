@@ -16,7 +16,7 @@ from xobj import xobj
 
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
 
-class QuerySets(modellib.Collection):
+class QuerySets(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -52,7 +52,6 @@ class QueryTag(modellib.XObjIdModel):
     query_tag_id = models.AutoField(primary_key=True)
     query_set = modellib.ForeignKey("QuerySet", null=True)
     query_tag = models.TextField()
-
 
 class InclusionMethod(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
