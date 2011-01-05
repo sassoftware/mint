@@ -112,7 +112,7 @@ class QuerySetManager(basemanager.BaseManager):
             self._getQuerySetChosenResult(querySet))
 
     def _getQuerySetChosenResult(self, querySet):
-        queryTag = models.QueryTag.objects.get(query_set=querySet)
+        queryTag = self.getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.get(
             inclusion_method='chosen')
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
