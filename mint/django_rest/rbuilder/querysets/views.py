@@ -7,7 +7,6 @@
 
 from mint.django_rest.deco import return_xml, requires
 from mint.django_rest.rbuilder import service
-from mint.django_rest.rbuilder.querysets import manager
 
 class BaseQuerySetService(service.BaseService):
     pass
