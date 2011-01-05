@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory metrics
+SUBDIRS = platforms reporting inventory metrics modellib
 
 python_files = $(wildcard *.py)
 
