@@ -194,4 +194,7 @@ urlpatterns = patterns('',
     url(r'^api/query_sets/?$',
         querysetsviews.QuerySetService(),
         name='QuerySets'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/?$',
+        querysetsviews.QuerySetService(),
+        name='QuerySet'),
 )

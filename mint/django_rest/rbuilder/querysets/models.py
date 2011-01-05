@@ -50,7 +50,7 @@ class QueryTag(modellib.XObjIdModel):
                 tag = 'query_tag')
 
     query_tag_id = models.AutoField(primary_key=True)
-    query_set = modellib.ForeignKey("QuerySet", null=True)
+    query_set = modellib.ForeignKey("QuerySet", related_name="querytags", null=True)
     query_tag = models.TextField()
 
 class InclusionMethod(modellib.XObjIdModel):
