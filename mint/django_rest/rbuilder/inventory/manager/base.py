@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+from mint.django_rest.rbuilder.manager.basemanager import exposed # pyflakes=ignore
+
 class BaseManager(object):
     def __init__(self, mgr):
         # mgr is a weakref to avoid circular references. Access its fields
