@@ -12,6 +12,7 @@ from mint.django_rest.rbuilder.reporting import imagereports, \
                                                 views
 
 from mint.django_rest.rbuilder.inventory import views as inventoryviews
+from mint.django_rest.rbuilder.querysets import views as querysetsviews
 
 urlpatterns = patterns('',
     # Reporting urls
@@ -188,4 +189,9 @@ urlpatterns = patterns('',
     url(r'^api/products/(\w|\-)*/?$',
         inventoryviews.ApplianceService(),
         name='Projects'),
+
+    # Query Sets
+    url(r'^api/query_sets/?$',
+        querysetsviews.QuerySetService(),
+        name='QuerySets'),
 )

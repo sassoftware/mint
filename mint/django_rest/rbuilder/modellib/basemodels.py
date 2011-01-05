@@ -343,7 +343,12 @@ class BaseManager(models.Manager):
         in obj.
         """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
-            rel_obj_name = m2m_mgr.target_field_name
+            _xobj = getattr(m2m_mgr.model, '_xobj', None)
+            if _xobj:
+                rel_obj_name = _xobj.tag or m2m_mgr.target_field_name
+            else:
+                rel_obj_name = m2m_mgr.target_field_name
+
             self.clear_m2m_accessor(model, m2m_accessor)
             acobj = getattr(obj, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)

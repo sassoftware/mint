@@ -97,6 +97,7 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.reporting',
     'mint.django_rest.rbuilder.inventory',
     'mint.django_rest.rbuilder.metrics',
+    'mint.django_rest.rbuilder.querysets',
 )
 
 AUTHENTICATION_BACKENDS = (

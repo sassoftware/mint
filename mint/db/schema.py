@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(52, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(52, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1929,6 +1929,100 @@ def _createPKI(db):
 
     return changed
 
+def _createQuerySetSchema(db):
+    """QuerySet tables"""
+    changed = False
+
+    changed |= createTable(db, 'querysets_queryset', """
+        CREATE TABLE "querysets_queryset" (
+            "query_set_id" %(PRIMARYKEY)s,
+            "name" TEXT NOT NULL,
+            "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "resource_type" TEXT NOT NULL
+        )""")
+    changed |= _addTableRows(db, "querysets_queryset", "name",
+        [dict(name="All Systems", resource_type="system",
+            created_date=str(datetime.datetime.now(tz.tzutc())),
+            modified_date=str(datetime.datetime.now(tz.tzutc())))])
+
+    changed |= createTable(db, 'querysets_filterentry', """
+        CREATE TABLE "querysets_filterentry" (
+            "filter_entry_id" %(PRIMARYKEY)s,
+            "field" TEXT NOT NULL,
+            "operator" TEXT NOT NULL,
+            "value" TEXT NOT NULL,
+            UNIQUE("field", "operator", "value")
+        )""")
+
+    changed |= createTable(db, 'querysets_querytag', """
+        CREATE TABLE "querysets_querytag" (
+            "query_tag_id" %(PRIMARYKEY)s,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "query_tag" TEXT NOT NULL UNIQUE
+        )""")
+    changed |= _addTableRows(db, "querysets_querytag", "query_tag",
+        [dict(query_set_id=1, query_tag="query-tag-All Systems-1")])
+
+    changed |= createTable(db, 'querysets_inclusionmethod', """
+        CREATE TABLE "querysets_inclusionmethod" (
+            "inclusion_method_id" %(PRIMARYKEY)s,
+            "inclusion_method" TEXT NOT NULL UNIQUE
+        )""")
+    changed |= _addTableRows(db, "querysets_inclusionmethod",
+        "inclusion_method",
+        [dict(inclusion_method="chosen"),
+         dict(inclusion_method="filtered")])
+
+    changed |= createTable(db, 'querysets_systemtag', """
+        CREATE TABLE "querysets_systemtag" (
+            "system_tag_id" %(PRIMARYKEY)s,
+            "system_id" INTEGER
+                REFERENCES "inventory_system" ("system_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_tag_id" INTEGER
+                REFERENCES "querysets_querytag" ("query_tag_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
+        )""")
+
+    changed |= createTable(db, "querysets_queryset_filter_entries", """
+        CREATE TABLE "querysets_queryset_filter_entries" (
+            "id" %(PRIMARYKEY)s,
+            "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "filterentry_id" INTEGER
+                REFERENCES "querysets_filterentry" ("filter_entry_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("queryset_id", "filterentry_id")
+        )""")
+
+    changed |= createTable(db, "querysets_queryset_children", """
+        CREATE TABLE "querysets_queryset_children" (
+            "id" %(PRIMARYKEY)s,
+            "from_queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "to_queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("from_queryset_id", "to_queryset_id")
+        )""")
+
+    return changed
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
@@ -1960,6 +2054,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
     changed |= _createPKI(db)
+    changed |= _createQuerySetSchema(db)
 
     if doCommit:
         db.commit()

@@ -13,6 +13,8 @@ from mint.django_rest.rbuilder.inventory.manager import versionmgr
 from mint.django_rest.rbuilder.inventory.manager import repeatermgr
 from mint.django_rest.rbuilder.inventory.manager import jobmgr
 
+from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
+
 class RbuilderManager(basemanager.BaseManager):
     def __init__(self, cfg=None, userName=None):
         super(self.__class__, self).__init__(cfg=cfg, userName=userName)
@@ -20,9 +22,11 @@ class RbuilderManager(basemanager.BaseManager):
         self.versionMgr = versionmgr.VersionManager(weakref.proxy(self))
         self.repeaterMgr = repeatermgr.RepeaterManager(weakref.proxy(self))
         self.jobMgr = jobmgr.JobManager(weakref.proxy(self))
+        self.querySetMgr = QuerySetManager(weakref.proxy(self))
 
         # Methods we simply copy
-        for subMgr in [ self.sysMgr, self.versionMgr, self.jobMgr ]:
+        for subMgr in [ self.sysMgr, self.versionMgr, self.jobMgr,
+            self.querySetMgr ]:
             for objName in subMgr.__class__.__dict__:
                 obj = getattr(subMgr, objName, None)
                 if getattr(obj, 'exposed', None):

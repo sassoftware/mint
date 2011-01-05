@@ -2267,10 +2267,106 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         return True
 
 class MigrateTo_52(SchemaMigration):
-    Version = (52, 0)
+    Version = (52, 1)
 
     def migrate(self):
         # FIRST SCHEMA MIGRATION CAN GO HERE SINCE .0 WAS A NO-OP
+        return True
+
+    def migrate1(self):
+        db = self.db
+
+        schema.createTable(db, 'querysets_queryset', """
+            CREATE TABLE "querysets_queryset" (
+                "query_set_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "resource_type" TEXT NOT NULL
+            )""")
+        schema._addTableRows(db, "querysets_queryset", "name",
+            [dict(name="All Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc())))])
+
+
+        schema.createTable(db, 'querysets_filterentry', """
+            CREATE TABLE "querysets_filterentry" (
+                "filter_entry_id" %(PRIMARYKEY)s,
+                "field" TEXT NOT NULL,
+                "operator" TEXT NOT NULL,
+                "value" TEXT NOT NULL,
+                UNIQUE("field", "operator", "value")
+            )""")
+
+        schema.createTable(db, 'querysets_querytag', """
+            CREATE TABLE "querysets_querytag" (
+                "query_tag_id" %(PRIMARYKEY)s,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "query_tag" TEXT NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, "querysets_querytag", "query_tag",
+            [dict(query_set_id=1, query_tag="query-tag-All Systems-1")])
+
+
+        schema.createTable(db, 'querysets_inclusionmethod', """
+            CREATE TABLE "querysets_inclusionmethod" (
+                "inclusion_method_id" %(PRIMARYKEY)s,
+                "inclusion_method" TEXT NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, "querysets_inclusionmethod",
+            "inclusion_method",
+            [dict(inclusion_method="chosen"),
+             dict(inclusion_method="filtered")])
+
+        schema.createTable(db, 'querysets_systemtag', """
+            CREATE TABLE "querysets_systemtag" (
+                "system_tag_id" %(PRIMARYKEY)s,
+                "system_id" INTEGER
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_tag_id" INTEGER
+                    REFERENCES "querysets_querytag" ("query_tag_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
+            )""")
+
+        schema.createTable(db, "querysets_queryset_filter_entries", """
+            CREATE TABLE "querysets_queryset_filter_entries" (
+                "id" %(PRIMARYKEY)s,
+                "queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "filterentry_id" INTEGER
+                    REFERENCES "querysets_filterentry" ("filter_entry_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("queryset_id", "filterentry_id")
+            )""")
+
+        schema.createTable(db, "querysets_queryset_children", """
+            CREATE TABLE "querysets_queryset_children" (
+                "id" %(PRIMARYKEY)s,
+                "from_queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "to_queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("from_queryset_id", "to_queryset_id")
+            )""")
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
