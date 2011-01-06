@@ -5001,7 +5001,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _getPackageCreatorClient(self, callback):
         from mint.django_rest.rbuilder.manager import rbuildermanager
-        mgr = rbuildermanager.RbuilderManager
+        mgr = rbuildermanager.RbuilderManager()
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
             callback=callback, djangoManager=mgr)
 
