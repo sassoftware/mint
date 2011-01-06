@@ -16,6 +16,21 @@ from xobj import xobj
 
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
 
+class AllMembers(modellib.XObjIdModel):
+    _xobj = xobj.XObjMetadata(
+                tag = "all_members")
+    view_name = "QuerySetAllResult"
+
+class ChosenMembers(modellib.XObjIdModel):
+    _xobj = xobj.XObjMetadata(
+                tag = "chosen_members")
+    view_name = "QuerySetChosenResult"
+
+class FilteredMembers(modellib.XObjIdModel):
+    _xobj = xobj.XObjMetadata(
+                tag = "filtered_members")
+    view_name = "QuerySetFilteredResult"
+
 class QuerySets(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -39,12 +54,15 @@ class QuerySet(modellib.XObjIdModel):
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request, values)
 
-        self.view_name = 'QuerySetAllResult'
-        xobjModel.allMembers = self.get_absolute_url(request)
-        self.view_name = 'QuerySetChosenResult'
-        xobjModel.chosenMembers = self.get_absolute_url(request)
-        self.view_name = 'QuerySetFilteredResult'
-        xobjModel.filteredMembers = self.get_absolute_url(request)
+        am = AllMembers()
+        am._parents = [self]
+        xobjModel.all_members = am.serialize(request)
+        cm = ChosenMembers()
+        cm._parents = [self]
+        xobjModel.chosen_members = cm.serialize(request)
+        fm = FilteredMembers()
+        fm._parents = [self]
+        xobjModel.filtered_members = fm.serialize(request)
 
         return xobjModel
 

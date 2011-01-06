@@ -69,8 +69,6 @@ class QuerySetManager(basemanager.BaseManager):
     def filterQuerySet(self, querySet):
         model = modellib.type_map[querySet.resource_type]
         resources = model.objects.all()
-        filters = []
-        qFilters = []
         for filt in querySet.filter_entries.all():
             # Replace all '.' with '__', to handle fields that span
             # relationships
@@ -78,16 +76,11 @@ class QuerySetManager(basemanager.BaseManager):
             operator = modellib.filterTermMap[filt.operator]
 
             k = '%s__%s' % (field, operator)
+            filtDict = {k:filt.value}
             if operator.startswith('NOT_'):
-                qFilters.append({k:filt.value})
+                resources = resources.filter(~Q(**filtDict))
             else:
-                filters.append({k:filt.value})
-
-        for qFilter in qFilters:
-            resources = resources.filter(~Q(**qFilter))
-
-        for filt in filters:
-            resources = resources.filter(**filt)
+                resources = resources.filter(**filtDict)
 
         return resources
 

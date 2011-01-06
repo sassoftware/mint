@@ -125,25 +125,22 @@ class Collection(XObjIdModel):
         filterBy = request.GET.get('filter_by')
         if filterBy:
             self.filter_by = filterBy
-            filters = []
-            qFilters = []
             for filt in filterBy.split(']'):
                 if not (filt.startswith('[') or filt.startswith(',[')):
                         continue
                 filtString = filt.strip(',').strip('[').strip(']')
                 field, oper, value = filtString.split(',', 3)
+
+                # Replace all '.' with '__', to handle fields that span
+                # relationships
+                field = field.replace('.', '__')
+
+                k = '%s__%s' % (field, filterTermMap[oper])
+                filtDict = {k:value}
                 if oper.startswith('NOT_'):
-                    k = '%s__%s' % (field, filterTermMap[oper])
-                    qFilters.append({k:value})
+                    modelList = modelList.filter(~Q(**filtDict))
                 else:
-                    k = '%s__%s' % (field, filterTermMap[oper])
-                    filters.append({k:value})
-
-            for qFilter in qFilters:
-                modelList = modelList.filter(~Q(**qFilter))
-
-            for filt in filters:
-                modelList = modelList.filter(**filt)
+                    modelList = modelList.filter(**filtDict)
 
         return modelList
 
