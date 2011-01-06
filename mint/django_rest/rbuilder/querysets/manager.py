@@ -96,20 +96,25 @@ class QuerySetManager(basemanager.BaseManager):
             self.resourceCollectionMap[querySet.resource_type]]
         resourceCollection = resourceCollection()
         setattr(resourceCollection, querySet.resource_type, resources)
+        resourceCollection._parents = [querySet]
         return resourceCollection
 
     @exposed
     def getQuerySetAllResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
-        return self.getResourceCollection(querySet,
+        resourceCollection = self.getResourceCollection(querySet,
             list(self._getQuerySetChosenResult(querySet)) + \
             list(self._getQuerySetFilteredResult(querySet)))
+        resourceCollection.view_name = "QuerySetAllResult"
+        return resourceCollection
 
     @exposed
     def getQuerySetChosenResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
-        return self.getResourceCollection(querySet,
+        resourceCollection = self.getResourceCollection(querySet,
             self._getQuerySetChosenResult(querySet))
+        resourceCollection.view_name = "QuerySetChosenResult"
+        return resourceCollection
 
     def _getQuerySetChosenResult(self, querySet):
         queryTag = self.getQueryTag(querySet)
@@ -125,8 +130,10 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def getQuerySetFilteredResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
-        return self.getResourceCollection(querySet,
+        resourceCollection = self.getResourceCollection(querySet,
             self._getQuerySetFilteredResult(querySet))
+        resourceCollection.view_name = "QuerySetFilteredResult"
+        return resourceCollection
 
     def _getQuerySetFilteredResult(self, querySet):
         resources = self.filterQuerySet(querySet)

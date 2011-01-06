@@ -790,16 +790,21 @@ class XObjModel(models.Model):
         # specified so that when generating a url for a Network model, the
         # system parent can be sent in, such that the result is
         # /api/inventory/systems/1/networks, where 1 is the system pk.
-        if not parents:
+        _parents = getattr(self, '_parents', None)
+        if parents:
+            url_key = []
+            for parent in parents:
+                url_key.append(str(parent.pk))
+        elif _parents:
+            url_key = []
+            for parent in _parents:
+                url_key.append(str(parent.pk))
+        else:
             url_key = getattr(self, 'pk', None)
             if url_key:
                 url_key = [str(url_key)]
             else:
                 url_key = []
-        else:
-            url_key = []
-            for parent in parents:
-                url_key.append(str(parent.pk))
 
         # Now do what models.pattern does.
         bits = (view_name, url_key)

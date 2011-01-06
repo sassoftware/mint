@@ -96,7 +96,7 @@ class Systems(modellib.Collection):
 
     def save(self):
         return [s.save() for s in self.system]
-    
+
 class SystemStates(modellib.XObjModel):
     class Meta:
         abstract = True
