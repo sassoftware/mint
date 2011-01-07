@@ -5,8 +5,9 @@
 # All rights reserved.
 #
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.db.models.query import EmptyQuerySet
+from django.core.exceptions import ObjectDoesNotExist
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
@@ -95,9 +96,10 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def getQuerySetAllResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
-        resourceCollection = self.getResourceCollection(querySet,
-            self._getQuerySetChosenResult(querySet)|
-            self._getQuerySetFilteredResult(querySet))
+        filtered = self._getQuerySetFilteredResult(querySet)
+        chosen =  self._getQuerySetChosenResult(querySet)
+        resourceCollection = self.getResourceCollection(querySet, 
+            filtered | chosen)
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
 
@@ -116,15 +118,12 @@ class QuerySetManager(basemanager.BaseManager):
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
         taggedModels = tagModel.objects.filter(query_tag=queryTag,
             inclusion_method=chosenMethod)
-        resources = None
         resourceModel = modellib.type_map[querySet.resource_type]
+        resources = EmptyQuerySet(resourceModel)
         for taggedModel in taggedModels:
             r = getattr(taggedModel, querySet.resource_type)
             r = resourceModel.objects.filter(pk=r.pk)
-            if not resources:
-                resources = r
-            else:
-                resources = resources | r
+            resources = resources | r
         return resources
 
     @exposed
