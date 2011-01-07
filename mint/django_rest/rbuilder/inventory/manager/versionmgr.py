@@ -331,6 +331,8 @@ class VersionManager(base.BaseManager):
 
         configDict = {}
         for propSet in properties:
+            if propSet is None:
+                continue
             for singleProperty in propSet.iter():
                 troveXml = singleProperty.definition()
                 try: 
