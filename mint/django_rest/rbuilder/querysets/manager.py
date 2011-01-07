@@ -124,7 +124,7 @@ class QuerySetManager(basemanager.BaseManager):
             if not resources:
                 resources = r
             else:
-                resources = resource | r
+                resources = resources | r
         return resources
 
     @exposed
