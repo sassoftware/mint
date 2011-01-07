@@ -90,7 +90,7 @@ class QueryTag(modellib.XObjIdModel):
 
 class InclusionMethod(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
-                tag = 'includsion_method')
+                tag = 'inclusion_method')
 
     METHOD_CHOICES = [
         ('chosen', 'Chosen'),
