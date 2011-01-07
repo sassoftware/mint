@@ -115,7 +115,7 @@ class Collection(XObjIdModel):
             try:
                 orderParams = orderBy.split(',')
                 # Ignore fields that don't exist on the model
-                orderParms = [o for o in orderParams
+                orderParams = [o for o in orderParams
                     if o in modelList.model._meta.get_all_field_names()]
                 modelList = modelList.order_by(*orderParams)
             except exceptions.FieldError:
