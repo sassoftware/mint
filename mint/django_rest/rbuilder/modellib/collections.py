@@ -112,14 +112,21 @@ class Collection(XObjIdModel):
     def orderBy(self, request, modelList):
         orderBy = request.GET.get('order_by', None)
         if orderBy:
-            try:
-                orderParams = orderBy.split(',')
+            newOrderParams = []
+            orderParams = orderBy.split(',')
+            for orderParam in orderParams:
+
                 # Ignore fields that don't exist on the model
-                orderParams = [o for o in orderParams
-                    if o in modelList.model._meta.get_all_field_names()]
-                modelList = modelList.order_by(*orderParams)
-            except exceptions.FieldError:
-                orderBy = None
+                fieldName = orderParam.split('.')[0]
+                if fieldName.startswith('-'):
+                    fieldName = fieldName[1:]
+                if fieldName not in modelList._meta.get_all_field_names():
+                    continue
+
+                orderParam = orderParam.replace('.', '__')
+                newOrderParams.append(orderParam)
+
+            modelList = modelList.order_by(*newOrderParams)
         self.order_by = orderBy
 
         return modelList
@@ -135,7 +142,8 @@ class Collection(XObjIdModel):
                 field, oper, value = filtString.split(',', 3)
 
                 # Ignore fields that don't exist on the model
-                if field not in modelList.model._meta.get_all_field_names():
+                fieldName = field.split('.')[0]
+                if fieldName not in modelList.model._meta.get_all_field_names():
                     continue
 
                 # Replace all '.' with '__', to handle fields that span
