@@ -41,8 +41,7 @@ class QuerySets(modellib.XObjModel):
 
 class SystemQuerySetDescriptor(modellib.XObjModel):
     def to_xml(self, *args, **kwargs):
-        pass
-        # return descriptor_xml.system_descriptor_xml
+        return descriptor_xml.system_query_set_descriptor_xml
 
 class QuerySet(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
