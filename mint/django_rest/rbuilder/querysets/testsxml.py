@@ -22,9 +22,11 @@ query_sets_xml = """\
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
     <name>All Systems</name>
     <filter_entries/>
-    <allMembers>http://testserver/api/query_sets/1/all</allMembers>
-    <chosenMembers>http://testserver/api/query_sets/1/chosen</chosenMembers>
     <query_set_id>1</query_set_id>
+    <all_members id="http://testserver/api/query_sets/1/all"/>
+    <chosen_members id="http://testserver/api/query_sets/1/chosen"/>
+    <filtered_members id="http://testserver/api/query_sets/1/filtered"/>
+    <filter_descriptor id="http://testserver/api/query_sets/1/filter_descriptor"/>
     <children/>
     <querytags>
       <query_tag>
@@ -35,7 +37,6 @@ query_sets_xml = """\
       </query_tag>
     </querytags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
-    <filteredMembers>http://testserver/api/query_sets/1/filtered</filteredMembers>
     <resource_type>system</resource_type>
   </query_set>
   <query_set id="http://testserver/api/query_sets/2">
@@ -49,9 +50,11 @@ query_sets_xml = """\
         <value>3</value>
       </filter_entry>
     </filter_entries>
-    <allMembers>http://testserver/api/query_sets/2/all</allMembers>
-    <chosenMembers>http://testserver/api/query_sets/2/chosen</chosenMembers>
     <query_set_id>2</query_set_id>
+    <all_members id="http://testserver/api/query_sets/2/all"/>
+    <chosen_members id="http://testserver/api/query_sets/2/chosen"/>
+    <filtered_members id="http://testserver/api/query_sets/2/filtered"/>
+    <filter_descriptor id="http://testserver/api/query_sets/2/filter_descriptor"/>
     <children/>
     <querytags>
       <query_tag>
@@ -69,7 +72,6 @@ query_sets_xml = """\
       </query_tag>
     </querytags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
-    <filteredMembers>http://testserver/api/query_sets/2/filtered</filteredMembers>
     <resource_type>system</resource_type>
   </query_set>
 </query_sets>
@@ -88,8 +90,9 @@ query_set_xml = """\
       <value>3</value>
     </filter_entry>
   </filter_entries>
-  <allMembers>http://testserver/api/query_sets/2/all</allMembers>
-  <chosenMembers>http://testserver/api/query_sets/2/chosen</chosenMembers>
+  <all_members id="http://testserver/api/query_sets/2/all"/>
+  <chosen_members id="http://testserver/api/query_sets/2/chosen"/>
+  <filter_descriptor id="http://testserver/api/query_sets/2/filter_descriptor"/>
   <query_set_id>2</query_set_id>
   <children/>
   <querytags>
@@ -108,7 +111,7 @@ query_set_xml = """\
     </query_tag>
   </querytags>
   <created_date>2011-01-05T00:00:00+00:00</created_date>
-  <filteredMembers>http://testserver/api/query_sets/2/filtered</filteredMembers>
+  <filtered_members id="http://testserver/api/query_sets/2/filtered"/>
   <resource_type>system</resource_type>
 </query_set>
 """
