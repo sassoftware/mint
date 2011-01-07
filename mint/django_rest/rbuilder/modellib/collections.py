@@ -114,6 +114,9 @@ class Collection(XObjIdModel):
         if orderBy:
             try:
                 orderParams = orderBy.split(',')
+                # Ignore fields that don't exist on the model
+                orderParms = [o for o in orderParams
+                    if o in modelList.model._meta.get_all_field_names()]
                 modelList = modelList.order_by(*orderParams)
             except exceptions.FieldError:
                 orderBy = None
@@ -130,6 +133,10 @@ class Collection(XObjIdModel):
                         continue
                 filtString = filt.strip(',').strip('[').strip(']')
                 field, oper, value = filtString.split(',', 3)
+
+                # Ignore fields that don't exist on the model
+                if field not in modelList.model._meta.get_all_field_names():
+                    continue
 
                 # Replace all '.' with '__', to handle fields that span
                 # relationships
