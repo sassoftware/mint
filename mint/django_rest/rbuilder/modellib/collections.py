@@ -120,7 +120,7 @@ class Collection(XObjIdModel):
                 fieldName = orderParam.split('.')[0]
                 if fieldName.startswith('-'):
                     fieldName = fieldName[1:]
-                if fieldName not in modelList._meta.get_all_field_names():
+                if fieldName not in modelList.model._meta.get_all_field_names():
                     continue
 
                 orderParam = orderParam.replace('.', '__')
