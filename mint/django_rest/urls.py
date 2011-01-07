@@ -206,4 +206,7 @@ urlpatterns = patterns('',
     url(r'^api/query_sets/(?P<query_set_id>\d+)/filtered/?$',
         querysetsviews.QuerySetFilteredResultService(),
         name='QuerySetFilteredResult'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
+        querysetsviews.QuerySetFilterDescriptorService(),
+        name='QuerySetFilterDescriptor'),
 )

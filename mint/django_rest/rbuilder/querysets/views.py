@@ -58,3 +58,9 @@ class QuerySetFilteredResultService(BaseQuerySetService):
     @return_xml
     def rest_GET(self, request, query_set_id):
         return self.mgr.getQuerySetFilteredResult(query_set_id)
+
+class QuerySetFilterDescriptorService(BaseQuerySetService):
+
+    @return_xml
+    def rest_GET(self, request, query_set_id):
+        return self.mgr.getQuerySetFilterDescriptor(query_set_id)

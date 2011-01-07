@@ -137,3 +137,9 @@ class QuerySetManager(basemanager.BaseManager):
     def _getQuerySetFilteredResult(self, querySet):
         resources = self.filterQuerySet(querySet)
         return resources
+
+    @exposed
+    def getQuerySetFilterDescriptor(self, querySetId):
+        querySet = models.QuerySet.objects.get(pk=querySetId)
+        # Just return the system filter descriptor for now
+        return models.SystemQuerySetDescriptor()

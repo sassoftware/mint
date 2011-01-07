@@ -18,16 +18,22 @@ from xobj import xobj
 OPERATOR_CHOICES = [(k, v) for k, v in modellib.filterTermMap.items()]
 
 class AllMembers(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = "all_members")
     view_name = "QuerySetAllResult"
 
 class ChosenMembers(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = "chosen_members")
     view_name = "QuerySetChosenResult"
 
 class FilteredMembers(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = "filtered_members")
     view_name = "QuerySetFilteredResult"
@@ -40,7 +46,16 @@ class QuerySets(modellib.XObjModel):
     list_fields = ["query_set"]
     query_set = []
 
+class FilterDescriptor(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "filter_descriptor")
+    view_name = "QuerySetFilterDescriptor"
+
 class SystemQuerySetDescriptor(modellib.XObjModel):
+    class Meta:
+        abstract = True
     def to_xml(self, *args, **kwargs):
         return descriptor_xml.system_query_set_descriptor_xml
 
@@ -68,6 +83,10 @@ class QuerySet(modellib.XObjIdModel):
         fm = FilteredMembers()
         fm._parents = [self]
         xobjModel.filtered_members = fm.serialize(request)
+
+        fd = FilterDescriptor()
+        fd._parents = [self]
+        xobjModel.filter_descriptor = fd.serialize(request)
 
         return xobjModel
 
