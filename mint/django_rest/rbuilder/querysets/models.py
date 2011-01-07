@@ -11,6 +11,7 @@ from django.db import models
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.querysets import descriptor_xml
 
 from xobj import xobj
 
