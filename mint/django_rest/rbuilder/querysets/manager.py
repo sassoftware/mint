@@ -96,8 +96,8 @@ class QuerySetManager(basemanager.BaseManager):
     def getQuerySetAllResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
         resourceCollection = self.getResourceCollection(querySet,
-            list(self._getQuerySetChosenResult(querySet)) + \
-            list(self._getQuerySetFilteredResult(querySet)))
+            self._getQuerySetChosenResult(querySet)|
+            self._getQuerySetFilteredResult(querySet))
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
 
@@ -116,8 +116,15 @@ class QuerySetManager(basemanager.BaseManager):
         tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
         taggedModels = tagModel.objects.filter(query_tag=queryTag,
             inclusion_method=chosenMethod)
-        resources = [getattr(r, querySet.resource_type) \
-            for r in taggedModels]
+        resources = None
+        resourceModel = modellib.type_map[querySet.resource_type]
+        for taggedModel in taggedModels:
+            r = getattr(taggedModel, querySet.resource_type)
+            r = resourceModel.objects.filter(pk=r.pk)
+            if not resources:
+                resources = r
+            else:
+                resources = resource | r
         return resources
 
     @exposed
