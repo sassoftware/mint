@@ -28,6 +28,11 @@ class QuerySetService(BaseQuerySetService):
     def rest_POST(self, request, query_set):
         return self.mgr.addQuerySet(query_set)
 
+    @requires('query_set')
+    @return_xml
+    def rest_PUT(self, request, query_set_id, systems):
+        pass
+
 class QuerySetAllResultService(BaseQuerySetService):
     
     @return_xml
@@ -40,6 +45,13 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @return_xml
     def rest_GET(self, request, query_set_id):
         return self.mgr.getQuerySetChosenResult(query_set_id)
+
+    # Requires is a list to allow for different types of collections to be
+    # PUT'd here.
+    @requires(['systems']) 
+    @return_xml
+    def rest_PUT(self, request, query_set_id, systems=None):
+        pass
 
 class QuerySetFilteredResultService(BaseQuerySetService):
 
