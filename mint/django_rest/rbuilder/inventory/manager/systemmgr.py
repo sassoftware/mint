@@ -1273,6 +1273,9 @@ class SystemManager(base.BaseManager):
             networks = system.networks.all()
         else:
             networks = system.networks.network
+            for net in networks:
+                net.required = (net.required == 'true' or net.required == 'True')
+                net.active = (net.active == 'true' or net.active == 'True')
 
         # first look for user required nets
         nets = [ x for x in networks if x.required ]

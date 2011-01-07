@@ -138,27 +138,31 @@ class WigTask(plug_worker.TaskHandler):
             self.sendContents(name, data, n, totalFiles)
 
         # Finish assembling servicing.xml and send it to the build service.
-        sysModel = 'install %s=%s' % (
+        sysModel = 'install %s=%s\n' % (
             self.troveTup.name, str(self.troveTup.version))
-        pollingManifest = '%s=%s[%s]' % (
+        pollingManifest = '%s=%s[%s]\n' % (
             self.troveTup.name, self.troveTup.version.freeze(),
             str(self.troveTup.flavor))
+
+        jobs = []
+        if criticalPackageList:
+            jobs.append(E.updateJob(
+                    E.sequence('0'),
+                    E.logFile('install.log'),
+                    E.packages(*criticalPackageList),
+                    ))
+        if packageList:
+            jobs.append(E.updateJob(
+                    E.sequence('1'),
+                    E.logFile('install.log'),
+                    E.packages(*packageList),
+                    ))
         root = E.update(
             E.logFile('install.log'),
             E.systemModel(sysModel),
             E.pollingManifest(pollingManifest),
-            E.updateJobs(
-                E.updateJob(
-                    E.sequence('0'),
-                    E.logFile('install.log'),
-                    E.packages(*criticalPackageList),
-                    ),
-                E.updateJob(
-                    E.sequence('1'),
-                    E.logFile('install.log'),
-                    E.packages(*packageList),
-                    ),
-                ))
+            E.updateJobs(*jobs)
+            )
         doc = etree.tostring(root)
         sio = StringIO.StringIO(doc)
         self.wigClient.addFileStream(sio, 'xml', 'servicing.xml', len(doc))
