@@ -1,11 +1,11 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
+
 import base64
 import kid
 import re
 import sys
-import time
 
 from conary.lib import util
 
@@ -20,7 +20,7 @@ from mint import shimclient
 from mint import userlevels
 from mint.helperfuncs import (formatHTTPDate, getProjectText,
     weak_signature_call)
-from mint.mint_error import *
+from mint.mint_error import MaintenanceMode, MintError
 from mint.web import fields
 from mint.web.admin import AdminHandler
 from mint.web.project import ProjectHandler
