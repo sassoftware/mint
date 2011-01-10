@@ -14,6 +14,7 @@ from mint.rest.db import manager
 log = logging.getLogger(__name__)
 
 class TargetManager(manager.Manager):
+    TargetImportScriptPath = '/usr/share/rbuilder/scripts/target-systems-import'
     def getUserId(self, username):
         cu = self.db.cursor()
         cu.execute("SELECT userId FROM Users WHERE username=? AND active=1",
@@ -152,7 +153,7 @@ class TargetManager(manager.Manager):
 
     def importTargetSystems(self, targetType, targetName):
         log.info('Importing systems for target %s.' % targetName)
-        cmd = ['/usr/share/rbuilder/scripts/target-systems-import']
+        cmd = [ self.TargetImportScriptPath ]
         subprocess.Popen(cmd)
 
     def setTargetCredentialsForUser(self, targetType, targetName, userName,

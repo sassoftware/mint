@@ -2267,10 +2267,21 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         return True
 
 class MigrateTo_52(SchemaMigration):
-    Version = (52, 0)
+    Version = (52, 1)
 
     def migrate(self):
-        # FIRST SCHEMA MIGRATION CAN GO HERE SINCE .0 WAS A NO-OP
+        return True
+
+    def migrate1(self):
+        createTable(self.db, """
+                CREATE TABLE TargetImagesDeployed (
+                    id              %(PRIMARYKEY)s,
+                    targetId        integer             NOT NULL
+                        REFERENCES Targets ON DELETE CASCADE,
+                    fileId          integer             NOT NULL
+                        REFERENCES BuildFiles ON DELETE CASCADE,
+                    targetImageId   varchar(128)        NOT NULL
+                ) %(TABLEOPTS)s""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
