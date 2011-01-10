@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import logging
@@ -110,7 +108,7 @@ class WigTask(plug_worker.TaskHandler):
         self.wigClient.createJob()
 
         # Choose between WIM and ISO output.
-        self.wigClient.setIsIso(self.imageType == buildtypes.WINDOWS_ISO)
+        self.wigClient.setImageType(self.imageType)
 
         # Select a rTIS registry bootstrap file.
         regFile = self.selectRegFile(fileMap)

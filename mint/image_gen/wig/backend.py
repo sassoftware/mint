@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import os
@@ -9,6 +7,8 @@ import robj
 import time
 from robj.lib import xutil
 from xobj import xobj
+
+from mint import buildtypes
 
 
 class WigBackendClient(object):
@@ -76,9 +76,20 @@ class WigBackendClient(object):
         """Return contents of the job log."""
         return self.image.imageJob.logs.read()
 
-    def setIsIso(self, isIso=True):
+    def setImageType(self, imageType):
         config = self.image.jobConfig
-        config.iso = 'true' if isIso else 'false'
+        config.iso = config.vhd = 'false'
+        if imageType == buildtypes.WINDOWS_ISO:
+            config.iso = 'true'
+        elif imageType in (
+                buildtypes.VIRTUAL_PC_IMAGE,
+                buildtypes.VMWARE_IMAGE,
+                ):
+            config.vhd = 'true'
+        elif imageType == buildtypes.WINDOWS_WIM:
+            pass
+        else:
+            raise RuntimeError("Unsupported image type %r" % (imageType,))
         config.persist()
 
     def cleanup(self):
