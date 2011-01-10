@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
-#
-# All rights reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 import base64
 import kid
@@ -112,11 +110,13 @@ class MintApp(WebHandler):
         # the current session has no authToken
         authorization = self.req.headers_in.get('Authorization', None)
         if authorization: 
-            type, user_pass = authorization.split(' ', 1)
-            try:
-                self.authToken = (base64.decodestring(user_pass).split(':', 1))
-            except:
-                self.authToken = anonToken
+            self.authToken = anonToken
+            authType, user_pass = authorization.split(' ', 1)
+            if authType == 'Basic':
+                try:
+                    self.authToken = (base64.decodestring(user_pass).split(':', 1))
+                except:
+                    pass
         else:
             self.authToken = self.session.get('authToken', anonToken)
         

@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import base64
@@ -65,7 +63,9 @@ class AuthenticationCallback(object):
         arr = request.headers['Authorization'].split(' ', 1)
         if len(arr) != 2:
             return None
-        type, user_pass = arr
+        authType, user_pass = arr
+        if authType != 'Basic':
+            return None
         try:
             user_name, password = base64.decodestring(user_pass).split(':', 1)
             password = util.ProtectedString(password)
