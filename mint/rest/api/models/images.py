@@ -18,6 +18,10 @@ class FileUrl(Model):
     def __repr__(self):
         return "images.FileUrl(fileId=%r, urlType=%r)" % (self.fileId, self.urlType)
 
+class TargetImage(Model):
+    targetType = fields.CharField()
+    targetName = fields.CharField()
+    targetImageId = fields.CharField()
 
 class ImageFile(Model):
     fileId   = fields.IntegerField()
@@ -28,6 +32,7 @@ class ImageFile(Model):
     sha1     = fields.CharField()
     fileName = fields.CharField()
     urls     = fields.ListField(FileUrl, displayName='url')
+    targetImages = fields.ListField(TargetImage)
 
     def __repr__(self):
         return "images.ImageId(fileId=%r, size=%r)" % (self.fileId, self.size)

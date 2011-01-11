@@ -252,6 +252,14 @@ class TargetUserCredentials(modellib.XObjModel):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetusercredentials'
 
+class TargetImagesDeployed(modellib.XObjModel):
+    targetid = models.ForeignKey(Targets, db_column="targetid")
+    fileid = models.IntegerField(null=False)
+    targetimageid = models.CharField(max_length=128)
+    class Meta:
+        managed = settings.MANAGE_RBUILDER_MODELS
+        db_table = u'targetimagesdeployed'
+
 class PkiCertificates(modellib.XObjModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS

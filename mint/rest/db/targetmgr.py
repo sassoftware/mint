@@ -156,6 +156,26 @@ class TargetManager(manager.Manager):
         cmd = [ self.TargetImportScriptPath ]
         subprocess.Popen(cmd)
 
+    def linkTargetImageToImage(self, targetType, targetName, fileId,
+            targetImageId):
+        targetId = self.getTargetId(targetType, targetName)
+        if targetId is None:
+            raise mint_error.TargetMissing(
+                    "Target named '%s' of type '%s' does not exist",
+                    targetName, targetType)
+        return self._linkTargetImageToImage(targetId, fileId, targetImageId)
+
+    def _linkTargetImageToImage(self, targetId, fileId, targetImageId):
+        cu = self.db.cursor()
+        cu.execute("""INSERT INTO TargetImagesDeployed
+            (targetId, fileId, targetImageId)
+            SELECT ?, ?, ?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM TargetImagesDeployed
+                    WHERE targetId = ? AND fileId = ? AND targetImageId =
+                    ?)""",
+            targetId, fileId, targetImageId, targetId, fileId, targetImageId)
+
     def setTargetCredentialsForUser(self, targetType, targetName, userName,
                                     credentials):
         userId = self.getUserId(userName)
