@@ -77,6 +77,7 @@ class Collection(XObjIdModel):
             'previous_page' : str,
             'order_by' : str,
             'filter_by' : str,
+            'limit' : str,
         }
     )
 
@@ -94,6 +95,7 @@ class Collection(XObjIdModel):
     previous_page = models.TextField()
     order_by = models.TextField()
     filter_by = models.TextField()
+    limit = models.TextField()
 
     def get_absolute_url(self, request=None, parents=None, model=None,
                          page=None, full=None):
@@ -162,6 +164,7 @@ class Collection(XObjIdModel):
     def paginate(self, request, listField, modelList):
         startIndex = int(request.GET.get('start_index', 0))
         limit = int(request.GET.get('limit', settings.PER_PAGE))
+        self.limit = limit
         pagination = CollectionPaginator(modelList, limit) 
         pageNumber = startIndex/limit
         page = pagination.page(pageNumber)

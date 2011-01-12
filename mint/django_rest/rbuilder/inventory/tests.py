@@ -4290,6 +4290,13 @@ class Jobs2TestCase(BaseJobsTest):
 class CollectionTest(XMLTestCase):
     fixtures = ['system_collection']
 
+    def xobjResponse(self, url):
+        response = self._get(url,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        return systems
+
     def testGetDefaultCollection(self):
         response = self._get('/api/inventory/systems/',
             username="admin", password="password")
@@ -4352,4 +4359,113 @@ class CollectionTest(XMLTestCase):
         self.assertEquals(systems.order_by, '')
         self.assertEquals(systems.filter_by, '')
 
+    def testOrderBy(self):
+        systems = self.xobjResponse('/api/inventory/systems;order_by=name')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            ['10', '100', '101', '102', '103', '104', '105', '106', '107', '108'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=name')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=name')
+        self.assertEquals(systems.order_by, 'name')
+        systems = self.xobjResponse('/api/inventory/systems;order_by=-name')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            ['rPath Update Servic', '99', '98', '97', '96', '95', '94', '93', '92', '91'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name')
+        self.assertEquals(systems.order_by, '-name')
 
+    def testFilterBy(self):
+        systems = self.xobjResponse(
+            '/api/inventory/systems;filter_by=[name,LIKE,3]')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'3', u'13', u'23', u'30', u'31', u'32', u'33', u'34', u'35', u'36'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.filter_by,
+            '[name,LIKE,3]')
+        systems = self.xobjResponse(
+            '/api/inventory/systems;filter_by=[name,NOT_LIKE,3]')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'rPath Update Servic', u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3]')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3]')
+        self.assertEquals(systems.filter_by,
+            '[name,NOT_LIKE,3]')
+        systems = self.xobjResponse(
+            '/api/inventory/systems;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'4', u'5', u'6', u'7', u'8', u'9', u'10', u'11', u'12', u'14'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;filter_by=[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+        self.assertEquals(systems.filter_by,
+            '[name,NOT_LIKE,3],[description,NOT_LIKE,Update]')
+
+    def testOrderAndFilterBy(self):
+        systems = self.xobjResponse(
+            '/api/inventory/systems;filter_by=[name,LIKE,3];order_by=-name')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.filter_by,
+            '[name,LIKE,3]')
+        self.assertEquals(systems.order_by,
+            '-name')
+        systems = self.xobjResponse(
+            '/api/inventory/systems;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.filter_by,
+            '[name,LIKE,3]')
+        self.assertEquals(systems.order_by,
+            '-name')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'93', u'83', u'73', u'63', u'53', u'43', u'39', u'38', u'37', u'36'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=10;limit=10;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.filter_by,
+            '[name,LIKE,3]')
+        self.assertEquals(systems.order_by,
+            '-name')
+
+    def testLimit(self):
+        systems = self.xobjResponse(
+            '/api/inventory/systems;limit=5')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'rPath Update Servic', u'3', u'4', u'5', u'6'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=5')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=5;limit=5')
+        self.assertEquals(systems.limit, '5')
+
+    def testOrderAndFilterAndLimitBy(self):
+        systems = self.xobjResponse(
+            '/api/inventory/systems;limit=5;filter_by=[name,LIKE,3];order_by=-name')
+        self.assertEquals([x.name.strip('System name ') for x in systems.system],
+            [u'93', u'83', u'73', u'63', u'53'])
+        self.assertEquals(systems.id,
+            'http://testserver/api/inventory/systems;start_index=0;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.next_page,
+            'http://testserver/api/inventory/systems;start_index=5;limit=5;order_by=-name;filter_by=[name,LIKE,3]')
+        self.assertEquals(systems.limit,
+            '5')
+        self.assertEquals(systems.filter_by,
+            '[name,LIKE,3]')
+        self.assertEquals(systems.order_by,
+            '-name')
