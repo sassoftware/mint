@@ -2267,7 +2267,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         return True
 
 class MigrateTo_52(SchemaMigration):
-    Version = (52, 1)
+    Version = (52, 2)
 
     def migrate(self):
         # FIRST SCHEMA MIGRATION CAN GO HERE SINCE .0 WAS A NO-OP
@@ -2368,6 +2368,51 @@ class MigrateTo_52(SchemaMigration):
             )""")
 
         return True
+
+    def migrate2(self):
+        db = self.db
+
+        schema._addTableRows(db, "querysets_queryset", "name",
+            [dict(name="Active Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Unmanaged Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            ])
+
+        schema._addTableRows(db, "querysets_filterentry", rows=
+            [dict(field="current_state.name", 
+                operator="EQUALS", value="responsive"),
+             dict(field="current_state.name", 
+                operator="EQUALS", value="unmanaged"),
+            ])
+
+        activeQuerySetId = schema._getRowPk(db, 'querysets_queryset',
+            'query_set_id', name="Active Systems")
+        unManagedQuerySetId = schema._getRowPk(db, 'querysets_queryset',
+            'query_set_id', name="Unmanaged Systems")
+        activeFilterId = schema._getRowPk(db, 'querysets_filterentry',
+            'filter_entry_id', field="current_state.name", 
+            operator="EQUALS", value="responsive")
+        unManagedFilterId = schema._getRowPk(db, 'querysets_filterentry',
+            'filter_entry_id', field="current_state.name", 
+            operator="EQUALS", value="unmanaged")
+
+        schema._addTableRows(db, "querysets_querytag", "query_tag",
+            [dict(query_set_id=activeQuerySetId, 
+                query_tag="query-tag-Active Systems-2"),
+             dict(query_set_id=unManagedQuerySetId, 
+                query_tag="query-tag-Unmanaged Systems-3"),
+            ])
+
+        schema._addTableRows(db, "querysets_queryset_filter_entries", rows=
+            [dict(queryset_id=activeQuerySetId, filterentry_id=activeFilterId),
+             dict(queryset_id=unManagedQuerySetId, filterentry_id=unManagedFilterId),
+            ])
+
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
