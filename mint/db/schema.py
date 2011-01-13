@@ -1994,16 +1994,16 @@ def _createQuerySetSchema(db):
         )""")
     responsive = _getRowPk(db, "querysets_filterentry",
         "filter_entry_id", field="current_state.name", 
-        operator="EQUALS", value="responsive")
+        operator="EQUAL", value="responsive")
     unmanaged = _getRowPk(db, "querysets_filterentry",
         "filter_entry_id", field="current_state.name", 
-        operator="EQUALS", value="unmanaged")
+        operator="EQUAL", value="unmanaged")
     changed |= _addTableRows(db, "querysets_filterentry",
         "filter_entry_id",
         [dict(filter_entry_id=responsive or 1, field="current_state.name", 
-            operator="EQUALS", value="responsive"),
+            operator="EQUAL", value="responsive"),
          dict(filter_entry_id=unmanaged or 2, field="current_state.name", 
-            operator="EQUALS", value="unmanaged"),
+            operator="EQUAL", value="unmanaged"),
         ])
 
     changed |= createTable(db, 'querysets_querytag', """
@@ -2054,10 +2054,10 @@ def _createQuerySetSchema(db):
         'query_set_id', name="Unmanaged Systems")
     activeFilterId = _getRowPk(db, 'querysets_filterentry',
         'filter_entry_id', field="current_state.name", 
-        operator="EQUALS", value="responsive")
+        operator="EQUAL", value="responsive")
     unManagedFilterId = _getRowPk(db, 'querysets_filterentry',
         'filter_entry_id', field="current_state.name", 
-        operator="EQUALS", value="unmanaged")
+        operator="EQUAL", value="unmanaged")
     activeQueryFilterId = _getRowPk(db, "querysets_queryset_filter_entries",
         "id", queryset_id=activeQuerySetId, filterentry_id=activeFilterId)
     unManagedQueryFilterId = _getRowPk(db, "querysets_queryset_filter_entries",

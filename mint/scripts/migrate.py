@@ -2398,9 +2398,9 @@ class MigrateTo_53(SchemaMigration):
 
         schema._addTableRows(db, "querysets_filterentry", rows=
             [dict(field="current_state.name", 
-                operator="EQUALS", value="responsive"),
+                operator="EQUAL", value="responsive"),
              dict(field="current_state.name", 
-                operator="EQUALS", value="unmanaged"),
+                operator="EQUAL", value="unmanaged"),
             ])
 
         activeQuerySetId = schema._getRowPk(db, 'querysets_queryset',
