@@ -1,4 +1,9 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All rights reserved.
+#
 
 import datetime
 from dateutil import parser
@@ -338,7 +343,12 @@ class BaseManager(models.Manager):
         in obj.
         """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
-            rel_obj_name = m2m_mgr.target_field_name
+            _xobj = getattr(m2m_mgr.model, '_xobj', None)
+            if _xobj:
+                rel_obj_name = _xobj.tag or m2m_mgr.target_field_name
+            else:
+                rel_obj_name = m2m_mgr.target_field_name
+
             self.clear_m2m_accessor(model, m2m_accessor)
             acobj = getattr(obj, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
@@ -639,6 +649,21 @@ class XObjModel(models.Model):
             underscoreName = mintutils.Transformations.strToUnderscore(
                 name[0].lower() + name[1:])
             ret._xobjClass = type(underscoreName, (object, ), {})
+
+            retXObj = getattr(ret, '_xobj', None)
+            if retXObj:
+                for base in bases:
+                    _xobj = getattr(base, '_xobj', None)
+                    if not _xobj:
+                        continue
+                    newAttrs = _xobj.attributes.copy()
+                    newAttrs.update(ret._xobj.attributes)
+                    ret._xobj.attributes = newAttrs
+
+                    for elem in _xobj.elements:
+                        if elem not in ret._xobj.elements:
+                            ret._xobj.elements.append(elem)
+
             return ret
 
     class Meta:
@@ -743,11 +768,12 @@ class XObjModel(models.Model):
             fields_dict[f.name] = getattr(self, f.name, None)
         return fields_dict
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         """
         Returns the xml serialization of this model.
         """
-        xobj_model = self.serialize(request)
+        if not xobj_model:
+            xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
     def get_absolute_url(self, request=None, parents=None, model=None):
@@ -764,13 +790,21 @@ class XObjModel(models.Model):
         # specified so that when generating a url for a Network model, the
         # system parent can be sent in, such that the result is
         # /api/inventory/systems/1/networks, where 1 is the system pk.
-        if not parents:
-            url_key = getattr(self, 'pk', [])
-            url_key = [str(url_key)]
-        else:
+        _parents = getattr(self, '_parents', None)
+        if parents:
             url_key = []
             for parent in parents:
                 url_key.append(str(parent.pk))
+        elif _parents:
+            url_key = []
+            for parent in _parents:
+                url_key.append(str(parent.pk))
+        else:
+            url_key = getattr(self, 'pk', None)
+            if url_key:
+                url_key = [str(url_key)]
+            else:
+                url_key = []
 
         # Now do what models.pattern does.
         bits = (view_name, url_key)
@@ -1041,6 +1075,10 @@ class XObjModel(models.Model):
         xobjModelClass = self._xobjClass
         xobj_model = xobjModelClass()
 
+        _xobj = getattr(self, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj = _xobj
+
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
 
@@ -1055,7 +1093,6 @@ class XObjModel(models.Model):
         self.serialize_list_fields(xobj_model, request, values=values)
 
         return xobj_model
-
 
 class SyntheticField(object):
     """A field that has no database storage, but is de-serialized"""
@@ -1082,8 +1119,12 @@ class XObjIdModel(XObjModel):
 
     def serialize(self, request=None, values=None):
         xobj_model = XObjModel.serialize(self, request, values=values)
-        xobj_model._xobj = xobj.XObjMetadata(
-                            attributes = {'id':str})
+        _xobj = getattr(xobj_model, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj.attributes['id'] = str
+        else:
+            xobj_model._xobj = xobj.XObjMetadata(
+                                attributes = {'id':str})
         xobj_model.id = self.get_absolute_url(request, model=xobj_model)
         return xobj_model
 

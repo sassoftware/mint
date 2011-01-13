@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<django-objects version="1.0">
+  <object pk="1" model="querysets.inclusionmethod">
+    <field type="TextField" name="inclusion_method">filtered</field>
+  </object>
+  <object pk="2" model="querysets.inclusionmethod">
+    <field type="TextField" name="inclusion_method">chosen</field>
+  </object>
+  <object pk="1" model="querysets.queryset">
+    <field type="TextField" name="name">All Systems</field>
+    <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
+    <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel"/>
+  </object>
+  <object pk="1" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="query_tag">query-tag-All Systems-1</field>
+  </object>
+</django-objects>

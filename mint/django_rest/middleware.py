@@ -11,6 +11,9 @@ import traceback
 import libxml2
 import libxslt
 
+from debug_toolbar import middleware
+
+from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
 from django.http import HttpResponseBadRequest, HttpResponse
@@ -20,7 +23,16 @@ from mint import logerror
 from mint import mint_error
 from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils
+
+from xobj import xobj
+
+try:
+    # The mod_python version is more efficient, so try importing it first.
+    from mod_python.util import parse_qsl # pyflakes=ignore
+except ImportError:
+    from cgi import parse_qsl # pyflakes=ignore
 
 log = logging.getLogger(__name__)
 
@@ -135,7 +147,7 @@ class SetMintConfigMiddleware(object):
 
         return None
 
-class SetMintConfigLocalMiddleware(object):
+class LocalSetMintConfigMiddleware(object):
 
     def process_request(self, request):
         cfg = config.MintConfig()
@@ -179,7 +191,92 @@ class NoParamsRequest(object):
         return self.request.path
 
 class RedirectMiddleware(redirectsmiddleware.RedirectFallbackMiddleware):
+    """
+    Middleware that process redirects irregardless of any query parameters
+    specified.  Overrides default django redirect middleware functionality.
+    """
     def process_response(self, request, response):
         nPRequest = NoParamsRequest(request)
         return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
 
+
+class LocalQueryParameterMiddleware(object):
+
+    def process_request(self, request):
+        if '?' in request.path:
+            url, questionParams = request.path.split('?', 1)
+            questionParams = parse_qsl(questionParams)
+        else:
+            questionParams = []
+            url = request.path
+
+        if ';' in url:
+            request.path, semiColonParams = url.split(';', 1)
+            request.path_info = request.path
+            semiColonParams = parse_qsl(semiColonParams)
+        else:
+            semiColonParams = []
+
+        qs = request.environ.get('QUERY_STRING', [])
+        if qs:
+            qs = parse_qsl(qs)
+        else:
+            qs = []
+
+        params = questionParams + semiColonParams + qs
+        request.params = ['%s=%s' % (k, v) for k, v in params]
+        request.params = ';' + ';'.join(request.params)
+        method = request.GET.get('_method', None)
+        if method:
+            request.params += ';_method=%s' % method
+        request.GET = http.QueryDict(request.params)
+
+class PerformanceMiddleware(middleware.DebugToolbarMiddleware):
+
+    def process_request(self, request):
+        metrics = request.GET.get('metrics', None)
+        if metrics:
+            middleware.DebugToolbarMiddleware.process_request(self, request)
+
+    def process_response(self, request, response):
+        metrics = request.GET.get('metrics', None)
+        if not metrics:
+            return response
+
+        debugToolbar = self.debug_toolbars.get(request, None)
+        if debugToolbar:
+            response = middleware.DebugToolbarMiddleware.process_response(
+                self, request, response)
+
+            metricsModel = metricsmodels.Metrics()
+
+            for panel in debugToolbar.panels:
+                if hasattr(panel, 'get_context'):
+                    model = metricsmodels.panelModels[panel.__class__]
+                    modelInst = model(panel.get_context())
+                    tag = getattr(model._xobj, 'tag', model.__class__.__name__)
+                    setattr(metricsModel, tag, modelInst)
+
+            xobj_model = response.model.serialize(request)
+            xobj_model.metrics = metricsModel.serialize(request)
+            response.content = ''
+            response.write(response.model.toxml(request, xobj_model))
+
+            return response
+        else:
+            if hasattr(response, 'model'):
+                response.write(response.model.to_xml(request))
+            return response
+
+
+class SerializeXmlMiddleware(object):
+    def process_response(self, request, response):
+        if hasattr(response, 'model'):
+            metrics = request.GET.get('metrics', None)
+            if metrics:
+                return response
+
+            response.write(response.model.to_xml(request))
+
+        return response
+        

@@ -4,8 +4,6 @@
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory metrics modellib manager querysets
-
 python_files = $(wildcard *.py)
 
 all: default-all
@@ -15,5 +13,5 @@ install: pyfiles-install default-install
 clean: default-clean
 
 
-include ../../../Make.rules
+include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
