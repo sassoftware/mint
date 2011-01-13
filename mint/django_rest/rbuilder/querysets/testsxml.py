@@ -125,3 +125,30 @@ query_sets_filtered_xml = """\
 query_sets_chosen_xml = """\
 """
 
+systems_chosen_put_xml = """\
+<?xml version="1.0"?>
+<systems>
+    <system id="http://testserver/api/inventory/systems/5">
+        <generated_uuid>system-5-generated-uuid</generated_uuid>
+        <local_uuid>system-5-local-uuid</local_uuid>
+    </system>
+    <system id="http://testserver/api/inventory/systems/6">
+        <generated_uuid>system-6-generated-uuid</generated_uuid>
+        <local_uuid>system-6-local-uuid</local_uuid>
+    </system>
+</systems>
+"""
+
+systems_chosen_put_xml2 = """\
+<?xml version="1.0"?>
+<systems>
+    <system id="http://testserver/api/inventory/systems/7">
+        <generated_uuid>system-7-generated-uuid</generated_uuid>
+        <local_uuid>system-7-local-uuid</local_uuid>
+    </system>
+    <system id="http://testserver/api/inventory/systems/8">
+        <generated_uuid>system-8-generated-uuid</generated_uuid>
+        <local_uuid>system-8-local-uuid</local_uuid>
+    </system>
+</systems>
+"""

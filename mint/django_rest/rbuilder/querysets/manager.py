@@ -143,3 +143,14 @@ class QuerySetManager(basemanager.BaseManager):
         querySet = models.QuerySet.objects.get(pk=querySetId)
         # Just return the system filter descriptor for now
         return models.SystemQuerySetDescriptor()
+
+    @exposed
+    def updateQuerySetChosen(self, querySetId, resources):
+        querySet = models.QuerySet.objects.get(pk=querySetId)
+        queryTag = self.getQueryTag(querySet)
+        chosenMethod = models.InclusionMethod.objects.get(
+            inclusion_method='chosen')
+        resources = getattr(resources, querySet.resource_type)
+        tagMethod = getattr(self, self.tagMethodMap[querySet.resource_type])
+        tagMethod(resources, queryTag, chosenMethod)
+        return self.getQuerySetChosenResult(querySetId)

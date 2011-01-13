@@ -51,7 +51,7 @@ class QuerySetChosenResultService(BaseQuerySetService):
     @requires(['systems']) 
     @return_xml
     def rest_PUT(self, request, query_set_id, systems=None):
-        pass
+        return self.mgr.updateQuerySetChosen(query_set_id, systems)
 
 class QuerySetFilteredResultService(BaseQuerySetService):
 

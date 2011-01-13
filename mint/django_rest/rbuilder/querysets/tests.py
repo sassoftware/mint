@@ -45,6 +45,13 @@ class QuerySetFixturedTestCase(XMLTestCase):
         XMLTestCase.setUp(self)
         self.mgr = manager.QuerySetManager()
 
+    def xobjResponse(self, url):
+        response = self._get(url,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        return systems
+
     def testGetQuerySets(self):
         response = self._get('/api/query_sets/',
             username="admin", password="password")
@@ -82,8 +89,25 @@ class QuerySetFixturedTestCase(XMLTestCase):
         systems = xobjModel.systems
         self.assertEquals(systems.count, '39')
 
-    def testPostQuerySetChosen(self):
-        pass
+    def testPutQuerySetChosen(self):
+        response = self._put('/api/query_sets/2/chosen/',
+            data=testsxml.systems_chosen_put_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        systems = self.xobjResponse('/api/query_sets/2/chosen/')
+        self.assertEquals(len(systems.system), 3)
+        self.assertEquals([s.name for s in systems.system],
+            [u'System name 4', u'System name 5', u'System name 6'])
+
+        response = self._put('/api/query_sets/2/chosen/',
+            data=testsxml.systems_chosen_put_xml2,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        systems = self.xobjResponse('/api/query_sets/2/chosen/')
+        self.assertEquals(len(systems.system), 5)
+        self.assertEquals([s.name for s in systems.system],
+            [u'System name 4', u'System name 5', u'System name 6',
+             u'System name 7', u'System name 8'])
 
     def testPostQuerySetFiltered(self):
         pass
