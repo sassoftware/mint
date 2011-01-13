@@ -2048,6 +2048,20 @@ def _createQuerySetSchema(db):
             UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
         )""")
 
+    changed |= createTable(db, "querysets_queryset_filter_entries", """
+        CREATE TABLE "querysets_queryset_filter_entries" (
+            "id" %(PRIMARYKEY)s,
+            "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "filterentry_id" INTEGER
+                REFERENCES "querysets_filterentry" ("filter_entry_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("queryset_id", "filterentry_id")
+        )""")
+
     activeQuerySetId = _getRowPk(db, 'querysets_queryset',
         'query_set_id', name="Active Systems")
     unManagedQuerySetId = _getRowPk(db, 'querysets_queryset',
@@ -2063,19 +2077,6 @@ def _createQuerySetSchema(db):
     unManagedQueryFilterId = _getRowPk(db, "querysets_queryset_filter_entries",
         "id", queryset_id=unManagedQuerySetId, filterentry_id=unManagedFilterId)
 
-    changed |= createTable(db, "querysets_queryset_filter_entries", """
-        CREATE TABLE "querysets_queryset_filter_entries" (
-            "id" %(PRIMARYKEY)s,
-            "queryset_id" INTEGER
-                REFERENCES "querysets_queryset" ("query_set_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            "filterentry_id" INTEGER
-                REFERENCES "querysets_filterentry" ("filter_entry_id")
-                ON DELETE CASCADE
-                NOT NULL,
-            UNIQUE ("queryset_id", "filterentry_id")
-        )""")
     changed |= _addTableRows(db, "querysets_queryset_filter_entries", 
         "id",
         [dict(id=activeQueryFilterId or 1, queryset_id=activeQuerySetId, 
