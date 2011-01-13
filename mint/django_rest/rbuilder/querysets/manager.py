@@ -42,6 +42,12 @@ class QuerySetManager(basemanager.BaseManager):
         self.tagQuerySet(querySet)
         return querySet
 
+    @exposed
+    def updateQuerySet(self, querySet):
+        querySet.save()
+        self.tagQuerySet(querySet)
+        return querySet
+
     def getQueryTag(self, querySet):
         try:
             queryTag = models.QueryTag.objects.get(query_set=querySet)
@@ -154,3 +160,4 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod = getattr(self, self.tagMethodMap[querySet.resource_type])
         tagMethod(resources, queryTag, chosenMethod)
         return self.getQuerySetChosenResult(querySetId)
+
