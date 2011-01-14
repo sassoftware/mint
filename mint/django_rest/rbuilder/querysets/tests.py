@@ -39,7 +39,7 @@ class QuerySetTestCase(XMLTestCase):
             "Unmanaged systems")
 
 class QuerySetFixturedTestCase(XMLTestCase):
-    fixtures = ['systems-named-like-3-queryset', 'system_collection']
+    fixtures = ['systems_named_like_3_queryset', 'system_collection']
 
     def setUp(self):
         XMLTestCase.setUp(self)
