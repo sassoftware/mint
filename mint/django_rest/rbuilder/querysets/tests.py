@@ -110,4 +110,16 @@ class QuerySetFixturedTestCase(XMLTestCase):
              u'System name 7', u'System name 8'])
 
     def testUpdateQuerySet(self):
-        pass
+        response = self._put('/api/query_sets/4/',
+            data=testsxml.query_set_update_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+    
+        querySet = models.QuerySet.objects.get(pk=4)
+        self.assertEquals(len(querySet.filter_entries.all()), 2)
+        self.assertEquals(querySet.filter_entries.all()[1].field,
+            'description')
+        self.assertEquals(querySet.filter_entries.all()[1].field,
+            'LIKE')
+        self.assertEquals(querySet.filter_entries.all()[1].field,
+            '3')

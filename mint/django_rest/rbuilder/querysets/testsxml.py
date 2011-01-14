@@ -208,3 +208,24 @@ systems_chosen_put_xml2 = """\
     </system>
 </systems>
 """
+
+query_set_update_xml = """\
+<?xml version="1.0"?>
+<query_set id="http://testserver/api/query_sets/4">
+  <name>Systems named like 3</name>
+  <filter_entries>
+    <filter_entry>
+      <operator>LIKE</operator>
+      <field>name</field>
+      <filter_entry_id>3</filter_entry_id>
+      <value>3</value>
+    </filter_entry>
+    <filter_entry>
+      <operator>LIKE</operator>
+      <field>description</field>
+      <value>3</value>
+    </filter_entry>
+  </filter_entries>
+</query_set>
+"""
+

@@ -31,7 +31,7 @@ class QuerySetService(BaseQuerySetService):
     @requires('query_set')
     @return_xml
     def rest_PUT(self, request, query_set_id, query_set):
-        self.mgr.updateQuerySet(query_set)
+        return self.mgr.updateQuerySet(query_set)
 
 class QuerySetAllResultService(BaseQuerySetService):
     
