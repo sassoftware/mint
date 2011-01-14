@@ -73,23 +73,34 @@ class QuerySetManager(basemanager.BaseManager):
                 system=system, query_tag=tag, inclusion_method=inclusionMethod)
             systemTag.save()
 
-    def filterQuerySet(self, querySet):
+    def filterQuerySet(self, querySet, resources=None):
         model = modellib.type_map[querySet.resource_type]
-        resources = model.objects.all()
+        if not resources:
+            resources = EmptyQuerySet(model)
+        if querySet.filter_entries.all():
+            newResources = model.objects.all()
+        else:
+            newResources = EmptyQuerySet(model)
         for filt in querySet.filter_entries.all():
             # Replace all '.' with '__', to handle fields that span
             # relationships
             field = filt.field.replace('.', '__')
             operator = modellib.filterTermMap[filt.operator]
+            value = filt.value
+            if value is None:
+                value = False
 
             k = '%s__%s' % (field, operator)
-            filtDict = {k:filt.value}
+            filtDict = {k:value}
             if operator.startswith('NOT_'):
-                resources = resources.filter(~Q(**filtDict))
+                newResources = newResources.filter(~Q(**filtDict))
             else:
-                resources = resources.filter(**filtDict)
+                newResources = newResources.filter(**filtDict)
 
-        return resources
+        for childQuerySet in querySet.children.all():
+            resources = newResources | self.filterQuerySet(childQuerySet, resources)
+
+        return resources | newResources
 
     def getResourceCollection(self, querySet, resources):
         resourceCollection = modellib.type_map[
@@ -117,7 +128,7 @@ class QuerySetManager(basemanager.BaseManager):
         resourceCollection.view_name = "QuerySetChosenResult"
         return resourceCollection
 
-    def _getQuerySetChosenResult(self, querySet):
+    def _getQuerySetChosenResult(self, querySet, resources=None):
         queryTag = self.getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.get(
             inclusion_method='chosen')
@@ -125,11 +136,15 @@ class QuerySetManager(basemanager.BaseManager):
         taggedModels = tagModel.objects.filter(query_tag=queryTag,
             inclusion_method=chosenMethod)
         resourceModel = modellib.type_map[querySet.resource_type]
-        resources = EmptyQuerySet(resourceModel)
+        if not resources:
+            resources = EmptyQuerySet(resourceModel)
         for taggedModel in taggedModels:
             r = getattr(taggedModel, querySet.resource_type)
             r = resourceModel.objects.filter(pk=r.pk)
             resources = resources | r
+        for childQuerySet in querySet.children.all():
+            resources = resources | self._getQuerySetChosenResult(childQuerySet,
+                resources)
         return resources
 
     @exposed

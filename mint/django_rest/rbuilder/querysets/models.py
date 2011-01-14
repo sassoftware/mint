@@ -64,7 +64,7 @@ class QuerySet(modellib.XObjIdModel):
                 tag = "query_set")
 
     query_set_id = models.AutoField(primary_key=True)
-    name = models.TextField()
+    name = models.TextField(unique=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
     children = models.ManyToManyField("self", symmetrical=False)
@@ -97,7 +97,7 @@ class FilterEntry(modellib.XObjIdModel):
     filter_entry_id = models.AutoField(primary_key=True)
     field = models.TextField()
     operator = models.TextField(choices=OPERATOR_CHOICES)
-    value = models.TextField()
+    value = models.TextField(null=True)
 
 class QueryTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
