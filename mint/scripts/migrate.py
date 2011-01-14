@@ -2313,6 +2313,10 @@ class MigrateTo_53(SchemaMigration):
                 "value" TEXT NOT NULL,
                 UNIQUE("field", "operator", "value")
             )""")
+        schema._addTableRows(db, "querysets_filterentry",
+            "filter_entry_id",
+            [dict(field="name", operator="IS_NULL", value=None)],
+            ["field", "operator", "value"])
 
         schema.createTable(db, 'querysets_querytag', """
             CREATE TABLE "querysets_querytag" (
@@ -2367,6 +2371,10 @@ class MigrateTo_53(SchemaMigration):
                     NOT NULL,
                 UNIQUE ("queryset_id", "filterentry_id")
             )""")
+        schema._addTableRows(db, "querysets_queryset_filter_entries",
+            'id',
+            [dict(queryset_id=1, filterentry_id=1)],
+            ['queryset_id', 'filterentry_id'])
 
         schema.createTable(db, "querysets_queryset_children", """
             CREATE TABLE "querysets_queryset_children" (
@@ -2396,35 +2404,23 @@ class MigrateTo_53(SchemaMigration):
                 modified_date=str(datetime.datetime.now(tz.tzutc()))),
             ])
 
-        schema._addTableRows(db, "querysets_filterentry", rows=
+        schema._addTableRows(db, "querysets_filterentry", 
+            'filter_entry_id',
             [dict(field="current_state.name", 
                 operator="EQUAL", value="responsive"),
              dict(field="current_state.name", 
-                operator="EQUAL", value="unmanaged"),
-            ])
-
-        activeQuerySetId = schema._getRowPk(db, 'querysets_queryset',
-            'query_set_id', name="Active Systems")
-        unManagedQuerySetId = schema._getRowPk(db, 'querysets_queryset',
-            'query_set_id', name="Unmanaged Systems")
-        activeFilterId = schema._getRowPk(db, 'querysets_filterentry',
-            'filter_entry_id', field="current_state.name", 
-            operator="EQUALS", value="responsive")
-        unManagedFilterId = schema._getRowPk(db, 'querysets_filterentry',
-            'filter_entry_id', field="current_state.name", 
-            operator="EQUALS", value="unmanaged")
+                operator="EQUAL", value="unmanaged")],
+            ["field", "operator", "value"])
 
         schema._addTableRows(db, "querysets_querytag", "query_tag",
-            [dict(query_set_id=activeQuerySetId, 
+            [dict(query_set_id=2, 
                 query_tag="query-tag-Active Systems-2"),
-             dict(query_set_id=unManagedQuerySetId, 
-                query_tag="query-tag-Unmanaged Systems-3"),
-            ])
+             dict(query_set_id=3, 
+                query_tag="query-tag-Unmanaged Systems-3")])
 
         schema._addTableRows(db, "querysets_queryset_filter_entries", rows=
-            [dict(queryset_id=activeQuerySetId, filterentry_id=activeFilterId),
-             dict(queryset_id=unManagedQuerySetId, filterentry_id=unManagedFilterId),
-            ])
+            [dict(queryset_id=2, filterentry_id=2),
+             dict(queryset_id=3, filterentry_id=3)])
 
         return True
 

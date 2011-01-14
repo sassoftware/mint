@@ -1772,7 +1772,7 @@ def _addSystemTypes(db):
     
     return changed
 
-def _addTableRows(db, table, uniqueKey=None, rows={}):
+def _addTableRows(db, table, uniqueKey, rows, uniqueCols=[]):
     """
     Adds rows to the table, if they do not exist already
     The rows argument is a list of dictionaries
@@ -1783,11 +1783,15 @@ def _addTableRows(db, table, uniqueKey=None, rows={}):
     inserts = []
     sql = "SELECT 1 FROM %s WHERE %s = ?" % (table, uniqueKey)
     tableCols = rows[0].keys()
+    if not uniqueCols:
+        uniqueCols = [uniqueKey]
     for row in rows:
-        if uniqueKey:
-            cu.execute(sql, row[uniqueKey])
-            if cu.fetchall():
-                continue
+        valList = [{c:row[c]} for c in uniqueCols]
+        uniqueValues = {}
+        [uniqueValues.update(v) for v in valList]
+        pk = _getRowPk(db, table, uniqueKey, **uniqueValues)
+        if pk:
+            continue
         inserts.append(tuple(row[c] for c in tableCols))
     if not inserts:
         return False
@@ -1967,7 +1971,7 @@ def _createQuerySetSchema(db):
     changed |= createTable(db, 'querysets_queryset', """
         CREATE TABLE "querysets_queryset" (
             "query_set_id" %(PRIMARYKEY)s,
-            "name" TEXT NOT NULL,
+            "name" TEXT NOT NULL UNIQUE,
             "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "resource_type" TEXT NOT NULL
@@ -1989,22 +1993,15 @@ def _createQuerySetSchema(db):
             "filter_entry_id" %(PRIMARYKEY)s,
             "field" TEXT NOT NULL,
             "operator" TEXT NOT NULL,
-            "value" TEXT NOT NULL,
+            "value" TEXT,
             UNIQUE("field", "operator", "value")
         )""")
-    responsive = _getRowPk(db, "querysets_filterentry",
-        "filter_entry_id", field="current_state.name", 
-        operator="EQUAL", value="responsive")
-    unmanaged = _getRowPk(db, "querysets_filterentry",
-        "filter_entry_id", field="current_state.name", 
-        operator="EQUAL", value="unmanaged")
     changed |= _addTableRows(db, "querysets_filterentry",
-        "filter_entry_id",
-        [dict(filter_entry_id=responsive or 1, field="current_state.name", 
-            operator="EQUAL", value="responsive"),
-         dict(filter_entry_id=unmanaged or 2, field="current_state.name", 
-            operator="EQUAL", value="unmanaged"),
-        ])
+        'filter_entry_id',
+        [dict(field="name", operator="IS_NULL", value=None),
+         dict(field="current_state.name", operator="EQUAL", value="responsive"),
+         dict(field="current_state.name", operator="EQUAL", value="unmanaged")],
+        ['field', 'operator', 'value'])
 
     changed |= createTable(db, 'querysets_querytag', """
         CREATE TABLE "querysets_querytag" (
@@ -2062,28 +2059,12 @@ def _createQuerySetSchema(db):
             UNIQUE ("queryset_id", "filterentry_id")
         )""")
 
-    activeQuerySetId = _getRowPk(db, 'querysets_queryset',
-        'query_set_id', name="Active Systems")
-    unManagedQuerySetId = _getRowPk(db, 'querysets_queryset',
-        'query_set_id', name="Unmanaged Systems")
-    activeFilterId = _getRowPk(db, 'querysets_filterentry',
-        'filter_entry_id', field="current_state.name", 
-        operator="EQUAL", value="responsive")
-    unManagedFilterId = _getRowPk(db, 'querysets_filterentry',
-        'filter_entry_id', field="current_state.name", 
-        operator="EQUAL", value="unmanaged")
-    activeQueryFilterId = _getRowPk(db, "querysets_queryset_filter_entries",
-        "id", queryset_id=activeQuerySetId, filterentry_id=activeFilterId)
-    unManagedQueryFilterId = _getRowPk(db, "querysets_queryset_filter_entries",
-        "id", queryset_id=unManagedQuerySetId, filterentry_id=unManagedFilterId)
-
-    changed |= _addTableRows(db, "querysets_queryset_filter_entries", 
-        "id",
-        [dict(id=activeQueryFilterId or 1, queryset_id=activeQuerySetId, 
-            filterentry_id=activeFilterId),
-         dict(id=unManagedQueryFilterId or 2, queryset_id=unManagedQuerySetId, 
-            filterentry_id=unManagedFilterId),
-        ])
+    changed |= _addTableRows(db, "querysets_queryset_filter_entries",
+        'id',
+        [dict(queryset_id=1, filterentry_id=1),
+         dict(queryset_id=2, filterentry_id=2),
+         dict(queryset_id=3, filterentry_id=3)],
+        ['queryset_id', 'filterentry_id'])
 
     changed |= createTable(db, "querysets_queryset_children", """
         CREATE TABLE "querysets_queryset_children" (
