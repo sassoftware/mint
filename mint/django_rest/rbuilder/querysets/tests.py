@@ -119,7 +119,7 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(len(querySet.filter_entries.all()), 2)
         self.assertEquals(querySet.filter_entries.all()[1].field,
             'description')
-        self.assertEquals(querySet.filter_entries.all()[1].field,
+        self.assertEquals(querySet.filter_entries.all()[1].operator,
             'LIKE')
-        self.assertEquals(querySet.filter_entries.all()[1].field,
+        self.assertEquals(querySet.filter_entries.all()[1].value,
             '3')
