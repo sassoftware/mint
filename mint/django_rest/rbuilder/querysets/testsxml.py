@@ -22,7 +22,14 @@ query_sets_xml = """\
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/1/filter_descriptor"/>
     <name>All Systems</name>
-    <filter_entries/>
+    <filter_entries>
+      <filter_entry>
+        <field>name</field>
+        <filter_entry_id>1</filter_entry_id>
+        <operator>IS_NULL</operator>
+        <value/>
+      </filter_entry>
+    </filter_entries>
     <query_set_id>1</query_set_id>
     <all_members id="http://testserver/api/query_sets/1/all"/>
     <chosen_members id="http://testserver/api/query_sets/1/chosen"/>
@@ -47,7 +54,7 @@ query_sets_xml = """\
       <filter_entry>
         <operator>EQUAL</operator>
         <field>current_state.name</field>
-        <filter_entry_id>1</filter_entry_id>
+        <filter_entry_id>2</filter_entry_id>
         <value>responsive</value>
       </filter_entry>
     </filter_entries>
@@ -75,7 +82,7 @@ query_sets_xml = """\
       <filter_entry>
         <operator>EQUAL</operator>
         <field>current_state.name</field>
-        <filter_entry_id>2</filter_entry_id>
+        <filter_entry_id>3</filter_entry_id>
         <value>unmanaged</value>
       </filter_entry>
     </filter_entries>
@@ -103,7 +110,7 @@ query_sets_xml = """\
       <filter_entry>
         <operator>LIKE</operator>
         <field>name</field>
-        <filter_entry_id>3</filter_entry_id>
+        <filter_entry_id>4</filter_entry_id>
         <value>3</value>
       </filter_entry>
     </filter_entries>
@@ -142,7 +149,7 @@ query_set_xml = """\
     <filter_entry>
       <operator>LIKE</operator>
       <field>name</field>
-      <filter_entry_id>3</filter_entry_id>
+      <filter_entry_id>4</filter_entry_id>
       <value>3</value>
     </filter_entry>
   </filter_entries>

@@ -80,6 +80,51 @@
     <field type="TextField" name="query_tag">query-tag-All Virtual Systems-7</field>
   </object>
 
+  <object pk="8" model="querysets.queryset">
+    <field type="TextField" name="name">Tagged Systems 1</field>
+    <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
+    <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+    </field>
+  </object>
+  <object pk="8" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">8</field>
+    <field type="TextField" name="query_tag">query-tag-Tagged Systems 1-8</field>
+  </object>
+
+  <object pk="9" model="querysets.queryset">
+    <field type="TextField" name="name">Tagged Systems 2</field>
+    <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
+    <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+    </field>
+  </object>
+  <object pk="9" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">9</field>
+    <field type="TextField" name="query_tag">query-tag-Tagged Systems 2-9</field>
+  </object>
+
+  <object pk="10" model="querysets.queryset">
+    <field type="TextField" name="name">Tagged Systems 1 and 2</field>
+    <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
+    <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel">
+      <object pk="8"/>
+      <object pk="9"/>
+    </field>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+    </field>
+  </object>
+  <object pk="10" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">10</field>
+    <field type="TextField" name="query_tag">query-tag-Tagged Systems 1 and 2-10</field>
+  </object>
+
   <object pk="1" model="rbuilder.targets">
     <field type="CharField" name="targettype">aws</field>
     <field type="CharField" name="targetname">ec2</field>
@@ -252,6 +297,118 @@
         <field type="NullBooleanField" name="active"><None></None></field>
         <field type="NullBooleanField" name="required"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="215" model="inventory.system">
+        <field type="CharField" name="name">System name 215</field>
+        <field type="CharField" name="description">System description 215</field>
+        <field type="DateTimeField" name="created_date">2010-12-06 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date"><None></None></field>
+        <field type="CharField" name="generated_uuid">system-215-generated-uuid</field>
+        <field type="CharField" name="local_uuid">system-215-local-uuid</field>
+        <field type="CharField" name="ssl_client_certificate">system-215-ssl-client-certificate</field>
+        <field type="CharField" name="ssl_client_key">system-215-ssl-client-key</field>
+        <field type="CharField" name="ssl_server_certificate">system-215-ssl-server-certificate</field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+        <field to="rbuilder.target" name="target" rel="ManyToOneRel">3</field>
+   </object>
+   <object pk="215" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">215</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="dns_name">127.0.0.215</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="216" model="inventory.system">
+        <field type="CharField" name="name">System name 216</field>
+        <field type="CharField" name="description">System description 216</field>
+        <field type="DateTimeField" name="created_date">2010-12-06 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date"><None></None></field>
+        <field type="CharField" name="generated_uuid">system-216-generated-uuid</field>
+        <field type="CharField" name="local_uuid">system-216-local-uuid</field>
+        <field type="CharField" name="ssl_client_certificate">system-216-ssl-client-certificate</field>
+        <field type="CharField" name="ssl_client_key">system-216-ssl-client-key</field>
+        <field type="CharField" name="ssl_server_certificate">system-216-ssl-server-certificate</field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+        <field to="rbuilder.target" name="target" rel="ManyToOneRel">3</field>
+   </object>
+   <object pk="216" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">216</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="dns_name">127.0.0.216</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="217" model="inventory.system">
+        <field type="CharField" name="name">System name 217</field>
+        <field type="CharField" name="description">System description 217</field>
+        <field type="DateTimeField" name="created_date">2010-12-06 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date"><None></None></field>
+        <field type="CharField" name="generated_uuid">system-217-generated-uuid</field>
+        <field type="CharField" name="local_uuid">system-217-local-uuid</field>
+        <field type="CharField" name="ssl_client_certificate">system-217-ssl-client-certificate</field>
+        <field type="CharField" name="ssl_client_key">system-217-ssl-client-key</field>
+        <field type="CharField" name="ssl_server_certificate">system-217-ssl-server-certificate</field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+        <field to="rbuilder.target" name="target" rel="ManyToOneRel">3</field>
+   </object>
+   <object pk="217" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">217</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="dns_name">127.0.0.217</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+
+  <object pk="1" model="querysets.systemtag">
+    <field to="inventory.system" name="system" rel="ManyToOneRel">215</field>
+    <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">8</field>
+    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">2</field>
+  </object>
+  <object pk="2" model="querysets.systemtag">
+    <field to="inventory.system" name="system" rel="ManyToOneRel">216</field>
+    <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">8</field>
+    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">2</field>
+  </object>
+  <object pk="3" model="querysets.systemtag">
+    <field to="inventory.system" name="system" rel="ManyToOneRel">217</field>
+    <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">9</field>
+    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">2</field>
   </object>
 
 </django-objects>
