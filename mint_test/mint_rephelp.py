@@ -520,6 +520,7 @@ class RestDBMixIn(object):
                         db.productMgr.setProductVersionDefinition
             db.productMgr.setProductVersionDefinition = mock.MockObject()
             db.reposMgr = mock.MockObject()
+        db.commit()
         return db
 
     def createUser(self, name, password=None, admin=False):
