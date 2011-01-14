@@ -2635,8 +2635,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # zone will fail to contact the rBuilder. Eventually SLP will work out
         # of the box and this won't be necessary.
         rbuilder_ip = procutil.getNetName()
-        if rbuilder_ip != 'localhost':
-            r['inventory_node'] = rbuilder_ip + ':8443'
+        if rbuilder_ip == 'localhost':
+            rbuilder_ip = self.cfg.siteHost
+        r['inventory_node'] = rbuilder_ip + ':8443'
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
@@ -2668,8 +2669,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             r['amiData'] = amiData
 
-        r['outputUrl'] = 'http://%s.%s%s' % \
-            (self.cfg.hostName, self.cfg.siteDomainName, self.cfg.basePath)
+        r['outputUrl'] = 'http://%s%s' % (rbuilder_ip, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)

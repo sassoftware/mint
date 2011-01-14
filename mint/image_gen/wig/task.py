@@ -111,8 +111,8 @@ class WigTask(plug_worker.TaskHandler):
             if not line:
                 continue
             ccfg.configLine(line)
-        ccfg.configLine('conaryProxy http http://localhost/conary/')
-        ccfg.configLine('conaryProxy https http://localhost/conary/')
+        ccfg.configLine('conaryProxy http %sconary' % (data['outputUrl']))
+        ccfg.configLine('conaryProxy https %sconary' % (data['outputUrl']))
         ccfg.dbPath = ':memory:'
         self.conaryClient = conaryclient.ConaryClient(self.conaryCfg)
 
@@ -121,10 +121,9 @@ class WigTask(plug_worker.TaskHandler):
         self.wigClient = backend.WigBackendClient(self.wigServiceUrl)
 
         # Mint service
-        self.imageBase = ('http://localhost/api/products/%s/images/%d/' % (
-                data['project']['hostname'], data['buildId'])
-                ).encode('utf8')
-        self.uploadBase = 'http://localhost/uploadBuild/%d/' % (
+        self.imageBase = ('%sapi/products/%s/images/%d/' % (data['outputUrl'],
+            data['project']['hostname'], data['buildId']) ).encode('utf8')
+        self.uploadBase = '%suploadBuild/%d/' % ( data['outputUrl'],
                 data['buildId'],)
         self.imageToken = data['outputToken'].encode('ascii')
 
