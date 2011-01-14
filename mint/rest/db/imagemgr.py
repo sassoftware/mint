@@ -130,6 +130,7 @@ class ImageManager(manager.Manager):
 
         cu = self.db.cursor()
 
+        cu.execute("DELETE FROM tmpOneVal")
         cu.executemany("INSERT INTO tmpOneVal (id) VALUES (?)",
             [ (x, ) for x in imageIds ])
 
