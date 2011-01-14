@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <django-objects version="1.0">
-  <object pk="3" model="querysets.filterentry">
+  <object pk="4" model="querysets.filterentry">
     <field type="TextField" name="field">name</field>
     <field type="TextField" name="operator">LIKE</field>
     <field type="TextField" name="value">3</field>
@@ -12,7 +12,7 @@
     <field type="TextField" name="resource_type">system</field>
     <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
-      <object pk="3"/>
+      <object pk="4"/>
     </field>
   </object>
   <object pk="4" model="querysets.querytag">

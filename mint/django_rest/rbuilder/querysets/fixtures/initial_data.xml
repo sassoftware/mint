@@ -7,11 +7,18 @@
     <field type="TextField" name="inclusion_method">chosen</field>
   </object>
   <object pk="1" model="querysets.filterentry">
+    <field type="TextField" name="field">name</field>
+    <field type="TextField" name="operator">IS_NULL</field>
+    <field type="TextField" name="value">
+        <None/>
+    </field>
+  </object>
+  <object pk="2" model="querysets.filterentry">
     <field type="TextField" name="field">current_state.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">responsive</field>
   </object>
-  <object pk="2" model="querysets.filterentry">
+  <object pk="3" model="querysets.filterentry">
     <field type="TextField" name="field">current_state.name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">unmanaged</field>
@@ -22,7 +29,9 @@
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
     <field type="TextField" name="resource_type">system</field>
     <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
-    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+        <object pk="1"/>
+    </field>
   </object>
   <object pk="1" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">1</field>
@@ -35,7 +44,7 @@
     <field type="TextField" name="resource_type">system</field>
     <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
-      <object pk="1"/>
+      <object pk="2"/>
     </field>
   </object>
   <object pk="2" model="querysets.querytag">
@@ -49,7 +58,7 @@
     <field type="TextField" name="resource_type">system</field>
     <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
-      <object pk="2"/>
+      <object pk="3"/>
     </field>
   </object>
   <object pk="3" model="querysets.querytag">
