@@ -56,21 +56,21 @@ class WigBackendClient(object):
     def getJobUrl(self):
         return self.image.imageJob.id
 
-    def getResults(self):
+    def getResults(self, kind):
         """Return a file handle to the result image."""
         results = self.image.imageJob.resultResource
         if not results.resultFiles.resultFile:
             raise RuntimeError("No files in job result")
 
         for resFile in results.resultFiles:
-            if resFile.type == 'iso':
-                # Prefer ISO to WIM
+            if resFile.type == kind:
                 break
+        else:
+            raise RuntimeError("No %r file in job result" % (kind,))
 
         size = int(resFile.size)
         fobj = resFile.path
-        kind = resFile.type.decode('utf8', 'ignore')
-        return kind, size, fobj
+        return size, fobj
 
     def getLog(self):
         """Return contents of the job log."""
