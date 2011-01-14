@@ -17,10 +17,6 @@ except:
     DATABASE_NAME = os.path.realpath('../mint-local.db')
 TEST_DATABASE_NAME = '../test-mint-local.db'
 
-appsList = list(INSTALLED_APPS)
-appsList.append('django.contrib.admin')
-INSTALLED_APPS = tuple(appsList)
-
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
     'django.contrib.auth.backends.ModelBackend'
