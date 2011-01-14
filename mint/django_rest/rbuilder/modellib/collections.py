@@ -61,6 +61,7 @@ filterTermMap = {
     'NOT_IN' : 'in',
     'MATCHING' : '',
     'NOT_MATCHING' : '',
+    'IS_NULL' : 'isnull',
 }
 
 class Collection(XObjIdModel):
