@@ -73,15 +73,12 @@ class QuerySetManager(basemanager.BaseManager):
                 system=system, query_tag=tag, inclusion_method=inclusionMethod)
             systemTag.save()
 
-    def filterQuerySet(self, querySet, resources=None):
+    def filterQuerySet(self, querySet):
         model = modellib.type_map[querySet.resource_type]
-        if not resources:
+        if not querySet.filter_entries.all():
             resources = EmptyQuerySet(model)
-        if querySet.filter_entries.all():
-            newResources = model.objects.all()
-        else:
-            newResources = EmptyQuerySet(model)
         for filt in querySet.filter_entries.all():
+            resources = model.objects.all()
             # Replace all '.' with '__', to handle fields that span
             # relationships
             field = filt.field.replace('.', '__')
@@ -93,14 +90,11 @@ class QuerySetManager(basemanager.BaseManager):
             k = '%s__%s' % (field, operator)
             filtDict = {k:value}
             if operator.startswith('NOT_'):
-                newResources = newResources.filter(~Q(**filtDict))
+                resources = resources.filter(~Q(**filtDict))
             else:
-                newResources = newResources.filter(**filtDict)
+                resources = resources.filter(**filtDict)
 
-        for childQuerySet in querySet.children.all():
-            resources = newResources | self.filterQuerySet(childQuerySet, resources)
-
-        return resources | newResources
+        return resources
 
     def getResourceCollection(self, querySet, resources):
         resourceCollection = modellib.type_map[
@@ -113,12 +107,16 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def getQuerySetAllResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
-        filtered = self._getQuerySetFilteredResult(querySet)
-        chosen =  self._getQuerySetChosenResult(querySet)
         resourceCollection = self.getResourceCollection(querySet, 
-            filtered | chosen)
+            self._getQuerySetAllResult(querySet))
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
+
+    def _getQuerySetAllResult(self, querySet):
+        filtered = self._getQuerySetFilteredResult(querySet)
+        chosen =  self._getQuerySetChosenResult(querySet)
+        children = self._getQuerySetChildResult(querySet)
+        return filtered | chosen | children
 
     @exposed
     def getQuerySetChosenResult(self, querySetId):
@@ -128,7 +126,7 @@ class QuerySetManager(basemanager.BaseManager):
         resourceCollection.view_name = "QuerySetChosenResult"
         return resourceCollection
 
-    def _getQuerySetChosenResult(self, querySet, resources=None):
+    def _getQuerySetChosenResult(self, querySet):
         queryTag = self.getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.get(
             inclusion_method='chosen')
@@ -136,15 +134,11 @@ class QuerySetManager(basemanager.BaseManager):
         taggedModels = tagModel.objects.filter(query_tag=queryTag,
             inclusion_method=chosenMethod)
         resourceModel = modellib.type_map[querySet.resource_type]
-        if not resources:
-            resources = EmptyQuerySet(resourceModel)
+        resources = EmptyQuerySet(resourceModel)
         for taggedModel in taggedModels:
             r = getattr(taggedModel, querySet.resource_type)
             r = resourceModel.objects.filter(pk=r.pk)
             resources = resources | r
-        for childQuerySet in querySet.children.all():
-            resources = resources | self._getQuerySetChosenResult(childQuerySet,
-                resources)
         return resources
 
     @exposed
@@ -157,6 +151,22 @@ class QuerySetManager(basemanager.BaseManager):
 
     def _getQuerySetFilteredResult(self, querySet):
         resources = self.filterQuerySet(querySet)
+        return resources
+
+    @exposed
+    def getQuerySetChildResult(self, querySetId):
+        querySet = models.QuerySet.objects.get(pk=querySetId)
+        resourceCollection = self.getResourceCollection(querySet,
+            self._getQuerySetChildResult(querySet))
+        resourceCollection.view_name = "QuerySetChildResult"
+        return resourceCollection
+
+    def _getQuerySetChildResult(self, querySet):
+        model = modellib.type_map[querySet.resource_type]
+        resources = EmptyQuerySet(model)
+        for childQuerySet in querySet.children.all():
+            childResources = self._getQuerySetAllResult(childQuerySet)
+            resources = resources | childResources
         return resources
 
     @exposed

@@ -45,6 +45,7 @@ query_sets_xml = """\
     <children/>
     <resource_type>system</resource_type>
     <filtered_members id="http://testserver/api/query_sets/1/filtered"/>
+    <child_members id="http://testserver/api/query_sets/1/child"/>
   </query_set>
   <query_set id="http://testserver/api/query_sets/2">
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
@@ -73,6 +74,7 @@ query_sets_xml = """\
     <children/>
     <resource_type>system</resource_type>
     <filtered_members id="http://testserver/api/query_sets/2/filtered"/>
+    <child_members id="http://testserver/api/query_sets/2/child"/>
   </query_set>
   <query_set id="http://testserver/api/query_sets/3">
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
@@ -101,6 +103,7 @@ query_sets_xml = """\
     <children/>
     <resource_type>system</resource_type>
     <filtered_members id="http://testserver/api/query_sets/3/filtered"/>
+    <child_members id="http://testserver/api/query_sets/3/child"/>
   </query_set>
   <query_set id="http://testserver/api/query_sets/4">
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
@@ -136,6 +139,7 @@ query_sets_xml = """\
     <children/>
     <resource_type>system</resource_type>
     <filtered_members id="http://testserver/api/query_sets/4/filtered"/>
+    <child_members id="http://testserver/api/query_sets/4/child"/>
   </query_set>
 </query_sets>
 """
@@ -175,6 +179,7 @@ query_set_xml = """\
   </querytags>
   <created_date>2011-01-05T00:00:00+00:00</created_date>
   <filtered_members id="http://testserver/api/query_sets/4/filtered"/>
+  <child_members id="http://testserver/api/query_sets/4/child"/>
   <resource_type>system</resource_type>
 </query_set>
 """

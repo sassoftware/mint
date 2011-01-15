@@ -38,6 +38,13 @@ class FilteredMembers(modellib.XObjIdModel):
                 tag = "filtered_members")
     view_name = "QuerySetFilteredResult"
 
+class ChildMembers(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "child_members")
+    view_name = "QuerySetChildResult"
+
 class QuerySets(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -83,6 +90,9 @@ class QuerySet(modellib.XObjIdModel):
         fm = FilteredMembers()
         fm._parents = [self]
         xobjModel.filtered_members = fm.serialize(request)
+        childM = ChildMembers()
+        childM._parents = [self]
+        xobjModel.child_members = childM.serialize(request)
 
         fd = FilterDescriptor()
         fd._parents = [self]
