@@ -271,7 +271,6 @@ system_types_put_xml="""\
 system_type_systems_xml="""
 <?xml version="1.0"?>
 <systems count="1" end_index="9" filter_by="" full_collection="http://testserver/api/inventory/systems" id="http://testserver/api/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-  <event_types href="http://testserver/api/inventory/system_types/1/event_types"/>
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
     <appliance/>
@@ -827,7 +826,6 @@ management_node_zone_post_response_xml = """\
 systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems count="2" end_index="9" filter_by="" full_collection="http://testserver/api/inventory/systems" id="http://testserver/api/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-  <event_types href="http://testserver/api/inventory/event_types"/>
   <system id="http://testserver/api/inventory/systems/2">
     <agent_port/>
     <appliance/>
@@ -3237,6 +3235,5 @@ Methods:
     <target_system_description/>
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
-  <event_types href="http://testserver/api/inventory/event_types"/>
 </systems>
 """

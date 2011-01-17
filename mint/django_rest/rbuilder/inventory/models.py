@@ -92,7 +92,6 @@ class Systems(modellib.Collection):
 
     def __init__(self):
         modellib.Collection.__init__(self)
-        self.event_types = modellib.XObjHrefModel('../event_types')
 
     def save(self):
         return [s.save() for s in self.system]
