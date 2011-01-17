@@ -7,6 +7,7 @@ import hashlib
 import itertools
 import json
 import os
+import re
 import StringIO
 import time
 from collections import namedtuple
@@ -103,7 +104,22 @@ class WigTask(plug_worker.TaskHandler):
         flavor = cny_deps.ThawFlavor(data['troveFlavor'].encode('ascii'))
         self.troveTup = trovetup.TroveTuple(name, version, flavor)
 
+        # Image parameters
         self.imageType = data['buildType']
+        baseFileName = data.get('baseFileName') or ''
+        if baseFileName:
+            baseFileName = re.sub('[^a-zA-Z0-9.-]', '_', baseFileName)
+        else:
+            try:
+                arch = self.troveTup.flavor.members[cny_deps.DEP_CLASS_IS
+                        ].members.keys()[0]
+            except KeyError:
+                arch = ''
+            baseFileName = '-'.join((
+                data['project']['hostname'],
+                self.troveTup.version.trailingRevision().version,
+                arch))
+        self.baseFileName = baseFileName.encode('utf8')
 
         # Conary configuration
         self.conaryCfg = ccfg = conarycfg.ConaryConfiguration(False)
@@ -458,9 +474,7 @@ class WigTask(plug_worker.TaskHandler):
 
     def postResults(self, fobj, size, kind, title):
         self.sendStatus(iconst.WIG_JOB_UPLOADING, "Transferring image result")
-
-        data = self.jobData
-        name = '%s-%s.%s' % (data['project']['hostname'], data['buildId'], kind)
+        name = '%s.%s' % (self.baseFileName, kind)
 
         # Report progress for file upload.
         def callback(transferred):
