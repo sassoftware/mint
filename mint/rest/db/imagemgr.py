@@ -18,7 +18,7 @@ from mint import helperfuncs
 from mint import mint_error
 from mint import notices_callbacks
 from mint import urltypes
-from mint.lib import data, database
+from mint.lib import data
 from mint.rest import errors
 from mint.rest.db import manager
 from mint.rest.api import models
@@ -129,18 +129,18 @@ class ImageManager(manager.Manager):
             return []
 
         cu = self.db.cursor()
-        database.createTemporaryTable(self.db.db.db, 'tmpBuild', [ "id int" ])
 
-        cu.executemany("INSERT INTO tmpBuild VALUES (?)",
+        cu.execute("DELETE FROM tmpOneVal")
+        cu.executemany("INSERT INTO tmpOneVal (id) VALUES (?)",
             [ (x, ) for x in imageIds ])
 
         # Grab target images
         cu.execute("""
-            SELECT t.targetType, t.targetName, tid.fileId, tid.targetImageId
+            SELECT DISTINCT t.targetType, t.targetName, tid.fileId, tid.targetImageId
               FROM Targets AS t
               JOIN TargetImagesDeployed AS tid USING (targetId)
               JOIN BuildFiles AS bf USING (fileId)
-              JOIN tmpBuild AS tb ON (bf.buildId = tb.id)
+              JOIN tmpOneVal AS tb ON (bf.buildId = tb.id)
         """)
         targetImages = {}
         for row in cu:
@@ -156,7 +156,7 @@ class ImageManager(manager.Manager):
             FROM BuildFiles f
                 JOIN BuildFilesUrlsMap USING ( fileId )
                 JOIN FilesUrls u USING ( urlId )
-                JOIN tmpBuild AS tb ON (f.buildId = tb.id)
+                JOIN tmpOneVal AS tb ON (f.buildId = tb.id)
             '''
         cu.execute(sql)
 
