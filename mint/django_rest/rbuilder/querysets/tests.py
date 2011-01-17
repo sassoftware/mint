@@ -153,3 +153,15 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
         systems = self.xobjResponse('/api/query_sets/10/all')
         self.assertEquals([s.system_id for s in systems.system],
             [u'215', u'216', u'217'])
+
+    def testUpdateChildQuery(self):
+        response = self._put('/api/query_sets/10/',
+            data=testsxml.query_set_child_update_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        querySet = models.QuerySet.objects.get(pk=10)
+        self.assertEquals([q.pk for q in querySet.children.all()],
+            [4, 8, 9])
+        systems = self.xobjResponse('/api/query_sets/10/child')
+        self.assertEquals([s.system_id for s in systems.system],
+            [u'210', u'211', u'215', u'216', u'217'])

@@ -241,3 +241,20 @@ query_set_update_xml = """\
 </query_set>
 """
 
+query_set_child_update_xml = """\
+<?xml version="1.0"?>
+<query_set id="http://127.0.0.1:8000/api/query_sets/10">
+  <name>Tagged Systems 1 and 2</name>
+  <children>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/8">
+      <name>Tagged Systems 1</name>
+    </query_set>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/9">
+      <name>Tagged Systems 2</name>
+    </query_set>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/4">
+      <name>Tagged Systems 2</name>
+    </query_set>
+  </children>
+</query_set>
+"""
