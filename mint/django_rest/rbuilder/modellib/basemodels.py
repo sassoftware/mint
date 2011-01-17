@@ -204,7 +204,7 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                href = getattr(val, 'href', None)
+                href = getattr(val, 'href', None) or getattr(val, 'id', None)
                 parentModel = field.related.parent_model
                 if href is not None:
                     val = parentModel.objects.load_from_href(href)
@@ -339,7 +339,7 @@ class BaseManager(models.Manager):
 
     def add_m2m_accessors(self, model, obj, request):
         """
-        Populate the many tom many accessors on model based on the xobj model
+        Populate the many to many accessors on model based on the xobj model
         in obj.
         """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
@@ -355,8 +355,14 @@ class BaseManager(models.Manager):
             if objlist is not None and not isinstance(objlist, list):
                 objlist = [ objlist ]
             for rel_obj in objlist or []:
-                rel_mod = type_map[rel_obj_name].objects.load_from_object(
-                    rel_obj, request)
+                modelCls = type_map[rel_obj_name]
+                href = getattr(rel_obj, 'href', None) or \
+                    getattr(rel_obj, 'id', None)
+                if href is not None:
+                    rel_mod = modelCls.objects.load_from_href(href)
+                else:
+                    rel_mod = modelCls.objects.load_from_object(
+                        rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)
 
         return model
