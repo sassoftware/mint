@@ -123,3 +123,33 @@ class QuerySetFixturedTestCase(XMLTestCase):
             'LIKE')
         self.assertEquals(querySet.filter_entries.all()[1].value,
             '3')
+
+class QuerySetChildFixturedTestCase(XMLTestCase):
+    fixtures = ['queryset_children', 'system_collection']
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        self.mgr = manager.QuerySetManager()
+
+    def xobjResponse(self, url):
+        response = self._get(url,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        systems = xobjModel.systems
+        return systems
+
+
+    def testGetQuerySetChildResult(self):
+        systems = self.xobjResponse('/api/query_sets/7/child')
+        self.assertEquals([s.system_id for s in systems.system],
+            [u'210', u'211', u'214', u'215', u'216', u'217', u'212', u'213'])
+        systems = self.xobjResponse('/api/query_sets/7/all')
+        self.assertEquals([s.system_id for s in systems.system],
+            [u'210', u'211', u'214', u'215', u'216', u'217', u'212', u'213'])
+
+        systems = self.xobjResponse('/api/query_sets/10/child')
+        self.assertEquals([s.system_id for s in systems.system],
+            [u'215', u'216', u'217'])
+        systems = self.xobjResponse('/api/query_sets/10/all')
+        self.assertEquals([s.system_id for s in systems.system],
+            [u'215', u'216', u'217'])
