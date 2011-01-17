@@ -2635,8 +2635,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # zone will fail to contact the rBuilder. Eventually SLP will work out
         # of the box and this won't be necessary.
         rbuilder_ip = procutil.getNetName()
-        if rbuilder_ip != 'localhost':
-            r['inventory_node'] = rbuilder_ip + ':8443'
+        if rbuilder_ip == 'localhost':
+            rbuilder_ip = self.cfg.siteHost
+        r['inventory_node'] = rbuilder_ip + ':8443'
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
@@ -2668,8 +2669,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             r['amiData'] = amiData
 
-        r['outputUrl'] = 'http://%s.%s%s' % \
-            (self.cfg.hostName, self.cfg.siteDomainName, self.cfg.basePath)
+        r['outputUrl'] = 'http://%s%s' % (rbuilder_ip, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
@@ -3091,10 +3091,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.builds.update(buildId, status=jobstatus.FINISHED,
                     statusMessage="Job Finished")
             return '0' * 32
-        elif buildType in buildtypes.windowsBuildTypes:
-            return self.startWindowsImageJob(buildId)
         else:
             jobData = self.serializeBuild(buildId)
+            if buildType in buildtypes.windowsBuildTypes:
+                return self.startWindowsImageJob(buildId, jobData)
+
+            # Check the product definition to see if this is based on a Windows
+            # platform.
+            if buildDict['productVersionId'] is not None:
+                pd = self._getProductDefinitionForVersionObj(
+                        buildDict['productVersionId'])
+                tags = pd.getPlatformInformation(
+                        ).platformClassifier.tags.split()
+                if 'windows' in tags:
+                    return self.startWindowsImageJob(buildId, jobData)
+
             try:
                 client = self._getMcpClient()
                 uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
@@ -3106,9 +3117,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         statusMessage="Failed to start image job - check logs")
                 raise
 
-    def startWindowsImageJob(self, buildId):
+    def startWindowsImageJob(self, buildId, jobData):
         """Direct Windows image builds to rMake 3."""
-        jobData = self.serializeBuild(buildId)
         cli = wig_client.WigClient(self._getRmakeClient())
         job_uuid, job = cli.createJob(jobData, subscribe=False)
         log.info("Created Windows image job, UUID %s", job_uuid)

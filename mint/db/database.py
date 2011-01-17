@@ -27,6 +27,7 @@ from mint.db import stats
 from mint.db import targets
 from mint.db import users
 
+from mint.lib import database as dblib
 
 class TableCache(object):
     def __init__(self, db, cfg):
@@ -154,6 +155,7 @@ class Database(object):
         tables = TableCache(self._db, self._cfg)
         self._copyTables(tables)
         self.normalizeMirrorOrder()
+        self._createTemporaryTables()
 
     def close(self):
         if self._autoDb:
@@ -212,3 +214,7 @@ class Database(object):
             return res
         except:
             raise exception(key)
+
+    def _createTemporaryTables(self):
+        dblib.createTemporaryTable(self.db, 'tmpOneVal',
+            [ "id int", "val int" ])

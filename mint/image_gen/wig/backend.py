@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import os
@@ -9,6 +7,8 @@ import robj
 import time
 from robj.lib import xutil
 from xobj import xobj
+
+from mint import buildtypes
 
 
 class WigBackendClient(object):
@@ -56,29 +56,40 @@ class WigBackendClient(object):
     def getJobUrl(self):
         return self.image.imageJob.id
 
-    def getResults(self):
+    def getResults(self, kind):
         """Return a file handle to the result image."""
         results = self.image.imageJob.resultResource
         if not results.resultFiles.resultFile:
             raise RuntimeError("No files in job result")
 
         for resFile in results.resultFiles:
-            if resFile.type == 'iso':
-                # Prefer ISO to WIM
+            if resFile.type == kind:
                 break
+        else:
+            raise RuntimeError("No %r file in job result" % (kind,))
 
         size = int(resFile.size)
         fobj = resFile.path
-        kind = resFile.type.decode('utf8', 'ignore')
-        return kind, size, fobj
+        return size, fobj
 
     def getLog(self):
         """Return contents of the job log."""
         return self.image.imageJob.logs.read()
 
-    def setIsIso(self, isIso=True):
+    def setImageType(self, imageType):
         config = self.image.jobConfig
-        config.iso = 'true' if isIso else 'false'
+        config.iso = config.vhd = 'false'
+        if imageType == buildtypes.WINDOWS_ISO:
+            config.iso = 'true'
+        elif imageType in (
+                buildtypes.VIRTUAL_PC_IMAGE,
+                buildtypes.VMWARE_IMAGE,
+                ):
+            config.vhd = 'true'
+        elif imageType == buildtypes.WINDOWS_WIM:
+            pass
+        else:
+            raise RuntimeError("Unsupported image type %r" % (imageType,))
         config.persist()
 
     def cleanup(self):

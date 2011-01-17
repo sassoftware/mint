@@ -167,14 +167,18 @@ class TargetManager(manager.Manager):
 
     def _linkTargetImageToImage(self, targetId, fileId, targetImageId):
         cu = self.db.cursor()
-        cu.execute("""INSERT INTO TargetImagesDeployed
+        # XXX Make sure we don't insert duplicates - but this query angers
+        # the postgres bindings
+        ("""INSERT INTO TargetImagesDeployed
             (targetId, fileId, targetImageId)
             SELECT ?, ?, ?
             WHERE NOT EXISTS (
                 SELECT 1 FROM TargetImagesDeployed
-                    WHERE targetId = ? AND fileId = ? AND targetImageId =
-                    ?)""",
+                    WHERE targetId = ? AND fileId = ? AND targetImageId = ?)""",
             targetId, fileId, targetImageId, targetId, fileId, targetImageId)
+        cu.execute("""INSERT INTO TargetImagesDeployed
+            (targetId, fileId, targetImageId)
+            VALUES (?, ?, ?)""", targetId, fileId, targetImageId)
 
     def setTargetCredentialsForUser(self, targetType, targetName, userName,
                                     credentials):
