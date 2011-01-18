@@ -165,6 +165,7 @@ typeNamesMarketing = {
     NETBOOT_IMAGE:      "Netboot Image",
     INSTALLABLE_ISO:    "Legacy Installable CD/DVD",
     RAW_FS_IMAGE:       "Mountable Filesystem",
+    RAW_FS_IMAGE:       "Eucalyptus",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "KVM/Parallels/QEMU/Raw Hard Disk",
     VMWARE_IMAGE:       "VMware(R) Virtual Appliance",
