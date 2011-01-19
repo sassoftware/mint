@@ -43,6 +43,7 @@ class RbuilderStatus(Model):
     reports                 = fields.UrlField('reports/', None)
     inventory               = fields.UrlField('inventory/', None)
     query_sets              = fields.UrlField('query_sets/', None)
+    packages                = fields.UrlField('packages/', None)
     moduleHooks             = fields.UrlField('moduleHooks', None)
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
