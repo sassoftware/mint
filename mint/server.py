@@ -3092,24 +3092,25 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     statusMessage="Job Finished")
             return '0' * 32
         else:
-            jobData = self.serializeBuild(buildId)
-            if buildType in buildtypes.windowsBuildTypes:
-                return self.startWindowsImageJob(buildId, jobData)
-
-            # Check the product definition to see if this is based on a Windows
-            # platform.
-            if buildDict['productVersionId'] is not None:
-                pd = self._getProductDefinitionForVersionObj(
-                        buildDict['productVersionId'])
-                tags = pd.getPlatformInformation(
-                        ).platformClassifier.tags.split()
-                if 'windows' in tags:
+            try:
+                jobData = self.serializeBuild(buildId)
+                if buildType in buildtypes.windowsBuildTypes:
                     return self.startWindowsImageJob(buildId, jobData)
 
-            try:
+                # Check the product definition to see if this is based on a
+                # Windows platform.
+                if buildDict['productVersionId'] is not None:
+                    pd = self._getProductDefinitionForVersionObj(
+                            buildDict['productVersionId'])
+                    tags = pd.getPlatformInformation(
+                            ).platformClassifier.tags.split()
+                    if 'windows' in tags:
+                        return self.startWindowsImageJob(buildId, jobData)
+
                 client = self._getMcpClient()
                 uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
-                self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+                self.buildData.setDataValue(buildId, 'uuid', uuid,
+                        data.RDT_STRING)
                 return uuid
             except:
                 log.exception("Failed to start image job:")
