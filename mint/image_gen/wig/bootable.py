@@ -12,6 +12,9 @@ import subprocess
 import tempfile
 from conary.lib import util as cny_util
 
+from jobslave import geometry as js_geometry
+from jobslave.generators import raw_hd_image as js_hdd
+from jobslave.generators import vmware_image as js_vmware
 from mint import buildtypes
 
 
@@ -20,17 +23,34 @@ class ImageConverter(object):
     Converts a bootable VHD image to another format.
     """
 
-    def __init__(self, vhdObj, vhdSize, tempDir):
+    def __init__(self, jobData, vhdObj, vhdSize, tempDir):
+        self.jobData = jobData
         self.vhdObj = vhdObj
         self.vhdSize = vhdSize
-        self.workDir = tempfile.mkdtemp(dir=tempDir, prefix='imagegen-')
+        self.scratchDir = tempfile.mkdtemp(dir=tempDir, prefix='imagegen-')
+
+        # Make it easy to mix in jobslave image generators, which expect these
+        # to be here.
+        self.basefilename = self.jobData['baseFileName']
+        self.baseFlavor = self.jobData['troveTup'].flavor
+        self.buildOVF10 = self.jobData.getBuildData('buildOVF10')
+        self.outputDir = self.scratchDir
+        self.outputFileList = []
+        self.workingDir = os.path.join(self.scratchDir, self.basefilename)
+        os.mkdir(self.workingDir)
 
     def convert(self):
         raise NotImplementedError
 
+    def getImageTitle(self):
+        raise NotImplementedError
+
+    def getBuildData(self, key):
+        return self.jobData.getBuildData(key)
+
     def fetch(self):
         """Copy input VHD to a file in the workdir and return its path."""
-        vhdPath = os.path.join(self.workDir, 'input.vhd')
+        vhdPath = os.path.join(self.scratchDir, 'input.vhd')
         tempFobj = open(vhdPath, 'wb')
         copied = cny_util.copyfileobj(self.vhdObj, tempFobj)
         tempFobj.close()
@@ -44,7 +64,7 @@ class ImageConverter(object):
     def qemuConvert(self, format, name='output.img'):
         vhdPath = self.fetch()
 
-        outPath = os.path.join(self.workDir, name)
+        outPath = os.path.join(self.scratchDir, name)
         proc = subprocess.Popen(['/usr/bin/qemu-img', 'convert', '-O', format,
             vhdPath, outPath], shell=False)
         proc.wait()
@@ -54,24 +74,45 @@ class ImageConverter(object):
 
     def destroy(self):
         """Clean up the workdir."""
-        if self.workDir:
-            cny_util.rmtree(self.workDir)
-            self.workDir = None
+        if self.scratchDir:
+            cny_util.rmtree(self.scratchDir)
+            self.scratchDir = None
 
 
-class VMDKConverter(ImageConverter):
-
-    outputName = "VMware (R) Image"
+class _BaseVMwareConverter(ImageConverter):
 
     def convert(self):
-        outPath = self.qemuConvert('vmdk')
-        return outPath, self.outputName
+        # Unpack to raw HD
+        outPath = self.qemuConvert('raw')
+        disk = js_hdd.HDDContainer(outPath, geometry=js_geometry.GEOMETRY_VHD)
+
+        # Use jobslave code to roll up a VMX tarball (VMware) or OVF 0.9
+        # tarball (VMware ESX) and, if requested, an OVF 1.0 archive.
+        self.configure()
+        vmdkPath = self.writeMachine(disk)
+        if self.buildOVF10:
+            self.writeVmwareOvf(disk.totalSize, vmdkPath)
+        return self.outputFileList
+
+    def getImageTitle(self):
+        return self.productName + " Image"
 
 
-def getConverter(imageType, vhdObj, vhdSize, tempDir):
+class VMwareConverter(_BaseVMwareConverter, js_vmware.VMwareImage):
+    pass
+
+
+class VMwareESXConverter(_BaseVMwareConverter, js_vmware.VMwareESXImage):
+    pass
+
+
+def getConverter(jobData, vhdObj, vhdSize, tempDir):
+    imageType = jobData['buildType']
     if imageType == buildtypes.VMWARE_IMAGE:
-        cls = VMDKConverter
+        cls = VMwareConverter
+    elif imageType == buildtypes.VMWARE_ESX_IMAGE:
+        cls = VMwareESXConverter
     else:
         raise RuntimeError("Unsupported image type %r" % (imageType,))
 
-    return cls(vhdObj, vhdSize, tempDir)
+    return cls(jobData, vhdObj, vhdSize, tempDir)

@@ -24,6 +24,7 @@ from restlib import client as rl_client
 from rmake3.worker import plug_worker
 from xobj import xobj
 
+from jobslave import job_data
 from mint import buildtypes
 from mint.image_gen import constants as iconst
 from mint.image_gen.wig import backend
@@ -78,7 +79,8 @@ class WigTask(plug_worker.TaskHandler):
                 kind = 'wim'
                 title = "Windows Image (WIM)"
             size, fobj = self.wigClient.getResults(kind)
-            self.postResults(fobj, size, kind, title)
+            outputName = '%s.%s' % (self.jobData['baseFileName'], kind)
+            self.postResults([fobj, size, outputName, title])
         else:
             self.convert()
         self.sendStatus(iconst.WIG_JOB_DONE, "Image built")
@@ -88,7 +90,7 @@ class WigTask(plug_worker.TaskHandler):
             # Automatically append progress information if the status code is
             # in the step list.
             currentStep = self.stepList.index(code)
-            totalSteps = len(self.stepList)
+            totalSteps = len(self.stepList) - 1  # minus the DONE "step"
             progress = '%d/%d' % (currentStep, totalSteps)
             if extraProgress:
                 progress += ';' + extraProgress
@@ -96,13 +98,14 @@ class WigTask(plug_worker.TaskHandler):
         plug_worker.TaskHandler.sendStatus(self, code, text)
 
     def setConfiguration(self):
-        data = self.jobData = json.loads(self.getData())
+        data = self.jobData = job_data.JobData(json.loads(self.getData()))
 
         # Image trove tuple
         name = data['troveName'].encode('ascii')
         version = cny_versions.ThawVersion(data['troveVersion'])
         flavor = cny_deps.ThawFlavor(data['troveFlavor'].encode('ascii'))
         self.troveTup = trovetup.TroveTuple(name, version, flavor)
+        data['troveTup'] = self.troveTup
 
         # Image parameters
         self.imageType = data['buildType']
@@ -119,7 +122,7 @@ class WigTask(plug_worker.TaskHandler):
                 data['project']['hostname'],
                 self.troveTup.version.trailingRevision().version,
                 arch))
-        self.baseFileName = baseFileName.encode('utf8')
+        self.jobData['baseFileName'] = baseFileName.encode('utf8')
 
         # Conary configuration
         self.conaryCfg = ccfg = conarycfg.ConaryConfiguration(False)
@@ -465,22 +468,27 @@ class WigTask(plug_worker.TaskHandler):
     def convert(self):
         """Fetch the VHD result, convert as needed, then upload."""
         size, fobj = self.wigClient.getResults('vhd')
-        converter = bootable.getConverter(imageType=self.imageType,
-                vhdObj=fobj, vhdSize=size, tempDir=self.tempDir)
-        self.sendStatus(iconst.WIG_JOB_CONVERTING, "Creating " +
-                converter.outputName)
+        converter = bootable.getConverter(jobData=self.jobData, vhdObj=fobj,
+                vhdSize=size, tempDir=self.tempDir)
+        self.sendStatus(iconst.WIG_JOB_CONVERTING, "Creating %s image" %
+                converter.getImageTitle())
         try:
-            outPath, title = converter.convert()
-            fobj = open(outPath, 'rb')
-            kind = outPath.split('.')[-1]
-            size = os.fstat(fobj.fileno()).st_size
-            self.postResults(fobj, size, kind, title)
+            outputPaths = converter.convert()
+            outputFiles = [(open(path, 'rb'), os.stat(path).st_size,
+                os.path.basename(path), title)
+                for (path, title) in outputPaths]
+            self.postResults(outputFiles)
         finally:
             converter.destroy()
 
-    def postResults(self, fobj, size, kind, title):
-        self.sendStatus(iconst.WIG_JOB_UPLOADING, "Transferring image result")
-        name = '%s.%s' % (self.baseFileName, kind)
+    def _postOneResult(self, fobj, size, name, title, seq, total):
+        """Upload a single file and return the XML fragment for the rBuilder
+        API.
+        """
+        statusString = "Transferring image result " + name
+        progressString = "%d/%d;%%d%%%%" % (seq, total)
+        self.sendStatus(iconst.WIG_JOB_UPLOADING, statusString,
+                progressString % 0)
 
         # Report progress for file upload.
         def callback(transferred):
@@ -497,12 +505,28 @@ class WigTask(plug_worker.TaskHandler):
         self._postFileObject('PUT', name, wrapper, ctx)
 
         E = builder.ElementMaker()
-        root = E.files(E.file(
+        fileXml = E.file(
             E.title(title),
             E.size(str(size)),
             E.sha1(ctx.hexdigest()),
             E.fileName(name),
-            ))
+            )
+        return fileXml
+
+    def postResults(self, outputFiles):
+        """Upload several files and post the file list to rBuilder.
+
+        C{outputFiles} should be a list of 4-tuples like
+        C{(fobj, size, name, title)}.
+        """
+        xmlFiles = []
+        for n, (fobj, size, name, title) in enumerate(outputFiles):
+            fileXml = self._postOneResult(fobj, size, name, title, n,
+                    len(outputFiles))
+            xmlFiles.append(fileXml)
+
+        E = builder.ElementMaker()
+        root = E.files(*xmlFiles)
         self._post('PUT', 'files', body=etree.tostring(root))
 
         self.wigClient.cleanup()
