@@ -101,6 +101,7 @@ class ImagesTest(restbase.BaseRestTest):
     <timeCreated></timeCreated>
     <timePublished></timePublished>
     <shouldMirror>true</shouldMirror>
+    <imageCount>1</imageCount>
   </release>
   <release id="http://localhost:8000/api/products/testproject/releases/1">
     <releaseId>1</releaseId>
@@ -113,6 +114,7 @@ class ImagesTest(restbase.BaseRestTest):
     <creator href="http://localhost:8000/api/users/adminuser">adminuser</creator>
     <timeCreated></timeCreated>
     <shouldMirror>false</shouldMirror>
+    <imageCount>2</imageCount>
   </release>
 </releases>
 """
@@ -139,7 +141,7 @@ class ImagesTest(restbase.BaseRestTest):
     <hostname>testproject</hostname>
     <release href="http://%(server)s:%(port)s/api/products/testproject/releases/1">Release Name</release>
     <imageType>installableIsoImage</imageType>
-    <imageTypeName>Installable CD/DVD</imageTypeName>
+    <imageTypeName>Legacy Installable CD/DVD</imageTypeName>
     <name>Image 1</name>
     <architecture></architecture>
     <troveName>group-foo</troveName>

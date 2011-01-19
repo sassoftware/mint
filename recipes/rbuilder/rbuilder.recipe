@@ -218,6 +218,8 @@ class rBuilderProduct(CPackageRecipe):
         # disable reportlab for rbuilder 5.0
         r.Requires(exceptDeps='python: reportlab.*')
 
+        # Make sure that amiconfig isn't required by our amiconfig plugin
+        r.Requires(exceptDeps='python: amiconfig.*')
 
         # Anaconda customization
         # This comes first so it is omitted from the -sources split.
