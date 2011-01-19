@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2010, 2011 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -36,7 +36,56 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-class ExceptionLoggerMiddleware(object):
+def handleException(request, exception):
+    ei = sys.exc_info()
+    tb = ''.join(traceback.format_tb(ei[2]))
+    msg = str(ei[1])
+    logError(request, ei[0], ei[1], ei[2])
+
+    code = getattr(ei[1], 'status', 500)
+    fault = models.Fault(code=code, message=msg, traceback=tb)
+    response = HttpResponse(status=code, content_type='text/xml')
+    response.content = fault.to_xml(request)
+
+    return response
+
+def logError(request, e_type, e_value, e_tb, doEmail=True):
+    info = {
+            'path'              : request.path,
+            'method'            : request.method,
+            'headers_in'        : request.META,
+            'request_params'    : request.GET,
+            'is_secure'         : request.is_secure,
+            }
+    if request.raw_post_data:
+        info.update(raw_post_data = request.raw_post_data)
+    try:
+        logerror.logErrorAndEmail(request.cfg, e_type, e_value,
+                e_tb, 'API call (django handler)', info, doEmail=doEmail)
+    except mint_error.MailError, err:
+        log.error("Error sending mail: %s", str(err))
+
+class BaseMiddleware(object):
+
+    def process_request(self, request):
+        try:
+            return self._process_request(request)
+        except Exception, e:
+            return handleException(request, e)
+
+    def process_response(self, request, response):
+        try:
+            return self._process_response(request, response)
+        except Exception, e:
+            return handleException(request, e)
+
+    def _process_request(self, request):
+        return None
+
+    def _process_response(self, request, response):
+        return response
+
+class ExceptionLoggerMiddleware(BaseMiddleware):
 
     def process_request(self, request):
         mintutils.setupLogging(consoleLevel=logging.INFO,
@@ -44,46 +93,20 @@ class ExceptionLoggerMiddleware(object):
         return None
 
     def process_exception(self, request, exception):
-        ei = sys.exc_info()
-        tb = ''.join(traceback.format_tb(ei[2]))
-        msg = str(ei[1])
-        self.logError(request, ei[0], ei[1], ei[2])
-
-        code = getattr(ei[1], 'status', 500)
-        fault = models.Fault(code=code, message=msg, traceback=tb)
-        response = HttpResponse(status=code, content_type='text/xml')
-        response.content = fault.to_xml(request)
-
-        return response
-
-    def logError(self, request, e_type, e_value, e_tb, doEmail=True):
-        info = {
-                'path'              : request.path,
-                'method'            : request.method,
-                'headers_in'        : request.META,
-                'request_params'    : request.GET,
-                'is_secure'         : request.is_secure,
-                }
-        if request.raw_post_data:
-            info.update(raw_post_data = request.raw_post_data)
-        try:
-            logerror.logErrorAndEmail(request.cfg, e_type, e_value,
-                    e_tb, 'API call (django handler)', info, doEmail=doEmail)
-        except mint_error.MailError, err:
-            log.error("Error sending mail: %s", str(err))
+        handleException(request, exception)
 
 
-class RequestSanitizationMiddleware(object):
-    def process_request(self, request):
+class RequestSanitizationMiddleware(BaseMiddleware):
+    def _process_request(self, request):
         # django will do bad things if the path doesn't end with / - it uses
         # urljoin which strips off the last component
         if not request.path.endswith('/'):
             request.path += '/'
         return None
 
-class SetMethodRequestMiddleware(object):
+class SetMethodRequestMiddleware(BaseMiddleware):
     
-    def process_request(self, request):
+    def _process_request(self, request):
         # Was a '_method' directive in the query request
         if request.REQUEST.has_key('_method'):
             request_method = request.REQUEST['_method'].upper()
@@ -102,41 +125,41 @@ class SetMethodRequestMiddleware(object):
 
         return None
     
-class SetMintAuthMiddleware(object):
+class SetMintAuthMiddleware(BaseMiddleware):
     """
     Set the authentication information on the request
     """
-    def process_request(self, request):
+    def _process_request(self, request):
         request._auth = auth.getAuth(request)
         username, password = request._auth
         request._authUser = authenticate(username = username, password = password)
         return None
 
-class SetMintAdminMiddleware(object):
+class SetMintAdminMiddleware(BaseMiddleware):
     """
     Set a flag on the request indicating whether or not the user is an admin
     """
-    def process_request(self, request):
+    def _process_request(self, request):
         request._is_admin = auth.isAdmin(request._authUser)
         return None
     
-class LocalSetMintAdminMiddleware(object):
-    def process_request(self, request):
+class LocalSetMintAdminMiddleware(BaseMiddleware):
+    def _process_request(self, request):
         request._is_admin = True
         request._is_authenticated = True
         return None
 
-class SetMintAuthenticatedMiddleware(object):
+class SetMintAuthenticatedMiddleware(BaseMiddleware):
     """
     Set a flag on the request indicating whether or not the user is authenticated
     """
-    def process_request(self, request):
+    def _process_request(self, request):
         request._is_authenticated = auth.isAuthenticated(request._authUser)
         return None
        
-class SetMintConfigMiddleware(object):
+class SetMintConfigMiddleware(BaseMiddleware):
 
-    def process_request(self, request):
+    def _process_request(self, request):
         if hasattr(request, '_req'):
             cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
         else:
@@ -147,14 +170,14 @@ class SetMintConfigMiddleware(object):
 
         return None
 
-class LocalSetMintConfigMiddleware(object):
+class LocalSetMintConfigMiddleware(BaseMiddleware):
 
-    def process_request(self, request):
+    def _process_request(self, request):
         cfg = config.MintConfig()
         cfg.siteHost = 'localhost.localdomain'
         request.cfg = cfg
 
-class AddCommentsMiddleware(object):
+class AddCommentsMiddleware(BaseMiddleware):
    
     useXForm = True
     
@@ -166,7 +189,7 @@ class AddCommentsMiddleware(object):
         except libxml2.parserError:
             self.useXForm = False 
 
-    def process_response(self, request, response):
+    def _process_response(self, request, response):
 
         if self.useXForm and response.content and  \
             response.status_code in (200, 201, 206, 207):
@@ -190,19 +213,19 @@ class NoParamsRequest(object):
     def get_full_path(self):
         return self.request.path
 
-class RedirectMiddleware(redirectsmiddleware.RedirectFallbackMiddleware):
+class RedirectMiddleware(BaseMiddleware, redirectsmiddleware.RedirectFallbackMiddleware):
     """
     Middleware that process redirects irregardless of any query parameters
     specified.  Overrides default django redirect middleware functionality.
     """
-    def process_response(self, request, response):
+    def _process_response(self, request, response):
         nPRequest = NoParamsRequest(request)
         return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
 
 
-class LocalQueryParameterMiddleware(object):
+class LocalQueryParameterMiddleware(BaseMiddleware):
 
-    def process_request(self, request):
+    def _process_request(self, request):
         if '?' in request.path:
             url, questionParams = request.path.split('?', 1)
             questionParams = parse_qsl(questionParams)
@@ -231,14 +254,14 @@ class LocalQueryParameterMiddleware(object):
             request.params += ';_method=%s' % method
         request.GET = http.QueryDict(request.params)
 
-class PerformanceMiddleware(middleware.DebugToolbarMiddleware):
+class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
 
-    def process_request(self, request):
+    def _process_request(self, request):
         metrics = request.GET.get('metrics', None)
         if metrics:
             middleware.DebugToolbarMiddleware.process_request(self, request)
 
-    def process_response(self, request, response):
+    def _process_response(self, request, response):
         metrics = request.GET.get('metrics', None)
         if not metrics:
             return response
@@ -269,8 +292,8 @@ class PerformanceMiddleware(middleware.DebugToolbarMiddleware):
             return response
 
 
-class SerializeXmlMiddleware(object):
-    def process_response(self, request, response):
+class SerializeXmlMiddleware(BaseMiddleware):
+    def _process_response(self, request, response):
         if hasattr(response, 'model'):
             metrics = request.GET.get('metrics', None)
             if metrics:
