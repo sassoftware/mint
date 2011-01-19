@@ -74,11 +74,6 @@ class TableCache(object):
         self.users.confirm_table.db = db
         self.newsCache.ageTable.db = db
         self.projects.reposDB.cfg = cfg
-        # make sure we commit after creating all of this, as
-        # instantiating some of these tables may perform inserts...
-        if db.inTransaction(True):
-            db.commit()
-
 
 class Database(object):
     # Not the ideal place to put these, but I wanted to easily find them later
@@ -156,6 +151,8 @@ class Database(object):
         self._copyTables(tables)
         self.normalizeMirrorOrder()
         self._createTemporaryTables()
+        if self._db.inTransaction(True):
+            self._db.commit()
 
     def close(self):
         if self._autoDb:
