@@ -78,6 +78,7 @@ install: default-install httpd-sysconfig
 	cp jabberd/*.xml jabberd/db-setup.pgsql $(DESTDIR)/usr/share/rbuilder/jabberd/
 	install -D -m0644 jabberd/sysconfig $(DESTDIR)/etc/sysconfig/jabberd
 	# amiconfig
+	mkdir -p $(DESTDIR)/$(PYDIR)/amiconfig/plugins/
 	install -D -m0644 rbuilderstorage.py $(DESTDIR)/$(PYDIR)/amiconfig/plugins/
 
 httpd-sysconfig:
