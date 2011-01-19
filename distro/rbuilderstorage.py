@@ -30,6 +30,10 @@ class AMIConfigPlugin(AMIPlugin):
         for key, dev in blkdevmap.iteritems():
             if 'ephemeral' in key:
                 mntpnt = '/ephemeral/%s' % key[9:]
+                # ephemeral device names are not correct
+                # for our kernel
+                if not os.path.exists('/dev/%s' % dev):
+                    dev = dev.replace('sd', 'xvd')
                 ephemeralDevs.append(('/dev/%s' % dev, mntpnt))
 
         relocatePaths = ['/srv', '/var/rmake']
