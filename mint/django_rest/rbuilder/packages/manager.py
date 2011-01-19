@@ -5,8 +5,6 @@
 # All rights reserved.
 #
 
-from django.core.exceptions import ObjectDoesNotExist
-
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.packages import models
