@@ -146,7 +146,9 @@ class QuerySetManager(basemanager.BaseManager):
         querySet = models.QuerySet.objects.get(pk=querySetId)
         resourceCollection = self.getResourceCollection(querySet,
             self._getQuerySetFilteredResult(querySet))
-        resourceCollection.view_name = "QuerySetFilteredResult"
+        resourceCollection.view_name = "Systems"
+        resourceCollection._parents = []
+        resourceCollection.filter_by = querySet.getFilterBy()
         return resourceCollection
 
     def _getQuerySetFilteredResult(self, querySet):

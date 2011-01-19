@@ -100,6 +100,14 @@ class QuerySet(modellib.XObjIdModel):
 
         return xobjModel
 
+    def getFilterBy(self):
+        filterBy = []
+        for filterEntry in self.filter_entries.all():
+            filterStr = '[%s,%s,%s]' % (filterEntry.field, filterEntry.operator,
+                filterEntry.value)
+            filterBy.append(filterStr)
+        return ','.join(filterBy)
+
 class FilterEntry(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "filter_entry")

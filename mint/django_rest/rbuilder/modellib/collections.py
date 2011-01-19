@@ -106,10 +106,10 @@ class Collection(XObjIdModel):
         if page:
             limit = request.GET.get('limit', settings.PER_PAGE)
             url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
-            if self.order_by:
-                url += ';order_by=%s' % self.order_by
-            if self.filter_by:
-                url += ';filter_by=%s' % self.filter_by
+        if self.order_by:
+            url += ';order_by=%s' % self.order_by
+        if self.filter_by:
+            url += ';filter_by=%s' % self.filter_by
         return url
 
     def orderBy(self, request, modelList):
