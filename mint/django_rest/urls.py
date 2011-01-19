@@ -12,7 +12,8 @@ from mint.django_rest.rbuilder.reporting import imagereports, \
                                                 views
 
 from mint.django_rest.rbuilder.inventory import views as inventoryviews
-from mint.django_rest.rbuilder.querysets import views as querysetsviews
+from mint.django_rest.rbuilder.querysets import views as querysetviews
+from mint.django_rest.rbuilder.packages import views as packageviews
 
 urlpatterns = patterns('',
     # Reporting urls
@@ -192,24 +193,35 @@ urlpatterns = patterns('',
 
     # Query Sets
     url(r'^api/query_sets/?$',
-        querysetsviews.QuerySetService(),
+        querysetviews.QuerySetService(),
         name='QuerySets'),
     url(r'^api/query_sets/(?P<query_set_id>\d+)/?$',
-        querysetsviews.QuerySetService(),
+        querysetviews.QuerySetService(),
         name='QuerySet'),
     url(r'^api/query_sets/(?P<query_set_id>\d+)/all/?$',
-        querysetsviews.QuerySetAllResultService(),
+        querysetviews.QuerySetAllResultService(),
         name='QuerySetAllResult'),
     url(r'^api/query_sets/(?P<query_set_id>\d+)/chosen/?$',
-        querysetsviews.QuerySetChosenResultService(),
+        querysetviews.QuerySetChosenResultService(),
         name='QuerySetChosenResult'),
     url(r'^api/query_sets/(?P<query_set_id>\d+)/filtered/?$',
-        querysetsviews.QuerySetFilteredResultService(),
+        querysetviews.QuerySetFilteredResultService(),
         name='QuerySetFilteredResult'),
     url(r'^api/query_sets/(?P<query_set_id>\d+)/child/?$',
-        querysetsviews.QuerySetChildResultService(),
+        querysetviews.QuerySetChildResultService(),
         name='QuerySetChildResult'),
     url(r'^api/query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
-        querysetsviews.QuerySetFilterDescriptorService(),
+        querysetviews.QuerySetFilterDescriptorService(),
         name='QuerySetFilterDescriptor'),
+
+    # Packages
+    url(r'^api/packages/?$',
+        packageviews.PackageService(),
+        name='Packages'),
+    url(r'^api/packages/(?P<package_id>\d+)/?$',
+        packageviews.PackageService(),
+        name='Package'),
+
 )
+
+
