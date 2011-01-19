@@ -81,15 +81,12 @@ class WigBackendClient(object):
         config.iso = config.vhd = 'false'
         if imageType == buildtypes.WINDOWS_ISO:
             config.iso = 'true'
-        elif imageType in (
-                buildtypes.VIRTUAL_PC_IMAGE,
-                buildtypes.VMWARE_IMAGE,
-                ):
-            config.vhd = 'true'
         elif imageType == buildtypes.WINDOWS_WIM:
             pass
         else:
-            raise RuntimeError("Unsupported image type %r" % (imageType,))
+            # Assume we need a VHD for the next layer up to convert into
+            # something else.
+            config.vhd = 'true'
         config.persist()
 
     def cleanup(self):

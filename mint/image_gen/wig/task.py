@@ -11,6 +11,7 @@ import re
 import StringIO
 import time
 from collections import namedtuple
+from conary import callbacks
 from conary import conarycfg
 from conary import conaryclient
 from conary import files as cny_files
@@ -27,6 +28,7 @@ from xobj import xobj
 from jobslave import job_data
 from mint import buildtypes
 from mint.image_gen import constants as iconst
+from mint.image_gen.util import FileWithProgress
 from mint.image_gen.wig import backend
 from mint.image_gen.wig import bootable
 
@@ -235,16 +237,33 @@ class WigTask(plug_worker.TaskHandler):
         progressString = "%d/%d;%%d%%%%" % (seq, total)
 
         # Retrieve contents
+        # Note that getFileContents doesn't pipeline, so rather than creating
+        # yet another substep just use the first 50% for fetching and the
+        # second 50% for sending.
+        last = [time.time()]
+        class FetchCallback(callbacks.ChangesetCallback):
+            def downloadingFileContents(xself, transferred, _):
+                if time.time() - last[0] < 2:
+                    return
+                last[0] = time.time()
+                if size:
+                    percent = int(50.0 * transferred / size)
+                else:
+                    percent = 0
+                self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
+                        progressString % percent)
+
         self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
                 progressString % 0)
-        fobj = repos.getFileContents( [(data.fileId, data.fileVer)] )[0].get()
+        fobj = repos.getFileContents( [(data.fileId, data.fileVer)],
+                callback=FetchCallback() )[0].get()
 
         # Report progress for file upload.
-        def callback(transferred):
+        def sendCallback(transferred):
             if size:
-                percent = int(100.0 * transferred / size)
+                percent = 50 + int(50.0 * transferred / size)
             else:
-                percent = 0
+                percent = 50
             self.sendStatus(iconst.WIG_JOB_SENDING, statusString,
                     progressString % percent)
 
@@ -252,7 +271,7 @@ class WigTask(plug_worker.TaskHandler):
         log.info("Sending file: pathid=%s fileid=%s path=%s",
                 data.pathId.encode('hex'), data.fileId.encode('hex'),
                 data.path)
-        wrapper = FileWithProgress(fobj, callback)
+        wrapper = FileWithProgress(fobj, sendCallback)
         self.wigClient.addFileStream(wrapper, data.kind, name, size)
 
     def filterFiles(self, cs):
@@ -469,7 +488,7 @@ class WigTask(plug_worker.TaskHandler):
         """Fetch the VHD result, convert as needed, then upload."""
         size, fobj = self.wigClient.getResults('vhd')
         converter = bootable.getConverter(jobData=self.jobData, vhdObj=fobj,
-                vhdSize=size, tempDir=self.tempDir)
+                vhdSize=size, tempDir=self.tempDir, callback=self.sendStatus)
         self.sendStatus(iconst.WIG_JOB_CONVERTING, "Creating %s image" %
                 converter.getImageTitle())
         try:
@@ -530,32 +549,6 @@ class WigTask(plug_worker.TaskHandler):
         self._post('PUT', 'files', body=etree.tostring(root))
 
         self.wigClient.cleanup()
-
-
-class FileWithProgress(object):
-
-    interval = 2
-
-    def __init__(self, fobj, callback):
-        self.fobj = fobj
-        self.callback = callback
-        self.total = 0
-        self.last = 0
-
-    _SIGIL = object()
-    def read(self, size=_SIGIL):
-        if size is self._SIGIL:
-            data = self.fobj.read()
-        else:
-            data = self.fobj.read(size)
-        self.total += len(data)
-
-        now = time.time()
-        if now - self.last >= self.interval:
-            self.last = now
-            self.callback(self.total)
-
-        return data
 
 
 # FIXME: copypasta from jobslave

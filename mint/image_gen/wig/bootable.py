@@ -16,6 +16,22 @@ from jobslave import geometry as js_geometry
 from jobslave.generators import raw_hd_image as js_hdd
 from jobslave.generators import vmware_image as js_vmware
 from mint import buildtypes
+from mint.image_gen import constants as iconst
+from mint.image_gen.util import FileWithProgress
+
+
+STEP_FETCH          = 0
+STEP_UNPACK         = 1
+STEP_REPACK         = 2
+STEP_COMPRESS       = 3
+STEP_OVF            = 3
+CONVERTER_STEPS = [
+        STEP_FETCH,
+        STEP_UNPACK,
+        STEP_REPACK,
+        STEP_COMPRESS,
+        STEP_OVF,
+        ]
 
 
 class ImageConverter(object):
@@ -23,7 +39,7 @@ class ImageConverter(object):
     Converts a bootable VHD image to another format.
     """
 
-    def __init__(self, jobData, vhdObj, vhdSize, tempDir):
+    def __init__(self, jobData, vhdObj, vhdSize, tempDir, callback=None):
         self.jobData = jobData
         self.vhdObj = vhdObj
         self.vhdSize = vhdSize
@@ -39,6 +55,33 @@ class ImageConverter(object):
         self.workingDir = os.path.join(self.scratchDir, self.basefilename)
         os.mkdir(self.workingDir)
 
+        # Status machinery
+        self._callback = callback
+        self._steps = CONVERTER_STEPS[:]
+        if not self.buildOVF10:
+            self._steps.remove(STEP_OVF)
+
+    def sendStatus(self, code, message, percent=None):
+        """Send status upstream.
+
+        C{percent}, if set, is either an integer or a tuple C{(done, total)}
+        where C{done} and C{total} are arbitrary units, such as bytes.
+        """
+        if not self._callback:
+            return
+        totalSteps = len(self._steps)
+        currentStep = self._steps.index(code)
+        progress = '%d/%d' % (currentStep, totalSteps)
+        if percent is not None:
+            if isinstance(percent, tuple):
+                done, total = percent
+                if total:
+                    percent = int(100.0 * done / total)
+                else:
+                    percent = 0
+            progress += ';%d%%' % (percent,)
+        self._callback(iconst.WIG_JOB_CONVERTING, message, progress)
+
     def convert(self):
         raise NotImplementedError
 
@@ -52,7 +95,14 @@ class ImageConverter(object):
         """Copy input VHD to a file in the workdir and return its path."""
         vhdPath = os.path.join(self.scratchDir, 'input.vhd')
         tempFobj = open(vhdPath, 'wb')
-        copied = cny_util.copyfileobj(self.vhdObj, tempFobj)
+
+        def callback(transferred):
+            self.sendStatus(STEP_FETCH, "Retrieving VHD", (transferred,
+                self.vhdSize))
+        callback(0)
+        wrapper = FileWithProgress(self.vhdObj, callback)
+        copied = cny_util.copyfileobj(wrapper, tempFobj)
+
         tempFobj.close()
         self.vhdObj.close()
         self.vhdObj = None
@@ -64,6 +114,8 @@ class ImageConverter(object):
     def qemuConvert(self, format, name='output.img'):
         vhdPath = self.fetch()
 
+        # TODO: figure out how to get progress out of this step
+        self.sendStatus(STEP_UNPACK, "Unpacking VHD")
         outPath = os.path.join(self.scratchDir, name)
         proc = subprocess.Popen(['/usr/bin/qemu-img', 'convert', '-O', format,
             vhdPath, outPath], shell=False)
@@ -88,9 +140,12 @@ class _BaseVMwareConverter(ImageConverter):
 
         # Use jobslave code to roll up a VMX tarball (VMware) or OVF 0.9
         # tarball (VMware ESX) and, if requested, an OVF 1.0 archive.
+        vmCallback = _VMwareCallback(self.sendStatus)
         self.configure()
-        vmdkPath = self.writeMachine(disk)
+        vmdkPath = self.writeMachine(disk, callback=vmCallback)
         if self.buildOVF10:
+            # TODO: figure out how to get progress out of this step
+            self.sendStatus(STEP_OVF, "Creating OVF 1.0 archive")
             self.writeVmwareOvf(disk.totalSize, vmdkPath)
         return self.outputFileList
 
@@ -106,7 +161,21 @@ class VMwareESXConverter(_BaseVMwareConverter, js_vmware.VMwareESXImage):
     pass
 
 
-def getConverter(jobData, vhdObj, vhdSize, tempDir):
+class _VMwareCallback(js_vmware.VMwareCallback):
+
+    def __init__(self, sendStatus):
+        self.sendStatus = sendStatus
+
+    def creatingDisk(self, completed, total):
+        # completed, total not set yet
+        self.sendStatus(STEP_REPACK, "Creating VMware (R) Virtual Disk")
+
+    def creatingArchive(self, compeleted, total):
+        # completed, total not set yet
+        self.sendStatus(STEP_COMPRESS, "Creating VMware (R) image archive")
+
+
+def getConverter(jobData, vhdObj, vhdSize, tempDir, callback=None):
     imageType = jobData['buildType']
     if imageType == buildtypes.VMWARE_IMAGE:
         cls = VMwareConverter
@@ -115,4 +184,4 @@ def getConverter(jobData, vhdObj, vhdSize, tempDir):
     else:
         raise RuntimeError("Unsupported image type %r" % (imageType,))
 
-    return cls(jobData, vhdObj, vhdSize, tempDir)
+    return cls(jobData, vhdObj, vhdSize, tempDir, callback)
