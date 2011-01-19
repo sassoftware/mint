@@ -411,8 +411,14 @@ class WigTask(plug_worker.TaskHandler):
         for status, message, progress in self.wigClient.watchJob():
             log.info("Job status: %03d %s: %s", progress, status,
                     message)
-            self.sendStatus(iconst.WIG_JOB_RUNNING, "Processing image",
-                    extraProgress=("%d%%" % (progress,)) )
+            message = message.strip()
+            if message and status != 'Completed':
+                # Don't update the message at completion because saying "The
+                # job has completed" might confuse users into thinking the
+                # entire image build is done when it is really just one part...
+                self.sendStatus(iconst.WIG_JOB_RUNNING,
+                        "Processing image: " + message,
+                        extraProgress=("%d%%" % (progress,)) )
 
         # TODO: send logs upstream to rMake as well
         logs = self.wigClient.getLog()
