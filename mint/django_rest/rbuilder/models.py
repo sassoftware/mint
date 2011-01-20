@@ -68,7 +68,7 @@ class Products(modellib.XObjModel):
     productId = models.AutoField(primary_key=True, db_column='projectid', blank=True)
     hostname = models.CharField(unique=True, max_length=63)
     name = models.CharField(unique=True, max_length=128)
-    namespace = models.CharField(max_length=16)
+    namespace = models.CharField(max_length=16, null=True)
     domainname = models.CharField(max_length=128)
     shortname = models.CharField(unique=True, max_length=63)
     projecturl = models.CharField(max_length=128, null=True, blank=True)

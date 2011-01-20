@@ -54,7 +54,6 @@ class Pk(object):
     def __init__(self, pk):
         self.pk = pk
 
-
 class Fault(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -82,7 +81,7 @@ class Inventory(modellib.XObjModel):
         self.inventory_systems = modellib.XObjHrefModel('inventory_systems')
         self.infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
 
-class Systems(modellib.XObjModel):
+class Systems(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -92,11 +91,11 @@ class Systems(modellib.XObjModel):
     objects = modellib.SystemsManager()
 
     def __init__(self):
-        self.event_types = modellib.XObjHrefModel('../event_types')
+        modellib.Collection.__init__(self)
 
     def save(self):
         return [s.save() for s in self.system]
-    
+
 class SystemStates(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -136,7 +135,7 @@ class SystemsLog(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='systemsLog')
+                tag='systems_log')
     list_fields = ['system_log_entry']
     system_log_entry = []
 
@@ -175,7 +174,11 @@ class Credentials(modellib.XObjIdModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'credentials',
-                attributes = {'id':str})
+                attributes = {'id':str},
+                elements = [
+                    'ssl_client_certificate',
+                    'ssl_client_key',
+                ])
     objects = modellib.CredentialsManager()
     view_name = 'SystemCredentials'
 
@@ -183,7 +186,7 @@ class Credentials(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -201,7 +204,7 @@ class Configuration(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -219,7 +222,7 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -250,7 +253,6 @@ class SystemState(modellib.XObjIdModel):
         db_table = 'inventory_system_state'
         
     _xobj = xobj.XObjMetadata(
-                tag = 'currentState',
                 attributes = {'id':str})
 
     UNMANAGED = "unmanaged"
@@ -404,7 +406,7 @@ class System(modellib.XObjIdModel):
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
-        'managementnode', 'jobsystem_set', ])
+        'managementnode', 'jobsystem_set', 'systemtag_set'])
     _xobj_hidden_m2m = set()
     _xobj = xobj.XObjMetadata(
                 tag = 'system',

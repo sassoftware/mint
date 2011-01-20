@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(52, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(53, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1772,7 +1772,7 @@ def _addSystemTypes(db):
     
     return changed
 
-def _addTableRows(db, table, uniqueKey, rows):
+def _addTableRows(db, table, uniqueKey, rows, uniqueCols=[]):
     """
     Adds rows to the table, if they do not exist already
     The rows argument is a list of dictionaries
@@ -1783,9 +1783,14 @@ def _addTableRows(db, table, uniqueKey, rows):
     inserts = []
     sql = "SELECT 1 FROM %s WHERE %s = ?" % (table, uniqueKey)
     tableCols = rows[0].keys()
+    if not uniqueCols:
+        uniqueCols = [uniqueKey]
     for row in rows:
-        cu.execute(sql, row[uniqueKey])
-        if cu.fetchall():
+        valList = [{c:row[c]} for c in uniqueCols]
+        uniqueValues = {}
+        [uniqueValues.update(v) for v in valList]
+        pk = _getRowPk(db, table, uniqueKey, **uniqueValues)
+        if pk:
             continue
         inserts.append(tuple(row[c] for c in tableCols))
     if not inserts:
@@ -1794,6 +1799,26 @@ def _addTableRows(db, table, uniqueKey, rows):
         ','.join(tableCols), ','.join('?' for c in tableCols))
     cu.executemany(sql, inserts)
     return True
+
+def _getRowPk(db, table, pkColumn, **uniqueVals):
+    """
+    Get the primary key value for a table row based on the value of a
+    different uniqueColumn.
+    """
+    cu = db.cursor()
+    sql = """
+        SELECT %s
+        FROM %s
+        WHERE %s
+    """
+    whereClause = ["%s='%s'" % (k, v) for k, v in uniqueVals.items()]
+    whereClause = 'AND '.join(whereClause)
+    cu.execute(sql % (pkColumn, table, whereClause))
+    row = cu.fetchone()
+    if row:
+        return row[0]
+    else:
+        return None
 
 def _createJobsSchema(db):
     cu = db.cursor()
@@ -1939,6 +1964,123 @@ def _createPKI(db):
 
     return changed
 
+def _createQuerySetSchema(db):
+    """QuerySet tables"""
+    changed = False
+
+    changed |= createTable(db, 'querysets_queryset', """
+        CREATE TABLE "querysets_queryset" (
+            "query_set_id" %(PRIMARYKEY)s,
+            "name" TEXT NOT NULL UNIQUE,
+            "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+            "resource_type" TEXT NOT NULL
+        )""")
+    changed |= _addTableRows(db, "querysets_queryset", "name",
+        [dict(name="All Systems", resource_type="system",
+            created_date=str(datetime.datetime.now(tz.tzutc())),
+            modified_date=str(datetime.datetime.now(tz.tzutc()))),
+         dict(name="Active Systems", resource_type="system",
+            created_date=str(datetime.datetime.now(tz.tzutc())),
+            modified_date=str(datetime.datetime.now(tz.tzutc()))),
+         dict(name="Unmanaged Systems", resource_type="system",
+            created_date=str(datetime.datetime.now(tz.tzutc())),
+            modified_date=str(datetime.datetime.now(tz.tzutc()))),
+        ])
+
+    changed |= createTable(db, 'querysets_filterentry', """
+        CREATE TABLE "querysets_filterentry" (
+            "filter_entry_id" %(PRIMARYKEY)s,
+            "field" TEXT NOT NULL,
+            "operator" TEXT NOT NULL,
+            "value" TEXT,
+            UNIQUE("field", "operator", "value")
+        )""")
+    changed |= _addTableRows(db, "querysets_filterentry",
+        'filter_entry_id',
+        [dict(field="name", operator="IS_NULL", value=None),
+         dict(field="current_state.name", operator="EQUAL", value="responsive"),
+         dict(field="current_state.name", operator="EQUAL", value="unmanaged")],
+        ['field', 'operator', 'value'])
+
+    changed |= createTable(db, 'querysets_querytag', """
+        CREATE TABLE "querysets_querytag" (
+            "query_tag_id" %(PRIMARYKEY)s,
+            "query_set_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE,
+            "query_tag" TEXT NOT NULL UNIQUE
+        )""")
+    changed |= _addTableRows(db, "querysets_querytag", "query_tag",
+        [dict(query_set_id=1, query_tag="query-tag-All Systems-1"),
+         dict(query_set_id=2, query_tag="query-tag-Active Systems-2"),
+         dict(query_set_id=3, query_tag="query-tag-Unmanaged Systems-3"),
+        ])
+
+    changed |= createTable(db, 'querysets_inclusionmethod', """
+        CREATE TABLE "querysets_inclusionmethod" (
+            "inclusion_method_id" %(PRIMARYKEY)s,
+            "inclusion_method" TEXT NOT NULL UNIQUE
+        )""")
+    changed |= _addTableRows(db, "querysets_inclusionmethod",
+        "inclusion_method",
+        [dict(inclusion_method="chosen"),
+         dict(inclusion_method="filtered")])
+
+    changed |= createTable(db, 'querysets_systemtag', """
+        CREATE TABLE "querysets_systemtag" (
+            "system_tag_id" %(PRIMARYKEY)s,
+            "system_id" INTEGER
+                REFERENCES "inventory_system" ("system_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_tag_id" INTEGER
+                REFERENCES "querysets_querytag" ("query_tag_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
+        )""")
+
+    changed |= createTable(db, "querysets_queryset_filter_entries", """
+        CREATE TABLE "querysets_queryset_filter_entries" (
+            "id" %(PRIMARYKEY)s,
+            "queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "filterentry_id" INTEGER
+                REFERENCES "querysets_filterentry" ("filter_entry_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("queryset_id", "filterentry_id")
+        )""")
+
+    changed |= _addTableRows(db, "querysets_queryset_filter_entries",
+        'id',
+        [dict(queryset_id=1, filterentry_id=1),
+         dict(queryset_id=2, filterentry_id=2),
+         dict(queryset_id=3, filterentry_id=3)],
+        ['queryset_id', 'filterentry_id'])
+
+    changed |= createTable(db, "querysets_queryset_children", """
+        CREATE TABLE "querysets_queryset_children" (
+            "id" %(PRIMARYKEY)s,
+            "from_queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "to_queryset_id" INTEGER
+                REFERENCES "querysets_queryset" ("query_set_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("from_queryset_id", "to_queryset_id")
+        )""")
+
+    return changed
 
 # create the (permanent) server repository schema
 def createSchema(db, doCommit=True, cfg=None):
@@ -1970,6 +2112,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createJobsSchema(db)
     changed |= _createCapsuleIndexerYumSchema(db)
     changed |= _createPKI(db)
+    changed |= _createQuerySetSchema(db)
 
     if doCommit:
         db.commit()
