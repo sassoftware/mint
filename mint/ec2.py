@@ -283,7 +283,8 @@ class S3Wrapper(object):
             bucket, permittedUsers=None, callback=None, policy="private"):
         current = 0
         for i, (biName, biSize, biFileObj) in enumerate(bundleItemGen):
-            key = bucket.new_key(biName)
+            keyName = os.path.basename(biName)
+            key = bucket.new_key(keyName)
             if callback:
                 cb = cls.UploadCallback(callback, biName,
                     i + 1, fileCount, current, totalSize).callback
@@ -293,7 +294,7 @@ class S3Wrapper(object):
             key.set_contents_from_file(biFileObj, cb=cb, policy=policy)
             if permittedUsers:
             # Grant additional permissions
-                key = bucket.get_key(biName)
+                key = bucket.get_key(keyName)
                 acl = key.get_acl()
                 for user in permittedUsers:
                     acl.acl.add_user_grant('READ', user)
