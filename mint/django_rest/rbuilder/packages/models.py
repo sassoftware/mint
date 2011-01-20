@@ -13,7 +13,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from xobj import xobj
 
 
-class Packages(modellib.XObjModel):
+class Packages(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
