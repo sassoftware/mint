@@ -917,6 +917,7 @@ class XObjModel(models.Model):
                 text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
+                refName = getattr(field, 'refName', 'href')
                 if val:
                     if visible:
                         # If the visible prop is set, we want to copy the
@@ -924,14 +925,15 @@ class XObjModel(models.Model):
                         setattr(xobj_model, fieldName,
                             getattr(val, visible))
                     elif not serialized:
-                        href_model = type('%s_href' % \
+                        refModel = type('%s_ref' % \
                             self.__class__.__name__, (object,), {})()
-                        href_model._xobj = xobj.XObjMetadata(
-                                            attributes = {'href':str})
-                        href_model.href = val.get_absolute_url(request)
+                        refModel._xobj = xobj.XObjMetadata(
+                                            attributes = {refName:str})
+                        setattr(refModel, refName, 
+                            val.get_absolute_url(request))
                         if text_field and getattr(val, text_field):
-                            href_model._xobj.text = getattr(val, text_field)
-                        setattr(xobj_model, fieldName, href_model)
+                            refModel._xobj.text = getattr(val, text_field)
+                        setattr(xobj_model, fieldName, refModel)
                     else:
                         val = val.serialize(request)
                         setattr(xobj_model, fieldName, val)
@@ -1166,6 +1168,12 @@ class ForeignKey(models.ForeignKey):
             self.text_field = kwargs.pop('text_field')
         except KeyError:
             pass # text wasn't specified, that is fine
+
+        try:
+            self.refName = kwargs.pop('refName')
+        except KeyError:
+            pass # text wasn't specified, that is fine
+
         super(ForeignKey, self).__init__(*args, **kwargs)
 
 class SerializedForeignKey(ForeignKey):
