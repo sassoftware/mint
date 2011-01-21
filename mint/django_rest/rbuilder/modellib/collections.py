@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core import exceptions
 from django.core import paginator
 
+from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.modellib import XObjIdModel
 
 from xobj import xobj
@@ -168,7 +169,11 @@ class Collection(XObjIdModel):
         self.limit = limit
         pagination = CollectionPaginator(modelList, limit) 
         pageNumber = startIndex/limit
-        page = pagination.page(pageNumber)
+
+        try:
+            page = pagination.page(pageNumber)
+        except paginator.EmptyPage:
+            raise errors.CollectionPageNotFound()
 
         self.page = page
         setattr(self, listField, page.object_list)
