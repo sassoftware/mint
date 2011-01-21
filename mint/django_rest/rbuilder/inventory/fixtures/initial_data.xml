@@ -1,0 +1,812 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <!--  please keep all user passwords as "password" with same salt -->
+    <object pk="1" model="rbuilder.users">
+	    <field type="CharField" name="username">admin</field>
+	    <field type="CharField" name="fullname">Administrator</field>
+	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
+	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+	    <field type="CharField" name="email">admin@rpath.com</field>
+	    <field type="TextField" name="displayemail"/>
+	    <field type="DecimalField" name="timecreated">1283523987.852</field>
+	    <field type="DecimalField" name="timeaccessed">1283530322.491</field>
+	    <field type="SmallIntegerField" name="active">1</field>
+	    <field type="TextField" name="blurb"/>
+	</object>
+	<object pk="2000" model="rbuilder.users">
+	    <field type="CharField" name="username">testuser</field>
+	    <field type="CharField" name="fullname"/>
+	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
+	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+	    <field type="CharField" name="email">testuser@rpath.com</field>
+	    <field type="TextField" name="displayemail"/>
+	    <field type="DecimalField" name="timecreated">1283529921.387</field>
+	    <field type="DecimalField" name="timeaccessed">1283530359.041</field>
+	    <field type="SmallIntegerField" name="active">1</field>
+	    <field type="TextField" name="blurb">null</field>
+	</object>
+	<object pk="1" model="rbuilder.usergroups">
+      <field type="CharField" name="usergroup">admin</field>
+    </object>
+    <object pk="2" model="rbuilder.usergroups">
+      <field type="CharField" name="usergroup">MintAdmin</field>
+    </object>
+    <object pk="2000" model="rbuilder.usergroups">
+	    <field type="CharField" name="usergroup">testuser</field>
+	</object>
+	<object pk="1" model="rbuilder.usergroupmembers">
+	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">1</field>
+	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
+	</object>
+	<object pk="2" model="rbuilder.usergroupmembers">
+        <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2</field>
+        <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
+    </object>
+	<object pk="2000" model="rbuilder.usergroupmembers">
+	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2000</field>
+	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2000</field>
+	</object>
+	<object pk="1" model="inventory.managementinterface">
+        <field type="CharField" name="name">cim</field>
+        <field type="CharField" name="description">Common Information Model (CIM)</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="IntegerField" name="port">5989</field>
+        <field type="NullBooleanField" name="credentials_readonly">True</field>
+        <field type="TextField" name="credentials_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field>
+      <name>ssl_client_certificate</name>
+      <descriptions>
+        <desc>Client Certificate</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The certificate must start with '-----BEGIN CERTIFICATE-----', end with '-----END CERTIFICATE-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+      <allowFileContent>true</allowFileContent>
+    </field>
+    <field>
+      <name>ssl_client_key</name>
+      <descriptions>
+        <desc>Client Private Key</desc>
+      </descriptions>
+      <type>str</type>
+      <constraints>
+        <descriptions>
+          <desc>The key must start with '-----BEGIN PRIVATE KEY-----', end with '----END PRIVATE KEY-----', and have a maximum length of 16384 characters.</desc>
+        </descriptions>
+        <regexp>^\s*-----BEGIN (\S+ )?PRIVATE KEY-----.*-----END (\S+ )?PRIVATE KEY-----\s*$</regexp>
+        <length>16384</length>
+      </constraints>
+      <required>true</required>
+     <allowFileContent>true</allowFileContent>
+    </field>
+  </dataFields>
+</descriptor>]]></field>
+    </object>
+    <object pk="2" model="inventory.managementinterface">
+        <field type="CharField" name="name">wmi</field>
+        <field type="CharField" name="description">Windows Management Instrumentation (WMI)</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:38</field>
+        <field type="IntegerField" name="port">135</field>
+        <field type="NullBooleanField" name="credentials_readonly">False</field>
+        <field type="TextField" name="credentials_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field><name>domain</name>
+      <descriptions>
+        <desc>Windows Domain</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>username</name>
+      <descriptions>
+        <desc>User</desc>
+      </descriptions>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+    <field>
+      <name>password</name>
+      <descriptions>
+        <desc>Password</desc>
+      </descriptions>
+      <password>true</password>
+      <type>str</type>
+      <default></default>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>]]></field>
+    </object>
+    <object pk="1" model="inventory.systemtype">
+        <field type="CharField" name="name">inventory</field>
+        <field type="CharField" name="description">Inventory</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">False</field>
+        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@System_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this system</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@System_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this system</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@System_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this system</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+    <field>
+      <name>requiredNetwork</name>
+      <help lang="en_US">@System_creation_required_net@</help>
+      <required>false</required>
+      <multiple>True</multiple>
+      <descriptions>
+        <desc>Manage Via this Address Only</desc>
+      </descriptions>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc></desc>
+          </descriptions>
+          <key>true</key>
+        </describedValue>
+      </enumeratedType>
+      <default>false</default>
+    </field>
+  </dataFields> 
+</descriptor>]]></field>
+  </object>
+    <object pk="2" model="inventory.systemtype">
+        <field type="CharField" name="name">infrastructure-management-node</field>
+        <field type="CharField" name="description">rPath Update Service (Infrastructure)</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">True</field>
+        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@Management_node_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this management service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@Management_node_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this management service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@Management_node_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this management service</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+    <field> 
+      <name>zoneName</name> 
+      <help lang="en_US">@Management_node_zone_creation_name@</help>
+      <descriptions> 
+        <desc>Zone Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for the zone</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>zoneDescription</name> 
+      <help lang="en_US">@Management_node_zone_creation_description@</help>
+      <descriptions> 
+        <desc>Zone Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for the zone</desc>
+      </prompt>
+    </field>
+  </dataFields> 
+</descriptor>]]></field>
+    </object>
+    <object pk="3" model="inventory.systemtype">
+        <field type="CharField" name="name">infrastructure-windows-build-node</field>
+        <field type="CharField" name="description">rPath Windows Build Service (Infrastructure)"</field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+        <field type="NullBooleanField" name="infrastructure">True</field>
+        <field type="TextField" name="creation_descriptor"><![CDATA[<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.0.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.0.xsd descriptor-1.0.xsd"> 
+  <metadata>
+  </metadata> 
+  <dataFields>
+    <field> 
+      <name>name</name> 
+      <help lang="en_US">@Windows_build_node_creation_name@</help>
+      <descriptions> 
+        <desc>Name</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>true</required>
+      <prompt>
+        <desc>Enter a name for this Windows build service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>description</name> 
+      <help lang="en_US">@Windows_build_node_creation_description@</help>
+      <descriptions> 
+        <desc>Description</desc> 
+      </descriptions> 
+      <type>str</type> 
+      <default></default>
+      <required>false</required>
+      <prompt>
+        <desc>Enter a description for this Windows build service</desc>
+      </prompt>
+    </field>
+    <field> 
+      <name>tempIpAddress</name> 
+      <help lang="en_US">@Windows_build_node_creation_ip@</help>
+      <descriptions> 
+        <desc>Network Address</desc> 
+      </descriptions> 
+      <prompt>
+        <desc>Enter a DNS name or IP address for this Windows build service</desc>
+      </prompt>
+      <type>str</type> 
+      <default></default> 
+      <required>true</required>
+    </field>
+  </dataFields> 
+</descriptor>]]></field>
+    </object>
+    <object pk="1" model="inventory.eventtype">
+        <field type="CharField" name="name">system registration</field>
+        <field type="CharField" name="description">System registration</field>
+        <field type="SmallIntegerField" name="priority">110</field>
+    </object>
+    <object pk="2" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system poll</field>
+        <field type="CharField" name="description">On-demand system synchronization</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
+    <object pk="3" model="inventory.eventtype">
+        <field type="CharField" name="name">system poll</field>
+        <field type="CharField" name="description">System synchronization</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="4" model="inventory.eventtype">
+        <field type="CharField" name="name">system apply update</field>
+        <field type="CharField" name="description">Scheduled system update</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="5" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system apply update</field>
+        <field type="CharField" name="description">System update</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
+    <object pk="6" model="inventory.eventtype">
+        <field type="CharField" name="name">system shutdown</field>
+        <field type="CharField" name="description">Scheduled system shutdown</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="7" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system shutdown</field>
+        <field type="CharField" name="description">System shutdown</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
+    <object pk="8" model="inventory.eventtype">
+        <field type="CharField" name="name">system launch wait</field>
+        <field type="CharField" name="description">Launched system network data discovery</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
+    <object pk="9" model="inventory.eventtype">
+        <field type="CharField" name="name">system detect management interface</field>
+        <field type="CharField" name="description">System management interface detection</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+    <object pk="10" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system detect management interface</field>
+        <field type="CharField" name="description">On-demand system management interface detection</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
+    <object pk="11" model="inventory.eventtype">
+        <field type="CharField" name="name">immediate system configuration</field>
+        <field type="CharField" name="description">Update system configuration</field>
+        <field type="SmallIntegerField" name="priority">105</field>
+    </object>
+  <object pk="2" model="inventory.system">
+        <field type="CharField" name="name">rPath Update Service</field>
+        <field type="CharField" name="description">Local rPath Update Service</field>
+        <field type="DateTimeField" name="created_date">2010-08-23 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date"><None></None></field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">2</field>
+    </object>
+  <object pk="2" model="inventory.managementnode">
+        <field type="NullBooleanField" name="local"><None></None></field>
+        <field to="inventory.zone" name="zone" rel="ManyToOneRel">1</field>
+        <field type="CharField" name="node_jid">superduperjid@rbuilder.rpath</field>
+        <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
+    </object>
+  <object pk="1" model="inventory.zone">
+        <field type="CharField" name="name">Local rBuilder</field>
+        <field type="CharField" name="description">Local rBuilder management zone</field>
+        <field type="DateTimeField" name="created_date">2010-08-23 22:05:49</field>
+    </object>
+   <object pk="1" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="dns_name">127.0.0.1</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="1" model="inventory.systemstate">
+    <field type="CharField" name="name">unmanaged</field>
+    <field type="CharField" name="description">Unmanaged</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="2" model="inventory.systemstate">
+    <field type="CharField" name="name">registered</field>
+    <field type="CharField" name="description">Initial synchronization pending</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="3" model="inventory.systemstate">
+    <field type="CharField" name="name">responsive</field>
+    <field type="CharField" name="description">Online</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="4" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-unknown</field>
+    <field type="CharField" name="description">Not responding: Unknown</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="5" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-net</field>
+    <field type="CharField" name="description">Not responding: Network unreachable</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="6" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-host</field>
+    <field type="CharField" name="description">Not responding: Host unreachable</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="7" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-shutdown</field>
+    <field type="CharField" name="description">Not responding: Shutdown</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="8" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-suspended</field>
+    <field type="CharField" name="description">Not responding: Suspended</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="9" model="inventory.systemstate">
+    <field type="CharField" name="name">dead</field>
+    <field type="CharField" name="description">Stale</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="10" model="inventory.systemstate">
+    <field type="CharField" name="name">mothballed</field>
+    <field type="CharField" name="description">Retired</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="11" model="inventory.systemstate">
+    <field type="CharField" name="name">unmanaged-credentials</field>
+    <field type="CharField" name="description">Unmanaged: Invalid credentials</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="12" model="inventory.systemstate">
+    <field type="CharField" name="name">non-responsive-credentials</field>
+    <field type="CharField" name="description">Not responding: Invalid credentials</field>
+    <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+  <object pk="1" model="inventory.jobstate">
+    <field type="CharField" name="name">Queued</field>
+  </object>
+  <object pk="2" model="inventory.jobstate">
+    <field type="CharField" name="name">Running</field>
+  </object>
+  <object pk="3" model="inventory.jobstate">
+    <field type="CharField" name="name">Completed</field>
+  </object>
+  <object pk="4" model="inventory.jobstate">
+    <field type="CharField" name="name">Failed</field>
+  </object>
+  <object pk="561f95e06c749a518526703d3c7013d1a1579f57" model="rbuilder.pkicertificates">
+    <field type="TextField" name="purpose">hg_ca</field>
+    <field type="BooleanField" name="is_ca">True</field>
+    <field type="TextField" name="x509_pem">-----BEGIN CERTIFICATE-----
+MIIDUzCCAjugAwIBAgICfVEwDQYJKoZIhvcNAQEFBQAwYjEyMDAGA1UEChMpckJ1
+aWxkZXIgSGlnaC1HcmFkZSBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkxLDAqBgNVBAsT
+I0NyZWF0ZWQgYXQgMjAxMC0wOS0wMiAxMToxODo1My0wNDAwMB4XDTEwMDkwMTE1
+MTg1M1oXDTIwMDkwMTE1MTg1M1owYjEyMDAGA1UEChMpckJ1aWxkZXIgSGlnaC1H
+cmFkZSBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkxLDAqBgNVBAsTI0NyZWF0ZWQgYXQg
+MjAxMC0wOS0wMiAxMToxODo1My0wNDAwMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAqTO2lBr1zOAAP9P6XZ1TBLTEDoGwj07QaEUMqMP1qB64wUeInL7S
+5UoVmK2TKnwMwBuDFUe+tQARo5GvLLBGPGDob+GZI6YY0N6vMBIJTGVTtXj1vY+a
+7uQqyHi2W1AT0OFGnv+trBHRqwauNyBTobzqLU5I9bIX9DnJYPADXqPIUA+B0zam
+scgHgBjWIY0OUdrTbxR5u+GCiNxspnj1aFGfENrIA/PKqqPtFjnDE2eA/jajSb9Z
+k5GpdbaNwnvT0dQBSnJP/o1llCGUQSItUyf04P3Coh71Nku41v3mNjITxJngElfG
+yGqKeYBdgxKFcIdLGcBM5yqIx7/04xXg8wIDAQABoxMwETAPBgNVHRMBAf8EBTAD
+AQH/MA0GCSqGSIb3DQEBBQUAA4IBAQBWLTL736zW8pQscRghuUqSiZnIPXicfCnE
+JzlUo73sTVNGD89vE6wbhSiKKb/rd+jQoxhOrFilgexBGF6P6WImV2UZFghI4LW6
+RKKCD4GmgmIVKJ8tKb/2n4Myr6MUE6eeMZoa+enrDzE1kszZ2v9Qu+WQvIZaPEbH
+lZdZ4YMe8yc7ySaM/PNj/TwSVwH4hN7sUwEB8jsBTDKiOx69z25/tszvUuPi0PhC
+pocV4176ot9d2+ivjJGTtfve0X8s1zh14bRRoVeiiXQS9eMWREdNBJn1fsmq3WBO
+t4eK7330hL2EKGcZh83GTKk2M0RWrmcF5C+2AYWMquzqaRIGX9d6
+-----END CERTIFICATE-----
+</field>
+    <field type="TextField" name="pkey_pem">-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAqTO2lBr1zOAAP9P6XZ1TBLTEDoGwj07QaEUMqMP1qB64wUeI
+nL7S5UoVmK2TKnwMwBuDFUe+tQARo5GvLLBGPGDob+GZI6YY0N6vMBIJTGVTtXj1
+vY+a7uQqyHi2W1AT0OFGnv+trBHRqwauNyBTobzqLU5I9bIX9DnJYPADXqPIUA+B
+0zamscgHgBjWIY0OUdrTbxR5u+GCiNxspnj1aFGfENrIA/PKqqPtFjnDE2eA/jaj
+Sb9Zk5GpdbaNwnvT0dQBSnJP/o1llCGUQSItUyf04P3Coh71Nku41v3mNjITxJng
+ElfGyGqKeYBdgxKFcIdLGcBM5yqIx7/04xXg8wIDAQABAoIBAQCc3HFWSsw3fC8e
+/VEteo2dXkwoOrlJkkKJeAItb0YN7zVPEhcnYY04vn7ZBYnaqBhV/OuATfwR5xdz
+MbtZza2/igPSvS3wq6pz8Q4unXn7VjDNm28OptR2xhaXtbkxXEKSslZ7TwNd80MS
+r+XQ+2otFmtvRxVCmjG02+HCuaAWGnTP+4dvtu+b4j97ZpOX1wgFZWsuUD/3LVil
+inFfBkVJzuyv8cZozDGze2OKqEIKc8g+zve0lQG9vJ/s5lVl70P4qkluXvW0rhV3
+xWfvuFyqL4LAY8dW2Sad8ODkkXLbBkOsgfyaOsH9G2VR74bSySP6dwlZkxFVEauB
+HwQsfKZ5AoGBANIGDZ8ltcWLYE7ghCRSTDS9IPICTEpO4veylTzCqBqTbhpQDVXs
+vHFgAFu7DuhsKzP6G1drnsQA9EfK9ZKLADz4Tmi7nZ5n0ZSlU7Br7YJXCpDG+w9J
+EZ2GoM5ZspNAQ85Me4ZIw94SQUQsxyT3Q+TieBdqod9lWpmn9tC/omalAoGBAM49
++N76LeOPl3vkMGnD6pZfrRtkKd2k3kjTEjtqhNiW9S3zhL+hImWrAXLmlJ1I5m04
+umvlfU898Eiepbf7Ddg8NI6h4fYy52iQnKKkFEbtuIHe1XYX7ikePqv0dHisfA+z
+nVy5KzpOgvYlD/tx2zbCeJuVE9+SATZ8J/17Ta23AoGBAKdxgAa0L/mxJzV7tp6m
+pm8doliQEHbl8fp9fJIWt6OIiy2bSSaKOatCWMbJmhcftkoYSxgli0zFXfynCaat
+/6Ccbxb9DasvJl6WeOSdB5z0/E109tC29r5aiXY6+S6A/A5L1+e1t8MjVrmd4Z/N
+K2oeTJSOxUOwMM10pkjDoBypAoGAHNq8w+16mBjR18qAH3wCiRFPtcJYvSLA2q11
+IozvkyHjoY8tZmYT2ueG511tM2gsnOFP66KK2phO0sonY0sjj7o0nDP32isbBx0c
+XQDZuWau5rSXZtNIRcZufD5SQUPYg5XckUlyy9CKMAfVaZdvVQT2PMYppqDVvJq4
+OZWTs5cCgYEAy+JJgd7AFkZBzIjTdjJGgMey6l5uHWi/mirjJYb4oHAzyd+rmvA7
+PRRrJWa3vIau0u9Uq0xktf1jlP8DLZKUYbSP6MOUMa8OQ+vYAELZJtO4wM96RXGX
+B/rY03JuWHqolVN6+7j5AdncsKYDxWLGh3IftAo/5JsW1w+nQ3ZQdhk=
+-----END RSA PRIVATE KEY-----
+</field>
+    <field to="rbuilder.pkicertificates" name="issuer_fingerprint" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="IntegerField" name="ca_serial_index">2</field>
+    <field type="DateTimeField" name="time_issued">2010-09-01 15:18:53</field>
+    <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
+  </object>
+  <object pk="53937aa1464ff25bbddcb4bf7f9824cb5567bd60" model="rbuilder.pkicertificates">
+    <field type="TextField" name="purpose">lg_ca</field>
+    <field type="BooleanField" name="is_ca">True</field>
+    <field type="TextField" name="x509_pem">-----BEGIN CERTIFICATE-----
+MIIDUTCCAjmgAwIBAgICd6QwDQYJKoZIhvcNAQEFBQAwYTExMC8GA1UEChMockJ1
+aWxkZXIgTG93LUdyYWRlIENlcnRpZmljYXRlIEF1dGhvcml0eTEsMCoGA1UECxMj
+Q3JlYXRlZCBhdCAyMDEwLTA5LTAyIDExOjE4OjUzLTA0MDAwHhcNMTAwOTAxMTUx
+ODUzWhcNMjAwOTAxMTUxODUzWjBhMTEwLwYDVQQKEyhyQnVpbGRlciBMb3ctR3Jh
+ZGUgQ2VydGlmaWNhdGUgQXV0aG9yaXR5MSwwKgYDVQQLEyNDcmVhdGVkIGF0IDIw
+MTAtMDktMDIgMTE6MTg6NTMtMDQwMDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBAMmKa+GY3WKTfErPrwcwahtMQY3msEKEVMTlv3/DQsjTYUtVdCVQwf5M
+llurI32FT4gP7i1VRupyT0b/dIYn9yGxtlETPjjHRGzmOAxYbz3Y110Wn1d3eK8a
+6YoW/5SYK2Zcc4yU9dNUGZuzG0egzy5kCpbKSBItkbJRk662qOuTASgpQk82fgYt
+/JUoZ+Mt0zYcN7fDRbPeylIHoW+5rACdxWdsXtr8tL6U3E7ef4XQ7DQcfPUiOHXn
+jYmfSuYQm0lgCoCB4bHtjuklskjSK6yPjcm6VPGOJZYPXgPsOF+GyeW1MM8OYY4H
+tjTAleQxzMiw9aTZUx4AAmchUYRdQa8CAwEAAaMTMBEwDwYDVR0TAQH/BAUwAwEB
+/zANBgkqhkiG9w0BAQUFAAOCAQEArn65/dQms1nByVc9s7Oo1VUW5TkUmJLLUp04
+C4u+d/4TqtDOOGk9wVdCMS+px+ZxbzNW+lp9hokks0GWktVZjN+zBoTKlwGStvZu
+YDAvQtskOxCRti1xlq6eBuJ5nXeEplXSvqEITlKrirb6vaN9VEF2W8EQyar05d4A
+hONtIq4pPXzbDNE1/D9LQekKxXLoUQvhnsLj0vRdKMK7aW+mYKssxrC1JilM9lAP
+xyACxyRtXm1/T6Rv3NmBlB0nS3gv1iti/QSEAjE9c1yZ7J4fmvg7KYRSVHNCAUOd
+2YlpwPEXBEeKKB30AYFwnyEHXzLucnxR1rQTGYUOCfHH4qfefg==
+-----END CERTIFICATE-----
+</field>
+    <field type="TextField" name="pkey_pem">-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEAyYpr4ZjdYpN8Ss+vBzBqG0xBjeawQoRUxOW/f8NCyNNhS1V0
+JVDB/kyWW6sjfYVPiA/uLVVG6nJPRv90hif3IbG2URM+OMdEbOY4DFhvPdjXXRaf
+V3d4rxrpihb/lJgrZlxzjJT101QZm7MbR6DPLmQKlspIEi2RslGTrrao65MBKClC
+TzZ+Bi38lShn4y3TNhw3t8NFs97KUgehb7msAJ3FZ2xe2vy0vpTcTt5/hdDsNBx8
+9SI4deeNiZ9K5hCbSWAKgIHhse2O6SWySNIrrI+NybpU8Y4llg9eA+w4X4bJ5bUw
+zw5hjge2NMCV5DHMyLD1pNlTHgACZyFRhF1BrwIDAQABAoIBAFcFx/NPWDhaSo7b
+Ak5uX0KOOLgW5gCytw+VzIxUOaARda9bpJ0AM+OkGkBWsypdx6uOhV9ZtRdCaGzV
+nPDYjOMlov16+6D0md0TwxvBi7b+zG9Ld14DHj8tta2EpLL6ybKXNOV85HBtnekW
++y6AhzUWyWO20EvZFVIT21rTUDj3KhJTzbvv9SO1BPIajSO7h2POqjHVwTIWJncW
+yIEAqUdZixb8C/kQDewgPgoKNGGjkUPZt2HVRZy5Rc5AzcjvfP1bgfjtZBYV4eVi
+qew9ccFy5gnaJbTvCiciYj/gH3asV4skKEl/FT/8+ObMbBUdiwfH3RkNS4R7F3nQ
+/lnL6fECgYEA9LzdU6El5I8WHkC9SptnNjO/0oZ4nJe1lEAKKH39kROWkkDUCY+y
+QBTwryr/4i8lgMUxXjgEDfeSw4qNCYlMoqh316vBk+1YrICL4+l+dA+BrrvZ82k2
+GZekWN8svmZWh76k9ltmq4k08pk9nBLP8UMYRK1FJD0f8rqEaItCU30CgYEA0tCs
+dXCo01SECqE11j587Yed0fIqQ7eo0TU0yXFRMLEdQFqe5G/knlj/p1/5C323ED/C
+QSyQ08qIFA5RfZQnvM4QIt50crgGdI25DyyCU0LDcNLtZNoZojze6YyUyFiBRw99
+n+vahyXcAGut8Gnkj6UydP+Ep29jtRd8JE+7mZsCgYAtrbKBkWpJJouySdMKwcaZ
+zz7WRFLup0I00V8T/6/8C/PmiEMLJc7XNxFVIGlyBeqyBhwYwcu/751s8ccxKHct
+RNRZZK1Uts/+Il/5wfLgJqTFwDoFvHVkgXEjRURMpT0xSNvxP04CZjGDtiZRoxE8
+rpExAEYPZXk5DKb5/EP84QKBgEu40HlOghWGYfc/eIr/3veiorlqdmvkaCrdJZzF
+qxgGRi97XV9IIaIO7aU8/8N04HBhtnCahVrNgJtTmUm2EZ/rlDgyFzmtiAQNc89T
+eWxWqsS3vrVe8Z4opxjUegyMXcMceU8b9F5e5urvwoZ8QrCl8b28mfVaOUIusVSJ
+nyTJAoGAEkx+FSs8lj0ieU9jOPz/RXcqZneFWJIJE9H5/VQIrDcGAvYzvW4GEkxz
+kSqGb4NdF2STch7hctBcPOCdoNhUXTL6z/uBK1gdtBUeEMSGzH/CmUcswFJnTwqc
+ktRFCKQOkSjyvYsE0dZsuorTVACUGReAIYV0X/Wj2Cyqdqy/vP8=
+-----END RSA PRIVATE KEY-----
+</field>
+    <field to="rbuilder.pkicertificates" name="issuer_fingerprint" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="IntegerField" name="ca_serial_index">1</field>
+    <field type="DateTimeField" name="time_issued">2010-09-01 15:18:53</field>
+    <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
+  </object>
+  <object pk="322c4f271fb35cd6d2114e8b0da53f50fb07a8e0" model="rbuilder.pkicertificates">
+    <field type="TextField" name="purpose">site</field>
+    <field type="BooleanField" name="is_ca">False</field>
+    <field type="TextField" name="x509_pem">-----BEGIN CERTIFICATE-----
+MIIDYDCCAkigAwIBAgIBATANBgkqhkiG9w0BAQUFADBiMTIwMAYDVQQKEylyQnVp
+bGRlciBIaWdoLUdyYWRlIENlcnRpZmljYXRlIEF1dGhvcml0eTEsMCoGA1UECxMj
+Q3JlYXRlZCBhdCAyMDEwLTA5LTAyIDExOjE4OjUzLTA0MDAwHhcNMTAwOTAxMTUx
+ODUzWhcNMjAwOTAxMTUxODUzWjBzMSIwIAYDVQQKExlyQnVpbGRlciBTaXRlIENl
+cnRpZmljYXRlMSwwKgYDVQQLEyNDcmVhdGVkIGF0IDIwMTAtMDktMDIgMTE6MTg6
+NTMtMDQwMDEfMB0GA1UEAxMWcmVpbmhvbGQucmR1LnJwYXRoLmNvbTCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBAJedtqxAQtJEaCZRs2xvJroIWIcAK1ds
+UfY9e+gxtRlxpuGxyOrTG8Vsokpt/dHZY7mR1UMsUS9saqVNkO4W2vFqPvOmAhea
+iasDn0xDon/7iYYErUgLEzwWgcnGzQEiqjDxmoHc3owa/WO/ffhScExbY7sjUZbA
+mYSL/0eZu3v67RQBI8EQZu5plz3Qy9bsMo9N6Ma6yqNkzJ+4Fcttwk6TgVoU91Mn
+rDMGdv64JlAWzdrfYhDPWMZDp6VRmjSbHHSdOphPo181jWgN3J10XJkelKptYRvc
+C7nOM1pNhCZANnm10agNLR6gEbAL8zPu2LSlZFQnOsqC+h/IRRlNstMCAwEAAaMQ
+MA4wDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQUFAAOCAQEATBMpEtvL5ELAabva
+Jk7QIXzHhEO0ZgVLQvZ9qmq6/SR7ohu0dD+BH5nMPwwlNe89z7LvrRY/jWDVoQgh
+iNccWjrf/vtv+VWh4HMd5jXYNlUti8F45NNpOk1IYj1cN7sZJyV+zUiWqw9ML/cw
+rcCcBxd1TzbtTI10ua3sogVaqrqmiKBCJ25ZAEgkK+TvRfUscVdhb1f6GrG1enLT
+Y5IqIGZkhInO0e2Fje1pw+kKqVmojYHoxmagVbiU0sj1TI35+F8fH03hriIGuHUL
+NouW8uYzxu+gAOzgLQHhL78xQ0ahN3C5WAFcstoO8CoFgePVmOOBPBPwcL4VQap0
+KdW+Fw==
+-----END CERTIFICATE-----
+</field>
+    <field type="TextField" name="pkey_pem">-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAl522rEBC0kRoJlGzbG8mughYhwArV2xR9j176DG1GXGm4bHI
+6tMbxWyiSm390dljuZHVQyxRL2xqpU2Q7hba8Wo+86YCF5qJqwOfTEOif/uJhgSt
+SAsTPBaBycbNASKqMPGagdzejBr9Y799+FJwTFtjuyNRlsCZhIv/R5m7e/rtFAEj
+wRBm7mmXPdDL1uwyj03oxrrKo2TMn7gVy23CTpOBWhT3UyesMwZ2/rgmUBbN2t9i
+EM9YxkOnpVGaNJscdJ06mE+jXzWNaA3cnXRcmR6Uqm1hG9wLuc4zWk2EJkA2ebXR
+qA0tHqARsAvzM+7YtKVkVCc6yoL6H8hFGU2y0wIDAQABAoIBABzg8oF+v/uTAg+C
+cl2OEl9O5aXZN2gwfrAbZ/WDOk59Yl8M4QsxaNHC7mqk5rrI4IDhMTDZSSFyUiHo
+U1m2Sr+/D/ySu0VJrz0+tGHvZA1imQBI9cSKL4C7fL81OakktCwcaOShcFZZcbhF
+KjZZZYB1y9pCUPEZAGTJ0bcOpjJn/yEIwGkx8hv1gbMEf5WCFsGxL3Zian+sGqMW
+iMpaVrrSN3MO0yvWGBeDANyoEOVkrXIOoLV2JH5e7CtPPd5T9zEjaP4ZN5dzpKrs
+rIpGPxIKgfTsF0/81raVqGUO0e/hOA4ps0O7gEASquiM8eEg01KeMkcHoq0SaWwT
+/MOieMECgYEAxVFCCR7y3KXUYsoRYALBw0OHPFNXJztDLpvDy0PPfRY+/JirDHzB
+9qW9wLlBRhLXBBKyvgRmB70V9THq+ZLs4P9VoCm8YKkm1FW5bEHr33Yk6BksqmAf
+t9QLVZmG1WpZXZS6j3Ccy26SwSPJlGJnP+KWXZy5BRo/6RRGxge63SECgYEAxLT8
+95tcaT9M9mzvYHeez8UFGLNA1rx3yPm84Z0bnOiTeOV2AyVzJLE2P0qiQmFvD+yi
+yqR6/snnM0wO7pyEGS/zX+mZB5f89e1om/AYwTeIaLfuACuk5LHuHidU56ZIgdSk
+RqMr97YvgG3pHHlUz2dIslJpEXpDTXN+MqS7vXMCgYEAtqq+JnF3RdtjHj2RDkAf
+HuSiCq/grBoJ3NkozkEtkdCJaRDwsPPCINNZMlSOYA/K7CNfQ9gQmLNs43xd2sQw
+9S6MF2Tr1tRhdQsTSGxSr6HREulTVzr7whPUll812tbEeoTYnTgUf6QSyiiWUf8z
+NIpQx8Lx6g5eAinaRzQawuECgYEAgmCroro44BFyw4qkhr4CZxfhLuPwv+OfSXgt
+9yQY30FQLbt5ItC5psJGgGDJd1H5OQbRR5sJYsMUGO36n7Dh5Yfgudus8FmO8rnu
+shzLa5WRNkdi2n4TBvngJ+BN6FRQjq0QTTlttPvuNCOldJf+3JFKn9b7iPgOj9FS
+/eIuBX0CgYEApp1nXuaMrer8ObZzqXVIr8eT/8AN86eOkP2J3X0ADsBgnjgz9djj
+8701JpUq9OrliVHB6fmy1MTWDFo8Q9/PVWZLxbeN5AOgIbt9YxO/lAhBZXp0yff4
+6fhiU1L5einDYPhyG3AcztEF+RMKOyl2sSO4Ybl1Fp7tQ6nVoVOJIr0=
+-----END RSA PRIVATE KEY-----
+</field>
+    <field to="rbuilder.pkicertificates" name="issuer_fingerprint" rel="ManyToOneRel">561f95e06c749a518526703d3c7013d1a1579f57</field>
+    <field type="IntegerField" name="ca_serial_index">0</field>
+    <field type="DateTimeField" name="time_issued">2010-09-01 15:18:53</field>
+    <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
+  </object>
+  <object pk="1034c7eb271230eca2d265b69c2bcfd0b1980e7a" model="rbuilder.pkicertificates">
+    <field type="TextField" name="purpose">xmpp</field>
+    <field type="BooleanField" name="is_ca">False</field>
+    <field type="TextField" name="x509_pem">-----BEGIN CERTIFICATE-----
+MIIDPzCCAiegAwIBAgIBAjANBgkqhkiG9w0BAQUFADBiMTIwMAYDVQQKEylyQnVp
+bGRlciBIaWdoLUdyYWRlIENlcnRpZmljYXRlIEF1dGhvcml0eTEsMCoGA1UECxMj
+Q3JlYXRlZCBhdCAyMDEwLTA5LTAyIDExOjE4OjUzLTA0MDAwHhcNMTAwOTAxMTUx
+ODUzWhcNMjAwOTAxMTUxODUzWjBSMSIwIAYDVQQKExlyQnVpbGRlciBYTVBQIENl
+cnRpZmljYXRlMSwwKgYDVQQLEyNDcmVhdGVkIGF0IDIwMTAtMDktMDIgMTE6MTg6
+NTMtMDQwMDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL0HY/pfyqO4
+KLp/LneQBBXfIT2tfD3paUHYVmxAPP3+gS9Emmv6rE6/zY4XSpK2LuYSQnO0hWU5
+s3aBkuYsMl8LNuy04riTEl3GFj1Dgv3iIiZhKRJVJRi9ZTLLG0NbgNzNAXknnN6F
+mX0U/VT8TWkF1ux3PlSzlMkHhoI5uxFRWm/TD8yhJDQ15US6xMCHCi/hpcRCJc7+
+IF1ZzSgeiIoaRWqR+gEyvbkLCRiwYL8fhaM6LCRZNJHUUkKqjbPv6WgPnQ01kTZ2
+rgx8k+3PQCfTLqVDEx+MZghW1W/4rBxntqzEcZ20JyeRpuQJqNuL0v/b+DN1BV5b
+F30q6C8EViUCAwEAAaMQMA4wDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQUFAAOC
+AQEAaZFwbImmYBDtva7GD010hd+RPhUSC1yOkaxmPftPTc8dzAXgLwoqXc43NW+e
+35V+AhcI/rcAjRu7uglSotM/VJJEYLILvw4rgNa9ERVAZAulBEK77xuD5yhAUa9+
+3gsV0bgJgV3x5kHqvP6KUlkcQOjEhpkEV0hCUErUmF8aKSMlLcvQ/5+ddkE4GCyd
+yY45wpUdPNxb/vC4tw44SHZH0RA+ojhxcPk/OygyvWPnAjlvrtPgGZsYhQrzLK4A
+aQGD1m+W0+kc6fzIF9E1B1y/GPPUkupXBbws2VfNJIJmxPtVKmg+iGowYx8lAhW7
++/S8iFGOZMnoDRxYQuwi+P3Taw==
+-----END CERTIFICATE-----
+</field>
+    <field type="TextField" name="pkey_pem">-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAvQdj+l/Ko7goun8ud5AEFd8hPa18PelpQdhWbEA8/f6BL0Sa
+a/qsTr/NjhdKkrYu5hJCc7SFZTmzdoGS5iwyXws27LTiuJMSXcYWPUOC/eIiJmEp
+ElUlGL1lMssbQ1uA3M0BeSec3oWZfRT9VPxNaQXW7Hc+VLOUyQeGgjm7EVFab9MP
+zKEkNDXlRLrEwIcKL+GlxEIlzv4gXVnNKB6IihpFapH6ATK9uQsJGLBgvx+Fozos
+JFk0kdRSQqqNs+/paA+dDTWRNnauDHyT7c9AJ9MupUMTH4xmCFbVb/isHGe2rMRx
+nbQnJ5Gm5Amo24vS/9v4M3UFXlsXfSroLwRWJQIDAQABAoIBAGTwcV7dkCPkzzrn
+dzS5XrUfNWzuGw4keeSDVYLwuqEXKnzHMX6/mQtkOKvLnDLDvj91OK74ktL/AOoj
+PwJST4OZRXcZEIhnYMNaZ73HM0fHXV0JPRlhBjIz0LpS4vgRALrnbgX4NThONywn
+7S9Ymy2dxKr48fvg+W5v6k/X7CDOWRIsAAC1sv89qOCLmhYCq6WMx238pMaIlqZS
+6rZK1lftc8ys9Z5ArTjYaXjKcG8LczNjiTSXgNUsYY81ubks02+ol4pw8ejAnkoG
+TTnDz4y7IIK2mi8w/Yvoz7uoMic/AMY02hOUMemSJaspcxKOaOARGSfMHiAkO7R1
+z5wVzwECgYEA6bjleP/0t3bkYdl7YLPDzTPnNVVTtk/SdlELb5/ft1/qpskgFxUp
+VI6OVi/+P/FoClcMFqGy3gqG3xGEiTa3J3u9qIH/40b7XMyU7KmcSj3cT7cBGma9
+S/HBXrF5VGUhA0w9/TQzAIEdobKhLm2aDIs0UqE5TPzSBte7dGGDdHECgYEAzwvs
+BbiHpX98d4Xmgem7eNmBnY/gzyfCb1SJ7qBJQiYIUyb78yrXnQEhTSlVN5YuYTwn
+jfmPJz0WzPdVw4n17A3/rjznsprQCJOV57KP4d3UtvoG41lAEj1lL8i1uYIwbu2M
+gnQ5+oMxokDzruw4y2lvBM68Emni+87E83PPRvUCgYBHNvhsywjE0iw6iGrohz3V
+C8iaXpp4RZAqTv1+EKe5FzfHhCcMAX2rbxh9uHfvAd6ir+1WBAUdVPXNiGfq60oZ
+dMHQU3Qly14R46BJEFE36et0Op3SbpWlS0+RS+BdT8ckWxnUShB0SeM+ftBP9kNn
+KQ9TUh7Ej5BrV1ad2oyUcQKBgAYp5bHZ53fezrbELrOJYMJdP0WQhfHEzj4AN0b6
+UJP+i9rl2zRG/zo2UWZ5p4bLGsBcSRUp68AQSoB5kH0Mu1x2ojjuqTsg7raCpkDK
+iQwBTZbQ5KmZ+5VPbJa6k+Zc4NI8kiVEDoHNrAmXg2mesKYlkl+DRAgMTOyQID7b
+IL2NAoGBALfmq4pwkhyCVNcu0Q/XGm1Pdl2cvj/5I6YDs0BraPyG/Y3cKlTMR3xU
+0R3KkCvxMgCsrmNeP3/zzmFx5+DDPcTddijzlhU0MxRJ9fAJ5eiJX5JaG2Pt0aQH
+tSf4qT0l8+8sdTF1/hcprpV9zPufO3NNdRqY9U8n2gVCc9nydBVm
+-----END RSA PRIVATE KEY-----
+</field>
+    <field to="rbuilder.pkicertificates" name="issuer_fingerprint" rel="ManyToOneRel">561f95e06c749a518526703d3c7013d1a1579f57</field>
+    <field type="IntegerField" name="ca_serial_index">0</field>
+    <field type="DateTimeField" name="time_issued">2010-09-01 15:18:53</field>
+    <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
+  </object>
+  <object pk="63dc301d7a6c8544b1b4725a739284d1b6431c4c" model="rbuilder.pkicertificates">
+    <field type="TextField" name="purpose">outbound</field>
+    <field type="BooleanField" name="is_ca">False</field>
+    <field type="TextField" name="x509_pem">-----BEGIN CERTIFICATE-----
+MIIDSTCCAjGgAwIBAgIBATANBgkqhkiG9w0BAQUFADBhMTEwLwYDVQQKEyhyQnVp
+bGRlciBMb3ctR3JhZGUgQ2VydGlmaWNhdGUgQXV0aG9yaXR5MSwwKgYDVQQLEyND
+cmVhdGVkIGF0IDIwMTAtMDktMDIgMTE6MTg6NTMtMDQwMDAeFw0xMDA5MDExNTE4
+NTNaFw0yMDA5MDExNTE4NTNaMF0xLTArBgNVBAoTJHJCdWlsZGVyIFJlcGVhdGVy
+IENsaWVudCBDZXJ0aWZpY2F0ZTEsMCoGA1UECxMjQ3JlYXRlZCBhdCAyMDEwLTA5
+LTAyIDExOjE4OjUzLTA0MDAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQCgz+pOK5ROa/+PJo9/3glqvqchCBJIOYiygGpUMGq1p/HKspN08RsuHPL4/1Dd
+h+AGMQndojaumIvuDW/3eP9AgXfJZa6YDjNmhmGTBOqCickOoc/vGmdFnsi6cNCT
+ClBR4MvW770h1yQdSgtUszyixTBLn+5yB5oIIKCXVMxuh63XhTa9TVsk5HRIpAW9
+ZVIaWhRU/QQhYt5qPE7OoePKRkUS3zNXK/LAgPEayzPJbUT4AHku33Ps8dCyVBDC
+oOgKOu0FSGqAqleprDPaQslWx0bjx7kQMObt7ptTTPWGV+T0TSIrz8ab370PYY7e
+KsNXS+Ad9yiZCbcrg5uMYrr7AgMBAAGjEDAOMAwGA1UdEwEB/wQCMAAwDQYJKoZI
+hvcNAQEFBQADggEBAAEOZy8q2W4eRS7jjOHVjKMNBl7qVQafRCApjZmmmHcqWLF9
+oA+wsbuYgbTHYPZ91johrKJx2D7KUj+dhTHLN3QmCSRwschUTLL8SSTlncT6NI4V
+nYvxBhgh45N+RVmk/hWSeNGHPZrHKSnnFyxRWUooDontBoUTlmQP9v6CXGxwFBpb
+k+BIkRElpceL73AMmiquPCUNIeMmGZqQivLvaIzowREQCuXNorJgMAdG5xWddO3H
+/duKEYsL6aGrEG9mw7CAxzA0fcq5T9YFq90nd9E0g3IhfiAWvsrInJmH0c7DhaZ/
+2r9WWECYqxWkHMLsW6PVA0pVTL/XoicHiu6NTac=
+-----END CERTIFICATE-----
+</field>
+    <field type="TextField" name="pkey_pem">-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAoM/qTiuUTmv/jyaPf94Jar6nIQgSSDmIsoBqVDBqtafxyrKT
+dPEbLhzy+P9Q3YfgBjEJ3aI2rpiL7g1v93j/QIF3yWWumA4zZoZhkwTqgonJDqHP
+7xpnRZ7IunDQkwpQUeDL1u+9IdckHUoLVLM8osUwS5/ucgeaCCCgl1TMboet14U2
+vU1bJOR0SKQFvWVSGloUVP0EIWLeajxOzqHjykZFEt8zVyvywIDxGsszyW1E+AB5
+Lt9z7PHQslQQwqDoCjrtBUhqgKpXqawz2kLJVsdG48e5EDDm7e6bU0z1hlfk9E0i
+K8/Gm9+9D2GO3irDV0vgHfcomQm3K4ObjGK6+wIDAQABAoIBADDoiz5TCrv/JK6I
+78PX581LRtFI/yZwOR7w52XLg+jTtzoKrcY3Pij8LPmFzTZTCNNZPsLlfvQC+Svh
+clg1uIwJ1ECwaDVevEtGO47XQ+uHtFp65B64TQhjjnEFtqnBzUPZtqUcLM2J/TXb
+Oy77hEmM529YqNCNd09ZfP4JkFNc/PVauJeHfjikLtTCPQxfIL1/SryCCxhpGdOJ
+BYY45enPurzeeTosddxhh0zCfTbjDkZIvC6j0gapMtQ3y0HVu4rqZApZAtqRRkol
+3ThT4f94gOiMUpa3n5GqdeQztBziP2tm0dfqajvY8DkG4l8cLs5JMV3ybzuRjO7D
+nK+ioWECgYEA1Q9q15QVf8SABn4Hx7glwR3y9US2oQxnzD8FSyHys6ayXqrIBRTm
+ctY8fqx5FaAgLRleYrqppAEFHnyv0rNuj5uBG4Vv7hPVFMMB2IjX6Go3y4Kp2Cji
+E0exfaED1fOVF6Qg3YMrlLN9UQDWDVXtowmmf1MZeKJrbHIm9G7/tbcCgYEAwTjS
+uv1yJQvMeCgzhHkYjwaTGFYIIENrwh5v+aqL/qFfisxBb2TGCeWMenel4nI/7Sj8
+Ks5skazLilMY0XvXZQLQb8Z46ejz3qAF90Nt7mR8+3Fi/RG3CV7nlTYKi4EBoRwa
+A6J5HYjJbWsvWPjRun+VC5/RCLaLRt3vBruUBN0CgYBWbXeg1bBW8QYiHBPZ34hp
+K1X4SpRvBhJBFzt1e+LxH2jx4ANdlFnbMa6+kAZaUGddBBJ2qFPSdJt3/4pvRVxP
+IvyfhmSeRitEzco85V34KMZTZsCxL/xtZ8LHPH7K1pGfUnQGh4QxQRJPvrAWHspU
+PcDtm28UsYY0KqZEt5ZBRwKBgQCxF4V8wIH3lkLG9gGRrvNlUx9KNL+p4mFHP2Jd
+r4Qz0m+g5OgsUm537527OSIe05vnn6LPEPbM5VR/6P1cMmcOO3ASohN8P3gUWRJe
+t7xvvEYYpqmVTME3o3YZebhcd9aodPsazbS37wC+enig0RxYFErkpouNstEgGJTU
+1OMrOQKBgGj8bASJ+BypTtg8xnac5FuzEPr0ksjz+FaY+NGeXmfqCxdTvUs0Ue25
+Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
+9GYZo4+j1V1Ld2WUxY+jXJdJetbrPjU4Bq8M+etypQrNJXrX/DD4
+-----END RSA PRIVATE KEY-----
+</field>
+    <field to="rbuilder.pkicertificates" name="issuer_fingerprint" rel="ManyToOneRel">53937aa1464ff25bbddcb4bf7f9824cb5567bd60</field>
+    <field type="IntegerField" name="ca_serial_index">0</field>
+    <field type="DateTimeField" name="time_issued">2010-09-01 15:18:53</field>
+    <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
+  </object>
+  <object pk="1" model="rbuilder.products">
+    <field type="CharField" name="hostname">chater-foo.eng.rpath.com</field>
+    <field type="CharField" name="name">chater-foo</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="domainname">eng.rpath.com</field>
+    <field type="CharField" name="shortname">chater-foo</field>
+    <field type="CharField" name="projecturl">http://</field>
+    <field type="CharField" name="repositoryHostName">chater-foo.eng.rpath.com</field>
+    <field type="TextField" name="description">chater-foo</field>
+    <field type="CharField" name="prodtype">1</field>
+    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="SmallIntegerField" name="backupexternal">0</field>
+    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="timemodified">0</field>
+    <field type="SmallIntegerField" name="hidden">0</field>
+    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="1" model="rbuilder.versions">
+    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="name">1</field>
+    <field type="TextField" name="description">1</field>
+    <field type="DecimalField" name="timecreated">0</field>
+  </object>
+</django-objects>

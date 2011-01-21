@@ -1,8 +1,9 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
-# All rights reserved
+# All rights reserved.
 #
+
 import os
 import sys
 
@@ -13,7 +14,7 @@ from mint import mint_error
 from conary.conarycfg import ConfigFile, CfgProxy
 from conary.dbstore import CfgDriver
 from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
-        CfgList, CfgPath, CfgString)
+        CfgList, CfgPath, CfgString, CfgEnvironmentError)
 
 
 RBUILDER_DATA = os.getenv('RBUILDER_DATA', '/srv/rbuilder/')
@@ -46,9 +47,9 @@ def getConfig(path=RBUILDER_CONFIG):
     """
     mintCfg = MintConfig()
     try:
-        mintCfg.read(path)
-    except:
-        raise mint_error.ConfigurationMissing
+        mintCfg.read(path, exception=True)
+    except CfgEnvironmentError:
+        raise mint_error.ConfigurationMissing()
     else:
         return mintCfg
 
@@ -154,7 +155,8 @@ class MintConfig(ConfigFile):
 
     # User authorization
     adminNewProjects        = (CfgBool, False, "Whether project creation is restricted to site admins")
-    adminNewUsers           = (CfgBool, False, "Whether new users should have site admin privileges")
+    adminNewUsers           = (CfgBool, False,
+            "Whether user creation is restricted to site admins.")
 
     # Downloads
     redirectUrlType         = (CfgInt, urltypes.AMAZONS3)
@@ -223,7 +225,6 @@ class MintConfig(ConfigFile):
     # Build system
     anacondaTemplatesFallback   = (CfgString, 'conary.rpath.com@rpl:1')
     packageCreatorConfiguration = (CfgPath, None)
-    packageCreatorURL       = (CfgString, None)
     visibleBuildTypes       = (CfgList(CfgBuildEnum))
     excludeBuildTypes       = (CfgList(CfgBuildEnum))
     includeBuildTypes       = (CfgList(CfgBuildEnum))
@@ -237,6 +238,7 @@ class MintConfig(ConfigFile):
     availablePlatformNames  = (CfgList(CfgString), [])
     availablePlatforms      = (CfgList(CfgString), [])
     configurablePlatforms   = (CfgList(CfgString), [])
+    abstractPlatforms       = (CfgList(CfgString), [])
     # Parallel lists of platform sources
     platformSourceNames      = (CfgList(CfgString), [])
     platformSourceUrls       = (CfgList(CfgString), [])
@@ -252,7 +254,21 @@ class MintConfig(ConfigFile):
                                 "whether or not to generate a scrambled password for the "
                                 "guided tour currently this is set to false (see WEB-354) "
                                 "until further notice")
+    
+    # inventory
+    systemEventsNumToProcess = (CfgInt, 100,
+                          "The number of asynchronous system events to dispatch at a time")
+    systemEventsPollDelay = (CfgInt, 720,
+                          "The number of minutes to wait before enabling a system's next polling task")
+    deadStateTimeout = (CfgInt, 30,
+                        "The number of days after which a non-responsive system is marked as dead")
+    mothballedStateTimeout = (CfgInt, 30,
+                        "The number of days after which a dead system is marked as mothballed")
+    launchWaitTime = (CfgInt, 300,
+                        "The number of seconds to wait for a launched system's network information to become available")
 
+    # inventory - configuration
+    inventoryConfigurationEnabled = (CfgBool, False)
 
     # *** BEGIN DEPRECATED VALUES ***
     # These values are no longer in active use but must remain here so that
@@ -271,6 +287,7 @@ class MintConfig(ConfigFile):
     serializeCommits        = (CfgBool, True)
     projectAdmin            = (CfgBool, True)
     externalDomainName      = (CfgString, None)
+    packageCreatorURL       = (CfgString, None)
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
@@ -354,3 +371,39 @@ class MintConfig(ConfigFile):
         if 'default' in self.database:
             self._options['database'].write(fObj,
                     {'default': self.database['default']}, {})
+
+    def getDBParams(self):
+        """Return a dictionary of psycopg params needed to connect to mintdb."""
+        if self.dbDriver not in ('postgresql', 'pgpool'):
+            raise RuntimeError("Cannot convert %s database connection to "
+                    "libpq format." % (self.dbDriver,))
+
+        name = self.dbPath
+        if '/' not in name:
+            return dict(database=name)
+        user = password = host = port = None
+
+        host, name = name.split('/', 1)
+        if '@' not in host:
+            return dict(database=name, host=host)
+
+        user, host = host.split('@', 1)
+        if ':' in user:
+            user, password = user.split(':', 1)
+
+        # Parse bracketed IPv6 addresses
+        i = host.rfind(':')
+        j = host.rfind(']')
+        if i > j:
+            host, port = host[:i], int(host[i+1:])
+        if host[0] == '[' and host[-1] == ']':
+            host = host[1:-1]
+
+        out = dict(database=name, host=host)
+        if port:
+            out['port'] = port
+        if user:
+            out['user'] = user
+        if password:
+            out['password'] = password
+        return out

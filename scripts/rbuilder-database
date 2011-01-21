@@ -1,6 +1,0 @@
-#!/usr/bin/python
-from mint.scripts import rbuilder_database
-import sys
-
-if __name__ == '__main__':
-    sys.exit(rbuilder_database.RBuilderDatabase().run())

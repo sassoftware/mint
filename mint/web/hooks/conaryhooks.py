@@ -374,8 +374,9 @@ def conaryHandler(context):
         # don't require signatures for the internal user (this would break
         # group builder)
         requireSigs = False
-    if auth[1]:
-        auth[1] = util.ProtectedString(auth[1])
+    # From this point on we don't use the authentication information
+    # Get rid of it so it doesn't show up in tracebacks
+    del auth
 
     paths = normPath(req.uri).split("/")
     fqdn = hostName = None

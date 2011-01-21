@@ -43,6 +43,13 @@ class InvalidProjectForPlatform(mint_error.MintError):
     domainname of the platform that is being enabled.
     """
 
+class ContentSourceTypeNotDefined(mint_error.MintError):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "Content source type %s was defined in the config but not defined by any platform definition." % self.name
+
 class PlatformLoadFileNotFound(mint_error.MintError):
     def __init__(self, uri):
         self.uri = uri

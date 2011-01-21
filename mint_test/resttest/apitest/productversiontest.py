@@ -335,7 +335,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>ISO</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/installableIsoImage">
       <name>installableIsoImage</name>
-      <displayName>Installable CD/DVD</displayName>
+      <displayName>Legacy Installable CD/DVD</displayName>
       <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -374,7 +374,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>ISO</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/installableIsoImage">
       <name>installableIsoImage</name>
-      <displayName>Installable CD/DVD</displayName>
+      <displayName>Legacy Installable CD/DVD</displayName>
       <options anacondaCustomTrove="" anacondaTemplatesTrove="conary.rpath.com@rpl:2" autoResolve="false" baseFileName="" betaNag="false" bugsUrl="" installLabelPath="" mediaTemplateTrove="" showMediaCheck="false"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -434,7 +434,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Filesystem</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawFsImage">
       <name>rawFsImage</name>
-      <displayName>Mountable Filesystem</displayName>
+      <displayName>Eucalyptus/Mountable Filesystem</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -447,7 +447,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Filesystem</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawFsImage">
       <name>rawFsImage</name>
-      <displayName>Mountable Filesystem</displayName>
+      <displayName>Eucalyptus/Mountable Filesystem</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -460,7 +460,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>Parallels(R), QEMU (Raw Hard Disk)</displayName>
+      <displayName>KVM/Parallels/QEMU/Raw Hard Disk</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
@@ -473,7 +473,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>Parallels(R), QEMU (Raw Hard Disk)</displayName>
+      <displayName>KVM/Parallels/QEMU/Raw Hard Disk</displayName>
       <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512"/>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
@@ -719,7 +719,7 @@ class ProductVersionTest(restbase.BaseRestTest):
         uri = uriTemplate % (self.productShortName, self.productVersion)
         client = self.getRestClient(username='foouser', admin=True)
 
-        label = self.mintCfg.availablePlatforms[1]
+        label = 'localhost@rpath:plat-2'
         data = """\
 <platform>
   <label>%s</label>
@@ -731,10 +731,10 @@ class ProductVersionTest(restbase.BaseRestTest):
   <platformId>2</platformId>
   <platformTroveName>platform-definition</platformTroveName>
   <label>localhost@rpath:plat-2</label>
-  <platformVersion>4.1-1</platformVersion>
+  <platformVersion>4.2-1</platformVersion>
   <productVersion>1.0</productVersion>
   <platformName>Crowbar Linux 2</platformName>
-  <enabled>false</enabled>
+  <enabled>true</enabled>
   <contentSources href="http://localhost:8000/api/platforms/2/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/2/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>

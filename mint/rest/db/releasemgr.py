@@ -40,6 +40,7 @@ class ReleaseManager(manager.Manager):
         for row in cu:
             row['published'] = bool(row['timePublished'])
             release = models.Release(row)
+            release.imageCount = self._getBuildCount(row['releaseId'])
             releases.releases.append(release)
         return releases
 

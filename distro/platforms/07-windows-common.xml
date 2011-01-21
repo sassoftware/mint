@@ -1,0 +1,6 @@
+<platform>
+  <label>windows.rpath.com@rpath:windows-common</label>
+  <platformName>Windows Foundation Platform</platformName>
+  <abstract>true</abstract>
+  <configurable>false</configurable>
+</platform>

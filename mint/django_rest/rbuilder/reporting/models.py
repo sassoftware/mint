@@ -1,7 +1,12 @@
+#
+# Copyright (c) 2010 rPath, Inc.
+#
+# All rights reserved.
+#
+
 from django.db import models
 
-from mint.django_rest import rbuilder, logger
-from mint.django_rest.rbuilder.models import Users
+from mint.django_rest import rbuilder
 
 from xobj import xobj
 

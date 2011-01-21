@@ -126,11 +126,35 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
                                    name='Image1')
         self.setImageFiles(db, 'bar', imageId)
 
+        # Add a target
+        targetType = 'vmware'
+        targetName = 'abc.eng.rpath.com'
+        db.targetMgr.addTarget(targetType, targetName, dict(alias=targetName,
+            description=targetName))
+
+        # Add some fake target images
+        tgtImageIds = [ 'vmware-image-id-1', 'vmware-image-id-2' ]
+        for targetImageId in tgtImageIds:
+            db.targetMgr.linkTargetImageToImage(targetType, targetName,
+                imageId, targetImageId)
+            # Add it twice, to make sure duplicates are removed
+            db.targetMgr.linkTargetImageToImage(targetType, targetName,
+                imageId, targetImageId)
+
         images = db.imageMgr.getAllImagesByType('INSTALLABLE_ISO')
         self.failUnlessEqual(
             [ [ x['sha1'] for x in img['files'] ] for img in images],
             [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
               [ 'da4b9237bacccdf19c0760cab7aec4a8359010b0' ] ])
+        self.failUnlessEqual(
+            [ [ x['targetImages'] for x in img['files'] ] for img in images],
+            [
+                [[]],
+                [[
+                    ('vmware', 'abc.eng.rpath.com', 'vmware-image-id-1'),
+                    ('vmware', 'abc.eng.rpath.com', 'vmware-image-id-2'),
+                ]]])
+
         # RBL-6290: make sure we don't have cross-polination of hostnames
         self.failUnlessEqual(
             [ img['baseFileName'] for img in images ],

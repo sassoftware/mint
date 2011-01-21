@@ -27,3 +27,25 @@
     compressext .bz2
     compresscmd /usr/bin/bzip2
 }
+
+/var/log/rbuilder/system_events.log {
+    rotate 12
+    size 10M
+    missingok
+    notifempty
+    copytruncate
+    compress
+    compressext .bz2
+    compresscmd /usr/bin/bzip2
+}
+
+/var/log/rbuilder/target_systems_import.log {
+    rotate 12
+    size 10M
+    missingok
+    notifempty
+    copytruncate
+    compress
+    compressext .bz2
+    compresscmd /usr/bin/bzip2
+}

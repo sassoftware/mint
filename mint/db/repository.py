@@ -92,8 +92,20 @@ class RepositoryManager(object):
         Generate a sequence of L{RepositoryHandle}s matching a given
         query.
         """
+        return self._iterRepositories(whereClause, args, contentSources=True)
+
+    def _iterRepositories(self, whereClause, args, contentSources):
         if whereClause:
             whereClause = 'WHERE ' + whereClause
+        if contentSources:
+            sourceClause = """
+                EXISTS (
+                    SELECT * FROM PlatformsContentSourceTypes
+                    JOIN Platforms AS plat USING (platformId)
+                    WHERE plat.projectId = projectId
+                )"""
+        else:
+            sourceClause = "false"
 
         cu = self.db.cursor()
         cu.execute("""
@@ -101,15 +113,10 @@ class RepositoryManager(object):
                     EXISTS ( SELECT * FROM InboundMirrors
                         WHERE projectId = targetProjectId
                         ) AS localMirror,
-                    commitEmail, %s, url, authType, username, password,
-                    entitlement, EXISTS (
-                        SELECT * FROM PlatformsContentSourceTypes
-                            JOIN Platforms AS plat USING (platformId)
-                        WHERE plat.projectId = projectId) AS hasContentSources
+                    commitEmail, database, url, authType, username, password,
+                    entitlement, %s AS hasContentSources
                 FROM Projects LEFT JOIN Labels USING ( projectId )
-                %s ORDER BY projectId ASC""" % (
-                    (self.db.driver == 'mysql' and '`database`' or 'database'),
-                    whereClause),
+                %s ORDER BY projectId ASC""" % (sourceClause, whereClause),
                 *args)
 
         for row in cu:
@@ -819,12 +826,25 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             self._create(empty=True)
 
             host, port, user, database = self._splitParams()
+            if port == 6432:
+                # pg_restore 9.0 does not work with
+                # pgbouncer 1.3.1+rpath_8fc940fbca2a
+                port = 5439
             cxnArgs = "-h '%s' -p '%s' -U postgres" % (host, port)
 
-            if path.endswith('.pgtar'):
+            if path.endswith('.pgtar') or path.endswith('.pgdump'):
+                # Dumps from postgres < 9.0 force-create plpgsql, which already
+                # exists in template0 in >= 9.0. But dumps from the latter
+                # still reference it, just as CREATE OR REPLACE. The most
+                # straightforward workaround is thus to drop it beforehand, and
+                # let pg_restore put it back.
+                util.execute("droplang %s plpgsql '%s'" % (cxnArgs, database))
+
                 util.execute("pg_restore %s --single-transaction "
                         "-d '%s' '%s'" % (cxnArgs, database, path))
             else:
+                # Flat file dumps aren't run with --single-transaction so
+                # duplicate plpgsql isn't fatal.
                 util.execute("psql %s -f '%s' '%s' >/dev/null"
                         % (cxnArgs, path, dbName))
 

@@ -4,8 +4,6 @@
 #
 import time
 import os
-import md5
-import simplejson
 
 from gettext import gettext as _
 from time import time

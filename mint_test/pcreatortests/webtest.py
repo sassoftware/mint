@@ -19,7 +19,7 @@ from testutils import mock
 from factory_test.factorydatatest import basicXmlDef
 
 import re, os, StringIO
-import simplejson
+import json
 
 import mint.mint_error
 import mint.web.webhandler
@@ -290,7 +290,7 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         util.mkdirChain(dataPath)
         modePath = os.path.join(dataPath, 'mode')
         f = open(modePath, 'w')
-        f.write(simplejson.dumps(modeName))
+        f.write(json.dumps(modeName))
         f.close()
 
     def _setupMaintainInterviewEnvironment(self, mockMethod):

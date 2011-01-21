@@ -1,0 +1,46 @@
+<router>
+  <id>router</id>
+  <pidfile>/var/lib/jabberd/pid/router.pid</pidfile>
+
+  <log type='syslog'>
+    <ident>jabberd/router</ident>
+    <facility>local3</facility>
+  </log>
+
+  <local>
+    <ip>127.0.0.1</ip>
+    <port>5347</port>
+    <users>/usr/share/rbuilder/jabberd/router-users.xml</users>
+    <secret>f761434d1c9a6f91d1ab3cb240afff0c863c559e</secret>
+  </local>
+
+  <check>
+    <interval>15</interval>
+     <keepalive>15</keepalive>
+  </check>
+
+  <io>
+    <max_fds>1024</max_fds>
+
+    <limits>
+      <bytes>0</bytes>
+      <connects>0</connects>
+    </limits>
+
+    <access>
+      <order>allow,deny</order>
+    </access>
+  </io>
+
+  <aliases />
+
+  <aci>
+    <acl type='all'>
+      <user>jabberd</user>
+    </acl>
+  </aci>
+
+</router>
+<!--
+  vim: syntax=xml
+-->

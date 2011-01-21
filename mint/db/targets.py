@@ -4,8 +4,7 @@
 # All Rights Reserved
 #
 
-import base64
-import simplejson
+import json
 
 from mint import mint_error
 from mint.lib import database
@@ -53,7 +52,7 @@ class TargetDataTable(database.DatabaseTable):
         cu = self.db.cursor()
         # perhaps check the id to be certain it's unique
         for name, value in targetData.iteritems():
-            value = simplejson.dumps(value)
+            value = json.dumps(value)
             cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                     targetId, name, value)
         self.db.commit()
@@ -64,7 +63,7 @@ class TargetDataTable(database.DatabaseTable):
                 targetId)
         res = {}
         for name, value in cu.fetchall():
-            v = simplejson.loads(value)
+            v = json.loads(value)
             if isinstance(v, unicode):
                 v = v.encode("ascii")
             res[name] = v

@@ -139,7 +139,11 @@ class ProductManager(manager.Manager):
             clauses.append(('(UPPER(p.shortname) LIKE UPPER(?) OR UPPER(p.name) LIKE UPPER(?))', (search, search,)))
 
         if prodtype:
-            clauses.append(('(UPPER(p.prodtype) = UPPER(?))', (prodtype, )))
+            if prodtype.lower() == 'appliance':
+                # search for PlatformFoundation types also
+                clauses.append(('(UPPER(p.prodtype) = UPPER(?) or UPPER(p.prodtype) = ?)', (prodtype, 'PLATFORMFOUNDATION' )))
+            else:
+                clauses.append(('(UPPER(p.prodtype) = UPPER(?))', (prodtype, )))
 
         ret = models.ProductSearchResultList()
         ret.products = self._getProducts(clauses, limit, start)
@@ -195,7 +199,7 @@ class ProductManager(manager.Manager):
                 fqdn='%s.%s' % (hostname, domainname),
                 database=self.cfg.defaultDatabase,
                 namespace=namespace,
-                isAppliance=int(prodtype == 'Appliance'), 
+                isAppliance=int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation'), 
                 projecturl=projecturl,
                 timeModified=createTime, 
                 timeCreated=createTime,
@@ -231,7 +235,7 @@ class ProductManager(manager.Manager):
                       timeModified=time.time())
         if prodtype is not None:
             params['prodtype'] = prodtype
-            params['isAppliance'] = int(prodtype == 'Appliance')
+            params['isAppliance'] = int(prodtype == 'Appliance' or prodtype == 'PlatformFoundation')
         if namespace is not None:
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
@@ -398,7 +402,7 @@ class ProductManager(manager.Manager):
         projects._validateProductVersion(version)
 
         # initial product definition
-        prodDef = helperfuncs.sanitizeProductDefinition(product.shortname,
+        prodDef = helperfuncs.sanitizeProductDefinition(product.name,
                         description, product.hostname, product.domainname, 
                         product.shortname, version,
                         '', namespace)
@@ -421,7 +425,7 @@ class ProductManager(manager.Manager):
         except mint_error.DuplicateItem:
             raise mint_error.DuplicateProductVersion
 
-        if product.prodtype == 'Appliance':
+        if product.prodtype == 'Appliance' or product.prodtype == 'PlatformFoundation':
             groupName = helperfuncs.getDefaultImageGroupName(product.hostname)
             className = util.convertPackageNameToClassName(groupName)
             # convert from unicode

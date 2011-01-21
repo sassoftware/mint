@@ -1,8 +1,10 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
 #
+
+# pyflakes=ignore-file
 
 import sys
 from conary.deps import deps
@@ -27,6 +29,8 @@ validBuildTypes = {
     'APPLIANCE_ISO'     : 16,
     'IMAGELESS'         : 17,
     'VMWARE_OVF_IMAGE'  : 18,
+    'WINDOWS_ISO'       : 19,
+    'WINDOWS_WIM'       : 20,
 }
 
 TYPES = validBuildTypes.values()
@@ -38,6 +42,11 @@ sys.modules[__name__].__dict__.update(validBuildTypes)
 deprecatedBuildTypes = {
     'QEMU_IMAGE' : RAW_HD_IMAGE
     }
+
+windowsBuildTypes = set([
+    WINDOWS_ISO,
+    WINDOWS_WIM,
+    ])
 
 #
 # These are identifying pieces of information that we can extract from the
@@ -89,6 +98,8 @@ typeNames = {
     AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    WINDOWS_ISO:        "Windows Installable ISO",
+    WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update"
 }
 
@@ -109,6 +120,8 @@ typeNamesShort = {
     AMI:                "AMI",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Inst",
+    WINDOWS_ISO:        "Windows Inst",
+    WINDOWS_WIM:        "Windows WIM",
     IMAGELESS:          "Online Update",
     VMWARE_OVF_IMAGE:   "VMware (R) OVF",
 }
@@ -142,16 +155,18 @@ xmlTagNameImageTypeMap = {
     'vmwareOvfImage':      VMWARE_OVF_IMAGE,
     'xenOvaImage':         XEN_OVA,
     'imageless':           IMAGELESS,
+    'windowsIsoImage':     WINDOWS_ISO,
+    'wimImage':            WINDOWS_WIM, 
 }
 
 imageTypeXmlTagNameMap = dict([(v,k) for k,v in xmlTagNameImageTypeMap.iteritems()])
 
 typeNamesMarketing = {
     NETBOOT_IMAGE:      "Netboot Image",
-    INSTALLABLE_ISO:    "Installable CD/DVD",
-    RAW_FS_IMAGE:       "Mountable Filesystem",
+    INSTALLABLE_ISO:    "Legacy Installable CD/DVD",
+    RAW_FS_IMAGE:       "Eucalyptus/Mountable Filesystem",
     STUB_IMAGE:         "Stub Image",
-    RAW_HD_IMAGE:       "Parallels(R), QEMU (Raw Hard Disk)",
+    RAW_HD_IMAGE:       "KVM/Parallels/QEMU/Raw Hard Disk",
     VMWARE_IMAGE:       "VMware(R) Virtual Appliance",
     VMWARE_ESX_IMAGE:   "VMware(R) ESX(R) Server Virtual Appliance",
     VMWARE_OVF_IMAGE:   "VMware(R) Virtual Appliance OVF",
@@ -164,6 +179,8 @@ typeNamesMarketing = {
     AMI:                "Amazon Machine Image (EC2)",
     UPDATE_ISO:         "Update CD/DVD",
     APPLIANCE_ISO:      "Appliance Installable ISO",
+    WINDOWS_ISO:        "Installable CD/DVD (ISO)",
+    WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update",
 
     # flavor flags here

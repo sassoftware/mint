@@ -203,11 +203,13 @@ class RepositoryController(BaseReposController):
                 trailingVersion = version.trailingRevision().asString()
                 label = version.trailingLabel()
                 for flavor in flavorList:
+                    imageCount = len(self.db.listImagesForTrove(hostname,
+                        name, version, flavor).images)
                     trv = models.Trove(hostname=hostname, name=name, 
                                version=version, flavor=flavor,
                                timeStamp=timeStamp,
                                trailingVersion=trailingVersion,
-                               label=label)
+                               label=label, imageCount=imageCount)
                     troveList.append(trv)
         troveList = sorted(troveList, key = lambda x: x.timeStamp)
         return models.TroveList(troveList)

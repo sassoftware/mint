@@ -336,10 +336,11 @@ class UsersTable(database.KeyedTable):
         """
         cu = self.db.cursor()
         SQL = """
-            SELECT u.userId, tuc.credentials AS creds
+            SELECT u.userId, tc.credentials AS creds
               FROM Users u
               JOIN TargetUserCredentials AS tuc USING (userId)
-              JOIN Targets AS t USING (targetId)
+              JOIN TargetCredentials AS tc USING (targetCredentialsId)
+              JOIN Targets AS t ON (t.targetId=tuc.targetId)
              WHERE t.targetType = ?
                AND t.targetName = ?
             """

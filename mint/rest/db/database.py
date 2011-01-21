@@ -24,6 +24,7 @@ from mint.rest.db import capsulemgr
 from mint.rest.db import emailnotifier
 from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
+from mint.rest.db import pkimgr
 from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
@@ -86,7 +87,13 @@ class DBInterface(object):
         raise NotImplementedError
 
     def reopen(self):
+        self._holdCommits = False
         self.db = self.open()
+
+    def reopen_fork(self):
+        self._holdCommits = False
+        if self.db:
+            self.db.reopen_fork()
 
     def close(self):
         self.db.close()
@@ -109,7 +116,11 @@ def readonly(fn, self, *args, **kw):
     inTransaction = self.inTransaction(default=False)
     rv = fn(self, *args, **kw)
     if not inTransaction and self.inTransaction(default=False):
-        raise RuntimeError('Database modified unexpectedly after %s.' % fn.func_name)
+        #raise RuntimeError('Database modified unexpectedly after %s.' % fn.func_name)
+        # We used to complain loudly if the state had modified, until we
+        # started to use temporary tables. So now we just roll back.
+        # RBL-8111
+        self.rollback()
     return rv
 
 class Database(DBInterface):
@@ -132,6 +143,7 @@ class Database(DBInterface):
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
         self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
         self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
+        self.pkiMgr = pkimgr.PKIManager(cfg, self, auth)
         self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
         if subscribers is None:
             subscribers = []
@@ -358,7 +370,7 @@ class Database(DBInterface):
         prodtype = product.prodtype
         if not prodtype:
             prodtype = 'Appliance'
-        elif prodtype not in ('Appliance', 'Component', 'Platform', 'Repository'):
+        elif prodtype not in ('Appliance', 'Component', 'Platform', 'Repository', 'PlatformFoundation'):
             raise mint_error.InvalidProdType
 
         fqdn = ".".join((product.hostname, product.domainname))
@@ -737,6 +749,10 @@ class Database(DBInterface):
     def getPlatform(self, platformId):
         return self.platformMgr.getPlatform(platformId)
 
+    @commitafter
+    def createPlatform(self, platform, createPlatDef=True):
+        return self.platformMgr.createPlatform(platform, createPlatDef)
+
     @readonly
     def getPlatformImageTypeDefs(self, request, platformId):
         return self.platformMgr.getPlatformImageTypeDefs(request, platformId)
@@ -828,3 +844,16 @@ class Database(DBInterface):
         if self.siteAuth.isValid():
             self.auth.requireAdmin()
         return self.siteAuth.getForm()
+
+    @readonly
+    def getCACertificates(self):
+        return self.pkiMgr.getCACertificates()
+
+    @commitafter
+    def createCertificate(self, purpose, desc, issuer=None, common=None,
+            conditional=False):
+        if conditional:
+            x509_pem, pkey_pem = self.pkiMgr.getCertificatePair(purpose)
+            if x509_pem:
+                return x509_pem, pkey_pem
+        return self.pkiMgr.createCertificate(purpose, desc, issuer, common)

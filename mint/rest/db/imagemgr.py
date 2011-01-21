@@ -129,6 +129,26 @@ class ImageManager(manager.Manager):
             return []
 
         cu = self.db.cursor()
+
+        cu.execute("DELETE FROM tmpOneVal")
+        cu.executemany("INSERT INTO tmpOneVal (id) VALUES (?)",
+            [ (x, ) for x in imageIds ])
+
+        # Grab target images
+        cu.execute("""
+            SELECT DISTINCT t.targetType, t.targetName, tid.fileId, tid.targetImageId
+              FROM Targets AS t
+              JOIN TargetImagesDeployed AS tid USING (targetId)
+              JOIN BuildFiles AS bf USING (fileId)
+              JOIN tmpOneVal AS tb ON (bf.buildId = tb.id)
+        """)
+        targetImages = {}
+        for row in cu:
+            targetImages.setdefault(row['fileId'], []).append(
+                models.TargetImage(targetType=row['targetType'],
+                    targetName=row['targetName'],
+                    targetImageId=row['targetImageId']))
+
         sql = '''
             SELECT
                 f.fileId, f.buildId AS imageId, f.idx, f.title, f.size, f.sha1,
@@ -136,9 +156,8 @@ class ImageManager(manager.Manager):
             FROM BuildFiles f
                 JOIN BuildFilesUrlsMap USING ( fileId )
                 JOIN FilesUrls u USING ( urlId )
-            WHERE buildId IN ( %(images)s )
+                JOIN tmpOneVal AS tb ON (f.buildId = tb.id)
             '''
-        sql %= dict(images=','.join('%d' % x for x in imageIds))
         cu.execute(sql)
 
         filesByImageId = dict((imageId, {}) for imageId in imageIds)
@@ -152,6 +171,10 @@ class ImageManager(manager.Manager):
                 file = imageFiles[fileId] = models.ImageFile(d)
                 file.urls = []
                 file.sha1 = d['sha1']
+            targetImageIds = sorted(targetImages.get(fileId, []),
+                key=lambda x: (x.targetName, x.targetType, x.targetImageId))
+            file.targetImages = targetImageIds
+
             if url:
                 file.fileName = os.path.basename(url)
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
@@ -538,7 +561,10 @@ class ImageManager(manager.Manager):
                 dict(fileId = x.fileId, sha1 = x.sha1,
                      fileName = x.fileName,
                      idx = x.idx, size = x.size,
-                     downloadUrl = self.getDownloadUrl(x.fileId),)
+                     downloadUrl = self.getDownloadUrl(x.fileId),
+                     targetImages = [
+                        (y.targetType, y.targetName, y.targetImageId)
+                            for y in x.targetImages ])
                 for x in imageFileList.files ]
             imageData['files'] = imageFileData
             imageId = imageData['buildId']

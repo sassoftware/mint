@@ -1,29 +1,28 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) 2010 rPath, Inc.
 #
 # All Rights Reserved
 #
 
 static_files =				\
+	add-lvm-disk			\
+	add-windows-build-service       \
 	amazon-s3-processor		\
 	apply-proxy-settings		\
 	auth-generate			\
 	check-repository		\
+	create-platforms		\
 	deleteproject			\
-	ec2-terminator			\
 	enable-platforms	\
 	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
 	init-extproducts	        \
-	job-cleanup			\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
-	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
-	rbuilder-database		\
 	refresh-auth			\
 	rmake-reset			\
 	rmake-setup			\
@@ -31,25 +30,42 @@ static_files =				\
 	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
-	update-top-projects		\
 	validate-proxy-settings		\
 	set-password                    \
-	repository-log-scrape
+	repository-log-scrape		\
+	$(generic_scripts)		\
 
-generated_files =	\
-	rbuilder_database.py
+
+generated_files = $(generic_scripts)
+
+generic_scripts = \
+	job-cleanup			\
+	migrate-config			\
+	pki-tool			\
+	postgres-auto-update		\
+	postgres-major-migrate		\
+	process-system-events		\
+	rbuilder-database		\
+	system-resolver			\
+	target-systems-import		\
 
 cgi_files =				\
-	fileupload.cgi
+	fileupload.cgi			\
+	urldownloader.cgi
 
 override STATICDEST = /usr/share/rbuilder/scripts
 override CGIDEST = /srv/www/cgi-bin
 
-all: default-all
+all: default-all $(generated_files)
 
 install: static-install cgi-install default-install
 
 clean: default-clean
+
+
+$(generic_scripts): generic-script.py Makefile
+	sed -e 's/some_module/$(subst -,_,$@)/g' $< >$@
+	@chmod 0755 $@
 
 
 include ../Make.rules

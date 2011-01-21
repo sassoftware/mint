@@ -29,10 +29,10 @@
 ^distro/rbuilder.conf$
 ^distro/schema$
 
-mint/django_rest/mint-local.db
-
-^.*project$
-^.*pydevproject$
+^mint/mint-local.db$
+^mint/django_rest/mint-local.db$
+^mint/test-mint-local.db$
+^mint/test-mint-local.db-journal$
 
 ^\.coverage$
 ^mint_test/(raa-tests/)?\.(times|coverage)$
@@ -42,6 +42,15 @@ mint/django_rest/mint-local.db
 ^scripts/raw2vmdk$
 ^scripts/rbuilder_database.py$
 ^scripts/httpd-graceful$
+^scripts/job-cleanup$
+^scripts/migrate-config$
+^scripts/pki-tool$
+^scripts/postgres-auto-update$
+^scripts/postgres-major-migrate$
+^scripts/process-system-events$
+^scripts/rbuilder-database$
+^scripts/system-resolver$
+^scripts/target-systems-import$
 
 ^failed$
 ^(.*/)?\.failed$

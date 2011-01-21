@@ -120,8 +120,8 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
     def _addPlatformSources(self, db):
         # XXX nasty hacks to produce some data in the hopefully proper format
         psql = """
-            INSERT INTO Platforms (label, mode)
-            VALUES (?, ?)
+            INSERT INTO Platforms (platformName, label, mode)
+            VALUES (?, ?, ?)
         """
         cstsql = """
             INSERT INTO platformsContentSourceTypes
@@ -131,7 +131,9 @@ class IndexerSetupMixIn(base.IndexerTestMixIn):
         mode = 'manual'
         cu = db.cursor()
         for platformLabel in self.mintCfg.availablePlatforms:
-            cu.execute(psql, platformLabel, mode)
+            # XXX this isn't quite right, we set the platform name to be the
+            # same as the label. It may need to change
+            cu.execute(psql, platformLabel, platformLabel, mode)
             platformId = cu.lastid()
 
             for contentSourceType in self.LabelToContentSourcesMap[platformLabel]:
@@ -172,7 +174,7 @@ class BaseCapsulesTest(restbase.BaseRestTest, IndexerSetupMixIn):
             IndexerSetupMixIn.setUp(self)
         except Exception, e:
             self.tearDown()
-            raise e
+            raise
 
 class CapsulesTest(BaseCapsulesTest):
     def testGetContent(self):

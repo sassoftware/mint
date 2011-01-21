@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+    <object pk="1" model="inventory.system">
+        <field type="CharField" name="name">mgoblue</field>
+        <field type="CharField" name="description">mgoblue desc</field>
+        <field type="DateTimeField" name="created_date">2010-08-05 22:17:29</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date">2010-08-05 22:17:29</field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+    </object>
+    <object pk="2" model="inventory.system">
+        <field type="CharField" name="name">mgoblue2</field>
+        <field type="CharField" name="description">mgoblue2 desc</field>
+        <field type="DateTimeField" name="created_date">2010-08-05 22:17:43</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date">2010-08-05 22:17:43</field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+    </object>
+    <object pk="3" model="inventory.system">
+        <field type="CharField" name="name">mgoblue3</field>
+        <field type="CharField" name="description">mgoblue3 desc</field>
+        <field type="DateTimeField" name="created_date">2010-08-05 22:17:59</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date">2010-08-05 22:17:59</field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
+        <field type="CharField" name="ssl_client_certificate"><None></None></field>
+        <field type="CharField" name="ssl_client_key"><None></None></field>
+        <field type="CharField" name="ssl_server_certificate"><None></None></field>
+        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.installed_software" name="installed_software" rel="ManyToManyRel"></field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+    </object>
+    <object pk="1" model="inventory.systemevent">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">1</field>
+        <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">1</field>
+        <field type="DateTimeField" name="time_created">2010-08-05 22:20:46</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-06 02:09:36</field>
+        <field type="SmallIntegerField" name="priority">100</field>
+    </object>
+    <object pk="2" model="inventory.systemevent">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">2</field>
+        <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">2</field>
+        <field type="DateTimeField" name="time_created">2010-08-05 22:21:04</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-06 02:09:36</field>
+        <field type="SmallIntegerField" name="priority">90</field>
+    </object>
+    <object pk="3" model="inventory.systemevent">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">3</field>
+        <field to="inventory.eventtype" name="event_type" rel="ManyToOneRel">3</field>
+        <field type="DateTimeField" name="time_created">2010-08-05 22:21:21</field>
+        <field type="DateTimeField" name="time_enabled">2010-08-06 02:09:36</field>
+        <field type="SmallIntegerField" name="priority">50</field>
+    </object>
+</django-objects>
