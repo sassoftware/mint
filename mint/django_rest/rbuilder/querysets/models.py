@@ -45,7 +45,7 @@ class ChildMembers(modellib.XObjIdModel):
                 tag = "child_members")
     view_name = "QuerySetChildResult"
 
-class QuerySets(modellib.XObjModel):
+class QuerySets(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
