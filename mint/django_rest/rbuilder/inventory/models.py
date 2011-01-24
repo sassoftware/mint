@@ -89,6 +89,7 @@ class Systems(modellib.Collection):
     list_fields = ['system']
     system = []
     objects = modellib.SystemsManager()
+    view_name = 'Systems'
 
     def __init__(self):
         modellib.Collection.__init__(self)

@@ -66,6 +66,12 @@ class SystemQuerySetDescriptor(modellib.XObjModel):
     def to_xml(self, *args, **kwargs):
         return descriptor_xml.system_query_set_descriptor_xml
 
+class CollectionId(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='collection')
+                
+
 class QuerySet(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
@@ -97,6 +103,12 @@ class QuerySet(modellib.XObjIdModel):
         fd = FilterDescriptor()
         fd._parents = [self]
         xobjModel.filter_descriptor = fd.serialize(request)
+
+        from mint.django_rest.rbuilder.querysets import manager
+        collectionId = CollectionId()
+        collectionId.view_name = \
+            modellib.type_map[manager.QuerySetManager.resourceCollectionMap[self.resource_type]].view_name
+        xobjModel.collection = collectionId.serialize(request)
 
         return xobjModel
 
