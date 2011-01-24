@@ -111,4 +111,36 @@
     <field type="TextField" name="branch_name">rpath:centos-5e</field>
     <field type="IntegerField" name="is_source">0</field>
   </object>
+  <object pk="20361" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version">/conary.rpath.com@rpl:devel/0-1</field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name">rpl:devel</field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
+  <object pk="20362" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version"></field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name"></field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
+  <object pk="20363" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version">/conary.rpath.com@rpl:devel//1-devel/1.5.3-9</field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name">rpl:1-devel</field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
+  <object pk="20364" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version">/conary.rpath.com@rpl:devel//1-qa/1.5.3-9</field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name">rpl:1-qa</field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
 </django-objects>
