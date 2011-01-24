@@ -17,7 +17,7 @@ queryset_post_xml = """\
 
 query_sets_xml = """\
 <?xml version="1.0"?>
-<query_sets>
+<query_sets count="4" end_index="9" filter_by="" full_collection="http://testserver/api/query_sets" id="http://testserver/api/query_sets;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <query_set id="http://testserver/api/query_sets/1">
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/1/filter_descriptor"/>
@@ -33,6 +33,7 @@ query_sets_xml = """\
     <query_set_id>1</query_set_id>
     <all_members id="http://testserver/api/query_sets/1/all"/>
     <chosen_members id="http://testserver/api/query_sets/1/chosen"/>
+    <collection id="http://testserver/api/inventory/systems"/> 
     <querytags>
       <query_tag>
         <query_tag>query-tag-All Systems-1</query_tag>
@@ -62,6 +63,7 @@ query_sets_xml = """\
     <query_set_id>2</query_set_id>
     <all_members id="http://testserver/api/query_sets/2/all"/>
     <chosen_members id="http://testserver/api/query_sets/2/chosen"/>
+    <collection id="http://testserver/api/inventory/systems"/> 
     <querytags>
       <query_tag>
         <query_tag>query-tag-Active Systems-2</query_tag>
@@ -91,6 +93,7 @@ query_sets_xml = """\
     <query_set_id>3</query_set_id>
     <all_members id="http://testserver/api/query_sets/3/all"/>
     <chosen_members id="http://testserver/api/query_sets/3/chosen"/>
+    <collection id="http://testserver/api/inventory/systems"/> 
     <querytags>
       <query_tag>
         <query_tag>query-tag-Unmanaged Systems-3</query_tag>
@@ -120,6 +123,7 @@ query_sets_xml = """\
     <query_set_id>4</query_set_id>
     <all_members id="http://testserver/api/query_sets/4/all"/>
     <chosen_members id="http://testserver/api/query_sets/4/chosen"/>
+    <collection id="http://testserver/api/inventory/systems"/>
     <querytags>
       <query_tag>
         <query_tag>query-tag-Systems named like 3-4</query_tag>
@@ -159,6 +163,7 @@ query_set_xml = """\
   </filter_entries>
   <all_members id="http://testserver/api/query_sets/4/all"/>
   <chosen_members id="http://testserver/api/query_sets/4/chosen"/>
+  <collection id="http://testserver/api/inventory/systems"/> 
   <filter_descriptor id="http://testserver/api/query_sets/4/filter_descriptor"/>
   <query_set_id>4</query_set_id>
   <children/>
