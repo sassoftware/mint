@@ -41,7 +41,6 @@ def m2mChanged(sender, instance, **kwargs):
         entryText = "%s added to %s" % (modelInst, fieldName)
     if action == 'post_remove':
         entryText = "%s removed from %s" % (modelInst, fieldName)
-    from mint.django_rest.rbuilder.changelog import models as changelogmodels
     changeLog, created = changelogmodels.ChangeLog.objects.get_or_create(
         resource_type=tag, resource_id=instance.pk)
     changeLogEntry = changelogmodels.ChangeLogEntry(change_log=changeLog,
