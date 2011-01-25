@@ -2286,7 +2286,7 @@ class MigrateTo_52(SchemaMigration):
 
 
 class MigrateTo_53(SchemaMigration):
-    Version = (53, 1)
+    Version = (53, 2)
 
     def migrate(self):
         db = self.db
@@ -2421,6 +2421,28 @@ class MigrateTo_53(SchemaMigration):
         schema._addTableRows(db, "querysets_queryset_filter_entries", rows=
             [dict(queryset_id=2, filterentry_id=2),
              dict(queryset_id=3, filterentry_id=3)])
+
+        return True
+
+    def migrate2(self):
+        db = self.db
+
+        schema.createTable(db, 'changelog_change_log', """
+            CREATE TABLE "changelog_change_log" (
+                "change_log_id" %(PRIMARYKEY)s,
+                "resource_type" TEXT NOT NULL,
+                "resource_id" INTEGER NOT NULL
+            )""")
+
+        schema.createTable(db, 'changelog_change_log_entry', """
+            CREATE TABLE "changelog_change_log_entry" (
+                "change_log_entry_id" %(PRIMARYKEY)s,
+                "change_log_id" INTEGER
+                    REFERENCES "changelog_change_log" ("change_log_id")
+                    ON DELETE CASCADE NOT NULL,
+                "entry_text" TEXT NOT NULL,
+                "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
+            )""")
 
         return True
 

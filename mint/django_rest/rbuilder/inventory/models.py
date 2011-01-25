@@ -499,6 +499,7 @@ class System(modellib.XObjIdModel):
         "the descriptor of available fields to set system configuration parameters")
 
     load_fields = [local_uuid]
+    logged_fields = ['name', 'installed_software']
 
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
@@ -1116,6 +1117,9 @@ class Trove(modellib.XObjIdModel):
 
     def getNVF(self):
         return self.name, self.version.conaryVersion, self.getFlavor()
+
+    def __str__(self):
+        return "%s=%s" % (self.name, self.getVersion().asString())
 
     def serialize(self, *args, **kwargs):
         xobj_model = modellib.XObjIdModel.serialize(self, *args, **kwargs)

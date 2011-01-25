@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(53, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(53, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2078,6 +2078,29 @@ def _createQuerySetSchema(db):
                 ON DELETE CASCADE
                 NOT NULL,
             UNIQUE ("from_queryset_id", "to_queryset_id")
+        )""")
+
+    return changed
+
+def _createChangeLogSchema(db):
+    """ChangeLog tables"""
+    changed = False
+
+    changed |= createTable(db, 'changelog_change_log', """
+        CREATE TABLE "changelog_change_log" (
+            "change_log_id" %(PRIMARYKEY)s,
+            "resource_type" TEXT NOT NULL,
+            "resource_id" INTEGER NOT NULL
+        )""")
+
+    changed |= createTable(db, 'changelog_change_log_entry', """
+        CREATE TABLE "changelog_change_log_entry" (
+            "change_log__entry_id" %(PRIMARYKEY)s,
+            "change_log_id" INTEGER
+                REFERENCES "changelog_change_log" ("change_log_id")
+                ON DELETE CASCADE NOT NULL,
+            "entry_text" TEXT NOT NULL,
+            "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
         )""")
 
     return changed

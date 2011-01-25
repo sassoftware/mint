@@ -15,6 +15,7 @@ from mint.django_rest.rbuilder.inventory.manager import jobmgr
 
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager
+from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 
 class RbuilderManager(basemanager.BaseManager):
     def __init__(self, cfg=None, userName=None):
@@ -25,10 +26,11 @@ class RbuilderManager(basemanager.BaseManager):
         self.jobMgr = jobmgr.JobManager(weakref.proxy(self))
         self.querySetMgr = QuerySetManager(weakref.proxy(self))
         self.packageMgr = PackageManager(weakref.proxy(self))
+        self.changeLogMgr = ChangeLogManager(weakref.proxy(self))
 
         # Methods we simply copy
         for subMgr in [ self.sysMgr, self.versionMgr, self.jobMgr,
-            self.querySetMgr, self.packageMgr ]:
+            self.querySetMgr, self.packageMgr, self.changeLogMgr ]:
             for objName in subMgr.__class__.__dict__:
                 obj = getattr(subMgr, objName, None)
                 if getattr(obj, 'exposed', None):

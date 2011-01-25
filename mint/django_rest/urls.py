@@ -14,6 +14,7 @@ from mint.django_rest.rbuilder.reporting import imagereports, \
 from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
+from mint.django_rest.rbuilder.changelog import views as changelogviews
 
 urlpatterns = patterns('',
     # Reporting urls
@@ -221,6 +222,14 @@ urlpatterns = patterns('',
     url(r'^api/packages/(?P<package_id>\d+)/?$',
         packageviews.PackageService(),
         name='Package'),
+
+    # Change Logs
+    url(r'^api/changelogs/?$',
+        changelogviews.ChangeLogService(),
+        name='ChangeLogs'),
+    url(r'^api/changelogs/(?P<change_log_id>\d+)/?$',
+        changelogviews.ChangeLogService(),
+        name='ChangeLog'),
 
 )
 

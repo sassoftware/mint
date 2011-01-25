@@ -4,3 +4,5 @@
 #
 # All rights reserved.
 #
+
+from mint.django_rest.rbuilder.changelog import signalhandler
