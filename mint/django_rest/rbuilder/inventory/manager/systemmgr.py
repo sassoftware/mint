@@ -981,8 +981,10 @@ class SystemManager(base.BaseManager):
         system.launching_user = self.user
         system.launch_date = self.now()
         # Copy some of the data from the target
-        system.name = system.target_system_name
-        system.description = system.target_system_description
+        if system.name is None:
+            system.name = system.target_system_name
+        if system.description is None:
+            system.description = system.target_system_description
         # Look up the credentials for this user
         credentials = self._getCredentialsForUser(system.target)
         assert credentials is not None, "User should have credentials"
