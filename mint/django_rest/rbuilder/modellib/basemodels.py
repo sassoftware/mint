@@ -642,7 +642,6 @@ class ManagementNodesManager(SystemsManager):
 class InstalledSoftwareManager(SystemsManager):
     pass
 
-
 class XObjModel(models.Model):
     """
     Common model class all models should inherit from.  Overrides the default
@@ -675,7 +674,6 @@ class XObjModel(models.Model):
 
     class Meta:
         abstract = True
-
 
     # All models use our BaseManager as their manager
     objects = BaseManager()
