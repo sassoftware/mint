@@ -11,8 +11,6 @@ from mint import mint_error
 from mint.lib import data as mintdata
 from mint.rest.db import manager
 
-from mint.django_rest.rbuilder.manager import rbuildermanager
-from mint.django_rest.rbuilder.querysets import models
 
 log = logging.getLogger(__name__)
 
@@ -62,6 +60,8 @@ class TargetManager(manager.Manager):
                     targetId, name, value)
 
     def _addTargetQuerySet(self, targetId, targetName):
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        from mint.django_rest.rbuilder.querysets import models
         log.info("Creating a new query set for target %s." % targetName)
         filterEntry, created = models.FilterEntry.objects.get_or_create(
             field='target.targetid', operator='EQUALS', value=targetId)
