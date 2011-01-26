@@ -2289,6 +2289,7 @@ class MigrateTo_52(SchemaMigration):
         cursor.execute("""
             ALTER TABLE inventory_system
                 DROP CONSTRAINT inventory_system_generated_uuid_key""")
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
