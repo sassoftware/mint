@@ -4262,9 +4262,30 @@ class TargetSystemImportTest(XMLTestCase):
                 for x in user2.targetusercredentials_set.all() ])
         self.failUnlessEqual(system.managing_zone.name,
             models.Zone.LOCAL_ZONE)
+        self.failUnlessEqual(system.target_system_name, params['target_system_name'])
         self.failUnlessEqual(system.name, params['target_system_name'])
+        self.failUnlessEqual(system.target_system_description,
+            params['target_system_description'])
         self.failUnlessEqual(system.description,
             params['target_system_description'])
+
+        # Another system that specifies a name and description
+        params = dict((x, y.replace('001', '002'))
+            for (x, y) in params.items())
+        params.update(name="system-name-002",
+            description="system-description-002")
+        system = self.newSystem(**params)
+
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.targetname,
+            targetType=self.tgt2.targettype)
+
+        self.failUnlessEqual(system.target_system_name, params['target_system_name'])
+        self.failUnlessEqual(system.name, params['name'])
+        self.failUnlessEqual(system.target_system_description,
+            params['target_system_description'])
+        self.failUnlessEqual(system.description, params['description'])
 
 class BaseJobsTest(XMLTestCase):
     def _mock(self):
