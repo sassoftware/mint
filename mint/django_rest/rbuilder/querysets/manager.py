@@ -82,14 +82,19 @@ class QuerySetManager(basemanager.BaseManager):
             # Replace all '.' with '__', to handle fields that span
             # relationships
             field = filt.field.replace('.', '__')
-            operator = modellib.filterTermMap[filt.operator]
+            oper = modellib.filterTermMap[filt.operator]
             value = filt.value
             if value is None:
                 value = False
 
-            k = '%s__%s' % (field, operator)
+            if oper in modellib.operatorMap:
+                operator = modellib.operatorMap[oper]()
+                fieldCls = modelList.model()._meta.get_field_by_name(field)[0]
+                value = operator.prepValue(fieldCls, value)
+
+            k = '%s__%s' % (field, oper)
             filtDict = {k:value}
-            if operator.startswith('NOT_'):
+            if oper.startswith('NOT_'):
                 resources = resources.filter(~Q(**filtDict))
             else:
                 resources = resources.filter(**filtDict)
