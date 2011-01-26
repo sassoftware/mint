@@ -211,6 +211,7 @@ class rBuilderProduct(CPackageRecipe):
             r'%(sysconfdir)s/cron.daily/rbuilder.tmpwatch')
         r.Requires('logrotate:runtime',
             r'%(sysconfdir)s/logrotate.d/')
+        r.Requires('/usr/bin/qemu-img', '.*/wig/bootable.py.*')
 
         # disable reportlab for rbuilder 5.0
         r.Requires(exceptDeps='python: reportlab.*')
