@@ -69,6 +69,9 @@ class Operator(object):
     filterTerm = None
     operator = None
 
+    def prepValue(self, field, valueStr):
+        return field.get_prep_value(valueStr)
+
 class ListOperator(Operator):
 
     def prepValue(self, field, valueStr):
@@ -88,9 +91,22 @@ class InOperator(ListOperator):
 class NotInOperator(InOperator):
     filterTerm = 'NOT_IN'
 
+class NullOperator(Operator):
+    filterTerm = 'IS_NULL'
+    operator = 'isnull'
+
+    def prepValue(self, field, valueStr):
+        if valueStr.lower() == 'true':
+            return True
+        elif valueStr.lower() == 'false' or valueStr == '0':
+            return False
+        else:
+            return bool(valueStr)
+
 operatorMap = {
     'IN' : InOperator,
-    'NOT_IN': NotInOperator,
+    'NOT_IN' : NotInOperator,
+    'IS_NULL' : NullOperator,
 }
 
 class Collection(XObjIdModel):

@@ -1986,6 +1986,9 @@ def _createQuerySetSchema(db):
          dict(name="Inactive Systems", resource_type="system",
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc()))),
+         dict(name="Physical Systems", resource_type="system",
+            created_date=str(datetime.datetime.now(tz.tzutc())),
+            modified_date=str(datetime.datetime.now(tz.tzutc()))),
         ])
     allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Systems")
@@ -1993,6 +1996,8 @@ def _createQuerySetSchema(db):
         name="Active Systems")
     inactiveQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="Inactive Systems")
+    physicalQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
+        name="Physical Systems")
 
     changed |= createTable(db, 'querysets_filterentry', """
         CREATE TABLE "querysets_filterentry" (
@@ -2006,13 +2011,16 @@ def _createQuerySetSchema(db):
         'filter_entry_id',
         [dict(field="current_state.name", operator="EQUAL", value="responsive"),
          dict(field="current_state.name", operator="IN", 
-            value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")],
+            value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)"),
+         dict(field="target", operator='IS_NULL', value="True")],
         ['field', 'operator', 'value'])
     activeFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
         field="current_state.name", operator="EQUAL", value="responsive")
     inactiveFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
         field="current_state.name", operator="IN", 
                     value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")
+    physicalFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+        field="target", operator='IS_NULL', value="True")
 
     changed |= createTable(db, 'querysets_querytag', """
         CREATE TABLE "querysets_querytag" (
@@ -2026,6 +2034,7 @@ def _createQuerySetSchema(db):
         [dict(query_set_id=allQSId, query_tag="query-tag-All Systems-1"),
          dict(query_set_id=activeQSId, query_tag="query-tag-Active Systems-2"),
          dict(query_set_id=inactiveQSId, query_tag="query-tag-Inactive Systems-3"),
+         dict(query_set_id=physicalQSId, query_tag="query-tag-Physical Systems-4"),
         ])
 
     changed |= createTable(db, 'querysets_inclusionmethod', """
@@ -2073,7 +2082,8 @@ def _createQuerySetSchema(db):
     changed |= _addTableRows(db, "querysets_queryset_filter_entries",
         'id',
         [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
-         dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId)],
+         dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId),
+         dict(queryset_id=physicalQSId, filterentry_id=physicalFiltId)],
         ['queryset_id', 'filterentry_id'])
 
     changed |= createTable(db, "querysets_queryset_children", """
