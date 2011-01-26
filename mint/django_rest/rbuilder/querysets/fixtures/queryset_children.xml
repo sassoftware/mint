@@ -1,38 +1,23 @@
 <?xml version="1.0"?>
 <django-objects version="1.0">
-  <object pk="4" model="querysets.filterentry">
+  <object pk="5" model="querysets.filterentry">
     <field type="TextField" name="field">target.targetname</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">ec2</field>
   </object>
-  <object pk="5" model="querysets.filterentry">
+  <object pk="6" model="querysets.filterentry">
     <field type="TextField" name="field">target.targetname</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">vsphere</field>
   </object>
-  <object pk="6" model="querysets.filterentry">
+  <object pk="7" model="querysets.filterentry">
     <field type="TextField" name="field">target.targetname</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">esx</field>
   </object>
 
-  <object pk="4" model="querysets.queryset">
+  <object pk="6" model="querysets.queryset">
     <field type="TextField" name="name">EC2 Systems</field>
-    <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
-    <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
-    <field type="TextField" name="resource_type">system</field>
-    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
-    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
-      <object pk="4"/>
-    </field>
-  </object>
-  <object pk="4" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">4</field>
-    <field type="TextField" name="query_tag">query-tag-EC2 Systems-4</field>
-  </object>
-
-  <object pk="5" model="querysets.queryset">
-    <field type="TextField" name="name">Vsphere Systems</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
     <field type="TextField" name="resource_type">system</field>
@@ -41,13 +26,13 @@
       <object pk="5"/>
     </field>
   </object>
-  <object pk="5" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">5</field>
-    <field type="TextField" name="query_tag">query-tag-Vsphere Systems-5</field>
+  <object pk="6" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">6</field>
+    <field type="TextField" name="query_tag">query-tag-EC2 Systems-4</field>
   </object>
 
-  <object pk="6" model="querysets.queryset">
-    <field type="TextField" name="name">ESX Systems</field>
+  <object pk="7" model="querysets.queryset">
+    <field type="TextField" name="name">Vsphere Systems</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
     <field type="TextField" name="resource_type">system</field>
@@ -56,12 +41,27 @@
       <object pk="6"/>
     </field>
   </object>
-  <object pk="4" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">6</field>
+  <object pk="7" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">7</field>
+    <field type="TextField" name="query_tag">query-tag-Vsphere Systems-5</field>
+  </object>
+
+  <object pk="8" model="querysets.queryset">
+    <field type="TextField" name="name">ESX Systems</field>
+    <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
+    <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
+    <field type="TextField" name="resource_type">system</field>
+    <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
+    <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
+      <object pk="7"/>
+    </field>
+  </object>
+  <object pk="8" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">8</field>
     <field type="TextField" name="query_tag">query-tag-ESX Systems-6</field>
   </object>
 
-  <object pk="7" model="querysets.queryset">
+  <object pk="9" model="querysets.queryset">
     <field type="TextField" name="name">All Virtual Systems</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
@@ -70,17 +70,17 @@
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
     </field>
     <field to="querysets.queryset" name="children" rel="ManyToManyRel">
-      <object pk="4"/>
-      <object pk="5"/>
       <object pk="6"/>
+      <object pk="7"/>
+      <object pk="8"/>
     </field>
   </object>
-  <object pk="7" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">7</field>
+  <object pk="9" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">9</field>
     <field type="TextField" name="query_tag">query-tag-All Virtual Systems-7</field>
   </object>
 
-  <object pk="8" model="querysets.queryset">
+  <object pk="10" model="querysets.queryset">
     <field type="TextField" name="name">Tagged Systems 1</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
@@ -89,12 +89,12 @@
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
     </field>
   </object>
-  <object pk="8" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">8</field>
+  <object pk="10" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">10</field>
     <field type="TextField" name="query_tag">query-tag-Tagged Systems 1-8</field>
   </object>
 
-  <object pk="9" model="querysets.queryset">
+  <object pk="11" model="querysets.queryset">
     <field type="TextField" name="name">Tagged Systems 2</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
@@ -103,25 +103,25 @@
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
     </field>
   </object>
-  <object pk="9" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">9</field>
+  <object pk="11" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">11</field>
     <field type="TextField" name="query_tag">query-tag-Tagged Systems 2-9</field>
   </object>
 
-  <object pk="10" model="querysets.queryset">
+  <object pk="12" model="querysets.queryset">
     <field type="TextField" name="name">Tagged Systems 1 and 2</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
     <field type="TextField" name="resource_type">system</field>
     <field to="querysets.queryset" name="children" rel="ManyToManyRel">
-      <object pk="8"/>
-      <object pk="9"/>
+      <object pk="10"/>
+      <object pk="11"/>
     </field>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
     </field>
   </object>
-  <object pk="10" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">10</field>
+  <object pk="12" model="querysets.querytag">
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">12</field>
     <field type="TextField" name="query_tag">query-tag-Tagged Systems 1 and 2-10</field>
   </object>
 

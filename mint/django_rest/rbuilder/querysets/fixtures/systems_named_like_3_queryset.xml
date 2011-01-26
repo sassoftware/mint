@@ -5,7 +5,7 @@
     <field type="TextField" name="operator">LIKE</field>
     <field type="TextField" name="value">3</field>
   </object>
-  <object pk="4" model="querysets.queryset">
+  <object pk="5" model="querysets.queryset">
     <field type="TextField" name="name">Systems named like 3</field>
     <field type="DateTimeField" name="created_date">2011-01-05 00:00:00</field>
     <field type="DateTimeField" name="modified_date">2011-01-05 00:00:00</field>
@@ -15,7 +15,7 @@
       <object pk="4"/>
     </field>
   </object>
-  <object pk="4" model="querysets.querytag">
+  <object pk="5" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">4</field>
     <field type="TextField" name="query_tag">query-tag-Systems named like 3-4</field>
   </object>
