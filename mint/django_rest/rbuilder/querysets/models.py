@@ -121,6 +121,9 @@ class QuerySet(modellib.XObjIdModel):
         return ','.join(filterBy)
 
 class FilterEntry(modellib.XObjIdModel):
+    class Meta:
+        unique_together = ('field', 'operator', 'value')
+
     _xobj = xobj.XObjMetadata(
                 tag = "filter_entry")
 

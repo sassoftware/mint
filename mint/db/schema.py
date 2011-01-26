@@ -2095,7 +2095,7 @@ def _createChangeLogSchema(db):
 
     changed |= createTable(db, 'changelog_change_log_entry', """
         CREATE TABLE "changelog_change_log_entry" (
-            "change_log__entry_id" %(PRIMARYKEY)s,
+            "change_log_entry_id" %(PRIMARYKEY)s,
             "change_log_id" INTEGER
                 REFERENCES "changelog_change_log" ("change_log_id")
                 ON DELETE CASCADE NOT NULL,
