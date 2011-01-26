@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(53, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(53, 1)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1983,10 +1983,16 @@ def _createQuerySetSchema(db):
          dict(name="Active Systems", resource_type="system",
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc()))),
-         dict(name="Unmanaged Systems", resource_type="system",
+         dict(name="Inactive Systems", resource_type="system",
             created_date=str(datetime.datetime.now(tz.tzutc())),
             modified_date=str(datetime.datetime.now(tz.tzutc()))),
         ])
+    allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
+        name="All Systems")
+    activeQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
+        name="Active Systems")
+    inactiveQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
+        name="Inactive Systems")
 
     changed |= createTable(db, 'querysets_filterentry', """
         CREATE TABLE "querysets_filterentry" (
@@ -1998,10 +2004,15 @@ def _createQuerySetSchema(db):
         )""")
     changed |= _addTableRows(db, "querysets_filterentry",
         'filter_entry_id',
-        [dict(field="name", operator="IS_NULL", value=None),
-         dict(field="current_state.name", operator="EQUAL", value="responsive"),
-         dict(field="current_state.name", operator="EQUAL", value="unmanaged")],
+        [dict(field="current_state.name", operator="EQUAL", value="responsive"),
+         dict(field="current_state.name", operator="IN", 
+            value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")],
         ['field', 'operator', 'value'])
+    activeFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+        field="current_state.name", operator="EQUAL", value="responsive")
+    inactiveFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+        field="current_state.name", operator="IN", 
+                    value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")
 
     changed |= createTable(db, 'querysets_querytag', """
         CREATE TABLE "querysets_querytag" (
@@ -2012,9 +2023,9 @@ def _createQuerySetSchema(db):
             "query_tag" TEXT NOT NULL UNIQUE
         )""")
     changed |= _addTableRows(db, "querysets_querytag", "query_tag",
-        [dict(query_set_id=1, query_tag="query-tag-All Systems-1"),
-         dict(query_set_id=2, query_tag="query-tag-Active Systems-2"),
-         dict(query_set_id=3, query_tag="query-tag-Unmanaged Systems-3"),
+        [dict(query_set_id=allQSId, query_tag="query-tag-All Systems-1"),
+         dict(query_set_id=activeQSId, query_tag="query-tag-Active Systems-2"),
+         dict(query_set_id=inactiveQSId, query_tag="query-tag-Inactive Systems-3"),
         ])
 
     changed |= createTable(db, 'querysets_inclusionmethod', """
@@ -2061,9 +2072,8 @@ def _createQuerySetSchema(db):
 
     changed |= _addTableRows(db, "querysets_queryset_filter_entries",
         'id',
-        [dict(queryset_id=1, filterentry_id=1),
-         dict(queryset_id=2, filterentry_id=2),
-         dict(queryset_id=3, filterentry_id=3)],
+        [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
+         dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId)],
         ['queryset_id', 'filterentry_id'])
 
     changed |= createTable(db, "querysets_queryset_children", """
@@ -2079,6 +2089,11 @@ def _createQuerySetSchema(db):
                 NOT NULL,
             UNIQUE ("from_queryset_id", "to_queryset_id")
         )""")
+    changed |= _addTableRows(db, "querysets_queryset_children",
+        'id',
+        [dict(from_queryset_id=allQSId, to_queryset_id=activeQSId),
+         dict(from_queryset_id=allQSId, to_queryset_id=inactiveQSId)],
+        uniqueCols=('from_queryset_id', 'to_queryset_id'))
 
     return changed
 

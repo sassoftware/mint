@@ -2286,7 +2286,7 @@ class MigrateTo_52(SchemaMigration):
 
 
 class MigrateTo_53(SchemaMigration):
-    Version = (53, 2)
+    Version = (53, 1)
 
     def migrate(self):
         db = self.db
@@ -2294,7 +2294,7 @@ class MigrateTo_53(SchemaMigration):
         schema.createTable(db, 'querysets_queryset', """
             CREATE TABLE "querysets_queryset" (
                 "query_set_id" %(PRIMARYKEY)s,
-                "name" TEXT NOT NULL,
+                "name" TEXT NOT NULL UNIQUE,
                 "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
                 "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
                 "resource_type" TEXT NOT NULL
@@ -2302,21 +2302,40 @@ class MigrateTo_53(SchemaMigration):
         schema._addTableRows(db, "querysets_queryset", "name",
             [dict(name="All Systems", resource_type="system",
                 created_date=str(datetime.datetime.now(tz.tzutc())),
-                modified_date=str(datetime.datetime.now(tz.tzutc())))])
-
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Active Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Inactive Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            ])
+        allQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="All Systems")
+        activeQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Active Systems")
+        inactiveQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Inactive Systems")
 
         schema.createTable(db, 'querysets_filterentry', """
             CREATE TABLE "querysets_filterentry" (
                 "filter_entry_id" %(PRIMARYKEY)s,
                 "field" TEXT NOT NULL,
                 "operator" TEXT NOT NULL,
-                "value" TEXT NOT NULL,
+                "value" TEXT,
                 UNIQUE("field", "operator", "value")
             )""")
         schema._addTableRows(db, "querysets_filterentry",
-            "filter_entry_id",
-            [dict(field="name", operator="IS_NULL", value=None)],
-            ["field", "operator", "value"])
+            'filter_entry_id',
+            [dict(field="current_state.name", operator="EQUAL", value="responsive"),
+             dict(field="current_state.name", operator="IN", 
+                value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")],
+            ['field', 'operator', 'value'])
+        activeFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="current_state.name", operator="EQUAL", value="responsive")
+        inactiveFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="current_state.name", operator="IN", 
+                        value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")
 
         schema.createTable(db, 'querysets_querytag', """
             CREATE TABLE "querysets_querytag" (
@@ -2327,8 +2346,10 @@ class MigrateTo_53(SchemaMigration):
                 "query_tag" TEXT NOT NULL UNIQUE
             )""")
         schema._addTableRows(db, "querysets_querytag", "query_tag",
-            [dict(query_set_id=1, query_tag="query-tag-All Systems-1")])
-
+            [dict(query_set_id=allQSId, query_tag="query-tag-All Systems-1"),
+             dict(query_set_id=activeQSId, query_tag="query-tag-Active Systems-2"),
+             dict(query_set_id=inactiveQSId, query_tag="query-tag-Inactive Systems-3"),
+            ])
 
         schema.createTable(db, 'querysets_inclusionmethod', """
             CREATE TABLE "querysets_inclusionmethod" (
@@ -2371,9 +2392,11 @@ class MigrateTo_53(SchemaMigration):
                     NOT NULL,
                 UNIQUE ("queryset_id", "filterentry_id")
             )""")
+
         schema._addTableRows(db, "querysets_queryset_filter_entries",
             'id',
-            [dict(queryset_id=1, filterentry_id=1)],
+            [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
+             dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId)],
             ['queryset_id', 'filterentry_id'])
 
         schema.createTable(db, "querysets_queryset_children", """
@@ -2389,42 +2412,15 @@ class MigrateTo_53(SchemaMigration):
                     NOT NULL,
                 UNIQUE ("from_queryset_id", "to_queryset_id")
             )""")
+        schema._addTableRows(db, "querysets_queryset_children",
+            'id',
+            [dict(from_queryset_id=allQSId, to_queryset_id=activeQSId),
+             dict(from_queryset_id=allQSId, to_queryset_id=inactiveQSId)],
+            uniqueCols=('from_queryset_id', 'to_queryset_id'))
 
         return True
 
     def migrate1(self):
-        db = self.db
-
-        schema._addTableRows(db, "querysets_queryset", "name",
-            [dict(name="Active Systems", resource_type="system",
-                created_date=str(datetime.datetime.now(tz.tzutc())),
-                modified_date=str(datetime.datetime.now(tz.tzutc()))),
-             dict(name="Unmanaged Systems", resource_type="system",
-                created_date=str(datetime.datetime.now(tz.tzutc())),
-                modified_date=str(datetime.datetime.now(tz.tzutc()))),
-            ])
-
-        schema._addTableRows(db, "querysets_filterentry", 
-            'filter_entry_id',
-            [dict(field="current_state.name", 
-                operator="EQUAL", value="responsive"),
-             dict(field="current_state.name", 
-                operator="EQUAL", value="unmanaged")],
-            ["field", "operator", "value"])
-
-        schema._addTableRows(db, "querysets_querytag", "query_tag",
-            [dict(query_set_id=2, 
-                query_tag="query-tag-Active Systems-2"),
-             dict(query_set_id=3, 
-                query_tag="query-tag-Unmanaged Systems-3")])
-
-        schema._addTableRows(db, "querysets_queryset_filter_entries", rows=
-            [dict(queryset_id=2, filterentry_id=2),
-             dict(queryset_id=3, filterentry_id=3)])
-
-        return True
-
-    def migrate2(self):
         db = self.db
 
         schema.createTable(db, 'changelog_change_log', """
