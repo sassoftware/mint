@@ -65,6 +65,34 @@ filterTermMap = {
     'IS_NULL' : 'isnull',
 }
 
+class Operator(object):
+    filterTerm = None
+    operator = None
+
+class ListOperator(Operator):
+
+    def prepValue(self, field, valueStr):
+        if not (valueStr.startswith('(') and valueStr.endswith(')')):
+            # TODO: use a better exception
+            raise Exception
+
+        valueStr = valueStr.strip('(').strip(')')
+        values = valueStr.split(',')
+        values = [field.get_prep_value(v) for v in values]
+        return values
+
+class InOperator(ListOperator):
+    filterTerm = 'IN'
+    operator = 'in'
+
+class NotInOperator(InOperator):
+    filterTerm = 'NOT_IN'
+
+operatorMap = {
+    'IN' : InOperator,
+    'NOT_IN': NotInOperator,
+}
+
 class Collection(XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
@@ -143,7 +171,7 @@ class Collection(XObjIdModel):
                 if not (filt.startswith('[') or filt.startswith(',[')):
                         continue
                 filtString = filt.strip(',').strip('[').strip(']')
-                field, oper, value = filtString.split(',', 3)
+                field, oper, value = filtString.split(',', 2)
 
                 # Ignore fields that don't exist on the model
                 fieldName = field.split('.')[0]
@@ -153,6 +181,11 @@ class Collection(XObjIdModel):
                 # Replace all '.' with '__', to handle fields that span
                 # relationships
                 field = field.replace('.', '__')
+
+                if oper in operatorMap:
+                    operator = operatorMap[oper]()
+                    fieldCls = modelList.model()._meta.get_field_by_name(field)[0]
+                    value = operator.prepValue(fieldCls, value)
 
                 k = '%s__%s' % (field, filterTermMap[oper])
                 filtDict = {k:value}
