@@ -101,9 +101,9 @@ class QuerySetManager(basemanager.BaseManager):
             if value is None:
                 value = False
 
-            if oper in modellib.operatorMap:
-                operator = modellib.operatorMap[oper]()
-                fieldCls = modelList.model()._meta.get_field_by_name(field)[0]
+            if filt.operator in modellib.operatorMap:
+                operator = modellib.operatorMap[filt.operator]()
+                fieldCls = model._meta.get_field_by_name(field)[0]
                 value = operator.prepValue(fieldCls, value)
 
             k = '%s__%s' % (field, oper)
