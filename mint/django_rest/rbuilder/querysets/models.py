@@ -110,6 +110,8 @@ class QuerySet(modellib.XObjIdModel):
             modellib.type_map[manager.QuerySetManager.resourceCollectionMap[self.resource_type]].view_name
         xobjModel.collection = collectionId.serialize(request)
 
+        xobjModel.is_top_level = self.isTopLevel()
+
         return xobjModel
 
     def getFilterBy(self):
@@ -119,6 +121,13 @@ class QuerySet(modellib.XObjIdModel):
                 filterEntry.value)
             filterBy.append(filterStr)
         return ','.join(filterBy)
+
+    def isTopLevel(self):
+        parents = self.__class__.children.through.objects.filter(to_queryset=self)
+        if parents:
+            return False
+        else: 
+            return True
 
 class FilterEntry(modellib.XObjIdModel):
     class Meta:
