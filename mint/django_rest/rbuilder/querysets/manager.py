@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
+from mint.django_rest.rbuilder.querysets import errors
 from mint.django_rest.rbuilder.querysets import models
 
 class QuerySetManager(basemanager.BaseManager):
@@ -38,15 +39,28 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def addQuerySet(self, querySet):
+        if querySet.name == 'All Systems':
+            raise errors.AllSystemsQuerySetReadOnly()
         querySet.save()
         self.tagQuerySet(querySet)
+        if querySet.resource_type == 'system' and querySet.isTopLevel():
+            self.addToAllQuerySet(querySet)
         return querySet
 
     @exposed
     def updateQuerySet(self, querySet):
+        if querySet.name == 'All Systems':
+            raise errors.AllSystemsQuerySetReadOnly()
         querySet.save()
         self.tagQuerySet(querySet)
+        if querySet.resource_type == 'system' and querySet.isTopLevel():
+            self.addToAllQuerySet(querySet)
         return querySet
+
+    def addToAllQuerySet(self, querySet):
+        allQuerySet = models.QuerySet.objects.get(name='All Systems')
+        allQuerySet.children.add(querySet)
+        allQuerySet.save()
 
     def getQueryTag(self, querySet):
         try:
