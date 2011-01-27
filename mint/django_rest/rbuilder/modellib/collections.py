@@ -5,7 +5,10 @@
 # All rights reserved.
 #
 
+import sys
+
 from django.db import models
+from django.db.models import fields
 from django.db.models import Q
 from django.conf import settings
 from django.core import exceptions
@@ -60,8 +63,6 @@ filterTermMap = {
     'NOT_LIKE' : 'contains',
     'IN' : 'in',
     'NOT_IN' : 'in',
-    'MATCHING' : '',
-    'NOT_MATCHING' : '',
     'IS_NULL' : 'isnull',
 }
 
@@ -70,7 +71,17 @@ class Operator(object):
     operator = None
 
     def prepValue(self, field, valueStr):
+        if isinstance(field, fields.BooleanField):
+            valueStr = self.castToBool(valueStr)
         return field.get_prep_value(valueStr)
+
+    def castToBool(self, valueStr):
+        if valueStr.lower() == 'true':
+            return True
+        elif valueStr.lower() == 'false' or valueStr == '0':
+            return False
+        else:
+            return bool(valueStr)
 
 class ListOperator(Operator):
 
@@ -84,6 +95,10 @@ class ListOperator(Operator):
         values = [field.get_prep_value(v) for v in values]
         return values
 
+class BooleanOperator(Operator):
+    def prepValue(self, field, valueStr):
+        return self.castToBool(valueStr)
+
 class InOperator(ListOperator):
     filterTerm = 'IN'
     operator = 'in'
@@ -91,23 +106,43 @@ class InOperator(ListOperator):
 class NotInOperator(InOperator):
     filterTerm = 'NOT_IN'
 
-class NullOperator(Operator):
+class NullOperator(BooleanOperator):
     filterTerm = 'IS_NULL'
     operator = 'isnull'
 
-    def prepValue(self, field, valueStr):
-        if valueStr.lower() == 'true':
-            return True
-        elif valueStr.lower() == 'false' or valueStr == '0':
-            return False
-        else:
-            return bool(valueStr)
+class EqualOperator(Operator):
+    filterTerm = 'EQUAL'
+    operator = 'exact'
 
-operatorMap = {
-    'IN' : InOperator,
-    'NOT_IN' : NotInOperator,
-    'IS_NULL' : NullOperator,
-}
+class NotEqualOperator(EqualOperator):
+    filterTerm = 'NOT_EQUAL'
+
+class LessThanOperator(Operator):
+    filterTerm = 'LESS_THAN'
+    operator = 'lt'
+
+class LessThanEqualOperator(Operator):
+    filterTerm = 'LESS_THAN_OR_EQUAL'
+    operator = 'lte'
+
+class GreaterThanOperator(Operator):
+    filterTerm = 'GREATER_THAN'
+    operator = 'gt'
+
+class GreaterThanEqualOperator(Operator):
+    filterTerm = 'GREATER_THAN_OR_EQUAL'
+    operator = 'gte'
+
+class LikeOperator(Operator):
+    filterTerm = 'LIKE'
+    operator = 'contains'
+
+class NotLikeOperator(LikeOperator):
+    filterTerm = 'NOT_LIKE'
+    operator = 'contains'
+
+def operatorFactory(field, operator):
+    return operatorMap[operator]
 
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
     # Ignore fields that don't exist on the model
@@ -120,14 +155,17 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
 
     # Replace all '.' with '__', to handle fields that span
     # relationships
-    field = field.replace('.', '__')
+    fields = field.split('.')
 
     if operator in operatorMap:
-        operatorCls = operatorMap[operator]()
-        fieldCls = djangoQuerySet.model._meta.get_field_by_name(fieldName)[0]
+        nextModel = djangoQuerySet.model()
+        for f in fields[:-1]:
+            nextModel = nextModel._meta.get_field_by_name(f)[0].rel.to()
+        fieldCls = nextModel._meta.get_field_by_name(fields[-1])[0]
+        operatorCls = operatorFactory(fieldCls, operator)()
         value = operatorCls.prepValue(fieldCls, value)
 
-    k = '%s__%s' % (field, filterTermMap[operator])
+    k = '%s__%s' % (field.replace('.', '__'), operatorCls.operator)
     filtDict = {k:value}
     if operator.startswith('NOT_'):
         djangoQuerySet = djangoQuerySet.filter(~Q(**filtDict))
@@ -271,4 +309,9 @@ class Collection(XObjIdModel):
         xobj_model = XObjIdModel.serialize(self, request, values)
 
         return xobj_model
+
+operatorMap = {}
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, 'filterTerm'):
+        operatorMap[mod_obj.filterTerm] = mod_obj
 
