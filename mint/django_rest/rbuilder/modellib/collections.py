@@ -200,7 +200,8 @@ class Collection(XObjIdModel):
 
                 if oper in operatorMap:
                     operator = operatorMap[oper]()
-                    fieldCls = modelList.model()._meta.get_field_by_name(field)[0]
+                    fieldName = field.split('__')[0]
+                    fieldCls = model._meta.get_field_by_name(fieldName)[0]
                     value = operator.prepValue(fieldCls, value)
 
                 k = '%s__%s' % (field, filterTermMap[oper])

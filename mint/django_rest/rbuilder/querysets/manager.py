@@ -103,7 +103,8 @@ class QuerySetManager(basemanager.BaseManager):
 
             if filt.operator in modellib.operatorMap:
                 operator = modellib.operatorMap[filt.operator]()
-                fieldCls = model._meta.get_field_by_name(field)[0]
+                fieldName = field.split('__')[0]
+                fieldCls = model._meta.get_field_by_name(fieldName)[0]
                 value = operator.prepValue(fieldCls, value)
 
             k = '%s__%s' % (field, oper)
