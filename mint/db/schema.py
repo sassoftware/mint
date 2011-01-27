@@ -2161,6 +2161,7 @@ def createSchema(db, doCommit=True, cfg=None):
     changed |= _createCapsuleIndexerYumSchema(db)
     changed |= _createPKI(db)
     changed |= _createQuerySetSchema(db)
+    chagned |= _createChangeLogSchema(db)
 
     if doCommit:
         db.commit()
