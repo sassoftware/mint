@@ -8,6 +8,7 @@
 import sys
 
 from django.db import models
+from django.core import exceptions
 
 from mint.django_rest.rbuilder import modellib
 # from mint.django_rest.rbuilder.inventory import models as inventorymodels
@@ -32,6 +33,19 @@ class ChangeLog(modellib.XObjIdModel):
     change_log_id = models.AutoField(primary_key=True)
     resource_type = models.TextField()
     resource_id = models.IntegerField()
+
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request, values)
+        resourceIdModel = modellib.XObjIdModel()
+        resourceIdModel.view_name = getattr(
+            modellib.type_map[self.resource_type], 'view_name', None)
+        try:
+            resourceIdModel._parents = [modellib.type_map[self.resource_type].objects.get(
+                pk=self.resource_id)]
+        except exceptions.ObjectDoesNotExist:
+            pass
+        setattr(xobjModel, self.resource_type, resourceIdModel.serialize(request))
+        return xobjModel
 
 class ChangeLogEntry(modellib.XObjIdModel):
     class Meta:

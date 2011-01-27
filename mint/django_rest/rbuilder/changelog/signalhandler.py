@@ -59,7 +59,10 @@ def logChanges(instance):
         resource_type=tag, resource_id=instance.pk)
     for field, oldValue in changedFields.items():
         newValue = getattr(instance, field)
-        entryText = "%s updated from %s to %s" % (field, oldValue, newValue)
+        if oldValue:
+            entryText = "%s updated from %s to %s" % (field, oldValue, newValue)
+        else:
+            entryText = "%s set to %s" % (field, newValue)
         changeLogEntry = changelogmodels.ChangeLogEntry(change_log=changeLog,
             entry_text=entryText)
         changeLogEntry.save()

@@ -404,6 +404,9 @@ class System(modellib.XObjIdModel):
     XSL = "system.xsl"
     class Meta:
         db_table = 'inventory_system'
+
+    view_name = 'System'
+
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
