@@ -31,11 +31,11 @@ class QuerySetTestCase(XMLTestCase):
             "rPath Update Service")
         self.assertEquals(models.SystemTag.objects.all()[0].inclusion_method.inclusion_method,
             "filtered")
-        self.assertEquals(len(models.QueryTag.objects.all()), 4)
-        self.assertEquals(models.QueryTag.objects.all()[3].query_tag,
-            "query-tag-Unmanaged systems-4")
-        self.assertEquals(len(models.QuerySet.objects.all()), 4)
-        self.assertEquals(models.QuerySet.objects.all()[3].name,
+        self.assertEquals(len(models.QueryTag.objects.all()), 5)
+        self.assertEquals(models.QueryTag.objects.all()[4].query_tag,
+            "query-tag-Unmanaged systems-5")
+        self.assertEquals(len(models.QuerySet.objects.all()), 5)
+        self.assertEquals(models.QuerySet.objects.all()[4].name,
             "Unmanaged systems")
 
 class QuerySetFixturedTestCase(XMLTestCase):
@@ -146,28 +146,28 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
 
 
     def testGetQuerySetChildResult(self):
-        systems = self.xobjResponse('/api/query_sets/7/child')
+        systems = self.xobjResponse('/api/query_sets/9/child')
         self.assertEquals([s.system_id for s in systems.system],
             [u'210', u'211', u'214', u'215', u'216', u'217', u'212', u'213'])
-        systems = self.xobjResponse('/api/query_sets/7/all')
+        systems = self.xobjResponse('/api/query_sets/9/all')
         self.assertEquals([s.system_id for s in systems.system],
             [u'210', u'211', u'214', u'215', u'216', u'217', u'212', u'213'])
 
-        systems = self.xobjResponse('/api/query_sets/10/child')
+        systems = self.xobjResponse('/api/query_sets/12/child')
         self.assertEquals([s.system_id for s in systems.system],
             [u'215', u'216', u'217'])
-        systems = self.xobjResponse('/api/query_sets/10/all')
+        systems = self.xobjResponse('/api/query_sets/12/all')
         self.assertEquals([s.system_id for s in systems.system],
             [u'215', u'216', u'217'])
 
     def testUpdateChildQuery(self):
-        response = self._put('/api/query_sets/10/',
+        response = self._put('/api/query_sets/12/',
             data=testsxml.query_set_child_update_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        querySet = models.QuerySet.objects.get(pk=10)
+        querySet = models.QuerySet.objects.get(pk=12)
         self.assertEquals([q.pk for q in querySet.children.all()],
             [4, 8, 9])
-        systems = self.xobjResponse('/api/query_sets/10/child')
+        systems = self.xobjResponse('/api/query_sets/12/child')
         self.assertEquals([s.system_id for s in systems.system],
             [u'210', u'211', u'215', u'216', u'217'])
