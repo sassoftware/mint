@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 <django-objects version="1.0">
 
+  <object pk="1" model="querysets.inclusionmethod">
+    <field type="TextField" name="inclusion_method">chosen</field>
+  </object>
+  <object pk="2" model="querysets.inclusionmethod">
+    <field type="TextField" name="inclusion_method">filtered</field>
+  </object>
+
   <object pk="1" model="querysets.filterentry">
     <field type="TextField" name="field">current_state.name</field>
     <field type="TextField" name="operator">EQUAL</field>

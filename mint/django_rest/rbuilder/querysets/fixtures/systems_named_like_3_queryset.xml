@@ -16,12 +16,12 @@
     </field>
   </object>
   <object pk="5" model="querysets.querytag">
-    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">4</field>
+    <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">5</field>
     <field type="TextField" name="query_tag">query-tag-Systems named like 3-4</field>
   </object>
   <object pk="1" model="querysets.systemtag">
     <field to="inventory.system" name="system" rel="ManyToOneRel">4</field>
-    <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">4</field>
-    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">2</field>
+    <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">5</field>
+    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">1</field>
   </object>
 </django-objects>
