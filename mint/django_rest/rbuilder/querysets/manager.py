@@ -91,29 +91,11 @@ class QuerySetManager(basemanager.BaseManager):
         model = modellib.type_map[querySet.resource_type]
         if not querySet.filter_entries.all():
             resources = EmptyQuerySet(model)
-        for filt in querySet.filter_entries.all():
+        else:
             resources = model.objects.all()
-            # Replace all '.' with '__', to handle fields that span
-            # relationships
-            field = filt.field.replace('.', '__')
-            oper = modellib.filterTermMap[filt.operator]
-            value = filt.value
-            if value is None:
-                value = False
-
-            if filt.operator in modellib.operatorMap:
-                operator = modellib.operatorMap[filt.operator]()
-                fieldName = field.split('__')[0]
-                fieldCls = model._meta.get_field_by_name(fieldName)[0]
-                value = operator.prepValue(fieldCls, value)
-
-            k = '%s__%s' % (field, oper)
-            filtDict = {k:value}
-            if oper.startswith('NOT_'):
-                resources = resources.filter(~Q(**filtDict))
-            else:
-                resources = resources.filter(**filtDict)
-
+        for filt in querySet.filter_entries.all():
+            resources = modellib.filterDjangoQuerySet(resources, 
+                filt.field, filt.operator, filt.value)
         return resources
 
     def getResourceCollection(self, querySet, resources):

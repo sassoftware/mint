@@ -109,6 +109,33 @@ operatorMap = {
     'IS_NULL' : NullOperator,
 }
 
+def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
+    # Ignore fields that don't exist on the model
+    fieldName = field.split('.')[0]
+    if fieldName not in djangoQuerySet.model._meta.get_all_field_names():
+        return djangoQuerySet
+
+    if value is None:
+        value = False
+
+    # Replace all '.' with '__', to handle fields that span
+    # relationships
+    field = field.replace('.', '__')
+
+    if operator in operatorMap:
+        operatorCls = operatorMap[operator]()
+        fieldCls = djangoQuerySet.model._meta.get_field_by_name(fieldName)[0]
+        value = operatorCls.prepValue(fieldCls, value)
+
+    k = '%s__%s' % (field, filterTermMap[operator])
+    filtDict = {k:value}
+    if operator.startswith('NOT_'):
+        djangoQuerySet = djangoQuerySet.filter(~Q(**filtDict))
+    else:
+        djangoQuerySet = djangoQuerySet.filter(**filtDict)
+
+    return djangoQuerySet
+ 
 class Collection(XObjIdModel):
 
     _xobj = xobj.XObjMetadata(
@@ -188,28 +215,8 @@ class Collection(XObjIdModel):
                         continue
                 filtString = filt.strip(',').strip('[').strip(']')
                 field, oper, value = filtString.split(',', 2)
-
-                # Ignore fields that don't exist on the model
-                fieldName = field.split('.')[0]
-                if fieldName not in modelList.model._meta.get_all_field_names():
-                    continue
-
-                # Replace all '.' with '__', to handle fields that span
-                # relationships
-                field = field.replace('.', '__')
-
-                if oper in operatorMap:
-                    operator = operatorMap[oper]()
-                    fieldName = field.split('__')[0]
-                    fieldCls = model._meta.get_field_by_name(fieldName)[0]
-                    value = operator.prepValue(fieldCls, value)
-
-                k = '%s__%s' % (field, filterTermMap[oper])
-                filtDict = {k:value}
-                if oper.startswith('NOT_'):
-                    modelList = modelList.filter(~Q(**filtDict))
-                else:
-                    modelList = modelList.filter(**filtDict)
+                modelList = filterDjangoQuerySet(modelList,
+                    field, oper, value)
 
         return modelList
 
