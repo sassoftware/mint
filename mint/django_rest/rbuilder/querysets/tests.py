@@ -64,8 +64,14 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.query_set_xml)
 
+    def testGetFixturedQuerySet(self):
+        response = self._get('/api/query_sets/5/',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, testsxml.query_set_fixtured_xml)
+
     def testGetQuerySetFilteredResult(self):
-        response = self._get('/api/query_sets/4/filtered',
+        response = self._get('/api/query_sets/5/filtered',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         xobjModel = xobj.parse(response.content)
@@ -73,7 +79,7 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(systems.count, '38')
 
     def testGetQuerySetChosenResult(self):
-        response = self._get('/api/query_sets/4/chosen/',
+        response = self._get('/api/query_sets/5/chosen/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
 
@@ -82,7 +88,7 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(systems.count, '1')
 
     def testGetQuerySetAllResult(self):
-        response = self._get('/api/query_sets/4/all/',
+        response = self._get('/api/query_sets/5/all/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         xobjModel = xobj.parse(response.content)
@@ -90,32 +96,32 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(systems.count, '39')
 
     def testPutQuerySetChosen(self):
-        response = self._put('/api/query_sets/4/chosen/',
+        response = self._put('/api/query_sets/5/chosen/',
             data=testsxml.systems_chosen_put_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        systems = self.xobjResponse('/api/query_sets/4/chosen/')
+        systems = self.xobjResponse('/api/query_sets/5/chosen/')
         self.assertEquals(len(systems.system), 3)
         self.assertEquals([s.name for s in systems.system],
             [u'System name 4', u'System name 5', u'System name 6'])
 
-        response = self._put('/api/query_sets/4/chosen/',
+        response = self._put('/api/query_sets/5/chosen/',
             data=testsxml.systems_chosen_put_xml2,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        systems = self.xobjResponse('/api/query_sets/4/chosen/')
+        systems = self.xobjResponse('/api/query_sets/5/chosen/')
         self.assertEquals(len(systems.system), 5)
         self.assertEquals([s.name for s in systems.system],
             [u'System name 4', u'System name 5', u'System name 6',
              u'System name 7', u'System name 8'])
 
     def testUpdateQuerySet(self):
-        response = self._put('/api/query_sets/4/',
+        response = self._put('/api/query_sets/5/',
             data=testsxml.query_set_update_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
     
-        querySet = models.QuerySet.objects.get(pk=4)
+        querySet = models.QuerySet.objects.get(pk=5)
         self.assertEquals(len(querySet.filter_entries.all()), 2)
         self.assertEquals(querySet.filter_entries.all()[1].field,
             'description')
