@@ -398,17 +398,17 @@
   <object pk="1" model="querysets.systemtag">
     <field to="inventory.system" name="system" rel="ManyToOneRel">215</field>
     <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">10</field>
-    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">2</field>
+    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="querysets.systemtag">
     <field to="inventory.system" name="system" rel="ManyToOneRel">216</field>
     <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">10</field>
-    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">2</field>
+    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">1</field>
   </object>
   <object pk="3" model="querysets.systemtag">
     <field to="inventory.system" name="system" rel="ManyToOneRel">217</field>
     <field to="querysets.querytag" name="query_tag" rel="ManyToOneRel">11</field>
-    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">2</field>
+    <field to="querysets.inclusionmethod" name="inclusion_method" rel="ManyToOneRel">1</field>
   </object>
 
 </django-objects>

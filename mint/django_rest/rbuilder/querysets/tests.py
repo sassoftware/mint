@@ -167,7 +167,7 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         querySet = models.QuerySet.objects.get(pk=12)
         self.assertEquals([q.pk for q in querySet.children.all()],
-            [4, 8, 9])
+            [6, 10, 11])
         systems = self.xobjResponse('/api/query_sets/12/child')
         self.assertEquals([s.system_id for s in systems.system],
             [u'210', u'211', u'215', u'216', u'217'])
