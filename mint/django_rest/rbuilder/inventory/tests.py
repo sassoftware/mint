@@ -2486,6 +2486,22 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(system.current_state.name,
             p['currentState'])
 
+    def testAddSystemsSameGeneratedUuid(self):
+        # RBL-8211 - get rid of unnecessary unique constraint on generated_uuid
+        guuid = "some-uuid"
+        luuid1 = "localuuid001"
+        luuid2 = "localuuid002"
+        system1 = self.newSystem(local_uuid=luuid1, generated_uuid=guuid)
+        system1.save()
+        system2 = self.newSystem(local_uuid=luuid2, generated_uuid=guuid)
+        system2.save()
+
+        system1 = models.System.objects.get(local_uuid=luuid1,
+            generated_uuid=guuid)
+        system2 = models.System.objects.get(local_uuid=luuid2,
+            generated_uuid=guuid)
+        self.failIf(system1.pk == system2.pk)
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",
