@@ -48,6 +48,7 @@ class RbuilderStatus(Model):
     maintMode               = fields.BooleanField()
     proddefSchemaVersion    = fields.CharField()
     inventoryConfigurationEnabled   = fields.BooleanField()
+    imageImportEnabled      = fields.BooleanField()
 
     def get_absolute_url(self):
         return '',

@@ -452,7 +452,7 @@ class System(modellib.XObjIdModel):
         "the system state as reported by its target (only applies if system is on a virtual target)")
     registration_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was registered in inventory (UTC)")
-    generated_uuid = D(models.CharField(max_length=64, unique=True, null=True),
+    generated_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID that is randomly generated")
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile")

@@ -2267,7 +2267,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         return True
 
 class MigrateTo_52(SchemaMigration):
-    Version = (52, 1)
+    Version = (52, 2)
 
     def migrate(self):
         return True
@@ -2284,6 +2284,12 @@ class MigrateTo_52(SchemaMigration):
                 ) %(TABLEOPTS)s""")
         return True
 
+    def migrate2(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE inventory_system
+                DROP CONSTRAINT inventory_system_generated_uuid_key""")
+        return True
 
 class MigrateTo_53(SchemaMigration):
     Version = (53, 1)

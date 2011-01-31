@@ -392,8 +392,10 @@ class WigTask(plug_worker.TaskHandler):
         arch = image.WINDOWS.ARCH
         if arch == '0':
             archPart = 'x86'
+            vmwareSuffix = ''
         elif arch == '9':
             archPart = 'x64'
+            vmwareSuffix = '-64'
         else:
             raise RuntimeError("WIM has unsupported architecture %r" % (arch,))
 
@@ -401,9 +403,12 @@ class WigTask(plug_worker.TaskHandler):
         if version >= [6, 0]:
             # Windows Server 2008 (and later, including R2)
             verPart = '2008'
+            vmwareName = 'windows7srv'
         else:
             # Windows Server 2003
             verPart = '2003'
+            vmwareName = 'winNetStandard'
+        self.jobData['vmwareOS'] = vmwareName + vmwareSuffix
 
         regPath = '/%s%s.reg' % (verPart, archPart)
         for fileData in fileMap.get('reg', []):

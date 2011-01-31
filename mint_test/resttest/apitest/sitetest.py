@@ -57,6 +57,7 @@ class SiteTest(restbase.BaseRestTest):
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
   <inventoryConfigurationEnabled>false</inventoryConfigurationEnabled>
+  <imageImportEnabled>false</imageImportEnabled>
 </rbuilderStatus>
 """
         self.assertBlobEquals(response,

@@ -1114,7 +1114,7 @@ def _createInventorySchema(db, cfg):
                 "target_system_description" varchar(1024),
                 "target_system_state" varchar(64),
                 "registration_date" timestamp with time zone,
-                "generated_uuid" varchar(64) UNIQUE,
+                "generated_uuid" varchar(64),
                 "local_uuid" varchar(64),
                 "ssl_client_certificate" varchar(8092),
                 "ssl_client_key" varchar(8092),

@@ -60,6 +60,7 @@ class RbuilderRestServer(RestController):
                                      identity=identity,
                                      maintMode=maintMode,
                                      inventoryConfigurationEnabled=self.cfg.inventoryConfigurationEnabled,
+                                     imageImportEnabled=self.cfg.imageImportEnabled,
                                      proddefSchemaVersion=proddefSchemaVersion)
 
     def url(self, request, *args, **kw):
