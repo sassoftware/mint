@@ -64,11 +64,11 @@ class TargetManager(manager.Manager):
         from mint.django_rest.rbuilder.querysets import models
         log.info("Creating a new query set for target %s." % targetName)
         filterEntry, created = models.FilterEntry.objects.get_or_create(
-            field='target.targetid', operator='EQUALS', value=targetId)
+            field='target.targetid', operator='EQUAL', value=targetId)
         filterEntry.save()
         querySetName = "All %s systems" % targetName
-        querySet, created = models.QuerySet.objects.get_or_create(name=querySetName)
-        if created:
+        querySet, created = models.QuerySet.objects.get_or_create(name=querySetName, resource_type='system')
+        if not created:
             log.info("Already a query set named %s, not creating a new one." %
                 querySetName)
             return
