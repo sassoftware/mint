@@ -111,7 +111,7 @@ def getFieldDescriptors(field, prefix=None):
             key = '%s.%s' % (prefix, field.name)
         else:
             key = field.name
-        fd.field_label = field.name
+        fd.field_label = getattr(field, 'docstring', field.name)
         fd.field_key = key
         fd.value_type = getFieldValueType(field)
         fd.value_options = getFieldValueOptions(field)
