@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
+from mint.django_rest.rbuilder.querysets import descriptor
 from mint.django_rest.rbuilder.querysets import errors
 from mint.django_rest.rbuilder.querysets import models
 
@@ -176,6 +177,8 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def getQuerySetFilterDescriptor(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
+        model = modellib.type_map[querySet.resource_type]
+        return descriptor.getFilterDescriptor(model)
         # Just return the system filter descriptor for now
         return models.SystemQuerySetDescriptor()
 
