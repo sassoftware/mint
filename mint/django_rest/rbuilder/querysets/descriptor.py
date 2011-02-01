@@ -8,7 +8,6 @@
 from django.db import models
 from xobj import xobj
 
-from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder import modellib
 
 class FieldDescriptor(object):
