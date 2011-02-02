@@ -101,6 +101,8 @@ def getFieldDescriptors(field, prefix=None):
     # Not using get_all_field_names in this function b/c of infinite recursion
     if isinstance(field, models.ForeignKey) or \
        isinstance(field, models.ManyToManyField):
+        if field.rel.to in processedModels:
+            return fds
         for f in field.rel.to._meta.fields:
             if prefix:
                 _prefix = '%s.%s' % (prefix, field.name)
@@ -108,7 +110,10 @@ def getFieldDescriptors(field, prefix=None):
                 _prefix = field.name
             _fds = getFieldDescriptors(f, _prefix)
             [fds.append(_fd) for _fd in _fds]
+        processedModels.append(field.rel.to)
     elif isinstance(field, related.RelatedObject):
+        if field.model() in processedModels:
+            return fds
         for f in field.model()._meta.fields:
             if prefix:
                 _prefix = '%s.%s' % (prefix, field.get_accessor_name())
@@ -116,6 +121,7 @@ def getFieldDescriptors(field, prefix=None):
                 _prefix = field.get_accessor_name()
             _fds = getFieldDescriptors(f, _prefix)
             [fds.append(_fd) for _fd in _fds]
+        processedModels.append(field.model())
     else:   
         fd = FieldDescriptor()
         if prefix:
@@ -130,7 +136,10 @@ def getFieldDescriptors(field, prefix=None):
         fds.append(fd)
     return fds
 
+processedModels = []
+
 def getFilterDescriptor(model):
+    processedModels.append(model)
     fd = FilterDescriptor()
     fd.field_descriptors = []
     fieldNames = model._meta.get_all_field_names()
