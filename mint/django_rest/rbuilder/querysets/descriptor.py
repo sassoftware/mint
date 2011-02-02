@@ -17,6 +17,9 @@ class FieldDescriptor(object):
             'field_label', 'field_key', 'value_type',
             'operator_choices', 'value_options'])
 
+class FieldDescriptors(object):
+    _xobj = xobj.XObjMetadata(tag='field_descriptors')
+
 class FilterDescriptor(object):
     _xobj = xobj.XObjMetadata(tag='filter_descriptor',
         elements=['field_descriptors'])
@@ -141,11 +144,12 @@ processedModels = []
 def getFilterDescriptor(model):
     processedModels.append(model)
     fd = FilterDescriptor()
-    fd.field_descriptors = []
+    fd.field_descriptors = FieldDescriptors()
+    fd.field_descriptors.descriptors = []
     fieldNames = model._meta.get_all_field_names()
     for fieldName in fieldNames:
         field = model._meta.get_field_by_name(fieldName)[0]
         _fds = getFieldDescriptors(field)
-        [fd.field_descriptors.append(_fd) for _fd in _fds]
+        [fd.field_descriptors.descriptors.append(_fd) for _fd in _fds]
     return fd
 
