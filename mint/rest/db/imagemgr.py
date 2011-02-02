@@ -309,12 +309,25 @@ class ImageManager(manager.Manager):
         hostname = fqdn.split('.')[0]
         return self._getFilesForImages(hostname, [imageId])[0]
 
-    def createImage(self, fqdn, buildType, buildName, troveTuple, buildData):
+    def createImage(self, fqdn, image, buildData):
+        buildType = image.imageType
+        buildName = image.name
+        troveTuple = image.getNameVersionFlavor()
+
+        # Look up the build type by name too - and fall back to what the user
+        # specified
+        buildType = buildtypes.xmlTagNameImageTypeMap.get(buildType, buildType)
         cu = self.db.db.cursor()
         productId = self.db.getProductId(fqdn)
         troveLabel = troveTuple[1].trailingLabel()
-        productVersionId, stage = self.db.productMgr.getProductVersionForLabel(
-                                                fqdn, troveLabel)
+        if image.stage and image.version:
+            stage = os.path.basename(image.stage.href)
+            version = os.path.basename(image.version.href)
+            productVersion = self.db.productMgr.getProductVersion(fqdn, version)
+            productVersionId = productVersion.versionId
+        else:
+            productVersionId, stage = self.db.productMgr.getProductVersionForLabel(
+                                                    fqdn, troveLabel)
         sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
                                      buildCount, createdBy, troveName, 
                                      troveVersion, troveFlavor, stageName, 
@@ -344,6 +357,47 @@ class ImageManager(manager.Manager):
                                         commit=False)
         return buildId
 
+    def getRepeaterClient(self):
+        try:
+            from rpath_repeater import client as repeater_client
+        except:
+            return None
+
+        return repeater_client.RepeaterClient()
+
+    def uploadImageFiles(self, hostname, image, outputToken=None):
+        if not image.files.files:
+            return None
+        rcli = self.getRepeaterClient()
+        if rcli is None:
+            return None
+        path = "/api/products/%s/images/%s/" % (hostname, image.imageId)
+        stPath = path + 'status'
+        putFilesPath = path + 'files'
+        uploadPath = "/uploadBuild/%s/" % (image.imageId, )
+        headers = { 'X-rBuilder-OutputToken' : outputToken }
+        fileList = []
+        putFilesURL = rcli.URL(scheme="http", host="localhost",
+            path=putFilesPath, unparsedPath=putFilesPath,
+            headers=headers)
+        statusReportURL = rcli.URL(scheme="http", host="localhost",
+                path=stPath, unparsedPath=stPath, headers=headers)
+        for fileItem in image.files.files:
+            if not fileItem.urls:
+                continue
+            srcurl = fileItem.urls[0].url
+            # XXX we don't parse url correctly
+            srcurl = "http://reinhold.rdu.rpath.com/~misa/ginkgo-1-x86-ovf.tar.gz"
+            fileName = os.path.basename(fileItem.fileName)
+            uPath = uploadPath + fileName
+            url = rcli.makeUrl(srcurl)
+            destination = rcli.URL(scheme="http", host="localhost",
+                path=uPath, unparsedPath=uPath, headers=headers)
+            ifile = rcli.ImageFile(url=url, destination=destination)
+            fileList.append(ifile)
+        if not fileList:
+            return None
+        uuid, job = rcli.download_images(fileList, statusReportURL, putFilesURL)
 
     def stopImageJob(self, imageId):
         raise NotImplementedError

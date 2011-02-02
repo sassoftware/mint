@@ -73,6 +73,43 @@ class ImagesTest(restbase.BaseRestTest):
         # Make sure the subscriber's method got called
         self.failUnlessEqual(Subscriber.imageIds, [('1', None, 1)])
 
+    def testCreateImage(self):
+        hostname = "createdproject"
+        productVersion = "10"
+        client = self.getRestClient(username='adminuser')
+        db = self.openRestDatabase()
+
+        # Create the project and the project version
+        self.createUser('admin', admin=True)
+        self.setDbUser(db, 'admin')
+        self.createProduct(hostname, owners=['admin'], db=db)
+        self.createProductVersion(db, hostname, productVersion)
+
+        imageXml = """\
+<image>
+  <name>ginkgo-Raw Filesystem (x86)</name>
+  <baseFileName>ginkgo-1-x86_64</baseFileName>
+  <troveName>blabbedy</troveName>
+  <troveVersion>/local@local:COOK/1.0-1-1</troveVersion>
+  <troveFlavor/>
+  <version href="%(productVersion)s"/>
+  <stage href="Development"/>
+  <buildCount>1</buildCount>
+  <imageType>vmwareEsxImage</imageType>
+  <files>
+    <file>
+      <title>My super-duper file</title>
+      <size>123</size>
+      <sha1>123</sha1>
+      <fileName>ginkgo-1-x86.fs.tar.gz</fileName>
+      <url urlType="0">http://reinhold.rdu.rpath.com/~misa/ginkgo-1-x86-ovf.tar.gz</url>
+    </file>
+  </files>
+</image>""" % dict(productVersion=productVersion)
+        req, img = client.call('POST', 'products/%s/images' % hostname, imageXml)
+        self.failUnlessEqual(img.stage, "Development")
+        self.failUnlessEqual(img.version, productVersion)
+
     def testGetReleases(self):
         return self._testGetReleases()
 

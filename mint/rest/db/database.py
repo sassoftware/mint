@@ -719,13 +719,16 @@ class Database(DBInterface):
     @commitafter
     def createImage(self, hostname, image, buildData=None):
         self.auth.requireProductDeveloper(hostname)
-        imageId =  self.imageMgr.createImage(hostname, image.imageType, 
-                                            image.name,  
-                                            image.getNameVersionFlavor(), 
-                                            buildData)
+        imageId =  self.imageMgr.createImage(hostname, image, buildData)
         image.imageId = imageId
         return imageId
 
+    @commitafter
+    def uploadImageFiles(self, hostname, image, outputToken=None):
+        self.auth.requireProductDeveloper(hostname)
+        self.imageMgr.uploadImageFiles(hostname, image,
+            outputToken=outputToken)
+        return image
 
     @commitafter
     def createUser(self, username, password, fullName, email, 
