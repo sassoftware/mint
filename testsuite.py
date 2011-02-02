@@ -182,6 +182,7 @@ def main(argv=None, individual=True):
     results = handler.main(argv)
 
     # Need to delete the database used by django tests.
+    from django.conf import settings
     if settings.DATABASE_ENGINE == 'sqlite3':
         try:
             os.unlink(settings.TEST_DATABASE_NAME)
