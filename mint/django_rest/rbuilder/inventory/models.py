@@ -678,6 +678,7 @@ class ManagementNode(System):
     _xobj = xobj.XObjMetadata(
                 tag = 'management_node',
                 attributes = {'id':str})
+    view_name = 'ManagementNode'
     local = models.NullBooleanField()
     zone = modellib.ForeignKey(Zone, related_name='management_nodes')
     node_jid = models.CharField(max_length=64, null=True)
