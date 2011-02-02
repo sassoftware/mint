@@ -11,7 +11,6 @@ from django.db import models
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
-from mint.django_rest.rbuilder.querysets import descriptor_xml
 
 from xobj import xobj
 
@@ -59,12 +58,6 @@ class FilterDescriptor(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "filter_descriptor")
     view_name = "QuerySetFilterDescriptor"
-
-class SystemQuerySetDescriptor(modellib.XObjModel):
-    class Meta:
-        abstract = True
-    def to_xml(self, *args, **kwargs):
-        return descriptor_xml.system_query_set_descriptor_xml
 
 class CollectionId(modellib.XObjIdModel):
     class Meta:
