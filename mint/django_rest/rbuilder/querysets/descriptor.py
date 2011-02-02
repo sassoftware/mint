@@ -6,6 +6,7 @@
 #
 
 from django.db import models
+from django.db.models import related
 from xobj import xobj
 
 from mint.django_rest.rbuilder import modellib
@@ -97,7 +98,9 @@ def getFieldOperatorChoices(field):
 
 def getFieldDescriptors(field, prefix=None):
     fds = []
-    if isinstance(field, models.ForeignKey):
+    # Not using get_all_field_names in this function b/c of infinite recursion
+    if isinstance(field, models.ForeignKey) or \
+       isinstance(field, models.ManyToManyField):
         for f in field.rel.to._meta.fields:
             if prefix:
                 _prefix = '%s.%s' % (prefix, field.name)
@@ -105,7 +108,15 @@ def getFieldDescriptors(field, prefix=None):
                 _prefix = field.name
             _fds = getFieldDescriptors(f, _prefix)
             [fds.append(_fd) for _fd in _fds]
-    else:
+    elif isinstance(field, related.RelatedObject):
+        for f in field.model()._meta.fields:
+            if prefix:
+                _prefix = '%s.%s' % (prefix, field.get_accessor_name())
+            else:
+                _prefix = field.get_accessor_name()
+            _fds = getFieldDescriptors(f, _prefix)
+            [fds.append(_fd) for _fd in _fds]
+    else:   
         fd = FieldDescriptor()
         if prefix:
             key = '%s.%s' % (prefix, field.name)
@@ -122,7 +133,9 @@ def getFieldDescriptors(field, prefix=None):
 def getFilterDescriptor(model):
     fd = FilterDescriptor()
     fd.field_descriptors = []
-    for field in model._meta.fields:
+    fieldNames = model._meta.get_all_field_names()
+    for fieldName in fieldNames:
+        field = model._meta.get_field_by_name(fieldName)[0]
         _fds = getFieldDescriptors(field)
         [fd.field_descriptors.append(_fd) for _fd in _fds]
     return fd
