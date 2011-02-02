@@ -20,12 +20,15 @@ class FieldDescriptor(object):
 class FieldDescriptors(object):
     _xobj = xobj.XObjMetadata(tag='field_descriptors')
 
-class FilterDescriptor(object):
+class FilterDescriptor(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='filter_descriptor',
-        elements=['field_descriptors'])
+        elements=['field_descriptors'],
+        attributes={'id':str})
+    view_name = 'QuerySetFilterDescriptor'
 
-    def to_xml(self, request=None, values=None):
-        return xobj.toxml(self)
+    def serialize(self, *args, **kwargs):
+        self.id = self.get_absolute_url(*args, **kwargs)
+        return self
 
 class OperatorChoices(object):
     _xobj = xobj.XObjMetadata(tag='operator_choices')

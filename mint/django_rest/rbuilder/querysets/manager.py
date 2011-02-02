@@ -178,9 +178,9 @@ class QuerySetManager(basemanager.BaseManager):
     def getQuerySetFilterDescriptor(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
         model = modellib.type_map[querySet.resource_type]
-        return descriptor.getFilterDescriptor(model)
-        # Just return the system filter descriptor for now
-        return models.SystemQuerySetDescriptor()
+        filterDescriptor = descriptor.getFilterDescriptor(model)
+        filterDescriptor.pk = querySetId
+        return filterDescriptor
 
     @exposed
     def updateQuerySetChosen(self, querySetId, resources):
