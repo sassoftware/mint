@@ -34,6 +34,9 @@ try:
 except ImportError:
     from cgi import parse_qsl # pyflakes=ignore
 
+if parse_qsl is None:
+    from cgi import parse_qsl
+
 log = logging.getLogger(__name__)
 
 def handleException(request, exception):
