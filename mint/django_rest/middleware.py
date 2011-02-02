@@ -93,8 +93,7 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
         return None
 
     def process_exception(self, request, exception):
-        handleException(request, exception)
-
+        return handleException(request, exception)
 
 class RequestSanitizationMiddleware(BaseMiddleware):
     def _process_request(self, request):
