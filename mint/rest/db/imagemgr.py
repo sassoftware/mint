@@ -394,16 +394,22 @@ class ImageManager(manager.Manager):
             # Convert fields to unicode, we don't want to send xobj strings
             # over the wire
             ifile = rcli.ImageFile(
-                title=unicode(fileItem.fileName),
-                fileName=unicode(fileItem.fileName),
+                title=self._u(fileItem.fileName),
+                fileName=self._u(fileItem.fileName),
                 url=url, destination=destination)
             fileList.append(ifile)
         if not fileList:
             return None
         meta = rcli.ImageMetadata(**dict(image.metadata.getValues()))
-        image = rcli.Image(name=image.name, metadata=meta,
-            architecture=image.architecture, files=fileList)
+        image = rcli.Image(name=self._u(image.name), metadata=meta,
+            architecture=self._u(image.architecture), files=fileList)
         uuid, job = rcli.download_images(image, statusReportURL, putFilesURL)
+
+    @classmethod
+    def _u(cls, obj):
+        if obj is None:
+            return None
+        return unicode(obj)
 
     def stopImageJob(self, imageId):
         raise NotImplementedError
