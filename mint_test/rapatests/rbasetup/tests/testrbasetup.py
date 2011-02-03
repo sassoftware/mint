@@ -173,6 +173,7 @@ class rBASetupTest(raatest.rAATest):
         raaFramework = webPluginTest()
         raaFramework.pseudoroot = raa.web.getWebRoot().rbasetup.rBASetup
         self.rbasetupweb = raa.web.getWebRoot().rbasetup.rBASetup
+        self.rbasetupweb.validateNewEntitlement = lambda *args, **kwargs: {}
         self.root = raaFramework.pseudoroot
         self.rbasetupweb.server = self.rbasetupweb
         _ignored, self.initialConfigurableOptions = rbasetup_lib.getRBAConfiguration()
