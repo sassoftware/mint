@@ -387,24 +387,24 @@ class Platforms(object):
         platform = self.getById(platformId)
         host = platform.label.split('@')[:1][0]
         repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
-        uri = platformLoad.uri.encode('utf-8')
+        loadUri = platformLoad.loadUri.encode('utf-8')
         headers = {}
         fd, outFilePath = tempfile.mkstemp('.ccs', 'platform-load-')
 
         finder = lookaside.FileFinder(None, None, cfg = self.cfg)
-        inFile = finder._fetchUrl(uri, headers)
+        inFile = finder._fetchUrl(loadUri, headers)
 
         if not inFile:
-            raise errors.PlatformLoadFileNotFound(uri)
+            raise errors.PlatformLoadFileNotFound(loadUri)
 
         job = self.jobStore.create()
 
         platLoad = models.PlatformLoad()
         platLoad.jobId = job.id
         platLoad.platformId = platformId
-        platLoad.uri = platformLoad.uri
+        platLoad.loadUri = platformLoad.loadUri
 
-        self.loader(platform, job.id, inFile, outFilePath, uri, repos)
+        self.loader(platform, job.id, inFile, outFilePath, loadUri, repos)
 
         return platLoad
 

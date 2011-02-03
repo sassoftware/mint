@@ -54,7 +54,6 @@ class Pk(object):
     def __init__(self, pk):
         self.pk = pk
 
-
 class Fault(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -82,7 +81,7 @@ class Inventory(modellib.XObjModel):
         self.inventory_systems = modellib.XObjHrefModel('inventory_systems')
         self.infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
 
-class Systems(modellib.XObjModel):
+class Systems(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -90,13 +89,14 @@ class Systems(modellib.XObjModel):
     list_fields = ['system']
     system = []
     objects = modellib.SystemsManager()
+    view_name = 'Systems'
 
     def __init__(self):
-        self.event_types = modellib.XObjHrefModel('../event_types')
+        modellib.Collection.__init__(self)
 
     def save(self):
         return [s.save() for s in self.system]
-    
+
 class SystemStates(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -136,7 +136,7 @@ class SystemsLog(modellib.XObjModel):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='systemsLog')
+                tag='systems_log')
     list_fields = ['system_log_entry']
     system_log_entry = []
 
@@ -175,7 +175,11 @@ class Credentials(modellib.XObjIdModel):
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'credentials',
-                attributes = {'id':str})
+                attributes = {'id':str},
+                elements = [
+                    'ssl_client_certificate',
+                    'ssl_client_key',
+                ])
     objects = modellib.CredentialsManager()
     view_name = 'SystemCredentials'
 
@@ -183,7 +187,7 @@ class Credentials(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -201,7 +205,7 @@ class Configuration(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -219,7 +223,7 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         self._system = system
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         self.id = self.get_absolute_url(request, model=self,
             parents=[self._system])
         return xobj.toxml(self)
@@ -250,7 +254,6 @@ class SystemState(modellib.XObjIdModel):
         db_table = 'inventory_system_state'
         
     _xobj = xobj.XObjMetadata(
-                tag = 'currentState',
                 attributes = {'id':str})
 
     UNMANAGED = "unmanaged"
@@ -401,10 +404,13 @@ class System(modellib.XObjIdModel):
     XSL = "system.xsl"
     class Meta:
         db_table = 'inventory_system'
+
+    view_name = 'System'
+
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
-        'managementnode', 'jobsystem_set', ])
+        'managementnode', 'jobsystem_set', 'systemtag_set'])
     _xobj_hidden_m2m = set()
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
@@ -496,6 +502,7 @@ class System(modellib.XObjIdModel):
         "the descriptor of available fields to set system configuration parameters")
 
     load_fields = [local_uuid]
+    logged_fields = ['name', 'installed_software']
 
     # We need to distinguish between an <installed_software> node not being
     # present at all, and being present and empty
@@ -671,6 +678,7 @@ class ManagementNode(System):
     _xobj = xobj.XObjMetadata(
                 tag = 'management_node',
                 attributes = {'id':str})
+    view_name = 'ManagementNode'
     local = models.NullBooleanField()
     zone = modellib.ForeignKey(Zone, related_name='management_nodes')
     node_jid = models.CharField(max_length=64, null=True)
@@ -1113,6 +1121,9 @@ class Trove(modellib.XObjIdModel):
 
     def getNVF(self):
         return self.name, self.version.conaryVersion, self.getFlavor()
+
+    def __str__(self):
+        return "%s=%s" % (self.name, self.getVersion().asString())
 
     def serialize(self, *args, **kwargs):
         xobj_model = modellib.XObjIdModel.serialize(self, *args, **kwargs)
