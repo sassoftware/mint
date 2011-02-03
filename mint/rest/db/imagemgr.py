@@ -386,8 +386,6 @@ class ImageManager(manager.Manager):
             if not fileItem.urls:
                 continue
             srcurl = fileItem.urls[0].url
-            # XXX we don't parse url correctly
-            srcurl = "http://reinhold.rdu.rpath.com/~misa/ginkgo-1-x86-ovf.tar.gz"
             fileName = os.path.basename(fileItem.fileName)
             uPath = uploadPath + fileName
             url = rcli.makeUrl(srcurl)
