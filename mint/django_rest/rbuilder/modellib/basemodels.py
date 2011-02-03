@@ -204,7 +204,10 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                href = getattr(val, 'href', None) or getattr(val, 'id', None)
+                if hasattr(val, 'id'):
+                    href = getattr(val, 'id', None)
+                elif hasattr(val, 'href'):
+                    href = getattr(val, 'href', None)
                 parentModel = field.related.parent_model
                 if href is not None:
                     val = parentModel.objects.load_from_href(href)
