@@ -391,9 +391,11 @@ class ImageManager(manager.Manager):
             url = rcli.makeUrl(srcurl)
             destination = rcli.URL(scheme="http", host="localhost",
                 path=uPath, unparsedPath=uPath, headers=headers)
+            # Convert fields to unicode, we don't want to send xobj strings
+            # over the wire
             ifile = rcli.ImageFile(
-                title=fileItem.fileName,
-                fileName=fileItem.fileName,
+                title=unicode(fileItem.fileName),
+                fileName=unicode(fileItem.fileName),
                 url=url, destination=destination)
             fileList.append(ifile)
         if not fileList:
