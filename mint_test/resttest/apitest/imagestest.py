@@ -116,11 +116,15 @@ class ImagesTest(restbase.BaseRestTest):
 
 
         from rpath_repeater import client as repclient
+        from rpath_repeater import models
         class MockRepeaterClient(repclient.RepeaterClient):
             calls = []
             def download_images(slf, *args, **kwargs):
                 slf.calls.append((args, kwargs))
                 return 'uuid', 'job'
+            Image = models.Image
+            ImageFile = models.ImageFile
+            ImageMetadata = models.ImageMetadata
 
         def mockGetRepeaterClient():
             return MockRepeaterClient()
