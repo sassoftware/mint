@@ -11,9 +11,14 @@ from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
 class FileUrl(Model):
-    fileId = fields.IntegerField(display=False)
+    fileId = fields.IntegerField(isAttribute=True, display=False)
     urlType = fields.IntegerField(isAttribute=True)
-    url = fields.ImageDownloadField(isText=True)
+    # It is a bit weird that a field is set to be both isAttribute and isText
+    # But this is because xobj only sets the text value of a node if it
+    # contains no child elements (i.e. all fields are attributes).
+    # This won't cause problems on the way out, because we test for isText
+    # before we attempt to write the field as an attribute.
+    url = fields.ImageDownloadField(isAttribute=True, isText=True)
 
     def __repr__(self):
         return "images.FileUrl(fileId=%r, urlType=%r)" % (self.fileId, self.urlType)
