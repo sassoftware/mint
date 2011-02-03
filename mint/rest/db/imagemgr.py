@@ -391,11 +391,17 @@ class ImageManager(manager.Manager):
             url = rcli.makeUrl(srcurl)
             destination = rcli.URL(scheme="http", host="localhost",
                 path=uPath, unparsedPath=uPath, headers=headers)
-            ifile = rcli.ImageFile(url=url, destination=destination)
+            ifile = rcli.ImageFile(
+                title=fileItem.fileName,
+                fileName=fileItem.fileName,
+                url=url, destination=destination)
             fileList.append(ifile)
         if not fileList:
             return None
-        uuid, job = rcli.download_images(fileList, statusReportURL, putFilesURL)
+        meta = rcli.ImageMetadata(**dict(image.metadata.getValues()))
+        image = rcli.Image(name=image.name, metadata=meta,
+            architecture=image.architecture, files=fileList)
+        uuid, job = rcli.download_images(image, statusReportURL, putFilesURL)
 
     def stopImageJob(self, imageId):
         raise NotImplementedError

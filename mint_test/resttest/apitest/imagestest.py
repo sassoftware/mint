@@ -76,8 +76,8 @@ class ImagesTest(restbase.BaseRestTest):
     def testCreateImage(self):
         hostname = "createdproject"
         productVersion = "10"
-        client = self.getRestClient(username='adminuser')
         db = self.openRestDatabase()
+        client = self.getRestClient(username='adminuser', db=db)
 
         # Create the project and the project version
         self.createUser('admin', admin=True)
@@ -87,13 +87,14 @@ class ImagesTest(restbase.BaseRestTest):
 
         imageXml = """\
 <image>
+  <architecture>x86</architecture>
   <name>ginkgo-Raw Filesystem (x86)</name>
   <baseFileName>ginkgo-1-x86_64</baseFileName>
   <troveName>blabbedy</troveName>
   <troveVersion>/local@local:COOK/1.0-1-1</troveVersion>
   <troveFlavor/>
   <version href="%(productVersion)s"/>
-  <stage href="Development"/>
+  <stage><href>Development</href></stage>
   <buildCount>1</buildCount>
   <imageType>vmwareEsxImage</imageType>
   <files>
@@ -105,10 +106,42 @@ class ImagesTest(restbase.BaseRestTest):
       <url urlType="0">http://reinhold.rdu.rpath.com/~misa/ginkgo-1-x86-ovf.tar.gz</url>
     </file>
   </files>
+  <metadata>
+    <billingCode>sdfg</billingCode>
+    <cost>sdfg</cost>
+    <deptCode />
+    <owner>sdfg</owner>
+  </metadata>
 </image>""" % dict(productVersion=productVersion)
+
+
+        from rpath_repeater import client as repclient
+        class MockRepeaterClient(repclient.RepeaterClient):
+            calls = []
+            def download_images(slf, *args, **kwargs):
+                slf.calls.append((args, kwargs))
+                return 'uuid', 'job'
+
+        def mockGetRepeaterClient():
+            return MockRepeaterClient()
+        self.mock(db.imageMgr, "getRepeaterClient", mockGetRepeaterClient)
+
         req, img = client.call('POST', 'products/%s/images' % hostname, imageXml)
         self.failUnlessEqual(img.stage, "Development")
         self.failUnlessEqual(img.version, productVersion)
+
+        self.failUnlessEqual(len(MockRepeaterClient.calls), 1)
+        rcargs, rckwargs = MockRepeaterClient.calls[0]
+        self.failUnlessEqual(rckwargs, {})
+
+        image, statusReportUrl, putFilesUrl = rcargs
+        self.failUnlessEqual(image.architecture, 'x86')
+        self.failUnlessEqual(image.metadata.cost, 'sdfg')
+
+        self.failUnlessEqual(statusReportUrl.path,
+            '/api/products/createdproject/images/4/status')
+        self.failUnlessEqual(putFilesUrl.path,
+            '/api/products/createdproject/images/4/files')
 
     def testGetReleases(self):
         return self._testGetReleases()

@@ -129,6 +129,21 @@ class ImageStatus(Model):
             self.message = jobstatus.statusNames[self.code]
         self.isFinal = self.code in jobstatus.terminalStatuses
 
+class ImageMetadataField(Model):
+    owner = fields.CharField()
+    billingCode = fields.CharField()
+    deptCode = fields.CharField()
+    cost = fields.CharField()
+
+    def getValues(self):
+        vals = ((x, getattr(self, x)) for x in self._elements)
+        vals = [ (x, str(y)) for (x, y) in vals if y ]
+        return vals
+
+    def __repr__(self):
+        vals = self.getValues()
+        return "<images.%s: %s>" % (self.__class__.__name__,
+            ', '.join("%s:%s" % x for x in vals))
 
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
@@ -161,7 +176,8 @@ class Image(Model):
     imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     baseFileName = fields.CharField()
-    
+    metadata = fields.ModelField(ImageMetadataField)
+
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.
     amiId    = fields.CharField()
