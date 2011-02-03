@@ -208,6 +208,8 @@ class BaseManager(models.Manager):
                     href = getattr(val, 'id', None)
                 elif hasattr(val, 'href'):
                     href = getattr(val, 'href', None)
+                else:
+                    href = None
                 parentModel = field.related.parent_model
                 if href is not None:
                     val = parentModel.objects.load_from_href(href)
