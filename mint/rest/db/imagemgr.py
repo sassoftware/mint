@@ -598,7 +598,28 @@ class ImageManager(manager.Manager):
                     fileId, urlId) VALUES ( ?, ? )""",
                     fileId, urlId)
 
+        if files.metadata:
+            self._addImageToRepository(hostname, imageId, files.metadata)
+
         return self.listFilesForImage(hostname, imageId)
+
+    def _addImageToRepository(self, hostname, imageId, metadata):
+        # Fetch file paths
+        cu = self._getImageFiles(imageId)
+        filePaths = [ row[0] for row in cu ]
+        img = self.getImageForProduct(hostname, imageId)
+        productMgr = self.db.productMgr
+        # We need the product's fqdn
+        product = productMgr.getProduct(hostname)
+        fqdn = product.repositoryHostname
+        pd = productMgr.getProductVersionDefinition(fqdn, img.version)
+        buildLabel = pd.getLabelForStage(img.stage)
+
+        troveName = "image-%s" % hostname
+        troveVersion = "1.0"
+        streamMap = dict((x, file(x)) for x in filePaths)
+        productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
+            troveVersion, streamMap, changeLogMessage="Image imported")
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
