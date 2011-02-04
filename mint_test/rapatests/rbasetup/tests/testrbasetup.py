@@ -173,6 +173,8 @@ class rBASetupTest(raatest.rAATest):
         raaFramework = webPluginTest()
         raaFramework.pseudoroot = raa.web.getWebRoot().rbasetup.rBASetup
         self.rbasetupweb = raa.web.getWebRoot().rbasetup.rBASetup
+        self.rbasetupweb.validateNewEntitlement = lambda *args, **kwargs: {}
+        self.rbasetupweb.setNewEntitlement = lambda *args, **kwargs: {'errors':''}
         self.root = raaFramework.pseudoroot
         self.rbasetupweb.server = self.rbasetupweb
         _ignored, self.initialConfigurableOptions = rbasetup_lib.getRBAConfiguration()
@@ -250,7 +252,8 @@ class rBASetupTest(raatest.rAATest):
                              externalPasswordURL="",
                              authCacheTimeout="",
                              configured="0",
-                             allowNamesaceChange="1")
+                             allowNamesaceChange="1",
+                             entitlementKey="testentitlementkey")
 
         oldBackendCall = self.root.callBackend
         try:

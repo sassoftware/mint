@@ -972,8 +972,9 @@ class FixturedUnitTest(testhelp.TestCase):
             pass
 
 class FixturedProductVersionTest(FixturedUnitTest):
+    oldProductDefinition = proddef.ProductDefinition
 
-    class _MockProductDefinition(proddef.ProductDefinition):
+    class _MockProductDefinition(oldProductDefinition):
         _testxmldata = []
         def saveToRepository(self, *args, **kwargs):
             sio = StringIO.StringIO()
@@ -989,7 +990,6 @@ class FixturedProductVersionTest(FixturedUnitTest):
             self.parseStream(sio)
 
     def setUp(self):
-        self.oldProductDefinition = proddef.ProductDefinition
         proddef.ProductDefinition = self._MockProductDefinition
         FixturedUnitTest.setUp(self)
         del self._MockProductDefinition._testxmldata[:]

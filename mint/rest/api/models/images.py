@@ -42,6 +42,22 @@ class ImageFile(Model):
     def __repr__(self):
         return "images.ImageId(fileId=%r, size=%r)" % (self.fileId, self.size)
 
+class ImageMetadata(Model):
+    owner = fields.CharField()
+    billingCode = fields.CharField()
+    deptCode = fields.CharField()
+    cost = fields.CharField()
+
+    def getValues(self):
+        vals = ((x, getattr(self, x)) for x in self._elements)
+        vals = [ (x, str(y)) for (x, y) in vals if y ]
+        return vals
+
+    def __repr__(self):
+        vals = self.getValues()
+        return "<images.%s: %s>" % (self.__class__.__name__,
+            ', '.join("%s:%s" % x for x in vals))
+
 class ImageFileList(Model):
     class Meta(object):
         name = 'files'
@@ -50,6 +66,7 @@ class ImageFileList(Model):
     hostname = fields.CharField(display=False)
     imageId = fields.IntegerField(display=False)
     files = fields.ListField(ImageFile, displayName='file')
+    metadata = fields.ModelField(ImageMetadata)
 
     def get_absolute_url(self):
         return ('products.images.files', self.hostname, str(self.imageId))
@@ -129,7 +146,6 @@ class ImageStatus(Model):
             self.message = jobstatus.statusNames[self.code]
         self.isFinal = self.code in jobstatus.terminalStatuses
 
-
 class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
@@ -161,7 +177,8 @@ class Image(Model):
     imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     baseFileName = fields.CharField()
-    
+    metadata = fields.ModelField(ImageMetadata)
+
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.
     amiId    = fields.CharField()

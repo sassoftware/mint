@@ -1162,6 +1162,14 @@ class ProductVersionBuildTest(fixtures.FixturedProductVersionTest):
                                    '/conary.rpath.com@rpl:devel/0.0:1.0-1-3'}),
                               stages=['Custom'],
                               imageGroup='group-dist')
+        # Kind of unfortunate we have no easy way to programatically set the
+        # platform information
+        pclas = pd.xmlFactory().platformClassifierTypeSub(
+            name="rpl", version="2", tags="linux")
+        pinfo = pd.xmlFactory().platformInformationTypeSub(
+            platformClassifier=pclas,
+            originLabel="conary.rpath.com@rpl:2")
+        pd._rootObj.set_platformInformation(pinfo)
 
         # mocked out call to save to memory
         pd.saveToRepository()
