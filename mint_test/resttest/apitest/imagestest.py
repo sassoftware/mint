@@ -392,10 +392,8 @@ class ImagesTest(restbase.BaseRestTest):
             admin=True)
         repos = cli.getRepos()
         from conary import versions
-        from conary.deps import deps
         label = versions.Label('%s@yournamespace:testproject-1.0-devel' %
             fqdn)
-        flavor = deps.parseFlavor("")
         trvTup = repos.findTrove(label, ("image-testproject:source", None, None))[0]
         self.failUnlessEqual(str(trvTup[1]),
             '/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1.0-1')
