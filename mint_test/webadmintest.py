@@ -538,6 +538,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert('An account with that username already exists.' in page.body)
 
     def testReports(self):
+        try:
+            import reportlab
+        except ImportError:
+            raise testsuite.SkipTestException("reportlab not installed")
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
