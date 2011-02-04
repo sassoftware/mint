@@ -540,6 +540,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testReports(self):
         try:
             import reportlab
+            del reportlab
         except ImportError:
             raise testsuite.SkipTestException("reportlab not installed")
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
