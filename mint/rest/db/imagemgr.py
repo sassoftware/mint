@@ -620,6 +620,7 @@ class ImageManager(manager.Manager):
         streamMap = dict((x, file(x)) for x in filePaths)
         productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
             troveVersion, streamMap, changeLogMessage="Image imported")
+        log.info("Adding image as %s:source=%s" % (troveName, buildLabel))
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
