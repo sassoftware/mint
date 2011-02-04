@@ -760,7 +760,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         if useProxy:
             self.cfg.configKey('conaryProxy',
                                'http http://localhost:%s' % server.port)
-        cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
+        try:
+            cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
+        except:
+            print "Failure connecting to localhost:%s" % (server.port, )
+            raise
         auth = cli.checkAuth()
         assert(auth.authorized)
         return cli
