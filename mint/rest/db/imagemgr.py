@@ -615,11 +615,13 @@ class ImageManager(manager.Manager):
         pd = productMgr.getProductVersionDefinition(fqdn, img.version)
         buildLabel = pd.getLabelForStage(img.stage)
 
+        factoryName = "rbuilder-image"
         troveName = "image-%s" % hostname
         troveVersion = "1.0"
-        streamMap = dict((x, file(x)) for x in filePaths)
+        streamMap = dict((os.path.basename(x), file(x)) for x in filePaths)
         productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
-            troveVersion, streamMap, changeLogMessage="Image imported")
+            troveVersion, streamMap, changeLogMessage="Image imported",
+            factoryName=factoryName)
         log.info("Adding image as %s:source=%s" % (troveName, buildLabel))
 
     def getAllImagesByType(self, imageType):

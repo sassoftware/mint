@@ -314,7 +314,8 @@ class RepositoryManager(manager.Manager):
         return userMap, entMap
 
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
-                          upstreamVersion, streamMap, changeLogMessage):
+                          upstreamVersion, streamMap, changeLogMessage,
+                          factoryName=None):
         # Get repository + client
         client = self.getUserClient()
 
@@ -340,7 +341,8 @@ class RepositoryManager(manager.Manager):
 
         # create a change set object from our source data
         changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
-                str(upstreamVersion), pathDict, newchangelog)
+                str(upstreamVersion), pathDict, newchangelog,
+                factory=factoryName)
 
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
