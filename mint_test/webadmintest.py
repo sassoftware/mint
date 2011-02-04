@@ -551,7 +551,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # make sure we get a real pdf
         page = page.postForm(1, self.post, {'reportName': 'site_summary'})
-        assert(page.body.startswith('%PDF-1.3'))
+        assert(page.body.startswith('%PDF-1'))
 
     def testSelections(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
