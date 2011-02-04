@@ -53,6 +53,8 @@ class SiteTest(restbase.BaseRestTest):
   <registration href="http://%(server)s:%(port)s/api/registration"/>
   <reports href="http://%(server)s:%(port)s/api/reports/"/>
   <inventory href="http://%(server)s:%(port)s/api/inventory/"/>
+  <query_sets href="http://localhost:8000/api/query_sets/"/>
+  <packages href="http://localhost:8000/api/packages/"/>
   <moduleHooks href="http://%(server)s:%(port)s/api/moduleHooks/"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
