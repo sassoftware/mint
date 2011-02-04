@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import logging
 import os
 import shutil
 import pwd
@@ -647,8 +648,16 @@ class MintDatabaseHelper(rephelp.RepositoryHelper, RestDBMixIn):
         RestDBMixIn.setUp(self)
 
     def tearDown(self):
+        self.tearDownLogging()
         RestDBMixIn.tearDown(self)
         rephelp.RepositoryHelper.tearDown(self)
+
+    @classmethod
+    def tearDownLogging(cls):
+        raiseExceptions = logging.raiseExceptions
+        logging.raiseExceptions = 0
+        logging.shutdown()
+        logging.raiseExceptions = raiseExceptions
 
     def loadRestFixture(self, name, fn=None):
         import fixtures
