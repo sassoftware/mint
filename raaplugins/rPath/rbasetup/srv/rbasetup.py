@@ -109,11 +109,12 @@ class rBASetup(rAASrvPlugin):
             os.close(rdfd2)
             logWriter = os.fdopen(wrfd, 'w')
             errorWriter = os.fdopen(wrfd2, 'w')
+            loggingHandler = logging.StreamHandler(logWriter)
             try:
                 try:
                     # Reset logging in the child
                     childLog = logging.getLogger('setupRMake')
-                    childLog.addHandler(logging.StreamHandler(logWriter))
+                    childLog.addHandler(loggingHandler)
                     childLog.setLevel(logging.DEBUG)
 
                     # Drop privs in the child to apache so as to not create
@@ -135,12 +136,12 @@ class rBASetup(rAASrvPlugin):
                     try:
                         pickle.dump(sys.exc_info()[:2], errorWriter)
                     except Exception, e:
-                        log.error('Pickle failed: %s', str(e))
+                        childLog.error('Pickle failed: %s', str(e))
                         pass
                     childLog.error(traceback.format_exc())
                     rc = -2
             finally:
-                logWriter.close()
+                loggingHandler.close()
                 errorWriter.close()
                 os._exit(rc)
         else: # parent
