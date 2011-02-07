@@ -318,7 +318,7 @@ class RepositoryManager(manager.Manager):
                           factoryName=None, admin=False):
         # Get repository + client
         if admin:
-            client = self.getAdminClient()
+            client = self.getAdminClient(write=True)
         else:
             client = self.getUserClient()
 
