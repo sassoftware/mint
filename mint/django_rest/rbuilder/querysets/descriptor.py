@@ -66,7 +66,7 @@ def allOperatorChoices():
     operatorChoices = OperatorChoices()
     operatorChoices.choices = []
     operators = [o for o in modellib.operatorMap
-        if o not in ('IS_NULL',)]
+        if o not in ('IS_NULL', None)]
     for operator in operators:
         operatorChoices.choices.append(OperatorChoice(operator, operator))
     return operatorChoices
@@ -76,7 +76,7 @@ def strOperatorChoices():
     operatorChoices.choices = []
     operators = [o for o in modellib.operatorMap
         if o not in ('LESS_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN',
-            'GREATER_THAN_OR_EQUAL', 'IS_NULL')]
+            'GREATER_THAN_OR_EQUAL', 'IS_NULL', None)]
     for operator in operators:
         operatorChoices.choices.append(OperatorChoice(operator, operator))
     return operatorChoices
@@ -92,7 +92,7 @@ def getFieldOperatorChoices(field):
     if isinstance(field, models.IntegerField):
         operatorChoices = allOperatorChoices()
     if isinstance(field, models.BooleanField):
-        operatorChoices = allOperatorChoices()
+        operatorChoices = boolOperatorChoices()
 
     # Default to str
     operatorChoices = strOperatorChoices()
