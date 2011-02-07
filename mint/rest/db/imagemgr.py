@@ -628,7 +628,7 @@ class ImageManager(manager.Manager):
             self._setStatus(imageId, message="Commit failed: %s" % (e, ))
             log.error("Error: %s", e)
         else:
-            message = "Image committed as %s:source=%s" % (troveName, buildLabel))
+            message = "Image committed as %s:source=%s" % (troveName, buildLabel)
             self._setStatus(imageId, message=message)
             log.info(message)
 
