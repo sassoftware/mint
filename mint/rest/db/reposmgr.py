@@ -315,9 +315,12 @@ class RepositoryManager(manager.Manager):
 
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage,
-                          factoryName=None):
+                          factoryName=None, admin=False):
         # Get repository + client
-        client = self.getUserClient()
+        if admin:
+            client = self.getAdminClient()
+        else:
+            client = self.getUserClient()
 
         # Sanitize input
         if ':' not in trovename:

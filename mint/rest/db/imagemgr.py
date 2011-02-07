@@ -622,7 +622,7 @@ class ImageManager(manager.Manager):
         try:
             productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
                 troveVersion, streamMap, changeLogMessage="Image imported",
-                factoryName=factoryName)
+                factoryName=factoryName, admin=True)
         except Exception, e:
             log.error("Error: %s", e)
         log.info("Adding image as %s:source=%s" % (troveName, buildLabel))
