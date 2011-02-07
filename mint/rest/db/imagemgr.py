@@ -620,15 +620,17 @@ class ImageManager(manager.Manager):
         troveVersion = "1.0"
         streamMap = dict((os.path.basename(x), file(x)) for x in filePaths)
         try:
-            self._setStatus(imageId, "Committing image to repository")
+            self._setStatus(imageId, message="Committing image to repository")
             productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
                 troveVersion, streamMap, changeLogMessage="Image imported",
                 factoryName=factoryName, admin=True)
         except Exception, e:
-            self._setStatus(imageId, "Committing image to repository")
+            self._setStatus(imageId, message="Commit failed: %s" % (e, ))
             log.error("Error: %s", e)
         else:
-            log.info("Added image as %s:source=%s" % (troveName, buildLabel))
+            message = "Image committed as %s:source=%s" % (troveName, buildLabel))
+            self._setStatus(imageId, message=message)
+            log.info(message)
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
