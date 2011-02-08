@@ -603,7 +603,17 @@ class ImageManager(manager.Manager):
 
         return self.listFilesForImage(hostname, imageId)
 
+    @classmethod
+    def getMetadataDict(cls, metadata):
+        if metadata is None:
+            return None
+        metadataValues = ((x, getattr(metadata, x, None)) for x in metadata._fields)
+        metadataDict = dict((x, str(y)) for (x, y) in metadataValues
+            if y is not None)
+        return metadataDict
+
     def _addImageToRepository(self, hostname, imageId, metadata):
+        metadataDict = self.getMetadataDict(metadata)
         # Fetch file paths
         cu = self._getImageFiles(imageId)
         filePaths = [ row[0] for row in cu ]
@@ -617,16 +627,20 @@ class ImageManager(manager.Manager):
 
         factoryName = "rbuilder-image"
         troveName = "image-%s" % hostname
-        troveVersion = "1.0"
-        streamMap = dict((os.path.basename(x), file(x)) for x in filePaths)
+        troveVersion = img.version
+        RegularFile = productMgr.reposMgr.RegularFile
+        streamMap = dict((os.path.basename(x),
+            RegularFile(contents=file(x), config=False)) for x in filePaths)
         try:
             self._setStatus(imageId, message="Committing image to repository")
             productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
                 troveVersion, streamMap, changeLogMessage="Image imported",
-                factoryName=factoryName, admin=True)
+                factoryName=factoryName, admin=True,
+                metadata=metadataDict)
         except Exception, e:
             self._setStatus(imageId, message="Commit failed: %s" % (e, ))
             log.error("Error: %s", e)
+            raise
         else:
             message = "Image committed as %s:source=%s" % (troveName, buildLabel)
             self._setStatus(imageId, message=message)

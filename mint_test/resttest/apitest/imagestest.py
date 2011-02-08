@@ -397,6 +397,9 @@ class ImagesTest(restbase.BaseRestTest):
         trvTup = repos.findTrove(label, ("image-testproject:source", None, None))[0]
         self.failUnlessEqual(str(trvTup[1]),
             '/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1.0-1')
+        trv = repos.getTrove(*trvTup)
+        self.failUnlessEqual(dict(trv.troveInfo.metadata.flatten()[0].keyValue),
+            dict(owner="JeanValjean"))
 
     class MockKey(object):
         class MockPolicy(object):

@@ -313,9 +313,11 @@ class RepositoryManager(manager.Manager):
                 entMap.append((host, entitlement))
         return userMap, entMap
 
+    RegularFile = filetypes.RegularFile
+
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage,
-                          factoryName=None, admin=False):
+                          factoryName=None, admin=False, metadata=None):
         # Get repository + client
         if admin:
             client = self.getAdminClient(write=True)
@@ -334,18 +336,23 @@ class RepositoryManager(manager.Manager):
         for filename, filestream in streamMap.iteritems():
             if isinstance(filestream, str):
                 filestream = StringIO(filestream)
-            pathDict[filename] = filetypes.RegularFile(contents=filestream,
-                                                       config=True)
+            if hasattr(filestream, 'getContents'):
+                fileobj = filestream
+            else:
+                fileobj = self.RegularFile(contents=filestream,
+                                           config=True)
+
+            pathDict[filename] = fileobj
 
         # create the changelog message using the currently
         # logged-on user's username and fullname, if available
-        newchangelog = changelog.ChangeLog(self.auth.username,
-                self.auth.fullName or '', changeLogMessage.encode('utf8'))
+        newchangelog = changelog.ChangeLog(self.auth.username or '(unset)',
+                self.auth.fullName or '(unset)', changeLogMessage.encode('utf8'))
 
         # create a change set object from our source data
         changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
                 str(upstreamVersion), pathDict, newchangelog,
-                factory=factoryName)
+                factory=factoryName, metadata=metadata)
 
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
