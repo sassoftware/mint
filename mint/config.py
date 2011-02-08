@@ -1,20 +1,20 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import os
 import sys
+import urllib
 
 from mint import buildtypes
 from mint import urltypes
 from mint import mint_error
 
-from conary.conarycfg import ConfigFile, CfgProxy
+from conary import conarycfg
 from conary.dbstore import CfgDriver
 from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
         CfgList, CfgPath, CfgString, CfgEnvironmentError)
+from conary.lib.http import proxy_map
 
 
 RBUILDER_DATA = os.getenv('RBUILDER_DATA', '/srv/rbuilder/')
@@ -88,7 +88,7 @@ class CfgBuildEnum(CfgEnum):
         return CfgEnum.parseString(self, val)
 
 
-class MintConfig(ConfigFile):
+class MintConfig(conarycfg.ConfigFile):
     configured              = (CfgBool, False)
     dataPath                = (CfgPath, '/srv/rbuilder/')
     rBuilderOnline          = (CfgBool, False)
@@ -198,7 +198,7 @@ class MintConfig(ConfigFile):
             "The label that contains the group-appliance-platform superclass")
 
     # Upstream resources
-    proxy                   = CfgProxy
+    proxy                   = conarycfg.CfgProxy
     VAMUser                 = (CfgString, '')
     VAMPassword             = (CfgString, '')
 
@@ -315,13 +315,13 @@ class MintConfig(ConfigFile):
 
 
     def read(self, path, exception = False):
-        ConfigFile.read(self, path, exception)
+        conarycfg.ConfigFile.read(self, path, exception)
 
         self.postCfg()
 
     def __setstate__(self, state):
         # Needed to reset calculated fields after copy or unpickle
-        ConfigFile.__setstate__(self, state)
+        conarycfg.ConfigFile.__setstate__(self, state)
         self.postCfg()
 
     def postCfg(self):
@@ -357,6 +357,13 @@ class MintConfig(ConfigFile):
 
         return {'http': 'http://localhost',
                 'https': 'https://localhost'}
+
+    def getProxyMap(self):
+        # Similar to conarycfg.getProxyMap, but only supports the 'proxy'
+        # option.
+        proxyDict = urllib.getproxies()
+        proxyDict.update(self.proxy)
+        return proxy_map.ProxyMap.fromDict(proxyDict)
 
     def writeGeneratedConfig(self, path=RBUILDER_GENERATED_CONFIG, fObj=None):
         """
