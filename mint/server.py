@@ -55,7 +55,7 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
-from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.helperfuncs import getUrlHost
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 
@@ -66,13 +66,12 @@ from conary import versions
 from conary.conaryclient import filetypes
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
-from conary.lib.cfgtypes import CfgEnvironmentError
+from conary.lib import http_error
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound, RoleNotFound
+from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
 from conary import errors as conary_errors
 
@@ -723,24 +722,6 @@ class MintServer(object):
         from mint.lib import proxiedtransport
         mirrorUser = ''
         try:
-            # Make sure that we deal with any HTTP proxies
-            proxy_host = self.cfg.proxy.get('https') or \
-                         self.cfg.proxy.get('http')
-
-            if proxy_host and proxy_host.startswith('https'):
-                proxy_proto_https = True
-            else:
-                proxy_proto_https = False 
-
-            # Set up a transport object to override the default if we're using
-            # a proxy.
-            if proxy_host:
-                conaryTransport = proxiedtransport.ProxiedTransport(
-                                    https=proxy_proto_https,
-                                    proxies=self.cfg.proxy)
-            else:
-                conaryTransport = None
-
             # Connect to the rUS via XML-RPC
             urlhostname = hostname
             if ':' not in urlhostname:
@@ -752,7 +733,10 @@ class MintServer(object):
                 protocol = 'http'
             url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
                     (protocol, adminUser, adminPassword, urlhostname)
-            sp = xmlrpclib.ServerProxy(url, transport=conaryTransport)
+            transport = proxiedtransport.ProxiedTransport(
+                    https=(protocol == 'https'),
+                    proxyMap=self.cfg.getProxyMap())
+            sp = util.ServerProxy(url, transport=transport)
 
             mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
                     (self.cfg.hostName, self.cfg.siteDomainName), hostname)
@@ -769,12 +753,12 @@ class MintServer(object):
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
 
             self._configureSputnik(sp, urlhostname)
-        except xmlrpclib.ProtocolError, e:
+        except http_error.ResponseError, e:
             if e.errcode == 403:
                 raise mint_error.UpdateServiceAuthError(urlhostname)
             else:
                 raise mint_error.UpdateServiceConnectionFailed(urlhostname,
-                        "%d %s" % (e.errcode, e.errmsg))
+                        "%d %s" % (e.errcode, e.reason))
         except socket.error, e:
             raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
                                                            str(e[1]))
