@@ -66,9 +66,9 @@ from conary import versions
 from conary.conaryclient import filetypes
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
-from conary.lib import http_error
 from conary.lib import sha1helper
 from conary.lib import util
+from conary.lib.http import http_error
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
