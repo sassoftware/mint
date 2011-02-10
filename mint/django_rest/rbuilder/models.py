@@ -13,6 +13,13 @@ from mint.django_rest.rbuilder import modellib
 
 XObjHidden = modellib.XObjHidden
 
+class Fault(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    code = models.IntegerField(null=True)
+    message = models.CharField(max_length=8092, null=True)
+    traceback = models.TextField(null=True)
+
 class DatabaseVersion(modellib.XObjModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS

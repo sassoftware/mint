@@ -16,6 +16,9 @@ from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
 
+handler404 = 'mint.django_rest.handler.handler404'
+handler500 = 'mint.django_rest.handler.handler500'
+
 urlpatterns = patterns('',
     # Reporting urls
     url(r'^api/reports/(.*?)/descriptor/?$',

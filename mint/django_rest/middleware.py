@@ -19,10 +19,9 @@ from django.contrib.redirects import middleware as redirectsmiddleware
 from django.http import HttpResponseBadRequest, HttpResponse
 
 from mint import config
-from mint import logerror
-from mint import mint_error
+from mint.django_rest import handler
 from mint.django_rest.rbuilder import auth
-from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder import models
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils
 
@@ -37,50 +36,19 @@ except ImportError:
 if parse_qsl is None:
     from cgi import parse_qsl
 
-log = logging.getLogger(__name__)
-
-def handleException(request, exception):
-    ei = sys.exc_info()
-    tb = ''.join(traceback.format_tb(ei[2]))
-    msg = str(ei[1])
-    logError(request, ei[0], ei[1], ei[2])
-
-    code = getattr(ei[1], 'status', 500)
-    fault = models.Fault(code=code, message=msg, traceback=tb)
-    response = HttpResponse(status=code, content_type='text/xml')
-    response.content = fault.to_xml(request)
-
-    return response
-
-def logError(request, e_type, e_value, e_tb, doEmail=True):
-    info = {
-            'path'              : request.path,
-            'method'            : request.method,
-            'headers_in'        : request.META,
-            'request_params'    : request.GET,
-            'is_secure'         : request.is_secure,
-            }
-    if request.raw_post_data:
-        info.update(raw_post_data = request.raw_post_data)
-    try:
-        logerror.logErrorAndEmail(request.cfg, e_type, e_value,
-                e_tb, 'API call (django handler)', info, doEmail=doEmail)
-    except mint_error.MailError, err:
-        log.error("Error sending mail: %s", str(err))
-
 class BaseMiddleware(object):
 
     def process_request(self, request):
         try:
             return self._process_request(request)
         except Exception, e:
-            return handleException(request, e)
+            return handler.handleException(request, e)
 
     def process_response(self, request, response):
         try:
             return self._process_response(request, response)
         except Exception, e:
-            return handleException(request, e)
+            return handler.handleException(request, e)
 
     def _process_request(self, request):
         return None
@@ -96,7 +64,7 @@ class ExceptionLoggerMiddleware(BaseMiddleware):
         return None
 
     def process_exception(self, request, exception):
-        return handleException(request, exception)
+        return handler.handleException(request, exception)
 
 class RequestSanitizationMiddleware(BaseMiddleware):
     def _process_request(self, request):

@@ -54,13 +54,6 @@ class Pk(object):
     def __init__(self, pk):
         self.pk = pk
 
-class Fault(modellib.XObjModel):
-    class Meta:
-        abstract = True
-    code = models.IntegerField(null=True)
-    message = models.CharField(max_length=8092, null=True)
-    traceback = models.TextField(null=True)
-
 class Inventory(modellib.XObjModel):
     class Meta:
         abstract = True
