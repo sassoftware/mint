@@ -58,6 +58,9 @@ class ImageMetadata(Model):
         return "<images.%s: %s>" % (self.__class__.__name__,
             ', '.join("%s:%s" % x for x in vals))
 
+    def __nonzero__(self):
+        return bool(self.getValues())
+
 class ImageFileList(Model):
     class Meta(object):
         name = 'files'
