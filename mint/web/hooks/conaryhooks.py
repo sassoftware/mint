@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 from mod_python import apache
@@ -9,7 +7,6 @@ from mod_python import apache
 import logging
 import os
 import time
-import traceback
 import urllib
 import base64
 
@@ -20,7 +17,6 @@ from mint import maintenance
 from mint.db import database as mdb
 from mint.db.projects import transTables
 from mint.rest.db import database as rdb
-from mint.rest.errors import ProductNotFound
 from mint.web import app
 from mint.web import cresthandler
 from mint.web.webhandler import normPath
@@ -29,7 +25,6 @@ from conary import errors as cerrors
 from conary.web import webauth
 from conary import dbstore, conarycfg
 from conary.dbstore import sqlerrors
-from conary.lib import util
 from conary.repository import shimclient, transport
 from conary.repository.netrepos import proxy
 from conary.repository.netrepos import netserver
@@ -215,25 +210,6 @@ def _addCapsuleConfig(context, conaryReposCfg, repName):
     return restDb
 
 
-class RestRequestError(Exception):
-    def __init__(self, code, msg):
-        self.code = code
-        self.msg = msg
-        Exception.__init__(self, code, msg)
-
-
-class RestProxyOpener(transport.URLOpener):
-    def http_error_default(self, url, fp, errcode, errmsg, headers, data=None):
-        raise RestRequestError(errcode, errmsg)
-
-    # override all error handling
-    http_error_301 = http_error_default
-    http_error_302 = http_error_default
-    http_error_303 = http_error_default
-    http_error_307 = http_error_default
-    http_error_401 = http_error_default
-
-
 def proxyExternalRestRequest(context, fqdn, proxyServer):
     cfg, req = context.cfg, context.req
     # FIXME: this only works with entitlements, not user:password
@@ -263,20 +239,23 @@ def proxyExternalRestRequest(context, fqdn, proxyServer):
                                 base64.b64encode(entitlement[1])))
     entitlement = ' '.join(l)
 
-    opener = RestProxyOpener(proxies=proxyServer.cfg.proxy)
-    opener.addheader('X-Conary-Entitlement', entitlement)
-    opener.addheader('X-Conary-Servername', fqdn)
-    opener.addheader('User-agent', transport.Transport.user_agent)
+    opener = transport.URLOpener(proxyMap=context.cfg.getProxyMap())
+    headers = [
+            ('X-Conary-Entitlement', entitlement),
+            ('X-Conary-Servername', fqdn),
+            ('User-agent', transport.Transport.user_agent),
+            ]
 
     # make the request
     try:
-        f = opener.open(url)
-    except RestRequestError, e:
-        if e.code != apache.HTTP_FORBIDDEN:
+        f = opener.open(url, headers=headers)
+    except Exception, err:
+        if getattr(err, 'errcode', None) == 403:
+            return 403  # Forbidden
+        else:
             # translate all errors to a 502
-            log.error("Cannot proxy REST request to %s: %s", urlBase, e)
-            return apache.HTTP_BAD_GATEWAY
-        return e.code
+            log.error("Cannot proxy REST request to %s: %s", urlBase, err)
+            return 502  # Bad Gateway
 
     # form up the base URL to this repository on rBuilder
     if req.subprocess_env.get('HTTPS', '') == 'on':
