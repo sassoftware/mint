@@ -147,7 +147,7 @@ class ContentSourceTypes(object):
 
     def _getSourceTypeInstance(self, source):
         sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
-        sourceInst = sourceClass(proxies = self.db.cfg.proxy)
+        sourceInst = sourceClass(proxyMap=self.db.cfg.getProxyMap())
         for field in sourceInst.getFieldNames():
             if hasattr(source, field):
                 val = str(getattr(source, field))
@@ -157,7 +157,7 @@ class ContentSourceTypes(object):
 
     def _getSourceTypeInstanceByName(self, sourceType):
         sourceClass = contentsources.contentSourceTypes[sourceType]
-        return sourceClass(proxies = self.db.cfg.proxy)
+        return sourceClass(proxyMap=self.db.cfg.getProxyMap())
 
     def getDescriptor(self, sourceType):
         sourceTypeInst = self._getSourceTypeInstanceByName(sourceType)
