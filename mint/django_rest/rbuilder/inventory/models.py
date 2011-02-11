@@ -1212,7 +1212,6 @@ class SystemJob(modellib.XObjModel):
 
 class JobSystem(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = 'job_system'
     job = models.ForeignKey(rbuildermodels.Jobs, null=False)
     # Django will insist on removing entries from this table when removing a

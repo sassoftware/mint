@@ -22,7 +22,6 @@ class Fault(modellib.XObjModel):
 
 class DatabaseVersion(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'databaseversion'
     version = models.SmallIntegerField(null=True)
     minor = models.SmallIntegerField(null=True)
@@ -32,7 +31,6 @@ class UserGroups(modellib.XObjModel):
     usergroup = models.CharField(unique=True, max_length=128)
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroups'
         
     def __unicode__(self):
@@ -54,7 +52,6 @@ class Users(modellib.XObjModel):
     groups = models.ManyToManyField(UserGroups, through="UserGroupMembers", related_name='groups')
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
         
     def __unicode__(self):
@@ -65,7 +62,6 @@ class UserGroupMembers(modellib.XObjModel):
     userid = models.ForeignKey(Users, db_column='userid', related_name='usermember')
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroupmembers'
     
 class Products(modellib.XObjModel):
@@ -90,7 +86,6 @@ class Products(modellib.XObjModel):
     view_name = 'Projects'
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'projects'
         
     def __unicode__(self):
@@ -109,7 +104,6 @@ class Members(modellib.XObjModel):
     userid = models.ForeignKey(Users, db_column='userid', related_name='user')
     level = models.SmallIntegerField()
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'projectusers'
         
 class Pk(object):
@@ -125,7 +119,6 @@ class Versions(modellib.XObjIdModel):
     description = models.TextField()
     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'productversions'
     view_name = 'MajorVersions'
 
@@ -157,7 +150,6 @@ class Releases(modellib.XObjModel):
     shouldmirror = models.SmallIntegerField()
     timemirrored = models.DecimalField(max_digits=14, decimal_places=3)
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'publishedreleases'
      
     def __unicode__(self):
@@ -185,7 +177,6 @@ class Images(modellib.XObjModel):
     status = models.IntegerField()
     statusmessage = models.TextField()
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'builds'
         
     def __unicode__(self):
@@ -197,7 +188,6 @@ class Downloads(modellib.XObjModel):
     ip = models.CharField(max_length=64)
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'urldownloads'
 
 class Sessions(modellib.XObjModel):
@@ -206,7 +196,6 @@ class Sessions(modellib.XObjModel):
     data = models.TextField()
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'sessions'
 
 class Targets(modellib.XObjModel):
@@ -214,7 +203,6 @@ class Targets(modellib.XObjModel):
     targettype = models.CharField(max_length=255)
     targetname = models.CharField(unique=True, max_length=255)
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targets'
 
     def get_absolute_url(self, request=None, parents=None, values=None):
@@ -232,7 +220,6 @@ class Targets(modellib.XObjModel):
 
 class TargetData(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetdata'
     targetid = models.ForeignKey(Targets, db_column="targetid")
     name = models.CharField(max_length=255, null=False)
@@ -241,7 +228,6 @@ class TargetData(modellib.XObjModel):
 
 class TargetCredentials(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetcredentials'
     targetcredentialsid = models.AutoField(primary_key=True,
         db_column="targetcredentialsid")
@@ -253,7 +239,6 @@ class TargetUserCredentials(modellib.XObjModel):
     targetcredentialsid = models.ForeignKey(TargetCredentials,
         db_column="targetcredentialsid")
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetusercredentials'
 
 class TargetImagesDeployed(modellib.XObjModel):
@@ -261,12 +246,10 @@ class TargetImagesDeployed(modellib.XObjModel):
     fileid = models.IntegerField(null=False)
     targetimageid = models.CharField(max_length=128)
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetimagesdeployed'
 
 class PkiCertificates(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = 'pki_certificates'
         unique_together = [ ('fingerprint', 'ca_serial_index') ]
     fingerprint = models.TextField(primary_key=True)
@@ -282,7 +265,6 @@ class PkiCertificates(modellib.XObjModel):
 
 class Jobs(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = 'jobs'
     job_id = models.AutoField(primary_key=True)
     job_uuid = models.TextField(max_length=64, null=False)

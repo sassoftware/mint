@@ -28,7 +28,6 @@ class Package(modellib.XObjIdModel):
                 tag='package')
 
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = "packageindex"
 
     package_id = models.AutoField(primary_key=True, db_column='pkgid')
