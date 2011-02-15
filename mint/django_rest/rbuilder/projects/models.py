@@ -6,6 +6,7 @@
 
 from django.db import models
 
+from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
 
@@ -57,8 +58,13 @@ class Project(modellib.XObjIdModel):
     def __unicode__(self):
         return self.hostname
         
-    def _attributes(self):
-        return ({"id": self.hostname})
+    def serialize(self, request):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        member = self.members.filter(userid=request._authUser)
+        if member:
+            role = userlevels[role.level]
+            xobjModel.role = role
+        return xobjModel
 
 class Members(modellib.XObjModel):
     productId = models.ForeignKey(Project, db_column='projectid',
