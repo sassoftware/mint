@@ -12,10 +12,14 @@ from mint.rest.modellib import Field
 
 class IntegerField(Field):
     def _valueFromString(self, value):
+        if value is None or value == '':
+            return None
         return int(value)
 
 class FloatField(Field):
     def _valueFromString(self, value):
+        if value is None or value == '':
+            return None
         return float(value)
 
 class CharField(Field):

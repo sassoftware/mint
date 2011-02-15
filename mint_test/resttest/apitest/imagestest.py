@@ -94,6 +94,7 @@ class ImagesTest(restbase.BaseRestTest):
   <version href="%(productVersion)s"/>
   <stage><href>Development</href></stage>
   <imageType>vmwareEsxImage</imageType>
+  <buildCount /> <!-- explicitly set it to empty string -->
   <files>
     <file>
       <title>My super-duper file</title>
