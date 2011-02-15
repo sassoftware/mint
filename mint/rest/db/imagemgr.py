@@ -312,6 +312,8 @@ class ImageManager(manager.Manager):
     def createImage(self, fqdn, image, buildData):
         buildType = image.imageType
         buildName = image.name
+        if image.troveFlavor is None and image.architecture:
+            image.troveFlavor = deps.parseFlavor("is: %s" % image.architecture)
         troveTuple = image.getNameVersionFlavor()
 
         # Look up the build type by name too - and fall back to what the user

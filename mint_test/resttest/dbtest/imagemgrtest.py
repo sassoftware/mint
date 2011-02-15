@@ -118,12 +118,12 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                                   name='Image1')
+                                   troveFlavor="is: x86", name='Image1')
         self.setImageFiles(db, 'foo', imageId)
 
         self.createProduct('bar', owners=['admin'], db=db)
         imageId = self.createImage(db, 'bar', buildtypes.INSTALLABLE_ISO,
-                                   name='Image1')
+                                   troveFlavor="is: x86_64", name='Image1')
         self.setImageFiles(db, 'bar', imageId)
 
         # Add a target
@@ -143,6 +143,9 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
 
         images = db.imageMgr.getAllImagesByType('INSTALLABLE_ISO')
         self.failUnlessEqual(
+            [ x['architecture'] for x in images ],
+            [ 'x86', 'x86_64'])
+        self.failUnlessEqual(
             [ [ x['sha1'] for x in img['files'] ] for img in images],
             [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
               [ 'da4b9237bacccdf19c0760cab7aec4a8359010b0' ] ])
@@ -158,7 +161,7 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         # RBL-6290: make sure we don't have cross-polination of hostnames
         self.failUnlessEqual(
             [ img['baseFileName'] for img in images ],
-            [ 'foo-0.1-', 'bar-0.1-', ])
+            [ 'foo-0.1-x86', 'bar-0.1-x86_64', ])
         self.failUnlessEqual(
             [ [ x['fileName'] for x in img['files'] ] for img in images],
             [ [ 'imagefile_1.iso' ], [ 'imagefile_2.iso' ] ])
