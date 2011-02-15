@@ -4,10 +4,7 @@
 # All Rights Reserved
 #
 
-from conary import versions
-
 from django.db import models
-from django.conf import settings
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
