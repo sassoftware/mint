@@ -114,7 +114,7 @@ class Releases(modellib.XObjModel):
     def __unicode__(self):
         return self.name
                
-class Images(modellib.XObjModel):
+class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
         
@@ -154,11 +154,18 @@ class Images(modellib.XObjModel):
     status = models.IntegerField()
     statusmessage = models.TextField()
 
+    def get_absolute_url(self, request, parents=None, model=None):
+        if parents:
+            if isinstance(parents[0], Project):
+                self.view_name = "ProjectImages"
+        return modellib.XObjIdModel.get_absolute_url(self, request,
+            parents, model)
+
 class Downloads(modellib.XObjModel):
     class Meta:
         db_table = u'urldownloads'
 
-    imageId = models.ForeignKey(Images, db_column='urlid')
+    imageId = models.ForeignKey(Image, db_column='urlid')
     timedownloaded = models.CharField(max_length=14)
     ip = models.CharField(max_length=64)
     
