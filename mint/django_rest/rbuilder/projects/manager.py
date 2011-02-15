@@ -6,6 +6,7 @@
 #
 
 from mint.django_rest.rbuilder import auth
+from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.projects import models
@@ -15,7 +16,8 @@ class ProjectManager(basemanager.BaseManager):
     @exposed 
     def getProjects(self):
         projects = models.Projects()
-        projects.project = models.Project.objects.all()
+        projects.project = [p for p in models.Project.objects.all()
+            if self.checkAccess(p)]
         return projects
 
     @exposed
@@ -24,7 +26,7 @@ class ProjectManager(basemanager.BaseManager):
         if self.checkAccess(project):   
             return project
         else:
-            
+            raise errors.PermissionDenied() 
 
     def checkAccess(self, project):
         if auth.isAdmin(self.user):
