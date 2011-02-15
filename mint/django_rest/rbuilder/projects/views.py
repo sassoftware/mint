@@ -30,6 +30,11 @@ class ProjectService(service.BaseService):
     def rest_PUT(self, request, project_name, project):
         return self.mgr.updateProject(project)
 
+    def rest_DELETE(self, request, project_name):
+        project = self.get(project_name)
+        return self.mgr.deleteProject(project)
+
+
 class ProjectVersionService(service.BaseService):
 
     @return_xml
@@ -38,6 +43,7 @@ class ProjectVersionService(service.BaseService):
 
     def get(self, project_name, version_id):
         return None
+
 
 class ProjectImageService(service.BaseService):
 

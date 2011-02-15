@@ -5,6 +5,7 @@
 # All rights reserved.
 #
 
+from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.projects import models
@@ -20,12 +21,32 @@ class ProjectManager(basemanager.BaseManager):
     @exposed
     def getProject(self, project_id):
         project = models.Project.objects.get(pk=project_id)
-        return project
+        if self.checkAccess(project):   
+            return project
+        else:
+            
+
+    def checkAccess(self, project):
+        if auth.isAdmin(self.user):
+            return True
+        if project.hidden == 0:
+            return True
+        elif self.user in project.members.all():
+            return True
+        else:
+            return False
 
     @exposed
     def updateProject(self, project):
-        pass
+        project.save()
+        return project
 
     @exposed
     def addProject(self, project):
-        pass
+        project.save()
+        return project
+
+    @exposed
+    def deleteProject(self, project):
+        project.delete()
+        return project
