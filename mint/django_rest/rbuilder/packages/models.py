@@ -11,6 +11,7 @@ from django.conf import settings
 
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.projects.models import Project
 
 from xobj import xobj
 
@@ -31,7 +32,7 @@ class Package(modellib.XObjIdModel):
         db_table = "packageindex"
 
     package_id = models.AutoField(primary_key=True, db_column='pkgid')
-    project = modellib.ForeignKey(rbuildermodels.Products,
+    project = modellib.ForeignKey(Project,
         db_column="projectid", refName='id')
     name = models.TextField()
     version = models.TextField()
