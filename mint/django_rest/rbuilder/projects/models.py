@@ -21,7 +21,11 @@ class Projects(modellib.Collection):
     project = []
 
 class Project(modellib.XObjIdModel):
-    project_id = models.AutoField(primary_key=True, db_column="projectid", blank=True)
+    view_name = "Project"
+    url_key = "short_name"
+    
+    project_id = models.AutoField(primary_key=True, db_column="projectid",
+        blank=True)
     hostname = models.CharField(unique=True, max_length=63)
     name = models.CharField(unique=True, max_length=128)
     namespace = models.CharField(max_length=16, null=True)
@@ -37,17 +41,15 @@ class Project(modellib.XObjIdModel):
         db_column="commitemail")
     backup_external = models.SmallIntegerField(null=True, blank=True,
         db_column="backup_external")
-    time_created = models.DecimalField(max_digits=14, decimal_places=3, blank=True,
-        db_column="timecreated")
-    time_modified = models.DecimalField(max_digits=14, decimal_places=3, blank=True,
-        db_column="timemodified")
+    time_created = models.DecimalField(max_digits=14, decimal_places=3,
+        blank=True, db_column="timecreated")
+    time_modified = models.DecimalField(max_digits=14, decimal_places=3,
+        blank=True, db_column="timemodified")
     hidden = models.SmallIntegerField()
-    creator_id = models.ForeignKey(rbuildermodels.Users, related_name="creator", null=True, 
-        db_column="creatorid")
-    members = models.ManyToManyField(rbuildermodels.Users, through="Members", related_name="members")
-    
-    view_name = "Project"
-    url_key = "short_name"
+    creator_id = models.ForeignKey(rbuildermodels.Users,
+        related_name="creator", null=True, db_column="creatorid")
+    members = models.ManyToManyField(rbuildermodels.Users, through="Members",
+        related_name="members")
     
     class Meta:
         db_table = u"projects"
@@ -59,8 +61,10 @@ class Project(modellib.XObjIdModel):
         return ({"id": self.hostname})
 
 class Members(modellib.XObjModel):
-    productId = models.ForeignKey(Project, db_column='projectid', related_name='product')
-    userid = models.ForeignKey(rbuildermodels.Users, db_column='userid', related_name='user')
+    productId = models.ForeignKey(Project, db_column='projectid',
+        related_name='product')
+    userid = models.ForeignKey(rbuildermodels.Users, db_column='userid',
+        related_name='user')
     level = models.SmallIntegerField()
     class Meta:
         db_table = u'projectusers'
@@ -86,16 +90,20 @@ class Versions(modellib.XObjIdModel):
         
 class Releases(modellib.XObjModel):
     pubreleaseid = models.AutoField(primary_key=True)
-    productId = models.ForeignKey(Project, db_column='projectid', related_name='releasesProduct')
+    productId = modellib.DeferredForeignKey(Project, db_column='projectid', 
+        related_name='releasesProduct')
     name = models.CharField(max_length=255)
     version = models.CharField(max_length=32)
     description = models.TextField()
     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    createdby = models.ForeignKey(rbuildermodels.Users, db_column='createdby', related_name='releaseCreator')
+    createdby = models.ForeignKey(rbuildermodels.Users, db_column='createdby',
+        related_name='releaseCreator')
     timeupdated = models.DecimalField(max_digits=14, decimal_places=3)
-    updatedby = models.ForeignKey(rbuildermodels.Users, db_column='updatedby', related_name='releaseUpdater')
+    updatedby = models.ForeignKey(rbuildermodels.Users, db_column='updatedby',
+        related_name='releaseUpdater')
     timepublished = models.DecimalField(max_digits=14, decimal_places=3)
-    publishedby = models.ForeignKey(rbuildermodels.Users, db_column='publishedby', related_name='releasePublisher')
+    publishedby = models.ForeignKey(rbuildermodels.Users, db_column='publishedby',
+        related_name='releasePublisher')
     shouldmirror = models.SmallIntegerField()
     timemirrored = models.DecimalField(max_digits=14, decimal_places=3)
     class Meta:
@@ -105,38 +113,49 @@ class Releases(modellib.XObjModel):
         return self.name
                
 class Images(modellib.XObjModel):
+    class Meta:
+        db_table = u'builds'
+        
+    _xobj = xobj.XObjMetadata(
+        tag="image")
+
+    def __unicode__(self):
+        return self.name
+
     imageId = models.AutoField(primary_key=True, db_column='buildid')
-    productId = models.ForeignKey(Project, db_column='projectid')
-    pubreleaseid = models.ForeignKey(Releases, null=True, db_column='pubreleaseid')
+    productId = modellib.DeferredForeignKey(Project, db_column='projectid')
+    pubreleaseid = models.ForeignKey(Releases, null=True,
+        db_column='pubreleaseid')
     buildtype = models.IntegerField()
     name = models.CharField(max_length=255)
     description = models.TextField()
     trovename = models.CharField(max_length=128)
     troveversion = models.CharField(max_length=255)
     troveflavor = models.CharField(max_length=4096)
-    trovelastchanged = models.DecimalField(max_digits=14, decimal_places=3)
+    trovelastchanged = models.DecimalField(max_digits=14,
+        decimal_places=3)
     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    createdby = models.ForeignKey(rbuildermodels.Users, db_column='createdby', related_name='imageCreator')
-    timeupdated = models.DecimalField(max_digits=14, decimal_places=3, null=True)
-    updatedby = models.ForeignKey(rbuildermodels.Users, db_column='updatedby', related_name='imageUpdater', null=True)
+    createdby = models.ForeignKey(rbuildermodels.Users, db_column='createdby',
+        related_name='imageCreator')
+    timeupdated = models.DecimalField(max_digits=14, decimal_places=3,
+        null=True)
+    updatedby = models.ForeignKey(rbuildermodels.Users, db_column='updatedby',
+        related_name='imageUpdater', null=True)
     deleted = models.SmallIntegerField()
     buildcount = models.IntegerField()
-    productversionid = models.ForeignKey(Versions, db_column='productversionid')
+    productversionid = models.ForeignKey(Versions,
+        db_column='productversionid')
     stagename = models.CharField(max_length=255)
     status = models.IntegerField()
     statusmessage = models.TextField()
-    class Meta:
-        db_table = u'builds'
-        
-    def __unicode__(self):
-        return self.name
 
 class Downloads(modellib.XObjModel):
+    class Meta:
+        db_table = u'urldownloads'
+
     imageId = models.ForeignKey(Images, db_column='urlid')
     timedownloaded = models.CharField(max_length=14)
     ip = models.CharField(max_length=64)
     
-    class Meta:
-        db_table = u'urldownloads'
 
 
