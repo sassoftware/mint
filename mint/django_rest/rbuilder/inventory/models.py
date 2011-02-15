@@ -19,7 +19,7 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.projects.models import Project, Versions
+from mint.django_rest.rbuilder.projects.models import Project, Version
 
 from xobj import xobj
 
@@ -485,7 +485,7 @@ class System(modellib.XObjIdModel):
         "the type of the system")
     stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name')),
         "the project stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(Versions, null=True,
+    major_version = D(APIReadOnly(modellib.ForeignKey(Version, null=True,
         text_field='name')),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.ForeignKey(Project, null=True,
@@ -1132,7 +1132,7 @@ class Stage(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(['version_set',])
 
     stage_id = models.AutoField(primary_key=True)
-    major_version = models.ForeignKey(Versions)
+    major_version = models.ForeignKey(Version)
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
 

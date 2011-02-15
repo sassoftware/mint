@@ -248,6 +248,12 @@ urlpatterns = patterns('',
     url(r'api/projects/(\w|\-)*/versions/(?P<version_id>\d+)/?$',
         projectviews.ProjectVersionService(),
         name='ProjectVersion'),
+    url(r'api/projects/(\w|\-)*/images/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImages'),
+    url(r'api/projects/(\w|\-)*/images/(?P<image_id>\d+)/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImage'),
 )
 
 

@@ -69,10 +69,18 @@ class Members(modellib.XObjModel):
     class Meta:
         db_table = u'projectusers'
 
-class Versions(modellib.XObjIdModel):
+class Version(modellib.XObjIdModel):
+    class Meta:
+        db_table = u'productversions'
+
     _xobj = xobj.XObjMetadata(
         tag="version")
 
+    view_name = 'ProjectVersions'
+
+    def __unicode__(self):
+        return self.name
+        
     productVersionId = models.AutoField(primary_key=True,
         db_column='productversionid')
     productId = modellib.DeferredForeignKey(Project, db_column='projectid',
@@ -81,13 +89,7 @@ class Versions(modellib.XObjIdModel):
     name = models.CharField(max_length=16)
     description = models.TextField()
     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    class Meta:
-        db_table = u'productversions'
-    view_name = 'ProjectVersions'
 
-    def __unicode__(self):
-        return self.name
-        
 class Releases(modellib.XObjModel):
     pubreleaseid = models.AutoField(primary_key=True)
     productId = modellib.DeferredForeignKey(Project, db_column='projectid', 
@@ -119,11 +121,14 @@ class Images(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
         tag="image")
 
+    view_name = "ProjectImage"
+
     def __unicode__(self):
         return self.name
 
     imageId = models.AutoField(primary_key=True, db_column='buildid')
-    productId = modellib.DeferredForeignKey(Project, db_column='projectid')
+    productId = modellib.DeferredForeignKey(Project, db_column='projectid',
+        related_name="images")
     pubreleaseid = models.ForeignKey(Releases, null=True,
         db_column='pubreleaseid')
     buildtype = models.IntegerField()
@@ -143,7 +148,7 @@ class Images(modellib.XObjModel):
         related_name='imageUpdater', null=True)
     deleted = models.SmallIntegerField()
     buildcount = models.IntegerField()
-    productversionid = models.ForeignKey(Versions,
+    productversionid = models.ForeignKey(Version,
         db_column='productversionid')
     stagename = models.CharField(max_length=255)
     status = models.IntegerField()

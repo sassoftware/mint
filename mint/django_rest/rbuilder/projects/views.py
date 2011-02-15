@@ -38,3 +38,12 @@ class ProjectVersionService(service.BaseService):
 
     def get(self, project_name, version_id):
         return None
+
+class ProjectImageService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self, request, project_name, image_id=None):
+        return self.get(project_name, image_id)
+
+    def get(self, project_name, image_id):
+        return None       
