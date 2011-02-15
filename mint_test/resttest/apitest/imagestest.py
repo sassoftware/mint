@@ -91,11 +91,8 @@ class ImagesTest(restbase.BaseRestTest):
   <name>ginkgo-Raw Filesystem (x86)</name>
   <baseFileName>ginkgo-1-x86_64</baseFileName>
   <troveName>blabbedy</troveName>
-  <troveVersion>/local@local:COOK/1.0-1-1</troveVersion>
-  <troveFlavor/>
   <version href="%(productVersion)s"/>
   <stage><href>Development</href></stage>
-  <buildCount>1</buildCount>
   <imageType>vmwareEsxImage</imageType>
   <files>
     <file>
@@ -133,6 +130,8 @@ class ImagesTest(restbase.BaseRestTest):
         req, img = client.call('POST', 'products/%s/images' % hostname, imageXml)
         self.failUnlessEqual(img.stage, "Development")
         self.failUnlessEqual(img.version, productVersion)
+        self.failUnlessEqual(str(img.troveVersion), '/local@local:COOK/1-1-1')
+        self.failUnlessEqual(str(img.troveFlavor), 'is: x86')
 
         self.failUnlessEqual(len(MockRepeaterClient.calls), 1)
         rcargs, rckwargs = MockRepeaterClient.calls[0]

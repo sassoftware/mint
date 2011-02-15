@@ -314,6 +314,9 @@ class ImageManager(manager.Manager):
         buildName = image.name
         if image.troveFlavor is None and image.architecture:
             image.troveFlavor = deps.parseFlavor("is: %s" % image.architecture)
+        if image.troveVersion is None:
+            image.troveVersion = versions.VersionFromString(
+                '/local@local:COOK/1-1-1', timeStamps = [ 0.1 ])
         troveTuple = image.getNameVersionFlavor()
 
         # Look up the build type by name too - and fall back to what the user
