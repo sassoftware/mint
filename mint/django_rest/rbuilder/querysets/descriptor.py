@@ -102,30 +102,32 @@ def getFieldOperatorChoices(field):
 
     return operatorChoices
 
-def getFieldDescriptors(field, prefix=None):
+def getFieldDescriptors(field, prefix=None, processedModels=[]):
     fds = []
     # Not using get_all_field_names in this function b/c of infinite recursion
     if isinstance(field, models.ForeignKey) or \
        isinstance(field, models.ManyToManyField):
-        if field.rel.to in processedModels:
+        # Skip the model if it has already been processed, as long as it is
+        # not directly off the root model (prefix is not None).
+        if field.rel.to in processedModels and prefix is not None:
             return fds
         for f in field.rel.to._meta.fields:
             if prefix:
                 _prefix = '%s.%s' % (prefix, field.name)
             else:
                 _prefix = field.name
-            _fds = getFieldDescriptors(f, _prefix)
+            _fds = getFieldDescriptors(f, _prefix, processedModels)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.rel.to)
     elif isinstance(field, related.RelatedObject):
-        if field.model() in processedModels:
+        if field.model() in processedModels and prefix is not None:
             return fds
         for f in field.model()._meta.fields:
             if prefix:
                 _prefix = '%s.%s' % (prefix, field.get_accessor_name())
             else:
                 _prefix = field.get_accessor_name()
-            _fds = getFieldDescriptors(f, _prefix)
+            _fds = getFieldDescriptors(f, _prefix, processedModels)
             [fds.append(_fd) for _fd in _fds]
         processedModels.append(field.model())
     else:   
@@ -142,9 +144,9 @@ def getFieldDescriptors(field, prefix=None):
         fds.append(fd)
     return fds
 
-processedModels = []
 
 def getFilterDescriptor(model):
+    processedModels = []
     processedModels.append(model)
     fd = FilterDescriptor()
     fd.field_descriptors = FieldDescriptors()
@@ -152,7 +154,7 @@ def getFilterDescriptor(model):
     fieldNames = model._meta.get_all_field_names()
     for fieldName in fieldNames:
         field = model._meta.get_field_by_name(fieldName)[0]
-        _fds = getFieldDescriptors(field)
+        _fds = getFieldDescriptors(field, None, processedModels)
         [fd.field_descriptors.descriptors.append(_fd) for _fd in _fds]
     return fd
 
