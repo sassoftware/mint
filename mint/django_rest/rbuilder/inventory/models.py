@@ -19,6 +19,7 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.projects.models import Project, Version
 
 from xobj import xobj
 
@@ -483,13 +484,13 @@ class System(modellib.XObjIdModel):
         related_name='systems', text_field='description'),
         "the type of the system")
     stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name')),
-        "the appliance stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, null=True,
+        "the project stage of the system")
+    major_version = D(APIReadOnly(modellib.ForeignKey(Version, null=True,
         text_field='name')),
-        "the appliance major version of the system")
-    appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, null=True,
+        "the project major version of the system")
+    project = D(APIReadOnly(modellib.ForeignKey(Project, null=True,
         text_field='shortname')),
-        "the appliance of the system")
+        "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
         "the descriptor of available fields to set system configuration parameters")
@@ -1131,7 +1132,7 @@ class Stage(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(['version_set',])
 
     stage_id = models.AutoField(primary_key=True)
-    major_version = models.ForeignKey(rbuildermodels.Versions)
+    major_version = models.ForeignKey(Version)
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
 
@@ -1212,7 +1213,6 @@ class SystemJob(modellib.XObjModel):
 
 class JobSystem(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = 'job_system'
     job = models.ForeignKey(rbuildermodels.Jobs, null=False)
     # Django will insist on removing entries from this table when removing a

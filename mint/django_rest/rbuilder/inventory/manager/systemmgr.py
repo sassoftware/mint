@@ -202,10 +202,8 @@ class SystemManager(base.BaseManager):
 
         # Recalculate available updates for each trove on the system, if
         # needed.  This call honors the 24 hour cache.
-        # We only want to do this if we're not running in local mode.
-        if not settings.MANAGE_RBUILDER_MODELS:
-            for trove in system.installed_software.all():
-                self.mgr.versionMgr.set_available_updates(trove)
+        for trove in system.installed_software.all():
+            self.mgr.versionMgr.set_available_updates(trove)
         return system
 
     @base.exposed

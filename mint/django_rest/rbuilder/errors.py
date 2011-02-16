@@ -20,6 +20,11 @@ class RbuilderError(Exception):
         except TypeError:
             return self.msg
 
+class PermissionDenied(RbuilderError):
+    "Permission to the requested resource is denied"
+
+    status = 401
+
 class CollectionPageNotFound(RbuilderError):
     "The requested page of the collection was not found."
     status = 404

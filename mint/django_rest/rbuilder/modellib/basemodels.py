@@ -709,6 +709,10 @@ class XObjModel(models.Model):
     # serialize models that refer to it with foreign keys.
     serialize_accessors = True
 
+    # Attribute used to look up the url for this resource, defaults to pk,
+    # since we use the primary keys most of the times in the URL's.
+    url_key = 'pk'
+
     old_m2m_accessors = {}
 
     def __init__(self, *args, **kwargs):    
@@ -820,6 +824,14 @@ class XObjModel(models.Model):
             xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
+
+    def get_url_key(self):
+        url_key = getattr(self, self.url_key, None)
+        if url_key:
+            return str(url_key)
+        else:
+            return url_key
+
     def get_absolute_url(self, request=None, parents=None, model=None):
         """
         Return an absolute url for this model.  Incorporates the same behavior
@@ -834,21 +846,15 @@ class XObjModel(models.Model):
         # specified so that when generating a url for a Network model, the
         # system parent can be sent in, such that the result is
         # /api/inventory/systems/1/networks, where 1 is the system pk.
-        _parents = getattr(self, '_parents', None)
-        if parents:
-            url_key = []
-            for parent in parents:
-                url_key.append(str(parent.pk))
-        elif _parents:
-            url_key = []
+        _parents = getattr(self, '_parents', parents)
+        url_key = []
+        if _parents:
             for parent in _parents:
-                url_key.append(str(parent.pk))
-        else:
-            url_key = getattr(self, 'pk', None)
-            if url_key:
-                url_key = [str(url_key)]
-            else:
-                url_key = []
+                url_key.append(parent.get_url_key())
+
+        uk = self.get_url_key()
+        if uk:
+            url_key.append(uk)
 
         # Now do what models.pattern does.
         bits = (view_name, url_key)
