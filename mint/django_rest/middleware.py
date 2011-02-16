@@ -252,7 +252,7 @@ class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
             xobj_model = response.model.serialize(request)
             xobj_model.metrics = metricsModel.serialize(request)
             response.content = ''
-            response.write(response.model.toxml(request, xobj_model))
+            response.write(response.model.to_xml(request, xobj_model))
 
             return response
         else:
