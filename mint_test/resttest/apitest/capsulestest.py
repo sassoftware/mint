@@ -519,8 +519,9 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
 
         cfg = db.capsuleMgr.getIndexerConfig()
         self.failUnlessEqual(
-            [ (x.address, x.protocol) for x in cfg.getProxyMap().items() ],
-            proxyDict)
+            [ [ u.hostport.host.name for u in x[1]] for x in
+            cfg.getProxyMap().items() ],
+            [['foo.bar'], ['foo.baz']])
 
 if __name__ == "__main__":
         testsetup.main()
