@@ -510,7 +510,7 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
     def testSetProxies(self):
         db = self.openRestDatabase()
         cfg = db.capsuleMgr.getIndexerConfig()
-        self.failUnlessEqual(cfg.proxy, {})
+        self.failUnlessEqual(cfg.proxyMap.filterList, [])
 
         # Add proxy information to the rest db
         proxyDict = dict(http = "http://foo.bar:1234",
@@ -518,7 +518,9 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
         db.cfg.proxy = proxyDict
 
         cfg = db.capsuleMgr.getIndexerConfig()
-        self.failUnlessEqual(cfg.proxy, proxyDict)
+        self.failUnlessEqual(
+            [ (x.address, x.protocol) for x in cfg.getProxyMap().items() ],
+            proxyDict)
 
 if __name__ == "__main__":
         testsetup.main()
