@@ -268,7 +268,7 @@ class MintConfig(conarycfg.ConfigFile):
                         "The number of seconds to wait for a launched system's network information to become available")
 
     # inventory - configuration
-    inventoryConfigurationEnabled = (CfgBool, False, "Whether or not managed systems can be configured vai the API")
+    inventoryConfigurationEnabled = (CfgBool, True, "Whether or not managed systems can be configured vai the API")
     
     # image import
     imageImportEnabled = (CfgBool, False, "Whether or not base images can be imported directly as project images")
