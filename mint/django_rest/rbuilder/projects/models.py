@@ -32,7 +32,7 @@ class Project(modellib.XObjIdModel):
     namespace = models.CharField(max_length=16, null=True)
     domain_name = models.CharField(max_length=128, db_column="domainname")
     short_name = models.CharField(unique=True, max_length=63, 
-        db_column="short_name")
+        db_column="shortname")
     project_url = models.CharField(max_length=128, null=True, blank=True,
         db_column= "projecturl")
     repository_hostname = models.CharField(max_length=255, db_column="fqdn")
