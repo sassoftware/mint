@@ -1095,7 +1095,6 @@ class PlatformManager(manager.Manager):
 
     def getPlatformImageTypeDefs(self, request, platformId):
         platform = self.platforms.getById(platformId)
-        templates = models.PlatformBuildTemplates()
         platDef = self.platforms.platformCache.get(platform.label)
         from mint import buildtypes
         from mint.rest.api import productversion
