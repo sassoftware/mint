@@ -312,7 +312,7 @@ class ImageManager(manager.Manager):
     def createImage(self, fqdn, image, buildData):
         buildType = image.imageType
         buildName = image.name
-        if not image.troveFlavor and image.architecture:
+        if image.troveFlavor is None and image.architecture:
             image.troveFlavor = deps.parseFlavor("is: %s" % image.architecture)
         if image.troveVersion is None:
             image.troveVersion = versions.VersionFromString(
