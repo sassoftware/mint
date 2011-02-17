@@ -63,7 +63,7 @@ class Project(modellib.XObjIdModel):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         member = self.members.filter(userid=request._authUser)
         if member:
-            role = userlevels[role.level]
+            role = userlevels[member.level]
             xobjModel.role = role
         return xobjModel
 
