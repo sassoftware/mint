@@ -1511,8 +1511,8 @@
         <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
         <field type="CharField" name="target_system_id"><None></None></field>
         <field type="DateTimeField" name="registration_date"><None></None></field>
-        <field type="CharField" name="generated_uuid">system-50-generated-uuid</field>
-        <field type="CharField" name="local_uuid">system-50-local-uuid</field>
+        <field type="CharField" name="generated_uuid"><None></None></field>
+        <field type="CharField" name="local_uuid"><None></None></field>
         <field type="CharField" name="ssl_client_certificate">system-50-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-50-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-50-ssl-server-certificate</field>

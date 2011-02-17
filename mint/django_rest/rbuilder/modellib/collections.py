@@ -160,8 +160,6 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
     if value is None:
         value = False
 
-    # Replace all '.' with '__', to handle fields that span
-    # relationships
     fields = field.split('.')
 
     if operator in operatorMap:
@@ -178,6 +176,8 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
     else:
         raise errors.UnknownFilterOperator(filter=operator)
 
+    # Replace all '.' with '__', to handle fields that span
+    # relationships
     k = '%s__%s' % (field.replace('.', '__'), operatorCls.operator)
     filtDict = {k:value}
     if operator.startswith('NOT_'):

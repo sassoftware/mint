@@ -4506,3 +4506,11 @@ class CollectionTest(XMLTestCase):
             '[name,LIKE,3]')
         self.assertEquals(systems.order_by,
             '-name')
+
+    def testFilterByBoolean(self):
+        systems = self.xobjResponse(
+            '/api/inventory/systems;filter_by=[local_uuid,IS_NULL,True]')
+        # System 50 and the Update Service are the only one set up with a null
+        # local_uuid in the fixture
+        self.assertEquals([x.system_id for x in systems.system],
+            [u'2', u'50'])
