@@ -47,7 +47,7 @@ class Project(modellib.XObjIdModel):
     time_modified = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timemodified")
     hidden = models.SmallIntegerField()
-    creator_id = models.ForeignKey(rbuildermodels.Users,
+    creator = models.ForeignKey(rbuildermodels.Users,
         related_name="creator", null=True, db_column="creatorid")
     members = models.ManyToManyField(rbuildermodels.Users, through="Members",
         related_name="members")
@@ -94,7 +94,8 @@ class Version(modellib.XObjIdModel):
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
+    time_created = models.DecimalField(max_digits=14, decimal_places=3,
+        db_column="timecreated")
 
 class Releases(modellib.XObjModel):
     pubreleaseid = models.AutoField(primary_key=True)

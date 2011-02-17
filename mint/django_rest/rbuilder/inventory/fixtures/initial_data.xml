@@ -800,13 +800,13 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DecimalField" name="time_created">0</field>
     <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creator_id" rel="ManyToOneRel">1</field>
+    <field to="rbuilder.users" name="creator" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="projects.version">
     <field to="projects.project" name="productId" rel="ManyToOneRel">1</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
 </django-objects>
