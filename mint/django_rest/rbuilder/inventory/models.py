@@ -578,18 +578,9 @@ class System(modellib.XObjIdModel):
         return bool([j for j in jobs \
             if j.job_state_id == self.runningJobState.job_state_id])
 
-    def serialize(self, request=None, values=None):
-        # We are going to replace the jobs node with hrefs. But DO NOT mark
-        # the jobs m2m relationship as hidden, or else the bulk load fails
-        if values is None:
-            jobs = self.jobs.all()
-        else:
-            # We're popping the jobs data structure from values because its
-            # only purpose is to prevent repeated database hits when we bulk
-            # load
-            jobs = [ x[0] for x in values.pop('jobs', []) ]
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+    def serialize(self, request=None):
+        jobs = self.jobs.all()
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
         xobj_model.has_running_jobs = self.areJobsRunning(jobs)
 
@@ -930,9 +921,8 @@ class Job(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, request,
             parents=parents, model=model)
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
             pk=self.event_type_id).name
         xobj_model.job_description = modellib.Cache.get(
@@ -1142,8 +1132,8 @@ class Stage(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(
             self, request, parents)
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
         return xobj_model
 

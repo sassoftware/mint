@@ -77,8 +77,8 @@ class QuerySet(modellib.XObjIdModel):
     filter_entries = models.ManyToManyField("FilterEntry")
     resource_type = models.TextField()
 
-    def serialize(self, request=None, values=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request, values)
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
 
         am = AllMembers()
         am._parents = [self]

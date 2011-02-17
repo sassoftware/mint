@@ -34,8 +34,8 @@ class ChangeLog(modellib.XObjIdModel):
     resource_type = models.TextField()
     resource_id = models.IntegerField()
 
-    def serialize(self, request=None, values=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request, values)
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
         resourceIdModel = modellib.XObjIdModel()
         resourceIdModel.view_name = getattr(
             modellib.type_map[self.resource_type], 'view_name', None)

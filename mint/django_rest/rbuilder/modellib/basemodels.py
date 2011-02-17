@@ -911,7 +911,7 @@ class XObjModel(models.Model):
             m2m_accessors[f.name] = getattr(self, f.name)
         return m2m_accessors
 
-    def serialize_fields(self, xobj_model, fields, request, values=None):
+    def serialize_fields(self, xobj_model, fields, request):
         """
         For each attribute on self (the model), see if it's a field, if so,
         set the value on xobj_model.  Then, remove it from fields, as don't
@@ -944,7 +944,7 @@ class XObjModel(models.Model):
                 val.serialize(request)
                 setattr(xobj_model, key, val)
 
-    def serialize_fk_fields(self, xobj_model, fields, request, values=None):
+    def serialize_fk_fields(self, xobj_model, fields, request):
         """
         For each remaining field in fields, see if it's a FK field, if so set
         the create an href object and set it on xobj_model.
@@ -954,10 +954,7 @@ class XObjModel(models.Model):
             if getattr(field, 'XObjHidden', False):
                 continue
             if isinstance(field, related.RelatedField):
-                if values is None:
-                    val = getattr(self, fieldName)
-                else:
-                    val = values.get(fieldName, None)
+                val = getattr(self, fieldName)
                 text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
@@ -984,7 +981,7 @@ class XObjModel(models.Model):
                 else:
                     setattr(xobj_model, fieldName, '')
 
-    def serialize_accessors(self, xobj_model, accessors, request, values=None):
+    def serialize_accessors(self, xobj_model, accessors, request):
         """
         Builds up an object for each accessor for this model and sets it on
         xobj_model.  This is so that things like <networks> appear as an xml
@@ -1019,18 +1016,15 @@ class XObjModel(models.Model):
                     # For each related model in the accessor, serialize it,
                     # then append the serialized object to the list on
                     # accessor_model.
-                    if values is None:
-                        accessorValues = getattr(self, accessorName)
-                        if isinstance(accessorValues, BaseManager):
-                            accessorValues = [ (x, None)
-                                for x in accessorValues.all() ]
-                        else:
-                            accessorValues = None
+                    accessorValues = getattr(self, accessorName)
+                    if isinstance(accessorValues, BaseManager):
+                        accessorValues = [ (x, None)
+                            for x in accessorValues.all() ]
                     else:
-                        accessorValues = values.get(accessorName)
+                        accessorValues = None
                     if accessorValues is not None:
                         for rel_mod, subvalues in accessorValues:
-                            rel_mod = rel_mod.serialize(request, values=subvalues)
+                            rel_mod = rel_mod.serialize(request)
                             accessorModelValues.append(rel_mod)
                     else:
                         accessor_model = None
@@ -1057,8 +1051,7 @@ class XObjModel(models.Model):
             m2m_accessor_model = type(m2m_accessor, (object,), {})()
         return m2m_accessor_model
 
-    def serialize_m2m_accessors(self, xobj_model, m2m_accessors, request,
-            values=None):
+    def serialize_m2m_accessors(self, xobj_model, m2m_accessors, request):
         """
         Build up an object for each many to many field on this model and set
         it on xobj_model.
@@ -1083,13 +1076,10 @@ class XObjModel(models.Model):
                 # For each related model in the m2m_accessor, serialize
                 # it, then append the serialized object to the list on
                 # m2m_accessor_model.
-                if values is None:
-                    accessorValues = [ (x, None)
-                        for x in getattr(self, m2m_accessor).all() ]
-                else:
-                    accessorValues = values.get(m2m_accessor, [])
+                accessorValues = [ (x, None)
+                    for x in getattr(self, m2m_accessor).all() ]
                 for rel_mod, subvalues in accessorValues:
-                    rel_mod = rel_mod.serialize(request, values=subvalues)
+                    rel_mod = rel_mod.serialize(request)
                     accessorModelValues.append(rel_mod)
 
                 setattr(xobj_model, m2m_accessor, m2m_accessor_model)
@@ -1099,7 +1089,7 @@ class XObjModel(models.Model):
             except exceptions.ObjectDoesNotExist:
                 setattr(xobj_model, m2m_accessor, None)
 
-    def serialize_list_fields(self, xobj_model, request, values=None):
+    def serialize_list_fields(self, xobj_model, request):
         """
         Special handling of list_fields.  For each field in list_fields, get
         the list found at the attribute on the model and serialize each model
@@ -1117,7 +1107,7 @@ class XObjModel(models.Model):
                     xobjModelVal = val
                 listFieldVals.append(xobjModelVal)
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         """
         Serialize this model into an object that can be passed blindly into
         xobj to produce the xml that we require.
@@ -1134,15 +1124,13 @@ class XObjModel(models.Model):
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
 
-        self.serialize_fields(xobj_model, fields, request, values=values)
-        self.serialize_fk_fields(xobj_model, fields, request, values=values)
+        self.serialize_fields(xobj_model, fields, request)
+        self.serialize_fk_fields(xobj_model, fields, request)
         if self.serialize_accessors:
             accessors = self.get_accessor_dict()
-            self.serialize_accessors(xobj_model, accessors, request,
-                values=values)
-        self.serialize_m2m_accessors(xobj_model, m2m_accessors, request,
-            values=values)
-        self.serialize_list_fields(xobj_model, request, values=values)
+            self.serialize_accessors(xobj_model, accessors, request)
+        self.serialize_m2m_accessors(xobj_model, m2m_accessors, request)
+        self.serialize_list_fields(xobj_model, request)
 
         return xobj_model
 
@@ -1169,8 +1157,8 @@ class XObjIdModel(XObjModel):
                     setattr(ret, k, None)
             return ret
 
-    def serialize(self, request=None, values=None):
-        xobj_model = XObjModel.serialize(self, request, values=values)
+    def serialize(self, request=None):
+        xobj_model = XObjModel.serialize(self, request)
         _xobj = getattr(xobj_model, '_xobj', None)
         if _xobj:
             xobj_model._xobj.attributes['id'] = str
@@ -1193,7 +1181,7 @@ class XObjHrefModel(XObjModel):
     def __init__(self, href=None):
         self.href = href
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         self.href = request.build_absolute_uri(self.href)
         
 class ForeignKey(models.ForeignKey):
