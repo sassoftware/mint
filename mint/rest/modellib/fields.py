@@ -31,10 +31,14 @@ class CharField(Field):
 
 class ProtectedField(CharField):
     def _valueFromString(self, value):
+        if value is None or value == '':
+            return None
         return util.ProtectedString(unicode(value))
 
 class BooleanField(Field):
     def _valueFromString(self, value):
+        if value is None:
+            return None
         if isinstance(value, (int, bool)):
             return bool(value)
         value = value.lower()
@@ -148,8 +152,11 @@ class DateTimeField(Field):
 
 class ObjectField(Field):
     parser = None
+    _emptyIsNone = True
 
     def _valueFromString(self, value):
+        if value is None or (self._emptyIsNone and value == ''):
+            return None
         return self.parser(value)
 
     def _valueToString(self, value, parent, context):
@@ -163,6 +170,7 @@ class LabelField(ObjectField):
     parser = versions.Label
 
 class FlavorField(ObjectField):
+    _emptyIsNone = False
     parser = staticmethod(deps.parseFlavor)
 
 

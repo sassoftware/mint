@@ -77,7 +77,7 @@ class ContentSourceType(object):
     _ContentSourceTypeName = None
 
     def __init__(self, proxyMap = None):
-        self.proxyMap = proxyMap or {}
+        self.proxyMap = proxyMap
         self._fieldValues = dict((x.name, x())
             for x in self.__class__.fields)
 

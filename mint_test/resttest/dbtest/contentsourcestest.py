@@ -42,7 +42,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         # Test failure
         from conary.repository import transport
         urls = []
-        def mockedUrlopen(slf, fullurl, data=None):
+        def mockedUrlopen(slf, fullurl, data=None, headers=()):
             urls.append(fullurl)
             raise IOError("http error", 401, "Unauthorized", object())
         self.mock(transport.URLOpener, "open", mockedUrlopen)
@@ -50,7 +50,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
         s3 = contentsources.contentSourceTypes['nu'](proxyMap=proxyMap)
         s3.username = 'JeanValjean'
         s3.password = 'Javert:!&#'
-        self.failUnlessEqual(s3.getProxyMap(), proxyMap=proxyMap)
+        self.failUnlessEqual(s3.getProxyMap(), proxyMap)
         self.failUnlessEqual(s3.status(),
             (False, False,
                 "Error validating source at url https://nu.novell.com/repo/$RCE/SLES10-SP3-Online/sles-10-i586"))
@@ -60,7 +60,7 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
             "https://JeanValjean:Javert%3A%21%26%23@nu.novell.com/repo/$RCE/SLES10-SP3-Online/sles-10-i586/repodata/repomd.xml")
 
         s4 = contentsources.contentSourceTypes['SMT'](proxyMap=proxyMap)
-        self.failUnlessEqual(s4.getProxyMap(), proxyMap=proxyMap)
+        self.failUnlessEqual(s4.getProxyMap(), proxyMap)
 
         self.failUnlessEqual(s1.name, name1)
         self.failUnlessEqual(s1.sourceUrl, url1)
