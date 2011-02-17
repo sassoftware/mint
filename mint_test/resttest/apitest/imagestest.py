@@ -94,6 +94,7 @@ class ImagesTest(restbase.BaseRestTest):
   <version href="%(productVersion)s"/>
   <stage><href>Development</href></stage>
   <imageType>vmwareEsxImage</imageType>
+  <troveFlavor /> <!-- explicitly set it to empty string -->
   <troveVersion /> <!-- explicitly set it to empty string -->
   <buildCount /> <!-- explicitly set it to empty string -->
   <files>
