@@ -22,6 +22,7 @@ class Projects(modellib.Collection):
     project = []
 
 class Project(modellib.XObjIdModel):
+    _xobj_hidden_accessors = set(['project_members'])
     view_name = "Project"
     url_key = "short_name"
     
@@ -49,8 +50,8 @@ class Project(modellib.XObjIdModel):
     hidden = models.SmallIntegerField()
     creator = models.ForeignKey(rbuildermodels.Users,
         related_name="creator", null=True, db_column="creatorid")
-    members = models.ManyToManyField(rbuildermodels.Users, through="Members",
-        related_name="members")
+    members = models.ManyToManyField(rbuildermodels.Users, through="Member")
+        
     
     class Meta:
         db_table = u"projects"
@@ -66,11 +67,11 @@ class Project(modellib.XObjIdModel):
             xobjModel.role = role
         return xobjModel
 
-class Members(modellib.XObjModel):
+class Member(modellib.XObjModel):
     productId = models.ForeignKey(Project, db_column='projectid',
-        related_name='product')
+        related_name='project_members')
     userid = models.ForeignKey(rbuildermodels.Users, db_column='userid',
-        related_name='user')
+        related_name='project_membership')
     level = models.SmallIntegerField()
     class Meta:
         db_table = u'projectusers'
