@@ -13,7 +13,7 @@
 	    <field type="SmallIntegerField" name="active">1</field>
 	    <field type="TextField" name="blurb"/>
 	</object>
-	<object pk="2000" model="rbuilder.users">
+	<object pk="2" model="rbuilder.users">
 	    <field type="CharField" name="username">testuser</field>
 	    <field type="CharField" name="fullname"/>
 	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
@@ -31,7 +31,7 @@
     <object pk="2" model="rbuilder.usergroups">
       <field type="CharField" name="usergroup">MintAdmin</field>
     </object>
-    <object pk="2000" model="rbuilder.usergroups">
+    <object pk="3" model="rbuilder.usergroups">
 	    <field type="CharField" name="usergroup">testuser</field>
 	</object>
 	<object pk="1" model="rbuilder.usergroupmembers">
@@ -43,8 +43,8 @@
         <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
     </object>
 	<object pk="2000" model="rbuilder.usergroupmembers">
-	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2000</field>
-	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2000</field>
+	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">3</field>
+	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2</field>
 	</object>
 	<object pk="1" model="inventory.managementinterface">
         <field type="CharField" name="name">cim</field>
