@@ -12,7 +12,6 @@ Stores a dictionary of data on disk in a pickle.
 
 import os
 import time
-import errno
 import cPickle as pickle
 from conary.lib.util import mkdirChain, fopenIfExists
 from mint.lib.unixutils import hashFile

@@ -6,7 +6,6 @@
 #
 
 import os
-import collections
 import time
 
 import testsetup
