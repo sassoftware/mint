@@ -76,6 +76,15 @@ class Operator(object):
         return field.get_prep_value(valueStr)
 
     def castToBool(self, valueStr):
+        """
+        The field could either be a boolean field, or the operator might only
+        accept boolean values.  Either way, we need a helper method to cast
+        strings that correspond to bool values.
+        """
+        # Might be a bool already.
+        if isinstance(valueStr, bool):
+            return valueStr
+
         if valueStr.lower() == 'true':
             return True
         elif valueStr.lower() == 'false' or valueStr == '0':
@@ -83,25 +92,23 @@ class Operator(object):
         else:
             return bool(valueStr)
 
-class ListOperator(Operator):
+class BooleanOperator(Operator):
+    def prepValue(self, field, valueStr):
+        return self.castToBool(valueStr)
+
+class InOperator(Operator):
+    filterTerm = 'IN'
+    operator = 'in'
 
     def prepValue(self, field, valueStr):
         if not (valueStr.startswith('(') and valueStr.endswith(')')):
-            # TODO: use a better exception
-            raise Exception
+            raise errors.InvalidFilterValue(value=valueStr,
+                filter=self.filterTerm)
 
         valueStr = valueStr.strip('(').strip(')')
         values = valueStr.split(',')
         values = [field.get_prep_value(v) for v in values]
         return values
-
-class BooleanOperator(Operator):
-    def prepValue(self, field, valueStr):
-        return self.castToBool(valueStr)
-
-class InOperator(ListOperator):
-    filterTerm = 'IN'
-    operator = 'in'
 
 class NotInOperator(InOperator):
     filterTerm = 'NOT_IN'
@@ -141,7 +148,7 @@ class NotLikeOperator(LikeOperator):
     filterTerm = 'NOT_LIKE'
     operator = 'contains'
 
-def operatorFactory(field, operator):
+def operatorFactory(operator):
     return operatorMap[operator]
 
 def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
@@ -162,8 +169,14 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value):
         for f in fields[:-1]:
             nextModel = nextModel._meta.get_field_by_name(f)[0].rel.to()
         fieldCls = nextModel._meta.get_field_by_name(fields[-1])[0]
-        operatorCls = operatorFactory(fieldCls, operator)()
-        value = operatorCls.prepValue(fieldCls, value)
+        operatorCls = operatorFactory(operator)()
+        try:
+            value = operatorCls.prepValue(fieldCls, value)
+        except:
+            raise errors.InvalidFilterValue(value=value,
+                filter=operatorCls.filterTerm)
+    else:
+        raise errors.UnknownFilterOperator(filter=operator)
 
     k = '%s__%s' % (field.replace('.', '__'), operatorCls.operator)
     filtDict = {k:value}

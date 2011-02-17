@@ -4,10 +4,14 @@
 # All Rights Reserved
 #
 
+BAD_REQUEST = 400
+NOT_FOUND = 404
+INTERNAL_SERVER_ERROR = 500
+
 class RbuilderError(Exception):
     "An unknown error has occured."
 
-    status = 500
+    status = INTERNAL_SERVER_ERROR 
 
     def __init__(self, **kwargs):
         cls = self.__class__
@@ -22,4 +26,13 @@ class RbuilderError(Exception):
 
 class CollectionPageNotFound(RbuilderError):
     "The requested page of the collection was not found."
-    status = 404
+    status = NOT_FOUND
+
+class UknownFilterOperator(RbuilderError):
+    "%(filter)s is an invalid filter operator."
+    status = BAD_REQUEST
+
+class InvalidFilterValue(RbuilderError):
+    "%(value)s in an invalid value for filter operator %(filter)s"
+    status = BAD_REQUEST
+
