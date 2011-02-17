@@ -981,7 +981,7 @@ class XObjModel(models.Model):
                 else:
                     setattr(xobj_model, fieldName, '')
 
-    def serialize_accessors(self, xobj_model, accessors, request):
+    def serialize_fk_accessors(self, xobj_model, accessors, request):
         """
         Builds up an object for each accessor for this model and sets it on
         xobj_model.  This is so that things like <networks> appear as an xml
@@ -1128,7 +1128,7 @@ class XObjModel(models.Model):
         self.serialize_fk_fields(xobj_model, fields, request)
         if self.serialize_accessors:
             accessors = self.get_accessor_dict()
-            self.serialize_accessors(xobj_model, accessors, request)
+            self.serialize_fk_accessors(xobj_model, accessors, request)
         self.serialize_m2m_accessors(xobj_model, m2m_accessors, request)
         self.serialize_list_fields(xobj_model, request)
 

@@ -9,6 +9,8 @@ import urlparse
 from django.db import models
 from django.conf import settings
 
+from xobj import xobj
+
 from mint.django_rest.rbuilder import modellib
 
 XObjHidden = modellib.XObjHidden
@@ -27,16 +29,23 @@ class DatabaseVersion(modellib.XObjModel):
     minor = models.SmallIntegerField(null=True)
 
 class UserGroups(modellib.XObjModel):
-    usergroupid = models.AutoField(primary_key=True)
-    usergroup = models.CharField(unique=True, max_length=128)
-    
     class Meta:
         db_table = u'usergroups'
         
+    _xobj = xobj.XObjMetadata(tag="usergroups")
+
+    usergroupid = models.AutoField(primary_key=True)
+    usergroup = models.CharField(unique=True, max_length=128)
+    
     def __unicode__(self):
         return self.usergroup
 
 class Users(modellib.XObjModel):
+    class Meta:
+        db_table = u'users'
+
+    serialize_accessors = False
+
     userid = models.AutoField(primary_key=True)
     username = models.CharField(unique=True, max_length=128)
     fullname = models.CharField(max_length=128)
@@ -51,9 +60,6 @@ class Users(modellib.XObjModel):
     blurb = models.TextField()
     groups = models.ManyToManyField(UserGroups, through="UserGroupMembers", related_name='groups')
     
-    class Meta:
-        db_table = u'users'
-        
     def __unicode__(self):
         return self.username
         
