@@ -206,7 +206,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         db = self.openRestDatabase()
         db.cfg.proxy.update(proxies)
         src = db.platformMgr.contentSourceTypes._getSourceTypeInstanceByName('RHN')
-        proxyMap = src.proxyMap
         self.assertEqual(src.proxyMap.filterList[0][1],
                 [req_mod.URL('https://blah.com:12345')])
         self.assertEqual(src.proxyMap.filterList[1][1],
