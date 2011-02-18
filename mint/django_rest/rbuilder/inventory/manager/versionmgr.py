@@ -19,6 +19,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.rest.errors import ProductNotFound
 
 import base
 
@@ -224,6 +225,11 @@ class VersionManager(base.BaseManager):
         except RepositoryError, e:
             log.error("Error contacting repository to look for available " + \
                 "updates for %s=%s[%s]" % (trvName, trvLabel, trvFlavor))
+            log.error(e)
+            return
+        except ProductNotFound, e:
+            log.error("Permission error querying repository for %s=%s[%s]" \
+                % (trvName, trvLabel, trvFlavor))
             log.error(e)
             return
         assert(len(troves) == 1)
