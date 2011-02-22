@@ -34,3 +34,7 @@ class RbuilderDjangoManager(object):
             # mind when it tries to decode it as UTF-8. Since we don't need it
             # here, defer the loading of that column
             self.user = rbuildermodels.Users.objects.defer("salt").get(username = userName)
+
+    def setAuth(self, auth, user):
+        self._auth = auth
+        self.user = user
