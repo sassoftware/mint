@@ -203,10 +203,11 @@ class VersionManager(base.BaseManager):
            self._checkCacheExpired(trove):
 
             trove.available_updates.clear()
-            self.refresh_available_updates(trove)
-            trove.last_available_update_refresh = \
-                datetime.datetime.now(tz.tzutc())
-            trove.save()
+            refreshed = self.refresh_available_updates(trove)
+            if refreshed:
+                trove.last_available_update_refresh = \
+                    datetime.datetime.now(tz.tzutc())
+                trove.save()
 
     def refresh_available_updates(self, trove):
         self.cclient = self.get_conary_client()
@@ -226,12 +227,12 @@ class VersionManager(base.BaseManager):
             log.error("Error contacting repository to look for available " + \
                 "updates for %s=%s[%s]" % (trvName, trvLabel, trvFlavor))
             log.error(e)
-            return
+            return False
         except ProductNotFound, e:
             log.error("Permission error querying repository for %s=%s[%s]" \
                 % (trvName, trvLabel, trvFlavor))
             log.error(e)
-            return
+            return False
         assert(len(troves) == 1)
 
         # findTroves returns a {} with keys of (name, version, flavor), values
@@ -285,6 +286,8 @@ class VersionManager(base.BaseManager):
         # Always add the current version as an available update, this is so
         # that remediation will work.
         trove.available_updates.add(trove.version)
+
+        return True
 
     @base.exposed
     def getConfigurationDescriptor(self, system):
