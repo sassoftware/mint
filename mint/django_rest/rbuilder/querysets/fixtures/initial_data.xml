@@ -26,6 +26,7 @@
 
   <object pk="1" model="querysets.queryset">
     <field type="TextField" name="name">All Systems</field>
+    <field type="TextField" name="description">All Systems</field>
     <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
     <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
     <field type="TextField" name="resource_type">system</field>
@@ -37,6 +38,7 @@
   </object>
   <object pk="2" model="querysets.queryset">
     <field type="TextField" name="name">Active Systems</field>
+    <field type="TextField" name="description">Active Systems</field>
     <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
     <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
     <field type="TextField" name="resource_type">system</field>
@@ -47,6 +49,7 @@
   </object>
   <object pk="3" model="querysets.queryset">
     <field type="TextField" name="name">Inactive Systems</field>
+    <field type="TextField" name="description">Inactive Systems</field>
     <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
     <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
     <field type="TextField" name="resource_type">system</field>
@@ -57,6 +60,7 @@
   </object>
   <object pk="4" model="querysets.queryset">
     <field type="TextField" name="name">Physical Systems</field>
+    <field type="TextField" name="description">Physical Systems</field>
     <field type="DateTimeField" name="created_date">2011-01-26 21:59:59</field>
     <field type="DateTimeField" name="modified_date">2011-01-26 21:59:59</field>
     <field type="TextField" name="resource_type">system</field>
