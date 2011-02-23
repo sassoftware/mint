@@ -19,6 +19,7 @@ from mint import config
 from mint import logerror
 from mint import mint_error
 from mint.django_rest.rbuilder import auth
++from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.lib import mintutils
 
