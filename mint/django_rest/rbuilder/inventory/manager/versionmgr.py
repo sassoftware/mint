@@ -176,7 +176,6 @@ class VersionManager(base.BaseManager):
         troves = models.Trove.objects.filter(name=name, 
             version__label=label)
         for trove in troves:
-            trove.available_updates.clear()
             self.set_available_updates(trove, force=True)
 
     def get_conary_client(self):
@@ -202,7 +201,6 @@ class VersionManager(base.BaseManager):
            trove.last_available_update_refresh is None or \
            self._checkCacheExpired(trove):
 
-            trove.available_updates.clear()
             refreshed = self.refresh_available_updates(trove)
             if refreshed:
                 trove.last_available_update_refresh = \
@@ -234,6 +232,8 @@ class VersionManager(base.BaseManager):
             log.error(e)
             return False
         assert(len(troves) == 1)
+
+        trove.available_updates.clear()
 
         # findTroves returns a {} with keys of (name, version, flavor), values
         # of [(name, repoVersion, repoFlavor)], where repoVersion and
