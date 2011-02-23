@@ -71,6 +71,7 @@ class QuerySet(modellib.XObjIdModel):
 
     query_set_id = models.AutoField(primary_key=True)
     name = models.TextField(unique=True)
+    description = models.TextField(null=True)
     created_date = modellib.DateTimeUtcField(auto_now_add=True)
     modified_date = modellib.DateTimeUtcField(auto_now_add=True)
     children = models.ManyToManyField("self", symmetrical=False)
