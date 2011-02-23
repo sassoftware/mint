@@ -312,6 +312,11 @@ class ImageManager(manager.Manager):
     def createImage(self, fqdn, image, buildData):
         buildType = image.imageType
         buildName = image.name
+        if (image.troveFlavor is None or str(image.troveFlavor) == '') and image.architecture:
+            image.troveFlavor = deps.parseFlavor("is: %s" % image.architecture)
+        if image.troveVersion is None:
+            image.troveVersion = versions.VersionFromString(
+                '/local@local:COOK/1-1-1', timeStamps = [ 0.1 ])
         troveTuple = image.getNameVersionFlavor()
 
         # Look up the build type by name too - and fall back to what the user
@@ -598,7 +603,53 @@ class ImageManager(manager.Manager):
                     fileId, urlId) VALUES ( ?, ? )""",
                     fileId, urlId)
 
+        if files.metadata:
+            self._addImageToRepository(hostname, imageId, files.metadata)
+
         return self.listFilesForImage(hostname, imageId)
+
+    @classmethod
+    def getMetadataDict(cls, metadata):
+        if metadata is None:
+            return None
+        metadataValues = ((x, getattr(metadata, x, None)) for x in metadata._fields)
+        metadataDict = dict((x, str(y)) for (x, y) in metadataValues
+            if y is not None)
+        return metadataDict
+
+    def _addImageToRepository(self, hostname, imageId, metadata):
+        metadataDict = self.getMetadataDict(metadata)
+        # Fetch file paths
+        cu = self._getImageFiles(imageId)
+        filePaths = [ row[0] for row in cu ]
+        img = self.getImageForProduct(hostname, imageId)
+        productMgr = self.db.productMgr
+        # We need the product's fqdn
+        product = productMgr.getProduct(hostname)
+        fqdn = product.repositoryHostname
+        pd = productMgr.getProductVersionDefinition(fqdn, img.version)
+        buildLabel = pd.getLabelForStage(img.stage)
+
+        factoryName = "rbuilder-image"
+        troveName = "image-%s" % hostname
+        troveVersion = img.version
+        RegularFile = productMgr.reposMgr.RegularFile
+        streamMap = dict((os.path.basename(x),
+            RegularFile(contents=file(x), config=False)) for x in filePaths)
+        try:
+            self._setStatus(imageId, message="Committing image to repository")
+            productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
+                troveVersion, streamMap, changeLogMessage="Image imported",
+                factoryName=factoryName, admin=True,
+                metadata=metadataDict)
+        except Exception, e:
+            self._setStatus(imageId, message="Commit failed: %s" % (e, ))
+            log.error("Error: %s", e)
+            raise
+        else:
+            message = "Image committed as %s:source=%s" % (troveName, buildLabel)
+            self._setStatus(imageId, message=message)
+            log.info(message)
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,

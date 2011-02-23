@@ -58,7 +58,7 @@ class SiteTest(restbase.BaseRestTest):
   <moduleHooks href="http://%(server)s:%(port)s/api/moduleHooks/"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
-  <inventoryConfigurationEnabled>false</inventoryConfigurationEnabled>
+  <inventoryConfigurationEnabled>true</inventoryConfigurationEnabled>
   <imageImportEnabled>false</imageImportEnabled>
 </rbuilderStatus>
 """

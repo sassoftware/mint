@@ -22,6 +22,7 @@ query_sets_xml = """\
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/1/filter_descriptor"/>
     <name>All Systems</name>
+    <description>All Systems</description>
     <filter_entries/>
     <query_set_id>1</query_set_id>
     <all_members id="http://testserver/api/query_sets/1/all"/>
@@ -43,6 +44,7 @@ query_sets_xml = """\
         <modified_date>2011-01-26T21:59:59+00:00</modified_date>
         <filter_descriptor id="http://testserver/api/query_sets/2/filter_descriptor"/>
         <name>Active Systems</name>
+        <description>Active Systems</description>
         <filter_entries>
           <filter_entry>
             <operator>EQUAL</operator>
@@ -74,6 +76,7 @@ query_sets_xml = """\
         <modified_date>2011-01-26T21:59:59+00:00</modified_date>
         <filter_descriptor id="http://testserver/api/query_sets/3/filter_descriptor"/>
         <name>Inactive Systems</name>
+        <description>Inactive Systems</description>
         <filter_entries>
           <filter_entry>
             <operator>IN</operator>
@@ -109,6 +112,7 @@ query_sets_xml = """\
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/2/filter_descriptor"/>
     <name>Active Systems</name>
+    <description>Active Systems</description>
     <filter_entries>
       <filter_entry>
         <operator>EQUAL</operator>
@@ -140,6 +144,7 @@ query_sets_xml = """\
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/3/filter_descriptor"/>
     <name>Inactive Systems</name>
+    <description>Inactive Systems</description>
     <filter_entries>
       <filter_entry>
         <operator>IN</operator>
@@ -171,6 +176,7 @@ query_sets_xml = """\
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/4/filter_descriptor"/>
     <name>Physical Systems</name>
+    <description>Physical Systems</description>
     <filter_entries>
       <filter_entry>
         <operator>IS_NULL</operator>
@@ -202,6 +208,7 @@ query_sets_xml = """\
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/5/filter_descriptor"/>
     <name>Systems named like 3</name>
+    <description/>
     <filter_entries>
       <filter_entry>
         <operator>LIKE</operator>
@@ -245,6 +252,7 @@ query_set_xml = """\
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/4/filter_descriptor"/>
     <name>Physical Systems</name>
+    <description>Physical Systems</description>
     <filter_entries>
       <filter_entry>
         <operator>IS_NULL</operator>
@@ -280,6 +288,7 @@ query_set_fixtured_xml = """\
     <modified_date>2011-01-05T00:00:00+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/5/filter_descriptor"/>
     <name>Systems named like 3</name>
+    <description/>
     <filter_entries>
       <filter_entry>
         <operator>LIKE</operator>

@@ -6,14 +6,12 @@
 import base64
 import logging
 import os
-import sys
 import tempfile
 import weakref
 
 from conary import errors as conaryErrors
 from conary import versions
 from conary.conaryclient import callbacks
-from conary.dbstore import sqlerrors
 from conary.dbstore import sqllib
 from conary.build import lookaside
 from conary.lib import util
@@ -94,10 +92,10 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
         self._message("Committing database transaction")
 
 class ContentSourceTypes(object):
-    def __init__(self, db, cfg, platforms):
+    def __init__(self, db, cfg, mgr):
         self.db = db
         self.cfg = cfg
-        self.platforms = platforms
+        self.mgr = weakref.ref(mgr)
 
     def _contentSourceTypeModelFactory(self, name, singleton = None, id = None):
         if id is None:
@@ -108,7 +106,7 @@ class ContentSourceTypes(object):
     def _listFromCfg(self):
         allTypesMap = dict()
         allTypes = []
-        pIter = self.platforms.iterPlatforms(withRepositoryLookups=True)
+        pIter = self.mgr().platforms.iterPlatforms(withRepositoryLookups=True)
         for platform in pIter:
             sourceTypes = platform._sourceTypes
             for t, isSingleton in sourceTypes or []:
@@ -147,7 +145,7 @@ class ContentSourceTypes(object):
 
     def _getSourceTypeInstance(self, source):
         sourceClass = contentsources.contentSourceTypes[source.contentSourceType]
-        sourceInst = sourceClass(proxies = self.db.cfg.proxy)
+        sourceInst = sourceClass(proxyMap=self.db.cfg.getProxyMap())
         for field in sourceInst.getFieldNames():
             if hasattr(source, field):
                 val = str(getattr(source, field))
@@ -157,7 +155,7 @@ class ContentSourceTypes(object):
 
     def _getSourceTypeInstanceByName(self, sourceType):
         sourceClass = contentsources.contentSourceTypes[sourceType]
-        return sourceClass(proxies = self.db.cfg.proxy)
+        return sourceClass(proxyMap=self.db.cfg.getProxyMap())
 
     def getDescriptor(self, sourceType):
         sourceTypeInst = self._getSourceTypeInstanceByName(sourceType)
@@ -213,13 +211,10 @@ class Platforms(object):
         self.platforms = []
         self.db = db
         self.cfg = cfg
-        self._reposMgr = db.productMgr.reposMgr
+        self.mgr = weakref.ref(mgr)
         cacheFile = os.path.join(self.cfg.dataPath, 'data', 
                                  'platformName.cache')
-        self.platformCache = PlatformDefCache(cacheFile, 
-                                              self._reposMgr)
-        self.contentSourceTypes = ContentSourceTypes(db, cfg, self)
-        self.mgr = mgr
+        self.platformCache = PlatformDefCache(cacheFile, mgr)
         self.jobStore = PlatformJobStore(self.db)
         self.loader = LoadRunner(self._load, self.db)
 
@@ -345,17 +340,21 @@ class Platforms(object):
         # called when fetching a platform.
         if self.db.siteAuth:
             if platformModel.configurable:
-                platformModel.mirrorPermission = self._checkMirrorPermissions(
-                    platformModel)
+                # XXX this is a hack, we need the platform model passed to the
+                # platform cache somehow
+                self._platformModel = platformModel
+                mirrorPermission = self.platformCache.getMirrorPermission(platformModel.label)
+                del self._platformModel
             else:
-                platformModel.mirrorPermission = False
+                mirrorPermission = False
+            platformModel.mirrorPermission = mirrorPermission
 
     def _updateDatabasePlatformSources(self, platformModel, platformDef):
         platformId = platformModel.platformId
         self._linkPlatformToSourceTypes(platformModel, platformDef)
         contentSourceIds = set()
         for contentSourceType, isSingleton in (platformModel._sourceTypes or []):
-            contentSources = self.mgr.contentSources.listByType(contentSourceType)
+            contentSources = self.mgr().contentSources.listByType(contentSourceType)
             contentSourceIds.update(x.contentSourceId for x in contentSources.instance)
         self.db.db.platformsPlatformSources.sync(platformId=platformId,
             platformSourceIds=contentSourceIds)
@@ -593,8 +592,23 @@ class Platforms(object):
     def list(self):
         return models.Platforms(self.iterPlatforms())
 
-    def _getStatus(self, platform):
+    def _getPlatformSourceStatus(self, platform):
         platStatus = models.PlatformSourceStatus()
+        # XXX this is a hack, we need the platform model passed to the
+        # platform cache somehow
+        self._platformModel = platform
+        valid, connected, message = self.platformCache.getStatus(platform.label)
+        del self._platformModel
+        platStatus.valid = valid
+        platStatus.connected = connected
+        platStatus.message = message
+        return platStatus
+
+    def _getPlatformStatus(self, platform):
+        """
+        Return (valid, connected, message)
+        """
+        reposMgr = self.db.productMgr.reposMgr
         remote = True
         remoteMessage = ''
         remoteConnected = True
@@ -603,10 +617,8 @@ class Platforms(object):
         localConnected = False
 
         if not platform.enabled:
-           platStatus.valid = False
-           platStatus.connected = False
-           platStatus.message = "Platform must be enabled to check its status."
-           return platStatus
+            return (False, False,
+                "Platform must be enabled to check its status.")
 
         openMsg = "Repository not responding: %s."
         connectMsg = "Error connecting to repository %s: %s."
@@ -617,8 +629,7 @@ class Platforms(object):
         successMsg = "Available."
 
         if platform.mode == 'auto':
-            client = self._reposMgr.getAdminClient()
-            from mint.db import repository as reposdb
+            client = reposMgr.getAdminClient()
             host = platform.label.split('@')[0]
             entitlement = self.db.productMgr.reposMgr.db.siteAuth.entitlementKey
             # Go straight to the host as defined by the platform, bypassing
@@ -653,9 +664,9 @@ class Platforms(object):
                 else:
                     remoteMessage = connectMsg % (sourceUrl, e)
 
-        client = self._reposMgr.getAdminClient()
+        client = reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
-        url = self._reposMgr._getFullRepositoryMap().get(
+        url = reposMgr._getFullRepositoryMap().get(
                 platform.repositoryHostname, self._getUrl(platform))
 
         try:
@@ -680,21 +691,20 @@ class Platforms(object):
             local = True
             localConnected = True
 
-        platStatus.valid = local and remote
-        platStatus.connected = localConnected and remoteConnected
-        if platStatus.valid:
-            platStatus.message = successMsg
+        valid = local and remote
+        connected = localConnected and remoteConnected
+        if valid:
+            message = successMsg
         else:
-            platStatus.message = ' '.join([remoteMessage, localMessage])
-
-        return platStatus
+            message = ' '.join([remoteMessage, localMessage])
+        return (valid, connected, message)
 
     def getStatusTest(self, platform):
-        return self._getStatus(platform)
+        return self._getPlatformSourceStatus(platform)
 
     def getStatus(self, platformId):
         platform = self.getById(platformId)
-        return self._getStatus(platform)
+        return self._getPlatformSourceStatus(platform)
 
     def getLoadStatus(self, platformId, jobId):
         job = self.jobStore.get(jobId)
@@ -736,16 +746,15 @@ class Platforms(object):
         return platforms[0]
 
     def getSources(self, platformId):
-        return self.mgr.contentSources.listByPlatformId(platformId)
+        return self.mgr().contentSources.listByPlatformId(platformId)
 
 class ContentSources(object):
 
-    def __init__(self, db, cfg, platforms, contentSourceTypes):
+    def __init__(self, db, cfg, mgr):
         self._sources = []
         self.db = db
         self.cfg = cfg
-        self.platforms = platforms
-        self.contentSourceTypes = contentSourceTypes
+        self.mgr = weakref.ref(mgr)
 
     def _contentSourceModelFactory(self, *args, **kw):
 
@@ -799,7 +808,7 @@ class ContentSources(object):
 
     def _create(self, source):
         try:
-            typeName = self.contentSourceTypes.getIdByName(source.contentSourceType)
+            typeName = self.mgr().contentSourceTypes.getIdByName(source.contentSourceType)
         except errors.ContentSourceTypeNotDefined, e:
             log.error("Failed to create content source %s defined in the config "
                 "file.  The content source type was not defined by any platforms. "
@@ -973,7 +982,7 @@ class ContentSources(object):
         return models.ContentSourceInstances(sources)            
 
     def getStatus(self, source):        
-        sourceInst = self.contentSourceTypes._getSourceTypeInstance(source)
+        sourceInst = self.mgr().contentSourceTypes._getSourceTypeInstance(source)
 
         missing = []
         for field in sourceInst.fields:
@@ -997,15 +1006,12 @@ class ContentSources(object):
 class PlatformManager(manager.Manager):
     def __init__(self, cfg, db, auth):
         manager.Manager.__init__(self, cfg, db, auth)
-        self._reposMgr = db.productMgr.reposMgr
         cacheFile = os.path.join(self.cfg.dataPath, 'data', 
                                  'platformName.cache')
-        self.platformCache = PlatformDefCache(cacheFile, 
-                                              self._reposMgr)
         self.platforms = Platforms(db, cfg, self)
-        self.contentSourceTypes = ContentSourceTypes(db, cfg, self.platforms)
-        self.contentSources = ContentSources(db, cfg, self.platforms,
-                                self.contentSourceTypes)
+        self.contentSourceTypes = ContentSourceTypes(db, cfg, self)
+        self.contentSources = ContentSources(db, cfg, self)
+        self.platformCache = self.platforms.platformCache
 
     def getPlatforms(self, platformId=None):
         return self.platforms.list()
@@ -1019,7 +1025,7 @@ class PlatformManager(manager.Manager):
         pd = proddef.ProductDefinition()
         pd.setBaseLabel(platformLabel)
 
-        client = self._reposMgr.getAdminClient(write=True)
+        client = self.db.productMgr.reposMgr.getAdminClient(write=True)
         if createPlatDef:
             try:
                 pd.loadFromRepository(client)
@@ -1031,7 +1037,7 @@ class PlatformManager(manager.Manager):
                     "enablement." % platformLabel)
                 # Invalidate the platform cache, we know we need to reload this
                 # platform
-                self.platformCache.clear()
+                self.platforms.platformCache.clear()
             except proddef.ProductDefinitionError:
                 # Could not find a product. Look for the platform
                 pl = proddef.PlatformDefinition()
@@ -1089,8 +1095,7 @@ class PlatformManager(manager.Manager):
 
     def getPlatformImageTypeDefs(self, request, platformId):
         platform = self.platforms.getById(platformId)
-        templates = models.PlatformBuildTemplates()
-        platDef = self.platformCache.get(platform.label)
+        platDef = self.platforms.platformCache.get(platform.label)
         from mint import buildtypes
         from mint.rest.api import productversion
         buildDefModels = []
@@ -1219,30 +1224,40 @@ class PlatformManager(manager.Manager):
         return [ x[0] for x in cu ]
 
 class PlatformDefCache(persistentcache.PersistentCache):
-    def __init__(self, cacheFile, reposMgr):
+    def __init__(self, cacheFile, mgr):
         persistentcache.PersistentCache.__init__(self, cacheFile)
-        self._reposMgr = weakref.ref(reposMgr)
+        self.mgr = weakref.ref(mgr)
+
+    def getReposMgr(self):
+        return self.mgr().db.productMgr.reposMgr
 
     def _getPlatDef(self, client, labelStr):
         try:
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
+            self.clearPlatformData(labelStr)
         except reposErrors.InsufficientPermission, err:
             log.error("Failed to lookup platform definition on label %s: %s",
                     labelStr, str(err))
+            self.clearPlatformData(labelStr)
             return None
-        except proddef.ProductDefinitionTroveNotFoundError, e:
-            # Re-raise so this can be handled by the _refresh method.
-            raise e
         except:
             log.exception("Failed to lookup platform definition on label %s:",
                     labelStr)
+            self.clearPlatformData(labelStr)
             return None
 
-        return platDef            
+        platDef.label = labelStr
+        return platDef
 
     def _refresh(self, labelStr):
-        reposMgr = self._reposMgr()
+        if isinstance(labelStr, tuple):
+            if labelStr == self._mirrorKey(labelStr[1]):
+                return self._refreshMirrorPermission(labelStr[1], platform=None)
+            if labelStr == self._statusKey(labelStr[1]):
+                return self._refreshStatus(labelStr[1], platform=None)
+            raise Exception("XXX")
+        reposMgr = self.getReposMgr()
         try:
             client = reposMgr.getAdminClient()
             platDef = self._getPlatDef(client, labelStr)
@@ -1261,7 +1276,6 @@ class PlatformDefCache(persistentcache.PersistentCache):
                 sourceUrl = "https://%s/conary/" % host
 
             try:
-                from mint.db import repository as reposdb
                 if reposMgr.db.siteAuth:
                     entitlement = reposMgr.db.siteAuth.entitlementKey
                 else:
@@ -1275,3 +1289,55 @@ class PlatformDefCache(persistentcache.PersistentCache):
                 log.error("Platform Definition not found for %s: %s" % (labelStr, e))
                 return None
 
+    def _getPlatform(self, labelStr, platform, commit=True):
+        # Helper function to reduce code duplication - if a platform is not
+        # presented, attempt to fetch it from the cache; if not available,
+        # clear the caches
+        if platform is not None:
+            return platform
+        platform = self.get(labelStr)
+        if platform is None:
+            self.clearPlatformData(labelStr, commit=commit)
+            return None
+        return platform
+
+    @classmethod
+    def _mirrorKey(cls, labelStr):
+        return ('mirrorPermission', labelStr)
+
+    @classmethod
+    def _statusKey(cls, labelStr):
+        return ('status', labelStr)
+
+    def _refreshMirrorPermission(self, labelStr, platform=None, commit=True):
+        platformMgr = self.mgr()
+        platformModel = platformMgr.platforms._platformModel
+        mirrorPermission = platformMgr.platforms._checkMirrorPermissions(platformModel)
+        self._update(self._mirrorKey(labelStr), mirrorPermission,
+            commit=commit)
+        return mirrorPermission
+
+    def _refreshStatus(self, labelStr, platform=None, commit=True):
+        platformMgr = self.mgr()
+        platformModel = platformMgr.platforms._platformModel
+        (valid, connected, message) = platformMgr.platforms._getPlatformStatus(
+            platformModel)
+        self._update(self._mirrorKey(labelStr), (valid, connected, message),
+            commit=commit)
+        return (valid, connected, message)
+
+    def _clearMirrorPermission(self, labelStr, commit=True):
+        self.clearKey(self._mirrorKey(labelStr), commit=commit)
+
+    def _clearStatus(self, labelStr, commit=True):
+        self.clearKey(self._statusKey(labelStr), commit=commit)
+
+    def getMirrorPermission(self, labelStr):
+        return self.get(self._mirrorKey(labelStr))
+
+    def getStatus(self, labelStr):
+        return self.get(self._statusKey(labelStr))
+
+    def clearPlatformData(self, labelStr, commit=True):
+        self._clearMirrorPermission(labelStr, commit=commit)
+        self._clearStatus(labelStr, commit=commit)

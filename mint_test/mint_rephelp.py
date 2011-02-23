@@ -763,14 +763,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         try:
             cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
         except:
-            print "Failure connecting to localhost:%s, tryint to restart server" % (server.port, )
-            try:
-                server.stop()
-                server.start()
-                cli = mint.client.MintClient('http://%s:%s@localhost:%s/xmlrpc-private' % ('intuser', 'intpass', server.port))
-            except:
-                print "Failure connecting to localhost:%s" % (server.port, )
-                raise
+            print "Failure connecting to localhost:%s" % (server.port, )
+            serverCache.stopServer(serverIdx)
+            raise
         auth = cli.checkAuth()
         assert(auth.authorized)
         return cli

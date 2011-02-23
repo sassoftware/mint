@@ -1,20 +1,16 @@
 #!/usr/bin/python
-import StringIO
 import testsetup
 from testutils import mock
 
 from rpath_proddef import api1 as proddef
 
-from mint import mint_error
-
-from mint import userlevels
+from conary.lib.http import request as req_mod
 from mint.db import repository as reposdb
 from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import platformmgr
 from mint.rest.db import reposmgr
 
-from mint_test import mint_rephelp
 from mint_test.resttest.apitest import restbase
 
 class PlatformManagerTest(restbase.BaseRestTest):
@@ -205,12 +201,15 @@ class PlatformManagerTest(restbase.BaseRestTest):
             2)
 
     def testProxySettingsPropagated(self):
-        proxies = dict(http = "http://blah.com:1234",
+        proxies = dict(http = "https://blah.com:12345",
                        https = "https://blah.com:12345")
         db = self.openRestDatabase()
         db.cfg.proxy.update(proxies)
         src = db.platformMgr.contentSourceTypes._getSourceTypeInstanceByName('RHN')
-        self.failUnlessEqual(src.proxies, proxies)
+        self.assertEqual(src.proxyMap.filterList[0][1],
+                [req_mod.URL('https://blah.com:12345')])
+        self.assertEqual(src.proxyMap.filterList[1][1],
+                [req_mod.URL('https://blah.com:12345')])
 
     def testPlatformsLinkedToSources(self):
         # list platforms and sources so they're created

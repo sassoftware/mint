@@ -67,7 +67,8 @@ class TargetManager(manager.Manager):
             field='target.targetid', operator='EQUAL', value=targetId)
         filterEntry.save()
         querySetName = "All %s systems" % targetName
-        querySet, created = models.QuerySet.objects.get_or_create(name=querySetName, resource_type='system')
+        querySet, created = models.QuerySet.objects.get_or_create(name=querySetName, 
+            description=querySetName, resource_type='system')
         if not created:
             log.info("Already a query set named %s, not creating a new one." %
                 querySetName)

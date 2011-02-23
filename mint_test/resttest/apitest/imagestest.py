@@ -91,12 +91,12 @@ class ImagesTest(restbase.BaseRestTest):
   <name>ginkgo-Raw Filesystem (x86)</name>
   <baseFileName>ginkgo-1-x86_64</baseFileName>
   <troveName>blabbedy</troveName>
-  <troveVersion>/local@local:COOK/1.0-1-1</troveVersion>
-  <troveFlavor/>
   <version href="%(productVersion)s"/>
   <stage><href>Development</href></stage>
-  <buildCount>1</buildCount>
   <imageType>vmwareEsxImage</imageType>
+  <troveFlavor /> <!-- explicitly set it to empty string -->
+  <troveVersion /> <!-- explicitly set it to empty string -->
+  <buildCount /> <!-- explicitly set it to empty string -->
   <files>
     <file>
       <title>My super-duper file</title>
@@ -133,6 +133,8 @@ class ImagesTest(restbase.BaseRestTest):
         req, img = client.call('POST', 'products/%s/images' % hostname, imageXml)
         self.failUnlessEqual(img.stage, "Development")
         self.failUnlessEqual(img.version, productVersion)
+        self.failUnlessEqual(str(img.troveVersion), '/local@local:COOK/1-1-1')
+        self.failUnlessEqual(str(img.troveFlavor), 'is: x86')
 
         self.failUnlessEqual(len(MockRepeaterClient.calls), 1)
         rcargs, rckwargs = MockRepeaterClient.calls[0]
@@ -361,6 +363,45 @@ class ImagesTest(restbase.BaseRestTest):
                 for x in resp.files ],
             exp)
 
+    def testSetFilesForImagePushToRepo(self):
+        client = self.getRestClient(username='adminuser')
+        token = self._setOutputToken(1)
+
+        headers = {
+                'content-type': 'text/plain',
+                'x-rbuilder-outputtoken': token,
+                }
+        data = """\
+<files>
+  <file title="title1" size="10" sha1="d68146c2e5fe437a9f2c7a8affb88271cff46182" fileName="imagefile_1.iso" />
+  <metadata>
+    <owner>JeanValjean</owner>
+  </metadata>
+</files>
+"""
+        resp = client.call('PUT', 'products/testproject/images/1/files',
+                data, headers=headers)[1]
+
+        exp = [ ('title1', 10,
+            'd68146c2e5fe437a9f2c7a8affb88271cff46182', 'imagefile_1.iso')]
+        self.failUnlessEqual(
+            [ (x.title, x.size, x.sha1, x.fileName)
+                for x in resp.files ],
+            exp)
+        fqdn = 'testproject.rpath.local2'
+        db = self.openRestDatabase()
+        cli = db.productMgr.reposMgr.getConaryClientForProduct(fqdn,
+            admin=True)
+        repos = cli.getRepos()
+        from conary import versions
+        label = versions.Label('%s@yournamespace:testproject-1.0-devel' %
+            fqdn)
+        trvTup = repos.findTrove(label, ("image-testproject:source", None, None))[0]
+        self.failUnlessEqual(str(trvTup[1]),
+            '/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1.0-1')
+        trv = repos.getTrove(*trvTup)
+        self.failUnlessEqual(dict(trv.troveInfo.metadata.flatten()[0].keyValue),
+            dict(owner="JeanValjean"))
 
     class MockKey(object):
         class MockPolicy(object):

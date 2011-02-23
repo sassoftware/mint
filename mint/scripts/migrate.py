@@ -2292,7 +2292,7 @@ class MigrateTo_52(SchemaMigration):
         return True
 
 class MigrateTo_53(SchemaMigration):
-    Version = (53, 1)
+    Version = (53, 2)
 
     def migrate(self):
         db = self.db
@@ -2455,6 +2455,19 @@ class MigrateTo_53(SchemaMigration):
                 "entry_text" TEXT NOT NULL,
                 "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
             )""")
+
+        return True
+
+    def migrate2(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE "querysets_queryset"
+            ADD COLUMN "description" TEXT
+        """)
+        cursor.execute("""
+            UPDATE "querysets_queryset"
+            SET "description" = "name"
+        """)
 
         return True
 

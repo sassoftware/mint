@@ -82,7 +82,7 @@ class WigTask(plug_worker.TaskHandler):
                 title = "Windows Image (WIM)"
             size, fobj = self.wigClient.getResults(kind)
             outputName = '%s.%s' % (self.jobData['baseFileName'], kind)
-            self.postResults([fobj, size, outputName, title])
+            self.postResults([(fobj, size, outputName, title)])
         else:
             self.convert()
         self.sendStatus(iconst.WIG_JOB_DONE, "Image built")

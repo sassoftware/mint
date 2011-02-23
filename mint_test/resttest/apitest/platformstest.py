@@ -120,24 +120,38 @@ class PlatformsTest(BaseTest):
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml, xml)
 
+        platLabel = 'localhost@rpath:plat-1'
+
+        platformMgr = self.openRestDatabase().platformMgr
         mock.mock(proddef.PlatformDefinition, 'loadFromRepository')
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             reposErrors.OpenError)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml2, xml)
+
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             conaryErrors.ConaryError)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml3, xml)
+
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             proddef.ProductDefinitionTroveNotFoundError)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml4, xml)
+
         proddef.PlatformDefinition.loadFromRepository._mock.raiseErrorOnAccess(
             Exception)
+        # Reset platform cache
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformSourceStatusXml5, xml)
@@ -337,6 +351,10 @@ class PlatformsTest(BaseTest):
         mock.mockFunctionOnce(reposmgr.RepositoryManager,
                               '_getFullRepositoryMap', 
                               {'localhost':'http://localhost/conary/'})
+
+        platLabel = 'localhost@rpath:plat-1'
+        platformMgr = self.openRestDatabase().platformMgr
+        platformMgr.platforms.platformCache._clearStatus(platLabel)
         req, platform = client.call('GET', uri)
         xml = self._toXml(platform, client, req)
         self.assertXMLEquals(platformStatus2Xml, xml)
