@@ -45,6 +45,10 @@ class BaseManager(object):
         # We instantiate _rest_db lazily
         self._rest_db = None
 
+    def setAuth(self, auth, user):
+        self._auth = auth
+        self.user = user
+
     @property
     def rest_db(self):
         if self.cfg is None:

@@ -103,18 +103,18 @@
   </object>
 
   <object pk="1" model="projects.members">
-    <field to="projects.project" name="productId" rel="ManyToOneRel">2</field>
-    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="rbuilder.users" name="user" rel="ManyToOneRel">1</field>
     <field type="SmallIntegerField" name="level">0</field>
   </object>
   <object pk="2" model="projects.members">
-    <field to="projects.project" name="productId" rel="ManyToOneRel">2</field>
-    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
+    <field to="rbuilder.users" name="user" rel="ManyToOneRel">2</field>
     <field type="SmallIntegerField" name="level">2</field>
   </object>
   <object pk="3" model="projects.members">
-    <field to="projects.project" name="productId" rel="ManyToOneRel">3</field>
-    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field to="rbuilder.users" name="user" rel="ManyToOneRel">1</field>
     <field type="SmallIntegerField" name="level">0</field>
   </object>
 

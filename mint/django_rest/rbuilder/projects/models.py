@@ -61,16 +61,16 @@ class Project(modellib.XObjIdModel):
         
     def serialize(self, request):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        member = self.members.filter(userid=request._authUser)
+        member = self.membership.filter(user=request._authUser)
         if member:
-            role = userlevels[member.level]
+            role = member[0].level
             xobjModel.role = role
         return xobjModel
 
 class Member(modellib.XObjModel):
-    productId = models.ForeignKey(Project, db_column='projectid',
-        related_name='project_members')
-    userid = models.ForeignKey(rbuildermodels.Users, db_column='userid',
+    project = models.ForeignKey(Project, db_column='projectid',
+        related_name='membership')
+    user = models.ForeignKey(rbuildermodels.Users, db_column='userid',
         related_name='project_membership')
     level = models.SmallIntegerField()
     class Meta:

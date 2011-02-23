@@ -9,6 +9,7 @@ from django.http import HttpResponseNotAllowed, HttpResponseNotFound
 
 from django_restapi import resource
 
+from mint import users
 from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthenticationRequired
 from mint.django_rest.rbuilder.manager import rbuildermanager
 
@@ -27,7 +28,17 @@ class BaseService(resource.Resource):
 
     def __call__(self, request, *args, **kw):
         self.mgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
+        self.setManagerAuth(request)
         return resource.Resource.__call__(self, request, *args, **kw)
+
+    def setManagerAuth(self, request):
+        username, password = request._auth
+        user = request._authUser
+        if username and password and user:
+            mintAuth = users.Authorization(username=username,
+                token=(username, password), admin=request._is_admin,
+                userId=user.userid)
+            self.mgr.setAuth(mintAuth, user)
 
     def read(self, request, *args, **kwargs):
         resp = None
