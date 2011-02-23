@@ -135,6 +135,8 @@ class FilterEntry(modellib.XObjIdModel):
     operator = models.TextField(choices=OPERATOR_CHOICES)
     value = models.TextField(null=True)
 
+    load_fields = [field, operator, value]
+
 class QueryTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'query_tag')
