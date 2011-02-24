@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
 
     def listViews(self):
-        baseClass = views.AbstractInventoryService
+        baseClass = views.BaseInventoryService
         for k, v in views.__dict__.items():
             if v is baseClass or not inspect.isclass(v):
                 continue
