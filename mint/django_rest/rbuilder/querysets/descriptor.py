@@ -65,27 +65,31 @@ def getFieldValueOptions(field):
 def allOperatorChoices():
     operatorChoices = OperatorChoices()
     operatorChoices.choices = []
-    operators = [o for o in modellib.operatorMap
+    operators = [modellib.operatorMap[o] for o in modellib.operatorMap
         if o not in ('IS_NULL', None)]
     for operator in operators:
-        operatorChoices.choices.append(OperatorChoice(operator, operator))
+        operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
+            operator.description))
     return operatorChoices
 
 def strOperatorChoices():
     operatorChoices = OperatorChoices()
     operatorChoices.choices = []
-    operators = [o for o in modellib.operatorMap
+    operators = [modellib.operatorMap[o] for o in modellib.operatorMap
         if o not in ('LESS_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN',
             'GREATER_THAN_OR_EQUAL', 'IS_NULL', None)]
     for operator in operators:
-        operatorChoices.choices.append(OperatorChoice(operator, operator))
+        operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
+            operator.description))
     return operatorChoices
 
 def boolOperatorChoices():
     operatorChoices = OperatorChoices()
     operatorChoices.choices = []
-    for operator in ['EQUAL', 'NOT_EQUAL']:
-        operatorChoices.choices.append(OperatorChoice(operator, operator))
+    operators = [modellib.operatorMap['EQUAL'], modellib.operatorMap['NOT_EQUAL']]
+    for operator in operators:
+        operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
+            operator.description))
     return operatorChoices
 
 def getFieldOperatorChoices(field):
@@ -98,7 +102,9 @@ def getFieldOperatorChoices(field):
     operatorChoices = strOperatorChoices()
 
     if field.null:
-        operatorChoices.choices.append(OperatorChoice('IS_NULL', 'IS_NULL'))
+        operator = modellib.operatorMap['IS_NULL']
+        operatorChoices.choices.append(OperatorChoice(operator.filterTerm,
+            operator.description))
 
     return operatorChoices
 
