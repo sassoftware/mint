@@ -69,6 +69,7 @@ filterTermMap = {
 class Operator(object):
     filterTerm = None
     operator = None
+    description = None
 
     def prepValue(self, field, valueStr):
         if isinstance(field, fields.BooleanField):
@@ -99,6 +100,7 @@ class BooleanOperator(Operator):
 class InOperator(Operator):
     filterTerm = 'IN'
     operator = 'in'
+    description = 'in'
 
     def prepValue(self, field, valueStr):
         if not (valueStr.startswith('(') and valueStr.endswith(')')):
@@ -112,41 +114,51 @@ class InOperator(Operator):
 
 class NotInOperator(InOperator):
     filterTerm = 'NOT_IN'
+    description = 'Not present in'
 
 class NullOperator(BooleanOperator):
     filterTerm = 'IS_NULL'
     operator = 'isnull'
+    description = 'Is NULL'
 
 class EqualOperator(Operator):
     filterTerm = 'EQUAL'
     operator = 'exact'
+    description = 'Equal to'
 
 class NotEqualOperator(EqualOperator):
     filterTerm = 'NOT_EQUAL'
+    description = 'Not equal to'
 
 class LessThanOperator(Operator):
     filterTerm = 'LESS_THAN'
     operator = 'lt'
+    description = 'Less than'
 
 class LessThanEqualOperator(Operator):
     filterTerm = 'LESS_THAN_OR_EQUAL'
     operator = 'lte'
+    description = 'Less than or equal to'
 
 class GreaterThanOperator(Operator):
     filterTerm = 'GREATER_THAN'
     operator = 'gt'
+    description = 'Greater than'
 
 class GreaterThanEqualOperator(Operator):
     filterTerm = 'GREATER_THAN_OR_EQUAL'
     operator = 'gte'
+    description = 'Greater than or equal to'
 
 class LikeOperator(Operator):
     filterTerm = 'LIKE'
     operator = 'contains'
+    description = 'Contains'
 
 class NotLikeOperator(LikeOperator):
     filterTerm = 'NOT_LIKE'
     operator = 'contains'
+    description = 'Does not contain'
 
 def operatorFactory(operator):
     return operatorMap[operator]
