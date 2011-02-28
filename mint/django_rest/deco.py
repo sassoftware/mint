@@ -143,7 +143,7 @@ def return_xml(function):
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
         request = args[1]
-        response.write(ret_val.to_xml(request))
+        response.model = ret_val
         return response
 
     return inner

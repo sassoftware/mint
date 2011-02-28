@@ -363,7 +363,7 @@ class PlatformsTest(BaseTest):
         req, platforms = self._getPlatformModels()
         
         platformLoad = models.PlatformLoad()
-        platformLoad.uri = "http://no.such.host/1234"
+        platformLoad.loadUri = "http://no.such.host/1234"
         platformLoad.jobId = "abcd1234"
         platformLoad.platformId = platforms.platforms[0].platformId
 
