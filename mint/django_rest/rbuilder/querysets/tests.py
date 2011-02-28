@@ -130,6 +130,31 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(querySet.filter_entries.all()[1].value,
             '3')
 
+    def testDeleteQuerySet(self):
+        response = self._delete('/api/query_sets/5/',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 204)
+        
+        try:
+            querySet = models.QuerySet.objects.get(pk=5)
+        except models.QuerySet.DoesNotExist:
+            return
+        else:
+            self.assertTrue(False)
+
+    def testDeleteReadOnlyQuerySet(self):
+        response = self._delete('/api/query_sets/1/',
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        xobjModel = xobj.parse(response.content)
+        fault = xobjModel.fault
+        self.assertEquals(fault.message,
+            "The All Systems Query Set can not be modified.")
+
+        querySet = models.QuerySet.objects.get(pk=1)
+        self.assertEquals(querySet.name,
+            "All Systems")
+
 class QuerySetChildFixturedTestCase(XMLTestCase):
     fixtures = ['queryset_children', 'system_collection']
 
