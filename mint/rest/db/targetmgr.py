@@ -76,6 +76,7 @@ class TargetManager(manager.Manager):
         querySet.filter_entries.add(filterEntry)
         rbuilderManager = rbuildermanager.RbuilderManager(self.cfg, 
             self.auth.username)
+        querySet.can_modify = False
         return rbuilderManager.addQuerySet(querySet)
 
     def getTargetData(self, targetType, targetName):

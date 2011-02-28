@@ -38,6 +38,12 @@ class QuerySetService(BaseQuerySetService):
     def rest_PUT(self, request, query_set_id, query_set):
         return self.mgr.updateQuerySet(query_set)
 
+    def rest_DELETE(self, request, query_set_id):
+        querySet = self.mgr.getQuerySet(query_set_id)
+        self.mgr.deleteQuerySet(querySet)
+        response = http.HttpResponse(status=204)
+        return response
+
 class QuerySetAllResultService(BaseQuerySetService):
     
     @return_xml

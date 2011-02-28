@@ -9,6 +9,6 @@ from mint.django_rest.rbuilder import errors
 class QuerySetError(errors.RbuilderError):
     pass
 
-class AllSystemsQuerySetReadOnly(QuerySetError):
-    "The All Systems Query Set can not be modified."
-    stauts = 200
+class QuerySetReadOnly(QuerySetError):
+    "The %(querySetName)s Query Set can not be modified."
+    status = 200

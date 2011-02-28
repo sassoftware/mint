@@ -25,6 +25,7 @@
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
       <object pk="5"/>
     </field>
+    <field type="BooleanField" name="can_modify">True</field>
   </object>
   <object pk="6" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">6</field>
@@ -40,6 +41,7 @@
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
       <object pk="6"/>
     </field>
+    <field type="BooleanField" name="can_modify">True</field>
   </object>
   <object pk="7" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">7</field>
@@ -55,6 +57,7 @@
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
       <object pk="7"/>
     </field>
+    <field type="BooleanField" name="can_modify">True</field>
   </object>
   <object pk="8" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">8</field>
@@ -74,6 +77,7 @@
       <object pk="7"/>
       <object pk="8"/>
     </field>
+    <field type="BooleanField" name="can_modify">True</field>
   </object>
   <object pk="9" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">9</field>
@@ -88,6 +92,7 @@
     <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
     </field>
+    <field type="BooleanField" name="can_modify">True</field>
   </object>
   <object pk="10" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">10</field>
@@ -102,6 +107,7 @@
     <field to="querysets.queryset" name="children" rel="ManyToManyRel"/>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
     </field>
+    <field type="BooleanField" name="can_modify">True</field>
   </object>
   <object pk="11" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">11</field>
@@ -119,6 +125,7 @@
     </field>
     <field to="querysets.filterentry" name="filter_entries" rel="ManyToManyRel">
     </field>
+    <field type="BooleanField" name="can_modify">True</field>
   </object>
   <object pk="12" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">12</field>
