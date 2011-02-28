@@ -181,6 +181,8 @@ class Image(Model):
     files = fields.ModelField(ImageFileList)
     baseFileName = fields.CharField()
     metadata = fields.ModelField(ImageMetadata)
+    importDescriptor = fields.UrlField('products.images.importDescriptor',  
+                                       ['hostname', 'imageId'])
 
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.

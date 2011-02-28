@@ -272,6 +272,7 @@ class MintConfig(conarycfg.ConfigFile):
     
     # image import
     imageImportEnabled = (CfgBool, False, "Whether or not base images can be imported directly as project images")
+    importDescriptorPath = (CfgPath, RBUILDER_DATA + 'data/importDescriptor.xml')
 
     # *** BEGIN DEPRECATED VALUES ***
     # These values are no longer in active use but must remain here so that

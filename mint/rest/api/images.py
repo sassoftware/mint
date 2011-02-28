@@ -28,6 +28,7 @@ class ProductImagesController(base.BaseController):
             'stop'  : {'POST' : 'stop'},
             'status': {'GET': 'getStatus', 'PUT': 'setStatus'},
             'buildLog': {'GET': 'getBuildLog', 'POST': 'postBuildLog'},
+            'importDescriptor' : {'GET': 'getImportDescriptor'},
             }
 
     @auth.public
@@ -89,3 +90,13 @@ class ProductImagesController(base.BaseController):
 
         # 204 No Content
         return Response(status=204)
+
+    @auth.tokenRequired
+    def getImportDescriptor(self, request, hostname, imageId):
+        # Return static xml file
+        response = Response(status=200)
+        importDescriptorFile = open(self.cfg.importDescriptorPath)
+        importDescriptorData = importDescriptorFile.read()
+        importDescriptorFile.close()
+        response.write(importDescriptorData)
+        return response
