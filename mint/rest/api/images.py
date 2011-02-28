@@ -91,12 +91,12 @@ class ProductImagesController(base.BaseController):
         # 204 No Content
         return Response(status=204)
 
-    @auth.tokenRequired
+    @auth.public
     def getImportDescriptor(self, request, hostname, imageId):
         # Return static xml file
-        response = Response(status=200)
         importDescriptorFile = open(self.cfg.importDescriptorPath)
         importDescriptorData = importDescriptorFile.read()
         importDescriptorFile.close()
-        response.write(importDescriptorData)
+        response = Response(status=200, content=importDescriptorData,
+            content_type='text/xml')
         return response
