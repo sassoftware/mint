@@ -40,8 +40,6 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def addQuerySet(self, querySet):
-        if querySet.name == 'All Systems':
-            raise errors.AllSystemsQuerySetReadOnly()
         querySet.save()
         self.tagQuerySet(querySet)
         if querySet.resource_type == 'system' and querySet.isTopLevel():
@@ -50,13 +48,20 @@ class QuerySetManager(basemanager.BaseManager):
 
     @exposed
     def updateQuerySet(self, querySet):
-        if querySet.name == 'All Systems':
-            raise errors.AllSystemsQuerySetReadOnly()
+        if not querySet.can_modify:
+            raise errors.QuerySetReadOnly(querySetName=querySet.name)
         querySet.save()
         self.tagQuerySet(querySet)
         if querySet.resource_type == 'system' and querySet.isTopLevel():
             self.addToAllQuerySet(querySet)
         return querySet
+
+    @exposed
+    def deleteQuerySet(self, querySet):
+        if querySet.can_modify: 
+            querySet.delete()
+        else:
+            raise errors.QuerySetReadOnly(querySetName=querySet.name)
 
     def addToAllQuerySet(self, querySet):
         allQuerySet = models.QuerySet.objects.get(name='All Systems')

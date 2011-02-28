@@ -2292,7 +2292,7 @@ class MigrateTo_52(SchemaMigration):
         return True
 
 class MigrateTo_53(SchemaMigration):
-    Version = (53, 2)
+    Version = (53, 3)
 
     def migrate(self):
         db = self.db
@@ -2467,6 +2467,18 @@ class MigrateTo_53(SchemaMigration):
         cursor.execute("""
             UPDATE "querysets_queryset"
             SET "description" = "name"
+        """)
+
+        return True
+
+    def migrate3(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE "querysets_queryset"
+            ADD COLUMN "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
+        """)
+        cursor.execute("""
+            UPDATE "querysets_queryset" SET "can_modify" = false
         """)
 
         return True
