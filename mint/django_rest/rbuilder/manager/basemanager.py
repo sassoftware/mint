@@ -39,12 +39,12 @@ class BaseManager(object):
 
 class BaseRbuilderManager(object):
 
-    MANAGERS = []
-    managers = []
+    MANAGERS = {}
 
     def __init__(self, cfg=None, userName=None):
         self.cfg = cfg
         self._auth = None
+        self.managers = []
         
         if not self.cfg:
             try:

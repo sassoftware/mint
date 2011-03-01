@@ -20,20 +20,23 @@ from mint.django_rest.rbuilder.projects.manager import ProjectManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
-    MANAGERS = [
-        systemmgr.SystemManager,
-        versionmgr.VersionManager,
-        repeatermgr.RepeaterManager,
-        jobmgr.JobManager,
-        QuerySetManager,
-        PackageManager,
-        ChangeLogManager,
-        ProjectManager,
-    ]
+    MANAGERS = {
+        'sysMgr' : systemmgr.SystemManager,
+        'versionMgr' : versionmgr.VersionManager,
+        'repeaterMgr' : repeatermgr.RepeaterManager,
+        'jobMgr' : jobmgr.JobManager,
+        'querySetMgr' : QuerySetManager,
+        'packageMgr' : PackageManager,
+        'changeLogMgr' : ChangeLogManager,
+        'projectMgr' : ProjectManager,
+    }
 
     def __init__(self, cfg=None, userName=None):
         super(self.__class__, self).__init__(cfg=cfg, userName=userName)
-        self.managers = [m(weakref.proxy(self)) for m in self.MANAGERS]
+        for name, manager in self.MANAGERS.items():
+            mgr = manager(weakref.proxy(self))
+            setattr(self, name, mgr)
+            self.managers.append(mgr)
 
         # Methods we simply copy
         for subMgr in self.managers:
