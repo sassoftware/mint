@@ -107,7 +107,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # Custom settings for pagination
-PER_PAGE = 10
+PER_PAGE = 50
 
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK' : metrics.show_toolbar,

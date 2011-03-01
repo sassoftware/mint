@@ -5,8 +5,13 @@
 # All rights reserved.
 #
 
+from django import http
+
 from mint.django_rest.deco import return_xml, requires
+from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder import service
+from mint.django_rest.rbuilder.querysets import filterdescriptors
+from mint.django_rest.rbuilder.querysets import models
 
 class BaseQuerySetService(service.BaseService):
     pass
@@ -32,6 +37,12 @@ class QuerySetService(BaseQuerySetService):
     @return_xml
     def rest_PUT(self, request, query_set_id, query_set):
         return self.mgr.updateQuerySet(query_set)
+
+    def rest_DELETE(self, request, query_set_id):
+        querySet = self.mgr.getQuerySet(query_set_id)
+        self.mgr.deleteQuerySet(querySet)
+        response = http.HttpResponse(status=204)
+        return response
 
 class QuerySetAllResultService(BaseQuerySetService):
     
@@ -68,6 +79,14 @@ class QuerySetChildResultService(BaseQuerySetService):
 
 class QuerySetFilterDescriptorService(BaseQuerySetService):
 
-    @return_xml
     def rest_GET(self, request, query_set_id):
-        return self.mgr.getQuerySetFilterDescriptor(query_set_id)
+        filterDescriptor = models.FilterDescriptor()
+        filterDescriptor._parents = [rbuildermodels.Pk(query_set_id)]
+        filterDescriptorId = filterDescriptor.get_absolute_url(request)
+        code = 200
+        response = http.HttpResponse(status=code, content_type='text/xml')
+        response.content = \
+            filterdescriptors.system_filter_descriptor.replace('@@ID@@', 
+                filterDescriptorId)
+        return response
+

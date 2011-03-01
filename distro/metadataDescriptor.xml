@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<metadataDescriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/factorydef-1.0.xsd    factorydef-1.0.xsd">
+  <metadata></metadata>
+  <dataFields>
+    <field>
+      <name>metadata.owner</name>
+      <help lang="en_US">@Help_import_image_owner@</help>
+      <readonly>true</readonly>
+      <descriptions>
+        <desc>Owner</desc>
+      </descriptions>
+      <type>str</type>
+      <default/>
+    </field>
+    <field>
+      <name>metadata.admin</name>
+      <help lang="en_US">@Help_import_image_admin@</help>
+      <readonly>true</readonly>
+      <descriptions>
+        <desc>Admin</desc>
+      </descriptions>
+      <type>str</type>
+      <default/>
+    </field>
+    <field>
+      <name>metadata.location</name>
+      <required>true</required>
+      <descriptions>
+        <desc>Location</desc>
+      </descriptions>
+      <help lang="en_US">@Help_import_image_location@</help>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>Internal</desc>
+          </descriptions>
+          <key>internal</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>DMZ</desc>
+          </descriptions>
+          <key>dmz</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Public</desc>
+          </descriptions>
+          <key>public</key>
+        </describedValue>
+      </enumeratedType>
+    </field>
+    <field>
+      <name>metadata.billingCode</name>
+      <help lang="en_US">@Help_import_image_billing_code@</help>
+      <descriptions>
+        <desc>Billing Code</desc>
+      </descriptions>
+      <type>str</type>
+      <default/>
+    </field>
+    <field>
+      <name>metadata.deptCode</name>
+      <help lang="en_US">@Help_import_image_dept_code@</help>
+      <descriptions>
+        <desc>Department Code</desc>
+      </descriptions>
+      <type>str</type>
+      <default/>
+    </field>
+    <field>
+      <name>metadata.cost</name>
+      <help lang="en_US">@Help_import_image_cost@</help>
+      <descriptions>
+        <desc>Cost</desc>
+      </descriptions>
+      <type>str</type>
+      <default/>
+    </field>
+  </dataFields>
+</metadataDescriptor>

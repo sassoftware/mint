@@ -56,8 +56,17 @@ class UpdatePackageIndex(PackageIndexer):
             cu.execute('SELECT COUNT(*) FROM PackageIndexMark')
             if not cu.fetchone()[0]:
                 cu.execute('INSERT INTO PackageIndexMark VALUES(0)')
+                oldMark = 0
+            else:
+                cu.execute("SELECT MAX(mark) FROM PackageIndexMark")
+                oldMark = cu.fetchone()[0]
             cu.execute("SELECT COALESCE(MAX(timestamp), 0) FROM Commits")
             newMark = cu.fetchone()[0]
+            # If the oldMark was 1, and there have been no comits (newMark is
+            # 0), preserve the oldMark of 1, so that the external package
+            # index does not get blown away.
+            if newMark == 0 and oldMark == 1:
+                newMark = 1
 
             # Clear out Package index if the timestamp in PackageIndexMark == 0
             cu.execute("""DELETE FROM PackageIndex WHERE
@@ -154,13 +163,17 @@ class UpdatePackageIndexExternal(PackageIndexer):
 
     def updateMark(self):
         # This code exists to overcome the situation where there are no
-        # internal projects on the rBuilder. internal package index code will
-        # delete the package index if there is no mark or a mark of zero.
-        # this code sets the mark to "1" to ensure no race conditions exist
+        # internal projects on the rBuilder, or there are internal projects but
+        # they haven't had any commits. internal package index code will delete
+        # the package index if there is no mark or a mark of zero.  this code
+        # sets the mark to "1" to ensure no race conditions exist
         # sorrounding the setting of the mark.
         cu = self.db.transaction()
         cu.execute("SELECT COUNT(*) FROM Projects WHERE external = 0")
-        if not cu.fetchone()[0]:
+        internalProjects = cu.fetchone()[0]
+        cu.execute("SELECT COUNT(*) FROM Commits")
+        commits = cu.fetchone()[0]
+        if not internalProjects or not commits:
             cu.execute("DELETE FROM PackageIndexMark")
             cu.execute("INSERT INTO PackageIndexMark ( mark ) VALUES ( 1 )")
             self.db.commit()

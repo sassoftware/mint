@@ -28,6 +28,7 @@ class ProductImagesController(base.BaseController):
             'stop'  : {'POST' : 'stop'},
             'status': {'GET': 'getStatus', 'PUT': 'setStatus'},
             'buildLog': {'GET': 'getBuildLog', 'POST': 'postBuildLog'},
+            'metadataDescriptor' : {'GET': 'getMetadataDescriptor'},
             }
 
     @auth.public
@@ -89,3 +90,13 @@ class ProductImagesController(base.BaseController):
 
         # 204 No Content
         return Response(status=204)
+
+    @auth.public
+    def getMetadataDescriptor(self, request, hostname, imageId):
+        # Return static xml file
+        metadataDescriptorFile = open(self.cfg.metadataDescriptorPath)
+        metadataDescriptorData = metadataDescriptorFile.read()
+        metadataDescriptorFile.close()
+        response = Response(status=200, content=metadataDescriptorData,
+            content_type='text/xml')
+        return response

@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(53, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(53, 3)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1975,25 +1975,30 @@ def _createQuerySetSchema(db):
             "description" TEXT,
             "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
             "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
-            "resource_type" TEXT NOT NULL
+            "resource_type" TEXT NOT NULL,
+            "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
         )""")
     changed |= _addTableRows(db, "querysets_queryset", "name",
         [dict(name="All Systems", resource_type="system",
             description="All Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
-            modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            modified_date=str(datetime.datetime.now(tz.tzutc())),
+            can_modify=False),
          dict(name="Active Systems", resource_type="system",
             description="Active Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
-            modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            modified_date=str(datetime.datetime.now(tz.tzutc())),
+            can_modify=False),
          dict(name="Inactive Systems", resource_type="system",
             description="Inactive Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
-            modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            modified_date=str(datetime.datetime.now(tz.tzutc())),
+            can_modify=False),
          dict(name="Physical Systems", resource_type="system",
             description="Physical Systems",
             created_date=str(datetime.datetime.now(tz.tzutc())),
-            modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            modified_date=str(datetime.datetime.now(tz.tzutc())),
+            can_modify=False),
         ])
     allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Systems")

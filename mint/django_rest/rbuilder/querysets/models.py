@@ -9,6 +9,7 @@ import sys
 
 from django.db import models
 
+from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 
@@ -69,14 +70,24 @@ class QuerySet(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
 
-    query_set_id = models.AutoField(primary_key=True)
-    name = models.TextField(unique=True)
-    description = models.TextField(null=True)
-    created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    modified_date = modellib.DateTimeUtcField(auto_now_add=True)
-    children = models.ManyToManyField("self", symmetrical=False)
-    filter_entries = models.ManyToManyField("FilterEntry")
-    resource_type = models.TextField()
+    query_set_id = D(models.AutoField(primary_key=True),
+        "The database id for the query set")
+    name = D(models.TextField(unique=True),
+        "Query set name")
+    description = D(models.TextField(null=True),
+        "Query set description")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "Date the query set was created")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "Date the query set was modified")
+    children = D(models.ManyToManyField("self", symmetrical=False),
+        "Query sets that are children of this query set")
+    filter_entries = D(models.ManyToManyField("FilterEntry"),
+        "Defined filter entries for this query set")
+    resource_type = D(models.TextField(),
+        "Name of the resource this query set operates on")
+    can_modify = D(models.BooleanField(default=True),
+        "Whether this query set can be deleted through the API.")
 
     def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
@@ -131,9 +142,14 @@ class FilterEntry(modellib.XObjIdModel):
                 tag = "filter_entry")
 
     filter_entry_id = models.AutoField(primary_key=True)
-    field = models.TextField()
-    operator = models.TextField(choices=OPERATOR_CHOICES)
-    value = models.TextField(null=True)
+    field = D(models.TextField(),
+        "Field this filter operates on.  '.' in field names indicate resource relationships")
+    operator = D(models.TextField(choices=OPERATOR_CHOICES),
+        "Operator for this filter")
+    value = D(models.TextField(null=True),
+        "Value for this filter")
+
+    load_fields = [field, operator, value]
 
 class QueryTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
