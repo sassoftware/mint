@@ -16,6 +16,7 @@ class ProjectManager(basemanager.BaseManager):
     @exposed 
     def getProjects(self):
         projects = models.Projects()
+        import epdb; epdb.st()  
         projects.project = [p for p in models.Project.objects.all()
             if self.checkAccess(p)]
         return projects
@@ -29,10 +30,13 @@ class ProjectManager(basemanager.BaseManager):
             raise errors.PermissionDenied() 
 
     def checkAccess(self, project):
+        # Admins can see all projects
         if auth.isAdmin(self.user):
             return True
-        if project.hidden == 0:
+        # Public projects are visible to all
+        elif project.hidden == 0:
             return True
+        # Is the current user a project member
         elif self.user in project.members.all():
             return True
         else:

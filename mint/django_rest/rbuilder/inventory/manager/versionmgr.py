@@ -19,20 +19,20 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects.models import Project
 from mint.rest.errors import ProductNotFound
 
-import base
-
 log = logging.getLogger(__name__)
+exposed = basemanager.exposed
 
-class VersionManager(base.BaseManager):
+class VersionManager(basemanager.BaseManager):
     """
     Class encapsulating all logic around versions, available updates, etc.
     """
     
     def __init__(self, *args, **kwargs):
-        base.BaseManager.__init__(self, *args, **kwargs)
+        basemanager.BaseManager.__init__(self, *args, **kwargs)
         self._cclient = None
 
     def get_software_versions(self, system):
@@ -61,7 +61,7 @@ class VersionManager(base.BaseManager):
 
         return oldInstalled, newInstalled, toAdd
 
-    @base.exposed
+    @exposed
     def setInstalledSoftware(self, system, new_versions):
         oldInstalled, newInstalled, toAdd = \
             self._diffVersions(system, new_versions)
@@ -115,7 +115,7 @@ class VersionManager(base.BaseManager):
         system.major_version = majorVersion
         system.appliance = project
 
-    @base.exposed
+    @exposed
     def updateInstalledSoftware(self, system_id, new_versions):
         system = models.System.objects.get(pk=system_id)
         troveSpecs = ["%s=%s[%s]" % x.getNVF()
@@ -172,7 +172,7 @@ class VersionManager(base.BaseManager):
             trove=trove, trove_available_update=update_trove)
         available_update.save()
 
-    @base.exposed
+    @exposed
     def refreshCachedUpdates(self, name, label):
         troves = models.Trove.objects.filter(name=name, 
             version__label=label)
@@ -189,7 +189,7 @@ class VersionManager(base.BaseManager):
         return (trove.last_available_update_refresh + one_day) < \
             datetime.datetime.now(tz.tzutc())
 
-    @base.exposed
+    @exposed
     def set_available_updates(self, trove, force=False):
 
         # Hack to make sure utc is set as the timezone on
@@ -290,7 +290,7 @@ class VersionManager(base.BaseManager):
 
         return True
 
-    @base.exposed
+    @exposed
     def getConfigurationDescriptor(self, system):
         
         # remove this when you want it to work for real
