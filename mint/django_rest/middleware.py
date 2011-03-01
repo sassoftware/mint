@@ -6,8 +6,6 @@
 
 import os
 import logging
-import sys
-import traceback
 
 import libxml2
 import libxslt
@@ -17,7 +15,7 @@ from debug_toolbar import middleware
 from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest
 
 from mint import config
 from mint.django_rest import handler
@@ -25,8 +23,6 @@ from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils
-
-from xobj import xobj
 
 try:
     # The mod_python version is more efficient, so try importing it first.
