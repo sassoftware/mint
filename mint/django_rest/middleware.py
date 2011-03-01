@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import os
 import logging
 import sys
 import traceback
@@ -155,14 +156,13 @@ class AddCommentsMiddleware(BaseMiddleware):
     
     def __init__(self):
         try:
-            styledoc = libxml2.parseFile(__file__[0:__file__.index('.py')].replace(
-                    'middleware', 'templates/comments.xsl'))
+            styledoc = libxml2.parseFile(os.path.join(
+                os.path.dirname(__file__), 'templates/comments.xsl'))
             self.style = libxslt.parseStylesheetDoc(styledoc)
         except libxml2.parserError:
             self.useXForm = False 
 
     def _process_response(self, request, response):
-
         if self.useXForm and response.content and  \
             response.status_code in (200, 201, 206, 207):
 
@@ -176,6 +176,10 @@ class AddCommentsMiddleware(BaseMiddleware):
                 pass
 
         return response 
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        request._view_func = view_func
+        return None
 
 class NoParamsRequest(object):
 
