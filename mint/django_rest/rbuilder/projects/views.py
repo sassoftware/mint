@@ -5,11 +5,12 @@
 # All rights reserved.
 #
 
-from mint.django_rest.deco import return_xml, requires
+from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
 
 class ProjectService(service.BaseService):
 
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, project_name=None):
         return self.get(project_name)
@@ -37,6 +38,7 @@ class ProjectService(service.BaseService):
 
 class ProjectVersionService(service.BaseService):
 
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, project_name, version_id=None):
         return self.get(project_name, version_id)
@@ -47,6 +49,7 @@ class ProjectVersionService(service.BaseService):
 
 class ProjectImageService(service.BaseService):
 
+    @access.anonymous
     @return_xml
     def rest_GET(self, request, project_name, image_id=None):
         return self.get(project_name, image_id)
