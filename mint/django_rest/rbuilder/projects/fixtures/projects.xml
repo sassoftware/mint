@@ -118,4 +118,24 @@
     <field type="SmallIntegerField" name="level">0</field>
   </object>
 
+	<object pk="3" model="rbuilder.users">
+	    <field type="CharField" name="username">testuser2</field>
+	    <field type="CharField" name="fullname"/>
+	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
+	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+	    <field type="CharField" name="email">testuser2@rpath.com</field>
+	    <field type="TextField" name="displayemail"/>
+	    <field type="DecimalField" name="timecreated">1283529921.387</field>
+	    <field type="DecimalField" name="timeaccessed">1283530359.041</field>
+	    <field type="SmallIntegerField" name="active">1</field>
+	    <field type="TextField" name="blurb">null</field>
+	</object>
+
+  <object pk="4" model="projects.member">
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
+    <field to="rbuilder.users" name="user" rel="ManyToOneRel">3</field>
+    <field type="SmallIntegerField" name="level">1</field>
+  </object>
+
+
 </django-objects>
