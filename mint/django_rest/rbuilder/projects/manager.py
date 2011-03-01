@@ -16,7 +16,6 @@ class ProjectManager(basemanager.BaseManager):
     @exposed 
     def getProjects(self):
         projects = models.Projects()
-        import epdb; epdb.st()  
         projects.project = [p for p in models.Project.objects.all()
             if self.checkAccess(p)]
         return projects
