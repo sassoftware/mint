@@ -22,7 +22,7 @@ class Projects(modellib.Collection):
     project = []
 
 class Project(modellib.XObjIdModel):
-    _xobj_hidden_accessors = set(['project_members'])
+    _xobj_hidden_accessors = set(['membership'])
     view_name = "Project"
     url_key = "short_name"
     
