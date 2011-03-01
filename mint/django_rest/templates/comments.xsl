@@ -63,20 +63,12 @@ Attributes:
 <xsl:copy-of select="/"/>
 </xsl:template>
 
-<xsl:template match="/inventory/zones/*/management_nodes">
+<xsl:template match="/management_nodes">
 <xsl:comment>
 <xsl:copy-of select="$management_nodes_info" />
 </xsl:comment>
 <xsl:copy-of select="/"/>
 </xsl:template>
-
-<xsl:template match="/inventory/management_nodes">
-<xsl:comment>
-<xsl:copy-of select="$inventory_management_nodes_info" />
-</xsl:comment>
-<xsl:copy-of select="/"/>
-</xsl:template>
-
 
 <xsl:template match="/management_node">
 <xsl:comment>
