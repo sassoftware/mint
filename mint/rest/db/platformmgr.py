@@ -587,6 +587,9 @@ class Platforms(object):
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
             mode=platform.mode, configurable=bool(platform.configurable))
 
+        # Clear the cache of status information
+        self.platformCache.clearPlatformData(platform.label)
+
         return self.getById(platformId)
 
     def list(self):
