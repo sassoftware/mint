@@ -34,25 +34,30 @@ class Project(modellib.XObjIdModel):
     domain_name = models.CharField(max_length=128, db_column="domainname")
     short_name = models.CharField(unique=True, max_length=63, 
         db_column="shortname")
-    project_url = models.CharField(max_length=128, null=True, blank=True,
+    project_url = models.CharField(max_length=128, blank=True,
         db_column= "projecturl")
     repository_hostname = models.CharField(max_length=255, db_column="fqdn")
     description = models.TextField(null=True, blank=True)
     project_type = models.CharField(max_length=128, db_column="prodtype")
     commit_email = models.CharField(max_length=128, null=True, blank=True, 
         db_column="commitemail")
-    backup_external = models.SmallIntegerField(null=True, blank=True,
+    backup_external = models.SmallIntegerField(default=0,
         db_column="backup_external")
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timecreated")
     time_modified = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timemodified")
-    hidden = models.SmallIntegerField()
+    hidden = models.SmallIntegerField(default=0)
     creator = models.ForeignKey(rbuildermodels.Users,
         related_name="creator", null=True, db_column="creatorid")
+    external = models.SmallIntegerField(default=0)
+    disabled = models.SmallIntegerField(default=0)
+    isAppliance = models.SmallIntegerField(default=1)
+    version = models.CharField(max_length=128, null=True, blank=True,
+        default='')
+    database = models.CharField(max_length=128, null=True)
     members = models.ManyToManyField(rbuildermodels.Users, through="Member")
-        
-    
+
     class Meta:
         db_table = u"projects"
         

@@ -5,6 +5,8 @@
 # All rights reserved.
 #
 
+from django.http import HttpResponse, HttpResponseNotFound
+
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
 
@@ -33,8 +35,9 @@ class ProjectService(service.BaseService):
 
     def rest_DELETE(self, request, project_name):
         project = self.get(project_name)
-        return self.mgr.deleteProject(project)
-
+        self.mgr.deleteProject(project)
+        response = HttpResponse(status=204)
+        return response
 
 class ProjectVersionService(service.BaseService):
 

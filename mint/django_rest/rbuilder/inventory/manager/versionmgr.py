@@ -81,7 +81,7 @@ class VersionManager(basemanager.BaseManager):
         return str(flavor)
 
     def getStages(self, hostname, majorVersionName):
-        stages = self.rest_db.getProductVersionStages(hostname,
+        stages = self.restDb.getProductVersionStages(hostname,
             majorVersionName)
         return stages.stages
 
@@ -181,7 +181,7 @@ class VersionManager(basemanager.BaseManager):
 
     def get_conary_client(self):
         if self._cclient is None:
-            self._cclient = self.rest_db.productMgr.reposMgr.getUserClient()
+            self._cclient = self.restDb.productMgr.reposMgr.getUserClient()
         return self._cclient
 
     def _checkCacheExpired(self, trove):

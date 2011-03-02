@@ -30,12 +30,16 @@ class BaseManager(object):
         return self.mgr.cfg
 
     @property
-    def rest_db(self):
-        return self.mgr.rest_db
+    def restDb(self):
+        return self.mgr.restDb
 
     @property
     def user(self):
         return self.mgr.user
+
+    @property
+    def auth(self):
+        return self.mgr._auth
 
 class BaseRbuilderManager(object):
 
@@ -64,18 +68,18 @@ class BaseRbuilderManager(object):
             # here, defer the loading of that column
             self.user = rbuildermodels.Users.objects.defer("salt").get(username=userName)
 
-        # We instantiate _rest_db lazily
-        self._rest_db = None
+        # We instantiate _restDb lazily
+        self._restDb = None
 
     def setAuth(self, auth, user):
         self._auth = auth
         self.user = user
 
     @property
-    def rest_db(self):
+    def restDb(self):
         if self.cfg is None:
             return None
-        if self._rest_db is None:
+        if self._restDb is None:
             from django.conf import settings
             if settings.DATABASE_ENGINE == 'sqlite3':
                 self.cfg.dbPath = settings.DATABASE_NAME
@@ -83,7 +87,7 @@ class BaseRbuilderManager(object):
                 self.cfg.dbPath = '%s:%s/%s' % (settings.DATABASE_HOST, 
                     settings.DATABASE_PORT, settings.DATABASE_NAME)
             mint_db = database.Database(self.cfg)
-            self._rest_db = RestDatabase(self.cfg, mint_db)
+            self._restDb = RestDatabase(self.cfg, mint_db)
             if self._auth:
-                self._rest_db.setAuth(self._auth, self._auth.getToken())
-        return self._rest_db
+                self._restDb.setAuth(self._auth, self._auth.getToken())
+        return self._restDb
