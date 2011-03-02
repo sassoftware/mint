@@ -37,8 +37,9 @@ class ProjectManager(basemanager.BaseManager):
         return projects
 
     @exposed
-    def getProject(self, project_id):
-        project = models.Project.objects.get(pk=project_id)
+    def getProject(self, shortName):
+        import epdb; epdb.st()  
+        project = models.Project.objects.get(short_name=shortName)
         if self.checkAccess(project):   
             return project
         else:
