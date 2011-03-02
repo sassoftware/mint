@@ -38,7 +38,6 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProject(self, shortName):
-        import epdb; epdb.st()  
         project = models.Project.objects.get(short_name=shortName)
         if self.checkAccess(project):   
             return project
@@ -173,4 +172,16 @@ class ProjectManager(basemanager.BaseManager):
             raise mint_error.LastOwner
 
         member.delete()
+
+    @exposed
+    def getProjectVersions(self, shortName):
+        versions = models.Versions()
+        project = models.Project.objects.get(short_name=shortName)
+        versions.version = project.versions.all()
+        return versions
+
+    @exposed
+    def getProjectVersion(self, shortName, versionName):
+        version = models.Version.objects.get(name=versionName)
+        return version
 

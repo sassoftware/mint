@@ -24,7 +24,7 @@ class Projects(modellib.Collection):
 class Project(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(['membership'])
     view_name = "Project"
-    url_key = "short_name"
+    url_key = ["short_name"]
     
     project_id = models.AutoField(primary_key=True, db_column="projectid",
         blank=True)
@@ -81,27 +81,56 @@ class Member(modellib.XObjModel):
     class Meta:
         db_table = u'projectusers'
 
+class Versions(modellib.Collection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = "versions")
+    view_name = "ProjectVersions"
+    list_fields = ["version"]
+    version = []
+
 class Version(modellib.XObjIdModel):
     class Meta:
         db_table = u'productversions'
+    _xobj_hidden_accessors = set(['stages',])
 
     _xobj = xobj.XObjMetadata(
         tag="version")
 
-    view_name = 'ProjectVersions'
+    view_name = 'ProjectVersion'
+
+    # url_key = ['project', 'pk']
 
     def __unicode__(self):
         return self.name
         
-    productVersionId = models.AutoField(primary_key=True,
+    version_id = models.AutoField(primary_key=True,
         db_column='productversionid')
-    productId = modellib.DeferredForeignKey(Project, db_column='projectid',
+    project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="versions")
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
+
+class Stage(modellib.XObjIdModel):
+    class Meta:
+        db_table = 'inventory_stage'
+    view_name = 'ProjectVersionStage'
+    _xobj = xobj.XObjMetadata(tag='stage')
+    _xobj_hidden_accessors = set(['version_set',])
+
+    stage_id = models.AutoField(primary_key=True)
+    major_version = modellib.DeferredForeignKey(Version, related_name="stages")
+    name = models.CharField(max_length=256)
+    label = models.TextField(unique=True)
+
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        xobj_model._xobj.text = self.name
+        return xobj_model
 
 class Releases(modellib.XObjModel):
     pubreleaseid = models.AutoField(primary_key=True)

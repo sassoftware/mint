@@ -19,7 +19,7 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.projects.models import Project, Version
+from mint.django_rest.rbuilder.projects.models import Project, Version, Stage
 
 from xobj import xobj
 
@@ -483,7 +483,7 @@ class System(modellib.XObjIdModel):
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name')),
+    stage = D(APIReadOnly(modellib.ForeignKey(Stage, null=True, text_field='name')),
         "the project stage of the system")
     major_version = D(APIReadOnly(modellib.ForeignKey(Version, null=True,
         text_field='name')),
@@ -1112,29 +1112,6 @@ class Trove(modellib.XObjIdModel):
     def serialize(self, *args, **kwargs):
         xobj_model = modellib.XObjIdModel.serialize(self, *args, **kwargs)
         xobj_model.is_top_level_item = True
-        return xobj_model
-
-class Stage(modellib.XObjIdModel):
-    class Meta:
-        db_table = 'inventory_stage'
-    view_name = 'Stages'
-    _xobj = xobj.XObjMetadata(tag='stage')
-    _xobj_hidden_accessors = set(['version_set',])
-
-    stage_id = models.AutoField(primary_key=True)
-    major_version = models.ForeignKey(Version)
-    name = models.CharField(max_length=256)
-    label = models.TextField(unique=True)
-
-    def get_absolute_url(self, request, *args, **kwargs):
-        parents = [Pk(self.major_version.productId.shortname),
-            Pk(self.major_version.name), Pk(self.name)]
-        return modellib.XObjIdModel.get_absolute_url(
-            self, request, parents)
-
-    def serialize(self, request=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model._xobj.text = self.name
         return xobj_model
 
 class Version(modellib.XObjModel):

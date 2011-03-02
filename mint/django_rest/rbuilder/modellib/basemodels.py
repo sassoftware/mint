@@ -711,7 +711,7 @@ class XObjModel(models.Model):
 
     # Attribute used to look up the url for this resource, defaults to pk,
     # since we use the primary keys most of the times in the URL's.
-    url_key = 'pk'
+    url_key = ['pk']
 
     old_m2m_accessors = {}
 
@@ -826,11 +826,15 @@ class XObjModel(models.Model):
 
 
     def get_url_key(self):
-        url_key = getattr(self, self.url_key, None)
-        if url_key:
-            return str(url_key)
-        else:
-            return url_key
+        url_key_values = []
+        for uk in self.url_key:
+            key_value = getattr(self, uk, None)
+            if hasattr(key_value, "get_url_key"):
+                url_key_values += key_value.get_url_key()
+            else:   
+                url_key_values.append(str(key_value))
+
+        return url_key_values
 
     def get_absolute_url(self, request=None, parents=None, model=None):
         """
@@ -854,7 +858,7 @@ class XObjModel(models.Model):
 
         uk = self.get_url_key()
         if uk:
-            url_key.append(uk)
+            url_key += uk
 
         # Now do what models.pattern does.
         bits = (view_name, url_key)

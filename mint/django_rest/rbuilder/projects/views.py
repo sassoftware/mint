@@ -43,11 +43,17 @@ class ProjectVersionService(service.BaseService):
 
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, short_name, version_id=None):
-        return self.get(short_name, version_id)
+    def rest_GET(self, request, short_name, version_name=None):
+        return self.get(short_name, version_name)
 
-    def get(self, short_name, version_id):
-        return None
+    def get(self, short_name, version_name=None):
+        if version_name:
+            return self.mgr.getProjectVersion(short_name, version_name)
+        else:
+            return self.mgr.getProjectVersions(short_name)
+
+class ProjectVersionStageService(service.BaseService):
+    pass
 
 
 class ProjectImageService(service.BaseService):
