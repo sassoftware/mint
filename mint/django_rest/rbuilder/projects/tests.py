@@ -7,9 +7,9 @@
 
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 
-from mint.django_rest.rbuilder.projects import manager
-from mint.django_rest.rbuilder.projects import models
-from mint.django_rest.rbuilder.projects import testsxml
+from mint.django_rest.rbuilder.projects import manager # pyflakes=ignore
+from mint.django_rest.rbuilder.projects import models # pyflakes=ignore
+from mint.django_rest.rbuilder.projects import testsxml # pyflakes=ignore
 
 from xobj import xobj
 

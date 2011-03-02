@@ -60,10 +60,10 @@ class ProjectManager(basemanager.BaseManager):
 
     def validateNamespace(self, namespace):
         # Use the default namespace if one was not provided.
-        if project.namespace is None:
-            project.namespace = self.cfg.namespace
+        if namespace is None:
+            namespace = self.cfg.namespace
         else:
-            v = helperfuncs.validateNamespace(project.namespace)
+            v = helperfuncs.validateNamespace(namespace)
             if v != True:
                 raise mint_error.InvalidNamespace
 
@@ -148,7 +148,7 @@ class ProjectManager(basemanager.BaseManager):
                     user.userid, project.project_id, oldMember.level, level)
         else:
             # Add membership
-            member = Projects.member(project=project, user=user, level=level)
+            member = models.Project.member(project=project, user=user, level=level)
             member.save()
 
             # Add repository perms for non-external projects

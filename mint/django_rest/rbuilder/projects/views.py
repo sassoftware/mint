@@ -5,7 +5,7 @@
 # All rights reserved.
 #
 
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse
 
 from mint.django_rest.deco import access, return_xml, requires
 from mint.django_rest.rbuilder import service
