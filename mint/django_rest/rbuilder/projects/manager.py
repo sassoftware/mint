@@ -162,4 +162,14 @@ class ProjectManager(basemanager.BaseManager):
 
         return user
 
+    @exposed
+    def deleteProjectMember(self, project, user):
+        member = models.Member.filter(project=project, user=user)
+
+        # Can not demote the last owner
+        allOwners = project.member.filter(level=userlevels.OWNER)
+        if len(allOwners) == 1 and user in allOwners:
+            raise mint_error.LastOwner
+
+        member.delete()
 
