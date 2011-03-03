@@ -245,6 +245,13 @@ class SystemManager(base.BaseManager):
         return systems
 
     @base.exposed
+    def getImageImportMetadataDescriptor(self):
+        importDescriptorFile = open(self.cfg.metadataDescriptorPath)
+        importDescriptorData = importDescriptorFile.read()
+        importDescriptorFile.close()
+        return importDescriptorData
+
+    @base.exposed
     def getInfrastructureSystems(self):
         systems = models.Systems()
         systems.system = \

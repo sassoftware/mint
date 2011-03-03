@@ -4,6 +4,7 @@ inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
   <event_types href="http://testserver/api/inventory/event_types"/>
+  <image_import_metadata_descriptor href="http://testserver/api/inventory/image_import_metadata_descriptor"/>
   <infrastructure_systems href="http://testserver/api/inventory/infrastructure_systems"/>
   <inventory_systems href="http://testserver/api/inventory/inventory_systems"/>
   <job_states href="http://testserver/api/inventory/job_states"/>
