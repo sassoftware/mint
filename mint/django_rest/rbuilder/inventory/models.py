@@ -81,6 +81,7 @@ class Inventory(modellib.XObjModel):
         self.job_states = modellib.XObjHrefModel('job_states')
         self.inventory_systems = modellib.XObjHrefModel('inventory_systems')
         self.infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
+        self.image_import_metadata_descriptor = modellib.XObjHrefModel('image_import_metadata_descriptor')
 
 class Systems(modellib.XObjModel):
     class Meta:

@@ -422,6 +422,18 @@ class InventoryInfrastructureSystemsService(AbstractInventoryService):
 
     def get(self):
         return self.mgr.getInfrastructureSystems()
+    
+class ImageImportMetadataDescriptorService(AbstractInventoryService):
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request):
+        response = HttpResponse(status=200, content=self.get())
+        response['Content-Type'] = 'text/xml'
+        return response
+
+    def get(self):
+        return self.mgr.getImageImportMetadataDescriptor()
 
 class InventorySystemsSystemService(AbstractInventoryService):
     
