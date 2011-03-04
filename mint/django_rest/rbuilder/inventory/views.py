@@ -326,7 +326,7 @@ class InventoryInfrastructureSystemsService(BaseInventoryService):
     def get(self):
         return self.mgr.getInfrastructureSystems()
     
-class ImageImportMetadataDescriptorService(AbstractInventoryService):
+class ImageImportMetadataDescriptorService(BaseInventoryService):
 
     @access.anonymous
     @return_xml
