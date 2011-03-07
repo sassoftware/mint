@@ -826,17 +826,26 @@ class XObjModel(models.Model):
 
 
     def get_url_key(self):
+        if type(self.url_key) != type([]):
+            url_key = [self.url_key]
+        else:
+            url_key = self.url_key
+
         url_key_values = []
-        for uk in self.url_key:
-            key_value = getattr(self, uk, None)
-            if hasattr(key_value, "get_url_key"):
-                url_key_values += key_value.get_url_key()
-            else:   
-                url_key_values.append(str(key_value))
+        for uk in url_key:
+            if hasattr(self, uk):
+                key_value = getattr(self, uk)
+                if hasattr(key_value, "get_url_key"):
+                    url_key_values += key_value.get_url_key()
+                else:   
+                    url_key_values.append(str(key_value))
+            else:
+                # XXX do something else?
+                continue
 
         return url_key_values
 
-    def get_absolute_url(self, request=None, parents=None, model=None):
+    def get_absolute_url(self, request=None, parents=None, view_name=None):
         """
         Return an absolute url for this model.  Incorporates the same behavior
         as the django decorator models.pattern, but we use it directly here so
@@ -844,21 +853,20 @@ class XObjModel(models.Model):
         """
         # Default to class name for the view_name to use during the lookup,
         # allow it to be overriden by a view_name attribute.
-        view_name = getattr(self, 'view_name', self.__class__.__name__)
+        if not view_name:
+            view_name = getattr(self, 'view_name', self.__class__.__name__)
 
         # If parent wasn't specified, use our own pk, e.g., parent can be
         # specified so that when generating a url for a Network model, the
         # system parent can be sent in, such that the result is
         # /api/inventory/systems/1/networks, where 1 is the system pk.
         _parents = getattr(self, '_parents', parents)
-        url_key = []
         if _parents:
+            url_key = []
             for parent in _parents:
-                url_key.append(parent.get_url_key())
-
-        uk = self.get_url_key()
-        if uk:
-            url_key += uk
+                url_key += parent.get_url_key()
+        else:
+            url_key = self.get_url_key()
 
         # Now do what models.pattern does.
         bits = (view_name, url_key)
@@ -1006,11 +1014,13 @@ class XObjModel(models.Model):
             if getattr(accessor.field, 'Deferred', False):
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
-                rel_mod = getattr(self, accessorName).model()
-                href = rel_mod.get_absolute_url(request, parents=[self])
+                rel_mod = accessor.model()
+                ref_name = accessor.field.ref_name
+                href = rel_mod.get_absolute_url(request, parents=[self],
+                    view_name=accessor.field.view_name)
                 accessor_model._xobj = xobj.XObjMetadata(
-                    attributes={'href':str})
-                accessor_model.href = href
+                    attributes={ref_name:str})
+                setattr(accessor_model, ref_name, href)
                 setattr(xobj_model, accessorName, accessor_model)
             else:
                 # In django, accessors are always lists of other models.
@@ -1169,7 +1179,7 @@ class XObjIdModel(XObjModel):
         else:
             xobj_model._xobj = xobj.XObjMetadata(
                                 attributes = {'id':str})
-        xobj_model.id = self.get_absolute_url(request, model=xobj_model)
+        xobj_model.id = self.get_absolute_url(request)
         return xobj_model
 
 class XObjHrefModel(XObjModel):
@@ -1205,8 +1215,16 @@ class ForeignKey(models.ForeignKey):
         except KeyError:
             pass # text wasn't specified, that is fine
 
+        # TODO: change the default to 'id'
+        self.ref_name = 'href'
         try:
-            self.refName = kwargs.pop('refName')
+            self.ref_name = kwargs.pop('ref_name')
+        except KeyError:
+            pass # text wasn't specified, that is fine
+
+        self.view_name = None
+        try:
+            self.view_name = kwargs.pop('view_name')
         except KeyError:
             pass # text wasn't specified, that is fine
 
