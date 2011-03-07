@@ -108,7 +108,8 @@ class Version(modellib.XObjIdModel):
     version_id = models.AutoField(primary_key=True,
         db_column='productversionid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
-        related_name="versions")
+        related_name="versions", view_name="ProjectVersions",
+        ref_name="id")
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
@@ -168,12 +169,12 @@ class Image(modellib.XObjIdModel):
     def __unicode__(self):
         return self.name
 
-    imageId = models.AutoField(primary_key=True, db_column='buildid')
-    productId = modellib.DeferredForeignKey(Project, db_column='projectid',
-        related_name="images")
-    pubreleaseid = models.ForeignKey(Releases, null=True,
+    image_id = models.AutoField(primary_key=True, db_column='buildid')
+    project = modellib.DeferredForeignKey(Project, db_column='projectid',
+        related_name="images", view_name="ProjectImages", ref_name="id")
+    release = models.ForeignKey(Releases, null=True,
         db_column='pubreleaseid')
-    buildtype = models.IntegerField()
+    build_type = models.IntegerField(db_column="build_type")
     name = models.CharField(max_length=255)
     description = models.TextField()
     trovename = models.CharField(max_length=128)
@@ -195,13 +196,6 @@ class Image(modellib.XObjIdModel):
     stagename = models.CharField(max_length=255)
     status = models.IntegerField()
     statusmessage = models.TextField()
-
-    def get_absolute_url(self, request, parents=None, model=None):
-        if parents:
-            if isinstance(parents[0], Project):
-                self.view_name = "ProjectImages"
-        return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents, model)
 
 class Downloads(modellib.XObjModel):
     class Meta:
