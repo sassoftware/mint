@@ -60,20 +60,19 @@ class Inventory(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory')
 
-    def __init__(self):
-        self.zones = modellib.XObjHrefModel('zones')
-        self.management_nodes = modellib.XObjHrefModel('management_nodes')
-        self.management_interfaces = modellib.XObjHrefModel('management_interfaces')
-        self.system_types = modellib.XObjHrefModel('system_types')
-        self.networks = modellib.XObjHrefModel('networks')
-        self.systems = modellib.XObjHrefModel('systems')
-        self.log = modellib.XObjHrefModel('log')
-        self.event_types = modellib.XObjHrefModel('event_types')
-        self.system_states = modellib.XObjHrefModel('system_states')
-        self.job_states = modellib.XObjHrefModel('job_states')
-        self.inventory_systems = modellib.XObjHrefModel('inventory_systems')
-        self.infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
-        self.image_import_metadata_descriptor = modellib.XObjHrefModel('image_import_metadata_descriptor')
+    zones = modellib.XObjHrefModel('zones')
+    management_nodes = modellib.XObjHrefModel('management_nodes')
+    management_interfaces = modellib.XObjHrefModel('management_interfaces')
+    system_types = modellib.XObjHrefModel('system_types')
+    networks = modellib.XObjHrefModel('networks')
+    systems = modellib.XObjHrefModel('systems')
+    log = modellib.XObjHrefModel('log')
+    event_types = modellib.XObjHrefModel('event_types')
+    system_states = modellib.XObjHrefModel('system_states')
+    job_states = modellib.XObjHrefModel('job_states')
+    inventory_systems = modellib.XObjHrefModel('inventory_systems')
+    infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
+    image_import_metadata_descriptor = modellib.XObjHrefModel('image_import_metadata_descriptor')
 
 class Systems(modellib.Collection):
     class Meta:
@@ -153,8 +152,7 @@ class Networks(modellib.XObjModel):
                 elements=['network', 'systems'])
     list_fields = ['network']
     
-    def __init__(self):
-        self.systems = modellib.XObjHrefModel('../systems')
+    systems = modellib.XObjHrefModel('../systems')
     
 class Zones(modellib.XObjModel):
     class Meta:

@@ -859,7 +859,7 @@ class XObjModel(models.Model):
         else:
             return relative_url
 
-    def _serialize_hrefs(self, request=None):
+    def serialize_hrefs(self, xobj_model, request=None):
         """
         Serialize each occurence of where an XObjHrefModel has been set as
         an attribute on this model.
@@ -868,6 +868,7 @@ class XObjModel(models.Model):
                         if isinstance(v, XObjHrefModel)]
         for href in href_fields:
             href[1].serialize(request)
+            setattr(xobj_model, href[0], href[1])
 
     def get_field_dict(self):
         """
@@ -928,10 +929,6 @@ class XObjModel(models.Model):
                     if val is None:
                         continue
                     val = xobj.parse(val)
-                setattr(xobj_model, key, val)
-            # TODO: is this still needed, we already called serialize_hrefs.?
-            elif isinstance(val, XObjHrefModel):
-                val.serialize(request)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request, values=None):
@@ -1112,7 +1109,6 @@ class XObjModel(models.Model):
         Serialize this model into an object that can be passed blindly into
         xobj to produce the xml that we require.
         """
-        self._serialize_hrefs(request)
         # Basic object to use to send to xobj.
         xobjModelClass = self._xobjClass
         xobj_model = xobjModelClass()
@@ -1124,6 +1120,7 @@ class XObjModel(models.Model):
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
 
+        self.serialize_hrefs(xobj_model, request)
         self.serialize_fields(xobj_model, fields, request, values=values)
         self.serialize_fk_fields(xobj_model, fields, request, values=values)
         if self.serialize_accessors:
