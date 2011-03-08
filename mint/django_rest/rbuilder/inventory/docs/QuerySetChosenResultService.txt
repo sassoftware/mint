@@ -1,0 +1,12 @@
+
+
+View: QuerySetChosenResultService
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        Authentication: user
+    DELETE:
+        not supported

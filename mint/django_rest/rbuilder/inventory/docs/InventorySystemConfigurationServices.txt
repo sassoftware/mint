@@ -1,0 +1,12 @@
+
+
+View: InventorySystemConfigurationServices
+Methods:
+    GET:
+        Authentication: admin
+    POST:
+        Authentication: admin
+    PUT:
+        Authentication: admin
+    DELETE:
+        not supported
