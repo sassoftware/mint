@@ -55,27 +55,40 @@ class Pk(object):
         self.pk = pk
 
 class Inventory(modellib.XObjModel):
+
+    #FIXME Inventory needs class attribute XSL for generatecomments to do
+    #      its thing.  However, because the field definitions are inside
+    #      an init, nothing will get picked up until they are moved outside
+    XSL = 'inventory.xsl'
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory')
 
     def __init__(self):
-        self.zones = modellib.XObjHrefModel('zones')
-        self.management_nodes = modellib.XObjHrefModel('management_nodes')
-        self.management_interfaces = modellib.XObjHrefModel('management_interfaces')
-        self.system_types = modellib.XObjHrefModel('system_types')
-        self.networks = modellib.XObjHrefModel('networks')
-        self.systems = modellib.XObjHrefModel('systems')
-        self.log = modellib.XObjHrefModel('log')
-        self.event_types = modellib.XObjHrefModel('event_types')
-        self.system_states = modellib.XObjHrefModel('system_states')
-        self.job_states = modellib.XObjHrefModel('job_states')
-        self.inventory_systems = modellib.XObjHrefModel('inventory_systems')
-        self.infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
-        self.image_import_metadata_descriptor = modellib.XObjHrefModel('image_import_metadata_descriptor')
+        # FIXME
+        # Field definitions need to be moved outside the init to the class level
+        # See _serialize_hrefs in basemodels.py for possible cause
+        self.zones = D(modellib.XObjHrefModel('zones'), "an entry point into the inventory management zones collection")
+        self.management_nodes = D(modellib.XObjHrefModel('management_nodes'), "an entry point into the inventory management nodes collection (rPath Update Services)")
+        self.management_interfaces = D(modellib.XObjHrefModel('management_interfaces'), "an entry point into the collection of management interfaces (CIM, WMI, etc.)")
+        self.system_types = D(modellib.XObjHrefModel('system_types'), "an entry point into the inventory system types collection")
+        self.networks = D(modellib.XObjHrefModel('networks'), "an entry point into the inventory system networks collection")
+        self.systems = D(modellib.XObjHrefModel('systems'), "an entry point into the collection of all systems (all systems in inventory_systems and infrastructure systems combined)")
+        self.log = D(modellib.XObjHrefModel('log'), "an entry point into inventory logging")
+        self.event_types = D(modellib.XObjHrefModel('event_types'), "an entry point into the inventory events collection")
+        self.system_states = D(modellib.XObjHrefModel('system_states'), "an entry point into the inventory system states collection")
+        self.job_states = D(modellib.XObjHrefModel('job_states'), "an entry point into the inventory job states collection")
+        self.inventory_systems = D(modellib.XObjHrefModel('inventory_systems'), "an entry point into the collection of inventory systems (all systems visible in the UI under Systems)")
+        self.infrastructure_systems = D(modellib.XObjHrefModel('infrastructure_systems'), "an entry point into the collection of infrastructure systems (all systems visible in the UI under Infrastructure)")
+        self.image_import_metadata_descriptor = D(modellib.XObjHrefModel('image_import_metadata_descriptor'), 'No documentation')
+
 
 class Systems(modellib.Collection):
+
+    XSL = 'systems.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -92,6 +105,9 @@ class Systems(modellib.Collection):
         return [s.save() for s in self.system]
 
 class SystemStates(modellib.XObjModel):
+
+    XSL = 'systemStates.xsl'
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -103,6 +119,9 @@ class SystemStates(modellib.XObjModel):
         return [s.save() for s in self.system_state]
     
 class ManagementNodes(modellib.XObjModel):
+
+    XSL = 'managementNodes.xsl'
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -116,6 +135,9 @@ class ManagementNodes(modellib.XObjModel):
         return [s.save() for s in self.management_node]
     
 class EventTypes(modellib.XObjModel):
+
+    XSL = 'eventTypes.xsl'
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -146,6 +168,9 @@ class SystemEvents(modellib.XObjModel):
         return [s.save() for s in self.system_event]
 
 class Networks(modellib.XObjModel):
+
+    XSL = 'networks.xsl'
+
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -154,9 +179,12 @@ class Networks(modellib.XObjModel):
     list_fields = ['network']
     
     def __init__(self):
-        self.systems = modellib.XObjHrefModel('../systems')
+        self.systems = D(modellib.XObjHrefModel('../systems'), "an entry point into system inventory")
     
 class Zones(modellib.XObjModel):
+    
+    XSL = 'zones.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -165,6 +193,9 @@ class Zones(modellib.XObjModel):
     list_fields = ['zone']
     
 class Credentials(modellib.XObjIdModel):
+    
+    XSL = 'credentials.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -187,6 +218,9 @@ class Credentials(modellib.XObjIdModel):
         return xobj.toxml(self)
     
 class Configuration(modellib.XObjIdModel):
+    
+    XSL = 'configuration.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -223,6 +257,9 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         return xobj.toxml(self)
 
 class Zone(modellib.XObjIdModel):
+    
+    XSL = 'zone.xsl'
+    
     LOCAL_ZONE = "Local rBuilder"
     class Meta:
         db_table = 'inventory_zone'
@@ -235,14 +272,17 @@ class Zone(modellib.XObjIdModel):
     # https://issues.rpath.com/browse/RBL-7237 for more info
     _xobj_hidden_accessors = set(['systems',])
 
-    zone_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=8092, unique=True)
-    description = models.CharField(max_length=8092, null=True)
-    created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    zone_id = D(models.AutoField(primary_key=True), "the database id for the zone")
+    name = D(models.CharField(max_length=8092, unique=True), "the zone name")
+    description = D(models.CharField(max_length=8092, null=True), "the zone description")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the zone was created (UTC)")
     
     load_fields = [ name ]
 
 class SystemState(modellib.XObjIdModel):
+    
+    XSL = 'systemState.xsl'
+    
     serialize_accessors = False
     class Meta:
         db_table = 'inventory_system_state'
@@ -301,15 +341,18 @@ class SystemState(modellib.XObjIdModel):
         (MOTHBALLED, MOTHBALLED_DESC),
     )
 
-    system_state_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=8092, unique=True,
-        choices=STATE_CHOICES)
-    description = models.CharField(max_length=8092)
-    created_date = modellib.DateTimeUtcField(auto_now_add=True)
+    system_state_id = D(models.AutoField(primary_key=True), "the database id for the state")
+    name = D(models.CharField(max_length=8092, unique=True,
+        choices=STATE_CHOICES), "the state name")
+    description = D(models.CharField(max_length=8092), "the state description")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the state was created (UTC)")
 
     load_fields = [ name ]
 
 class ManagementInterfaces(modellib.XObjModel):
+    
+    XSL = 'managementInterfaces.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -318,7 +361,9 @@ class ManagementInterfaces(modellib.XObjModel):
     list_fields = ['management_interface']
     
 class ManagementInterface(modellib.XObjIdModel):
+    
     XSL = "managementInterface.xsl"
+    
     class Meta:
         db_table = 'inventory_management_interface'
         
@@ -353,6 +398,9 @@ class ManagementInterface(modellib.XObjIdModel):
     load_fields = [name]
 
 class SystemTypes(modellib.XObjModel):
+    
+    XSL = 'systemTypes.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -667,15 +715,18 @@ class System(modellib.XObjIdModel):
         return xobj_model
 
 class ManagementNode(System):
+    
+    XSL = 'managementNode.xsl'
+    
     class Meta:
         db_table = 'inventory_zone_management_node'
     _xobj = xobj.XObjMetadata(
                 tag = 'management_node',
                 attributes = {'id':str})
     view_name = 'ManagementNode'
-    local = models.NullBooleanField()
-    zone = modellib.ForeignKey(Zone, related_name='management_nodes')
-    node_jid = models.CharField(max_length=64, null=True)
+    local = D(models.NullBooleanField(), "whether or not this management node is local to the rBuilder")
+    zone = D(modellib.ForeignKey(Zone, related_name='management_nodes'), "the zone the management node lives in")
+    node_jid = D(models.CharField(max_length=64, null=True), "the Jabber ID the management node is using")
     load_fields = [ node_jid ]
 
     # ignore auto generated ptr from inheritance
@@ -700,6 +751,9 @@ class SystemTargetCredentials(modellib.XObjModel):
         null=False, related_name = 'systems')
 
 class InstalledSoftware(modellib.XObjIdModel):
+    
+    XSL = 'installedSoftware.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -715,6 +769,9 @@ class InstalledSoftware(modellib.XObjIdModel):
         return request.build_absolute_uri(request.get_full_path())
 
 class EventType(modellib.XObjIdModel):
+    
+    XSL = 'eventType.xsl'
+    
     class Meta:
         db_table = 'inventory_event_type'
     _xobj = xobj.XObjMetadata(tag='event_type')
@@ -774,7 +831,7 @@ class EventType(modellib.XObjIdModel):
     SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION = "Update system configuration"
     SYSTEM_CONFIG_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
         
-    event_type_id = models.AutoField(primary_key=True)
+    event_type_id = D(models.AutoField(primary_key=True), "the database id of the event type")
     EVENT_TYPES = (
         (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
         (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
@@ -795,10 +852,10 @@ class EventType(modellib.XObjIdModel):
         (SYSTEM_CONFIG_IMMEDIATE,
          SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
     )
-    name = APIReadOnly(models.CharField(max_length=8092, unique=True,
-        choices=EVENT_TYPES))
-    description = models.CharField(max_length=8092)
-    priority = models.SmallIntegerField(db_index=True)
+    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
+        choices=EVENT_TYPES)), "the event type name (read-only)")
+    description = D(models.CharField(max_length=8092), "the event type description")
+    priority = D(models.SmallIntegerField(db_index=True), "the event type priority where > priority wins")
 
     @property
     def requiresManagementInterface(self):
@@ -817,6 +874,9 @@ class EventType(modellib.XObjIdModel):
             return False
 
 class JobStates(modellib.XObjModel):
+    
+    XSL = 'jobStates.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -826,6 +886,9 @@ class JobStates(modellib.XObjModel):
     job_state = []
 
 class JobState(modellib.XObjIdModel):
+    
+    XSL = 'jobState.xsl'
+    
     class Meta:
         db_table = "inventory_job_state"
     QUEUED = "Queued"
@@ -841,12 +904,15 @@ class JobState(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='job_state',
                 attributes = {'id':str})
 
-    job_state_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=64, unique=True, choices=choices)
+    job_state_id = D(models.AutoField(primary_key=True), "the database ID for the job state")
+    name = D(models.CharField(max_length=64, unique=True, choices=choices), "the name of the job state")
 
     load_fields = [ name ]
 
 class Jobs(modellib.XObjIdModel):
+    
+    XSL = 'jobs.xsl'
+    
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
@@ -866,6 +932,9 @@ class Jobs(modellib.XObjIdModel):
         return request.build_absolute_uri(request.get_full_path())
 
 class Job(modellib.XObjIdModel):
+    
+    XSL = 'job.xsl'
+    
     class Meta:
         db_table = 'inventory_job'
     _xobj = xobj.XObjMetadata(
@@ -874,19 +943,19 @@ class Job(modellib.XObjIdModel):
 
     objects = modellib.JobManager()
 
-    job_id = models.AutoField(primary_key=True)
-    job_uuid = models.CharField(max_length=64, unique=True)
-    job_state = modellib.InlinedDeferredForeignKey(JobState, visible='name',
-        related_name='jobs')
-    status_code = models.IntegerField(default=100)
-    status_text = models.TextField(default='Initializing')
-    status_detail = XObjHidden(models.TextField(null=True))
-    event_type = APIReadOnly(modellib.InlinedForeignKey(EventType,
-        visible='name', related_name="jobs"))
-    time_created = modellib.DateTimeUtcField(auto_now_add=True)
-    time_updated =  modellib.DateTimeUtcField(auto_now_add=True)
-    job_type = modellib.SyntheticField()
-    job_description = modellib.SyntheticField()
+    job_id = D(models.AutoField(primary_key=True), "the database id of the job")
+    job_uuid = D(models.CharField(max_length=64, unique=True), "a UUID for job tracking purposes")
+    job_state = D(modellib.InlinedDeferredForeignKey(JobState, visible='name',
+        related_name='jobs'), "the current state of the job")
+    status_code = D(models.IntegerField(default=100), "the current status code of the job, typically an http status code")
+    status_text = D(models.TextField(default='Initializing'), "the message associated with the current status")
+    status_detail = D(XObjHidden(models.TextField(null=True)), "documentation missing")
+    event_type = D(APIReadOnly(modellib.InlinedForeignKey(EventType,
+        visible='name', related_name="jobs")), "documentation missing")
+    time_created = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was created (UTC)")
+    time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was updated (UTC)")
+    job_type = D(modellib.SyntheticField(), "the job type")
+    job_description = D(modellib.SyntheticField(), "a description of the job")
 
     load_fields = [ job_uuid ]
 
@@ -976,6 +1045,9 @@ class SystemEvent(modellib.XObjIdModel):
         modellib.XObjIdModel.save(self, *args, **kw)
 
 class Network(modellib.XObjIdModel):
+    
+    XSL = 'network.xsl'
+    
     class Meta:
         db_table = 'inventory_system_network'
         unique_together = (('system', 'dns_name', 'ip_address', 'ipv6_address'),)
@@ -983,18 +1055,18 @@ class Network(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag='network',
                 attributes = {'id':str})
-    network_id = models.AutoField(primary_key=True)
-    created_date = modellib.DateTimeUtcField(auto_now_add=True)
-    system = modellib.ForeignKey(System, related_name='networks')
-    ip_address = models.CharField(max_length=15, null=True)
+    network_id = D(models.AutoField(primary_key=True), "the database ID for the network")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the network was created (UTC)")
+    system = D(modellib.ForeignKey(System, related_name='networks'), "documentation missing")
+    ip_address = D(models.CharField(max_length=15, null=True), "the network IP address")
     # TODO: how long should this be?
-    ipv6_address = models.CharField(max_length=32, null=True)
-    device_name = models.CharField(max_length=255) 
-    dns_name = models.CharField(max_length=255, db_index=True)
-    netmask = models.CharField(max_length=20, null=True)
-    port_type = models.CharField(max_length=32, null=True)
-    active = models.NullBooleanField()
-    required = models.NullBooleanField()
+    ipv6_address = D(models.CharField(max_length=32, null=True), "the network IPv6 address")
+    device_name = D(models.CharField(max_length=255), "the network device name") 
+    dns_name = D(models.CharField(max_length=255, db_index=True), "the network DNS name")
+    netmask = D(models.CharField(max_length=20, null=True), "the network netmask")
+    port_type = D(models.CharField(max_length=32, null=True), "the network port type")
+    active = D(models.NullBooleanField(), "whether or not this is the active network device on the system")
+    required = D(models.NullBooleanField(), "whether or not a user has required that this network device be the ones used to manage the system")
 
     load_fields = [ip_address, dns_name]
 
@@ -1002,10 +1074,13 @@ class Network(modellib.XObjIdModel):
         return self.ip_address, self.dns_name
 
 class SystemLog(modellib.XObjIdModel):
+    
+    XSL = 'systemLog.xsl'
+    
     class Meta:
         db_table = 'inventory_system_log'
-    system_log_id = models.AutoField(primary_key=True)
-    system = modellib.DeferredForeignKey(System, related_name='system_log')
+    system_log_id = D(models.AutoField(primary_key=True), "the database ID for the system log")
+    system = D(modellib.DeferredForeignKey(System, related_name='system_log'), "a entry point to the system this log is for")
 
     def get_absolute_url(self, request, parents=None, model=None):
         if not parents:

@@ -1,0 +1,12 @@
+SystemJob properties:
+
+View: InventorySystemJobsService
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported

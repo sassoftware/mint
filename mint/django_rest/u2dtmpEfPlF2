@@ -1,0 +1,119 @@
+search contrib.rpath.org@rpl:2
+search contrib.rpath.org@rpl:2-py26
+search group-os=conary.rpath.com@rpl:2/2.0.1-0.10-1
+search group-os=conary.rpath.com@rpl:2-py26-devel
+install group-appliance-platform
+
+search mercurial=cantwait.rpath.org@rpl:2-py26
+search xz=cantwait.rpath.org@rpl:2
+search rpath-product-definition=jules.eng.rpath.com@rpath:rba-claymore-p5
+
+update conary=jules.eng.rpath.com@rpath:fl-2-conary-2.2
+update conary-build=jules.eng.rpath.com@rpath:fl-2-conary-2.2
+update conary-repository=jules.eng.rpath.com@rpath:fl-2-conary-2.2
+update conary-policy=jules.eng.rpath.com@rpath:fl-2-conary-2.2
+
+install rbuild
+install rmake
+
+update rpath-product-definition
+
+install vim
+install sudo
+install less
+install mkisofs
+install which
+install man
+install openssh
+install gnupg
+install rmake
+install squid
+install nc
+install tmpwatch
+install openssh-client
+install postgresql
+install postgresql-contrib
+install postgresql-server
+
+install flex
+install bison
+install gdb
+install strace
+install autoconf
+install automake
+install make
+install binutils
+install libtool
+install gettext
+install xmlto
+install gcc
+install gcc-c++
+install intltool
+
+install cvs
+install git
+install mercurial
+install patch
+install subversion
+install tar
+install unzip
+install xz
+
+install glibc
+install openssl
+install libcap
+install libxml2
+install libelf-lgpl
+install python=conary.rpath.com@rpl:2-py26-devel
+install python2.4
+
+install django
+install django-db-postgres
+install django-db-sqlite3
+install django-rest-interface
+install epdb
+install kid
+install python-dateutil
+install decorator
+install python-setuptools
+install SQLAlchemy
+install python-twisted
+install python-pgsql
+install psycopg2
+install simplejson
+install bzip2
+install ctags
+install curl
+install ncurses
+install neon
+install nss
+install perl
+install popt
+install readline
+install rsh
+
+install httpd
+install mod_python
+install mod_ssl
+
+install group-rpm=rpm.rpath.org@rpath:linux-2-py26
+
+install userspace-kernel-headers
+install zlib
+install sqlite
+install docbook-dtds
+install docbook-xsl
+install docbook-dsssl
+install lxml
+install rpath-common
+install debugedit elfutils pcre pkgconfig
+install asciidoc
+install reportlab
+install hg-forest
+
+update rbuilder-client
+install tk
+install python-setuptools
+update webunit=contrib.rpath.org@rpl:2-py26/1.3.8-8.1-0.0.1
+install django-debug-toolbar
+install dos2unix

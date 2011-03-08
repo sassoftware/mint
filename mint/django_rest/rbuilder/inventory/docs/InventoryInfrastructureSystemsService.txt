@@ -1,0 +1,12 @@
+
+
+View: InventoryInfrastructureSystemsService
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported
