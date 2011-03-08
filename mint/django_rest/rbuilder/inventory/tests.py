@@ -2817,10 +2817,12 @@ class SystemVersionsTestCase(XMLTestCase):
 
         self.mgr.versionMgr.refreshCachedUpdates(name, label)
         update = self.trove.available_updates.all()
-        self.assertEquals(len(update), 1)
-        update = update[0]
-        self.assertEquals(update.full,
-            '/clover.eng.rpath.com@rpath:clover-1-devel/1-5-1')
+        self.assertEquals(len(update), 3)
+        update = [u.full for u in update]
+        self.assertEquals(update,
+            ['/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1',
+             '/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1',
+             '/clover.eng.rpath.com@rpath:clover-1-devel/1-5-1'])
 
     def testGetSystemWithVersion(self):
         system = self._saveSystem()
