@@ -178,6 +178,7 @@ class ProjectManager(basemanager.BaseManager):
         versions = models.Versions()
         project = models.Project.objects.get(short_name=shortName)
         versions.version = project.versions.all()
+        versions._parents = [project]
         return versions
 
     @exposed
