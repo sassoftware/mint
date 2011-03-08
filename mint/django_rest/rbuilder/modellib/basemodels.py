@@ -204,12 +204,8 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                if hasattr(val, 'id'):
-                    href = getattr(val, 'id', None)
-                elif hasattr(val, 'href'):
-                    href = getattr(val, 'href', None)
-                else:
-                    href = None
+                refName = field.refName
+                href = getattr(val, refName, None)
                 parentModel = field.related.parent_model
                 if href is not None:
                     val = parentModel.objects.load_from_href(href)
@@ -360,9 +356,9 @@ class BaseManager(models.Manager):
             if objlist is not None and not isinstance(objlist, list):
                 objlist = [ objlist ]
             for rel_obj in objlist or []:
-                modelCls = type_map[rel_obj_name]
-                href = getattr(rel_obj, 'href', None) or \
-                    getattr(rel_obj, 'id', None)
+                modelCls = m2m_mgr.model
+                refName = getattr(getattr(model, m2m_accessor), refName, 'href')
+                href = getattr(rel_obj, refName, None)
                 if href is not None:
                     rel_mod = modelCls.objects.load_from_href(href)
                 else:
@@ -1207,6 +1203,7 @@ class ForeignKey(models.ForeignKey):
         except KeyError:
             pass # text wasn't specified, that is fine
 
+        self.refName = 'href'
         try:
             self.refName = kwargs.pop('refName')
         except KeyError:
