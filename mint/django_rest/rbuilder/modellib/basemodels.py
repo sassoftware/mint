@@ -859,17 +859,6 @@ class XObjModel(models.Model):
         else:
             return relative_url
 
-    def serialize_hrefs(self, xobj_model, request=None):
-        """
-        Serialize each occurence of where an XObjHrefModel has been set as
-        an attribute on this model.
-        """
-        href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
-                        if isinstance(v, XObjHrefModel)]
-        for href in href_fields:
-            href[1].serialize(request)
-            setattr(xobj_model, href[0], href[1])
-
     def get_field_dict(self):
         """
         return dict of field names and field instances (these are not field
@@ -929,6 +918,8 @@ class XObjModel(models.Model):
                     if val is None:
                         continue
                     val = xobj.parse(val)
+                elif isinstance(field, HrefField):
+                    val = field.serialize_value(request)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request, values=None):
@@ -1120,7 +1111,6 @@ class XObjModel(models.Model):
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
 
-        self.serialize_hrefs(xobj_model, request)
         self.serialize_fields(xobj_model, fields, request, values=values)
         self.serialize_fk_fields(xobj_model, fields, request, values=values)
         if self.serialize_accessors:
@@ -1177,12 +1167,23 @@ class XObjHrefModel(XObjModel):
     _xobj = xobj.XObjMetadata(
                 attributes = {'href':str})
 
-    def __init__(self, href=None):
+    def __init__(self, href):
         self.href = href
 
     def serialize(self, request=None, values=None):
         self.href = request.build_absolute_uri(self.href)
         
+class HrefField(models.Field):
+    def __init__(self, href=None):
+        self.href = href
+        models.Field.__init__(self)
+
+    def serialize_value(self, request=None, values=None):
+        hrefClass = type(self.name, (object, ), {})
+        hrefClass._xobj = xobj.XObjMetadata(attributes={"href":str})
+        hrefClass.href = request.build_absolute_uri(self.href)
+        return hrefClass
+
 class ForeignKey(models.ForeignKey):
     """
     Wrapper of django foreign key for use in models

@@ -60,19 +60,19 @@ class Inventory(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'inventory')
 
-    zones = modellib.XObjHrefModel('zones')
-    management_nodes = modellib.XObjHrefModel('management_nodes')
-    management_interfaces = modellib.XObjHrefModel('management_interfaces')
-    system_types = modellib.XObjHrefModel('system_types')
-    networks = modellib.XObjHrefModel('networks')
-    systems = modellib.XObjHrefModel('systems')
-    log = modellib.XObjHrefModel('log')
-    event_types = modellib.XObjHrefModel('event_types')
-    system_states = modellib.XObjHrefModel('system_states')
-    job_states = modellib.XObjHrefModel('job_states')
-    inventory_systems = modellib.XObjHrefModel('inventory_systems')
-    infrastructure_systems = modellib.XObjHrefModel('infrastructure_systems')
-    image_import_metadata_descriptor = modellib.XObjHrefModel('image_import_metadata_descriptor')
+    zones = modellib.HrefField('zones')
+    management_nodes = modellib.HrefField('management_nodes')
+    management_interfaces = modellib.HrefField('management_interfaces')
+    system_types = modellib.HrefField('system_types')
+    networks = modellib.HrefField('networks')
+    systems = modellib.HrefField('systems')
+    log = modellib.HrefField('log')
+    event_types = modellib.HrefField('event_types')
+    system_states = modellib.HrefField('system_states')
+    job_states = modellib.HrefField('job_states')
+    inventory_systems = modellib.HrefField('inventory_systems')
+    infrastructure_systems = modellib.HrefField('infrastructure_systems')
+    image_import_metadata_descriptor = modellib.HrefField('image_import_metadata_descriptor')
 
 class Systems(modellib.Collection):
     class Meta:
@@ -152,7 +152,7 @@ class Networks(modellib.XObjModel):
                 elements=['network', 'systems'])
     list_fields = ['network']
     
-    systems = modellib.XObjHrefModel('../systems')
+    systems = modellib.HrefField('../systems')
     
 class Zones(modellib.XObjModel):
     class Meta:
