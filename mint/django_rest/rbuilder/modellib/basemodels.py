@@ -357,7 +357,7 @@ class BaseManager(models.Manager):
                 objlist = [ objlist ]
             for rel_obj in objlist or []:
                 modelCls = m2m_mgr.model
-                refName = getattr(getattr(model, m2m_accessor), refName, 'href')
+                refName = getattr(getattr(model, m2m_accessor), 'refName', 'href')
                 href = getattr(rel_obj, refName, None)
                 if href is not None:
                     rel_mod = modelCls.objects.load_from_href(href)
