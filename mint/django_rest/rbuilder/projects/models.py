@@ -15,6 +15,7 @@ from xobj import xobj
 class Projects(modellib.Collection):
     class Meta:
         abstract = True
+
     _xobj = xobj.XObjMetadata(
                 tag = "projects")
     view_name = "Projects"
@@ -22,6 +23,9 @@ class Projects(modellib.Collection):
     project = []
 
 class Project(modellib.XObjIdModel):
+    class Meta:
+        db_table = u"projects"
+        
     _xobj_hidden_accessors = set(['membership'])
     view_name = "Project"
     url_key = ["short_name"]
@@ -58,9 +62,6 @@ class Project(modellib.XObjIdModel):
     database = models.CharField(max_length=128, null=True)
     members = models.ManyToManyField(rbuildermodels.Users, through="Member")
 
-    class Meta:
-        db_table = u"projects"
-        
     def __unicode__(self):
         return self.hostname
         
@@ -84,6 +85,7 @@ class Member(modellib.XObjModel):
 class Versions(modellib.Collection):
     class Meta:
         abstract = True
+
     _xobj = xobj.XObjMetadata(
                 tag = "versions")
     view_name = "ProjectVersions"
@@ -93,18 +95,13 @@ class Versions(modellib.Collection):
 class Version(modellib.XObjIdModel):
     class Meta:
         db_table = u'productversions'
-    _xobj_hidden_accessors = set(['stages',])
 
+    _xobj_hidden_accessors = set(['stages',])
     _xobj = xobj.XObjMetadata(
         tag="version")
-
     view_name = 'ProjectVersion'
+    url_key = ['project', 'pk']
 
-    # url_key = ['project', 'pk']
-
-    def __unicode__(self):
-        return self.name
-        
     version_id = models.AutoField(primary_key=True,
         db_column='productversionid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
@@ -116,9 +113,13 @@ class Version(modellib.XObjIdModel):
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
 
+    def __unicode__(self):
+        return self.name
+        
 class Stage(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_stage'
+
     view_name = 'ProjectVersionStage'
     _xobj = xobj.XObjMetadata(tag='stage')
     _xobj_hidden_accessors = set(['version_set',])
@@ -133,29 +134,37 @@ class Stage(modellib.XObjIdModel):
         xobj_model._xobj.text = self.name
         return xobj_model
 
-class Releases(modellib.XObjModel):
-    pubreleaseid = models.AutoField(primary_key=True)
-    productId = modellib.DeferredForeignKey(Project, db_column='projectid', 
-        related_name='releasesProduct')
-    name = models.CharField(max_length=255)
-    version = models.CharField(max_length=32)
-    description = models.TextField()
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    createdby = models.ForeignKey(rbuildermodels.Users, db_column='createdby',
-        related_name='releaseCreator')
-    timeupdated = models.DecimalField(max_digits=14, decimal_places=3)
-    updatedby = models.ForeignKey(rbuildermodels.Users, db_column='updatedby',
-        related_name='releaseUpdater')
-    timepublished = models.DecimalField(max_digits=14, decimal_places=3)
-    publishedby = models.ForeignKey(rbuildermodels.Users, db_column='publishedby',
-        related_name='releasePublisher')
-    shouldmirror = models.SmallIntegerField()
-    timemirrored = models.DecimalField(max_digits=14, decimal_places=3)
+class Release(modellib.XObjModel):
     class Meta:
         db_table = u'publishedreleases'
+
+    _xobj = xobj.XObjMetadata(
+        tag='releases')
+    view_name = "ProjectRelease"
      
-    def __unicode__(self):
-        return self.name
+    release_id = models.AutoField(primary_key=True)
+    project = modellib.DeferredForeignKey(Project, db_column='projectid', 
+        related_name='releases')
+    name = models.CharField(max_length=255, blank=True, default='')
+    version = models.CharField(max_length=32, blank=True, default='')
+    description = models.TextField()
+    time_created = models.DecimalField(max_digits=14, decimal_places=3,
+        db_column='timeCreated', null=True)
+    created_by = modellib.ForeignKey(rbuildermodels.Users, db_column='createdby',
+        related_name='created_releases', null=True)
+    time_updated = models.DecimalField(max_digits=14, decimal_places=3,
+        null=True, db_column='timeUpdated')
+    updated_by = modellib.ForeignKey(rbuildermodels.Users, db_column='updatedby',
+        related_name='updated_releases', null=True)
+    time_published = models.DecimalField(max_digits=14, decimal_places=3,
+        db_column='timePublished', null=True)
+    published_by = modellib.ForeignKey(rbuildermodels.Users, 
+        db_column='publishedby', related_name='published_releases',
+        null=True)
+    should_mirror = models.SmallIntegerField(db_column='shouldMirror',
+        blank=True, default=0)
+    time_mirrored = models.DecimalField(max_digits=14, decimal_places=3,
+        null=True, db_column='timeMirrored')
                
 class Image(modellib.XObjIdModel):
     class Meta:
@@ -163,7 +172,6 @@ class Image(modellib.XObjIdModel):
         
     _xobj = xobj.XObjMetadata(
         tag="image")
-
     view_name = "ProjectImage"
 
     def __unicode__(self):
@@ -172,30 +180,36 @@ class Image(modellib.XObjIdModel):
     image_id = models.AutoField(primary_key=True, db_column='buildid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
         related_name="images", view_name="ProjectImages", ref_name="id")
-    release = models.ForeignKey(Releases, null=True,
+    release = models.ForeignKey(Release, null=True,
         db_column='pubreleaseid')
-    build_type = models.IntegerField(db_column="build_type")
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    trovename = models.CharField(max_length=128)
-    troveversion = models.CharField(max_length=255)
-    troveflavor = models.CharField(max_length=4096)
-    trovelastchanged = models.DecimalField(max_digits=14,
-        decimal_places=3)
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    createdby = models.ForeignKey(rbuildermodels.Users, db_column='createdby',
-        related_name='imageCreator')
-    timeupdated = models.DecimalField(max_digits=14, decimal_places=3,
-        null=True)
-    updatedby = models.ForeignKey(rbuildermodels.Users, db_column='updatedby',
-        related_name='imageUpdater', null=True)
-    deleted = models.SmallIntegerField()
-    buildcount = models.IntegerField()
-    productversionid = models.ForeignKey(Version,
+    build_type = models.IntegerField(db_column="buildType")
+    job_uuid = models.CharField(max_length=64, null=True)
+    name = models.CharField(max_length=255, null=True)
+    description = models.TextField(null=True)
+    trove_name = models.CharField(max_length=128, null=True,
+        db_column='troveName')
+    trove_version = models.CharField(max_length=255, null=True,
+        db_column='troveVersion')
+    trove_flavor = models.CharField(max_length=4096, null=True,
+        db_column='troveFlavor')
+    trove_last_changed = models.DecimalField(max_digits=14,
+        decimal_places=3, null=True, db_column='troveLastChanged')
+    time_created = models.DecimalField(max_digits=14, decimal_places=3,
+        db_column='timeCreated')
+    created_by = modellib.ForeignKey(rbuildermodels.Users,
+        db_column='createdby', related_name='created_images')
+    time_updated = models.DecimalField(max_digits=14, decimal_places=3,
+        null=True, db_column='timeUpdated')
+    updated_by = modellib.ForeignKey(rbuildermodels.Users, db_column='updatedby',
+        related_name='updated_images', null=True)
+    build_count = models.IntegerField(null=True, default=0)
+    version = models.ForeignKey(Version, null=True,
         db_column='productversionid')
-    stagename = models.CharField(max_length=255)
-    status = models.IntegerField()
-    statusmessage = models.TextField()
+    stage_name = models.CharField(max_length=255, db_column='stageName',
+        null=True, blank=True, default='')
+    status = models.IntegerField(null=True, default=-1)
+    status_message = models.TextField(null=True, blank=True, default='',
+        db_column='')
 
 class Downloads(modellib.XObjModel):
     class Meta:

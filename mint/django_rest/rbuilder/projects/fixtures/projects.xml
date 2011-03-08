@@ -18,45 +18,45 @@
     <field to="rbuilder.users" name="creator" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="projects.version">
-    <field to="projects.project" name="productId" rel="ManyToOneRel">2</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
     <field type="DecimalField" name="time_created">0</field>
   </object>
   <object pk="3" model="projects.version">
-    <field to="projects.project" name="productId" rel="ManyToOneRel">2</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">2</field>
     <field type="TextField" name="description">2</field>
     <field type="DecimalField" name="time_created">0</field>
   </object>
-  <object pk="1" model="inventory.stage">
+  <object pk="1" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">2</field>
     <field type="CharField" name="name">Development</field>
     <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1-devel</field>
   </object>
-  <object pk="2" model="inventory.stage">
+  <object pk="2" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">2</field>
     <field type="CharField" name="name">QA</field>
     <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1-qa</field>
   </object>
-  <object pk="3" model="inventory.stage">
+  <object pk="3" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">2</field>
     <field type="CharField" name="name">Release</field>
     <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-1</field>
   </object>
-  <object pk="4" model="inventory.stage">
+  <object pk="4" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">3</field>
     <field type="CharField" name="name">Development</field>
     <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2-devel</field>
   </object>
-  <object pk="5" model="inventory.stage">
+  <object pk="5" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">3</field>
     <field type="CharField" name="name">QA</field>
     <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2-qa</field>
   </object>
-  <object pk="6" model="inventory.stage">
+  <object pk="6" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">3</field>
     <field type="CharField" name="name">Release</field>
     <field type="TextField" name="label">postgres.rpath.com@rpath:postgres-2</field>
@@ -80,23 +80,23 @@
     <field to="rbuilder.users" name="creator" rel="ManyToOneRel">1</field>
   </object>
   <object pk="4" model="projects.version">
-    <field to="projects.project" name="productId" rel="ManyToOneRel">3</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">3</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
     <field type="DecimalField" name="time_created">0</field>
   </object>
-  <object pk="7" model="inventory.stage">
+  <object pk="7" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">4</field>
     <field type="CharField" name="name">Development</field>
     <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-1-devel</field>
   </object>
-  <object pk="8" model="inventory.stage">
+  <object pk="8" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">4</field>
     <field type="CharField" name="name">QA</field>
     <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-1-qa</field>
   </object>
-  <object pk="9" model="inventory.stage">
+  <object pk="9" model="projects.stage">
     <field to="projects.version" name="major_version" rel="ManyToOneRel">4</field>
     <field type="CharField" name="name">Release</field>
     <field type="TextField" name="label">postgres-private.rpath.com@rpath:postgres-1</field>

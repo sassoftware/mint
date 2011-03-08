@@ -803,7 +803,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field to="rbuilder.users" name="creator" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="projects.version">
-    <field to="projects.project" name="productId" rel="ManyToOneRel">1</field>
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
