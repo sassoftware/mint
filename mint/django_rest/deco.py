@@ -65,7 +65,7 @@ def requires(model_names, save=True):
                 built_model, request, save=save)
             kw[model_name] = model
             return function(*args, **kw)
-
+        
         return inner
     return decorate
 
