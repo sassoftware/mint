@@ -1169,9 +1169,6 @@ class XObjHrefModel(XObjModel):
 
     def __init__(self, href):
         self.href = href
-
-    def serialize(self, request=None, values=None):
-        self.href = request.build_absolute_uri(self.href)
         
 class HrefField(models.Field):
     def __init__(self, href=None):
@@ -1179,10 +1176,8 @@ class HrefField(models.Field):
         models.Field.__init__(self)
 
     def serialize_value(self, request=None, values=None):
-        hrefClass = type(self.name, (object, ), {})
-        hrefClass._xobj = xobj.XObjMetadata(attributes={"href":str})
-        hrefClass.href = request.build_absolute_uri(self.href)
-        return hrefClass
+        hrefModel = XObjHrefModel(request.build_absolute_uri(self.href))
+        return hrefModel
 
 class ForeignKey(models.ForeignKey):
     """
