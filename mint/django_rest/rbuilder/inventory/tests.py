@@ -13,6 +13,7 @@ from conary import versions
 
 from django.contrib.redirects import models as redirectmodels
 from django.db import connection
+from django.conf import settings
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
@@ -132,6 +133,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.localZone = self.mgr.sysMgr.getLocalZone()
         rbuildermanager.repeatermgr.repeater_client = None
         views.BaseInventoryService._setMintAuth = lambda *args: None
+
+        # Default to 10 items per page in the tests
+        settings.PER_PAGE = 10
 
     def tearDown(self):
         TestCase.tearDown(self)
