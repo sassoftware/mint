@@ -352,7 +352,7 @@ class BaseManager(models.Manager):
 
             acobj = getattr(obj, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
-            if objlist:
+            if objlist is not None:
                 self.clear_m2m_accessor(model, m2m_accessor)
                 if not isinstance(objlist, list):
                     objlist = [ objlist ]
