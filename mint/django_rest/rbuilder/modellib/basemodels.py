@@ -350,11 +350,12 @@ class BaseManager(models.Manager):
             else:
                 rel_obj_name = m2m_mgr.target_field_name
 
-            self.clear_m2m_accessor(model, m2m_accessor)
             acobj = getattr(obj, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
-            if objlist is not None and not isinstance(objlist, list):
-                objlist = [ objlist ]
+            if objlist:
+                self.clear_m2m_accessor(model, m2m_accessor)
+                if not isinstance(objlist, list):
+                    objlist = [ objlist ]
             for rel_obj in objlist or []:
                 modelCls = m2m_mgr.model
                 refName = getattr(getattr(model, m2m_accessor), 'refName', 'href')
