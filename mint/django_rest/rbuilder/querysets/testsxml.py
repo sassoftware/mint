@@ -17,7 +17,7 @@ queryset_post_xml = """\
 
 query_sets_xml = """\
 <?xml version="1.0"?>
-<query_sets count="5" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/query_sets" end_index="9" limit="50" order_by="" per_page="10" filter_by="" id="http://testserver/api/query_sets;start_index=0;limit=50" start_index="0">
+<query_sets count="5" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/query_sets" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/query_sets;start_index=0;limit=10" start_index="0">
   <query_set id="http://testserver/api/query_sets/1">
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/1/filter_descriptor"/>
@@ -403,7 +403,7 @@ query_set_child_update_xml = """\
       <name>Tagged Systems 2</name>
     </query_set>
     <query_set id="http://127.0.0.1:8000/api/query_sets/6">
-      <name>Tagged Systems 2</name>
+      <name>EC2 Systems</name>
     </query_set>
   </children>
 </query_set>
