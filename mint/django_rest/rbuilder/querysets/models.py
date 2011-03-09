@@ -89,6 +89,8 @@ class QuerySet(modellib.XObjIdModel):
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.")
 
+    load_fields = [name]
+
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request, values)
 
