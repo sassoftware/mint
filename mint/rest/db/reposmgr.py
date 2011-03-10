@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import copy
 from cStringIO import StringIO
 import os
-import weakref
+import sys
 
 from mint import helperfuncs
 from mint import mint_error
@@ -22,15 +20,9 @@ from mint.rest.db import manager
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
-from conary import dbstore
 from conary.conaryclient import filetypes
-from conary.dbstore import sqlerrors
-from conary.deps import deps
-from conary.lib import util
 from conary.repository import errors as reposerrors
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver
-from conary.server import schema
 
 _cachedCfg = None
 
@@ -450,9 +442,11 @@ class RepositoryManager(manager.Manager):
             # use 2**64 to ensure we won't make the server do much
             nc.getNewTroveList(fqdn, '4611686018427387904')
         except reposerrors.InsufficientPermission, e:
-            raise errors.ExternalRepositoryMirrorError(url, e)
+            e_tb = sys.exc_info()[2]
+            raise errors.ExternalRepositoryMirrorError(url, e), None, e_tb
         except reposerrors.OpenError, e:
-            raise errors.ExternalRepositoryAccessError(url, e)
+            e_tb = sys.exc_info()[2]
+            raise errors.ExternalRepositoryAccessError(url, e), None, e_tb
 
     def _getRepositoryUrl(self, fqdn):
         hostname = fqdn.split('.', 1)[0]
