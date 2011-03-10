@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(53, 3)
+RBUILDER_DB_VERSION = sqllib.DBversion(53, 4)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1094,6 +1094,7 @@ def _createInventorySchema(db, cfg):
                 "label" text NOT NULL,
                 "major_version_id" integer
                     REFERENCES ProductVersions (productVersionId)
+                    ON DELETE SET NULL
             )""" % db.keywords)
         db.tables['inventory_stage'] = []
         changed = True

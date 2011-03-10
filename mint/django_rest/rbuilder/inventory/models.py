@@ -1201,7 +1201,7 @@ class Stage(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(['version_set',])
 
     stage_id = models.AutoField(primary_key=True)
-    major_version = models.ForeignKey(rbuildermodels.Versions)
+    major_version = models.ForeignKey(rbuildermodels.Versions, null=True)
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
 
