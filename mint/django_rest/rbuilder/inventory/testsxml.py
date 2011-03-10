@@ -1590,6 +1590,14 @@ get_installed_software_xml = """\
       <available_updates>
         <version>
           <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567890.12</ordering>
+          <revision>change me gently</revision>
+          <version_id>1</version_id>
+        </version>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
           <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</full>
           <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
           <ordering>1234567891.13</ordering>
@@ -1621,7 +1629,16 @@ get_installed_software_xml = """\
       </version>
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/emacs%%3D/contrib.rpath.org%%40rpl%%3A2/23.0.60cvs20080523-1-0.1%%5Bdesktop%%20is%%3A%%20x86_64%%5D">
-      <available_updates/>
+      <available_updates>
+        <version>
+          <flavor>desktop is: x86_64</flavor>
+          <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+          <label>contrib.rpath.org@rpl:2</label>
+          <ordering>1234567890.12</ordering>
+          <revision>23.0.60cvs20080523-1-0.1</revision>
+          <version_id>4</version_id>
+        </version>
+      </available_updates>
       <flavor>desktop is: x86_64</flavor>
       <is_top_level>false</is_top_level>
       <is_top_level_item>True</is_top_level_item>
@@ -1912,6 +1929,14 @@ system_available_updates_xml = """\
       <available_updates>
         <version>
           <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
+          <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1</full>
+          <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
+          <ordering>1234567890.12</ordering>
+          <revision>change me gently</revision>
+          <version_id>1</version_id>
+        </version>
+        <version>
+          <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
           <full>/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</full>
           <label>clover.eng.rpath.com@rpath:clover-1-devel</label>
           <ordering>1234567891.13</ordering>
@@ -1943,7 +1968,16 @@ system_available_updates_xml = """\
     <trove id="http://testserver/repos/contrib/api/trove/emacs%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
       <name>emacs</name>
       <trove_id>2</trove_id>
-      <available_updates/>
+      <available_updates>
+        <version>
+          <flavor>desktop is: x86_64</flavor>
+          <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>
+          <label>contrib.rpath.org@rpl:2</label>
+          <ordering>1234567890.12</ordering>
+          <revision>23.0.60cvs20080523-1-0.1</revision>
+          <version_id>4</version_id>
+        </version>
+      </available_updates>
       <version>
         <flavor>desktop is: x86_64</flavor>
         <full>/contrib.rpath.org@rpl:devel//2/23.0.60cvs20080523-1-0.1</full>

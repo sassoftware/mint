@@ -2829,10 +2829,11 @@ class SystemVersionsTestCase(XMLTestCase):
 
         self.mgr.versionMgr.refreshCachedUpdates(name, label)
         update = self.trove.available_updates.all()
-        self.assertEquals(len(update), 3)
+        self.assertEquals(4, len(update))
         update = [u.full for u in update]
         self.assertEquals(update,
-            ['/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1',
+            ['/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1',
+             '/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1',
              '/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1',
              '/clover.eng.rpath.com@rpath:clover-1-devel/1-5-1'])
 
