@@ -248,7 +248,6 @@ class ImagesTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
-    <metadataDescriptor href="http://localhost:8000/api/products/testproject/images/1/metadataDescriptor"/>
   </image>
   <image id="http://%(server)s:%(port)s/api/products/testproject/images/2">
     <imageId>2</imageId>
@@ -286,7 +285,6 @@ class ImagesTest(restbase.BaseRestTest):
       </file>
     </files>
     <baseFileName>testproject-1-</baseFileName>
-    <metadataDescriptor href="http://localhost:8000/api/products/testproject/images/2/metadataDescriptor"/>
   </image>
 </images>
 """

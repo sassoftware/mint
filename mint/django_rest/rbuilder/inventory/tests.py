@@ -10,9 +10,11 @@ from dateutil import tz
 from xobj import xobj
 
 from conary import versions
+from conary.conaryclient.cmdline import parseTroveSpec
 
 from django.contrib.redirects import models as redirectmodels
 from django.db import connection
+from django.conf import settings
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 from django.test.client import Client, MULTIPART_CONTENT
@@ -132,6 +134,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.localZone = self.mgr.sysMgr.getLocalZone()
         rbuildermanager.repeatermgr.repeater_client = None
         views.BaseInventoryService._setMintAuth = lambda *args: None
+
+        # Default to 10 items per page in the tests
+        settings.PER_PAGE = 10
 
     def tearDown(self):
         TestCase.tearDown(self)
@@ -2716,6 +2721,8 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mock_set_available_updates_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
+        rbuildermanager.systemmgr.SystemManager.scheduleSystemApplyUpdateEvent = self.mock_scheduleSystemApplyUpdateEvent
+        self.sources = []
         rbuildermanager.versionmgr.VersionManager.set_available_updates = \
             self.mock_set_available_updates
         models.Job.getRmakeJob = self.mockGetRmakeJob
@@ -2740,6 +2747,11 @@ class SystemVersionsTestCase(XMLTestCase):
         
     def mock_scheduleSystemPollEvent(self, system):
         self.mock_scheduleSystemPollEvent_called = True
+
+    def mock_scheduleSystemApplyUpdateEvent(self, system, sources):
+        self.mock_scheduleSystemApplyUpdateEvent_called = True
+        self.sources = sources
+    mock_scheduleSystemApplyUpdateEvent.exposed = True
  
     def _saveTrove(self):
         version = models.Version()
@@ -2772,6 +2784,7 @@ class SystemVersionsTestCase(XMLTestCase):
         version_update2.flavor = version.flavor
         version_update2.save()
 
+        trove.available_updates.add(version)
         trove.available_updates.add(version_update)
         trove.available_updates.add(version_update2)
         trove.save()
@@ -2788,6 +2801,9 @@ class SystemVersionsTestCase(XMLTestCase):
         trove2.flavor = version2.flavor
         trove2.last_available_update_refresh = \
             datetime.datetime.now(tz.tzutc())
+        trove2.save()
+
+        trove2.available_updates.add(version2)
         trove2.save()
 
         self.trove = trove
@@ -2813,10 +2829,13 @@ class SystemVersionsTestCase(XMLTestCase):
 
         self.mgr.versionMgr.refreshCachedUpdates(name, label)
         update = self.trove.available_updates.all()
-        self.assertEquals(len(update), 1)
-        update = update[0]
-        self.assertEquals(update.full,
-            '/clover.eng.rpath.com@rpath:clover-1-devel/1-5-1')
+        self.assertEquals(4, len(update))
+        update = [u.full for u in update]
+        self.assertEquals(update,
+            ['/clover.eng.rpath.com@rpath:clover-1-devel/1-2-1',
+             '/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1',
+             '/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1',
+             '/clover.eng.rpath.com@rpath:clover-1-devel/1-5-1'])
 
     def testGetSystemWithVersion(self):
         system = self._saveSystem()
@@ -2875,6 +2894,26 @@ class SystemVersionsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, 
             testsxml.system_available_updates_xml,
             ignoreNodes=['created_date', 'last_available_update_refresh'])
+
+    def testApplyUpdate(self):
+        system = self._saveSystem()
+        self._saveTrove()
+        system.installed_software.add(self.trove)
+        system.installed_software.add(self.trove2)
+        system.save()
+
+        # Apply update to 1-3-1
+        data = testsxml.system_apply_updates_xml
+        response = self._put('/api/inventory/systems/%s/installed_software' 
+            % system.pk,
+            data=data, username="admin", password="password")
+        self.assertEquals(2, len(self.sources))
+        newGroup = [g for g in self.sources \
+            if parseTroveSpec(g).name == 'group-clover-appliance'][0]
+        newGroup = parseTroveSpec(newGroup)
+        self.assertEquals('group-clover-appliance', newGroup.name)
+        version = versions.VersionFromString(newGroup.version)
+        self.assertEquals('1-3-1', version.trailingRevision().asString())
 
     def testSetInstalledSoftwareSystemRest(self):
         system = self._saveSystem()

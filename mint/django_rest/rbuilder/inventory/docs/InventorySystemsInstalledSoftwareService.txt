@@ -1,0 +1,15 @@
+InstalledSoftware properties:
+
+
+Trove properties:
+
+View: InventorySystemsInstalledSoftwareService
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        Authentication: user
+    DELETE:
+        not supported

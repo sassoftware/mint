@@ -204,12 +204,8 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                if hasattr(val, 'id'):
-                    href = getattr(val, 'id', None)
-                elif hasattr(val, 'href'):
-                    href = getattr(val, 'href', None)
-                else:
-                    href = None
+                refName = field.refName
+                href = getattr(val, refName, None)
                 parentModel = field.related.parent_model
                 if href is not None:
                     val = parentModel.objects.load_from_href(href)
@@ -354,15 +350,16 @@ class BaseManager(models.Manager):
             else:
                 rel_obj_name = m2m_mgr.target_field_name
 
-            self.clear_m2m_accessor(model, m2m_accessor)
             acobj = getattr(obj, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
-            if objlist is not None and not isinstance(objlist, list):
-                objlist = [ objlist ]
+            if objlist is not None:
+                self.clear_m2m_accessor(model, m2m_accessor)
+                if not isinstance(objlist, list):
+                    objlist = [ objlist ]
             for rel_obj in objlist or []:
-                modelCls = type_map[rel_obj_name]
-                href = getattr(rel_obj, 'href', None) or \
-                    getattr(rel_obj, 'id', None)
+                modelCls = m2m_mgr.model
+                refName = getattr(getattr(model, m2m_accessor), 'refName', 'href')
+                href = getattr(rel_obj, refName, None)
                 if href is not None:
                     rel_mod = modelCls.objects.load_from_href(href)
                 else:
@@ -881,16 +878,6 @@ class XObjModel(models.Model):
         else:
             return relative_url
 
-    def _serialize_hrefs(self, request=None):
-        """
-        Serialize each occurence of where an XObjHrefModel has been set as
-        an attribute on this model.
-        """
-        href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
-                        if isinstance(v, XObjHrefModel)]
-        for href in href_fields:
-            href[1].serialize(request)
-
     def get_field_dict(self):
         """
         return dict of field names and field instances (these are not field
@@ -950,10 +937,8 @@ class XObjModel(models.Model):
                     if val is None:
                         continue
                     val = xobj.parse(val)
-                setattr(xobj_model, key, val)
-            # TODO: is this still needed, we already called serialize_hrefs.?
-            elif isinstance(val, XObjHrefModel):
-                val.serialize(request)
+                elif isinstance(field, HrefField):
+                    val = field.serialize_value(request)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request):
@@ -1126,7 +1111,6 @@ class XObjModel(models.Model):
         Serialize this model into an object that can be passed blindly into
         xobj to produce the xml that we require.
         """
-        self._serialize_hrefs(request)
         # Basic object to use to send to xobj.
         xobjModelClass = self._xobjClass
         xobj_model = xobjModelClass()
@@ -1192,12 +1176,18 @@ class XObjHrefModel(XObjModel):
     _xobj = xobj.XObjMetadata(
                 attributes = {'href':str})
 
+    def __init__(self, href):
+        self.href = href
+        
+class HrefField(models.Field):
     def __init__(self, href=None):
         self.href = href
+        models.Field.__init__(self)
 
-    def serialize(self, request=None):
-        self.href = request.build_absolute_uri(self.href)
-        
+    def serialize_value(self, request=None, values=None):
+        hrefModel = XObjHrefModel(request.build_absolute_uri(self.href))
+        return hrefModel
+
 class ForeignKey(models.ForeignKey):
     """
     Wrapper of django foreign key for use in models

@@ -271,7 +271,7 @@ class MintConfig(conarycfg.ConfigFile):
     inventoryConfigurationEnabled = (CfgBool, True, "Whether or not managed systems can be configured vai the API")
     
     # image import
-    imageImportEnabled = (CfgBool, False, "Whether or not base images can be imported directly as project images")
+    imageImportEnabled = (CfgBool, True, "Whether or not base images can be imported directly as project images")
     metadataDescriptorPath = (CfgPath, RBUILDER_DATA + 'data/metadataDescriptor.xml')
 
     # *** BEGIN DEPRECATED VALUES ***

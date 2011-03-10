@@ -1,0 +1,12 @@
+SystemEvent properties:
+
+View: InventorySystemEventsService
+Methods:
+    GET:
+        Authentication: user
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported

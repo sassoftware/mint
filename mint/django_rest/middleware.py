@@ -4,19 +4,15 @@
 # All Rights Reserved
 #
 
+import os
 import logging
-import sys
-import traceback
-
-import libxml2
-import libxslt
 
 from debug_toolbar import middleware
 
 from django import http
 from django.contrib.auth import authenticate
 from django.contrib.redirects import middleware as redirectsmiddleware
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest
 
 from mint import config
 from mint.django_rest import handler
@@ -25,7 +21,8 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils
 
-from xobj import xobj
+#from lxml import etree
+
 
 try:
     # The mod_python version is more efficient, so try importing it first.
@@ -149,33 +146,65 @@ class LocalSetMintConfigMiddleware(BaseMiddleware):
         cfg.siteHost = 'localhost.localdomain'
         request.cfg = cfg
 
+
 class AddCommentsMiddleware(BaseMiddleware):
-   
-    useXForm = True
     
-    def __init__(self):
-        try:
-            styledoc = libxml2.parseFile(__file__[0:__file__.index('.py')].replace(
-                    'middleware', 'templates/comments.xsl'))
-            self.style = libxslt.parseStylesheetDoc(styledoc)
-        except libxml2.parserError:
-            self.useXForm = False 
+    useXForm = True
 
     def _process_response(self, request, response):
-
         if self.useXForm and response.content and  \
             response.status_code in (200, 201, 206, 207):
 
-            try: 
-                xmldoc = libxml2.parseDoc(response.content)
-                result = self.style.applyStylesheet(xmldoc, None)
-                response.content = result.serialize()
-                xmldoc.freeDoc()
-                result.freeDoc()
-            except:
-                pass
+            # get view + documentation
+            view_name = request._view_func.__class__.__name__
+            path = os.path.join(os.path.dirname(__file__), 'rbuilder/inventory/docs/%s.txt' % view_name)
+            f = open(path, 'r')
+            try:
+                contents = response.content.split('\n')
+                docs = '<!--' + f.read().strip() + '-->'
+                response.content = contents[0] + docs + '\n'.join(contents[1:])
+            finally:
+                f.close()
+        return response
 
-        return response 
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        request._view_func = view_func
+        return None
+
+#class AddCommentsMiddleware(BaseMiddleware):
+#    
+#    useXForm = True
+#    
+#    def __init__(self):
+#        try:
+#            f = os.path.join(os.path.dirname(__file__), 'templates/comments.xsl')
+#            self.styledoc = etree.parse(f)
+#        except:
+#            self.useXForm = False
+#
+#    def _process_response(self, request, response):
+#        if self.useXForm and response.content and  \
+#            response.status_code in (200, 201, 206, 207):
+#
+#            # get view + documentation
+#            view = request._view_func
+#            # Process view no longer exists, see generatecomments
+#            # script for HOWTO reconstruct it
+#            view_doc = processView(view)
+#            
+#            try:
+#                transform = etree.XSLT(self.styledoc)
+#                xmldoc = transform(etree.XML(response.content))
+#                response.content = str(xmldoc).replace('@@METHODS@@', view_doc)
+#            except:
+#                pass
+#
+#        return response 
+#
+#    def process_view(self, request, view_func, view_args, view_kwargs):
+#        request._view_func = view_func
+#        return None
+
 
 class NoParamsRequest(object):
 

@@ -2292,7 +2292,7 @@ class MigrateTo_52(SchemaMigration):
         return True
 
 class MigrateTo_53(SchemaMigration):
-    Version = (53, 3)
+    Version = (53, 4)
 
     def migrate(self):
         db = self.db
@@ -2482,6 +2482,22 @@ class MigrateTo_53(SchemaMigration):
         """)
 
         return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_stage 
+            DROP CONSTRAINT inventory_stage_major_version_id_fkey
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_stage 
+            ADD CONSTRAINT inventory_stage_major_version_id_fkey 
+            FOREIGN KEY (major_version_id) 
+            REFERENCES productversions(productversionid) ON DELETE SET NULL
+        """)
+
+        return True
+
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
