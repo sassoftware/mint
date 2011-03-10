@@ -1206,10 +1206,13 @@ class Stage(modellib.XObjIdModel):
     label = models.TextField(unique=True)
 
     def get_absolute_url(self, request, *args, **kwargs):
-        parents = [Pk(self.major_version.productId.shortname),
-            Pk(self.major_version.name), Pk(self.name)]
-        return modellib.XObjIdModel.get_absolute_url(
-            self, request, parents)
+        if self.major_version:
+            parents = [Pk(self.major_version.productId.shortname),
+                Pk(self.major_version.name), Pk(self.name)]
+            return modellib.XObjIdModel.get_absolute_url(
+                self, request, parents)
+        else:
+            return None
 
     def serialize(self, request=None, values=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request, values)
