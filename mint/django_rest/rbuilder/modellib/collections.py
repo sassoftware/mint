@@ -317,12 +317,12 @@ class Collection(XObjIdModel):
         else:
             self.previous_page = ''
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         # We only support one list field right now
         if self.list_fields:
             listField = self.list_fields[0]
         else:
-            return XObjIdModel.serialize(self, request, values)
+            return XObjIdModel.serialize(self, request)
 
         modelList = getattr(self, listField)
 
@@ -331,7 +331,7 @@ class Collection(XObjIdModel):
 
         self.paginate(request, listField, modelList)
 
-        xobj_model = XObjIdModel.serialize(self, request, values)
+        xobj_model = XObjIdModel.serialize(self, request)
 
         return xobj_model
 

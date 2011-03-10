@@ -115,7 +115,7 @@ class LocalSetMintAdminMiddleware(BaseMiddleware):
         request._is_admin = True
         request._is_authenticated = True
         request._authUser = rbuildermodels.Users.objects.get(pk=1)
-        request._auth = ("admin", "admin")
+        request._auth = ("admin", "password")
         return None
 
 class SetMintAuthenticatedMiddleware(BaseMiddleware):
