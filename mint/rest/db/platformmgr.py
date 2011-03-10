@@ -540,6 +540,20 @@ class Platforms(object):
         else:
             return models.AuthInfo(authType='none')
 
+    def _updateInternalPackageIndex(self):
+        """
+        Update the internal package index
+        """
+        upi = pkgindexer.UpdatePackageIndex()
+        return upi.run()
+
+    def _updateExternalPackageIndex(self):
+        """
+        Update the external package index.
+        """
+        upie = pkgindexer.UpdatePackageIndexExternal()
+        return upie.run()
+
     def _setupPlatform(self, platform):
         platformId = int(platform.platformId)
         platformName = str(platform.platformName)
@@ -553,19 +567,22 @@ class Platforms(object):
 
         # Get the projectId to see if this platform has already been
         # associated with an external project.
-        projectId = self._getUsableProject(platformId, hostname)
+        projectId = self._getProjectId(platformId)
 
         if not projectId:
             projectId = self._getUsableProject(platformId, hostname)
             if projectId:
-                if projectId:
-                    # Add the project to our platform
-                    self.db.db.platforms.update(platformId, 
-                        projectId=projectId)
+                # Add the project to our platform
+                self.db.db.platforms.update(platformId, 
+                    projectId=projectId)
                 project = self.db.db.projects.get(projectId)
                 if project['external'] == 1:
                     self._setupExternalProject(hostname, domainname, 
                         authInfo, url, projectId, mirror)
+                    self._updateExternalPackageIndex()
+                else:
+                    self._updateInternalPackageIndex()
+                
 
         if not projectId:            
             # Still no project, we need to create a new one.
@@ -577,6 +594,8 @@ class Platforms(object):
                 projectId = self.db.db.projects.getProjectIdByFQDN(hostname)
 
             self.db.db.platforms.update(platformId, projectId=projectId)
+
+            self._updateExternalPackageIndex()
 
         return projectId
 
