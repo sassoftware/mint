@@ -2907,6 +2907,7 @@ class SystemVersionsTestCase(XMLTestCase):
         response = self._put('/api/inventory/systems/%s/installed_software' 
             % system.pk,
             data=data, username="admin", password="password")
+        self.assertEquals(200, response.status_code)
         self.assertEquals(2, len(self.sources))
         newGroup = [g for g in self.sources \
             if parseTroveSpec(g).name == 'group-clover-appliance'][0]
