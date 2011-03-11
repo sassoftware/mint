@@ -48,7 +48,9 @@ class CollectionPage(paginator.Page):
         page.
         """
         endIndex = self.paginator.per_page * (self.number + 1) - 1
-        if endIndex > self.paginator.count:
+        if self.paginator.count == 0:
+            return 0
+        elif endIndex > self.paginator.count:
             return self.paginator.count - 1
         else:
             return endIndex
