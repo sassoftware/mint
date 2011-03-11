@@ -158,7 +158,10 @@ class AddCommentsMiddleware(BaseMiddleware):
             # get view + documentation
             view_name = request._view_func.__class__.__name__
             path = os.path.join(os.path.dirname(__file__), 'rbuilder/inventory/docs/%s.txt' % view_name)
-            f = open(path, 'r')
+            try:
+                f = open(path, 'r')
+            except IOError:
+                return response
             try:
                 contents = response.content.split('\n')
                 docs = '<!--' + f.read().strip() + '-->'
