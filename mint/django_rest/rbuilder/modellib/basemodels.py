@@ -1193,30 +1193,38 @@ class ForeignKey(models.ForeignKey):
     Wrapper of django foreign key for use in models
     """
     def __init__(self, *args, **kwargs):
-        #
-        # text_field is used when serializing the href.  It is the name of the 
+        # text_field is used when serializing the href.  It is the name of the
         # property to use for node text.  For example, a zone with name zone1
-        # serialized as an href would be <zone href="somehost/api/inventory/zones/1"/>.  
-        # If you set text_field to be name, it would be <zone href="somehost/api/inventory/zones/1">zone1</zone>.
-        #
-        self.text_field = None
-        try:
-            self.text_field = kwargs.pop('text_field')
-        except KeyError:
-            pass # text wasn't specified, that is fine
+        # serialized as an href would be <zone
+        # href="somehost/api/inventory/zones/1"/>.  If you set text_field to
+        # be name, it would be <zone
+        # href="somehost/api/inventory/zones/1">zone1</zone>.
+        if kwargs.has_key('text_field'):
+            self.text_field = kwargs['text_field']
+            kwargs.pop('text_field')
+        else:
+            self.text_field = None
 
-        # TODO: change the default to 'id'
-        self.ref_name = 'href'
-        try:
-            self.ref_name = kwargs.pop('ref_name')
-        except KeyError:
-            pass # text wasn't specified, that is fine
+        # ref_name is the attribute name to use when bulding the url for the
+        # foreign key accessor on the parent model.  Usually it is either id
+        # or href.  We have to support both and default to href as older code
+        # expects it to be href.
+        if kwargs.has_key('ref_name'):
+            self.ref_name = kwargs['ref_name']
+            kwargs.pop('ref_name')
+        else:
+            self.ref_name = 'href'
 
-        self.view_name = None
-        try:
-            self.view_name = kwargs.pop('view_name')
-        except KeyError:
-            pass # text wasn't specified, that is fine
+        # view_name is the name of the view from urls.py that should be used
+        # to build a url for this accessor on the parent model.
+        # E.g. Version has a Fk to Project, and the accessor is named
+        # versions.  The view_name is ProjectVersions to produce a url like:
+        # /api/projects/<short_name>/versions/
+        if kwargs.has_key('view_name'):
+            self.view_name = kwargs.get('view_name', None)
+            kwargs.pop('view_name')
+        else:
+            self.view_name = None
 
         super(ForeignKey, self).__init__(*args, **kwargs)
 
