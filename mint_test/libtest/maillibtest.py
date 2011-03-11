@@ -3,7 +3,7 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 
-import testsetup
+import testsetup #pyflakes=ignore
 import testsuite
 import smtplib
 testsuite.setup()
