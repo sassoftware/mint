@@ -17,7 +17,7 @@ queryset_post_xml = """\
 
 query_sets_xml = """\
 <?xml version="1.0"?>
-<query_sets count="5" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/query_sets" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/query_sets;start_index=0;limit=10" start_index="0">
+<query_sets count="5" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/query_sets" end_index="4" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/query_sets;start_index=0;limit=10" start_index="0">
   <query_set id="http://testserver/api/query_sets/1">
     <modified_date>2011-01-26T21:59:59+00:00</modified_date>
     <filter_descriptor id="http://testserver/api/query_sets/1/filter_descriptor"/>
