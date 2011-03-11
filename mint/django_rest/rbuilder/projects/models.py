@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import sys
+
 from django.db import models
 
 from mint import userlevels
@@ -60,7 +62,8 @@ class Project(modellib.XObjIdModel):
     version = models.CharField(max_length=128, null=True, blank=True,
         default='')
     database = models.CharField(max_length=128, null=True)
-    members = models.ManyToManyField(rbuildermodels.Users, through="Member")
+    members = modellib.DeferredManyToManyField(rbuildermodels.Users, 
+        through="Member")
 
     def __unicode__(self):
         return self.hostname
@@ -73,10 +76,18 @@ class Project(modellib.XObjIdModel):
             xobjModel.role = role
         return xobjModel
 
+class Members(modellib.Collection):
+    class Meta:
+        abstract = True
+
+    list_fields = ["member"]
+    member = []
+    view_name = "ProjectMembers"
+
 class Member(modellib.XObjModel):
     project = models.ForeignKey(Project, db_column='projectid',
         related_name='membership')
-    user = models.ForeignKey(rbuildermodels.Users, db_column='userid',
+    user = modellib.DeferredForeignKey(rbuildermodels.Users, db_column='userid',
         related_name='project_membership')
     level = models.SmallIntegerField()
     class Meta:
@@ -219,5 +230,9 @@ class Downloads(modellib.XObjModel):
     timedownloaded = models.CharField(max_length=14)
     ip = models.CharField(max_length=64)
     
-
-
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            modellib.type_map[mod_obj._xobj.tag] = mod_obj
+    if hasattr(mod_obj, '_meta'):
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj

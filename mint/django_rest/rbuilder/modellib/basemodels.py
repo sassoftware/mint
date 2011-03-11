@@ -1059,6 +1059,16 @@ class XObjModel(models.Model):
         for m2m_accessor in m2m_accessors:
             if m2m_accessor in hidden:
                 continue
+            deferred = getattr(self._meta.get_field(m2m_accessor), 
+                "Deferred", None)
+            if deferred:
+                rel_mod = type_map[m2m_accessor]()
+                resourceId = rel_mod.get_absolute_url(request, parents=[self])
+                m2mIdModel = XObjHrefModel(resourceId, ref_name="id")
+                m2mIdModel._xobj.tag = m2m_accessor
+                setattr(xobj_model, m2m_accessor, m2mIdModel)
+                continue
+
             m2model = m2m_accessors[m2m_accessor].model
             # Look up the name of the related model for the accessor.  Can be
             # overriden via _xobj.  E.g., The related model name for the
@@ -1174,10 +1184,11 @@ class XObjHrefModel(XObjModel):
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                attributes = {'href':str})
+                attributes = {'href':str,
+                              'id':str})
 
-    def __init__(self, href):
-        self.href = href
+    def __init__(self, href, ref_name="href"):
+        setattr(self, ref_name, href)
         
 class HrefField(models.Field):
     def __init__(self, href=None):
@@ -1249,6 +1260,16 @@ class InlinedForeignKey(ForeignKey):
         self.visible = kwargs.pop('visible')
         super(InlinedForeignKey, self).__init__(*args, **kwargs)
 
+class DeferredForeignKey(ForeignKey, DeferredForeignKeyMixIn):
+    pass
+
+class InlinedDeferredForeignKey(InlinedForeignKey, DeferredForeignKeyMixIn):
+    pass
+
+class DeferredManyToManyField(models.ManyToManyField,
+                              DeferredForeignKeyMixIn):
+    pass                              
+
 class DateTimeUtcField(models.DateTimeField):
     """
     Like a DateTimeField, but default to using a datetime value that is set to
@@ -1301,12 +1322,6 @@ class DateTimeUtcField(models.DateTimeField):
             return python_value.replace(tzinfo=tz.tzutc())
         else:
             return python_value
-
-class DeferredForeignKey(ForeignKey, DeferredForeignKeyMixIn):
-    pass
-
-class InlinedDeferredForeignKey(InlinedForeignKey, DeferredForeignKeyMixIn):
-    pass
 
 class Cache(object):
     """

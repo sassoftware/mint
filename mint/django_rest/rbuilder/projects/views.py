@@ -65,3 +65,14 @@ class ProjectImageService(service.BaseService):
 
     def get(self, short_name, image_id):
         return None       
+
+class ProjectMemberService(service.BaseService):
+
+    # TODO: figure out correct perms
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request, short_name):
+        return self.get(short_name)
+
+    def get(self, short_name):
+        return self.mgr.getProjectMembers(short_name)

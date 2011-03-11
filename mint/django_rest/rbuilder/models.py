@@ -36,6 +36,7 @@ class UserGroups(modellib.XObjModel):
 class Users(modellib.XObjModel):
     class Meta:
         db_table = u'users'
+    _xobj = xobj.XObjMetadata(tag="user")
 
     serialize_accessors = False
 

@@ -186,3 +186,11 @@ class ProjectManager(basemanager.BaseManager):
         version = models.Version.objects.get(name=versionName)
         return version
 
+    @exposed
+    def getProjectMembers(self, shortName):
+        project = models.Project.objects.get(short_name=shortName)
+        members = models.Members()
+        members.member = [m for m in project.members.all()]
+        members._parents = [project]
+        return members
+
