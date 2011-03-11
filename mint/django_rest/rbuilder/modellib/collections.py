@@ -50,6 +50,8 @@ class CollectionPage(paginator.Page):
         endIndex = self.paginator.per_page * (self.number + 1) - 1
         if endIndex > self.paginator.count:
             return self.paginator.count - 1
+        else:
+            return endIndex
 
     def has_next(self):
         return (self.number + 1) < self.paginator.num_pages
