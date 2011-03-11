@@ -42,9 +42,14 @@ class CollectionPage(paginator.Page):
         return (self.paginator.per_page * self.number)
 
     def end_index(self):
-        if self.number == self.paginator.num_pages:
-            return self.paginator.count
-        return (self.paginator.per_page * (self.number + 1)) - 1
+        """
+        Calculates the end index of this page.  Accounts for the fact that the
+        last page (or first page if there's only one page) may not be a full
+        page.
+        """
+        endIndex = self.paginator.per_page * (self.number + 1) - 1
+        if endIndex > self.paginator.count:
+            return self.paginator.count - 1
 
     def has_next(self):
         return (self.number + 1) < self.paginator.num_pages
