@@ -8,6 +8,7 @@ except ImportError:
 
 import smtplib
 import socket
+import time
 from email import MIMEText
 
 from mint.mint_error import MailError
@@ -72,6 +73,20 @@ def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
         # and so we attempt to send mail directly
         pass
 
-    s.connect()
-    s.sendmail(fromEmail, [toEmail], msg.as_string())
-    s.close()
+    for i in range(2):
+        try:
+            _send(s, fromEmail, toEmail, msg)
+        except smtplib.SMTPServerDisconnected:
+            time.sleep(.3 + i * .2)
+        else:
+            return
+    # If we got this far, we failed to send the email, so add something in the
+    # logs.
+    import logging
+    log = logging.getLogger(__name__)
+    log.error("Unable to send email to %s:\n%s", toEmail, body)
+
+def _send(smtpconn, fromEmail, toEmail, msg):
+    smtpconn.connect()
+    smtpconn.sendmail(fromEmail, [toEmail], msg.as_string())
+    smtpconn.close()
