@@ -311,8 +311,7 @@ class SiteAuthorization(object):
                 log.debug("Entitlement refresh successful.")
                 return True
         else:
-            log.warning("Deferring authorization check: "
-                    "no system entitlement.")
+            log.info("Deferring authorization check: no system entitlement.")
         return False
 
     def save(self):
