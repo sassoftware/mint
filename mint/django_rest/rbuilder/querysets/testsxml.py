@@ -35,7 +35,6 @@ query_sets_xml = """\
         <query_tag>query-tag-All Systems-1</query_tag>
         <query_tag_id>1</query_tag_id>
         <query_set href="http://testserver/api/query_sets/1"/>
-        <systemtag_set/>
       </query_tag>
     </querytags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -65,7 +64,6 @@ query_sets_xml = """\
             <query_tag>query-tag-Active Systems-2</query_tag>
             <query_tag_id>2</query_tag_id>
             <query_set href="http://testserver/api/query_sets/2"/>
-            <systemtag_set/>
           </query_tag>
         </querytags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -98,7 +96,6 @@ query_sets_xml = """\
             <query_tag>query-tag-Inactive Systems-3</query_tag>
             <query_tag_id>3</query_tag_id>
             <query_set href="http://testserver/api/query_sets/3"/>
-            <systemtag_set/>
           </query_tag>
         </querytags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -135,7 +132,6 @@ query_sets_xml = """\
         <query_tag>query-tag-Active Systems-2</query_tag>
         <query_tag_id>2</query_tag_id>
         <query_set href="http://testserver/api/query_sets/2"/>
-        <systemtag_set/>
       </query_tag>
     </querytags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -168,7 +164,6 @@ query_sets_xml = """\
         <query_tag>query-tag-Inactive Systems-3</query_tag>
         <query_tag_id>3</query_tag_id>
         <query_set href="http://testserver/api/query_sets/3"/>
-        <systemtag_set/>
       </query_tag>
     </querytags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -201,7 +196,6 @@ query_sets_xml = """\
         <query_tag>query-tag-Physical Systems-4</query_tag>
         <query_tag_id>4</query_tag_id>
         <query_set href="http://testserver/api/query_sets/4"/>
-        <systemtag_set/>
       </query_tag>
     </querytags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -271,7 +265,6 @@ query_set_xml = """\
         <query_tag>query-tag-Physical Systems-4</query_tag>
         <query_tag_id>4</query_tag_id>
         <query_set href="http://testserver/api/query_sets/4"/>
-        <systemtag_set/>
       </query_tag>
     </querytags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
