@@ -156,6 +156,7 @@ class FilterEntry(modellib.XObjIdModel):
 class QueryTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'query_tag')
+    _xobj_hidden_accessors = set(['system_tags'])
 
     query_tag_id = models.AutoField(primary_key=True)
     query_set = modellib.ForeignKey("QuerySet", related_name="querytags", null=True)
@@ -179,7 +180,7 @@ class SystemTag(modellib.XObjModel):
 
     system_tag_id = models.AutoField(primary_key=True)
     system = modellib.ForeignKey(inventorymodels.System)
-    query_tag = modellib.ForeignKey(QueryTag)
+    query_tag = modellib.ForeignKey(QueryTag, related_name="system_tags")
     inclusion_method = modellib.ForeignKey(InclusionMethod)
 
 for mod_obj in sys.modules[__name__].__dict__.values():
