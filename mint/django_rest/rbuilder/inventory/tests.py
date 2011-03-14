@@ -16,12 +16,11 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from django.contrib.redirects import models as redirectmodels
 from django.db import connection
 from django.conf import settings
+from django.utils.http import urlencode
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
-from django.test.client import Client, MULTIPART_CONTENT, encode_multipart, \
-    BOUNDARY, FakePayload
+from django.test.client import Client, FakePayload
 
-from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import views
 from mint.django_rest.rbuilder.manager import rbuildermanager
