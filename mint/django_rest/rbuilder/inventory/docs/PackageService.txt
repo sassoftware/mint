@@ -1,6 +1,5 @@
 
 
-View: PackageService
 Methods:
     GET:
         Authentication: user

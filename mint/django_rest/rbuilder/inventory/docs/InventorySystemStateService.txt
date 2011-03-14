@@ -4,7 +4,6 @@ SystemState properties:
     name - the state name
     system_state_id - the database id for the state
 
-View: InventorySystemStateService
 Methods:
     GET:
         Authentication: none

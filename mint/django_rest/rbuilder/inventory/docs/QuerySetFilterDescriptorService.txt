@@ -1,6 +1,5 @@
 
 
-View: QuerySetFilterDescriptorService
 Methods:
     GET:
         Authentication: user

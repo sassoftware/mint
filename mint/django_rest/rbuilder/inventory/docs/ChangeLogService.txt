@@ -1,6 +1,5 @@
 
 
-View: ChangeLogService
 Methods:
     GET:
         Authentication: user

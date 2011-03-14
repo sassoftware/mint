@@ -1,6 +1,5 @@
 
 
-View: InventoryLogService
 Methods:
     GET:
         Authentication: user

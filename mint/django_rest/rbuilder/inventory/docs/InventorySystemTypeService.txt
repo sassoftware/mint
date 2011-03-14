@@ -6,7 +6,6 @@ SystemType properties:
     name - the name of the system type
     system_type_id - the database ID for the system type
 
-View: InventorySystemTypeService
 Methods:
     GET:
         Authentication: user

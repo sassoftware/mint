@@ -26,7 +26,6 @@ System properties:
     target_system_name - the system name as reported by its target (only applies if system is on a virtual target)
     target_system_state - the system state as reported by its target (only applies if system is on a virtual target)
 
-View: InventorySystemsSystemService
 Methods:
     GET:
         Authentication: user

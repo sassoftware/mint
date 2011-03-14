@@ -1,6 +1,5 @@
 
 
-View: QuerySetChildResultService
 Methods:
     GET:
         Authentication: user

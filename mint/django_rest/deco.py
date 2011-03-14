@@ -145,5 +145,6 @@ def return_xml(function):
         request = args[1]
         response.model = ret_val
         return response
-
+    inner.__doc__ = function.__doc__
     return inner
+

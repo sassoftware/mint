@@ -9,7 +9,6 @@ Job properties:
     time_created - the date the job was created (UTC)
     time_updated - the date the job was updated (UTC)
 
-View: InventoryJobsService
 Methods:
     GET:
         Authentication: none

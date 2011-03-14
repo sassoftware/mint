@@ -1,6 +1,5 @@
 
 
-View: InventoryInfrastructureSystemsService
 Methods:
     GET:
         Authentication: user

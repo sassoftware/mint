@@ -29,7 +29,6 @@ ManagementNode properties:
     target_system_state - the system state as reported by its target (only applies if system is on a virtual target)
     zone - the zone the management node lives in
 
-View: InventoryManagementNodeService
 Methods:
     GET:
         Authentication: user

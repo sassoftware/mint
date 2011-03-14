@@ -1,6 +1,5 @@
 
 
-View: InventorySystemJobStatesService
 Methods:
     GET:
         Authentication: none

@@ -12,7 +12,6 @@ METHODS = ['GET', 'POST', 'PUT', 'DELETE']
 
 METHODS_TMPLT = string.Template(
 """
-View: ${VIEW}
 Methods:
     GET:
         ${GET}
@@ -60,23 +59,8 @@ class Command(BaseCommand):
                 if docstring is None:
                     continue
                 fdesc.append("    %s - %s" % (field.name, docstring))
-
-        # FIXME Below is a new way of iterating over the fields,
-        # its only necessary because some of the fields are defined
-        # inside of the model's init making them otherwise unavailable
-        # without first instantiating the model
-        # FIXME ... new way only partially works, it pulls everything
-        # from the init like it should but fails to pick up documentation
-        # of listed models during recursion.
-#        m = model()
-#        for field_name in sorted(dir(m)):
-#            try:
-#                docstring = getattr(m.__dict__[field_name], 'docstring', None)
-#                if docstring is None:
-#                    continue
-#                fdesc.append("    %s - %s" % (field_name, docstring))
-#            except:
-#                pass
+        if len(fdesc) == 1:
+            fdesc.append("    N/A")
         
         # Recursively retrieve documentation for all
         # models listed in listed_fields        
@@ -90,8 +74,8 @@ class Command(BaseCommand):
         return '\n'.join(fdesc)
 
     def processView(self, view):
-        docs_dict = {'GET':'', 'POST':'', 'PUT':'', 'DELETE':'', 'VIEW':''}
-        docs_dict['VIEW'] = view.__class__.__name__
+        example_response = view.__class__.__doc__ or 'N/A'
+        docs_dict = {'GET':'', 'POST':'', 'PUT':'', 'DELETE':''}
         for m in METHODS:
             # Throws AttributeError if view is missing a
             # rest_%s method
@@ -106,6 +90,6 @@ class Command(BaseCommand):
                 auth = 'user'
             elif access & deco.ACCESS.ADMIN:
                 auth = 'admin'
-            docs_dict[m] = docs_dict[m] + 'Authentication: ' + auth
+            docs_dict[m] = 'Authentication: ' + auth + docs_dict[m]
         return METHODS_TMPLT.substitute(docs_dict)
 

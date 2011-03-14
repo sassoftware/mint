@@ -1,9 +1,10 @@
 InstalledSoftware properties:
+    N/A
 
 
 Trove properties:
+    N/A
 
-View: InventorySystemsInstalledSoftwareService
 Methods:
     GET:
         Authentication: user

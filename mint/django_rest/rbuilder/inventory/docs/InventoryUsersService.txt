@@ -1,6 +1,5 @@
 
 
-View: InventoryUsersService
 Methods:
     GET:
         not supported

@@ -1,6 +1,5 @@
 
 
-View: QuerySetFilteredResultService
 Methods:
     GET:
         Authentication: user

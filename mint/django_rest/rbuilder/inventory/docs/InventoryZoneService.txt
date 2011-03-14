@@ -4,7 +4,6 @@ Zone properties:
     name - the zone name
     zone_id - the database id for the zone
 
-View: InventoryZoneService
 Methods:
     GET:
         Authentication: user

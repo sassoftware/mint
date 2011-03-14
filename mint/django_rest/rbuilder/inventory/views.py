@@ -87,6 +87,11 @@ class BaseInventoryService(service.BaseService):
         self.mgr._auth = mintAuth
 
 class InventoryService(BaseInventoryService):
+    """
+    <inventory>
+        ...
+    </inventory>
+    """
 
     @access.anonymous
     @return_xml
@@ -101,7 +106,17 @@ class InventoryLogService(BaseInventoryService):
         return self.mgr.getSystemsLog()
     
 class InventorySystemStateService(BaseInventoryService):
-    
+    """
+    <system_states> 
+        <system_state id="http://hostname/api/inventory/system_states/1/">
+        ...
+        </system_state>
+        <system_state id="http://hostname/api/inventory/system_states/2/">
+        ...
+        </system_state>
+    </system_states>
+    """
+   
     @access.anonymous
     @return_xml
     def rest_GET(self, request, system_state_id=None):
@@ -287,6 +302,11 @@ class InventoryNetworkService(BaseInventoryService):
         return response
 
 class InventorySystemsService(BaseInventoryService):
+    """
+    <system id="http://hostname/api/inventory/systems/1/">
+        ...
+    </system>
+    """
 
     @return_xml
     def rest_GET(self, request):
@@ -525,7 +545,16 @@ class InventorySystemConfigurationDescriptorServices(BaseInventoryService):
         return self.mgr.getSystemConfigurationDescriptor(system_id)
 
 class InventoryEventTypesService(BaseInventoryService):
-    
+    """
+    <event_types>
+        <event_type id="http://hostname/api/inventory/event_types/1/">
+            ...
+        </event_type>
+        <event_type id="http://hostname/api/inventory/event_types/2/">
+            ...
+        </event_type>
+    </event_types>
+    """
     @access.anonymous
     @return_xml
     def rest_GET(self, request, event_type_id=None):

@@ -1,6 +1,5 @@
 
 
-View: QuerySetAllResultService
 Methods:
     GET:
         Authentication: user

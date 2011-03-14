@@ -4,7 +4,6 @@ EventType properties:
     name - the event type name (read-only)
     priority - the event type priority where > priority wins
 
-View: InventoryEventTypesService
 Methods:
     GET:
         Authentication: none

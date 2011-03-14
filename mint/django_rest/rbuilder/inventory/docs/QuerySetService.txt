@@ -1,6 +1,5 @@
 
 
-View: QuerySetService
 Methods:
     GET:
         Authentication: user

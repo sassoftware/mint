@@ -7,7 +7,6 @@ ManagementInterface properties:
     name - the name of the management interface
     port - the port used by the management interface
 
-View: InventoryManagementInterfaceService
 Methods:
     GET:
         Authentication: user

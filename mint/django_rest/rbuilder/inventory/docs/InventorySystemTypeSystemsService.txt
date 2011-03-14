@@ -1,6 +1,5 @@
 
 
-View: InventorySystemTypeSystemsService
 Methods:
     GET:
         Authentication: user

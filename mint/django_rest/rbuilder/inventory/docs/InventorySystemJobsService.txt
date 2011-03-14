@@ -1,6 +1,6 @@
 SystemJob properties:
+    N/A
 
-View: InventorySystemJobsService
 Methods:
     GET:
         Authentication: none

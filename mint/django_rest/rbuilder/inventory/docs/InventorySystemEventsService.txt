@@ -1,6 +1,6 @@
 SystemEvent properties:
+    N/A
 
-View: InventorySystemEventsService
 Methods:
     GET:
         Authentication: user

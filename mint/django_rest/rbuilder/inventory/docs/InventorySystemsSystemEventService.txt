@@ -1,6 +1,5 @@
 
 
-View: InventorySystemsSystemEventService
 Methods:
     GET:
         Authentication: user
