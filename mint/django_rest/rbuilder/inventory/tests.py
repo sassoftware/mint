@@ -30,6 +30,11 @@ from mint.rest.api import models as restmodels
 
 from testrunner import testcase
 
+# Suppress all non critical msg's from output
+# still emits traceback for failed tests
+import logging
+logging.disable(logging.CRITICAL)
+
 class XML(object):
     class OrderedDict(dict):
         def items(self):
