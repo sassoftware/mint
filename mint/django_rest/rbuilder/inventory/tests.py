@@ -5,6 +5,7 @@ import os
 import random
 import shutil
 import tempfile
+import urllib
 import urlparse
 from dateutil import tz
 from xobj import xobj
@@ -17,7 +18,8 @@ from django.db import connection
 from django.conf import settings
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
-from django.test.client import Client, MULTIPART_CONTENT
+from django.test.client import Client, MULTIPART_CONTENT, encode_multipart, \
+    BOUNDARY, FakePayload
 
 from mint.django_rest import deco
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -209,10 +211,35 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         extra.update(headers or {})
         return self.client.put(path, data, content_type, follow, **extra)
 
-    def _delete(self, path, data={}, follow=False, username=None, password=None, headers=None):
+    def _delete(self, path, data={}, follow=False, username=None, 
+                password=None, headers=None, content_type='application_xml'):
         extra = self._addRequestAuth(username, password)
         extra.update(headers or {})
-        return self.client.delete(path, data, follow, **extra)
+
+        """
+        Send a DELETE request to the server.
+        """
+        post_data = data
+
+        query_string = None
+        if not isinstance(data, basestring):
+            query_string = urlencode(data, doseq=True)
+
+        parsed = urlparse.urlparse(path)
+        r = {
+            'CONTENT_LENGTH': len(post_data),
+            'CONTENT_TYPE':   content_type,
+            'PATH_INFO':      urllib.unquote(parsed[2]),
+            'QUERY_STRING':   query_string or parsed[4],
+            'REQUEST_METHOD': 'DELETE',
+            'wsgi.input':     FakePayload(post_data),
+        }
+        r.update(extra)
+
+        response = self.client.request(**r)
+        if follow:
+            response = self.client._handle_redirects(response, **extra)
+        return response
 
     def _authHeader(self, username, password):
         authStr = "%s:%s" % (username, password)

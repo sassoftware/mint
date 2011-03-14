@@ -67,6 +67,11 @@ class QuerySetChosenResultService(BaseQuerySetService):
     def rest_POST(self, request, query_set_id, system):
         return self.mgr.updateQuerySetChosen(query_set_id, system)
 
+    @requires('system')
+    @return_xml
+    def rest_DELETE(self, request, query_set_id, system):
+        return self.mgr.deleteQuerySetChosen(query_set_id, system)
+
 class QuerySetFilteredResultService(BaseQuerySetService):
 
     @return_xml

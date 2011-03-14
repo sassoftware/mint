@@ -216,3 +216,15 @@ class QuerySetManager(basemanager.BaseManager):
         tagMethod(resources, queryTag, chosenMethod)
 
         return self.getQuerySetChosenResult(querySetId)
+
+    @exposed
+    def deleteQuerySetChosen(self, querySetId, resource):
+        querySet = models.QuerySet.objects.get(pk=querySetId)
+        queryTag = self.getQueryTag(querySet)
+        chosenMethod = models.InclusionMethod.objects.get(
+            inclusion_method='chosen')
+        tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
+        resourceArg = {querySet.resource_type:resource}
+        tagModels = tagModel.objects.filter(query_tag=queryTag, **resourceArg)
+        tagModels.delete()
+        return self.getQuerySetChosenResult(querySetId)
