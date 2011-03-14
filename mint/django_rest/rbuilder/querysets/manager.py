@@ -188,13 +188,31 @@ class QuerySetManager(basemanager.BaseManager):
         return filterDescriptor
 
     @exposed
-    def updateQuerySetChosen(self, querySetId, resources):
+    def updateQuerySetChosen(self, querySetId, resource):
+        querySet = models.QuerySet.objects.get(pk=querySetId)
+        queryTag = self.getQueryTag(querySet)
+        chosenMethod = models.InclusionMethod.objects.get(
+            inclusion_method='chosen')
+        tagMethod = getattr(self, self.tagMethodMap[querySet.resource_type])
+        tagMethod([resource], queryTag, chosenMethod)
+        return self.getQuerySetChosenResult(querySetId)
+
+    @exposed
+    def addQuerySetChosen(self, querySetId, resources):
         querySet = models.QuerySet.objects.get(pk=querySetId)
         queryTag = self.getQueryTag(querySet)
         chosenMethod = models.InclusionMethod.objects.get(
             inclusion_method='chosen')
         resources = getattr(resources, querySet.resource_type)
+
+        # Delete all previously tagged resources
+        tagModel = modellib.type_map[self.tagModelMap[querySet.resource_type]]
+        tagModels = tagModel.objects.filter(query_tag=queryTag,
+            inclusion_method=chosenMethod)
+        tagModels.delete()
+
+        # Tag new resources
         tagMethod = getattr(self, self.tagMethodMap[querySet.resource_type])
         tagMethod(resources, queryTag, chosenMethod)
-        return self.getQuerySetChosenResult(querySetId)
 
+        return self.getQuerySetChosenResult(querySetId)
