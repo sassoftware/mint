@@ -74,7 +74,6 @@ class Command(BaseCommand):
         return '\n'.join(fdesc)
 
     def processView(self, view):
-        example_response = view.__class__.__doc__ or 'N/A'
         docs_dict = {'GET':'', 'POST':'', 'PUT':'', 'DELETE':''}
         for m in METHODS:
             # Throws AttributeError if view is missing a
