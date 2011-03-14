@@ -234,14 +234,6 @@ query_sets_xml = """\
         <query_tag>query-tag-Systems named like 3-4</query_tag>
         <query_tag_id>5</query_tag_id>
         <query_set href="http://testserver/api/query_sets/5"/>
-        <systemtag_set>
-          <system_tag>
-            <inclusion_method/>
-            <query_tag/>
-            <system href="http://testserver/api/inventory/systems/4"/>
-            <system_tag_id>1</system_tag_id>
-          </system_tag>
-        </systemtag_set>
       </query_tag>
     </querytags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
@@ -316,14 +308,6 @@ query_set_fixtured_xml = """\
        <query_set href="http://testserver/api/query_sets/5"/>
        <query_tag>query-tag-Systems named like 3-4</query_tag>
        <query_tag_id>5</query_tag_id>
-       <systemtag_set>
-         <system_tag>
-           <inclusion_method/>
-           <query_tag/>
-           <system href="http://testserver/api/inventory/systems/4"/>
-           <system_tag_id>1</system_tag_id>
-         </system_tag>
-       </systemtag_set>
      </query_tag>
    </querytags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
