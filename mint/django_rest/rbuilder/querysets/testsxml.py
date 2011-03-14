@@ -371,6 +371,22 @@ systems_chosen_put_xml2 = """\
 </systems>
 """
 
+systems_chosen_post_xml = """\
+<?xml version="1.0"?>
+<system id="http://testserver/api/inventory/systems/7">
+    <generated_uuid>system-7-generated-uuid</generated_uuid>
+    <local_uuid>system-7-local-uuid</local_uuid>
+</system>
+"""
+
+systems_chosen_post_xml2 = """\
+<?xml version="1.0"?>
+<system id="http://testserver/api/inventory/systems/8">
+    <generated_uuid>system-8-generated-uuid</generated_uuid>
+    <local_uuid>system-8-local-uuid</local_uuid>
+</system>
+"""
+
 query_set_update_xml = """\
 <?xml version="1.0"?>
 <query_set id="http://testserver/api/query_sets/4">

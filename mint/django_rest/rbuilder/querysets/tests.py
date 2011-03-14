@@ -101,19 +101,38 @@ class QuerySetFixturedTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         systems = self.xobjResponse('/api/query_sets/5/chosen/')
-        self.assertEquals(len(systems.system), 3)
+        self.assertEquals(len(systems.system), 2)
         self.assertEquals([s.name for s in systems.system],
-            [u'System name 4', u'System name 5', u'System name 6'])
+            [u'System name 5', u'System name 6'])
 
         response = self._put('/api/query_sets/5/chosen/',
             data=testsxml.systems_chosen_put_xml2,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         systems = self.xobjResponse('/api/query_sets/5/chosen/')
-        self.assertEquals(len(systems.system), 5)
+        self.assertEquals(len(systems.system), 2)
         self.assertEquals([s.name for s in systems.system],
-            [u'System name 4', u'System name 5', u'System name 6',
-             u'System name 7', u'System name 8'])
+            [u'System name 7', u'System name 8'])
+
+    def testPostQuerySetChosen(self):
+        response = self._post('/api/query_sets/5/chosen/',
+            data=testsxml.systems_chosen_post_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        systems = self.xobjResponse('/api/query_sets/5/chosen/')
+        self.assertEquals(len(systems.system), 2)
+        self.assertEquals([s.name for s in systems.system],
+            [u'System name 4', u'System name 7'])
+
+        response = self._post('/api/query_sets/5/chosen/',
+            data=testsxml.systems_chosen_post_xml2,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        systems = self.xobjResponse('/api/query_sets/5/chosen/')
+        self.assertEquals(len(systems.system), 3)
+        self.assertEquals([s.name for s in systems.system],
+            [u'System name 4', u'System name 7',
+             u'System name 8'])
 
     def testUpdateQuerySet(self):
         response = self._put('/api/query_sets/5/',
