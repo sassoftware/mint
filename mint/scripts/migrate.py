@@ -2292,7 +2292,7 @@ class MigrateTo_52(SchemaMigration):
         return True
 
 class MigrateTo_53(SchemaMigration):
-    Version = (53, 4)
+    Version = (53, 5)
 
     def migrate(self):
         db = self.db
@@ -2498,6 +2498,19 @@ class MigrateTo_53(SchemaMigration):
 
         return True
 
+    def migrate5(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE 'querysets_querytag'
+            RENAME 'query_tag' to 'name'
+        """)
+
+        cu.execute("""
+            ALTER TABLE 'querysets_inclusionmethod'
+            RENAME 'inclusion_method' to 'name'
+        """)
+
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
