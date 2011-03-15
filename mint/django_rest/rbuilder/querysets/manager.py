@@ -69,11 +69,15 @@ class QuerySetManager(basemanager.BaseManager):
         allQuerySet.save()
 
     def _getQueryTag(self, querySet):
-        querySetName = querySet.name.replace(' ', '_')
-        queryTagName = 'query-tag-%s-%s' % (querySetName, querySet.pk)
-        queryTag, created = models.QueryTag.objects.get_or_create(
-            query_set=querySet, name=queryTagName)
-        queryTag.save()
+        queryTags = models.QueryTag.objects.filter(query_set=querySet)
+
+        if not queryTags:
+            querySetName = querySet.name.replace(' ', '_')
+            queryTagName = 'query-tag-%s-%s' % (querySetName, querySet.pk)
+            queryTag = models.QueryTag(query_set=querySet, name=queryTagName)
+            queryTag.save()
+        else:
+            return queryTags[0]
 
         return queryTag
 
