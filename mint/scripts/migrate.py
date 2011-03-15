@@ -2531,6 +2531,17 @@ class MigrateTo_53(SchemaMigration):
             WHERE name='query-tag-Physical Systems-4'
         """)
 
+        cu.execute("""
+            ALTER TABLE querysets_querytag
+            ADD CONSTRAINT querysets_querytag_query_set_id_uq
+            UNIQUE (query_set_id)
+        """)
+
+        cu.execute("""
+            ALTER TABLE querysets_querytag
+            ALTER query_set_id SET NOT NULL
+        """)
+
         return True
 
 

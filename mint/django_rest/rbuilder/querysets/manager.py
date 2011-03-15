@@ -69,15 +69,13 @@ class QuerySetManager(basemanager.BaseManager):
         allQuerySet.save()
 
     def _getQueryTag(self, querySet):
-        queryTags = models.QueryTag.objects.filter(query_set=querySet)
-
-        if not queryTags:
+        try:
+            queryTag = models.QueryTag.objects.get(query_set=querySet)
+        except ObjectDoesNotExist:
             querySetName = querySet.name.replace(' ', '_')
             queryTagName = 'query-tag-%s-%s' % (querySetName, querySet.pk)
             queryTag = models.QueryTag(query_set=querySet, name=queryTagName)
             queryTag.save()
-        else:
-            return queryTags[0]
 
         return queryTag
 

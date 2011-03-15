@@ -2036,9 +2036,10 @@ def _createQuerySetSchema(db):
     changed |= createTable(db, 'querysets_querytag', """
         CREATE TABLE "querysets_querytag" (
             "query_tag_id" %(PRIMARYKEY)s,
-            "query_set_id" INTEGER
+            "query_set_id" INTEGER UNIQUE
                 REFERENCES "querysets_queryset" ("query_set_id")
-                ON DELETE CASCADE,
+                ON DELETE CASCADE
+                NOT NULL,
             "name" TEXT NOT NULL UNIQUE
         )""")
     changed |= _addTableRows(db, "querysets_querytag", "name",

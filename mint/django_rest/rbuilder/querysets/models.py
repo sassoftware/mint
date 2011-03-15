@@ -160,7 +160,7 @@ class QueryTag(modellib.XObjIdModel):
 
     query_tag_id = models.AutoField(primary_key=True)
     query_set = modellib.ForeignKey("QuerySet", related_name="query_tags", 
-        null=True)
+        unique=True)
     name = models.TextField()
 
     load_fields = [name]
