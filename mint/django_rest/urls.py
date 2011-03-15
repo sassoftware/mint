@@ -151,6 +151,14 @@ urlpatterns = patterns('',
         inventoryviews.InventorySystemEventsService(),
         name='SystemEvent'),
 
+    # System Tags
+    url(r'^api/inventory/systems/(?P<system_id>\d+)/system_tags/?$',
+        inventoryviews.InventorySystemTagsService(),
+        name='SystemTags'),
+    url(r'^api/inventory/systems/(?P<system_id>\d+)/system_tags/(?P<system_tag_id>\d+)/?$',
+        inventoryviews.InventorySystemTagsService(),
+        name='SystemTag'),
+
     # Event Types
     url(r'^api/inventory/event_types/?$',
         inventoryviews.InventoryEventTypesService(),
@@ -220,6 +228,14 @@ urlpatterns = patterns('',
     url(r'^api/query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
         querysetviews.QuerySetFilterDescriptorService(),
         name='QuerySetFilterDescriptor'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/query_tags/?$',
+        querysetviews.QueryTagService(),
+        name='QueryTags'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/query_tags/(?P<query_tag_id>\d+)/?$',
+        querysetviews.QueryTagService(),
+        name='QueryTag'),
+
+
 
     # Packages
     url(r'^api/packages/?$',

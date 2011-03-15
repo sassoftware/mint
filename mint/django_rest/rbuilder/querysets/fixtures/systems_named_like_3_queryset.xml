@@ -18,7 +18,7 @@
   </object>
   <object pk="5" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">5</field>
-    <field type="TextField" name="query_tag">query-tag-Systems named like 3-4</field>
+    <field type="TextField" name="name">query-tag-Systems_named_like_3-5</field>
   </object>
   <object pk="1" model="querysets.systemtag">
     <field to="inventory.system" name="system" rel="ManyToOneRel">4</field>

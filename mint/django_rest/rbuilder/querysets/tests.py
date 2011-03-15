@@ -115,6 +115,7 @@ class QuerySetFixturedTestCase(XMLTestCase):
             [u'System name 7', u'System name 8'])
 
     def testPostQuerySetChosen(self):
+        # Add system 7 to query set 5
         response = self._post('/api/query_sets/5/chosen/',
             data=testsxml.systems_chosen_post_xml,
             username="admin", password="password")
@@ -124,6 +125,7 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals([s.name for s in systems.system],
             [u'System name 4', u'System name 7'])
 
+        # Add system 8 to query set 5
         response = self._post('/api/query_sets/5/chosen/',
             data=testsxml.systems_chosen_post_xml2,
             username="admin", password="password")
@@ -154,6 +156,59 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(len(systems.system), 0)
         self.assertEquals([s.name for s in systems.system], [])
 
+    
+    def _getChosenSystems(self, querySet):
+        queryTag = models.QueryTag.objects.filter(query_set=querySet)[0]
+        chosenMethod = models.InclusionMethod.objects.get(
+            name='chosen')
+        chosenSystems = models.SystemTag.objects.filter(
+            inclusion_method=chosenMethod, query_tag=queryTag)
+        return chosenSystems
+
+    def testDeleteQuerySetChosen2(self):
+        # Delete system from the query set
+        response = self._put('/api/inventory/systems/4',
+            data=testsxml.system_4_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        system = response.content
+
+        chosenSystems4 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=4))
+        self.assertEquals(0, len(chosenSystems4))
+
+        # Add systems 7 and 8 to query sets 4 and 5
+        response = self._post('/api/query_sets/4/chosen/',
+            data=testsxml.systems_chosen_post_xml,
+            username="admin", password="password")
+        response = self._post('/api/query_sets/5/chosen/',
+            data=testsxml.systems_chosen_post_xml,
+            username="admin", password="password")
+        response = self._post('/api/query_sets/4/chosen/',
+            data=testsxml.systems_chosen_post_xml2,
+            username="admin", password="password")
+        response = self._post('/api/query_sets/5/chosen/',
+            data=testsxml.systems_chosen_post_xml2,
+            username="admin", password="password")
+
+        chosenSystems4 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=4))
+        chosenSystems5 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=5))
+
+        self.assertEquals(2, len(chosenSystems4))
+        self.assertEquals(2, len(chosenSystems5))
+
+        # Delete system 7 from query set 4
+        response = self._put('/api/inventory/systems/7',
+            data=testsxml.system_7_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        chosenSystems4 = self._getChosenSystems(
+            models.QuerySet.objects.get(pk=4))
+
+        self.assertEquals(1, len(chosenSystems4))
 
     def testUpdateQuerySet(self):
         response = self._put('/api/query_sets/5/',

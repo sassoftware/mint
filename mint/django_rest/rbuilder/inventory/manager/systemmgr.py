@@ -26,6 +26,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory.manager import base
+from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
@@ -1772,6 +1773,18 @@ class SystemManager(base.BaseManager):
             models.SystemLogEntry.objects.all().order_by('entry_date')
         systemsLog.system_log_entry = list(systemLogEntries)
         return systemsLog
+
+    @base.exposed
+    def getSystemTags(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        systemTags = querysetmodels.SystemTags()
+        systemTags.system_tag = system.system_tags.all()
+        return systemTags
+
+    @base.exposed
+    def getSystemTag(self, system_id, system_tag_id):
+        systemTag = querysetmodels.SystemTag.objects.get(pk=system_tag_id)
+        return systemTag
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(

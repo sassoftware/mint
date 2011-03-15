@@ -297,7 +297,8 @@ class BaseManager(models.Manager):
         for key, val in obj.__dict__.items():
             if key in accessors:
                 ret_accessors[key] = []
-                rel_obj_name = accessors[key].var_name
+                rel_obj_model = accessors[key].model
+                rel_obj_name = rel_obj_model.getTag()
                 rel_objs = getattr(val, rel_obj_name, None)
                 if rel_objs is None:
                     continue
@@ -598,6 +599,8 @@ class SystemManager(BaseManager):
         for key, val in accessors.items():
             if key == 'networks':
                 model.networks.all().delete()
+            if key == "system_tags":
+                model.system_tags.all().delete()
             for v in val:
                 getattr(model, key).add(v)
         return model

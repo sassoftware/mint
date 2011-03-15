@@ -2,10 +2,10 @@
 <django-objects version="1.0">
 
   <object pk="1" model="querysets.inclusionmethod">
-    <field type="TextField" name="inclusion_method">chosen</field>
+    <field type="TextField" name="name">chosen</field>
   </object>
   <object pk="2" model="querysets.inclusionmethod">
-    <field type="TextField" name="inclusion_method">filtered</field>
+    <field type="TextField" name="name">filtered</field>
   </object>
 
   <object pk="1" model="querysets.filterentry">
@@ -76,19 +76,19 @@
 
   <object pk="1" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">1</field>
-    <field type="TextField" name="query_tag">query-tag-All Systems-1</field>
+    <field type="TextField" name="name">query-tag-All Systems-1</field>
   </object>
   <object pk="2" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">2</field>
-    <field type="TextField" name="query_tag">query-tag-Active Systems-2</field>
+    <field type="TextField" name="name">query-tag-Active Systems-2</field>
   </object>
   <object pk="3" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">3</field>
-    <field type="TextField" name="query_tag">query-tag-Inactive Systems-3</field>
+    <field type="TextField" name="name">query-tag-Inactive Systems-3</field>
   </object>
   <object pk="4" model="querysets.querytag">
     <field to="querysets.queryset" name="query_set" rel="ManyToOneRel">4</field>
-    <field type="TextField" name="query_tag">query-tag-Physical Systems-4</field>
+    <field type="TextField" name="name">query-tag-Physical Systems-4</field>
   </object>
 </django-objects>
 

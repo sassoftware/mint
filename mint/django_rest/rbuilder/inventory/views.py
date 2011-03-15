@@ -632,3 +632,16 @@ class InventorySystemJobStatesService(BaseInventoryService):
 
     def get(self, system_id, job_state_id):
         return self.mgr.getSystemJobsByState(system_id, job_state_id)
+        
+
+class InventorySystemTagsService(BaseInventoryService):
+
+    @return_xml
+    def rest_GET(self, request, system_id, system_tag_id=None):
+        return self.get(system_id, system_tag_id)
+
+    def get(self, system_id, system_tag_id):
+        if system_tag_id:
+            return self.mgr.getSystemTag(system_id, system_tag_id)
+        else:
+            return self.mgr.getSystemTags(system_id)

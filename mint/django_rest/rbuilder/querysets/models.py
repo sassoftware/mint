@@ -159,12 +159,20 @@ class QueryTag(modellib.XObjIdModel):
     _xobj_hidden_accessors = set(['system_tags'])
 
     query_tag_id = models.AutoField(primary_key=True)
-    query_set = modellib.ForeignKey("QuerySet", related_name="querytags", null=True)
-    query_tag = models.TextField()
+    query_set = modellib.ForeignKey("QuerySet", related_name="query_tags", 
+        null=True)
+    name = models.TextField()
+
+    load_fields = [name]
+
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.query_set, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
 
 class InclusionMethod(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'inclusion_method')
+    _xobj_hidden_accessors = set(["system_tags"])
 
     METHOD_CHOICES = [
         ('chosen', 'Chosen'),
@@ -172,16 +180,30 @@ class InclusionMethod(modellib.XObjIdModel):
     ]
 
     inclusion_method_id = models.AutoField(primary_key=True)
-    inclusion_method = models.TextField(choices=METHOD_CHOICES)
+    name = models.TextField(choices=METHOD_CHOICES)
 
-class SystemTag(modellib.XObjModel):
+    load_fields = [name]
+
+class SystemTag(modellib.XObjIdModel):
+    class Meta:
+        unique_together = (("system", "query_tag", "inclusion_method"),)
+
     _xobj = xobj.XObjMetadata(
                 tag = 'system_tag')
 
     system_tag_id = models.AutoField(primary_key=True)
-    system = modellib.ForeignKey(inventorymodels.System)
-    query_tag = modellib.ForeignKey(QueryTag, related_name="system_tags")
-    inclusion_method = modellib.ForeignKey(InclusionMethod)
+    system = modellib.ForeignKey(inventorymodels.System,
+        related_name="system_tags")
+    query_tag = modellib.ForeignKey(QueryTag, related_name="system_tags",
+        text_field="name")
+    inclusion_method = modellib.SerializedForeignKey(InclusionMethod,
+        related_name="system_tags")
+
+    load_fields = [system, query_tag, inclusion_method]
+
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.system, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
