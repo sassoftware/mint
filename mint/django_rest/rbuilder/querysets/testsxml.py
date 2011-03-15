@@ -401,3 +401,29 @@ query_set_child_update_xml = """\
   </children>
 </query_set>
 """
+
+system_4_xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<system id="http://127.0.0.1:8000/api/inventory/systems/4">
+  <generated_uuid>system-4-generated-uuid</generated_uuid>
+  <system_tags/>
+  <local_uuid>system-4-local-uuid</local_uuid>
+</system>
+"""
+
+system_7_xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<system id="http://127.0.0.1:8000/api/inventory/systems/7">
+  <generated_uuid>system-7-generated-uuid</generated_uuid>
+  <local_uuid>system-7-local-uuid</local_uuid>
+  <system_tags>
+    <system_tag id="http://127.0.0.1:8000/api/inventory/systems/7/system_tags/2">
+      <query_tag href="http://127.0.0.1:8000/api/query_sets/5/query_tags/5">query-tag-Systems_named_like_3-5</query_tag>
+      <inclusion_method>
+        <name>chosen</name>
+      </inclusion_method>
+      <system href="http://127.0.0.1:8000/api/inventory/systems/7"/>
+    </system_tag>
+  </system_tags>
+</system>
+"""
