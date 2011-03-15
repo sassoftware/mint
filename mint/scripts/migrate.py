@@ -2359,7 +2359,7 @@ class MigrateTo_53(SchemaMigration):
                     ON DELETE CASCADE,
                 "query_tag" TEXT NOT NULL UNIQUE
             )""")
-        schema._addTableRows(db, "querysets_querytag", "query_tag",
+        schema._addTableRows(db, "querysets_querytag", "name",
             [dict(query_set_id=allQSId, query_tag="query-tag-All Systems-1"),
              dict(query_set_id=activeQSId, query_tag="query-tag-Active Systems-2"),
              dict(query_set_id=inactiveQSId, query_tag="query-tag-Inactive Systems-3"),
@@ -2372,7 +2372,7 @@ class MigrateTo_53(SchemaMigration):
                 "inclusion_method" TEXT NOT NULL UNIQUE
             )""")
         schema._addTableRows(db, "querysets_inclusionmethod",
-            "inclusion_method",
+            "name",
             [dict(inclusion_method="chosen"),
              dict(inclusion_method="filtered")])
 
@@ -2501,13 +2501,34 @@ class MigrateTo_53(SchemaMigration):
     def migrate5(self):
         cu = self.db.cursor()
         cu.execute("""
-            ALTER TABLE 'querysets_querytag'
-            RENAME 'query_tag' to 'name'
+            ALTER TABLE querysets_querytag
+            RENAME query_tag to name
         """)
 
         cu.execute("""
-            ALTER TABLE 'querysets_inclusionmethod'
-            RENAME 'inclusion_method' to 'name'
+            ALTER TABLE querysets_inclusionmethod
+            RENAME inclusion_method to name
+        """)
+
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-All_Systems-1'
+            WHERE name='query-tag-All Systems-1'
+        """)
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-Active_Systems-2'
+            WHERE name='query-tag-Active Systems-2'
+        """)
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-Inactive_Systems-3'
+            WHERE name='query-tag-Inactive Systems-3'
+        """)
+        cu.execute("""
+            UPDATE querysets_querytag
+            SET name='query-tag-Physical_Systems-4'
+            WHERE name='query-tag-Physical Systems-4'
         """)
 
         return True

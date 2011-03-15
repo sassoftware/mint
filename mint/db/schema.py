@@ -2041,11 +2041,11 @@ def _createQuerySetSchema(db):
                 ON DELETE CASCADE,
             "name" TEXT NOT NULL UNIQUE
         )""")
-    changed |= _addTableRows(db, "querysets_querytag", "query_tag",
-        [dict(query_set_id=allQSId, name="query-tag-All Systems-1"),
-         dict(query_set_id=activeQSId, name="query-tag-Active Systems-2"),
-         dict(query_set_id=inactiveQSId, name="query-tag-Inactive Systems-3"),
-         dict(query_set_id=physicalQSId, name="query-tag-Physical Systems-4"),
+    changed |= _addTableRows(db, "querysets_querytag", "name",
+        [dict(query_set_id=allQSId, name="query-tag-All_Systems-1"),
+         dict(query_set_id=activeQSId, name="query-tag-Active_Systems-2"),
+         dict(query_set_id=inactiveQSId, name="query-tag-Inactive_Systems-3"),
+         dict(query_set_id=physicalQSId, name="query-tag-Physical_Systems-4"),
         ])
 
     changed |= createTable(db, 'querysets_inclusionmethod', """
@@ -2054,7 +2054,7 @@ def _createQuerySetSchema(db):
             "name" TEXT NOT NULL UNIQUE
         )""")
     changed |= _addTableRows(db, "querysets_inclusionmethod",
-        "inclusion_method",
+        "name",
         [dict(name="chosen"),
          dict(name="filtered")])
 
