@@ -210,7 +210,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         extra.update(headers or {})
         return self.client.put(path, data, content_type, follow, **extra)
 
-    def _delete(self, path, data={}, follow=False, username=None, 
+    def _delete(self, path, data='', follow=False, username=None, 
                 password=None, headers=None, content_type='application_xml'):
         extra = self._addRequestAuth(username, password)
         extra.update(headers or {})

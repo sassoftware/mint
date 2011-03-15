@@ -30,13 +30,13 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/query_sets/1/chosen"/>
     <child_members id="http://testserver/api/query_sets/1/child"/>
     <collection id="http://testserver/api/inventory/systems"/>
-    <querytags>
-      <query_tag>
-        <query_tag>query-tag-All Systems-1</query_tag>
+    <query_tags>
+      <query_tag id="http://testserver/api/query_sets/1/query_tags/1">
+        <name>query-tag-All Systems-1</name>
         <query_tag_id>1</query_tag_id>
         <query_set href="http://testserver/api/query_sets/1"/>
       </query_tag>
-    </querytags>
+    </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children>
@@ -59,13 +59,13 @@ query_sets_xml = """\
         <chosen_members id="http://testserver/api/query_sets/2/chosen"/>
         <child_members id="http://testserver/api/query_sets/2/child"/>
         <collection id="http://testserver/api/inventory/systems"/>
-        <querytags>
-          <query_tag>
-            <query_tag>query-tag-Active Systems-2</query_tag>
+        <query_tags>
+          <query_tag id="http://testserver/api/query_sets/2/query_tags/2">
+            <name>query-tag-Active Systems-2</name>
             <query_tag_id>2</query_tag_id>
             <query_set href="http://testserver/api/query_sets/2"/>
           </query_tag>
-        </querytags>
+        </query_tags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
         <is_top_level>False</is_top_level>
         <children/>
@@ -91,13 +91,13 @@ query_sets_xml = """\
         <chosen_members id="http://testserver/api/query_sets/3/chosen"/>
         <child_members id="http://testserver/api/query_sets/3/child"/>
         <collection id="http://testserver/api/inventory/systems"/>
-        <querytags>
-          <query_tag>
-            <query_tag>query-tag-Inactive Systems-3</query_tag>
+        <query_tags>
+          <query_tag id="http://testserver/api/query_sets/3/query_tags/3">
+            <name>query-tag-Inactive Systems-3</name>
             <query_tag_id>3</query_tag_id>
             <query_set href="http://testserver/api/query_sets/3"/>
           </query_tag>
-        </querytags>
+        </query_tags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
         <is_top_level>False</is_top_level>
         <children/>
@@ -127,13 +127,13 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/query_sets/2/chosen"/>
     <child_members id="http://testserver/api/query_sets/2/child"/>
     <collection id="http://testserver/api/inventory/systems"/>
-    <querytags>
-      <query_tag>
-        <query_tag>query-tag-Active Systems-2</query_tag>
-        <query_tag_id>2</query_tag_id>
-        <query_set href="http://testserver/api/query_sets/2"/>
-      </query_tag>
-    </querytags>
+        <query_tags>
+          <query_tag id="http://testserver/api/query_sets/2/query_tags/2">
+            <name>query-tag-Active Systems-2</name>
+            <query_tag_id>2</query_tag_id>
+            <query_set href="http://testserver/api/query_sets/2"/>
+          </query_tag>
+        </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>False</is_top_level>
     <children/>
@@ -159,13 +159,13 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/query_sets/3/chosen"/>
     <child_members id="http://testserver/api/query_sets/3/child"/>
     <collection id="http://testserver/api/inventory/systems"/>
-    <querytags>
-      <query_tag>
-        <query_tag>query-tag-Inactive Systems-3</query_tag>
-        <query_tag_id>3</query_tag_id>
-        <query_set href="http://testserver/api/query_sets/3"/>
-      </query_tag>
-    </querytags>
+        <query_tags>
+          <query_tag id="http://testserver/api/query_sets/3/query_tags/3">
+            <name>query-tag-Inactive Systems-3</name>
+            <query_tag_id>3</query_tag_id>
+            <query_set href="http://testserver/api/query_sets/3"/>
+          </query_tag>
+        </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>False</is_top_level>
     <children/>
@@ -191,13 +191,13 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/query_sets/4/chosen"/>
     <child_members id="http://testserver/api/query_sets/4/child"/>
     <collection id="http://testserver/api/inventory/systems"/>
-    <querytags>
-      <query_tag>
-        <query_tag>query-tag-Physical Systems-4</query_tag>
+    <query_tags>
+      <query_tag id="http://testserver/api/query_sets/4/query_tags/4">
+        <name>query-tag-Physical Systems-4</name>
         <query_tag_id>4</query_tag_id>
         <query_set href="http://testserver/api/query_sets/4"/>
       </query_tag>
-    </querytags>
+    </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>
@@ -223,13 +223,13 @@ query_sets_xml = """\
     <chosen_members id="http://testserver/api/query_sets/5/chosen"/>
     <child_members id="http://testserver/api/query_sets/5/child"/>
     <collection id="http://testserver/api/inventory/systems"/>
-    <querytags>
-        <query_tag>
-        <query_tag>query-tag-Systems named like 3-4</query_tag>
+    <query_tags>
+      <query_tag id="http://testserver/api/query_sets/5/query_tags/5">
+        <name>query-tag-Systems_named_like_3-5</name>
         <query_tag_id>5</query_tag_id>
         <query_set href="http://testserver/api/query_sets/5"/>
       </query_tag>
-    </querytags>
+    </query_tags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>
@@ -260,13 +260,13 @@ query_set_xml = """\
     <chosen_members id="http://testserver/api/query_sets/4/chosen"/>
     <child_members id="http://testserver/api/query_sets/4/child"/>
     <collection id="http://testserver/api/inventory/systems"/>
-    <querytags>
-      <query_tag>
-        <query_tag>query-tag-Physical Systems-4</query_tag>
+    <query_tags>
+      <query_tag id="http://testserver/api/query_sets/4/query_tags/4">
+        <name>query-tag-Physical Systems-4</name>
         <query_tag_id>4</query_tag_id>
         <query_set href="http://testserver/api/query_sets/4"/>
       </query_tag>
-    </querytags>
+    </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>
@@ -296,13 +296,13 @@ query_set_fixtured_xml = """\
     <chosen_members id="http://testserver/api/query_sets/5/chosen"/>
     <child_members id="http://testserver/api/query_sets/5/child"/>
     <collection id="http://testserver/api/inventory/systems"/>
-   <querytags>
-     <query_tag>
+   <query_tags>
+     <query_tag id="http://testserver/api/query_sets/5/query_tags/5">
        <query_set href="http://testserver/api/query_sets/5"/>
-       <query_tag>query-tag-Systems named like 3-4</query_tag>
+       <name>query-tag-Systems_named_like_3-5</name>
        <query_tag_id>5</query_tag_id>
      </query_tag>
-   </querytags>
+   </query_tags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
     <is_top_level>True</is_top_level>
     <children/>

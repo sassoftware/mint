@@ -29,11 +29,11 @@ class QuerySetTestCase(XMLTestCase):
         self.assertEquals(len(models.SystemTag.objects.all()), 1)
         self.assertEquals(models.SystemTag.objects.all()[0].system.name,
             "rPath Update Service")
-        self.assertEquals(models.SystemTag.objects.all()[0].inclusion_method.inclusion_method,
+        self.assertEquals(models.SystemTag.objects.all()[0].inclusion_method.name,
             "filtered")
         self.assertEquals(len(models.QueryTag.objects.all()), 5)
-        self.assertEquals(models.QueryTag.objects.all()[4].query_tag,
-            "query-tag-Unmanaged systems-5")
+        self.assertEquals(models.QueryTag.objects.all()[4].name,
+            "query-tag-Unmanaged_systems-5")
         self.assertEquals(len(models.QuerySet.objects.all()), 5)
         self.assertEquals(models.QuerySet.objects.all()[4].name,
             "Unmanaged systems")

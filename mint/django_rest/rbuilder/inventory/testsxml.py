@@ -274,6 +274,7 @@ system_type_systems_xml="""
 <systems count="1" end_index="0" filter_by="" full_collection="http://testserver/api/inventory/systems" id="http://testserver/api/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
+    <system_tags/>
     <appliance/>
     <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
     <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
@@ -474,6 +475,7 @@ management_nodes_xml = """\
 <management_nodes>
   <management_node id="http://testserver/api/inventory/management_nodes/1">
     <agent_port>5989</agent_port>
+    <system_tags/>
     <appliance/>
     <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
     <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
@@ -545,6 +547,7 @@ management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port> 
+  <system_tags/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
@@ -652,6 +655,7 @@ management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port> 
+  <system_tags/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
@@ -764,6 +768,7 @@ management_node_zone_post_response_xml = """\
   <configuration href="http://testserver/api/inventory/management_nodes/1/configuration"/>
   <configuration_descriptor href="http://testserver/api/inventory/management_nodes/1/configuration_descriptor"/>
   <system_events href="http://testserver/api/inventory/systems/1/system_events"/>
+  <system_tags/>
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -829,6 +834,7 @@ systems_xml = """\
 <systems count="2" end_index="1" filter_by="" full_collection="http://testserver/api/inventory/systems" id="http://testserver/api/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/inventory/systems/2">
     <agent_port/>
+    <system_tags/>
     <appliance/>
     <credentials href="http://testserver/api/inventory/systems/2/credentials"/>
     <configuration href="http://testserver/api/inventory/systems/2/configuration"/>
@@ -890,6 +896,7 @@ systems_xml = """\
   </system>
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
+    <system_tags/>
     <appliance/>
     <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
     <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
@@ -1088,6 +1095,7 @@ system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
+  <system_tags/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
   <configuration href="http://testserver/api/inventory/systems/1/configuration"/>
@@ -1156,6 +1164,7 @@ system_post_xml = """\
   <out_of_date>False</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
+  <system_tags/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1264,6 +1273,7 @@ system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
+  <system_tags/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
   <configuration href="http://testserver/api/inventory/systems/1/configuration"/>
@@ -1377,6 +1387,7 @@ system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
+  <system_tags/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/1/credentials"/>
   <configuration href="http://testserver/api/inventory/systems/1/configuration"/>
@@ -1717,6 +1728,7 @@ system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port>5989</agent_port>
+  <system_tags/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
   <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
@@ -1918,6 +1930,7 @@ system_available_updates_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port>5989</agent_port>
+  <system_tags/>
   <appliance/>
   <credentials href="http://testserver/api/inventory/systems/3/credentials"/>
   <configuration href="http://testserver/api/inventory/systems/3/configuration"/>
@@ -2366,6 +2379,7 @@ system_with_target = """\
   </current_state>
   <created_date>2010-09-23T13:30:14.295974+00:00</created_date>
   <target_system_description/>
+  <system_tags/>
 </system>
 """
 
@@ -2498,6 +2512,7 @@ system_installed_software_version_stage_xml = """\
   <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
   <appliance href="http://testserver/api/products/chater-foo">chater-foo</appliance>
   <configuration_descriptor href="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
+  <system_tags/>
   <has_running_jobs>True</has_running_jobs>
   <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -2740,6 +2755,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/2/system_events"/>
     <appliance/>
@@ -2802,6 +2818,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/3/system_events"/>
     <appliance/>
@@ -2864,6 +2881,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/4/system_events"/>
     <appliance/>
@@ -2926,6 +2944,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/5/system_events"/>
     <appliance/>
@@ -2988,6 +3007,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/6/system_events"/>
     <appliance/>
@@ -3050,6 +3070,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/7/system_events"/>
     <appliance/>
@@ -3112,6 +3133,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/8/system_events"/>
     <appliance/>
@@ -3174,6 +3196,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/9/system_events"/>
     <appliance/>
@@ -3236,6 +3259,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/10/system_events"/>
     <appliance/>
@@ -3298,6 +3322,7 @@ Methods:
         <ip_address/>
       </network>
     </networks>
+    <system_tags/>
     <management_interface/>
     <system_events href="http://testserver/api/inventory/systems/11/system_events"/>
     <appliance/>
