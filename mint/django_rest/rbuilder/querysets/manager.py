@@ -72,7 +72,7 @@ class QuerySetManager(basemanager.BaseManager):
         querySetName = querySet.name.replace(' ', '_')
         queryTagName = 'query-tag-%s-%s' % (querySetName, querySet.pk)
         queryTag, created = models.QueryTag.objects.get_or_create(
-            query_set=querySet, name=queryTagName
+            query_set=querySet, name=queryTagName)
         queryTag.save()
 
         return queryTag
