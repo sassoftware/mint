@@ -12,6 +12,12 @@ from mint.django_rest.rbuilder.reporting import imagereports, \
                                                 views
 
 from mint.django_rest.rbuilder.inventory import views as inventoryviews
+from mint.django_rest.rbuilder.querysets import views as querysetviews
+from mint.django_rest.rbuilder.packages import views as packageviews
+from mint.django_rest.rbuilder.changelog import views as changelogviews
+
+handler404 = 'mint.django_rest.handler.handler404'
+handler500 = 'mint.django_rest.handler.handler500'
 
 urlpatterns = patterns('',
     # Reporting urls
@@ -80,7 +86,7 @@ urlpatterns = patterns('',
         name='SystemType'),
     url(r'^api/inventory/system_types/(?P<system_type_id>\d+)/systems/?$',
         inventoryviews.InventorySystemTypeSystemsService(),
-        name='Systems'),
+        name='SystemTypeSystems'),
        
     # Networks
     url(r'^api/inventory/networks/?$',
@@ -191,4 +197,46 @@ urlpatterns = patterns('',
     url(r'^api/products/(\w|\-)*/?$',
         inventoryviews.ApplianceService(),
         name='Projects'),
+
+    # Query Sets
+    url(r'^api/query_sets/?$',
+        querysetviews.QuerySetService(),
+        name='QuerySets'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/?$',
+        querysetviews.QuerySetService(),
+        name='QuerySet'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/all/?$',
+        querysetviews.QuerySetAllResultService(),
+        name='QuerySetAllResult'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/chosen/?$',
+        querysetviews.QuerySetChosenResultService(),
+        name='QuerySetChosenResult'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/filtered/?$',
+        querysetviews.QuerySetFilteredResultService(),
+        name='QuerySetFilteredResult'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/child/?$',
+        querysetviews.QuerySetChildResultService(),
+        name='QuerySetChildResult'),
+    url(r'^api/query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
+        querysetviews.QuerySetFilterDescriptorService(),
+        name='QuerySetFilterDescriptor'),
+
+    # Packages
+    url(r'^api/packages/?$',
+        packageviews.PackageService(),
+        name='Packages'),
+    url(r'^api/packages/(?P<package_id>\d+)/?$',
+        packageviews.PackageService(),
+        name='Package'),
+
+    # Change Logs
+    url(r'^api/changelogs/?$',
+        changelogviews.ChangeLogService(),
+        name='ChangeLogs'),
+    url(r'^api/changelogs/(?P<change_log_id>\d+)/?$',
+        changelogviews.ChangeLogService(),
+        name='ChangeLog'),
+
 )
+
+

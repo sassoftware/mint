@@ -2291,6 +2291,215 @@ class MigrateTo_52(SchemaMigration):
                 DROP CONSTRAINT inventory_system_generated_uuid_key""")
         return True
 
+class MigrateTo_53(SchemaMigration):
+    Version = (53, 4)
+
+    def migrate(self):
+        db = self.db
+
+        schema.createTable(db, 'querysets_queryset', """
+            CREATE TABLE "querysets_queryset" (
+                "query_set_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL UNIQUE,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "resource_type" TEXT NOT NULL
+            )""")
+        schema._addTableRows(db, "querysets_queryset", "name",
+            [dict(name="All Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Active Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Inactive Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+             dict(name="Physical Systems", resource_type="system",
+                created_date=str(datetime.datetime.now(tz.tzutc())),
+                modified_date=str(datetime.datetime.now(tz.tzutc()))),
+            ])
+        allQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="All Systems")
+        activeQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Active Systems")
+        inactiveQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Inactive Systems")
+        physicalQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="Physical Systems")
+
+        schema.createTable(db, 'querysets_filterentry', """
+            CREATE TABLE "querysets_filterentry" (
+                "filter_entry_id" %(PRIMARYKEY)s,
+                "field" TEXT NOT NULL,
+                "operator" TEXT NOT NULL,
+                "value" TEXT,
+                UNIQUE("field", "operator", "value")
+            )""")
+        schema._addTableRows(db, "querysets_filterentry",
+            'filter_entry_id',
+            [dict(field="current_state.name", operator="EQUAL", value="responsive"),
+             dict(field="current_state.name", operator="IN", 
+                value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)"),
+             dict(field="target", operator='IS_NULL', value="True")],
+            ['field', 'operator', 'value'])
+        activeFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="current_state.name", operator="EQUAL", value="responsive")
+        inactiveFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="current_state.name", operator="IN", 
+                        value="(unmanaged,unmanaged-credentials,registered,non-responsive-unknown,non-responsive-net,non-responsive-host,non-responsive-shutdown,non-responsive-suspended,non-responsive-credentials)")
+        physicalFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+            field="target", operator='IS_NULL', value="True")
+
+        schema.createTable(db, 'querysets_querytag', """
+            CREATE TABLE "querysets_querytag" (
+                "query_tag_id" %(PRIMARYKEY)s,
+                "query_set_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE,
+                "query_tag" TEXT NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, "querysets_querytag", "query_tag",
+            [dict(query_set_id=allQSId, query_tag="query-tag-All Systems-1"),
+             dict(query_set_id=activeQSId, query_tag="query-tag-Active Systems-2"),
+             dict(query_set_id=inactiveQSId, query_tag="query-tag-Inactive Systems-3"),
+             dict(query_set_id=physicalQSId, query_tag="query-tag-Physical Systems-4"),
+            ])
+
+        schema.createTable(db, 'querysets_inclusionmethod', """
+            CREATE TABLE "querysets_inclusionmethod" (
+                "inclusion_method_id" %(PRIMARYKEY)s,
+                "inclusion_method" TEXT NOT NULL UNIQUE
+            )""")
+        schema._addTableRows(db, "querysets_inclusionmethod",
+            "inclusion_method",
+            [dict(inclusion_method="chosen"),
+             dict(inclusion_method="filtered")])
+
+        schema.createTable(db, 'querysets_systemtag', """
+            CREATE TABLE "querysets_systemtag" (
+                "system_tag_id" %(PRIMARYKEY)s,
+                "system_id" INTEGER
+                    REFERENCES "inventory_system" ("system_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "query_tag_id" INTEGER
+                    REFERENCES "querysets_querytag" ("query_tag_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "inclusion_method_id" INTEGER
+                    REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
+            )""")
+
+        schema.createTable(db, "querysets_queryset_filter_entries", """
+            CREATE TABLE "querysets_queryset_filter_entries" (
+                "id" %(PRIMARYKEY)s,
+                "queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "filterentry_id" INTEGER
+                    REFERENCES "querysets_filterentry" ("filter_entry_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("queryset_id", "filterentry_id")
+            )""")
+
+        schema._addTableRows(db, "querysets_queryset_filter_entries",
+            'id',
+            [dict(queryset_id=activeQSId, filterentry_id=activeFiltId),
+             dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId),
+             dict(queryset_id=physicalQSId, filterentry_id=physicalFiltId)],
+            ['queryset_id', 'filterentry_id'])
+
+        schema.createTable(db, "querysets_queryset_children", """
+            CREATE TABLE "querysets_queryset_children" (
+                "id" %(PRIMARYKEY)s,
+                "from_queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                "to_queryset_id" INTEGER
+                    REFERENCES "querysets_queryset" ("query_set_id")
+                    ON DELETE CASCADE
+                    NOT NULL,
+                UNIQUE ("from_queryset_id", "to_queryset_id")
+            )""")
+        schema._addTableRows(db, "querysets_queryset_children",
+            'id',
+            [dict(from_queryset_id=allQSId, to_queryset_id=activeQSId),
+             dict(from_queryset_id=allQSId, to_queryset_id=inactiveQSId)],
+            uniqueCols=('from_queryset_id', 'to_queryset_id'))
+
+        return True
+
+    def migrate1(self):
+        db = self.db
+
+        schema.createTable(db, 'changelog_change_log', """
+            CREATE TABLE "changelog_change_log" (
+                "change_log_id" %(PRIMARYKEY)s,
+                "resource_type" TEXT NOT NULL,
+                "resource_id" INTEGER NOT NULL
+            )""")
+
+        schema.createTable(db, 'changelog_change_log_entry', """
+            CREATE TABLE "changelog_change_log_entry" (
+                "change_log_entry_id" %(PRIMARYKEY)s,
+                "change_log_id" INTEGER
+                    REFERENCES "changelog_change_log" ("change_log_id")
+                    ON DELETE CASCADE NOT NULL,
+                "entry_text" TEXT NOT NULL,
+                "entry_date" TIMESTAMP WITH TIME ZONE NOT NULL
+            )""")
+
+        return True
+
+    def migrate2(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE "querysets_queryset"
+            ADD COLUMN "description" TEXT
+        """)
+        cursor.execute("""
+            UPDATE "querysets_queryset"
+            SET "description" = "name"
+        """)
+
+        return True
+
+    def migrate3(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE "querysets_queryset"
+            ADD COLUMN "can_modify" BOOLEAN NOT NULL DEFAULT TRUE
+        """)
+        cursor.execute("""
+            UPDATE "querysets_queryset" SET "can_modify" = false
+        """)
+
+        return True
+
+    def migrate4(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE inventory_stage 
+            DROP CONSTRAINT inventory_stage_major_version_id_fkey
+        """)
+        cu.execute("""
+            ALTER TABLE inventory_stage 
+            ADD CONSTRAINT inventory_stage_major_version_id_fkey 
+            FOREIGN KEY (major_version_id) 
+            REFERENCES productversions(productversionid) ON DELETE SET NULL
+        """)
+
+        return True
+
+
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):

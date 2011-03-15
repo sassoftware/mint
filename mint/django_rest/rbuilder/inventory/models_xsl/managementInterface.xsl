@@ -11,36 +11,16 @@ Description:
 <xsl:copy-of select="$managementInterface_model_properties" />
 </xsl:variable>
 
-<xsl:variable name="managementInterface_model_properties"><![CDATA[
-ManagementInterface Properties:
-  management_interface_id - the database ID for the management interface
-  name - the name of the management interface
-  description - the description of the management interface
-  created_date - "the date the management interface was added to inventory (UTC)
-  port - the port used by the management interface
-  credentials_descriptor - the descriptor of available fields to set credentials for the management interface
-  credentials_readonly - whether or not the management interface has readonly credentials]]>
+<xsl:variable name="managementInterface_model_properties"><![CDATA[   created_date - the date the management interface was added to inventory (UTC)
+   credentials_descriptor - the descriptor of available fields to set credentials for the management interface
+   credentials_readonly - whether or not the management interface has readonly credentials
+   description - the description of the management interface
+   management_interface_id - the database ID for the management interface
+   name - the name of the management interface
+   port - the port used by the management interface]]>
 </xsl:variable>
 
-<xsl:variable name="managementInterface_methods"><![CDATA[
-Methods: 
-  GET:
-    Authentication: user
-    Response Format:
-      <management_interface id="http://hostname/api/inventory/management_interfaces/1/">
-        ...
-      </management_interface>
-
-  POST:
-    not supported
-    
-  PUT:
-    Authentication: admin
-    Read-only fields:
-        name
-      
-  DELETE:
-    not supported]]>
+<xsl:variable name="managementInterface_methods"><![CDATA[@@METHODS@@]]>
 </xsl:variable>
 
 </xsl:stylesheet>

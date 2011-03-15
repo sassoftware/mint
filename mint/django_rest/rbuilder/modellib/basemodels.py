@@ -1,4 +1,9 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All rights reserved.
+#
 
 import datetime
 from dateutil import parser
@@ -199,7 +204,8 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                href = getattr(val, 'href', None)
+                refName = field.refName
+                href = getattr(val, refName, None)
                 parentModel = field.related.parent_model
                 if href is not None:
                     val = parentModel.objects.load_from_href(href)
@@ -334,19 +340,31 @@ class BaseManager(models.Manager):
 
     def add_m2m_accessors(self, model, obj, request):
         """
-        Populate the many tom many accessors on model based on the xobj model
+        Populate the many to many accessors on model based on the xobj model
         in obj.
         """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
-            rel_obj_name = m2m_mgr.target_field_name
-            self.clear_m2m_accessor(model, m2m_accessor)
+            _xobj = getattr(m2m_mgr.model, '_xobj', None)
+            if _xobj:
+                rel_obj_name = _xobj.tag or m2m_mgr.target_field_name
+            else:
+                rel_obj_name = m2m_mgr.target_field_name
+
             acobj = getattr(obj, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
-            if objlist is not None and not isinstance(objlist, list):
-                objlist = [ objlist ]
+            if objlist is not None:
+                self.clear_m2m_accessor(model, m2m_accessor)
+                if not isinstance(objlist, list):
+                    objlist = [ objlist ]
             for rel_obj in objlist or []:
-                rel_mod = type_map[rel_obj_name].objects.load_from_object(
-                    rel_obj, request)
+                modelCls = m2m_mgr.model
+                refName = getattr(getattr(model, m2m_accessor), 'refName', 'href')
+                href = getattr(rel_obj, refName, None)
+                if href is not None:
+                    rel_mod = modelCls.objects.load_from_href(href)
+                else:
+                    rel_mod = modelCls.objects.load_from_object(
+                        rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)
 
         return model
@@ -639,6 +657,21 @@ class XObjModel(models.Model):
             underscoreName = mintutils.Transformations.strToUnderscore(
                 name[0].lower() + name[1:])
             ret._xobjClass = type(underscoreName, (object, ), {})
+
+            retXObj = getattr(ret, '_xobj', None)
+            if retXObj:
+                for base in bases:
+                    _xobj = getattr(base, '_xobj', None)
+                    if not _xobj:
+                        continue
+                    newAttrs = _xobj.attributes.copy()
+                    newAttrs.update(ret._xobj.attributes)
+                    ret._xobj.attributes = newAttrs
+
+                    for elem in _xobj.elements:
+                        if elem not in ret._xobj.elements:
+                            ret._xobj.elements.append(elem)
+
             return ret
 
     class Meta:
@@ -646,6 +679,9 @@ class XObjModel(models.Model):
 
     # All models use our BaseManager as their manager
     objects = BaseManager()
+
+    # Fields that when changed, cause a log to get created.
+    logged_fields = []
 
     # Fields which should be serialized/deserialized as lists.  This is a hint
     # for the to_xml method, e.g., given the Systems model with 'system' in
@@ -733,6 +769,36 @@ class XObjModel(models.Model):
             return m2model._xobj.tag
         return m2model._meta.verbose_name
 
+    @classmethod
+    def getTag(cls):
+        tag = None
+        _xobj = getattr(cls, '_xobj', None)
+        if _xobj:
+            tag = _xobj.tag
+        if not tag:
+            tag = cls.__name__.lower()
+        return tag
+
+    def _saveFields(self):
+        if self._meta.abstract:
+            return
+        fieldNames = self.get_field_dict().keys()
+        if self.pk:
+            self._savedFields = dict((f, getattr(self, f)) \
+                            for f in self.logged_fields \
+                            if f in fieldNames)
+        else:
+            self._savedFields = None
+
+    def getChangedFields(self):
+        changedFields = {}
+        if self._savedFields is None:
+            return changedFields
+        for k, v in self._savedFields.items():
+            if v != getattr(self, k):
+                changedFields[k] = v
+        return changedFields
+
     def load_fields_dict(self):
         """
         Returns a dict of field name, field value for each field in
@@ -743,11 +809,12 @@ class XObjModel(models.Model):
             fields_dict[f.name] = getattr(self, f.name, None)
         return fields_dict
 
-    def to_xml(self, request=None):
+    def to_xml(self, request=None, xobj_model=None):
         """
         Returns the xml serialization of this model.
         """
-        xobj_model = self.serialize(request)
+        if not xobj_model:
+            xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
     def get_absolute_url(self, request=None, parents=None, model=None):
@@ -764,13 +831,21 @@ class XObjModel(models.Model):
         # specified so that when generating a url for a Network model, the
         # system parent can be sent in, such that the result is
         # /api/inventory/systems/1/networks, where 1 is the system pk.
-        if not parents:
-            url_key = getattr(self, 'pk', [])
-            url_key = [str(url_key)]
-        else:
+        _parents = getattr(self, '_parents', None)
+        if parents:
             url_key = []
             for parent in parents:
                 url_key.append(str(parent.pk))
+        elif _parents:
+            url_key = []
+            for parent in _parents:
+                url_key.append(str(parent.pk))
+        else:
+            url_key = getattr(self, 'pk', None)
+            if url_key:
+                url_key = [str(url_key)]
+            else:
+                url_key = []
 
         # Now do what models.pattern does.
         bits = (view_name, url_key)
@@ -784,16 +859,6 @@ class XObjModel(models.Model):
             return request.build_absolute_uri(relative_url)
         else:
             return relative_url
-
-    def _serialize_hrefs(self, request=None):
-        """
-        Serialize each occurence of where an XObjHrefModel has been set as
-        an attribute on this model.
-        """
-        href_fields = [(f, v) for f, v in self.__class__.__dict__.items() \
-                        if isinstance(v, XObjHrefModel)]
-        for href in href_fields:
-            href[1].serialize(request)
 
     def get_field_dict(self):
         """
@@ -854,10 +919,8 @@ class XObjModel(models.Model):
                     if val is None:
                         continue
                     val = xobj.parse(val)
-                setattr(xobj_model, key, val)
-            # TODO: is this still needed, we already called serialize_hrefs.?
-            elif isinstance(val, XObjHrefModel):
-                val.serialize(request)
+                elif isinstance(field, HrefField):
+                    val = field.serialize_value(request)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request, values=None):
@@ -877,6 +940,7 @@ class XObjModel(models.Model):
                 text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
+                refName = getattr(field, 'refName', 'href')
                 if val:
                     if visible:
                         # If the visible prop is set, we want to copy the
@@ -884,14 +948,15 @@ class XObjModel(models.Model):
                         setattr(xobj_model, fieldName,
                             getattr(val, visible))
                     elif not serialized:
-                        href_model = type('%s_href' % \
+                        refModel = type('%s_ref' % \
                             self.__class__.__name__, (object,), {})()
-                        href_model._xobj = xobj.XObjMetadata(
-                                            attributes = {'href':str})
-                        href_model.href = val.get_absolute_url(request)
+                        refModel._xobj = xobj.XObjMetadata(
+                                            attributes = {refName:str})
+                        setattr(refModel, refName, 
+                            val.get_absolute_url(request))
                         if text_field and getattr(val, text_field):
-                            href_model._xobj.text = getattr(val, text_field)
-                        setattr(xobj_model, fieldName, href_model)
+                            refModel._xobj.text = getattr(val, text_field)
+                        setattr(xobj_model, fieldName, refModel)
                     else:
                         val = val.serialize(request)
                         setattr(xobj_model, fieldName, val)
@@ -1036,10 +1101,13 @@ class XObjModel(models.Model):
         Serialize this model into an object that can be passed blindly into
         xobj to produce the xml that we require.
         """
-        self._serialize_hrefs(request)
         # Basic object to use to send to xobj.
         xobjModelClass = self._xobjClass
         xobj_model = xobjModelClass()
+
+        _xobj = getattr(self, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj = _xobj
 
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
@@ -1055,7 +1123,6 @@ class XObjModel(models.Model):
         self.serialize_list_fields(xobj_model, request, values=values)
 
         return xobj_model
-
 
 class SyntheticField(object):
     """A field that has no database storage, but is de-serialized"""
@@ -1082,8 +1149,12 @@ class XObjIdModel(XObjModel):
 
     def serialize(self, request=None, values=None):
         xobj_model = XObjModel.serialize(self, request, values=values)
-        xobj_model._xobj = xobj.XObjMetadata(
-                            attributes = {'id':str})
+        _xobj = getattr(xobj_model, '_xobj', None)
+        if _xobj:
+            xobj_model._xobj.attributes['id'] = str
+        else:
+            xobj_model._xobj = xobj.XObjMetadata(
+                                attributes = {'id':str})
         xobj_model.id = self.get_absolute_url(request, model=xobj_model)
         return xobj_model
 
@@ -1097,12 +1168,18 @@ class XObjHrefModel(XObjModel):
     _xobj = xobj.XObjMetadata(
                 attributes = {'href':str})
 
+    def __init__(self, href):
+        self.href = href
+        
+class HrefField(models.Field):
     def __init__(self, href=None):
         self.href = href
+        models.Field.__init__(self)
 
-    def serialize(self, request=None, values=None):
-        self.href = request.build_absolute_uri(self.href)
-        
+    def serialize_value(self, request=None, values=None):
+        hrefModel = XObjHrefModel(request.build_absolute_uri(self.href))
+        return hrefModel
+
 class ForeignKey(models.ForeignKey):
     """
     Wrapper of django foreign key for use in models
@@ -1119,6 +1196,13 @@ class ForeignKey(models.ForeignKey):
             self.text_field = kwargs.pop('text_field')
         except KeyError:
             pass # text wasn't specified, that is fine
+
+        self.refName = 'href'
+        try:
+            self.refName = kwargs.pop('refName')
+        except KeyError:
+            pass # text wasn't specified, that is fine
+
         super(ForeignKey, self).__init__(*args, **kwargs)
 
 class SerializedForeignKey(ForeignKey):

@@ -65,7 +65,7 @@ def requires(model_names, save=True):
                 built_model, request, save=save)
             kw[model_name] = model
             return function(*args, **kw)
-
+        
         return inner
     return decorate
 
@@ -143,7 +143,8 @@ def return_xml(function):
         response = http.HttpResponse()
         response['Content-Type'] = 'text/xml'
         request = args[1]
-        response.write(ret_val.to_xml(request))
+        response.model = ret_val
         return response
-
+    inner.__doc__ = function.__doc__
     return inner
+
