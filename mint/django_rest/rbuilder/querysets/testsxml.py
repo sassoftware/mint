@@ -427,3 +427,96 @@ system_7_xml = """\
   </system_tags>
 </system>
 """
+
+queryset_post_xml2 = """\
+<?xml version="1.0"?>
+  <query_set>
+    <modified_date/>
+    <filter_descriptor/>
+    <name>A new query set</name>
+    <can_modify>true</can_modify>
+    <description>New query set for physical systems</description>
+    <filter_entries>
+      <filter_entry>
+        <operator>IS_NULL</operator>
+        <field>target</field>
+        <value>True</value>
+      </filter_entry>
+    </filter_entries>
+    <query_set_id/>
+    <all_members/>
+    <chosen_members/>
+    <child_members/>
+    <collection/>
+    <query_tags/>
+    <created_date/>
+    <is_top_level>True</is_top_level>
+    <children/>
+    <resource_type>system</resource_type>
+    <filtered_members/>
+  </query_set>
+"""
+
+queryset_post_response_xml2 = """\
+<query_set id="http://testserver/api/query_sets/6">
+  <filter_entries>
+    <filter_entry>
+      <operator>IS_NULL</operator>
+      <field>target</field>
+      <filter_entry_id>3</filter_entry_id>
+      <value>True</value>
+    </filter_entry>
+  </filter_entries>
+  <filter_descriptor id="http://testserver/api/query_sets/6/filter_descriptor"/>
+  <can_modify>true</can_modify>
+  <modified_date>2011-03-16T21:33:47.055412+00:00</modified_date>
+  <filtered_members id="http://testserver/api/query_sets/6/filtered"/>
+  <description>New query set for physical systems</description>
+  <child_members id="http://testserver/api/query_sets/6/child"/>
+  <query_tags>
+    <query_tag id="http://testserver/api/query_sets/6/query_tags/6">
+      <query_tag_id>6</query_tag_id>
+      <query_set href="http://testserver/api/query_sets/6"/>
+      <name>query-tag-A_new_query_set-6</name>
+    </query_tag>
+  </query_tags>
+  <chosen_members id="http://testserver/api/query_sets/6/chosen"/>
+  <query_set_id>6</query_set_id>
+  <collection id="http://testserver/api/inventory/systems"/>
+  <is_top_level>False</is_top_level>
+  <created_date>2011-03-16T21:33:47.055325+00:00</created_date>
+  <all_members id="http://testserver/api/query_sets/6/all"/>
+  <children/>
+  <resource_type>system</resource_type>
+  <name>A new query set</name>
+</query_set>
+"""
+
+queryset_post_xml3 = """\
+<?xml version="1.0"?>
+  <query_set>
+    <modified_date/>
+    <filter_descriptor/>
+    <name>A new query set</name>
+    <can_modify>true</can_modify>
+    <description>New query set for virtual systems</description>
+    <filter_entries>
+      <filter_entry>
+        <operator>IS_NULL</operator>
+        <field>target</field>
+        <value>False</value>
+      </filter_entry>
+    </filter_entries>
+    <query_set_id/>
+    <all_members/>
+    <chosen_members/>
+    <child_members/>
+    <collection/>
+    <query_tags/>
+    <created_date/>
+    <is_top_level>True</is_top_level>
+    <children/>
+    <resource_type>system</resource_type>
+    <filtered_members/>
+  </query_set>
+"""

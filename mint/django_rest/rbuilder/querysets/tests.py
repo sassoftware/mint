@@ -64,6 +64,32 @@ class QuerySetFixturedTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.query_set_xml)
 
+    def testPostQuerySet(self):
+        # Create a new query set
+        response = self._post('/api/query_sets/',
+            username="admin", password="password",
+            data=testsxml.queryset_post_xml2)
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(testsxml.queryset_post_response_xml2,
+            response.content)
+
+        # Post the same query set again, it should fail
+        response = self._post('/api/query_sets/',
+            username="admin", password="password",
+            data=testsxml.queryset_post_xml2)
+        self.assertEquals(400, response.status_code)
+        fault = xobj.parse(response.content).fault
+        self.assertEquals('400', fault.code)
+
+        # Post a different query set with the same name, it should fail
+        response = self._post('/api/query_sets/',
+            username="admin", password="password",
+            data=testsxml.queryset_post_xml3)
+        self.assertEquals(400, response.status_code)
+        fault = xobj.parse(response.content).fault
+        self.assertEquals('400', fault.code)
+
+
     def testGetFixturedQuerySet(self):
         response = self._get('/api/query_sets/5/',
             username="admin", password="password")

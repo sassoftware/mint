@@ -28,7 +28,7 @@ class QuerySetService(BaseQuerySetService):
         else:
             return self.mgr.getQuerySets()
         
-    @requires('query_set')
+    @requires('query_set', load=False)
     @return_xml
     def rest_POST(self, request, query_set):
         return self.mgr.addQuerySet(query_set)
