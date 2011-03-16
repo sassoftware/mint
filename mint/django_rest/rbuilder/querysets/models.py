@@ -205,6 +205,13 @@ class SystemTag(modellib.XObjIdModel):
         self._parents = [self.system, self]
         return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
 
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref, 'id')
+        return xobjModel
+         
+
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:

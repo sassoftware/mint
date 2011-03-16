@@ -1169,10 +1169,11 @@ class XObjHrefModel(XObjModel):
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                attributes = {'href':str})
+                attributes = {})
 
-    def __init__(self, href):
-        self.href = href
+    def __init__(self, refValue, refName='href'):
+        self._xobj.attributes[refName] = str
+        setattr(self, refName, refValue)
         
 class HrefField(models.Field):
     def __init__(self, href=None):
