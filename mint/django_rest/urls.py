@@ -235,8 +235,6 @@ urlpatterns = patterns('',
         querysetviews.QueryTagService(),
         name='QueryTag'),
 
-
-
     # Packages
     url(r'^api/packages/?$',
         packageviews.PackageService(),
