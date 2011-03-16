@@ -537,7 +537,6 @@ class System(modellib.XObjIdModel):
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
         "the descriptor of available fields to set system configuration parameters")
 
-    load_fields = [local_uuid]
     logged_fields = ['name', 'installed_software']
 
     # We need to distinguish between an <installed_software> node not being
