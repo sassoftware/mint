@@ -10,16 +10,18 @@ from dateutil import parser
 from dateutil import tz
 import urlparse
 
-from mint.lib import mintutils
-
 from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
+from django.db.utils import IntegrityError
 from django.core import exceptions
 from django.core import urlresolvers 
 
 from xobj import xobj
+
+from mint.django_rest.rbuilder import errors
+from mint.lib import mintutils
 
 def XObjHidden(field):
     """
@@ -54,7 +56,7 @@ class BaseManager(models.Manager):
     deserialize an object from xobj into an instance of the model.
     """
 
-    def load_from_db(self, model_inst, accessors=None):
+    def load_from_db(self, model_inst):
         """
         Load a model from the db based on model_inst.  Uses load_fields on the
         model to look up a corresponding model in the db. 
@@ -81,7 +83,7 @@ class BaseManager(models.Manager):
         except exceptions.MultipleObjectsReturned:
             return None, None
 
-    def load(self, model_inst, accessors=None, withReadOnly=False):
+    def load(self, model_inst, withReadOnly=False):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -95,7 +97,7 @@ class BaseManager(models.Manager):
         This should never be done when src is "unsafe" (i.e. loaded from XML)
         """
 
-        oldModel, loaded_model = self.load_from_db(model_inst, accessors)
+        oldModel, loaded_model = self.load_from_db(model_inst)
 
         # For each field on loaded_model, see if that field is defined on
         # model_inst, if it is and the value is different, update the value on
@@ -141,13 +143,13 @@ class BaseManager(models.Manager):
             if newFieldVal != oldFieldVal:
                 setattr(dest, field.name, newFieldVal)
 
-    def load_or_create(self, model_inst, accessors=None, withReadOnly=False):
+    def load_or_create(self, model_inst, withReadOnly=False):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
         """
         # Load the model from the db.
-        oldModel, loaded_model = self.load(model_inst, accessors,
+        oldModel, loaded_model = self.load(model_inst,
             withReadOnly=withReadOnly)
         if not loaded_model:
             # No matching model was found. We need to save.  This scenario
@@ -380,10 +382,13 @@ class BaseManager(models.Manager):
             setattr(model, fieldName, val)
         return model
 
-    def load_from_object(self, obj, request, save=True):
+    def load_from_object(self, obj, request, save=True, load=True):
         """
         Given an object (obj) from xobj, create and return the  corresponding
-        model, loading it from the db if one exists.  obj does not have to be
+        model.  If load is True, load the model from the db and apply the
+        updates to it based on obj, otherwise, always create a new model.
+        
+        obj does not have to be
         from xobj, but it should match the similar structure of an object that
         xobj would create from xml.
         """
@@ -400,10 +405,17 @@ class BaseManager(models.Manager):
         model = self.add_synthetic_fields(model, obj)
         model = self.add_fields(model, obj, request, save=save)
         accessors = self.get_accessors(model, obj, request)
-        if save:
-            oldModel, model = self.load_or_create(model, accessors)
+        if not load:
+            try:
+                model.save()
+            except IntegrityError, e:
+                e.status = errors.BAD_REQUEST
+                raise e
+            oldModel = None
+        elif save:
+            oldModel, model = self.load_or_create(model)
         else:
-            oldModel, dbmodel = self.load(model, accessors)
+            oldModel, dbmodel = self.load(model)
             if dbmodel:
                 model = dbmodel
         # Copy the synthetic fields again - this is unfortunate
@@ -417,13 +429,14 @@ class BaseManager(models.Manager):
         return model
 
 class TroveManager(BaseManager):
-    def load_from_object(self, obj, request, save=True):
+    def load_from_object(self, obj, request, save=True, load=True):
         # None flavor fixup
         if getattr(obj, 'flavor', None) is None:
             obj.flavor = ''
         # Fix up the flavor in the version object
         obj.version.flavor = obj.flavor
-        return BaseManager.load_from_object(self, obj, request, save=save)
+        return BaseManager.load_from_object(self, obj, request, save=save,
+            load=load)
 
     def clear_m2m_accessor(self, model, m2m_accessor):
         # We don't want available_updates to be published via REST
@@ -453,8 +466,8 @@ class VersionManager(BaseManager):
         return nmodel
 
 class JobManager(BaseManager):
-    def load_from_db(self, model_inst, accessors):
-        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+    def load_from_db(self, model_inst):
+        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst)
         if loaded_model:
             return oldModel, loaded_model
         # We could not find the job. Create one just because we need to
@@ -467,21 +480,21 @@ class JobManager(BaseManager):
         return oldModel, model
 
 class CredentialsManager(BaseManager):
-    def load_from_object(self, obj, request, save=False):
+    def load_from_object(self, obj, request, save=False, load=True):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model
     
 class ConfigurationManager(BaseManager):
-    def load_from_object(self, obj, request, save=False):
+    def load_from_object(self, obj, request, save=False, load=True):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
         return model
     
 class ConfigurationDescriptorManager(BaseManager):
-    def load_from_object(self, obj, request, save=False):
+    def load_from_object(self, obj, request, save=False, load=True):
         model = self.model(system=None)
         for k, v in obj.__dict__.items():
             setattr(model, k, v)
@@ -489,7 +502,7 @@ class ConfigurationDescriptorManager(BaseManager):
 
 class SystemManager(BaseManager):
     
-    def load_from_db(self, model_inst, accessors):
+    def load_from_db(self, model_inst):
         """
         Overridden because systems have several checks required to determine 
         if the system already exists.
@@ -610,8 +623,8 @@ class ManagementNodeManager(SystemManager):
     Overridden because management nodes have several checks required to
     determine if the system already exists.
     """
-    def load_from_db(self, model_inst, accessors):
-        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst, accessors)
+    def load_from_db(self, model_inst):
+        oldModel, loaded_model = BaseManager.load_from_db(self, model_inst)
         if loaded_model:
             if loaded_model.managing_zone_id is None:
                 loaded_model.managing_zone = loaded_model.zone
@@ -633,7 +646,7 @@ class ManagementNodeManager(SystemManager):
         return zone
 
 class SystemsManager(BaseManager):
-    def load(self, model_inst, accessors=None):
+    def load(self, model_inst):
         """
         Overridden because systems has no direct representation in the db - we
         need to load individual objects
