@@ -70,6 +70,8 @@ class QuerySet(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
 
+    refName = "id"
+
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
@@ -80,7 +82,8 @@ class QuerySet(modellib.XObjIdModel):
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
-    children = D(models.ManyToManyField("self", symmetrical=False),
+    children = D(modellib.ManyToManyField("self", symmetrical=False,
+        refName="id"),
         "Query sets that are children of this query set")
     filter_entries = D(models.ManyToManyField("FilterEntry"),
         "Defined filter entries for this query set")

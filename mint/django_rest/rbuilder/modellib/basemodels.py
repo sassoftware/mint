@@ -83,7 +83,7 @@ class BaseManager(models.Manager):
         except exceptions.MultipleObjectsReturned:
             return None, None
 
-    def load(self, model_inst, withReadOnly=False):
+    def load(self, model_inst, xobjModel, withReadOnly=False):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -97,7 +97,14 @@ class BaseManager(models.Manager):
         This should never be done when src is "unsafe" (i.e. loaded from XML)
         """
 
-        oldModel, loaded_model = self.load_from_db(model_inst)
+        # First try to load by an id or href attribute on xobjModel.  This
+        # attribute (if present) should a be the full url of the model.
+        loaded_model = self.load_from_href(xobjModel)
+        if loaded_model:
+            oldModel = loaded_model.serialize()
+        else:
+            # Fall back to loading from the db by model_inst
+            oldModel, loaded_model = self.load_from_db(model_inst)
 
         # For each field on loaded_model, see if that field is defined on
         # model_inst, if it is and the value is different, update the value on
@@ -143,14 +150,14 @@ class BaseManager(models.Manager):
             if newFieldVal != oldFieldVal:
                 setattr(dest, field.name, newFieldVal)
 
-    def load_or_create(self, model_inst, withReadOnly=False):
+    def load_or_create(self, model_inst, xobjModel=None, withReadOnly=False):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         from the db, if one wasn't found, create one and return it.
         """
         # Load the model from the db.
         oldModel, loaded_model = self.load(model_inst,
-            withReadOnly=withReadOnly)
+            xobjModel=xobjModel, withReadOnly=withReadOnly)
         if not loaded_model:
             # No matching model was found. We need to save.  This scenario
             # means we must be creating something new (POST), so it's safe to
@@ -161,10 +168,18 @@ class BaseManager(models.Manager):
 
         return oldModel, loaded_model
 
-    def load_from_href(self, href):
+    def load_from_href(self, xobjModel, refAttr="href"):
         """
-        Given an href, return the corresponding model.
+        Given an xobjModel, and an attribute to look at on that xobjModel for
+        a url, try to load the corresponding django model identified by that
+        url.
         """
+
+        if xobjModel is None:
+            return None
+
+        href = getattr(xobjModel, refAttr, None)
+
         if href:
             path = urlparse.urlparse(href)[2]
             # Look up the view function that corrosponds to the href using the
@@ -207,14 +222,14 @@ class BaseManager(models.Manager):
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
                 refName = field.refName
-                href = getattr(val, refName, None)
                 parentModel = field.related.parent_model
-                if href is not None:
-                    val = parentModel.objects.load_from_href(href)
-                else:
+                loadedModel = parentModel.objects.load_from_href(val, refName)
+                if loadedModel is None:
                     # Maybe the object was inlined for convenience?
                     val = parentModel.objects.load_from_object(val, request,
                         save=save)
+                else:
+                    val = loadedModel
             elif isinstance(field, (djangofields.BooleanField,
                                     djangofields.NullBooleanField)):
                 val = str(val)
@@ -361,11 +376,9 @@ class BaseManager(models.Manager):
                     objlist = [ objlist ]
             for rel_obj in objlist or []:
                 modelCls = m2m_mgr.model
-                refName = getattr(getattr(model, m2m_accessor), 'refName', 'href')
-                href = getattr(rel_obj, refName, None)
-                if href is not None:
-                    rel_mod = modelCls.objects.load_from_href(href)
-                else:
+                refName = getattr(modelCls, 'refName', 'href')
+                rel_mod = modelCls.objects.load_from_href(rel_obj, refName)
+                if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
                         rel_obj, request)
                 self.set_m2m_accessor(model, m2m_accessor, rel_mod)
@@ -413,9 +426,9 @@ class BaseManager(models.Manager):
                 raise e
             oldModel = None
         elif save:
-            oldModel, model = self.load_or_create(model)
+            oldModel, model = self.load_or_create(model, obj)
         else:
-            oldModel, dbmodel = self.load(model)
+            oldModel, dbmodel = self.load(model, obj)
             if dbmodel:
                 model = dbmodel
         # Copy the synthetic fields again - this is unfortunate
@@ -646,7 +659,7 @@ class ManagementNodeManager(SystemManager):
         return zone
 
 class SystemsManager(BaseManager):
-    def load(self, model_inst):
+    def load(self, *args, **kwargs):
         """
         Overridden because systems has no direct representation in the db - we
         need to load individual objects
@@ -1221,6 +1234,22 @@ class ForeignKey(models.ForeignKey):
             pass # text wasn't specified, that is fine
 
         super(ForeignKey, self).__init__(*args, **kwargs)
+
+class ManyToManyField(models.ManyToManyField):
+    """
+    Wrapper of ManyToManyFields
+
+    Adds the ability to specify refName, which is an attribute name whose
+    value will be an absolute url of the model.
+    """
+    def __init__(self, *args, **kwargs):
+        self.refName = 'href'
+        try:
+            self.refName = kwargs.pop('refName')
+        except KeyError:
+            pass # text wasn't specified, that is fine
+
+        super(ManyToManyField, self).__init__(*args, **kwargs)
 
 class SerializedForeignKey(ForeignKey):
     """
