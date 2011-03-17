@@ -402,6 +402,29 @@ query_set_child_update_xml = """\
 </query_set>
 """
 
+query_set_child_update_xml2 = """\
+<?xml version="1.0"?>
+<query_set id="http://127.0.0.1:8000/api/query_sets/12">
+  <name>Tagged Systems 1 and 2</name>
+  <children>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/10"/>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/11"/>
+  </children>
+</query_set>
+"""
+
+query_set_child_update_xml3 = """\
+<?xml version="1.0"?>
+<query_set id="http://127.0.0.1:8000/api/query_sets/12">
+  <name>Tagged Systems 1 and 2</name>
+  <children>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/10"/>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/11"/>
+    <query_set id="http://127.0.0.1:8000/api/query_sets/6"/>
+  </children>
+</query_set>
+"""
+
 system_4_xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <system id="http://127.0.0.1:8000/api/inventory/systems/4">

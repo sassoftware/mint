@@ -317,3 +317,24 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
         systems = self.xobjResponse('/api/query_sets/12/child')
         self.assertEquals([s.system_id for s in systems.system],
             [u'210', u'211', u'215', u'216', u'217'])
+
+        # Update the query set to just have children of 10 and 11 now
+        # Testing referencing query set children by id
+        response = self._put('/api/query_sets/12/',
+            data=testsxml.query_set_child_update_xml2,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        querySet = models.QuerySet.objects.get(pk=12)
+        self.assertEquals([q.pk for q in querySet.children.all()],
+            [10, 11])
+
+        # Add back 6 as a child
+        # Testing referencing query set children by id
+        response = self._put('/api/query_sets/12/',
+            data=testsxml.query_set_child_update_xml3,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        querySet = models.QuerySet.objects.get(pk=12)
+        self.assertEquals([q.pk for q in querySet.children.all()],
+            [6, 10, 11])
+
