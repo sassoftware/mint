@@ -2359,7 +2359,7 @@ class MigrateTo_53(SchemaMigration):
                     ON DELETE CASCADE,
                 "query_tag" TEXT NOT NULL UNIQUE
             )""")
-        schema._addTableRows(db, "querysets_querytag", "name",
+        schema._addTableRows(db, "querysets_querytag", "query_tag",
             [dict(query_set_id=allQSId, query_tag="query-tag-All Systems-1"),
              dict(query_set_id=activeQSId, query_tag="query-tag-Active Systems-2"),
              dict(query_set_id=inactiveQSId, query_tag="query-tag-Inactive Systems-3"),
@@ -2372,7 +2372,7 @@ class MigrateTo_53(SchemaMigration):
                 "inclusion_method" TEXT NOT NULL UNIQUE
             )""")
         schema._addTableRows(db, "querysets_inclusionmethod",
-            "name",
+            "inclusion_method",
             [dict(inclusion_method="chosen"),
              dict(inclusion_method="filtered")])
 
