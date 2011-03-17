@@ -126,7 +126,7 @@ platformSourceStatusXml4 = """\
 <platformSourceStatus>
   <connected>true</connected>
   <valid>false</valid>
-  <message> Repository is empty, please manually load the base slice for this platform available from http://docs.rpath.com/platforms/platform_repositories.html.</message>
+  <message> Repository is empty, please manually load the preload for this platform available from http://docs.rpath.com/platforms/platform_repositories.html.</message>
 </platformSourceStatus>
 """
 

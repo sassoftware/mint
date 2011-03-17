@@ -646,9 +646,9 @@ class Platforms(object):
         openMsg = "Repository not responding: %s."
         connectMsg = "Error connecting to repository %s: %s."
         pDefNotFoundMsg = "Platform definition not found in repository %s."
-        sliceUrl = "http://docs.rpath.com/platforms/platform_repositories.html"
+        preloadUrl = "http://docs.rpath.com/platforms/platform_repositories.html"
         pDefNotFoundMsgLocal = "Repository is empty, please manually load " + \
-            "the base slice for this platform available from %s."
+            "the preload for this platform available from %s."
         successMsg = "Available."
 
         if platform.mode == 'auto':
@@ -705,7 +705,7 @@ class Platforms(object):
         except proddef.ProductDefinitionTroveNotFoundError, e:
             local = False
             localConnected = True
-            localMessage = pDefNotFoundMsgLocal % sliceUrl
+            localMessage = pDefNotFoundMsgLocal % preloadUrl
         except Exception, e:
             local = False
             localConnected = False
