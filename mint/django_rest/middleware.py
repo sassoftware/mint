@@ -19,6 +19,7 @@ from mint import config
 from mint import logerror
 from mint import mint_error
 from mint.django_rest.rbuilder import auth
+from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.lib import mintutils
 
@@ -112,6 +113,8 @@ class LocalSetMintAdminMiddleware(object):
     def process_request(self, request):
         request._is_admin = True
         request._is_authenticated = True
+        request._authUser = rbuildermodels.Users.objects.get(pk=1)
+        request._auth = ("admin", "admin")
         return None
 
 class SetMintAuthenticatedMiddleware(object):

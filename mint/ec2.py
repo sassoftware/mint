@@ -245,7 +245,7 @@ class S3Wrapper(object):
         bucketName = bucketName.lower()
         try:
             bucket = conn.create_bucket(bucketName, policy=policy)
-        except S3CreateError:
+        except (S3CreateError, S3ResponseError):
             bucket = conn.get_bucket(bucketName)
         return bucket
 

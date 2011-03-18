@@ -49,7 +49,17 @@ class AbstractInventoryService(resource.Resource):
 
     def __call__(self, request, *args, **kw):
         self.mgr = MANAGER_CLASS(cfg=getattr(request, 'cfg', None))
+        self.setManagerAuth(request)
         return resource.Resource.__call__(self, request, *args, **kw)
+
+    def setManagerAuth(self, request):
+        username, password = request._auth
+        user = request._authUser
+        if username and password and user:
+            mintAuth = users.Authorization(username=username,
+                token=(username, password), admin=request._is_admin,
+                userId=user.userid)
+            self.mgr.setAuth(mintAuth, user)
 
     def read(self, request, *args, **kwargs):
         resp = None
@@ -412,6 +422,18 @@ class InventoryInfrastructureSystemsService(AbstractInventoryService):
 
     def get(self):
         return self.mgr.getInfrastructureSystems()
+    
+class ImageImportMetadataDescriptorService(AbstractInventoryService):
+
+    @access.anonymous
+    @return_xml
+    def rest_GET(self, request):
+        response = HttpResponse(status=200, content=self.get())
+        response['Content-Type'] = 'text/xml'
+        return response
+
+    def get(self):
+        return self.mgr.getImageImportMetadataDescriptor()
 
 class InventorySystemsSystemService(AbstractInventoryService):
     
