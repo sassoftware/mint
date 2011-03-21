@@ -196,7 +196,6 @@ class RepositoryManager(object):
 
 
 class RepositoryHandle(object):
-    preloadSuffix = 'sql'
 
     def __init__(self, manager, projectInfo):
         self._manager = weakref.ref(manager)
@@ -522,10 +521,6 @@ class RepositoryHandle(object):
         for contDir in nscfg.contentsDir.split():
             util.mkdirChain(contDir)
 
-        # Check for a preload tarball.
-        if self.preload():
-            return
-
         # Now do the driver-specfic bits and initialize the schema.
         self._create()
         db = self.getReposDB()
@@ -585,32 +580,6 @@ class RepositoryHandle(object):
         e.g. contents.
         """
         raise NotImplementedError
-
-    def preload(self):
-        """ Load contents and database from a compressed tarball on disk. """
-
-        workDir = os.path.dirname(os.path.normpath(self.contentsDirs[0]))
-        preloadPath = os.path.join(workDir, 'preload.tar.xz')
-        if not os.path.isfile(preloadPath):
-            return False
-
-        # Preloads with multiple content store dirs are not supported yet.
-        assert len(self.contentsDirs) == 1
-
-        log.info("Preloading repository %s from archive at %s", self.fqdn,
-                preloadPath)
-
-        # Extract contents and dump file.
-        util.execute("xzdec '%s' | tar -C '%s' -x" % (preloadPath, workDir))
-
-        # Restore and delete the dump file.
-        dumpPath = os.path.join(workDir, 'database.' + self.preloadSuffix)
-        self.restore(dumpPath)
-        os.unlink(dumpPath)
-
-        log.info("Preload of %s is complete", self.fqdn)
-
-        return True
 
     # Repository management
     @withNetServer
@@ -685,7 +654,6 @@ class SQLiteRepositoryHandle(RepositoryHandle):
 
 
 class PostgreSQLRepositoryHandle(RepositoryHandle):
-    preloadSuffix = 'pgtar'
 
     @cached
     def _getParams(self):
