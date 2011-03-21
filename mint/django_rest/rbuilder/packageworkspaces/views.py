@@ -1,9 +1,9 @@
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse
 
 from mint.django_rest.rbuilder import service
-from mint.django_rest.deco import requires, return_xml, access, ACCESS
+from mint.django_rest.deco import requires, return_xml #, access, ACCESS
 
-from mint.django_rest.rbuilder.packageworkspaces import models
+# from mint.django_rest.rbuilder.packageworkspaces import models
 
 class PackageWorkspaceService(service.BaseService):
     """docstring for PackageWorkspaceService"""
