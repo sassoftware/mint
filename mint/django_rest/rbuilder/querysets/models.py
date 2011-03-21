@@ -172,7 +172,7 @@ class QuerySet(modellib.XObjIdModel):
                     child=self.name)
 
             # Recurse, validating each child
-            childQuerySet._validateChildren()
+            childQuerySet._validateChildren(validatedChildren)
 
 
 class FilterEntry(modellib.XObjIdModel):
