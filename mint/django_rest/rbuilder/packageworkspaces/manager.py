@@ -42,28 +42,28 @@ class PackageWorkspaceManager(BaseManager):
         workspace.save()
         return workspace
         
-    # @exposed
-    # def updatePackageWorkspace(self, workspace_id, workspace):
-    #     """docstring for updateWorkspace"""
-    #     if not workspace:
-    #         return
-    #     w = models.PackageWorkspace.objects.get(pk=workspace_id)
-    #     field_names = w.get_field_dict().keys()
-    #     for name in field_names:
-    #         attr = getattr(workspace, name, None)
-    #         if not attr:
-    #             continue
-    #         setattr(w, name, attr)
-    #     w.save()
-    #     return w
-    
     @exposed
-    def updatePackageWorkspace(self, workspace):
+    def updatePackageWorkspace(self, workspace_id, workspace):
         """docstring for updateWorkspace"""
         if not workspace:
             return
-        workspace.save()
-        return workspace
+        w = models.PackageWorkspace.objects.get(pk=workspace_id)
+        field_names = w.get_field_dict().keys()
+        for name in field_names:
+            attr = getattr(workspace, name, None)
+            if not attr:
+                continue
+            setattr(w, name, attr)
+        w.save()
+        return w
+    
+    # @exposed
+    # def updatePackageWorkspace(self, workspace):
+    #     """docstring for updateWorkspace"""
+    #     if not workspace:
+    #         return
+    #     workspace.save()
+    #     return workspace
     
     @exposed
     def deletePackageWorkspace(self, workspace_id):

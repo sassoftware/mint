@@ -28,7 +28,7 @@ class PackageWorkspaceService(service.BaseService):
     @return_xml
     def rest_PUT(self, request, workspace_id, package_workspace):
         """docstring for rest_PUT"""
-        return self.mgr.updatePackageWorkspace(package_workspace)
+        return self.mgr.updatePackageWorkspace(workspace_id, package_workspace)
     
     # @access.admin   
     def rest_DELETE(self, request, workspace_id):

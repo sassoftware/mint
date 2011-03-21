@@ -21,6 +21,8 @@ class PackageWorkspaces(modellib.XObjModel):
                 elements=['package_workspace'])
     list_fields = ['package_workspace']
     
+    def save(self):
+        return [pw.save() for pw in self.package_workspace]
     
 class PackageWorkspace(modellib.XObjIdModel):
     XSL = "packageWorkspace.xsl"
@@ -47,6 +49,8 @@ class PackageWorkspaceFiles(modellib.XObjModel):
                 elements=['package_workspace_file'])
     list_fields = ['packageworkspacefile']
     
+    def save(self):
+        return [pwf.save() for pwf in self.package_workspace_file]
     
 class PackageWorkspaceFile(modellib.XObjIdModel):
     XSL = "packageWorkspaceFile.xsl"
