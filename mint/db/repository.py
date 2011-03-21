@@ -14,6 +14,7 @@ import logging
 import os
 import time
 import weakref
+from collections import namedtuple
 from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
@@ -687,56 +688,29 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
     preloadSuffix = 'pgtar'
 
     @cached
-    def _getName(self):
-        return self.dbTuple[1].rsplit('/')[-1]
-
-    @cached
-    def _splitParams(self):
+    def _getParams(self):
         driver, path = self.dbTuple
-        host, user = 'localhost', 'postgres'
         if driver == 'pgpool':
             port = 6432
         else:
             port = 5432
-        if '/' in path:
-            host, database = path.rsplit('/', 1)
-            if '@' in host:
-                user, host = host.split('@', 1)
-            if ':' in host:
-                host, port = host.rsplit(':', 1)
-                port = int(port)
-        else:
-            database = path
-        return host, port, user, database
+        return ConnectString.parseDBStore(path, port=port)
+
+    def _getName(self):
+        return self._getParams().database
 
     def _getControlConnection(self):
         "Return a connection to the control database."
-        driver, path = self.dbTuple
-        if '/' in path:
-            base = path.rsplit('/', 1)[0] + '/'
-        else:
-            base = ''
-
-        controlPath = base + 'postgres'
-        return dbstore.connect(controlPath, driver)
+        params = self._getParams()._replace(database='postgres')
+        return dbstore.connect(params.asDBStore(), self.driver)
 
     def _getBouncerConnection(self):
         """Return a connection to pgbouncer."""
-        driver, path = self.dbTuple
-
-        # Discard everything except the host/port
-        if '/' in path:
-            start = path.find('@')
-            end = path.find('/')
-            host = path[start + 1 : end]
-        else:
-            host = 'localhost:6432'
-
-        # Fill in the rest
+        params = self._getParams()._replace(user='pgbouncer',
+                database='pgbouncer')
         # NB: don't use the pgpool driver or it will try to interrogate
         # the admindb for schema information, which doesn't work.
-        bouncerPath = 'pgbouncer@%s/pgbouncer' % (host,)
-        return dbstore.connect(bouncerPath, 'postgresql')
+        return dbstore.connect(params.asDBStore(), 'postgresql')
 
     def _dbExists(self, controlDb):
         ccu = controlDb.cursor()
@@ -751,14 +725,14 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         This is currently used by C{restore} as well so make sure it doesn't
         create anything that would interfere with the restore process.
         """
-        user, dbName = self._splitParams()[2:]
+        params = self._getParams()
         controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
         if self._dbExists(controlDb):
             # Database exists
             log.error("PostgreSQL database %r already exists while "
-                    "creating project %r", dbName, self.shortName)
+                    "creating project %r", params.database, self.shortName)
             raise RepositoryAlreadyExists(self.shortName)
 
         extra = ''
@@ -766,7 +740,8 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             # Clone template0 when restoring from a dump since the dump already
             # has all the prefab stuff like plpgsql.
             extra += ' TEMPLATE template0'
-        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (dbName, extra))
+        ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (params.database,
+            extra))
 
     def drop(self):
         controlDb = self._getControlConnection()
@@ -816,7 +791,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                     % (path, self._getName()))
 
     def restore(self, path):
-        dbName = self._getName()
+        params = self._getParams()
         controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
@@ -825,12 +800,12 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             log.info("Restoring database dump for project %s", self.fqdn)
             self._create(empty=True)
 
-            host, port, user, database = self._splitParams()
-            if port == 6432:
+            if params.port == 6432:
                 # pg_restore 9.0 does not work with
                 # pgbouncer 1.3.1+rpath_8fc940fbca2a
-                port = 5439
-            cxnArgs = "-h '%s' -p '%s' -U postgres" % (host, port)
+                params = params._replace(port=5439)
+            cxnArgs = "-h '%s' -p '%s' -U postgres" % (params.host,
+                    params.port)
 
             if path.endswith('.pgtar') or path.endswith('.pgdump'):
                 # Dumps from postgres < 9.0 force-create plpgsql, which already
@@ -838,19 +813,39 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                 # still reference it, just as CREATE OR REPLACE. The most
                 # straightforward workaround is thus to drop it beforehand, and
                 # let pg_restore put it back.
-                util.execute("droplang %s plpgsql '%s'" % (cxnArgs, database))
+                util.execute("droplang %s plpgsql '%s'" % (cxnArgs,
+                    params.database))
 
                 util.execute("pg_restore %s --single-transaction "
-                        "-d '%s' '%s'" % (cxnArgs, database, path))
+                        "-d '%s' '%s'" % (cxnArgs, params.database, path))
             else:
                 # Flat file dumps aren't run with --single-transaction so
                 # duplicate plpgsql isn't fatal.
                 util.execute("psql %s -f '%s' '%s' >/dev/null"
-                        % (cxnArgs, path, dbName))
+                        % (cxnArgs, path, params.database))
 
             db = self.getReposDB(skipCache=True)
             db.analyze()
             db.close()
+
+
+class ConnectString(namedtuple('ConnectString', 'user host port database')):
+
+    @classmethod
+    def parseDBStore(cls, val, user='postgres', host='localhost', port=5432):
+        if '/' in val:
+            host, database = val.rsplit('/', 1)
+            if '@' in host:
+                user, host = host.split('@', 1)
+            if ':' in host:
+                host, port = host.rsplit(':', 1)
+                port = int(port)
+        else:
+            database = val
+        return cls(user, host, port, database)
+
+    def asDBStore(self):
+        return '%s@%s:%s/%s' % (self.user, self.host, self.port, self.database)
 
 
 class MultiShimServerCache(object):
