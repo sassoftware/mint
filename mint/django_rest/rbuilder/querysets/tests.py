@@ -162,6 +162,17 @@ class QuerySetFixturedTestCase(XMLTestCase):
             [u'System name 4', u'System name 7',
              u'System name 8'])
 
+        # Add system 9, this time completely by ref, to query set 5
+        response = self._post('/api/query_sets/5/chosen/',
+            data=testsxml.systems_chosen_post_xml3,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        systems = self.xobjResponse('/api/query_sets/5/chosen/')
+        self.assertEquals(len(systems.system), 4)
+        self.assertEquals([s.name for s in systems.system],
+            [u'System name 4', u'System name 7',
+             u'System name 8', u'System name 9'])
+
     def testDeleteQuerySetChosen(self):
         # Add system 7 to the query set first
         response = self._post('/api/query_sets/5/chosen/',

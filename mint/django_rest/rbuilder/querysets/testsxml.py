@@ -364,6 +364,11 @@ systems_chosen_post_xml2 = """\
 </system>
 """
 
+systems_chosen_post_xml3 = """\
+<?xml version="1.0"?>
+<system href="http://testserver/api/inventory/systems/9"/>
+"""
+
 query_set_update_xml = """\
 <?xml version="1.0"?>
 <query_set id="http://testserver/api/query_sets/4">
