@@ -538,11 +538,57 @@ class RepositoryHandle(object):
         """
         raise NotImplementedError
 
-    def restore(self, path, replaceExisting=False):
+    def restore(self, path, replaceExisting=False, callback=None):
         """
         Load the repository database from the backup at C{path}.
         """
         raise NotImplementedError
+
+    def restoreBundle(self, path, replaceExisting=False, callback=None):
+        """Load a repository bundle (uncompressed tar with contents and
+        database dump).
+        """
+        if not callback:
+            callback = DatabaseRestoreCallback()
+        if len(self.contentsDirs) != 1:
+            raise RuntimeError("Cannot restore bundle when multiple contents "
+                    "stores are in use.")
+        workDir = os.path.dirname(os.path.normpath(self.contentsDirs[0]))
+        callback.unpackStarted(self.fqdn)
+        util.mkdirChain(workDir)
+        util.execute("tar -C '%s' -xf '%s'" % (workDir, path))
+
+        try:
+            # Parse and verify metadata
+            mdPath = os.path.join(workDir, 'metadata')
+            metadata = {}
+            for line in open(mdPath):
+                key, value = line.rstrip().split(None, 1)
+                metadata[key] = value
+
+            if self.driver == 'pgpool':
+                expectType = 'postgresql'
+            else:
+                expectType = self.driver
+            if metadata['type'] != expectType:
+                raise RuntimeError("Wrong database type in bundle -- expected %s "
+                        "but got %s" % (expectType, metadata['type']))
+
+            # Restore database dump
+            dumpPath = os.path.join(workDir, metadata['database'])
+            if not os.path.exists(dumpPath):
+                raise RuntimeError("Invalid repository bundle -- %s is missing." %
+                        (dumpPath,))
+            self.restore(dumpPath, replaceExisting=replaceExisting,
+                    callback=callback)
+
+        finally:
+            # Clean up
+            try:
+                util.removeIfExists(mdPath)
+                util.removeIfExists(dumpPath)
+            except:
+                log.exception("Error cleaning up temporary restore files:")
 
     def destroy(self):
         """
@@ -630,6 +676,7 @@ class RepositoryHandle(object):
 
 
 class SQLiteRepositoryHandle(RepositoryHandle):
+
     @property
     def _dbPath(self):
         return self.dbTuple[1]
@@ -642,7 +689,7 @@ class SQLiteRepositoryHandle(RepositoryHandle):
         if os.path.exists(self._dbPath):
             util.execute("sqlite3 '%s' .dump > '%s'" % (self._dbPath, path))
 
-    def restore(self, path, replaceExisting=False):
+    def restore(self, path, replaceExisting=False, callback=None):
         if not os.path.exists(path):
             return
         if os.path.exists(self._dbPath) and not replaceExisting:
@@ -889,6 +936,9 @@ class ConnectString(namedtuple('ConnectString', 'user host port database')):
 
 
 class DatabaseRestoreCallback(callbacks.Callback):
+
+    def unpackStarted(self, fqdn):
+        self._info("Unpacking contents for project %s", fqdn)
 
     def restoreStarted(self, fqdn):
         self._info("Restoring database dump for project %s", fqdn)
