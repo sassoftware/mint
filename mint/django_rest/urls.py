@@ -15,6 +15,7 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
+from mint.django_rest.rbuilder.packageworkspaces import views as pkgworkspaceviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -250,6 +251,14 @@ urlpatterns = patterns('',
     url(r'^api/changelogs/(?P<change_log_id>\d+)/?$',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
+
+    # REST replacements for XMLRPC
+    url(r'^api/package_workspaces/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspaces'),
+    url(r'^api/package_workspaces/(?P<workspace_id>[a-zA-Z0-9]+)/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspace')
 
 )
 
