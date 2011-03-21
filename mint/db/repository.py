@@ -15,6 +15,7 @@ import os
 import time
 import weakref
 from collections import namedtuple
+from conary import callbacks
 from conary import conarycfg
 from conary import conaryclient
 from conary import dbstore
@@ -774,12 +775,14 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             util.execute("pg_dump -U postgres -p 5439 -f '%s' '%s'"
                     % (path, params.database))
 
-    def restore(self, path, replaceExisting=False):
+    def restore(self, path, replaceExisting=False, callback=None):
         params = self._getParams()
         controlDb = self._getControlConnection()
         if self._dbExists(controlDb, params.database) and not replaceExisting:
             raise RuntimeError("Repository database %s already exists" %
                     (params.database,))
+        if not callback:
+            callback = DatabaseRestoreCallback()
 
         # Assign a temporary database name for the restore process.
         tmpName = '_tmp_%s_%s' % (params.database, os.urandom(6).encode('hex'))
@@ -790,24 +793,24 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             tmpParams = tmpParams._replace(port=5439)
 
         # Restore into a temporary database
-        log.info("Restoring database dump for project %s into database %s",
-                self.fqdn, tmpName)
         self._create(empty=True, dbName=tmpName)
+        callback.restoreStarted(self.fqdn)
 
         try:
-            self._restore(path, params, tmpParams, controlDb, replaceExisting)
+            self._restore(path, params, tmpParams, controlDb, replaceExisting,
+                    callback)
         except:
-            saved = util.SavedException()
-            log.error("Error restoring database %s, attempting to clean up",
-                    params.database)
+            failure = util.SavedException()
+            callback.restoreFailed(self.fqdn, failure)
             try:
                 if self._dbExists(controlDb, tmpParams.database):
                     self.drop(tmpParams.database)
             except:
                 log.exception("Failed to drop temporary database %s:", tmpName)
-            saved.throw()
+            failure.throw()
 
-    def _restore(self, path, params, tmpParams, controlDb, replaceExisting):
+    def _restore(self, path, params, tmpParams, controlDb, replaceExisting,
+            callback):
         tmpName = tmpParams.database
         cxnArgs = "-h '%s' -p '%s' -U postgres" % (tmpParams.host,
                 tmpParams.port)
@@ -844,9 +847,7 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             # much faster.
             replacedName = '_removed_%s_%s' % (params.database,
                     os.urandom(6).encode('hex'))
-            log.info("Renaming old database %s to %s, this will terminate all "
-                    "active connections to that database.", params.database,
-                    replacedName)
+            callback.restoreRenaming(self.fqdn)
             bouncerDb = self._getBouncerConnection()
             self._doBounce(bouncerDb, "KILL " + params.database)
             ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' %
@@ -854,18 +855,18 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
 
         ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName,
             params.database))
-        log.info("Restore of database %s complete", params.database)
+        callback.restoreCompleted(self.fqdn)
 
+        callback.cleanupStarted(self.fqdn)
         if replacedName:
             self._doBounce(bouncerDb, "RESUME " + params.database)
             try:
                 bouncerDb.close()
-                log.info("Dropping old database %s", replacedName)
                 ccu.execute('DROP DATABASE "%s"' % (replacedName,))
-                log.info("Old database %s dropped", replacedName)
             except:
                 log.exception("Failed to drop old database %s; continuing:",
                         replacedName)
+        callback.cleanupCompleted(self.fqdn)
 
 
 class ConnectString(namedtuple('ConnectString', 'user host port database')):
@@ -885,6 +886,34 @@ class ConnectString(namedtuple('ConnectString', 'user host port database')):
 
     def asDBStore(self):
         return '%s@%s:%s/%s' % (self.user, self.host, self.port, self.database)
+
+
+class DatabaseRestoreCallback(callbacks.Callback):
+
+    def restoreStarted(self, fqdn):
+        self._info("Restoring database dump for project %s", fqdn)
+
+    def restoreFailed(self, fqdn, failure):
+        self._error("Error restoring project %s, attempting to clean up", fqdn)
+
+    def restoreRenaming(self, fqdn):
+        self._info("Replacing database for project %s; this will terminate "
+                "any active connections to that repository.", fqdn)
+
+    def restoreCompleted(self, fqdn):
+        self._info("Finished restoring database for project %s", fqdn)
+
+    def cleanupStarted(self, fqdn):
+        self._info("Cleaning up old database for project %s", fqdn)
+
+    def cleanupCompleted(self, fqdn):
+        self._info("Finished cleanup of project %s", fqdn)
+
+    def _info(self, message, *args):
+        log.info(message, *args)
+
+    def _error(self, message, *args):
+        log.error(message, *args)
 
 
 class MultiShimServerCache(object):
