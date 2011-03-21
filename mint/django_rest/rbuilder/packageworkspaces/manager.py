@@ -70,5 +70,3 @@ class PackageWorkspaceManager(BaseManager):
         """docstring for deletePackageWorkspace"""
         workspace = models.PackageWorkspace.objects.get(pk=workspace_id)
         workspace.delete()
-        
-        
