@@ -642,9 +642,14 @@ class SQLiteRepositoryHandle(RepositoryHandle):
             util.execute("sqlite3 '%s' .dump > '%s'" % (self._dbPath, path))
 
     def restore(self, path):
-        self.drop()
-        if os.path.exists(path):
-            util.execute("sqlite3 '%s' < '%s'" % (self._dbPath, path))
+        if not os.path.exists(path):
+            return
+        tempFile = util.AtomicFile(self._dbPath)
+        util.execute("sqlite3 '%s' < '%s'" % (tempFile.name, path))
+        # This is racy, but the risk is crashing the old process, not
+        # corrupting the new one.
+        util.removeIfExists(self._dbPath + '.journal')
+        tempFile.commit()
 
     def drop(self):
         if os.path.exists(self._dbPath):
