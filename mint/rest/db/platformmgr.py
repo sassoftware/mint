@@ -21,6 +21,7 @@ from conary.repository import filecontainer
 
 from mint import jobstatus
 from mint import mint_error
+from mint.db import repository
 from mint.lib import persistentcache
 from mint.rest import errors
 from mint.rest.api import models
@@ -33,22 +34,14 @@ from rpath_job import api1 as rpath_job
 log = logging.getLogger(__name__)
 
 
-class PlatformLoadCallback(callbacks.ChangesetCallback):
-    def __init__(self, db, platformId, job, totalKB, *args, **kw):
+class PlatformLoadCallback(repository.DatabaseRestoreCallback):
+    def __init__(self, db, job, totalKB, *args, **kw):
         self.db = db
-        self.platformId = platformId
         self.job = job
-        self.totalKB = totalKB
-        self.prefix = ''
         callbacks.ChangesetCallback.__init__(self, *args, **kw)
         
-    def _message(self, txt, usePrefix=True):
-        if usePrefix:
-            message = self.prefix + txt
-        else:
-            message = txt
-
-        self.job.message = message
+    def _message(self, txt):
+        self.job.message = txt
 
     def done(self):
         self.job.status = self.job.STATUS_COMPLETED
@@ -72,24 +65,6 @@ class PlatformLoadCallback(callbacks.ChangesetCallback):
                    % (msg, got/1024/1024, totalMsg, totalPct, rate/1024))
         self.update()                      
 
-    def sendingChangeset(self, got, need):
-        if need != 0:
-            self._message("Committing changeset "
-                          "(%dMB (%d%%) of %dMB at %dKB/sec)..."
-                          % (got/1024/1024, (got*100)/need, need/1024/1024, self.rate/1024))
-        else:
-            self._message("Committing changeset "
-                          "(%dKB at %dKB/sec)..." % (got/1024/1024, self.rate/1024))
-
-    def creatingDatabaseTransaction(self, troveNum, troveCount):
-        """
-        @see: callbacks.UpdateCallback.creatingDatabaseTransaction
-        """
-        self._message("Creating database transaction (%d of %d)" %
-		      (troveNum, troveCount))
-
-    def committingTransaction(self):
-        self._message("Committing database transaction")
 
 class ContentSourceTypes(object):
     def __init__(self, db, cfg, mgr):
@@ -411,39 +386,31 @@ class Platforms(object):
         # Open the job and commit after each state change
         job = self.jobStore.get(jobId, commitAfterChange = True)
         job.setFields([('pid', os.getpid()), ('status', job.STATUS_RUNNING) ])
-        platformId = platform.platformId
-        callback = PlatformLoadCallback(self.db, platformId, job, None)
-        # Save a reference to the callback so that we have access to it in the
-        # _load_error method.
-        self.callback = callback
-
 
         if inFile.headers.has_key('content-length'):
             totalKB = int(inFile.headers['content-length'])
-            callback.totalKB = totalKB
+        else:
+            totalKB = None
+
+        callback = PlatformLoadCallback(self.db, job, totalKB)
+        # Save a reference to the callback so that we have access to it in the
+        # _load_error method.
+        self.callback = callback
         
         outFile = open(outFilePath, 'w')
         total = util.copyfileobj(inFile, outFile,
                                  callback=callback.downloading)
         outFile.close()
 
-        callback._message('Download Complete. Figuring out what to commit..')
-        try:
-            cs = changeset.ChangeSetFromFile(outFilePath) 
-        except filecontainer.BadContainer:
-            raise Exception("%s is not a valid conary changeset." % uri)
-        removedTroves = self._filterChangeSet(cs, platform.label)
-        needsCommit = cs.removeCommitted(repos)
+        callback._message('Download Complete. Loading preload...')
+        repoHandle = \
+            self.db.productMgr.reposMgr.reposManager.getRepositoryFromFQDN(
+                platform.repositoryHostname)
+        repoHandle.restoreBundle(outFilePath)
+        callback._message('Load completed.')
+        callback.done()
 
-        if needsCommit:
-            repos.commitChangeSet(cs, callback=callback, mirror=True)
-            callback._message('Commit completed.')
-        else:
-            callback._message('Nothing needs to be committed. Local Repository '
-                              'is up to date.')
-        callback.done()            
-
-        return 
+        return
 
     def _filterChangeSet(self, cs, label):
         fqdn = label.split('@')[0]
