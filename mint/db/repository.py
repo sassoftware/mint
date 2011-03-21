@@ -664,9 +664,6 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             port = 5432
         return ConnectString.parseDBStore(path, port=port)
 
-    def _getName(self):
-        return self._getParams().database
-
     def _getControlConnection(self):
         "Return a connection to the control database."
         params = self._getParams()._replace(database='postgres')
@@ -680,13 +677,13 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         # the admindb for schema information, which doesn't work.
         return dbstore.connect(params.asDBStore(), 'postgresql')
 
-    def _dbExists(self, controlDb):
+    def _dbExists(self, controlDb, name):
         ccu = controlDb.cursor()
         ccu.execute("""SELECT COUNT(*) FROM pg_catalog.pg_database
-                WHERE datname = ?""", self._getName())
+                WHERE datname = ?""", name)
         return bool(ccu.fetchone()[0])
 
-    def _create(self, empty=False):
+    def _create(self, empty=False, dbName=None):
         """
         PostgreSQL-specific repository creation.
 
@@ -694,10 +691,12 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         create anything that would interfere with the restore process.
         """
         params = self._getParams()
+        if dbName:
+            params = params._replace(database=dbName)
         controlDb = self._getControlConnection()
         ccu = controlDb.cursor()
 
-        if self._dbExists(controlDb):
+        if self._dbExists(controlDb, params.database):
             # Database exists
             log.error("PostgreSQL database %r already exists while "
                     "creating project %r", params.database, self.shortName)
@@ -711,15 +710,17 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (params.database,
             extra))
 
-    def drop(self):
+    def drop(self, dbName=None):
+        params = self._getParams()
+        if dbName:
+            params = params._replace(database=dbName)
         controlDb = self._getControlConnection()
 
-        if not self._dbExists(controlDb):
+        if not self._dbExists(controlDb, params.database):
             return
 
-        name = self._getName()
         bcu = None
-        if ':6432/' in self.dbTuple[1]:
+        if params.port == 6432:
             # pgbouncer normally holds idle connections for 45 seconds. Our
             # version supports a custom KILL command that terminates all open
             # client and server connections to that database and prevents new
@@ -729,13 +730,13 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             # pgbouncer's admin interface.
             bouncerDb = self._getBouncerConnection()
             bcu = bouncerDb.cursor()
-            bcu._cursor._source.query("KILL " + name)
+            bcu._cursor._source.query("KILL " + params.database)
 
         try:
             ccu = controlDb.cursor()
             for n in range(5):
                 try:
-                    ccu.execute("DROP DATABASE %s" % (name,))
+                    ccu.execute("DROP DATABASE %s" % (params.database,))
                 except CursorError, err:
                     if 'is being accessed by other users' not in err.msg:
                         raise
@@ -744,19 +745,21 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                     break
             else:
                 log.error("Could not drop repository database %r because a "
-                        "connection is still open -- continuing.", name)
+                        "connection is still open -- continuing.",
+                        params.database)
 
         finally:
             if bcu:
-                bcu._cursor._source.query("RESUME " + name)
+                bcu._cursor._source.query("RESUME " + params.database)
 
     def dump(self, path):
+        params = self._getParams()
         controlDb = self._getControlConnection()
 
-        if self._dbExists(controlDb):
+        if self._dbExists(controlDb, params.database):
             # TODO: genericize
             util.execute("pg_dump -U postgres -p 5439 -f '%s' '%s'"
-                    % (path, self._getName()))
+                    % (path, params.database))
 
     def restore(self, path):
         params = self._getParams()
