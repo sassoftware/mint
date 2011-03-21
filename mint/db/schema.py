@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(52, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(52, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -715,6 +715,16 @@ def _createTargets(db):
                 UNIQUE ( targetId, userId )
             ) %(TABLEOPTS)s""")
 
+    changed |= createTable(db, 'TargetImagesDeployed', """
+            CREATE TABLE TargetImagesDeployed (
+                id              %(PRIMARYKEY)s,
+                targetId        integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                fileId          integer             NOT NULL
+                    REFERENCES BuildFiles ON DELETE CASCADE,
+                targetImageId   varchar(128)        NOT NULL
+            ) %(TABLEOPTS)s""")
+
     return changed
 
 def _createPlatforms(db):
@@ -1104,7 +1114,7 @@ def _createInventorySchema(db, cfg):
                 "target_system_description" varchar(1024),
                 "target_system_state" varchar(64),
                 "registration_date" timestamp with time zone,
-                "generated_uuid" varchar(64) UNIQUE,
+                "generated_uuid" varchar(64),
                 "local_uuid" varchar(64),
                 "ssl_client_certificate" varchar(8092),
                 "ssl_client_key" varchar(8092),

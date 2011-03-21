@@ -116,7 +116,11 @@ def readonly(fn, self, *args, **kw):
     inTransaction = self.inTransaction(default=False)
     rv = fn(self, *args, **kw)
     if not inTransaction and self.inTransaction(default=False):
-        raise RuntimeError('Database modified unexpectedly after %s.' % fn.func_name)
+        #raise RuntimeError('Database modified unexpectedly after %s.' % fn.func_name)
+        # We used to complain loudly if the state had modified, until we
+        # started to use temporary tables. So now we just roll back.
+        # RBL-8111
+        self.rollback()
     return rv
 
 class Database(DBInterface):
@@ -715,13 +719,16 @@ class Database(DBInterface):
     @commitafter
     def createImage(self, hostname, image, buildData=None):
         self.auth.requireProductDeveloper(hostname)
-        imageId =  self.imageMgr.createImage(hostname, image.imageType, 
-                                            image.name,  
-                                            image.getNameVersionFlavor(), 
-                                            buildData)
+        imageId =  self.imageMgr.createImage(hostname, image, buildData)
         image.imageId = imageId
         return imageId
 
+    @commitafter
+    def uploadImageFiles(self, hostname, image, outputToken=None):
+        self.auth.requireProductDeveloper(hostname)
+        self.imageMgr.uploadImageFiles(hostname, image,
+            outputToken=outputToken)
+        return image
 
     @commitafter
     def createUser(self, username, password, fullName, email, 

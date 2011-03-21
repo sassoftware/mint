@@ -223,6 +223,7 @@ class BuildsTable(database.KeyedTable):
                     p.name AS productName,
                     p.description AS productDescription,
                     b.name AS buildName,
+                    b.troveFlavor AS troveFlavor,
                     COALESCE(b.description,'') AS buildDescription,
                     COALESCE(pr.timePublished,0) != 0 AS isPublished,
                     p.hidden AS isPrivate,
@@ -249,7 +250,7 @@ class BuildsTable(database.KeyedTable):
         keys = ['projectId', 'hostname', 'buildId', 'productName',
                 'productDescription', 'buildName', 'buildDescription',
                 'isPublished', 'isPrivate', 'createdBy', 'role',
-                'awsCredentials', 'amiId',
+                'awsCredentials', 'amiId', 'troveFlavor',
                 ]
 
         cu.execute(query, requestingUserId, imageType)
@@ -269,6 +270,10 @@ class BuildsTable(database.KeyedTable):
                         value = value.get('accountId')
                     # Keep the old interface for getAllBuildsByType
                     key = 'awsAccountNumber'
+                elif key == 'troveFlavor':
+                    key = 'architecture'
+                    if value:
+                        value = helperfuncs.getArchFromFlavor(value)
                 if value is not None:
                     outRow[key] = value
             assert not row.fields

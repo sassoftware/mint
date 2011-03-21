@@ -2486,6 +2486,22 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(system.current_state.name,
             p['currentState'])
 
+    def testAddSystemsSameGeneratedUuid(self):
+        # RBL-8211 - get rid of unnecessary unique constraint on generated_uuid
+        guuid = "some-uuid"
+        luuid1 = "localuuid001"
+        luuid2 = "localuuid002"
+        system1 = self.newSystem(local_uuid=luuid1, generated_uuid=guuid)
+        system1.save()
+        system2 = self.newSystem(local_uuid=luuid2, generated_uuid=guuid)
+        system2.save()
+
+        system1 = models.System.objects.get(local_uuid=luuid1,
+            generated_uuid=guuid)
+        system2 = models.System.objects.get(local_uuid=luuid2,
+            generated_uuid=guuid)
+        self.failIf(system1.pk == system2.pk)
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",
@@ -4262,9 +4278,30 @@ class TargetSystemImportTest(XMLTestCase):
                 for x in user2.targetusercredentials_set.all() ])
         self.failUnlessEqual(system.managing_zone.name,
             models.Zone.LOCAL_ZONE)
+        self.failUnlessEqual(system.target_system_name, params['target_system_name'])
         self.failUnlessEqual(system.name, params['target_system_name'])
+        self.failUnlessEqual(system.target_system_description,
+            params['target_system_description'])
         self.failUnlessEqual(system.description,
             params['target_system_description'])
+
+        # Another system that specifies a name and description
+        params = dict((x, y.replace('001', '002'))
+            for (x, y) in params.items())
+        params.update(name="system-name-002",
+            description="system-description-002")
+        system = self.newSystem(**params)
+
+        system = self.mgr.addLaunchedSystem(system,
+            dnsName=dnsName,
+            targetName=self.tgt2.targetname,
+            targetType=self.tgt2.targettype)
+
+        self.failUnlessEqual(system.target_system_name, params['target_system_name'])
+        self.failUnlessEqual(system.name, params['name'])
+        self.failUnlessEqual(system.target_system_description,
+            params['target_system_description'])
+        self.failUnlessEqual(system.description, params['description'])
 
 class BaseJobsTest(XMLTestCase):
     def _mock(self):

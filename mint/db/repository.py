@@ -176,7 +176,7 @@ class RepositoryManager(object):
             entitlements.addEntitlement('*', entitlement)
 
         cache = netclient.ServerCache(repMap, userMap,
-                entitlements=entitlements, proxies=self.cfg.proxy)
+                entitlements=entitlements, proxyMap=self.cfg.getProxyMap())
         return cache[fqdn]
 
     def getRepos(self, userId=None):
@@ -860,9 +860,12 @@ class MultiShimServerCache(object):
     rBuilder, and will use the credentials in the database for any external
     projects.
     """
-    def __init__(self, manager, userId=None):
+    def __init__(self, manager, userId=None, proxyMap=None):
         self.manager = weakref.ref(manager)
         self.userId = userId
+        # NetworkRepositoryClient needs this.
+        self.proxyMap = proxyMap
+
         self.cache = {}
 
     @staticmethod
@@ -899,7 +902,8 @@ class MultiShimNetClient(shimclient.ShimNetClient):
     def __init__(self, manager, userId=None):
         repMap = conarycfg.RepoMap()
         userMap = conarycfg.UserInformation()
+        proxyMap = manager.cfg.getProxyMap()
         netclient.NetworkRepositoryClient.__init__(self, repMap, userMap,
-                proxy=manager.cfg.proxy)
+                proxyMap=proxyMap)
 
-        self.c = MultiShimServerCache(manager, userId)
+        self.c = MultiShimServerCache(manager, userId, proxyMap=proxyMap)

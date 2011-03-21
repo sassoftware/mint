@@ -362,3 +362,13 @@ class KeyedTable(DatabaseTable):
         for r in cu.fetchall():
             ids.append(r)
         return ids, count
+
+def createTemporaryTable(db, tableName, tableColumns):
+    cu = db.cursor()
+    if tableName in db.tempTables:
+        cu.execute("DELETE FROM %s" % tableName)
+    else:
+        sql = "CREATE TEMPORARY TABLE %s (%s)" % (
+            tableName, ','.join(tableColumns))
+        cu.execute(sql)
+        db.tempTables[tableName] = True

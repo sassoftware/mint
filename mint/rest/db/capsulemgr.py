@@ -137,7 +137,7 @@ class CapsuleManager(manager.Manager):
                 cfg.configLine("sourceYum %s %s" % (dsn, url))
 
         # Copy proxy information
-        cfg.proxy = self.db.cfg.proxy.copy()
+        cfg['proxyMap'] = self.db.cfg.getProxyMap()
 
         util.mkdirChain(capsuleDataDir)
         return cfg

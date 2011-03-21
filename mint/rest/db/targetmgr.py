@@ -14,6 +14,7 @@ from mint.rest.db import manager
 log = logging.getLogger(__name__)
 
 class TargetManager(manager.Manager):
+    TargetImportScriptPath = '/usr/share/rbuilder/scripts/target-systems-import'
     def getUserId(self, username):
         cu = self.db.cursor()
         cu.execute("SELECT userId FROM Users WHERE username=? AND active=1",
@@ -152,8 +153,32 @@ class TargetManager(manager.Manager):
 
     def importTargetSystems(self, targetType, targetName):
         log.info('Importing systems for target %s.' % targetName)
-        cmd = ['/usr/share/rbuilder/scripts/target-systems-import']
+        cmd = [ self.TargetImportScriptPath ]
         subprocess.Popen(cmd)
+
+    def linkTargetImageToImage(self, targetType, targetName, fileId,
+            targetImageId):
+        targetId = self.getTargetId(targetType, targetName)
+        if targetId is None:
+            raise mint_error.TargetMissing(
+                    "Target named '%s' of type '%s' does not exist",
+                    targetName, targetType)
+        return self._linkTargetImageToImage(targetId, fileId, targetImageId)
+
+    def _linkTargetImageToImage(self, targetId, fileId, targetImageId):
+        cu = self.db.cursor()
+        # XXX Make sure we don't insert duplicates - but this query angers
+        # the postgres bindings
+        ("""INSERT INTO TargetImagesDeployed
+            (targetId, fileId, targetImageId)
+            SELECT ?, ?, ?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM TargetImagesDeployed
+                    WHERE targetId = ? AND fileId = ? AND targetImageId = ?)""",
+            targetId, fileId, targetImageId, targetId, fileId, targetImageId)
+        cu.execute("""INSERT INTO TargetImagesDeployed
+            (targetId, fileId, targetImageId)
+            VALUES (?, ?, ?)""", targetId, fileId, targetImageId)
 
     def setTargetCredentialsForUser(self, targetType, targetName, userName,
                                     credentials):

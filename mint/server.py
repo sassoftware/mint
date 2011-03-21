@@ -55,7 +55,7 @@ from mint import urltypes
 from mint.db import repository
 from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
-from mint.helperfuncs import toDatabaseTimestamp, fromDatabaseTimestamp, getUrlHost
+from mint.helperfuncs import getUrlHost
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 
@@ -66,13 +66,12 @@ from conary import versions
 from conary.conaryclient import filetypes
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
-from conary.lib.cfgtypes import CfgEnvironmentError
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound, RoleNotFound
+from conary.lib.http import http_error
+from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
 from conary import errors as conary_errors
 
@@ -723,24 +722,6 @@ class MintServer(object):
         from mint.lib import proxiedtransport
         mirrorUser = ''
         try:
-            # Make sure that we deal with any HTTP proxies
-            proxy_host = self.cfg.proxy.get('https') or \
-                         self.cfg.proxy.get('http')
-
-            if proxy_host and proxy_host.startswith('https'):
-                proxy_proto_https = True
-            else:
-                proxy_proto_https = False 
-
-            # Set up a transport object to override the default if we're using
-            # a proxy.
-            if proxy_host:
-                conaryTransport = proxiedtransport.ProxiedTransport(
-                                    https=proxy_proto_https,
-                                    proxies=self.cfg.proxy)
-            else:
-                conaryTransport = None
-
             # Connect to the rUS via XML-RPC
             urlhostname = hostname
             if ':' not in urlhostname:
@@ -752,7 +733,10 @@ class MintServer(object):
                 protocol = 'http'
             url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
                     (protocol, adminUser, adminPassword, urlhostname)
-            sp = xmlrpclib.ServerProxy(url, transport=conaryTransport)
+            transport = proxiedtransport.ProxiedTransport(
+                    https=(protocol == 'https'),
+                    proxyMap=self.cfg.getProxyMap())
+            sp = util.ServerProxy(url, transport=transport)
 
             mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
                     (self.cfg.hostName, self.cfg.siteDomainName), hostname)
@@ -769,12 +753,12 @@ class MintServer(object):
                     sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
 
             self._configureSputnik(sp, urlhostname)
-        except xmlrpclib.ProtocolError, e:
+        except http_error.ResponseError, e:
             if e.errcode == 403:
                 raise mint_error.UpdateServiceAuthError(urlhostname)
             else:
                 raise mint_error.UpdateServiceConnectionFailed(urlhostname,
-                        "%d %s" % (e.errcode, e.errmsg))
+                        "%d %s" % (e.errcode, e.reason))
         except socket.error, e:
             raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
                                                            str(e[1]))
@@ -2635,8 +2619,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # zone will fail to contact the rBuilder. Eventually SLP will work out
         # of the box and this won't be necessary.
         rbuilder_ip = procutil.getNetName()
-        if rbuilder_ip != 'localhost':
-            r['inventory_node'] = rbuilder_ip + ':8443'
+        if rbuilder_ip == 'localhost':
+            rbuilder_ip = self.cfg.siteHost
+        r['inventory_node'] = rbuilder_ip + ':8443'
 
         # Serialize AMI configuration data (if AMI build)
         if buildDict.get('buildType', buildtypes.STUB_IMAGE) == buildtypes.AMI:
@@ -2668,8 +2653,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             r['amiData'] = amiData
 
-        r['outputUrl'] = 'http://%s.%s%s' % \
-            (self.cfg.hostName, self.cfg.siteDomainName, self.cfg.basePath)
+        r['outputUrl'] = 'http://%s%s' % (rbuilder_ip, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
@@ -3091,14 +3075,26 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.builds.update(buildId, status=jobstatus.FINISHED,
                     statusMessage="Job Finished")
             return '0' * 32
-        elif buildType in buildtypes.windowsBuildTypes:
-            return self.startWindowsImageJob(buildId)
         else:
-            jobData = self.serializeBuild(buildId)
             try:
+                jobData = self.serializeBuild(buildId)
+                if buildType in buildtypes.windowsBuildTypes:
+                    return self.startWindowsImageJob(buildId, jobData)
+
+                # Check the product definition to see if this is based on a
+                # Windows platform.
+                if buildDict['productVersionId'] is not None:
+                    pd = self._getProductDefinitionForVersionObj(
+                            buildDict['productVersionId'])
+                    tags = pd.getPlatformInformation(
+                            ).platformClassifier.tags.split()
+                    if 'windows' in tags:
+                        return self.startWindowsImageJob(buildId, jobData)
+
                 client = self._getMcpClient()
                 uuid = client.new_job(client.LOCAL_RBUILDER, jobData)
-                self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
+                self.buildData.setDataValue(buildId, 'uuid', uuid,
+                        data.RDT_STRING)
                 return uuid
             except:
                 log.exception("Failed to start image job:")
@@ -3106,9 +3102,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         statusMessage="Failed to start image job - check logs")
                 raise
 
-    def startWindowsImageJob(self, buildId):
+    def startWindowsImageJob(self, buildId, jobData):
         """Direct Windows image builds to rMake 3."""
-        jobData = self.serializeBuild(buildId)
         cli = wig_client.WigClient(self._getRmakeClient())
         job_uuid, job = cli.createJob(jobData, subscribe=False)
         log.info("Created Windows image job, UUID %s", job_uuid)

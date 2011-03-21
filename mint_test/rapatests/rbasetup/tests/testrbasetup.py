@@ -27,6 +27,8 @@ from mint import mint_error
 from mint import shimclient
 from mint import rmake_setup
 
+from mint_test import mint_rephelp
+
 MINT_CONFIG_ROOT="""
 # A file that approxiamates what the setup plugin will read.
 
@@ -173,6 +175,8 @@ class rBASetupTest(raatest.rAATest):
         raaFramework = webPluginTest()
         raaFramework.pseudoroot = raa.web.getWebRoot().rbasetup.rBASetup
         self.rbasetupweb = raa.web.getWebRoot().rbasetup.rBASetup
+        self.rbasetupweb.validateNewEntitlement = lambda *args, **kwargs: {}
+        self.rbasetupweb.setNewEntitlement = lambda *args, **kwargs: {'errors':''}
         self.root = raaFramework.pseudoroot
         self.rbasetupweb.server = self.rbasetupweb
         _ignored, self.initialConfigurableOptions = rbasetup_lib.getRBAConfiguration()
@@ -190,6 +194,7 @@ class rBASetupTest(raatest.rAATest):
         config.RBUILDER_GENERATED_CONFIG = self.oldGeneratedConfig
 
         raatest.rAATest.tearDown(self)
+        mint_rephelp.MintDatabaseHelper.tearDownLogging()
 
     def test_web_Index(self):
         """
@@ -250,7 +255,8 @@ class rBASetupTest(raatest.rAATest):
                              externalPasswordURL="",
                              authCacheTimeout="",
                              configured="0",
-                             allowNamesaceChange="1")
+                             allowNamesaceChange="1",
+                             entitlementKey="testentitlementkey")
 
         oldBackendCall = self.root.callBackend
         try:
@@ -360,6 +366,7 @@ class rBASetupTest(raatest.rAATest):
         # return userId = 1 when registerNewUser called
         self.mockShimMintClient().registerNewUser._mock.setDefaultReturn(1)
 
+        self.mockOSSystem._mock.setReturn(0, "/sbin/service httpd graceful")
         # Call the backend function
         ret = raapluginstest.backendCaller(self.rbasetupsrv.updateRBAConfig,
                 newValues)
@@ -469,6 +476,10 @@ class rBASetupTest(raatest.rAATest):
 
         self.mockShimMintClient().getProjectByHostname._mock.raiseErrorOnAccess(mint_error.ItemNotFound)
         self.mockShimMintClient().newProject._mock.setDefaultReturn(1)
+
+        def mockPipe():
+            return os.open("/dev/null", os.O_RDONLY), os.open("/dev/null", os.O_RDWR)
+        self.mock(os, "pipe", mockPipe)
 
         # Call the darn thing
         ret = self.rbasetupsrv._setupRMake(cfg)

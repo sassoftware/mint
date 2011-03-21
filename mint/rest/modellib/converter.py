@@ -49,7 +49,15 @@ class Converter(object):
                 attrName = field.displayName
             else:
                 attrName = fieldName
-            value = accessMethod(object, attrName, None)
+            if field.isText:
+                # This is a text node. Copy data from the text field
+                xobjMeta = getattr(object, '_xobj', None)
+                if xobjMeta:
+                    value = xobjMeta.text
+                else:
+                    value = None
+            else:
+                value = accessMethod(object, attrName, None)
             childModel = field.getModel()
             yield fieldName, field, value, childModel
 

@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import copy
 from cStringIO import StringIO
 import os
-import weakref
+import sys
 
 from mint import helperfuncs
 from mint import mint_error
@@ -22,15 +20,9 @@ from mint.rest.db import manager
 from conary import changelog
 from conary import conarycfg
 from conary import conaryclient
-from conary import dbstore
 from conary.conaryclient import filetypes
-from conary.dbstore import sqlerrors
-from conary.deps import deps
-from conary.lib import util
 from conary.repository import errors as reposerrors
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver
-from conary.server import schema
 
 _cachedCfg = None
 
@@ -313,10 +305,16 @@ class RepositoryManager(manager.Manager):
                 entMap.append((host, entitlement))
         return userMap, entMap
 
+    RegularFile = filetypes.RegularFile
+
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
-                          upstreamVersion, streamMap, changeLogMessage):
+                          upstreamVersion, streamMap, changeLogMessage,
+                          factoryName=None, admin=False, metadata=None):
         # Get repository + client
-        client = self.getUserClient()
+        if admin:
+            client = self.getAdminClient(write=True)
+        else:
+            client = self.getUserClient()
 
         # Sanitize input
         if ':' not in trovename:
@@ -330,17 +328,23 @@ class RepositoryManager(manager.Manager):
         for filename, filestream in streamMap.iteritems():
             if isinstance(filestream, str):
                 filestream = StringIO(filestream)
-            pathDict[filename] = filetypes.RegularFile(contents=filestream,
-                                                       config=True)
+            if hasattr(filestream, 'getContents'):
+                fileobj = filestream
+            else:
+                fileobj = self.RegularFile(contents=filestream,
+                                           config=True)
+
+            pathDict[filename] = fileobj
 
         # create the changelog message using the currently
         # logged-on user's username and fullname, if available
-        newchangelog = changelog.ChangeLog(self.auth.username,
-                self.auth.fullName or '', changeLogMessage.encode('utf8'))
+        newchangelog = changelog.ChangeLog(self.auth.username or '(unset)',
+                self.auth.fullName or '(unset)', changeLogMessage.encode('utf8'))
 
         # create a change set object from our source data
         changeSet = client.createSourceTrove(str(trovename), str(buildLabel),
-                str(upstreamVersion), pathDict, newchangelog)
+                str(upstreamVersion), pathDict, newchangelog,
+                factory=factoryName, metadata=metadata)
 
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
@@ -438,9 +442,11 @@ class RepositoryManager(manager.Manager):
             # use 2**64 to ensure we won't make the server do much
             nc.getNewTroveList(fqdn, '4611686018427387904')
         except reposerrors.InsufficientPermission, e:
-            raise errors.ExternalRepositoryMirrorError(url, e)
+            e_tb = sys.exc_info()[2]
+            raise errors.ExternalRepositoryMirrorError(url, e), None, e_tb
         except reposerrors.OpenError, e:
-            raise errors.ExternalRepositoryAccessError(url, e)
+            e_tb = sys.exc_info()[2]
+            raise errors.ExternalRepositoryAccessError(url, e), None, e_tb
 
     def _getRepositoryUrl(self, fqdn):
         hostname = fqdn.split('.', 1)[0]

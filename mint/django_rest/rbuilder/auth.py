@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) 2011 rPath, Inc.
 #
 
 from mint.django_rest.rbuilder.models import Users, UserGroups, Sessions
@@ -42,13 +40,14 @@ def getAuth(request):
         auth_header =  {'Authorization': request.META['HTTP_AUTHORIZATION']}
 
     if 'Authorization' in auth_header:
-        type, user_pass = auth_header['Authorization'].split(' ', 1)
-
-        try:
-            username, password = base64.decodestring(user_pass).split(':', 1)
-            return (username, password)
-        except:
-            pass
+        authType, user_pass = auth_header['Authorization'].split(' ', 1)
+        if authType == 'Basic':
+            try:
+                username, password = base64.decodestring(user_pass
+                        ).split(':', 1)
+                return (username, password)
+            except:
+                pass
     else:
         return getCookieAuth(request)
         

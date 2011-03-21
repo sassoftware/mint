@@ -118,23 +118,50 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.createUser('admin', admin=True)
         self.createProduct('foo', owners=['admin'], db=db)
         imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                                   name='Image1')
+                                   troveFlavor="is: x86", name='Image1')
         self.setImageFiles(db, 'foo', imageId)
 
         self.createProduct('bar', owners=['admin'], db=db)
         imageId = self.createImage(db, 'bar', buildtypes.INSTALLABLE_ISO,
-                                   name='Image1')
+                                   troveFlavor="is: x86_64", name='Image1')
         self.setImageFiles(db, 'bar', imageId)
 
+        # Add a target
+        targetType = 'vmware'
+        targetName = 'abc.eng.rpath.com'
+        db.targetMgr.addTarget(targetType, targetName, dict(alias=targetName,
+            description=targetName))
+
+        # Add some fake target images
+        tgtImageIds = [ 'vmware-image-id-1', 'vmware-image-id-2' ]
+        for targetImageId in tgtImageIds:
+            db.targetMgr.linkTargetImageToImage(targetType, targetName,
+                imageId, targetImageId)
+            # Add it twice, to make sure duplicates are removed
+            db.targetMgr.linkTargetImageToImage(targetType, targetName,
+                imageId, targetImageId)
+
         images = db.imageMgr.getAllImagesByType('INSTALLABLE_ISO')
+        self.failUnlessEqual(
+            [ x['architecture'] for x in images ],
+            [ 'x86', 'x86_64'])
         self.failUnlessEqual(
             [ [ x['sha1'] for x in img['files'] ] for img in images],
             [ [ '356a192b7913b04c54574d18c28d46e6395428ab' ],
               [ 'da4b9237bacccdf19c0760cab7aec4a8359010b0' ] ])
+        self.failUnlessEqual(
+            [ [ x['targetImages'] for x in img['files'] ] for img in images],
+            [
+                [[]],
+                [[
+                    ('vmware', 'abc.eng.rpath.com', 'vmware-image-id-1'),
+                    ('vmware', 'abc.eng.rpath.com', 'vmware-image-id-2'),
+                ]]])
+
         # RBL-6290: make sure we don't have cross-polination of hostnames
         self.failUnlessEqual(
             [ img['baseFileName'] for img in images ],
-            [ 'foo-0.1-', 'bar-0.1-', ])
+            [ 'foo-0.1-x86', 'bar-0.1-x86_64', ])
         self.failUnlessEqual(
             [ [ x['fileName'] for x in img['files'] ] for img in images],
             [ [ 'imagefile_1.iso' ], [ 'imagefile_2.iso' ] ])

@@ -129,6 +129,26 @@ class ImageManager(manager.Manager):
             return []
 
         cu = self.db.cursor()
+
+        cu.execute("DELETE FROM tmpOneVal")
+        cu.executemany("INSERT INTO tmpOneVal (id) VALUES (?)",
+            [ (x, ) for x in imageIds ])
+
+        # Grab target images
+        cu.execute("""
+            SELECT DISTINCT t.targetType, t.targetName, tid.fileId, tid.targetImageId
+              FROM Targets AS t
+              JOIN TargetImagesDeployed AS tid USING (targetId)
+              JOIN BuildFiles AS bf USING (fileId)
+              JOIN tmpOneVal AS tb ON (bf.buildId = tb.id)
+        """)
+        targetImages = {}
+        for row in cu:
+            targetImages.setdefault(row['fileId'], []).append(
+                models.TargetImage(targetType=row['targetType'],
+                    targetName=row['targetName'],
+                    targetImageId=row['targetImageId']))
+
         sql = '''
             SELECT
                 f.fileId, f.buildId AS imageId, f.idx, f.title, f.size, f.sha1,
@@ -136,9 +156,8 @@ class ImageManager(manager.Manager):
             FROM BuildFiles f
                 JOIN BuildFilesUrlsMap USING ( fileId )
                 JOIN FilesUrls u USING ( urlId )
-            WHERE buildId IN ( %(images)s )
+                JOIN tmpOneVal AS tb ON (f.buildId = tb.id)
             '''
-        sql %= dict(images=','.join('%d' % x for x in imageIds))
         cu.execute(sql)
 
         filesByImageId = dict((imageId, {}) for imageId in imageIds)
@@ -152,6 +171,10 @@ class ImageManager(manager.Manager):
                 file = imageFiles[fileId] = models.ImageFile(d)
                 file.urls = []
                 file.sha1 = d['sha1']
+            targetImageIds = sorted(targetImages.get(fileId, []),
+                key=lambda x: (x.targetName, x.targetType, x.targetImageId))
+            file.targetImages = targetImageIds
+
             if url:
                 file.fileName = os.path.basename(url)
             file.urls.append(models.FileUrl(fileId=fileId, urlType=urlType))
@@ -286,12 +309,30 @@ class ImageManager(manager.Manager):
         hostname = fqdn.split('.')[0]
         return self._getFilesForImages(hostname, [imageId])[0]
 
-    def createImage(self, fqdn, buildType, buildName, troveTuple, buildData):
+    def createImage(self, fqdn, image, buildData):
+        buildType = image.imageType
+        buildName = image.name
+        if (image.troveFlavor is None or str(image.troveFlavor) == '') and image.architecture:
+            image.troveFlavor = deps.parseFlavor("is: %s" % image.architecture)
+        if image.troveVersion is None:
+            image.troveVersion = versions.VersionFromString(
+                '/local@local:COOK/1-1-1', timeStamps = [ 0.1 ])
+        troveTuple = image.getNameVersionFlavor()
+
+        # Look up the build type by name too - and fall back to what the user
+        # specified
+        buildType = buildtypes.xmlTagNameImageTypeMap.get(buildType, buildType)
         cu = self.db.db.cursor()
         productId = self.db.getProductId(fqdn)
         troveLabel = troveTuple[1].trailingLabel()
-        productVersionId, stage = self.db.productMgr.getProductVersionForLabel(
-                                                fqdn, troveLabel)
+        if image.stage and image.version:
+            stage = os.path.basename(image.stage.href)
+            version = os.path.basename(image.version.href)
+            productVersion = self.db.productMgr.getProductVersion(fqdn, version)
+            productVersionId = productVersion.versionId
+        else:
+            productVersionId, stage = self.db.productMgr.getProductVersionForLabel(
+                                                    fqdn, troveLabel)
         sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
                                      buildCount, createdBy, troveName, 
                                      troveVersion, troveFlavor, stageName, 
@@ -321,6 +362,59 @@ class ImageManager(manager.Manager):
                                         commit=False)
         return buildId
 
+    def getRepeaterClient(self):
+        try:
+            from rpath_repeater import client as repeater_client
+        except:
+            return None
+
+        return repeater_client.RepeaterClient()
+
+    def uploadImageFiles(self, hostname, image, outputToken=None):
+        if not image.files.files:
+            return None
+        rcli = self.getRepeaterClient()
+        if rcli is None:
+            return None
+        path = "/api/products/%s/images/%s/" % (hostname, image.imageId)
+        stPath = path + 'status'
+        putFilesPath = path + 'files'
+        uploadPath = "/uploadBuild/%s/" % (image.imageId, )
+        headers = { 'X-rBuilder-OutputToken' : outputToken }
+        fileList = []
+        putFilesURL = rcli.URL(scheme="http", host="localhost",
+            path=putFilesPath, unparsedPath=putFilesPath,
+            headers=headers)
+        statusReportURL = rcli.URL(scheme="http", host="localhost",
+                path=stPath, unparsedPath=stPath, headers=headers)
+        for fileItem in image.files.files:
+            if not fileItem.urls:
+                continue
+            srcurl = fileItem.urls[0].url
+            fileName = os.path.basename(fileItem.fileName)
+            uPath = uploadPath + fileName
+            url = rcli.makeUrl(srcurl)
+            destination = rcli.URL(scheme="http", host="localhost",
+                path=uPath, unparsedPath=uPath, headers=headers)
+            # Convert fields to unicode, we don't want to send xobj strings
+            # over the wire
+            ifile = rcli.ImageFile(
+                title=self._u(fileItem.fileName),
+                fileName=self._u(fileItem.fileName),
+                url=url, destination=destination)
+            fileList.append(ifile)
+        if not fileList:
+            return None
+        meta = rcli.ImageMetadata(**dict(image.metadata.getValues()))
+        image = rcli.Image(name=self._u(image.name), metadata=meta,
+            architecture=self._u(image.architecture), files=fileList)
+        uuid, job = rcli.download_images(image, statusReportURL, putFilesURL)
+
+    @classmethod
+    def _u(cls, obj):
+        if obj is None:
+            return None
+        return unicode(obj)
 
     def stopImageJob(self, imageId):
         raise NotImplementedError
@@ -509,7 +603,53 @@ class ImageManager(manager.Manager):
                     fileId, urlId) VALUES ( ?, ? )""",
                     fileId, urlId)
 
+        if files.metadata:
+            self._addImageToRepository(hostname, imageId, files.metadata)
+
         return self.listFilesForImage(hostname, imageId)
+
+    @classmethod
+    def getMetadataDict(cls, metadata):
+        if metadata is None:
+            return None
+        metadataValues = ((x, getattr(metadata, x, None)) for x in metadata._fields)
+        metadataDict = dict((x, str(y)) for (x, y) in metadataValues
+            if y is not None)
+        return metadataDict
+
+    def _addImageToRepository(self, hostname, imageId, metadata):
+        metadataDict = self.getMetadataDict(metadata)
+        # Fetch file paths
+        cu = self._getImageFiles(imageId)
+        filePaths = [ row[0] for row in cu ]
+        img = self.getImageForProduct(hostname, imageId)
+        productMgr = self.db.productMgr
+        # We need the product's fqdn
+        product = productMgr.getProduct(hostname)
+        fqdn = product.repositoryHostname
+        pd = productMgr.getProductVersionDefinition(fqdn, img.version)
+        buildLabel = pd.getLabelForStage(img.stage)
+
+        factoryName = "rbuilder-image"
+        troveName = "image-%s" % hostname
+        troveVersion = img.version
+        RegularFile = productMgr.reposMgr.RegularFile
+        streamMap = dict((os.path.basename(x),
+            RegularFile(contents=file(x), config=False)) for x in filePaths)
+        try:
+            self._setStatus(imageId, message="Committing image to repository")
+            productMgr.reposMgr.createSourceTrove(fqdn, troveName, buildLabel,
+                troveVersion, streamMap, changeLogMessage="Image imported",
+                factoryName=factoryName, admin=True,
+                metadata=metadataDict)
+        except Exception, e:
+            self._setStatus(imageId, message="Commit failed: %s" % (e, ))
+            log.error("Error: %s", e)
+            raise
+        else:
+            message = "Image committed as %s:source=%s" % (troveName, buildLabel)
+            self._setStatus(imageId, message=message)
+            log.info(message)
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
@@ -538,7 +678,10 @@ class ImageManager(manager.Manager):
                 dict(fileId = x.fileId, sha1 = x.sha1,
                      fileName = x.fileName,
                      idx = x.idx, size = x.size,
-                     downloadUrl = self.getDownloadUrl(x.fileId),)
+                     downloadUrl = self.getDownloadUrl(x.fileId),
+                     targetImages = [
+                        (y.targetType, y.targetName, y.targetImageId)
+                            for y in x.targetImages ])
                 for x in imageFileList.files ]
             imageData['files'] = imageFileData
             imageId = imageData['buildId']

@@ -12,10 +12,20 @@ import tempfile
 import time
 
 import fixtures
+from mint import reports as mintreports
 from mint.lib import maillib
 from mint.mint_error import PermissionDenied
 from mint.mint_error import InvalidReport
 from testutils import mock
+
+def needs_reportlab(func):
+    if mintreports._reportlab_present:
+        return func
+    def fails(*args):
+        raise testsuite.SkipTestException("reportlab not installed")
+    fails.__name__ = func.__name__
+    fails.__dict__.update(func.__dict__)
+    return fails
 
 class ReportTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -27,6 +37,7 @@ class ReportTest(fixtures.FixturedUnitTest):
         self.assertRaises(InvalidReport, client.server.getReport, '')
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testReportPdf(self, db, data):
         client = self.getClient("admin")
         reportPdf = client.getReportPdf('new_users')
@@ -38,6 +49,7 @@ class ReportTest(fixtures.FixturedUnitTest):
             self.fail("Reports were not timestamped")
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testNewUsersReport(self, db, data):
         mock.mock(maillib, 'sendMailWithChecks')
         self.cfg.sendNotificationEmails = True
@@ -57,6 +69,7 @@ class ReportTest(fixtures.FixturedUnitTest):
                 == [False]), "Confirmed column of new user report misfired"
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testNewProjectsReport(self, db, data):
         client = self.getClient("admin")
         report = client.server.getReport('new_projects')
@@ -64,16 +77,19 @@ class ReportTest(fixtures.FixturedUnitTest):
             self.fail("New Projects report returned incorrect data")
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testSiteSummary(self, db, data):
         client = self.getClient("admin")
         report = client.server.getReport('site_summary')
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testExecSummary(self, db, data):
         client = self.getClient("admin")
         report = client.server.getReport('exec_summary')
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testNewsletterReport(self, db, data):
         adminClient = self.getClient("admin")
         report = adminClient.server.getReport('newsletter_users')
@@ -87,6 +103,7 @@ class ReportTest(fixtures.FixturedUnitTest):
                     "newletter opt-in not reflected in report")
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testInsiderReport(self, db, data):
         adminClient = self.getClient("admin")
         report = adminClient.server.getReport('insider_users')
@@ -100,6 +117,7 @@ class ReportTest(fixtures.FixturedUnitTest):
                     "insider opt-in not reflected in report")
 
     @fixtures.fixture("Full")
+    @needs_reportlab
     def testActiveUsersReport(self, db, data):
         adminClient = self.getClient("admin")
         projectId = data['projectId']

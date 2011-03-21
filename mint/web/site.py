@@ -1008,6 +1008,7 @@ class SiteHandler(WebHandler):
             return self._write("confirm", message = "Are you sure you want to close your account?",
                 yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
 
+    @redirectHttps
     def maintenance(self, auth, *args, **kwargs):
         mode = maintenance.getMaintenanceMode(self.cfg)
         if mode == maintenance.NORMAL_MODE:

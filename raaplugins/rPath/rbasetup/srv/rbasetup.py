@@ -109,11 +109,12 @@ class rBASetup(rAASrvPlugin):
             os.close(rdfd2)
             logWriter = os.fdopen(wrfd, 'w')
             errorWriter = os.fdopen(wrfd2, 'w')
+            loggingHandler = logging.StreamHandler(logWriter)
             try:
                 try:
                     # Reset logging in the child
                     childLog = logging.getLogger('setupRMake')
-                    childLog.addHandler(logging.StreamHandler(logWriter))
+                    childLog.addHandler(loggingHandler)
                     childLog.setLevel(logging.DEBUG)
 
                     # Drop privs in the child to apache so as to not create
@@ -135,12 +136,12 @@ class rBASetup(rAASrvPlugin):
                     try:
                         pickle.dump(sys.exc_info()[:2], errorWriter)
                     except Exception, e:
-                        log.error('Pickle failed: %s', str(e))
+                        childLog.error('Pickle failed: %s', str(e))
                         pass
                     childLog.error(traceback.format_exc())
                     rc = -2
             finally:
-                logWriter.close()
+                loggingHandler.close()
                 errorWriter.close()
                 os._exit(rc)
         else: # parent
@@ -350,17 +351,6 @@ class rBASetup(rAASrvPlugin):
             return { 'errors': result['errors'], 'step': step, 'message': self.message }
         self.message += result.get('message', '')
         self.reportMessage(execId, self.message)
-
-        if not options.get('entitlementKey'):
-            # Generate an entitlement
-            step = lib.FTS_STEP_ENTITLE
-            self.message += "Generating an entitlement...  "
-            self.reportMessage(execId, self.message)
-            ret = self._generateEntitlement(newCfg)
-            if ret.has_key('errors'):
-                return { 'errors': ret['errors'], 'step': step, 'message': self.message }
-            self.message += ret.get('message', '\n')
-            self.reportMessage(execId, self.message)
 
         self.message += "Creating platforms... "
         self.reportMessage(execId, self.message)

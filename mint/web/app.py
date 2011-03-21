@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All rights reserved
-#
+
 import base64
 import kid
 import re
 import sys
-import time
 
 from conary.lib import util
 
@@ -22,7 +20,7 @@ from mint import shimclient
 from mint import userlevels
 from mint.helperfuncs import (formatHTTPDate, getProjectText,
     weak_signature_call)
-from mint.mint_error import *
+from mint.mint_error import MaintenanceMode, MintError
 from mint.web import fields
 from mint.web.admin import AdminHandler
 from mint.web.project import ProjectHandler
@@ -112,11 +110,13 @@ class MintApp(WebHandler):
         # the current session has no authToken
         authorization = self.req.headers_in.get('Authorization', None)
         if authorization: 
-            type, user_pass = authorization.split(' ', 1)
-            try:
-                self.authToken = (base64.decodestring(user_pass).split(':', 1))
-            except:
-                self.authToken = anonToken
+            self.authToken = anonToken
+            authType, user_pass = authorization.split(' ', 1)
+            if authType == 'Basic':
+                try:
+                    self.authToken = (base64.decodestring(user_pass).split(':', 1))
+                except:
+                    pass
         else:
             self.authToken = self.session.get('authToken', anonToken)
         

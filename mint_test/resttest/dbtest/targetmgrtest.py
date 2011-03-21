@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import os
 import testsetup
 from testutils import mock
 
@@ -15,6 +16,12 @@ from mint.rest.db import targetmgr
 from mint_test import mint_rephelp
 
 class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
+    def setUp(self):
+        tmgr = targetmgr.TargetManager
+        mint_rephelp.MintDatabaseHelper.setUp(self)
+        if not os.path.exists(tmgr.TargetImportScriptPath):
+            tmgr.importTargetSystems = lambda *args, **kwargs: True
+
     def _newTarget(self, targetType=None, targetName=None, targetData=None):
         targetType = targetType or 'ec2'
         targetName = targetName or 'eww-west-1'

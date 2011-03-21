@@ -553,8 +553,8 @@ class TestPackageCreatorUIWeb(webprojecttest.WebProjectBaseTest):
         headings, uploadLines = self._extractPackageListLines(page)
 
         self.assertEquals(len(uploadLines), 2)
-        assert "newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1" in uploadLines[0]
-        assert '"newUpload?name=zope:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel&amp;prodVer=vs1&amp;namespace=ns1"' in uploadLines[1]
+        assert "newUpload?name=grnotify:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel/0.4.5-1&amp;prodVer=vs1&amp;namespace=ns1" in uploadLines[0]
+        assert '"newUpload?name=zope:source&amp;label=testproject.rpath.local2@ns1:testproject-vs1-devel/2.7.8-1&amp;prodVer=vs1&amp;namespace=ns1"' in uploadLines[1]
 
         self.assertEquals( len(headings), 1)
         assert 'Version vs1 (ns1)' in headings[0]
