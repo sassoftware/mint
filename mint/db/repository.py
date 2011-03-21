@@ -537,7 +537,7 @@ class RepositoryHandle(object):
         """
         raise NotImplementedError
 
-    def restore(self, path):
+    def restore(self, path, replaceExisting=False):
         """
         Load the repository database from the backup at C{path}.
         """
@@ -641,13 +641,20 @@ class SQLiteRepositoryHandle(RepositoryHandle):
         if os.path.exists(self._dbPath):
             util.execute("sqlite3 '%s' .dump > '%s'" % (self._dbPath, path))
 
-    def restore(self, path):
+    def restore(self, path, replaceExisting=False):
         if not os.path.exists(path):
             return
+        if os.path.exists(self._dbPath) and not replaceExisting:
+            raise RuntimeError("Repository database %s already exists" %
+                    (self._dbPath,))
         tempFile = util.AtomicFile(self._dbPath)
         util.execute("sqlite3 '%s' < '%s'" % (tempFile.name, path))
         # This is racy, but the risk is crashing the old process, not
         # corrupting the new one.
+        if os.path.exists(self._dbPath) and not replaceExisting:
+            tempFile.close()
+            raise RuntimeError("Repository database %s already exists" %
+                    (self._dbPath,))
         util.removeIfExists(self._dbPath + '.journal')
         tempFile.commit()
 
@@ -767,10 +774,10 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
             util.execute("pg_dump -U postgres -p 5439 -f '%s' '%s'"
                     % (path, params.database))
 
-    def restore(self, path):
+    def restore(self, path, replaceExisting=False):
         params = self._getParams()
         controlDb = self._getControlConnection()
-        if self._dbExists(controlDb, params.database):
+        if self._dbExists(controlDb, params.database) and not replaceExisting:
             raise RuntimeError("Repository database %s already exists" %
                     (params.database,))
 
@@ -787,10 +794,23 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                 self.fqdn, tmpName)
         self._create(empty=True, dbName=tmpName)
 
-        if params.port == 6432:
-            params = params._replace(port=5439)
-        cxnArgs = "-h '%s' -p '%s' -U postgres" % (params.host,
-                params.port)
+        try:
+            self._restore(path, params, tmpParams, controlDb, replaceExisting)
+        except:
+            saved = util.SavedException()
+            log.error("Error restoring database %s, attempting to clean up",
+                    params.database)
+            try:
+                if self._dbExists(controlDb, tmpParams.database):
+                    self.drop(tmpParams.database)
+            except:
+                log.exception("Failed to drop temporary database %s:", tmpName)
+            saved.throw()
+
+    def _restore(self, path, params, tmpParams, controlDb, replaceExisting):
+        tmpName = tmpParams.database
+        cxnArgs = "-h '%s' -p '%s' -U postgres" % (tmpParams.host,
+                tmpParams.port)
 
         if path.endswith('.pgtar') or path.endswith('.pgdump'):
             # Dumps from postgres < 9.0 force-create plpgsql, which already
@@ -815,8 +835,37 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
 
         # Rename into place
         ccu = controlDb.cursor()
+        replacedName = None
+        if self._dbExists(controlDb, params.database):
+            if not replaceExisting:
+                raise RuntimeError("Repository database %s already exists" %
+                        (params.database,))
+            # Rename the old database instead of dropping because it will be
+            # much faster.
+            replacedName = '_removed_%s_%s' % (params.database,
+                    os.urandom(6).encode('hex'))
+            log.info("Renaming old database %s to %s, this will terminate all "
+                    "active connections to that database.", params.database,
+                    replacedName)
+            bouncerDb = self._getBouncerConnection()
+            self._doBounce(bouncerDb, "KILL " + params.database)
+            ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' %
+                    (params.database, replacedName))
+
         ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName,
             params.database))
+        log.info("Restore of database %s complete", params.database)
+
+        if replacedName:
+            self._doBounce(bouncerDb, "RESUME " + params.database)
+            try:
+                bouncerDb.close()
+                log.info("Dropping old database %s", replacedName)
+                ccu.execute('DROP DATABASE "%s"' % (replacedName,))
+                log.info("Old database %s dropped", replacedName)
+            except:
+                log.exception("Failed to drop old database %s; continuing:",
+                        replacedName)
 
 
 class ConnectString(namedtuple('ConnectString', 'user host port database')):
