@@ -313,13 +313,13 @@ class RepositoryHandle(object):
 
         return driver, path
 
-    def getReposDB(self, skipCache=False):
+    def getReposDB(self):
         """
         Open and return a connection to the repository database. May use
         a cached connection.
         """
         params = self._getReposDBParams()
-        if params in self._manager().reposDBCache and not skipCache:
+        if params in self._manager().reposDBCache:
             db = self._manager().reposDBCache[params]
             db.reopen()
             if db.inTransaction(True):
@@ -327,8 +327,6 @@ class RepositoryHandle(object):
         else:
             driver, path = params
             db = dbstore.connect(path, driver)
-            if not skipCache:
-                self._manager().reposDBCache[params] = db
         return db
 
     @cached
@@ -764,40 +762,53 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
     def restore(self, path):
         params = self._getParams()
         controlDb = self._getControlConnection()
+        if self._dbExists(controlDb, params.database):
+            raise RuntimeError("Repository database %s already exists" %
+                    (params.database,))
+
+        # Assign a temporary database name for the restore process.
+        tmpName = '_tmp_%s_%s' % (params.database, os.urandom(6).encode('hex'))
+        tmpParams = params._replace(database=tmpName)
+        if tmpParams.port == 6432:
+            # pg_restore 9.0 does not work with
+            # pgbouncer 1.3.1+rpath_8fc940fbca2a
+            tmpParams = tmpParams._replace(port=5439)
+
+        # Restore into a temporary database
+        log.info("Restoring database dump for project %s into database %s",
+                self.fqdn, tmpName)
+        self._create(empty=True, dbName=tmpName)
+
+        if params.port == 6432:
+            params = params._replace(port=5439)
+        cxnArgs = "-h '%s' -p '%s' -U postgres" % (params.host,
+                params.port)
+
+        if path.endswith('.pgtar') or path.endswith('.pgdump'):
+            # Dumps from postgres < 9.0 force-create plpgsql, which already
+            # exists in template0 in >= 9.0. But dumps from the latter
+            # still reference it, just as CREATE OR REPLACE. The most
+            # straightforward workaround is thus to drop it beforehand, and
+            # let pg_restore put it back.
+            util.execute("droplang %s plpgsql '%s'" % (cxnArgs, tmpName))
+
+            util.execute("pg_restore %s --single-transaction "
+                    "-d '%s' '%s'" % (cxnArgs, tmpName, path))
+        else:
+            # Flat file dumps aren't run with --single-transaction so
+            # duplicate plpgsql isn't fatal.
+            util.execute("psql %s -f '%s' '%s' >/dev/null"
+                    % (cxnArgs, path, tmpName))
+
+        # Analyze
+        db = dbstore.connect(tmpParams.asDBStore(), 'postgresql')
+        db.analyze()
+        db.close()
+
+        # Rename into place
         ccu = controlDb.cursor()
-
-        self.drop()
-        if os.path.exists(path):
-            log.info("Restoring database dump for project %s", self.fqdn)
-            self._create(empty=True)
-
-            if params.port == 6432:
-                # pg_restore 9.0 does not work with
-                # pgbouncer 1.3.1+rpath_8fc940fbca2a
-                params = params._replace(port=5439)
-            cxnArgs = "-h '%s' -p '%s' -U postgres" % (params.host,
-                    params.port)
-
-            if path.endswith('.pgtar') or path.endswith('.pgdump'):
-                # Dumps from postgres < 9.0 force-create plpgsql, which already
-                # exists in template0 in >= 9.0. But dumps from the latter
-                # still reference it, just as CREATE OR REPLACE. The most
-                # straightforward workaround is thus to drop it beforehand, and
-                # let pg_restore put it back.
-                util.execute("droplang %s plpgsql '%s'" % (cxnArgs,
-                    params.database))
-
-                util.execute("pg_restore %s --single-transaction "
-                        "-d '%s' '%s'" % (cxnArgs, params.database, path))
-            else:
-                # Flat file dumps aren't run with --single-transaction so
-                # duplicate plpgsql isn't fatal.
-                util.execute("psql %s -f '%s' '%s' >/dev/null"
-                        % (cxnArgs, path, params.database))
-
-            db = self.getReposDB(skipCache=True)
-            db.analyze()
-            db.close()
+        ccu.execute('ALTER DATABASE "%s" RENAME TO "%s"' % (tmpName,
+            params.database))
 
 
 class ConnectString(namedtuple('ConnectString', 'user host port database')):
