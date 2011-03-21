@@ -36,4 +36,3 @@ class PackageWorkspaceService(service.BaseService):
         self.mgr.deletePackageWorkspace(workspace_id)
         response = HttpResponse(status=204)
         return response
-        
