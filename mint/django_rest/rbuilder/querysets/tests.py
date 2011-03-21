@@ -349,3 +349,31 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
         self.assertEquals([q.pk for q in querySet.children.all()],
             [6, 10, 11])
 
+    def testChildren(self):
+        # 12 can't be a child of 12
+        # (child relationship)
+        response = self._put('/api/query_sets/12/',
+            data=testsxml.query_set_child_update_xml4,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 422)
+
+    def testChildren2(self):
+        # Add 12 as a child of 10, where 10 is a child of 12
+        # (grandchild relationship)
+        response = self._put('/api/query_sets/10/',
+            data=testsxml.query_set_child_update_xml5,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 422)
+
+    def testChildren3(self):
+        # Make 11 a child of 10, and then verify 12 can't be a child of 11
+        # (great grandchild relationship)
+        response = self._put('/api/query_sets/10/',
+            data=testsxml.query_set_child_update_xml6,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        response = self._put('/api/query_sets/11/',
+            data=testsxml.query_set_child_update_xml7,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 422)
+
