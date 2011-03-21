@@ -713,6 +713,13 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         ccu.execute("CREATE DATABASE %s ENCODING 'UTF8'%s" % (params.database,
             extra))
 
+    def _doBounce(self, bouncerDb, command):
+        # A little bit of trickery is needed to get around the fact that
+        # python-pgsql's primary API always uses prepared statements, which
+        # aren't supported by pgbouncer's admin interface.
+        bcu = bouncerDb.cursor()
+        bcu._cursor._source.query(command)
+
     def drop(self, dbName=None):
         params = self._getParams()
         if dbName:
@@ -722,18 +729,14 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
         if not self._dbExists(controlDb, params.database):
             return
 
-        bcu = None
+        bouncerDb = None
         if params.port == 6432:
             # pgbouncer normally holds idle connections for 45 seconds. Our
             # version supports a custom KILL command that terminates all open
             # client and server connections to that database and prevents new
-            # ones until the following RESUME. A little bit of trickery is
-            # needed to get around the fact that python-pgsql's primary API
-            # always uses prepared statements, which aren't supported by
-            # pgbouncer's admin interface.
+            # ones until the following RESUME.
             bouncerDb = self._getBouncerConnection()
-            bcu = bouncerDb.cursor()
-            bcu._cursor._source.query("KILL " + params.database)
+            self._doBounce(bouncerDb, "KILL " + params.database)
 
         try:
             ccu = controlDb.cursor()
@@ -752,8 +755,8 @@ class PostgreSQLRepositoryHandle(RepositoryHandle):
                         params.database)
 
         finally:
-            if bcu:
-                bcu._cursor._source.query("RESUME " + params.database)
+            if bouncerDb:
+                self._doBounce(bouncerDb, "RESUME " + params.database)
 
     def dump(self, path):
         params = self._getParams()
