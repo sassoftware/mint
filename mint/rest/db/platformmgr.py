@@ -1,23 +1,20 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
+
 import base64
 import logging
 import os
 import tempfile
+import time
 import weakref
 
 from conary import errors as conaryErrors
 from conary import versions
-from conary.conaryclient import callbacks
 from conary.dbstore import sqllib
 from conary.build import lookaside
 from conary.lib import util
 from conary.repository import errors as reposErrors
-from conary.repository import changeset
-from conary.repository import filecontainer
 
 from mint import jobstatus
 from mint import mint_error
@@ -40,6 +37,7 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
         self.db = db
         self.job = job
         self.totalKB = totalKB
+        self.last = 0
         repository.DatabaseRestoreCallback.__init__(self)
         
     def _message(self, txt):
@@ -56,6 +54,9 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
         self.job.message = txt
 
     def downloading(self, got, rate):
+        if time.time() - self.last < 1:
+            return
+        self.last = time.time()
         self._downloading('Downloading', got, rate, self.totalKB)
 
     def _downloading(self, msg, got, rate, total):
