@@ -1,0 +1,137 @@
+<!--
+Description:
+  A collection of management nodes available to inventory systems
+  
+ManagementNodes Properties:
+  management_node - a management node resource
+
+ManagementNode Properties (extends System resource):
+   agent_port - the port used by the system's CIM broker
+   appliance - the appliance of the system
+   created_date - the date the system was added to inventory (UTC)
+   current_state - the current state of the system
+   description - the system description
+   generated_uuid - a UUID that is randomly generated
+   hostname - the system hostname
+   launch_date - the date the system was deployed (only applies if system is on a virtual target)
+   launching_user - the user that deployed the system (only applies if system is on a virtual target)
+   local_uuid - a UUID created from the system hardware profile
+   major_version - the appliance major version of the system
+   management_interface - the management interface used to communicate with the system
+   managing_zone - a link to the management zone in which this system resides
+   name - the system name
+   registration_date - the date the system was registered in inventory (UTC)
+   ssl_client_certificate - an x509 certificate of an authorized client that can use the system's CIM broker
+   ssl_client_key - an x509 private key of an authorized client that can use the system's CIM broker
+   ssl_server_certificate - an x509 public certificate of the system's CIM broker
+   stage - the appliance stage of the system
+   system_id - the database ID for the system
+   system_type - the type of the system
+   target - the virtual target the system was deployed to (only applies if system is on a virtual target)
+   target_system_description - the system description as reported by its target (only applies if system is on a virtual target)
+   target_system_id - the system ID as reported by its target (only applies if system is on a virtual target)
+   target_system_name - the system name as reported by its target (only applies if system is on a virtual target)
+   target_system_state - the system state as reported by its target (only applies if system is on a virtual target)
+   local - whether or not this management node is local to the rBuilder
+   system_ptr - a link to the management node's underlying system
+   zone - the zone the management node lives in
+   node_jid - the Jabber ID the management node is using
+
+Methods: 
+  GET:
+    Authentication: user
+    Response Format:
+      <management_nodes>
+        <management_node id="http://hostname/api/inventory/management_nodes/1/">
+          ...
+        </management_node>
+        <management_node id="http://hostname/api/inventory/management_nodes/2/">
+          ...
+        </management_node>
+      </management_nodes>
+      
+  POST:
+    Authentication: admin
+    Required Fields:
+      name
+      zone
+    Example:
+      <management_node>
+        <name>East Datacenter Node 1</name>
+        <description>Management node 1 for east datacenter</description>
+        <zone href="http://hostname/api/inventory/zones/1/"/>
+      </management_node>
+    
+  PUT:
+    not supported
+    
+  DELETE:
+    not supported
+--><management_nodes>
+  <management_node id="http://172.16.59.155:8000/api/inventory/management_nodes/2">
+    <networks>
+      <network id="http://172.16.59.155:8000/api/inventory/networks/1">
+        <ipv6_address/>
+        <network_id>1</network_id>
+        <dns_name>127.0.0.1</dns_name>
+        <required/>
+        <system href="http://172.16.59.155:8000/api/inventory/systems/2"/>
+        <device_name/>
+        <netmask/>
+        <port_type/>
+        <created_date>2010-10-05T18:36:37+00:00</created_date>
+        <active/>
+        <ip_address/>
+      </network>
+    </networks>
+    <management_interface/>
+    <system_events href="http://172.16.59.155:8000/api/inventory/systems/2/system_events"/>
+    <appliance/>
+    <configuration_descriptor href="http://172.16.59.155:8000/api/inventory/management_nodes/2/configuration_descriptor"/>
+    <has_running_jobs>False</has_running_jobs>
+    <system_type href="http://172.16.59.155:8000/api/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
+    <generated_uuid/>
+    <ssl_server_certificate/>
+    <managing_zone href="http://172.16.59.155:8000/api/inventory/zones/1">Local rBuilder</managing_zone>
+    <hostname/>
+    <name>rPath Update Service</name>
+    <system_id>2</system_id>
+    <launching_user/>
+    <launch_date/>
+    <local/>
+    <system_log href="http://172.16.59.155:8000/api/inventory/systems/2/system_log"/>
+    <installed_software id="http://172.16.59.155:8000/api/inventory/systems/2/installed_software"/>
+    <target_system_id/>
+    <jobs id="http://172.16.59.155:8000/api/inventory/systems/2/jobs">
+      <queued_jobs href="http://172.16.59.155:8000/api/inventory/systems/2/job_states/1/jobs"/>
+      <completed_jobs href="http://172.16.59.155:8000/api/inventory/systems/2/job_states/3/jobs"/>
+      <running_jobs href="http://172.16.59.155:8000/api/inventory/systems/2/job_states/2/jobs"/>
+      <failed_jobs href="http://172.16.59.155:8000/api/inventory/systems/2/job_states/4/jobs"/>
+    </jobs>
+    <description>Local rPath Update Service</description>
+    <ssl_client_certificate/>
+    <registration_date/>
+    <has_active_jobs>False</has_active_jobs>
+    <target_system_name/>
+    <credentials href="http://172.16.59.155:8000/api/inventory/management_nodes/2/credentials"/>
+    <configuration href="http://172.16.59.155:8000/api/inventory/management_nodes/2/configuration"/>
+    <node_jid>superduperjid@rbuilder.rpath</node_jid>
+    <agent_port/>
+    <stage/>
+    <out_of_date>False</out_of_date>
+    <zone href="http://172.16.59.155:8000/api/inventory/zones/1"/>
+    <system_ptr href="http://172.16.59.155:8000/api/inventory/systems/2"/>
+    <local_uuid/>
+    <target_system_state/>
+    <major_version/>
+    <current_state id="http://172.16.59.155:8000/api/inventory/system_states/1">
+      <system_state_id>1</system_state_id>
+      <description>Unmanaged</description>
+      <name>unmanaged</name>
+      <created_date>2010-10-05T18:36:37+00:00</created_date>
+    </current_state>
+    <target/>
+    <target_system_description/>
+    <created_date>2010-08-23T22:11:00+00:00</created_date>
+  </management_node>
+</management_nodes>
