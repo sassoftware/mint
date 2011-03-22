@@ -35,12 +35,14 @@ log = logging.getLogger(__name__)
 
 
 class PlatformLoadCallback(repository.DatabaseRestoreCallback):
-    def __init__(self, db, job, totalKB, *args, **kw):
+    def __init__(self, db, job, totalKB):
         self.db = db
         self.job = job
-        repository.DatabaseRestoreCallback(self, *args, **kw)
+        self.totalKB = totalKB
+        repository.DatabaseRestoreCallback.__init__(self)
         
     def _message(self, txt):
+        self._info = txt
         self.job.message = txt
 
     def done(self):
@@ -61,9 +63,8 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
             totalMsg = 'of %dMB ' % (total / 1024 / 1024)
             totalPct = '(%d%%) ' % ((got * 100) / total)
 
-        self.csMsg("%s %dMB %s%sat %dKB/sec"
+        self._message("%s %dMB %s%sat %dKB/sec"
                    % (msg, got/1024/1024, totalMsg, totalPct, rate/1024))
-        self.update()                      
 
 
 class ContentSourceTypes(object):
@@ -387,28 +388,31 @@ class Platforms(object):
         job = self.jobStore.get(jobId, commitAfterChange = True)
         job.setFields([('pid', os.getpid()), ('status', job.STATUS_RUNNING) ])
 
-        if inFile.headers.has_key('content-length'):
-            totalKB = int(inFile.headers['content-length'])
-        else:
-            totalKB = None
+        try:
+            if inFile.headers.has_key('content-length'):
+                totalKB = int(inFile.headers['content-length'])
+            else:
+                totalKB = None
 
-        callback = PlatformLoadCallback(self.db, job, totalKB)
-        # Save a reference to the callback so that we have access to it in the
-        # _load_error method.
-        self.callback = callback
-        
-        outFile = open(outFilePath, 'w')
-        total = util.copyfileobj(inFile, outFile,
-                                 callback=callback.downloading)
-        outFile.close()
+            callback = PlatformLoadCallback(self.db, job, totalKB)
+            # Save a reference to the callback so that we have access to it in the
+            # _load_error method.
+            self.callback = callback
+            
+            outFile = open(outFilePath, 'w')
+            total = util.copyfileobj(inFile, outFile,
+                                     callback=callback.downloading)
+            outFile.close()
 
-        callback._message('Download Complete. Loading preload...')
-        repoHandle = \
-            self.db.productMgr.reposMgr.reposManager.getRepositoryFromFQDN(
-                platform.repositoryHostname)
-        repoHandle.restoreBundle(outFilePath)
-        callback._message('Load completed.')
-        callback.done()
+            callback._message('Download Complete. Loading preload...')
+            repoHandle = \
+                self.db.productMgr.reposMgr.reposManager.getRepositoryFromFQDN(
+                    platform.repositoryHostname)
+            repoHandle.restoreBundle(outFilePath)
+            callback._message('Load completed.')
+            callback.done()
+        except Exception, e:
+            callback.error(e)
 
         return
 
