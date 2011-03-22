@@ -27,6 +27,7 @@ from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import contentsources
 from mint.rest.db import manager
+from mint.rest.db import reposmgr
 
 from rpath_proddef import api1 as proddef
 from rpath_job import api1 as rpath_job
@@ -42,15 +43,13 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
         repository.DatabaseRestoreCallback.__init__(self)
         
     def _message(self, txt):
-        self._info = txt
-        self.job.message = txt
+        self._info(txt)
 
     def done(self):
         self.job.status = self.job.STATUS_COMPLETED
 
     def error(self, e):
-        self.job.status = self.job.STATUS_FAILED
-        self._message("Load failed: %s" % e)
+        self._error("Load failed: %s" % e)
 
     def downloading(self, got, rate):
         self._downloading('Downloading', got, rate, self.totalKB)
@@ -65,6 +64,16 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
 
         self._message("%s %dMB %s%sat %dKB/sec"
                    % (msg, got/1024/1024, totalMsg, totalPct, rate/1024))
+
+    def _info(self, message, *args):
+        log.info(message, *args)
+        self.job.message = message
+
+    def _error(self, message, *args):
+        log.error(message, *args)
+        self.job.status = self.job.STATUS_FAILED
+        self.job.message = message
+
 
 
 class ContentSourceTypes(object):
@@ -405,8 +414,9 @@ class Platforms(object):
             outFile.close()
 
             callback._message('Download Complete. Loading preload...')
-            repoHandle = \
-                self.db.productMgr.reposMgr.reposManager.getRepositoryFromFQDN(
+            reposMgr = reposmgr.RepositoryManager(self.cfg, self.db, 
+                self.mgr().auth)
+            repoHandle = reposMgr.reposManager.getRepositoryFromFQDN(
                     platform.repositoryHostname)
             repoHandle.restoreBundle(outFilePath)
             callback._message('Load completed.')
