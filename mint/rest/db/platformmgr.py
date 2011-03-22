@@ -26,7 +26,6 @@ from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import contentsources
 from mint.rest.db import manager
-from mint.rest.db import reposmgr
 
 from rpath_proddef import api1 as proddef
 from rpath_job import api1 as rpath_job
