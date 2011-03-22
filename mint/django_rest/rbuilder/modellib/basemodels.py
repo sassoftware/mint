@@ -20,6 +20,7 @@ from django.core import exceptions
 from django.core import urlresolvers 
 
 from xobj import xobj
+import jobj
 
 def XObjHidden(field):
     """
@@ -821,6 +822,10 @@ class XObjModel(models.Model):
             xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
+    def to_json(self, request=None, xobj_model=None):
+        if not xobj_model:
+            xobj_model = self.serialize(request)
+        return jobj.tojson(xobj_model)
 
     def get_url_key(self):
         if type(self.url_key) != type([]):
@@ -1064,8 +1069,11 @@ class XObjModel(models.Model):
             if deferred:
                 rel_mod = type_map[m2m_accessor]()
                 resourceId = rel_mod.get_absolute_url(request, parents=[self])
-                m2mIdModel = XObjHrefModel(resourceId, ref_name="id")
+                m2mIdModel = type(m2m_accessor, (object,), {})()
+                m2mIdModel._xobj = xobj.XObjMetadata(
+                    attributes={"id":str})
                 m2mIdModel._xobj.tag = m2m_accessor
+                m2mIdModel.id = resourceId
                 setattr(xobj_model, m2m_accessor, m2mIdModel)
                 continue
 
