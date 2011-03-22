@@ -245,6 +245,8 @@ class Collection(XObjIdModel):
     def get_absolute_url(self, request=None, parents=None, model=None,
                          page=None, full=None):
         url = XObjIdModel.get_absolute_url(self, request, parents, model)
+        if url is None:
+            return url
         if not page and not full:
             page = getattr(self, 'page', None)
         if page:
@@ -326,12 +328,12 @@ class Collection(XObjIdModel):
         else:
             self.previous_page = ''
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         # We only support one list field right now
         if self.list_fields:
             listField = self.list_fields[0]
         else:
-            return XObjIdModel.serialize(self, request, values)
+            return XObjIdModel.serialize(self, request)
 
         modelList = getattr(self, listField)
 
@@ -340,7 +342,7 @@ class Collection(XObjIdModel):
 
         self.paginate(request, listField, modelList)
 
-        xobj_model = XObjIdModel.serialize(self, request, values)
+        xobj_model = XObjIdModel.serialize(self, request)
 
         return xobj_model
 
