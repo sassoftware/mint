@@ -111,7 +111,7 @@ class BaseManager(models.Manager):
         # loaded_model.  In this case we are most likely handling a PUT or an
         # update to a model.
         if loaded_model:
-            self.copyFields(loaded_model, model_inst,
+            self.copyFields(loaded_model, model_inst, xobjModel,
                 withReadOnly=withReadOnly)
             return oldModel, loaded_model
 
@@ -125,7 +125,7 @@ class BaseManager(models.Manager):
                 setattr(model_inst, field.name, None)
         return oldModel, loaded_model
 
-    def copyFields(self, dest, src, withReadOnly=False):
+    def copyFields(self, dest, src, xobjModel=object(), withReadOnly=False):
         """
         Copy fields from src to dest
         If withReadOnly is set to True, read-only fields will also be copied
@@ -144,7 +144,7 @@ class BaseManager(models.Manager):
                 newFieldVal = getattr(src, field.name, None)
             except exceptions.ObjectDoesNotExist:
                 newFieldVal = None
-            if newFieldVal is None:
+            if newFieldVal is None and not hasattr(xobjModel, field.name):
                 continue
             oldFieldVal = getattr(dest, field.name)
             if newFieldVal != oldFieldVal:
@@ -182,7 +182,7 @@ class BaseManager(models.Manager):
 
         if href:
             path = urlparse.urlparse(href)[2]
-            # Look up the view function that corrosponds to the href using the
+            # Look up the view function that corresponds to the href using the
             # django API.
             resolver = urlresolvers.resolve(path)
             # resolver contains a function and it's arguments that django
@@ -221,15 +221,9 @@ class BaseManager(models.Manager):
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
-                refName = field.refName
-                parentModel = field.related.parent_model
-                loadedModel = parentModel.objects.load_from_href(val, refName)
-                if loadedModel is None:
-                    # Maybe the object was inlined for convenience?
-                    val = parentModel.objects.load_from_object(val, request,
+                parentModel = field.rel.to
+                val = parentModel.objects.load_from_object(val, request,
                         save=save)
-                else:
-                    val = loadedModel
             elif isinstance(field, (djangofields.BooleanField,
                                     djangofields.NullBooleanField)):
                 val = str(val)
