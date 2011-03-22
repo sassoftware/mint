@@ -163,6 +163,10 @@ class Database(DBInterface):
         #DBInterface.close(self)
         self.productMgr.reposMgr.close()
 
+    def reopen_fork(self):
+        DBInterface.reopen_fork(self)
+        self.productMgr.reposMgr.reopen_fork()
+
     def setAuth(self, auth, authToken):
         self.auth.setAuth(auth, authToken)
 

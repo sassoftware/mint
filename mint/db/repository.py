@@ -160,6 +160,11 @@ class RepositoryManager(object):
             reposDB = self.reposDBCache.popitem()[1]
             reposDB.close()
 
+    def close_fork(self):
+        while self.reposDBCache:
+            reposDB = self.reposDBCache.popitem()[1]
+            reposDB.close_fork()
+
     def getServerProxy(self, fqdn, url=None, user=None, entitlement=None):
         """
         Get a generic XMLRPC server proxy for C{fqdn}, optionally using
