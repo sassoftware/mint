@@ -62,23 +62,26 @@ class RepositoryManager(manager.Manager):
             repos.create()
 
             # Create users and roles
-            if not repos.isHidden:
-                self.addUser(repos.fqdn, 'anonymous', password='anonymous',
-                        level=userlevels.USER)
+            self.populateUsers(repos)
 
-            # here we automatically create the USER and DEVELOPER levels
-            # This avoids the chance of paying a high price for adding
-            # them later - instead we amortize the cost over every commit
-            if not repos.isExternal:
-                netServer = repos.getNetServer()
-                self._getRoleForLevel(netServer, userlevels.USER)
-                self._getRoleForLevel(netServer, userlevels.DEVELOPER)
-                self._getRoleForLevel(netServer, userlevels.OWNER)
+    def populateUsers(self, repos):
+        if not repos.isHidden:
+            self.addUser(repos.fqdn, 'anonymous', password='anonymous',
+                    level=userlevels.USER)
 
-            # add the auth user so we can add additional permissions
-            # to this repository
-            self.addUser(repos.fqdn, self.cfg.authUser,
-                    password=self.cfg.authPass, level=userlevels.ADMIN)
+        # here we automatically create the USER and DEVELOPER levels
+        # This avoids the chance of paying a high price for adding
+        # them later - instead we amortize the cost over every commit
+        if not repos.isExternal:
+            netServer = repos.getNetServer()
+            self._getRoleForLevel(netServer, userlevels.USER)
+            self._getRoleForLevel(netServer, userlevels.DEVELOPER)
+            self._getRoleForLevel(netServer, userlevels.OWNER)
+
+        # add the auth user so we can add additional permissions
+        # to this repository
+        self.addUser(repos.fqdn, self.cfg.authUser,
+                password=self.cfg.authPass, level=userlevels.ADMIN)
 
     def deleteRepository(self, fqdn):
         # TODO: move this to the internal RepositoryManager

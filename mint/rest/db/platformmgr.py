@@ -5,8 +5,10 @@
 import base64
 import logging
 import os
+import sys
 import tempfile
 import time
+import traceback
 import weakref
 
 from conary import errors as conaryErrors
@@ -415,17 +417,23 @@ class Platforms(object):
             outFile.close()
 
             callback._message('Download Complete. Loading preload...')
-            reposMgr = reposmgr.RepositoryManager(self.cfg, self.db, 
-                self.mgr().auth)
-            repoHandle = reposMgr.reposManager.getRepositoryFromFQDN(
+            reposManager = self.db.productMgr.reposMgr.reposManager
+            repoHandle = reposManager.getRepositoryFromFQDN(
                     platform.repositoryHostname)
             repoHandle.restoreBundle(outFilePath, replaceExisting=True,
                 callback=callback)
+
+            # Recreate anonymous and mintauth users.
+            self.db.productMgr.reposMgr.populateUsers(repoHandle)
+
             callback._message('Load completed.')
             callback.done()
             os.unlink(outFilePath)
-        except Exception, e:
-            callback.error(e)
+        except:
+            log.exception("Unhandled exception loading platform repository:")
+            exc_info = sys.exc_info()
+            lines = traceback.format_exception_only(exc_info[0], exc_info[1])
+            callback.error('\n'.join(lines))
 
         return
 
