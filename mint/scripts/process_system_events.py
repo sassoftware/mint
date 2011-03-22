@@ -39,8 +39,8 @@ class Script(scriptlibrary.SingletonScript):
 
         os.environ['DJANGO_SETTINGS_MODULE'] = settingsModule
 
-        from mint.django_rest.rbuilder.inventory import manager
-        mgr = manager.Manager()
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        mgr = rbuildermanager.RbuilderManager()
         mgr.processSystemEvents()
 
     def usage(self):
