@@ -566,6 +566,10 @@ class RepositoryHandle(object):
                 key, value = line.rstrip().split(None, 1)
                 metadata[key] = value
 
+            if metadata['serverName'].lower() != self.fqdn.lower():
+                raise RuntimeError("Bundle is for repository %s but this is %s"
+                        % (metadata['serverName'], self.fqdn))
+
             if self.driver == 'pgpool':
                 expectType = 'postgresql'
             else:
