@@ -373,7 +373,7 @@ class Platforms(object):
         repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
         uri = platformLoad.uri.encode('utf-8')
         headers = {}
-        fd, outFilePath = tempfile.mkstemp('.ccs', 'platform-load-')
+        fd, outFilePath = tempfile.mkstemp('.tar', 'platform-load-')
 
         finder = lookaside.FileFinder(None, None, cfg = self.cfg)
         inFile = finder._fetchUrl(uri, headers)
@@ -422,6 +422,7 @@ class Platforms(object):
                 callback=callback)
             callback._message('Load completed.')
             callback.done()
+            os.unlink(outFilePath)
         except Exception, e:
             callback.error(e)
 
