@@ -563,9 +563,10 @@ class RepositoryHandle(object):
         util.mkdirChain(workDir)
         util.execute("tar -C '%s' -xf '%s'" % (workDir, path))
 
+        mdPath = os.path.join(workDir, 'metadata')
+        dumpPath = None
         try:
             # Parse and verify metadata
-            mdPath = os.path.join(workDir, 'metadata')
             metadata = {}
             for line in open(mdPath):
                 key, value = line.rstrip().split(None, 1)
@@ -595,7 +596,8 @@ class RepositoryHandle(object):
             # Clean up
             try:
                 util.removeIfExists(mdPath)
-                util.removeIfExists(dumpPath)
+                if dumpPath:
+                    util.removeIfExists(dumpPath)
             except:
                 log.exception("Error cleaning up temporary restore files:")
 
