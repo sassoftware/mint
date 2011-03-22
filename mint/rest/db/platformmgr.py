@@ -38,7 +38,7 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
     def __init__(self, db, job, totalKB, *args, **kw):
         self.db = db
         self.job = job
-        callbacks.ChangesetCallback.__init__(self, *args, **kw)
+        repository.DatabaseRestoreCallback(self, *args, **kw)
         
     def _message(self, txt):
         self.job.message = txt
