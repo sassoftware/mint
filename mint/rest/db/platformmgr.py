@@ -43,13 +43,17 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
         repository.DatabaseRestoreCallback.__init__(self)
         
     def _message(self, txt):
-        self._info(txt)
+        log.info(txt)
+        self.job.message = txt
 
     def done(self):
         self.job.status = self.job.STATUS_COMPLETED
 
-    def error(self, e):
-        self._error("Load failed: %s" % e)
+    def error(self, txt):
+        txt = "Load Failed: %s" % txt
+        log.error(txt)
+        self.job.status = self.job.STATUS_FAILED
+        self.job.message = txt
 
     def downloading(self, got, rate):
         self._downloading('Downloading', got, rate, self.totalKB)
@@ -66,14 +70,10 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
                    % (msg, got/1024/1024, totalMsg, totalPct, rate/1024))
 
     def _info(self, message, *args):
-        log.info(message, *args)
-        self.job.message = message
+        self._message(message % args)
 
     def _error(self, message, *args):
-        log.error(message, *args)
-        self.job.status = self.job.STATUS_FAILED
-        self.job.message = message
-
+        self.error(message % args)
 
 
 class ContentSourceTypes(object):
@@ -418,7 +418,8 @@ class Platforms(object):
                 self.mgr().auth)
             repoHandle = reposMgr.reposManager.getRepositoryFromFQDN(
                     platform.repositoryHostname)
-            repoHandle.restoreBundle(outFilePath)
+            repoHandle.restoreBundle(outFilePath, replaceExisting=True,
+                callback=callback)
             callback._message('Load completed.')
             callback.done()
         except Exception, e:
