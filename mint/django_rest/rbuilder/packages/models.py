@@ -104,7 +104,8 @@ class PackageVersionAction(modellib.XObjIdModel):
 
     package_version_action_id = D(models.AutoField(primary_key=True), 
         "Database id of package version action")
-    package_version = D(modellib.ForeignKey(PackageVersion),
+    package_version = D(modellib.ForeignKey(PackageVersion,
+        related_name="package_version_actions"),
         "Package Version")
     package_action_type = D(modellib.ForeignKey("PackageActionType"),
         "Package action type")
@@ -122,7 +123,7 @@ class PackageVersionAction(modellib.XObjIdModel):
 class PackageVersionJob(modellib.XObjIdModel):
     
     class Meta:
-        db_table = "packages_package_job"
+        db_table = "packages_package_version_job"
     _xobj = xobj.XObjMetadata(tag="package_version_job")
 
     package_version_job_id = D(models.AutoField(primary_key=True),
@@ -130,6 +131,9 @@ class PackageVersionJob(modellib.XObjIdModel):
     package_version = D(modellib.ForeignKey(PackageVersion,
         related_name="package_version_jobs"),
         "Package version")
+    package_action_type = D(modellib.ForeignKey("PackageActionType",
+        related_name="package_version_jobs"),
+        "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -216,7 +220,8 @@ class PackageSourceAction(modellib.XObjIdModel):
 
     package_source_action_id = D(models.AutoField(primary_key=True), 
         "Database id of package source action")
-    package_source = D(modellib.ForeignKey(PackageSource),
+    package_source = D(modellib.ForeignKey(PackageSource,
+        related_name="package_source_actions"),
         "Package Source")
     package_action_type = D(modellib.ForeignKey("PackageActionType"),
         "Package action type")
@@ -242,6 +247,9 @@ class PackageSourceJob(modellib.XObjIdModel):
     package_source = D(modellib.ForeignKey(PackageSource,
         related_name="package_source_jobs"),
         "Package source")
+    package_action_type = D(modellib.ForeignKey("PackageActionType",
+        related_name="package_source_jobs"),
+        "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -294,7 +302,8 @@ class PackageBuildAction(modellib.XObjIdModel):
 
     package_build_action_id = D(models.AutoField(primary_key=True), 
         "Database id of package build action")
-    package_build = D(modellib.ForeignKey(PackageBuild),
+    package_build = D(modellib.ForeignKey(PackageBuild,
+        related_name="package_build_actions"),
         "Package Build")
     package_action_type = D(modellib.ForeignKey("PackageActionType"),
         "Package action type")
@@ -320,6 +329,9 @@ class PackageBuildJob(modellib.XObjIdModel):
     package_build = D(modellib.ForeignKey(PackageBuild,
         related_name="package_builds_jobs"),
         "Package build")
+    package_action_type = D(modellib.ForeignKey("PackageActionType",
+        related_name="package_build_jobs"),
+        "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
