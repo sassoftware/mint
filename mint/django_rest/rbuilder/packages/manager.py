@@ -65,26 +65,32 @@ class PackageVersionService(object):
     @exposed
     def getPackageVersions(self, package_id):
         """docstring for getPackageVersions"""
-        Packages = models.Packages.get(pk=package_id)
-        Packages.package_version = list(models.PackageVersions.objects.all())
-        return Packages
+        PackagesVersions = models.PackagesVersions.get(pk=package_id)
+        PackagesVersions.packages_versions = list(models.PackageVersions.objects.all())
+        return PackagesVersions
+
+    @exposed
+    def getPackageVersion(self, package_id):
+        """docstring for getPackageVersion"""
+        PackageVersion = models.PackagesVersion.get(pk=package_id)
+        PackageVersion.package_version = list(models.PackageVersion.objects.all())
+        return PackagesVersions
 
 
 class PackagePackageVersionManager(basemanager.BaseManager):
     """docstring for PackageManager"""
 
     @exposed
-    def getPackagePackageVersions(self):
+    def getPackagePackageVersion(self, package_id):
         """docstring for getPackage"""
-        PackageVersions = models.PackageVersions()
-        PackageVersions.package = list(models.PackageVersion.objects.all())
-        return PackageVersions
+        return models.PackageVersion.objects.get(pk=package_id)
 
     @exposed
-    def getPackagePackageVersion(self, package_version_id):
-        """docstring for Package"""
-        PackageVersion = models.PackageVersion.objects.get(pk=package_version_id)
-        return PackageVersion
+    def getPackagePackageVersions(self, package_id, package_version_id):
+        """docstring for getPackage"""
+        PackageVersions = models.PackageVersions()
+        PackageVersions.package = list(models.PackageVersions.objects.all())
+        return PackageVersions
 
     @exposed
     def addPackagePackageVersion(self, package_version):
