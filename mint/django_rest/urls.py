@@ -15,7 +15,6 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
-from mint.django_rest.rbuilder.packageworkspaces import views as pkgworkspaceviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -236,14 +235,6 @@ urlpatterns = patterns('',
         querysetviews.QueryTagService(),
         name='QueryTag'),
 
-    # Packages
-    url(r'^api/packages/?$',
-        packageviews.PackageService(),
-        name='Packages'),
-    url(r'^api/packages/(?P<package_id>\d+)/?$',
-        packageviews.PackageService(),
-        name='Package'),
-
     # Change Logs
     url(r'^api/changelogs/?$',
         changelogviews.ChangeLogService(),
@@ -253,18 +244,18 @@ urlpatterns = patterns('',
         name='ChangeLog'),
 
     # Package Workspaces
-    url(r'^api/package_workspaces/?$',
-        pkgworkspaceviews.PackageWorkspaceService(),
-        name='PackageWorkspaces'),
-    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/?$',
-        pkgworkspaceviews.PackageWorkspaceService(),
-        name='PackageWorkspace'),
-    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/?$',
-        pkgworkspaceviews.PackageSessionService(),
-        name='PackageSessions'),
-    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/(?P<package_session_id>\d+)/?$',
-        pkgworkspaceviews.PackageSessionService(),
-        name='PackageSession'),
+    url(r'^api/packages/?$',
+        packageviews.PackageService(),
+        name='PackageVersions'),
+    url(r'^api/packages/(?P<package_id>\d+)/?$',
+        pkgworkspaceviews.PackageService(),
+        name='Package'),
+    url(r'^api/package/(?P<package_id>\d+)/package_sessions/?$',
+        pkgworkspaceviews.PackageVersionService(),
+        name='PackageVersions'),
+    url(r'^api/packages/(?P<package_id>\d+)/package_versions/(?P<package_version_id>\d+)/?$',
+        pkgworkspaceviews.PackageVersionService(),
+        name='PackageVersion'),
 
 
 )

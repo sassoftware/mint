@@ -5,41 +5,41 @@
 #
 
 from mint.django_rest.rbuilder.manager import basemanager
-from mint.django_rest.rbuilder.packageworkspaces import models
+from mint.django_rest.rbuilder.packages import models
 
 exposed = basemanager.exposed
 
-class PackageWorkspaceManager(basemanager.BaseManager):
-    """docstring for PackageWorkspaceManager"""
+class PackageManager(basemanager.BaseManager):
+    """docstring for PackageManager"""
     
     @exposed
-    def getPackageWorkspaces(self):
-        """docstring for getWorkspace"""
-        PackageWorkspaces = models.PackageWorkspaces()
-        PackageWorkspaces.package_workspace = list(models.PackageWorkspace.objects.all())
-        return PackageWorkspaces
+    def getPackage(self):
+        """docstring for getPackage"""
+        Packages = models.Package()
+        Packages.package = list(models.Package.objects.all())
+        return Packages
     
     @exposed
-    def getPackageWorkspace(self, packageWorkspaceId):
-        """docstring for PackageWorkspace"""
-        packageWorkspace = models.PackageWorkspace.objects.get(pk=packageWorkspaceId)
-        return packageWorkspace
+    def getPackage(self, package_id):
+        """docstring for Package"""
+        package = models.Package.objects.get(pk=package_id)
+        return package
         
     @exposed
-    def addPackageWorkspace(self, packageWorkspace):
+    def addPackage(self, package):
         """docstring for addWorkspace"""
-        packageWorkspace.save()
-        return packageWorkspace
+        package.save()
+        return package
         
     @exposed
-    def updatePackageWorkspace(self, packageWorkspaceId, packageWorkspace):
+    def updatePackage(self, package_id, package):
         """docstring for updateWorkspace"""
-        packageWorkspace.save()
-        return packageWorkspace
+        package.save()
+        return package
     
     @exposed
-    def deletePackageWorkspace(self, packageWorkspaceId):
+    def deletePackage(self, package_id):
         """docstring for deletePackageWorkspace"""
-        packageWorkspace = models.PackageWorkspace.objects.get(
-            pk=packageWorkspaceId)
-        packageWorkspace.delete()
+        package = models.Package.objects.get(
+            pk=package_id)
+        package.delete()

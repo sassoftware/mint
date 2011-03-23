@@ -11,66 +11,66 @@ from mint.django_rest.deco import requires, return_xml #, access, ACCESS
 
 # from mint.django_rest.rbuilder.packageworkspaces import models
 
-class PackageWorkspaceService(service.BaseService):
-    """docstring for PackageWorkspaceService"""
+class PackageService(service.BaseService):
+    """docstring for PackageService"""
     
     @return_xml
-    def rest_GET(self, request, package_workspace_id=None):
+    def rest_GET(self, request, package_id=None):
         """docstring for rest_GET"""
-        if package_workspace_id:
-            return self.mgr.getPackageWorkspace(package_workspace_id)
+        if package_id:
+            return self.mgr.getPackage(package_id)
         else:
-            return self.mgr.getPackageWorkspaces()
+            return self.mgr.getPackage()
     
     # access.admin
-    @requires('package_workspace')
+    @requires('package')
     @return_xml
-    def rest_POST(self, request, package_workspace):
+    def rest_POST(self, request, package):
         """docstring for rest_POST"""
-        return self.mgr.addPackageWorkspace(package_workspace)
+        return self.mgr.addPackage(package)
     
     # @access.admin
-    @requires('package_workspace')
+    @requires('package')
     @return_xml
-    def rest_PUT(self, request, package_workspace_id, package_workspace):
+    def rest_PUT(self, request, package_id, package):
         """docstring for rest_PUT"""
-        return self.mgr.updatePackageWorkspace(package_workspace_id, package_workspace)
+        return self.mgr.updatePackage(package_id, package)
     
     # @access.admin   
-    def rest_DELETE(self, request, package_workspace_id):
+    def rest_DELETE(self, request, package_id):
         """docstring for rest_DELETE"""
-        self.mgr.deletePackageWorkspace(package_workspace_id)
+        self.mgr.deletePackagee(package_id)
         response = HttpResponse(status=204)
         return response
 
-class PackageSessionService(service.BaseService):
+class PackageVersionService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, request, package_workspace_id=None):
+    def rest_GET(self, request, package_id=None):
         """docstring for rest_GET"""
         if package_workspace_id:
-            return self.mgr.getPackageWorkspace(package_workspace_id)
+            return self.mgr.getPackage(package_id)
         else:
-            return self.mgr.getPackageWorkspaces()
+            return self.mgr.getPackage()
     
     # access.admin
-    @requires('package_workspace')
+    @requires('package')
     @return_xml
-    def rest_POST(self, request, package_workspace):
+    def rest_POST(self, request, package):
         """docstring for rest_POST"""
-        return self.mgr.addPackageWorkspace(package_workspace)
+        return self.mgr.addPackage(package)
     
     # @access.admin
-    @requires('package_workspace')
+    @requires('package')
     @return_xml
-    def rest_PUT(self, request, package_workspace_id, package_workspace):
+    def rest_PUT(self, request, package_id, package):
         """docstring for rest_PUT"""
-        return self.mgr.updatePackageWorkspace(package_workspace_id, package_workspace)
+        return self.mgr.updatePackage(package_id, package)
     
     # @access.admin   
-    def rest_DELETE(self, request, package_workspace_id):
+    def rest_DELETE(self, request, package_id):
         """docstring for rest_DELETE"""
-        self.mgr.deletePackageWorkspace(package_workspace_id)
+        self.mgr.deletePackage(package_id)
         response = HttpResponse(status=204)
         return response
 
