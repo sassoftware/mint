@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.projects.manager import ProjectManager
+from mint.django_rest.rbuilder.packageworkspaces.manager import PackageWorkspaceManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
@@ -29,6 +30,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'packageMgr' : PackageManager,
         'changeLogMgr' : ChangeLogManager,
         'projectMgr' : ProjectManager,
+        'packageWorkspaceMgr' = PackageWorkspaceManager,
     }
 
     def __init__(self, cfg=None, userName=None):

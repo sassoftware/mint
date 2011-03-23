@@ -16,6 +16,7 @@ from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
 from mint.django_rest.rbuilder.projects import views as projectviews
+from mint.django_rest.rbuilder.packageworkspaces import views as pkgworkspaceviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -282,6 +283,22 @@ urlpatterns = patterns('',
     url(r'api/projects/(?P<short_name>(\w|\-)*)/images/(?P<image_id>\d+)/?$',
         projectviews.ProjectImageService(),
         name='ProjectImage'),
+
+    # Package Workspaces
+    url(r'^api/package_workspaces/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspaces'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspace'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSessions'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/(?P<package_session_id>\d+)/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSession'),
+
+
 )
 
 
