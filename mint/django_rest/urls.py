@@ -253,7 +253,7 @@ urlpatterns = patterns('',
         
     # Package Versions
     url(r'^api/packages/(?P<package_id>\d+)/package_versions/?$',
-        packageviews.PackagePackageVersionService(),
+        packageviews.PackageVersionService(),
         name='PackageVersions'),
 
      url(r'^api/package_versions/?$',
