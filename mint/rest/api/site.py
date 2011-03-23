@@ -36,6 +36,7 @@ class RbuilderRestServer(RestController):
             'inventory/' : 'djangoHandoff',
             'query_sets/' : 'djangoHandoff',
             'packages/' : 'djangoHandoff',
+            'package_versions/' : 'djangoHandoff',
             'moduleHooks' : modulehooks.ModuleController,}
 
     def __init__(self, cfg, db):
