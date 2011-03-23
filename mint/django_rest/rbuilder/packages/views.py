@@ -63,7 +63,7 @@ class PackagePackageVersionService(service.BaseService):
     @return_xml
     def rest_PUT(self, request, package_id, package_version):
         """docstring for rest_PUT"""
-        return self.mgr.updatePackagePackageVersion(package_version_id, package_version)
+        return self.mgr.updatePackagePackageVersion(package_id, package_version)
     
     # @access.admin   
     def rest_DELETE(self, request, package_id):
