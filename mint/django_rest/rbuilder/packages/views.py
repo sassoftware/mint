@@ -80,3 +80,11 @@ class PackageVersionService(service.BaseService):
     def rest_GET(self):
         """docstring for rest_GET"""
         return self.mgr.getPackageVersions()
+
+class PackageVersionJobsService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self):
+        """docstring for rest_GET"""
+        return self.mgr.getPackageVersionJobs()
+
