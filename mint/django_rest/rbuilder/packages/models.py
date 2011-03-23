@@ -124,12 +124,12 @@ class PackageVersionJob(modellib.XObjIdModel):
     
     class Meta:
         db_table = "packages_package_job"
-    _xobj = xobj.XObjMetadata(tag="package_package_version_job")
+    _xobj = xobj.XObjMetadata(tag="package_version_job")
 
     package_version_job_id = D(models.AutoField(primary_key=True),
         "Database id of package version job")
     package_version = D(modellib.ForeignKey(PackageVersion,
-        related_name="jobs"),
+        related_name="package_version_jobs"),
         "Package version")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
@@ -239,7 +239,7 @@ class PackageSourceJob(modellib.XObjIdModel):
     package_source_job_id = D(models.AutoField(primary_key=True),
         "Database id of package source job")
     package_source = D(modellib.ForeignKey(PackageSource,
-        related_name="jobs"),
+        related_name="package_source_jobs"),
         "Package source")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
@@ -315,7 +315,7 @@ class PackageBuildJob(modellib.XObjIdModel):
     package_build_job_id = D(models.AutoField(primary_key=True),
         "Database id of package build job")
     package_build = D(modellib.ForeignKey(PackageBuild,
-        related_name="jobs"),
+        related_name="package_builds_jobs"),
         "Package build")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
