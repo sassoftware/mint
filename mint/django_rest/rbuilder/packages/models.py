@@ -63,7 +63,7 @@ class PackageVersion(modellib.XObjIdModel):
     package= D(modellib.ForeignKey(Package,
         related_name="package_versions"),
         "Package for this package version")
-    version = D(models.TextField(),
+    name = D(models.TextField(),
         "Version")
     license = D(models.TextField(),
         "License")
@@ -72,6 +72,11 @@ class PackageVersion(modellib.XObjIdModel):
     actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageVersionAction"),
         "Package version actions")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
 
 
     def get_absolute_url(self, request, *args, **kwargs):
@@ -95,6 +100,31 @@ class PackageVersionAction(modellib.XObjIdModel):
         "If the action is visible")
     enabled = D(models.BooleanField(),
         "If the action is enabled")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
+
+
+class PackageVersionJob(modellib.XObjIdModel):
+    
+    class Meta:
+        db_table = "packages_package_job"
+    _xobj = xobj.XObjMetadata(tag="package_package_version_job")
+
+    package_version_job_id = D(models.AutoField(primary_key=True),
+        "Database id of package version job")
+    package_version = D(modellib.ForeignKey(PackageVersion,
+        related_name="jobs"),
+        "Package version")
+    job = D(modellib.ForeignKey(inventorymodels.Job),
+        "Job")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
 
 
 class PackageVersionUrl(modellib.XObjIdModel):
@@ -116,6 +146,11 @@ class PackageVersionUrl(modellib.XObjIdModel):
         "Downloaded date of the file")
     file_size = D(models.IntegerField(null=True), 
         "Size of file in KB")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
 
 
 class PackageSource(modellib.XObjIdModel):
@@ -131,6 +166,11 @@ class PackageSource(modellib.XObjIdModel):
     actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageSourceAction"),
         "Package source actions")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
 
 
 class PackageSourceAction(modellib.XObjIdModel):
@@ -149,11 +189,32 @@ class PackageSourceAction(modellib.XObjIdModel):
         "If the action is enabled")
     visible = D(modellib.SyntheticField(),
         "If the action is visible")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
+
 
 class PackageSourceJob(modellib.XObjIdModel):
+    
+    class Meta:
+        db_table = "packages_package_source_job"
+    _xobj = xobj.XObjMetadata(tag="package_source_job")
 
+    package_source_job_id = D(models.AutoField(primary_key=True),
+        "Database id of package source job")
+    package_source = D(modellib.ForeignKey(PackageSource,
+        related_name="jobs"),
+        "Package source")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
+
 
 class PackageBuild(modellib.XObjIdModel):
 
@@ -169,6 +230,12 @@ class PackageBuild(modellib.XObjIdModel):
     actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageBuildAction"),
         "Package build actions")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
+
 
 
 class PackageBuildAction(modellib.XObjIdModel):
@@ -187,6 +254,31 @@ class PackageBuildAction(modellib.XObjIdModel):
         "If the action is visible")
     enabled = D(models.BooleanField(),
         "If the action is enabled")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
+
+
+class PackageBuildJob(modellib.XObjIdModel):
+    
+    class Meta:
+        db_table = "packages_package_build_job"
+    _xobj = xobj.XObjMetadata(tag="package_build_job")
+
+    package_build_job_id = D(models.AutoField(primary_key=True),
+        "Database id of package build job")
+    package_build = D(modellib.ForeignKey(PackageBuild,
+        related_name="jobs"),
+        "Package build")
+    job = D(modellib.ForeignKey(inventorymodels.Job),
+        "Job")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
 
 
 class PackageActionType(modellib.XObjIdModel):
@@ -213,6 +305,11 @@ class PackageActionType(modellib.XObjIdModel):
         "description")
     descriptor = D(models.TextField(),
         "descriptor")
+    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
+        "the date the package was created (UTC)")
+    modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
+        auto_now=True),
+        "the date the package was last modified (UTC)")
 
 
 for mod_obj in sys.modules[__name__].__dict__.values():
