@@ -20,7 +20,7 @@ class PackageService(service.BaseService):
         if package_id:
             return self.mgr.getPackage(package_id)
         else:
-            return self.mgr.getPackage()
+            return self.mgr.getPackages()
     
     # access.admin
     @requires('package')
@@ -51,7 +51,7 @@ class PackageVersionService(service.BaseService):
         if package_id:
             return self.mgr.getPackage(package_id)
         else:
-            return self.mgr.getPackage()
+            return self.mgr.getPackages()
     
     # access.admin
     @requires('package')

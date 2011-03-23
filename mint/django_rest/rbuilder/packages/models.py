@@ -20,7 +20,6 @@ class Packages(modellib.Collection):
     _xobj = xobj.XObjMetadata(
                 tag='packages')
     list_fields = ['package']
-    
 
 class Package(modellib.XObjIdModel):
     
@@ -47,8 +46,6 @@ class Package(modellib.XObjIdModel):
         related_name="packages_last_modified"),
         "the user that last modified the resource")
 
-    load_fields = [name]
-
 
 class PackageVersions(modellib.Collection):
 
@@ -62,7 +59,7 @@ class PackageVersions(modellib.Collection):
 class PackageVersion(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packagees_package_version"
+        db_table = "packages_package_version"
     _xobj = xobj.XObjMetadata(tag="package_version")
 
     package_version_id = D(models.AutoField(primary_key=True), 
@@ -149,7 +146,7 @@ class PackageVersionJob(modellib.XObjIdModel):
 class PackageVersionUrl(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packageworkspaces_package_version_url"
+        db_table = "packages_package_version_url"
     _xobj = xobj.XObjMetadata(tag="package_version_url")
     
     package_version_url_id = D(models.AutoField(primary_key=True),
