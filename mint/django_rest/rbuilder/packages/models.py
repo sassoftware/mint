@@ -184,7 +184,8 @@ class PackageSource(modellib.XObjIdModel):
 
     package_source_id = D(models.AutoField(primary_key=True), 
         "Database id of package source")
-    package_version = D(modellib.ForeignKey(PackageVersion),
+    package_version = D(modellib.ForeignKey(PackageVersion,
+        related_name="package_sources"),
         "Package version")
     actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageSourceAction"),
@@ -257,11 +258,11 @@ class PackageBuild(modellib.XObjIdModel):
         db_table = "packages_package_build"
     _xobj = xobj.XObjMetadata(tag="package_build")
 
-    package_session_job_id = D(models.AutoField(primary_key=True), 
+    package_build_id = D(models.AutoField(primary_key=True), 
         "Database id of package build")
-    package_version = D(modellib.ForeignKey(PackageVersion,
+    package_source = D(modellib.ForeignKey(PackageSource,
         related_name="package_builds"),
-        "Package Version")
+        "Package Source")
     actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageBuildAction"),
         "Package build actions")
