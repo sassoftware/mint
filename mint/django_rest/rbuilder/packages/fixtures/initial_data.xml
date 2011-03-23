@@ -203,4 +203,38 @@
     <field type="DateTimeField" name="created_date">2011-03-23 19:40:28</field>
     <field type="DateTimeField" name="modified_date">2011-03-23 19:40:28</field>
   </object>
+  <object pk="1" model="inventory.version">
+    <field type="TextField" name="full">/contrib.rpath.org@rpl:2/1-1-1</field>
+    <field type="TextField" name="label">/contrib.rpath.org@rpl:2</field>
+    <field type="TextField" name="revision">1-1-1</field>
+    <field type="TextField" name="ordering">1234567891.13</field>
+    <field type="TextField" name="flavor">is:x86</field>
+  </object>
+  <object pk="2" model="inventory.version">
+    <field type="TextField" name="full">/contrib.rpath.org@rpl:2/1-2-1</field>
+    <field type="TextField" name="label">/contrib.rpath.org@rpl:2</field>
+    <field type="TextField" name="revision">1-2-1</field>
+    <field type="TextField" name="ordering">1234567891.14</field>
+    <field type="TextField" name="flavor">is:x86</field>
+  </object>
+  <object pk="1" model="inventory.trove">
+    <field type="TextField" name="name">httpd:source</field>
+    <field to="inventory.version" name="version" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="flavor">is:x86</field>
+    <field type="BooleanField" name="is_top_level">False</field>
+    <field type="DateTimeField" name="last_available_update_refresh">
+      <None/>
+    </field>
+    <field to="inventory.version" name="available_updates" rel="ManyToManyRel"/>
+  </object>
+  <object pk="2" model="inventory.trove">
+    <field type="TextField" name="name">httpd</field>
+    <field to="inventory.version" name="version" rel="ManyToOneRel">2</field>
+    <field type="TextField" name="flavor">is:x86</field>
+    <field type="BooleanField" name="is_top_level">False</field>
+    <field type="DateTimeField" name="last_available_update_refresh">
+      <None/>
+    </field>
+    <field to="inventory.version" name="available_updates" rel="ManyToManyRel"/>
+  </object>
 </django-objects>
