@@ -57,6 +57,19 @@
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
     <field type="BooleanField" name="committed">False</field>
   </object>
+  <object pk="1" model="packages.packageversionjob">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">1</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.job" name="job" rel="ManyToOneRel">1</field>
+    <field type="DateTimeField" name="created_date">2011-03-23 20:00:36</field>
+    <field type="DateTimeField" name="modified_date">2011-03-23 20:00:36</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+  </object>
   <object pk="1" model="packages.packageversionurl">
     <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">1</field>
     <field type="TextField" name="url">http://httpd.apache.org/download.cgi#apache20</field>
@@ -121,10 +134,37 @@
     <field type="BooleanField" name="built">True</field>
     <field to="inventory.trove" name="trove" rel="ManyToOneRel">1</field>
   </object>
+  <object pk="2" model="packages.packagesource">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">1</field>
+    <field type="DateTimeField" name="created_date">2011-03-23 20:02:00</field>
+    <field type="DateTimeField" name="modified_date">2011-03-23 20:02:00</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="BooleanField" name="built">True</field>
+    <field to="inventory.trove" name="trove" rel="ManyToOneRel">1</field>
+  </object>
   <object pk="1" model="packages.packagebuild">
     <field to="packages.packagesource" name="package_source" rel="ManyToOneRel">1</field>
     <field type="DateTimeField" name="created_date">2011-03-23 19:14:22</field>
     <field type="DateTimeField" name="modified_date">2011-03-23 19:14:25</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="inventory.trove" name="troves" rel="ManyToManyRel">
+      <object pk="2"/>
+    </field>
+  </object>
+  <object pk="2" model="packages.packagebuild">
+    <field to="packages.packagesource" name="package_source" rel="ManyToOneRel">2</field>
+    <field type="DateTimeField" name="created_date">2011-03-23 20:02:04</field>
+    <field type="DateTimeField" name="modified_date">2011-03-23 20:02:04</field>
     <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
       <None/>
     </field>
