@@ -64,8 +64,9 @@ class PackageVersion(modellib.XObjIdModel):
 
     package_version_id = D(models.AutoField(primary_key=True), 
         "Database id of package version")
-    package = D(modellib.ForeignKey(Package,
-        related_name="package_versions"),
+    package = D(modellib.DeferredForeignKey(Package,
+        related_name="package_versions", view_name="PackageVersions",
+        ref_name="id"),
         "Package for this package version")
     name = D(models.TextField(),
         "Version")
@@ -89,11 +90,6 @@ class PackageVersion(modellib.XObjIdModel):
         "the user that last modified the resource")
     committed = D(models.BooleanField(default=False),
         "if the package version has been committed.")
-
-
-    def get_absolute_url(self, request, *args, **kwargs):
-        return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=[self.package, self])
 
 
 class PackageVersionAction(modellib.XObjIdModel):
