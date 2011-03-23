@@ -205,6 +205,8 @@ class PackageSource(modellib.XObjIdModel):
         "the user that last modified the resource")
     built = D(models.BooleanField(default=False),
         "if the package source has been built")
+    trove = D(modellib.ForeignKey(inventorymodels.Trove, null=True),
+        "committed source trove")
 
 
 class PackageSourceAction(modellib.XObjIdModel):
@@ -281,6 +283,8 @@ class PackageBuild(modellib.XObjIdModel):
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
         related_name="package_builds_last_modified"),
         "the user that last modified the resource")
+    troves = D(modellib.ManyToManyField(inventorymodels.Trove),
+        "built binary troves")
 
 
 class PackageBuildAction(modellib.XObjIdModel):
