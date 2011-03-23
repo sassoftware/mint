@@ -44,3 +44,18 @@ class PackageManager(basemanager.BaseManager):
             pk=package_id)
         package.delete()
 
+    def downloadPackageVersionUrl(self, packageVersionUrl):
+        pass
+
+    def commitPackageVersion(self, packageVersion):
+        pass
+
+    def buildPackageSource(self, packageSource):
+        pass
+
+    def promotePackageSource(self, packageSource):
+        pass
+
+    def promotePackageBuild(self, packageBuild):
+        pass
+
