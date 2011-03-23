@@ -79,7 +79,16 @@ class PackageVersionService(service.BaseService):
     @return_xml
     def rest_GET(self, package_version_id=None):
         """docstring for rest_GET"""
+        
         if package_version_id:
             return self.mgr.getPackageVersion(package_version_id)
         else:
             return self.mgr.getPackageVersions()
+        return self.mgr.getPackageVersions()
+
+class PackageVersionJobsService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self):
+        """docstring for rest_GET"""
+        return self.mgr.getPackageVersionJobs()
