@@ -88,6 +88,8 @@ class PackageVersion(modellib.XObjIdModel):
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
         related_name="package_versions_last_modified"),
         "the user that last modified the resource")
+    committed = D(models.BooleanField(default=False),
+        "if the package version has been committed.")
 
 
     def get_absolute_url(self, request, *args, **kwargs):
@@ -122,12 +124,12 @@ class PackageVersionJob(modellib.XObjIdModel):
     
     class Meta:
         db_table = "packages_package_job"
-    _xobj = xobj.XObjMetadata(tag="package_package_version_job")
+    _xobj = xobj.XObjMetadata(tag="package_version_job")
 
     package_version_job_id = D(models.AutoField(primary_key=True),
         "Database id of package version job")
     package_version = D(modellib.ForeignKey(PackageVersion,
-        related_name="jobs"),
+        related_name="package_version_jobs"),
         "Package version")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
@@ -201,6 +203,10 @@ class PackageSource(modellib.XObjIdModel):
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
         related_name="package_sources_last_modified"),
         "the user that last modified the resource")
+    built = D(models.BooleanField(default=False),
+        "if the package source has been built")
+    trove = D(modellib.ForeignKey(inventorymodels.Trove, null=True),
+        "committed source trove")
 
 
 class PackageSourceAction(modellib.XObjIdModel):
@@ -235,7 +241,7 @@ class PackageSourceJob(modellib.XObjIdModel):
     package_source_job_id = D(models.AutoField(primary_key=True),
         "Database id of package source job")
     package_source = D(modellib.ForeignKey(PackageSource,
-        related_name="jobs"),
+        related_name="package_source_jobs"),
         "Package source")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
@@ -277,6 +283,8 @@ class PackageBuild(modellib.XObjIdModel):
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
         related_name="package_builds_last_modified"),
         "the user that last modified the resource")
+    troves = D(modellib.ManyToManyField(inventorymodels.Trove),
+        "built binary troves")
 
 
 class PackageBuildAction(modellib.XObjIdModel):
@@ -311,7 +319,7 @@ class PackageBuildJob(modellib.XObjIdModel):
     package_build_job_id = D(models.AutoField(primary_key=True),
         "Database id of package build job")
     package_build = D(modellib.ForeignKey(PackageBuild,
-        related_name="jobs"),
+        related_name="package_builds_jobs"),
         "Package build")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")

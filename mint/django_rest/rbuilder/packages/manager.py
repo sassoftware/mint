@@ -44,9 +44,15 @@ class PackageManager(basemanager.BaseManager):
             pk=package_id)
         package.delete()
 
+    def downloadPackageVersionUrl(self, packageVersionUrl):
+        pass
+
 
 class PackagePackageVersionManager(basemanager.BaseManager):
     """docstring for PackageManager"""
+    
+    def commitPackageVersion(self, packageVersion):
+        pass
 
     @exposed
     def getPackagePackageVersions(self):
@@ -55,17 +61,27 @@ class PackagePackageVersionManager(basemanager.BaseManager):
         PackageVersions.package = list(models.PackageVersion.objects.all())
         return Packages
 
+    def buildPackageSource(self, packageSource):
+        pass
+
     @exposed
     def getPackagePackageVersion(self, package_version_id):
         """docstring for Package"""
         PackageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         return PackageVersion
 
+    def promotePackageSource(self, packageSource):
+        pass
+
     @exposed
     def addPackagePackageVersion(self, package_version):
         """docstring for addWorkspace"""
         package_version.save()
         return package_version
+
+    def promotePackageBuild(self, packageBuild):
+        pass
+
 
     @exposed
     def updatePackagePackageVersion(self, package_version_id, package_version):
