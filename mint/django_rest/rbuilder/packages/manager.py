@@ -62,12 +62,26 @@ class PackageManager(basemanager.BaseManager):
 
 class PackageVersionManager(basemanager.BaseManager):
     
+
     @exposed
-    def getPackageVersions(self):
-        """docstring for getPackageVersions"""
-        packageVersions = models.PackageVersions()
+    def getAllPackageVersions(self):
+        packageVersions = models.AllPackageVersions()
         packageVersions.package_version = list(models.PackageVersion.objects.all())
         return packageVersions
+
+    @exposed
+    def getPackagePackageVersions(self, package_id):
+        """docstring for getPackageVersions"""
+        package = models.Package.objects.get(pk=package_id)
+        packageVersions = models.PackageVersions()
+        packageVersions.package_version = list(
+            models.PackageVersion.objects.filter(package=package))
+        packageVersions._parents = [package]
+        return packageVersions
+
+    @exposed
+    def getPackageVersions(self, package_id):
+        pass
 
     @exposed
     def getPackageVersion(self, package_id):

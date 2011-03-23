@@ -44,12 +44,9 @@ class PackageService(service.BaseService):
 class PackagePackageVersionService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, request, package_id=None, package_version_id=None):
+    def rest_GET(self, request, package_id):
         """docstring for rest_GET"""
-        if package_id:
-            return self.mgr.getPackagePackageVersion(package_id)
-        else:
-            return self.mgr.getPackagePackageVersions()
+        return self.mgr.getPackagePackageVersions(package_id)
     
     # access.admin
     @requires('package_version')
@@ -83,7 +80,7 @@ class PackageVersionService(service.BaseService):
         if package_version_id:
             return self.mgr.getPackageVersion(package_version_id)
         else:
-            return self.mgr.getPackageVersions()
+            return self.mgr.getAllPackageVersions()
 
 
 class PackageVersionJobService(service.BaseService):

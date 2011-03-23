@@ -56,6 +56,12 @@ class PackageVersions(modellib.Collection):
     list_fields = ['package_version']
 
 
+class AllPackageVersions(PackageVersions):
+
+    class Meta:
+        abstract = True
+
+
 class PackageVersion(modellib.XObjIdModel):
 
     class Meta:
