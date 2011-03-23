@@ -77,20 +77,19 @@ class PackageVersionService(service.BaseService):
     """docstring for PackagePackageVersionService"""
     
     @return_xml
-    def rest_GET(self, package_version_id=None):
+    def rest_GET(self, request, package_version_id=None):
         """docstring for rest_GET"""
         
         if package_version_id:
             return self.mgr.getPackageVersion(package_version_id)
         else:
             return self.mgr.getPackageVersions()
-        return self.mgr.getPackageVersions()
 
 
 class PackageVersionJobService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, package_version_id, package_version_job_id=None):
+    def rest_GET(self, request, package_version_id, package_version_job_id=None):
         """docstring for rest_GET"""
         if package_version_job_id:
             return self.mgr.getPackageVersionJob(package_version_job_id)
@@ -101,7 +100,7 @@ class PackageVersionJobService(service.BaseService):
 class PackageSourceService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, package_version_id, package_source_id=None):
+    def rest_GET(self, request, package_version_id, package_source_id=None):
         """docstring for rest_GET"""
         if package_source_id:
             return self.mgr.getPackageSource(package_source_id)
@@ -112,7 +111,7 @@ class PackageSourceService(service.BaseService):
 class PackageSourceJobService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, package_version_id, package_source_id,
+    def rest_GET(self, request, package_version_id, package_source_id,
         package_source_job_id=None):
         """docstring for rest_GET"""
         if package_source_job_id:
@@ -124,7 +123,7 @@ class PackageSourceJobService(service.BaseService):
 class PackageBuildService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, package_version_id, package_source_id,
+    def rest_GET(self, request, package_version_id, package_source_id,
         package_build_id=None):
         """docstring for rest_GET"""
         if package_build_id:
@@ -136,7 +135,7 @@ class PackageBuildService(service.BaseService):
 class PackageBuildJobService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, package_version_id, package_source_id,
+    def rest_GET(self, request, package_version_id, package_source_id,
         package_build_id, package_build_job_id=None):
         """docstring for rest_GET"""
         if package_build_job_id:
