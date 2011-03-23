@@ -37,17 +37,17 @@ class PackageService(service.BaseService):
     # @access.admin   
     def rest_DELETE(self, request, package_id):
         """docstring for rest_DELETE"""
-        self.mgr.deletePackagee(package_id)
+        self.mgr.deletePackage(package_id)
         response = HttpResponse(status=204)
         return response
 
 class PackagePackageVersionService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, request, package_version_id=None):
+    def rest_GET(self, request, package_id=None):
         """docstring for rest_GET"""
-        if package_version_id:
-            return self.mgr.getPackagePackageVersion(package_version_id)
+        if package_id:
+            return self.mgr.getPackagePackageVersion(package_id)
         else:
             return self.mgr.getPackagePackageVersions()
     
@@ -61,14 +61,14 @@ class PackagePackageVersionService(service.BaseService):
     # @access.admin
     @requires('package_version')
     @return_xml
-    def rest_PUT(self, request, package_version_id, package_version):
+    def rest_PUT(self, request, package_id, package_version):
         """docstring for rest_PUT"""
         return self.mgr.updatePackagePackageVersion(package_version_id, package_version)
     
     # @access.admin   
-    def rest_DELETE(self, request, package_version_id):
+    def rest_DELETE(self, request, package_id):
         """docstring for rest_DELETE"""
-        self.mgr.deletePackagePackageVersion(package_version_id)
+        self.mgr.deletePackagePackageVersion(package_id)
         response = HttpResponse(status=204)
         return response
 

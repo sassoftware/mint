@@ -47,12 +47,31 @@ class PackageManager(basemanager.BaseManager):
     def downloadPackageVersionUrl(self, packageVersionUrl):
         pass
 
+    def buildPackageSource(self, packageSource):
+        pass
+
+    def promotePackageSource(self, packageSource):
+        pass
+
+    def commitPackageVersion(self, packageVersion):
+        pass
+
+    def promotePackageBuild(self, packageBuild):
+        pass
+
+
+class PackageVersionService(object):
+    
+    @exposed
+    def getPackageVersions(self, package_id):
+        """docstring for getPackageVersions"""
+        Packages = models.Packages.get(pk=package_id)
+        Packages.package_version = list(models.PackageVersions.objects.all())
+        return Packages
+
 
 class PackagePackageVersionManager(basemanager.BaseManager):
     """docstring for PackageManager"""
-    
-    def commitPackageVersion(self, packageVersion):
-        pass
 
     @exposed
     def getPackagePackageVersions(self):
@@ -61,27 +80,17 @@ class PackagePackageVersionManager(basemanager.BaseManager):
         PackageVersions.package = list(models.PackageVersion.objects.all())
         return PackageVersions
 
-    def buildPackageSource(self, packageSource):
-        pass
-
     @exposed
     def getPackagePackageVersion(self, package_version_id):
         """docstring for Package"""
         PackageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         return PackageVersion
 
-    def promotePackageSource(self, packageSource):
-        pass
-
     @exposed
     def addPackagePackageVersion(self, package_version):
         """docstring for addWorkspace"""
         package_version.save()
         return package_version
-
-    def promotePackageBuild(self, packageBuild):
-        pass
-
 
     @exposed
     def updatePackagePackageVersion(self, package_version_id, package_version):

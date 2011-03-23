@@ -27,7 +27,6 @@ class Package(modellib.XObjIdModel):
     class Meta:
         db_table = 'packages_package'
     _xobj = xobj.XObjMetadata(tag='package')
-
     
     package_id = D(models.AutoField(primary_key=True), 
         "Database id of package")
