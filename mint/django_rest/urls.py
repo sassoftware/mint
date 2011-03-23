@@ -15,6 +15,7 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
+from mint.django_rest.rbuilder.projects import views as projectviews
 from mint.django_rest.rbuilder.packageworkspaces import views as pkgworkspaceviews
 
 handler404 = 'mint.django_rest.handler.handler404'
@@ -251,6 +252,37 @@ urlpatterns = patterns('',
     url(r'^api/changelogs/(?P<change_log_id>\d+)/?$',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
+
+    # Projects
+    url(r'^api/projects/?$',
+        projectviews.ProjectService(),
+        name='Projects'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/?$',
+        projectviews.ProjectService(),
+        name='Project'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersions'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/members/?$',
+        projectviews.ProjectMemberService(),
+        name='ProjectMembers'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersion'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/(?P<stage_name>[a-zA-Z0-9]+)/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStage'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/(?P<image_id>\d+)/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImage'),
 
     # Package Workspaces
     url(r'^api/package_workspaces/?$',

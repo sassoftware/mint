@@ -19,6 +19,7 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.projects.models import Project, Version, Stage
 
 from xobj import xobj
 
@@ -525,14 +526,14 @@ class System(modellib.XObjIdModel):
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name')),
-        "the appliance stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, null=True,
+    stage = D(APIReadOnly(modellib.ForeignKey(Stage, null=True, text_field='name')),
+        "the project stage of the system")
+    major_version = D(APIReadOnly(modellib.ForeignKey(Version, null=True,
         text_field='name')),
-        "the appliance major version of the system")
-    appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, null=True,
+        "the project major version of the system")
+    project = D(APIReadOnly(modellib.ForeignKey(Project, null=True,
         text_field='shortname')),
-        "the appliance of the system")
+        "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
         "the descriptor of available fields to set system configuration parameters")
@@ -619,18 +620,9 @@ class System(modellib.XObjIdModel):
         return bool([j for j in jobs \
             if j.job_state_id == self.runningJobState.job_state_id])
 
-    def serialize(self, request=None, values=None):
-        # We are going to replace the jobs node with hrefs. But DO NOT mark
-        # the jobs m2m relationship as hidden, or else the bulk load fails
-        if values is None:
-            jobs = self.jobs.all()
-        else:
-            # We're popping the jobs data structure from values because its
-            # only purpose is to prevent repeated database hits when we bulk
-            # load
-            jobs = [ x[0] for x in values.pop('jobs', []) ]
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+    def serialize(self, request=None):
+        jobs = self.jobs.all()
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
         xobj_model.has_running_jobs = self.areJobsRunning(jobs)
 
@@ -992,9 +984,8 @@ class Job(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, request,
             parents=parents, model=model)
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
             pk=self.event_type_id).name
         xobj_model.job_description = modellib.Cache.get(
@@ -1192,32 +1183,6 @@ class Trove(modellib.XObjIdModel):
         xobj_model.is_top_level_item = True
         return xobj_model
 
-class Stage(modellib.XObjIdModel):
-    class Meta:
-        db_table = 'inventory_stage'
-    view_name = 'Stages'
-    _xobj = xobj.XObjMetadata(tag='stage')
-    _xobj_hidden_accessors = set(['version_set',])
-
-    stage_id = models.AutoField(primary_key=True)
-    major_version = models.ForeignKey(rbuildermodels.Versions, null=True)
-    name = models.CharField(max_length=256)
-    label = models.TextField(unique=True)
-
-    def get_absolute_url(self, request, *args, **kwargs):
-        if self.major_version:
-            parents = [Pk(self.major_version.productId.shortname),
-                Pk(self.major_version.name), Pk(self.name)]
-            return modellib.XObjIdModel.get_absolute_url(
-                self, request, parents)
-        else:
-            return None
-
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
-        xobj_model._xobj.text = self.name
-        return xobj_model
-
 class Version(modellib.XObjModel):
     serialize_accessors = False
     class Meta:
@@ -1284,7 +1249,6 @@ class SystemJob(modellib.XObjModel):
 
 class JobSystem(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = 'job_system'
     job = models.ForeignKey(rbuildermodels.Jobs, null=False)
     # Django will insist on removing entries from this table when removing a
