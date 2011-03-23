@@ -9,8 +9,6 @@ from django.http import HttpResponse
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml #, access, ACCESS
 
-# from mint.django_rest.rbuilder.packageworkspaces import models
-
 class PackageService(service.BaseService):
     """docstring for PackageService"""
     
@@ -43,34 +41,43 @@ class PackageService(service.BaseService):
         response = HttpResponse(status=204)
         return response
 
-class PackageVersionService(service.BaseService):
+class PackagePackageVersionService(service.BaseService):
 
     @return_xml
-    def rest_GET(self, request, package_id=None):
+    def rest_GET(self, request, package_version_id=None):
         """docstring for rest_GET"""
         if package_id:
-            return self.mgr.getPackage(package_id)
+            return self.mgr.getPackagePackageVersion(package_version_id)
         else:
-            return self.mgr.getPackages()
+            return self.mgr.getPackagePackageVersions()
     
     # access.admin
-    @requires('package')
+    @requires('package_version')
     @return_xml
-    def rest_POST(self, request, package):
+    def rest_POST(self, request, package_version):
         """docstring for rest_POST"""
-        return self.mgr.addPackage(package)
+        return self.mgr.addPackagePackageVersion(package_version)
     
     # @access.admin
-    @requires('package')
+    @requires('package_version')
     @return_xml
-    def rest_PUT(self, request, package_id, package):
+    def rest_PUT(self, request, package_version_id, package_version):
         """docstring for rest_PUT"""
-        return self.mgr.updatePackage(package_id, package)
+        return self.mgr.updatePackagePackageVersion(package_version_id, package_version)
     
     # @access.admin   
-    def rest_DELETE(self, request, package_id):
+    def rest_DELETE(self, request, package_version_id):
         """docstring for rest_DELETE"""
-        self.mgr.deletePackage(package_id)
+        self.mgr.deletePackagePackageVersion(package_version_id)
         response = HttpResponse(status=204)
         return response
 
+
+class PackageVersionService(service.BaseService):
+    """docstring for PackagePackageVersionService"""
+    
+    @return_xml
+    def rest_GET(self):
+        """docstring for rest_GET"""
+        return self.mgr.getPackageVersions()
+        

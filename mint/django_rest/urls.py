@@ -243,18 +243,25 @@ urlpatterns = patterns('',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
 
-    # Package Workspaces
+    # Packages
     url(r'^api/packages/?$',
         packageviews.PackageService(),
-        name='PackageVersions'),
+        name='Packages'),
     url(r'^api/packages/(?P<package_id>\d+)/?$',
         packageviews.PackageService(),
         name='Package'),
-    url(r'^api/package/(?P<package_id>\d+)/package_versions/?$',
+        
+    # Package Versions
+    url(r'^api/package_versions/?$',
         packageviews.PackageVersionService(),
         name='PackageVersions'),
+        
+    url(r'^api/package/(?P<package_id>\d+)/package_versions/?$',
+        packageviews.PackagePackageVersionService(),
+        name='PackageVersions'),
+        
     url(r'^api/packages/(?P<package_id>\d+)/package_versions/(?P<package_version_id>\d+)/?$',
-        packageviews.PackageVersionService(),
+        packageviews.PackagePackageVersionService(),
         name='PackageVersion'),
 
 

@@ -15,7 +15,7 @@ class PackageManager(basemanager.BaseManager):
     @exposed
     def getPackages(self):
         """docstring for getPackage"""
-        Packages = models.Package()
+        Packages = models.Packages()
         Packages.package = list(models.Package.objects.all())
         return Packages
     
@@ -43,3 +43,39 @@ class PackageManager(basemanager.BaseManager):
         package = models.Package.objects.get(
             pk=package_id)
         package.delete()
+
+
+class PackagePackageVersionManager(basemanager.BaseManager):
+    """docstring for PackageManager"""
+
+    @exposed
+    def getPackagePackageVersions(self):
+        """docstring for getPackage"""
+        PackageVersions = models.PackageVersions()
+        PackageVersions.package = list(models.PackageVersion.objects.all())
+        return Packages
+
+    @exposed
+    def getPackagePackageVersion(self, package_version_id):
+        """docstring for Package"""
+        PackageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        return PackageVersion
+
+    @exposed
+    def addPackagePackageVersion(self, package_version):
+        """docstring for addWorkspace"""
+        package_version.save()
+        return package_version
+
+    @exposed
+    def updatePackagePackageVersion(self, package_version_id, package_version):
+        """docstring for updateWorkspace"""
+        package_version.save()
+        return package_version
+
+    @exposed
+    def deletePackagePackageVersion(self, package_version_id):
+        """docstring for deletePackageWorkspace"""
+        PackageVersion = models.PackageVersion.objects.get(
+            pk=package_version_id)
+        PackageVersion.delete()

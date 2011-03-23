@@ -65,7 +65,7 @@ class PackageVersion(modellib.XObjIdModel):
 
     package_version_id = D(models.AutoField(primary_key=True), 
         "Database id of package version")
-    package= D(modellib.ForeignKey(Package,
+    package = D(modellib.ForeignKey(Package,
         related_name="package_versions"),
         "Package for this package version")
     name = D(models.TextField(),
