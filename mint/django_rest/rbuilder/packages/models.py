@@ -193,6 +193,14 @@ class PackageVersionUrl(modellib.XObjIdModel):
         "the user that last modified the resource")
 
 
+class PackageSources(modellib.Collection):
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='package_sources')
+    list_fields = ['package_source']
+
 class PackageSource(modellib.XObjIdModel):
     
     class Meta:
@@ -202,8 +210,9 @@ class PackageSource(modellib.XObjIdModel):
 
     package_source_id = D(models.AutoField(primary_key=True), 
         "Database id of package source")
-    package_version = D(modellib.ForeignKey(PackageVersion,
-        related_name="package_sources"),
+    package_version = D(modellib.DeferredForeignKey(PackageVersion,
+        related_name="package_sources", view_name="PackageSources",
+        ref_name="id"),
         "Package version")
     actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageSourceAction"),

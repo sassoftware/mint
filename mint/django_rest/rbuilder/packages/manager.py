@@ -106,6 +106,19 @@ class PackageVersionManager(basemanager.BaseManager):
             pk=package_version_id)
         packageversion.delete()
 
+    @exposed
+    def getPackageSources(self, package_version_id):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        packageSources = models.PackageSources()
+        packageSources.package_source = list(
+            models.PackageSource.objects.filter(package_version=packageVersion))
+        return packageSources
+
+    @exposed
+    def getPackageSource(self, package_source_id):
+        packageSource = models.PackageSource.objects.get(pk=package_source_id)
+        return packageSource
+
 
 class PackagePackageVersionManager(basemanager.BaseManager):
     """docstring for PackageManager"""
