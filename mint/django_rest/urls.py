@@ -255,7 +255,11 @@ urlpatterns = patterns('',
     url(r'^api/package_versions/?$',
         packageviews.PackageVersionService(),
         name='PackageVersions'),
-        
+
+    url(r'^api/package_versions/(?P<package_version_id>)/?$',
+        packageviews.PackageVersionService(),
+        name='PackageVersion'),
+       
     url(r'^api/packages/(?P<package_id>\d+)/package_versions/?$',
         packageviews.PackagePackageVersionService(),
         name='PackageVersions'),
@@ -265,8 +269,56 @@ urlpatterns = patterns('',
         name='PackageVersion'),
 
     url(r'^api/package_versions/(?P<package_version_id>\d+)/package_version_jobs/?$',
-        packageviews.PackageVersionJobsService(),
+        packageviews.PackageVersionJobService(),
         name='PackageVersionJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_version_jobs/'
+         '(?P<package_version_job_id>\d+)/?$',
+        packageviews.PackageVersionJobService(),
+        name='PackageVersionJob'),
+
+    # Package Sources
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/?$',
+        packageviews.PackageSourceService(),
+        name='PackageSources'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/?$',
+        packageviews.PackageSourceService(),
+        name='PackageSource'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_source_jobs/?$',
+        packageviews.PackageSourceJobService(),
+        name='PackageSourceJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_source_jobs/(?P<package_source_job_id>\d+)/?$',
+        packageviews.PackageSourceJobService(),
+        name='PackageSourceJob'),
+
+    # Package Builds
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/?$',
+        packageviews.PackageBuildService(),
+        name='PackageBuilds'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>)/?$',
+        packageviews.PackageBuildService(),
+        name='PackageBuild'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>)/'
+         'package_builds_jobs/?$',
+        packageviews.PackageBuildJobService(),
+        name='PackageBuildJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>)/'
+          'package_builds_jobs/(?P<package_build_job_id>)/?$',
+        packageviews.PackageBuildJobService(),
+        name='PackageBuildJob'),
 
 )
 

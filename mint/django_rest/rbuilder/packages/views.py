@@ -86,9 +86,62 @@ class PackageVersionService(service.BaseService):
             return self.mgr.getPackageVersions()
         return self.mgr.getPackageVersions()
 
-class PackageVersionJobsService(service.BaseService):
+
+class PackageVersionJobService(service.BaseService):
 
     @return_xml
-    def rest_GET(self):
+    def rest_GET(self, package_version_id, package_version_job_id=None):
         """docstring for rest_GET"""
-        return self.mgr.getPackageVersionJobs()
+        if package_version_job_id:
+            return self.mgr.getPackageVersionJob(package_version_job_id)
+        else:
+            return self.mgr.getPackageVersionJobs(package_version_id)
+
+
+class PackageSourceService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self, package_version_id, package_source_id=None):
+        """docstring for rest_GET"""
+        if package_source_id:
+            return self.mgr.getPackageSource(package_source_id)
+        else:
+            return self.mgr.getPackageSources(package_version_id)
+        
+
+class PackageSourceJobService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self, package_version_id, package_source_id,
+        package_source_job_id=None):
+        """docstring for rest_GET"""
+        if package_source_job_id:
+            return self.mgr.getPackageSourceJob(package_source_job_id)
+        else:
+            return self.mgr.getPackageSourceJobs(package_version_id)
+
+
+class PackageBuildService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self, package_version_id, package_source_id,
+        package_build_id=None):
+        """docstring for rest_GET"""
+        if package_build_id:
+            return self.mgr.getPackageBuild(package_build_id)
+        else:
+            return self.mgr.getPackageBuilds(package_source_id)
+
+
+class PackageBuildJobService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self, package_version_id, package_source_id,
+        package_build_id, package_build_job_id=None):
+        """docstring for rest_GET"""
+        if package_build_job_id:
+            return self.mgr.getPackageBuildJob(package_build_job_id)
+        else:
+            return self.mgr.getPackageBuildsJobs(package_build_id)
+
+
