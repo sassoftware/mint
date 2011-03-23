@@ -120,16 +120,26 @@ class PackageVersionAction(modellib.XObjIdModel):
         "the date the package version action was last modified (UTC)")
 
 
+class PackageVersionJobs(modellib.XObjIdModel):
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag="package_version_jobs")
+    list_fields = ["package_version_job"]
+
 class PackageVersionJob(modellib.XObjIdModel):
     
     class Meta:
         db_table = "packages_package_version_job"
     _xobj = xobj.XObjMetadata(tag="package_version_job")
 
+    url_key = ["package_version.package", "package_version", "pk"]
+
     package_version_job_id = D(models.AutoField(primary_key=True),
         "Database id of package version job")
     package_version = D(modellib.DeferredForeignKey(PackageVersion,
-        related_name="package_version_jobs"),
+        related_name="package_version_jobs", view_name="PackageVersionJobs",
+        ref_name="id"),
         "Package version")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_version_jobs"),
@@ -237,6 +247,14 @@ class PackageSourceAction(modellib.XObjIdModel):
         "the date the package source action was last modified (UTC)")
 
 
+class PackageSourceJobs(modellib.XObjIdModel):
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag="package_source_jobs")
+    list_fields = ["package_source_job"]
+
+
 class PackageSourceJob(modellib.XObjIdModel):
     
     class Meta:
@@ -246,7 +264,8 @@ class PackageSourceJob(modellib.XObjIdModel):
     package_source_job_id = D(models.AutoField(primary_key=True),
         "Database id of package source job")
     package_source = D(modellib.ForeignKey(PackageSource,
-        related_name="package_source_jobs"),
+        related_name="package_source_jobs", view_name="PackageSourceJobs",
+        ref_name="id"),
         "Package source")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_source_jobs"),
@@ -320,6 +339,14 @@ class PackageBuildAction(modellib.XObjIdModel):
         "the date the package build action was last modified (UTC)")
 
 
+class PackageBuildJobs(modellib.XObjIdModel):
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag="package_build_jobs")
+    list_fields = ["package_build_job"]
+
+
 class PackageBuildJob(modellib.XObjIdModel):
     
     class Meta:
@@ -329,7 +356,8 @@ class PackageBuildJob(modellib.XObjIdModel):
     package_build_job_id = D(models.AutoField(primary_key=True),
         "Database id of package build job")
     package_build = D(modellib.ForeignKey(PackageBuild,
-        related_name="package_builds_jobs"),
+        related_name="package_builds_jobs", view_name="PackageBuildJobs",
+        ref_name="id"),
         "Package build")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_build_jobs"),
