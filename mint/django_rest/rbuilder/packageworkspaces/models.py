@@ -150,6 +150,10 @@ class PackageSourceAction(modellib.XObjIdModel):
     visible = D(modellib.SyntheticField(),
         "If the action is visible")
 
+class PackageSourceJob(modellib.XObjIdModel):
+
+    job = D(modellib.ForeignKey(inventorymodels.Job),
+        "Job")
 
 class PackageBuild(modellib.XObjIdModel):
 
