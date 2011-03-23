@@ -1642,14 +1642,13 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(system.management_interface.name, 'wmi')
         self.assertEquals(system.management_interface.pk, 2)
 
-        # DISABLED TEST, no support for this
         # Test that mgmt interface can be deleted
-        # response = self._put('/api/inventory/systems/%s' % system.pk,
-            # data=testsxml.system_delete_mgmt_interface_put_xml, 
-            # username="admin", password="password")
-        # self.assertEquals(response.status_code, 200)
-        # system = models.System.objects.get(pk=system.pk)
-        # self.assertEquals(system.management_interface, None)
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=testsxml.system_delete_mgmt_interface_put_xml, 
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.assertEquals(system.management_interface, None)
 
     def testSystemCredentials(self):
         system = self._saveSystem()

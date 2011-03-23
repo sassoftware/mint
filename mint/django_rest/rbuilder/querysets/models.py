@@ -12,6 +12,7 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.querysets import errors
 
 from xobj import xobj
 
@@ -138,6 +139,41 @@ class QuerySet(modellib.XObjIdModel):
             return False
         else: 
             return True
+
+    def save(self, *args, **kwargs):
+        """
+        Validate that the query set does not have any circular relationships in
+        it's children before saving it.  E.g., a query set can not be a child
+        of one of it's children.
+        """
+        self._validateChildren()
+        return modellib.XObjIdModel.save(self, *args, **kwargs)
+
+    def _validateChildren(self, validatedChildren=[]):
+        """
+        Validate the query set does not have any circular relationships in
+        it's children.
+        """
+        # Save the current query set as validated
+        validatedChildren.append(self)
+
+        children = self.children.all()
+
+        # A query set can not be in it's own children
+        if self in children:
+            raise errors.InvalidChildQuerySet(parent=self.name,
+                child=self.name)
+
+        # A query set can not be a child of any of it's children
+        for childQuerySet in children:
+            grandChildren = childQuerySet.children.all()
+            if self in grandChildren:
+                raise errors.InvalidChildQuerySet(parent=childQuerySet.name,
+                    child=self.name)
+
+            # Recurse, validating each child
+            childQuerySet._validateChildren(validatedChildren)
+
 
 class FilterEntry(modellib.XObjIdModel):
     class Meta:
