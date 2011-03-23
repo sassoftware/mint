@@ -88,6 +88,8 @@ class PackageVersion(modellib.XObjIdModel):
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
         related_name="package_versions_last_modified"),
         "the user that last modified the resource")
+    committed = D(models.BooleanField(default=False),
+        "if the package version has been committed.")
 
 
     def get_absolute_url(self, request, *args, **kwargs):
@@ -201,6 +203,8 @@ class PackageSource(modellib.XObjIdModel):
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
         related_name="package_sources_last_modified"),
         "the user that last modified the resource")
+    built = D(models.BooleanField(default=False),
+        "if the package source has been built")
 
 
 class PackageSourceAction(modellib.XObjIdModel):

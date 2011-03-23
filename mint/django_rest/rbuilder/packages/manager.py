@@ -43,3 +43,4 @@ class PackageManager(basemanager.BaseManager):
         package = models.Package.objects.get(
             pk=package_id)
         package.delete()
+
