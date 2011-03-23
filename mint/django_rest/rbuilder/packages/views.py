@@ -80,4 +80,3 @@ class PackageVersionService(service.BaseService):
     def rest_GET(self):
         """docstring for rest_GET"""
         return self.mgr.getPackageVersions()
-        

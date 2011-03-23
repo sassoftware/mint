@@ -59,7 +59,7 @@ class PackagePackageVersionManager(basemanager.BaseManager):
         """docstring for getPackage"""
         PackageVersions = models.PackageVersions()
         PackageVersions.package = list(models.PackageVersion.objects.all())
-        return Packages
+        return PackageVersions
 
     def buildPackageSource(self, packageSource):
         pass
