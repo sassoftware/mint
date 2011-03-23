@@ -40,9 +40,9 @@ class Package(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
     load_fields = [name]
@@ -82,9 +82,9 @@ class PackageVersion(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package version was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
 
@@ -134,9 +134,9 @@ class PackageVersionJob(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package version job was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
 
@@ -164,9 +164,9 @@ class PackageVersionUrl(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package version url was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
 
@@ -188,9 +188,9 @@ class PackageSource(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package source was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
 
@@ -235,9 +235,9 @@ class PackageSourceJob(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package source job was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
 
@@ -260,9 +260,9 @@ class PackageBuild(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package build was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
 
@@ -307,9 +307,9 @@ class PackageBuildJob(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package build job was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.User, null=True),
+    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True),
         "the user that last modified the resource")
 
 
