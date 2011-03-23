@@ -13,7 +13,7 @@ class PackageManager(basemanager.BaseManager):
     """docstring for PackageManager"""
     
     @exposed
-    def getPackage(self):
+    def getPackages(self):
         """docstring for getPackage"""
         Packages = models.Package()
         Packages.package = list(models.Package.objects.all())
