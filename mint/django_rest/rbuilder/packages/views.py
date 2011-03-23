@@ -48,7 +48,7 @@ class PackageVersionService(service.BaseService):
     @return_xml
     def rest_GET(self, request, package_id=None):
         """docstring for rest_GET"""
-        if package_workspace_id:
+        if package_id:
             return self.mgr.getPackage(package_id)
         else:
             return self.mgr.getPackage()
