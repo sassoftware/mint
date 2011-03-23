@@ -1,3 +1,9 @@
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from django.http import HttpResponse
 
 from mint.django_rest.rbuilder import service
@@ -9,10 +15,10 @@ class PackageWorkspaceService(service.BaseService):
     """docstring for PackageWorkspaceService"""
     
     @return_xml
-    def rest_GET(self, request, workspace_id=None):
+    def rest_GET(self, request, package_workspace_id=None):
         """docstring for rest_GET"""
-        if workspace_id:
-            return self.mgr.getPackageWorkspace(workspace_id)
+        if package_workspace_id:
+            return self.mgr.getPackageWorkspace(package_workspace_id)
         else:
             return self.mgr.getPackageWorkspaces()
     
@@ -26,13 +32,45 @@ class PackageWorkspaceService(service.BaseService):
     # @access.admin
     @requires('package_workspace')
     @return_xml
-    def rest_PUT(self, request, workspace_id, package_workspace):
+    def rest_PUT(self, request, package_workspace_id, package_workspace):
         """docstring for rest_PUT"""
-        return self.mgr.updatePackageWorkspace(workspace_id, package_workspace)
+        return self.mgr.updatePackageWorkspace(package_workspace_id, package_workspace)
     
     # @access.admin   
-    def rest_DELETE(self, request, workspace_id):
+    def rest_DELETE(self, request, package_workspace_id):
         """docstring for rest_DELETE"""
-        self.mgr.deletePackageWorkspace(workspace_id)
+        self.mgr.deletePackageWorkspace(package_workspace_id)
         response = HttpResponse(status=204)
         return response
+
+class PackageSessionService(service.BaseService):
+
+    @return_xml
+    def rest_GET(self, request, package_workspace_id=None):
+        """docstring for rest_GET"""
+        if package_workspace_id:
+            return self.mgr.getPackageWorkspace(package_workspace_id)
+        else:
+            return self.mgr.getPackageWorkspaces()
+    
+    # access.admin
+    @requires('package_workspace')
+    @return_xml
+    def rest_POST(self, request, package_workspace):
+        """docstring for rest_POST"""
+        return self.mgr.addPackageWorkspace(package_workspace)
+    
+    # @access.admin
+    @requires('package_workspace')
+    @return_xml
+    def rest_PUT(self, request, package_workspace_id, package_workspace):
+        """docstring for rest_PUT"""
+        return self.mgr.updatePackageWorkspace(package_workspace_id, package_workspace)
+    
+    # @access.admin   
+    def rest_DELETE(self, request, package_workspace_id):
+        """docstring for rest_DELETE"""
+        self.mgr.deletePackageWorkspace(package_workspace_id)
+        response = HttpResponse(status=204)
+        return response
+

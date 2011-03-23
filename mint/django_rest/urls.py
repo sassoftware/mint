@@ -252,13 +252,20 @@ urlpatterns = patterns('',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
 
-    # REST replacements for XMLRPC
+    # Package Workspaces
     url(r'^api/package_workspaces/?$',
         pkgworkspaceviews.PackageWorkspaceService(),
         name='PackageWorkspaces'),
-    url(r'^api/package_workspaces/(?P<workspace_id>[a-zA-Z0-9]+)/?$',
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/?$',
         pkgworkspaceviews.PackageWorkspaceService(),
-        name='PackageWorkspace')
+        name='PackageWorkspace'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSessions'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/(?P<package_session_id>\d+)/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSession'),
+
 
 )
 
