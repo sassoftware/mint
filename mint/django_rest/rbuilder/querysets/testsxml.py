@@ -32,7 +32,7 @@ query_sets_xml = """\
     <collection id="http://testserver/api/inventory/systems"/>
     <query_tags>
       <query_tag id="http://testserver/api/query_sets/1/query_tags/1">
-        <name>query-tag-All Systems-1</name>
+        <name>query-tag-All_Systems-1</name>
         <query_tag_id>1</query_tag_id>
         <query_set href="http://testserver/api/query_sets/1"/>
       </query_tag>
@@ -61,7 +61,7 @@ query_sets_xml = """\
         <collection id="http://testserver/api/inventory/systems"/>
         <query_tags>
           <query_tag id="http://testserver/api/query_sets/2/query_tags/2">
-            <name>query-tag-Active Systems-2</name>
+            <name>query-tag-Active_Systems-2</name>
             <query_tag_id>2</query_tag_id>
             <query_set href="http://testserver/api/query_sets/2"/>
           </query_tag>
@@ -93,7 +93,7 @@ query_sets_xml = """\
         <collection id="http://testserver/api/inventory/systems"/>
         <query_tags>
           <query_tag id="http://testserver/api/query_sets/3/query_tags/3">
-            <name>query-tag-Inactive Systems-3</name>
+            <name>query-tag-Inactive_Systems-3</name>
             <query_tag_id>3</query_tag_id>
             <query_set href="http://testserver/api/query_sets/3"/>
           </query_tag>
@@ -129,7 +129,7 @@ query_sets_xml = """\
     <collection id="http://testserver/api/inventory/systems"/>
         <query_tags>
           <query_tag id="http://testserver/api/query_sets/2/query_tags/2">
-            <name>query-tag-Active Systems-2</name>
+            <name>query-tag-Active_Systems-2</name>
             <query_tag_id>2</query_tag_id>
             <query_set href="http://testserver/api/query_sets/2"/>
           </query_tag>
@@ -161,7 +161,7 @@ query_sets_xml = """\
     <collection id="http://testserver/api/inventory/systems"/>
         <query_tags>
           <query_tag id="http://testserver/api/query_sets/3/query_tags/3">
-            <name>query-tag-Inactive Systems-3</name>
+            <name>query-tag-Inactive_Systems-3</name>
             <query_tag_id>3</query_tag_id>
             <query_set href="http://testserver/api/query_sets/3"/>
           </query_tag>
@@ -193,7 +193,7 @@ query_sets_xml = """\
     <collection id="http://testserver/api/inventory/systems"/>
     <query_tags>
       <query_tag id="http://testserver/api/query_sets/4/query_tags/4">
-        <name>query-tag-Physical Systems-4</name>
+        <name>query-tag-Physical_Systems-4</name>
         <query_tag_id>4</query_tag_id>
         <query_set href="http://testserver/api/query_sets/4"/>
       </query_tag>
@@ -262,7 +262,7 @@ query_set_xml = """\
     <collection id="http://testserver/api/inventory/systems"/>
     <query_tags>
       <query_tag id="http://testserver/api/query_sets/4/query_tags/4">
-        <name>query-tag-Physical Systems-4</name>
+        <name>query-tag-Physical_Systems-4</name>
         <query_tag_id>4</query_tag_id>
         <query_set href="http://testserver/api/query_sets/4"/>
       </query_tag>

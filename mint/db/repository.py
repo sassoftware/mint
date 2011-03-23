@@ -160,6 +160,11 @@ class RepositoryManager(object):
             reposDB = self.reposDBCache.popitem()[1]
             reposDB.close()
 
+    def close_fork(self):
+        while self.reposDBCache:
+            reposDB = self.reposDBCache.popitem()[1]
+            reposDB.close_fork()
+
     def getServerProxy(self, fqdn, url=None, user=None, entitlement=None):
         """
         Get a generic XMLRPC server proxy for C{fqdn}, optionally using
@@ -558,13 +563,18 @@ class RepositoryHandle(object):
         util.mkdirChain(workDir)
         util.execute("tar -C '%s' -xf '%s'" % (workDir, path))
 
+        mdPath = os.path.join(workDir, 'metadata')
+        dumpPath = None
         try:
             # Parse and verify metadata
-            mdPath = os.path.join(workDir, 'metadata')
             metadata = {}
             for line in open(mdPath):
                 key, value = line.rstrip().split(None, 1)
                 metadata[key] = value
+
+            if metadata['serverName'].lower() != self.fqdn.lower():
+                raise RuntimeError("Bundle is for repository %s but this is %s"
+                        % (metadata['serverName'], self.fqdn))
 
             if self.driver == 'pgpool':
                 expectType = 'postgresql'
@@ -586,7 +596,8 @@ class RepositoryHandle(object):
             # Clean up
             try:
                 util.removeIfExists(mdPath)
-                util.removeIfExists(dumpPath)
+                if dumpPath:
+                    util.removeIfExists(dumpPath)
             except:
                 log.exception("Error cleaning up temporary restore files:")
 

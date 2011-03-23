@@ -1,23 +1,22 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
-# All Rights Reserved
-#
+
 import base64
 import logging
 import os
+import sys
 import tempfile
+import time
+import traceback
 import weakref
 
 from conary import errors as conaryErrors
 from conary import versions
-from conary.conaryclient import callbacks
 from conary.dbstore import sqllib
 from conary.build import lookaside
 from conary.lib import util
 from conary.repository import errors as reposErrors
-from conary.repository import changeset
-from conary.repository import filecontainer
 
 from mint import jobstatus
 from mint import mint_error
@@ -36,22 +35,30 @@ log = logging.getLogger(__name__)
 
 
 class PlatformLoadCallback(repository.DatabaseRestoreCallback):
-    def __init__(self, db, job, totalKB, *args, **kw):
+    def __init__(self, db, job, totalKB):
         self.db = db
         self.job = job
-        repository.DatabaseRestoreCallback(self, *args, **kw)
+        self.totalKB = totalKB
+        self.last = 0
+        repository.DatabaseRestoreCallback.__init__(self)
         
     def _message(self, txt):
+        log.info(txt)
         self.job.message = txt
 
     def done(self):
         self.job.status = self.job.STATUS_COMPLETED
 
-    def error(self, e):
+    def error(self, txt):
+        txt = "Load Failed: %s" % txt
+        log.error(txt)
         self.job.status = self.job.STATUS_FAILED
-        self._message("Load failed: %s" % e)
+        self.job.message = txt
 
     def downloading(self, got, rate):
+        if time.time() - self.last < 1:
+            return
+        self.last = time.time()
         self._downloading('Downloading', got, rate, self.totalKB)
 
     def _downloading(self, msg, got, rate, total):
@@ -62,9 +69,14 @@ class PlatformLoadCallback(repository.DatabaseRestoreCallback):
             totalMsg = 'of %dMB ' % (total / 1024 / 1024)
             totalPct = '(%d%%) ' % ((got * 100) / total)
 
-        self.csMsg("%s %dMB %s%sat %dKB/sec"
+        self._message("%s %dMB %s%sat %dKB/sec"
                    % (msg, got/1024/1024, totalMsg, totalPct, rate/1024))
-        self.update()                      
+
+    def _info(self, message, *args):
+        self._message(message % args)
+
+    def _error(self, message, *args):
+        self.error(message % args)
 
 
 class ContentSourceTypes(object):
@@ -364,7 +376,7 @@ class Platforms(object):
         repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
         loadUri = platformLoad.loadUri.encode('utf-8')
         headers = {}
-        fd, outFilePath = tempfile.mkstemp('.ccs', 'platform-load-')
+        fd, outFilePath = tempfile.mkstemp('.tar', 'platform-load-')
 
         finder = lookaside.FileFinder(None, None, cfg = self.cfg)
         inFile = finder._fetchUrl(loadUri, headers)
@@ -388,28 +400,40 @@ class Platforms(object):
         job = self.jobStore.get(jobId, commitAfterChange = True)
         job.setFields([('pid', os.getpid()), ('status', job.STATUS_RUNNING) ])
 
-        if inFile.headers.has_key('content-length'):
-            totalKB = int(inFile.headers['content-length'])
-        else:
-            totalKB = None
+        try:
+            if inFile.headers.has_key('content-length'):
+                totalKB = int(inFile.headers['content-length'])
+            else:
+                totalKB = None
 
-        callback = PlatformLoadCallback(self.db, job, totalKB)
-        # Save a reference to the callback so that we have access to it in the
-        # _load_error method.
-        self.callback = callback
-        
-        outFile = open(outFilePath, 'w')
-        total = util.copyfileobj(inFile, outFile,
-                                 callback=callback.downloading)
-        outFile.close()
+            callback = PlatformLoadCallback(self.db, job, totalKB)
+            # Save a reference to the callback so that we have access to it in the
+            # _load_error method.
+            self.callback = callback
+            
+            outFile = open(outFilePath, 'w')
+            total = util.copyfileobj(inFile, outFile,
+                                     callback=callback.downloading)
+            outFile.close()
 
-        callback._message('Download Complete. Loading preload...')
-        repoHandle = \
-            self.db.productMgr.reposMgr.reposManager.getRepositoryFromFQDN(
-                platform.repositoryHostname)
-        repoHandle.restoreBundle(outFilePath)
-        callback._message('Load completed.')
-        callback.done()
+            callback._message('Download Complete. Loading preload...')
+            reposManager = self.db.productMgr.reposMgr.reposManager
+            repoHandle = reposManager.getRepositoryFromFQDN(
+                    platform.repositoryHostname)
+            repoHandle.restoreBundle(outFilePath, replaceExisting=True,
+                callback=callback)
+
+            # Recreate anonymous and mintauth users.
+            self.db.productMgr.reposMgr.populateUsers(repoHandle)
+
+            callback._message('Load completed.')
+            callback.done()
+            os.unlink(outFilePath)
+        except:
+            log.exception("Unhandled exception loading platform repository:")
+            exc_info = sys.exc_info()
+            lines = traceback.format_exception_only(exc_info[0], exc_info[1])
+            callback.error('\n'.join(lines))
 
         return
 
