@@ -30,7 +30,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'packageMgr' : PackageManager,
         'changeLogMgr' : ChangeLogManager,
         'projectMgr' : ProjectManager,
-        'packageWorkspaceMgr' = PackageWorkspaceManager,
+        'packageWorkspaceMgr' : PackageWorkspaceManager,
     }
 
     def __init__(self, cfg=None, userName=None):
