@@ -146,7 +146,11 @@ class QuerySet(modellib.XObjIdModel):
         it's children before saving it.  E.g., a query set can not be a child
         of one of it's children.
         """
-        self._validateChildren()
+        # If we don't have a query_set_id (pk), then we've never even been saved
+        # and Django prevents us from using the Many to Many manager on
+        # children.  Skip validating children in this case.
+        if self.query_set_id is not None:
+            self._validateChildren()
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
     def _validateChildren(self, validatedChildren=[]):
