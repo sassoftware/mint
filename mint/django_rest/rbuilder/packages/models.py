@@ -20,7 +20,7 @@ class Packages(modellib.Collection):
     _xobj = xobj.XObjMetadata(
                 tag='packages')
     list_fields = ['package']
-    
+
 
 class Package(modellib.XObjIdModel):
     
@@ -336,13 +336,19 @@ class PackageActionType(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag="package_action_type")
 
     COMMIT = "commit"
-    COMMIT_DESC = "commit the package session"
+    COMMIT_DESC = "commit the package version"
     BUILD = "build"
-    BUILD_DESC = "build the package session"
+    BUILD_DESC = "build the package version"
+    PROMOTE_VERSION = "promote_version"
+    PROMOTE_VERSION_DESC = "promote the package version"
+    PROMOTE = "promote"
+    PROMOTE_DESC = "promote the package"
 
     ACTION_CHOICES = (
         (COMMIT, COMMIT_DESC),
         (BUILD, BUILD_DESC),
+        (PROMOTE_VERSION, PROMOTE_VERSION_DESC),
+        (PROMOTE, PROMOTE_DESC),
     )
 
     package_action_type_id = D(models.AutoField(primary_key=True), 
