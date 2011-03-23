@@ -74,7 +74,7 @@ class PackageVersionService(object):
         """docstring for getPackageVersion"""
         PackageVersion = models.PackagesVersion.get(pk=package_id)
         PackageVersion.package_version = list(models.PackageVersion.objects.all())
-        return PackagesVersion
+        return PackageVersion
 
 
 class PackagePackageVersionManager(basemanager.BaseManager):
