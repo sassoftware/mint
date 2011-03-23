@@ -12,82 +12,184 @@ from xobj import xobj
 
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 
-class PackageWorkspaces(modellib.Collection):
+class Packages(modellib.Collection):
 
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='package_workspaces')
-    list_fields = ['package_workspace']
+                tag='packages')
+    list_fields = ['package']
     
 
-class PackageWorkspace(modellib.XObjIdModel):
+class Package(modellib.XObjIdModel):
     
     class Meta:
-        db_table = 'packageworkspaces_package_workspace'
-    _xobj = xobj.XObjMetadata(
-                tag = 'package_workspace')
+        db_table = 'packages_package'
+    _xobj = xobj.XObjMetadata(tag='package')
 
     
-    package_workspace_id = D(models.AutoField(primary_key=True), 
-        "Database id of package workspace")
+    package_id = D(models.AutoField(primary_key=True), 
+        "Database id of package")
     name = D(models.CharField(max_length=100, unique=True),
-        "Name of package workspace")
+        "Name of package")
+    description = D(models.TextField(),
+        "Description of package")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
-        "the date the package workspace was created (UTC)")
+        "the date the package was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
-        "the date the package workspace was last modified (UTC)")
+        "the date the package was last modified (UTC)")
 
     load_fields = [name]
 
-class PackageSessions(modellib.Collection):
+
+class PackageVersions(modellib.Collection):
 
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='package_sessions')
-    list_fields = ['package_session']
+                tag='package_versions')
+    list_fields = ['package_version']
 
 
-class PackageSession(modellib.XObjIdModel):
+class PackageVersion(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packageworkspaces_package_session"
-    _xobj = xobj.XObjMetadata(tag="package_session")
+        db_table = "packagees_package_version"
+    _xobj = xobj.XObjMetadata(tag="package_version")
 
-    package_session_id = D(models.AutoField(primary_key=True), 
-        "Database id of package session")
-    package_workspace = D(modellib.ForeignKey(PackageWorkspace,
-        related_name="package_sessions"),
-        "Package workspace for this package session")
+    package_version_id = D(models.AutoField(primary_key=True), 
+        "Database id of package version")
+    package= D(modellib.ForeignKey(Package,
+        related_name="package_versions"),
+        "Package for this package version")
+    version = D(models.TextField(),
+        "Version")
+    license = D(models.TextField(),
+        "License")
+    consumable = D(models.BooleanField(),
+        "Consumable")
+    actions = D(modellib.ManyToManyField("PackageActionType",
+        through="PackageVersionAction"),
+        "Package version actions")
+
 
     def get_absolute_url(self, request, *args, **kwargs):
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=[self.package_workspace, self])
+            parents=[self.package, self])
 
 
-class PackageSessionJob(modellib.XObjIdModel):
+class PackageVersionAction(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packageworkspaces_package_session_job"
-    _xobj = xobj.XObjMetadata(tag="job")
+        db_table = "packages_package_version_actions"
+    _xobj = xobj.XObjMetadata(tag="package_version_action")
+
+    package_version_action_id = D(models.AutoField(primary_key=True), 
+        "Database id of package version action")
+    package_version = D(modellib.ForeignKey(PackageVersion),
+        "Package Version")
+    package_action_type = D(modellib.ForeignKey("PackageActionType"),
+        "Package action type")
+    visible = D(models.BooleanField(),
+        "If the action is visible")
+    enabled = D(models.BooleanField(),
+        "If the action is enabled")
+
+
+class PackageVersionUrl(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = "packageworkspaces_package_version_url"
+    _xobj = xobj.XObjMetadata(tag="package_version_url")
+    
+    package_version_url_id = D(models.AutoField(primary_key=True),
+        "Database id of package version url")
+    package_version = D(modellib.ForeignKey(PackageVersion,
+        related_name="package_version_urls"),
+        "Package version for this url")
+    url = D(models.TextField(),
+        "The url")
+    file_path = D(models.TextField(null=True),
+        "Path on the file system of the downloaded url")
+    downloaded_date = D(modellib.DateTimeUtcField(null=True),
+        "Downloaded date of the file")
+    file_size = D(models.IntegerField(null=True), 
+        "Size of file in KB")
+
+
+class PackageSource(modellib.XObjIdModel):
+    
+    class Meta:
+        db_table = "packages_package_source"
+    _xobj = xobj.XObjMetadata(tag="package_source")
+
+    package_source_id = D(models.AutoField(primary_key=True), 
+        "Database id of package source")
+    package_version = D(modellib.ForeignKey(PackageVersion),
+        "Package version")
+    actions = D(modellib.ManyToManyField("PackageActionType",
+        through="PackageSourceAction"),
+        "Package source actions")
+
+
+class PackageSourceAction(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = "packages_package_source_actions"
+    _xobj = xobj.XObjMetadata(tag="package_source_action")
+
+    package_source_action_id = D(models.AutoField(primary_key=True), 
+        "Database id of package source action")
+    package_source = D(modellib.ForeignKey(PackageSource),
+        "Package Source")
+    package_action_type = D(modellib.ForeignKey("PackageActionType"),
+        "Package action type")
+    enabled = D(models.BooleanField(),
+        "If the action is enabled")
+    visible = D(modellib.SyntheticField(),
+        "If the action is visible")
+
+
+class PackageBuild(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = "packages_package_build"
+    _xobj = xobj.XObjMetadata(tag="package_build")
 
     package_session_job_id = D(models.AutoField(primary_key=True), 
-        "Database id of package session job")
-    package_session = D(modellib.ForeignKey(PackageSession,
-        related_name="package_session_jobs"),
-        "Package Session")
-    job = D(modellib.DeferredForeignKey(inventorymodels.Job, unique=True,
-        related_name="package_sessions"),
-        "Job")
+        "Database id of package build")
+    package_version = D(modellib.ForeignKey(PackageVersion,
+        related_name="package_builds"),
+        "Package Version")
+    actions = D(modellib.ManyToManyField("PackageActionType",
+        through="PackageBuildAction"),
+        "Package build actions")
 
 
-class PackageSessionAction(modellib.XObjIdModel):
+class PackageBuildAction(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packageworkspaces_package_session_action"
-    _xobj = xobj.XObjMetadata(tag="action")
+        db_table = "packages_package_build_actions"
+    _xobj = xobj.XObjMetadata(tag="package_build_action")
+
+    package_build_action_id = D(models.AutoField(primary_key=True), 
+        "Database id of package build action")
+    package_build = D(modellib.ForeignKey(PackageBuild),
+        "Package Build")
+    package_action_type = D(modellib.ForeignKey("PackageActionType"),
+        "Package action type")
+    visible = D(models.BooleanField(),
+        "If the action is visible")
+    enabled = D(models.BooleanField(),
+        "If the action is enabled")
+
+
+class PackageActionType(modellib.XObjIdModel):
+
+    class Meta:
+        db_table = "packages_package_action_type"
+    _xobj = xobj.XObjMetadata(tag="package_action_type")
 
     COMMIT = "commit"
     COMMIT_DESC = "commit the package session"
@@ -99,33 +201,14 @@ class PackageSessionAction(modellib.XObjIdModel):
         (BUILD, BUILD_DESC),
     )
 
-    package_session_action_id = D(models.AutoField(primary_key=True), 
+    package_action_type_id = D(models.AutoField(primary_key=True), 
         "Database id of package session action")
     name = D(models.TextField(choices=ACTION_CHOICES),
         "name")
     description = D(models.TextField(),
         "description")
-
-
-class PackageSessionUrl(modellib.XObjIdModel):
-
-    class Meta:
-        db_table = "packageworkspaces_package_session_url"
-    _xobj = xobj.XObjMetadata(tag="package_session_url")
-    
-    package_session_url_id = D(models.AutoField(primary_key=True),
-        "Database id of package session url")
-    package_session = D(modellib.ForeignKey(PackageSession,
-        related_name="package_session_urls"),
-        "Package session for this url")
-    url = D(models.TextField(),
-        "The url")
-    file_path = D(models.TextField(null=True),
-        "Path on the file system of the downloaded url")
-    downloaded_date = D(modellib.DateTimeUtcField(null=True),
-        "Downloaded date of the file")
-    file_size = D(models.IntegerField(null=True), 
-        "Size of file in KB")
+    descriptor = D(models.TextField(),
+        "descriptor")
 
 
 for mod_obj in sys.modules[__name__].__dict__.values():
