@@ -84,14 +84,10 @@ class PackageVersionManager(basemanager.BaseManager):
         pass
 
     @exposed
-    def getPackageVersion(self, package_id):
+    def getPackageVersion(self, package_version_id):
         """docstring for getPackageVersion"""
-        package = models.Package.objects.get(pk=package_id)
-        packageVersions = models.PackageVersions()
-        packageVersions.package_version = list(models.PackageVersion.objects.filter(package=package))
-        PackageVersion = models.PackageVersions.objects.get(pk=package_id)
-        PackageVersion.package_version = list(models.PackageVersion.objects.all())
-        return PackageVersion
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        return packageVersion
 
     @exposed
     def addPackageVersion(self, package_version):
