@@ -29,11 +29,14 @@ class PackageManager(basemanager.BaseManager):
     def addPackage(self, package):
         """docstring for addPackage"""
         package.save()
+        package.created_by = self.user
+        package.modified_by = self.user
         return package
         
     @exposed
     def updatePackage(self, package_id, package):
         """docstring for updatePackage"""
+        package.modified_by = self.user
         package.save()
         return package
     

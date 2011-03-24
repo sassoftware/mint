@@ -16,7 +16,7 @@ class PackagesTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.mgr = manager.PackageManager()
+        # self.mgr = manager.PackageManager()
 
     def testAddPackage(self):
         # Create a new package
