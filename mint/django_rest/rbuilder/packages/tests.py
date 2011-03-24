@@ -80,19 +80,14 @@ class PackagesTestCase(XMLTestCase):
         self.assertTrue(new_modified_date > original_modified_date)
 
     def testUpdatePackageVersion(self):
-        # Change consumable from true to false and
-        # set name from 3.0 to 3.1
-        # r = self._put('/api/packages/1/package_versions/',
-        #                  data=testsxml.package_version_put_xml,
-        #                  username="admin", password="password")
-        
         pv = models.PackageVersion.objects.get(pk=1)
-        
+        self.assertEquals(True, pv.consumable)
+        # Change consumable from true to false and
+        # change name from 3.0 to 3.1
         r = self._put('/api/package_versions/1',
                  data=testsxml.package_version_put_xml,
-                 username="admin", password="password")
-                 
+                 username="admin", password="password")   
         self.assertEquals(200, r.status_code)         
-        
         updatedPV = models.PackageVersion.objects.get(pk=1)
         self.assertEquals(u'3.1', updatedPV.name)
+        self.assertEquals(False, updatedPV.consumable)
