@@ -251,6 +251,14 @@ urlpatterns = patterns('',
         packageviews.PackageService(),
         name='Package'),
         
+    # Package Actions
+    url(r'^api/package_actions/?$',
+        packageviews.PackageActionTypeService(),
+        name='PackageActionTypes'),
+    url(r'^api/package_actions/(?P<package_action_type_id>\d+)/?$',
+        packageviews.PackageActionTypeService(),
+        name='PackageActionType'),
+
     # Package Versions
     url(r'^api/packages/(?P<package_id>\d+)/package_versions/?$',
         packageviews.PackagePackageVersionService(),

@@ -427,11 +427,19 @@ class PackageBuildJob(modellib.XObjIdModel):
         "the user that last modified the resource")
 
 
+class PackageActionTypes(modellib.Collection):
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='package_actions')
+    list_fields = ['package_action']
+
 class PackageActionType(modellib.XObjIdModel):
 
     class Meta:
         db_table = "packages_package_action_type"
-    _xobj = xobj.XObjMetadata(tag="package_action_type")
+    _xobj = xobj.XObjMetadata(tag="package_action")
     _xobj_hidden_accessors = set(["package_version_actions",
         "package_source_actions", "package_build_actions",
         "package_version_jobs", "package_source_jobs",

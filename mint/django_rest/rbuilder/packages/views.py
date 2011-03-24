@@ -44,6 +44,21 @@ class PackageService(service.BaseService):
         response = HttpResponse(status=204)
         return response
 
+class PackageActionTypeService(service.BaseService):
+    """docstring for PackageTypeService"""
+    
+    @return_xml
+    def rest_GET(self, request, package_action_type_id=None):
+        """docstring for rest_GET"""
+        return self.get(package_action_type_id)
+    
+    def get(self, package_action_type_id):
+        if package_action_type_id:
+            return self.mgr.getPackageActionType(package_action_type_id)
+        else:
+            return self.mgr.getPackageActionTypes()
+
+
 class PackagePackageVersionService(service.BaseService):
 
     @return_xml
