@@ -146,7 +146,6 @@ class PackageVersionManager(basemanager.BaseManager):
         package_version.package = package
         package_version.save()
 
-        import epdb; epdb.st()  
         # New package actions are download and commit
         commitAction = self.getPackageActionTypeByName(
             models.PackageActionType.COMMIT)
