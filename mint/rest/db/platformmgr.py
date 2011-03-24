@@ -1250,9 +1250,11 @@ class PlatformDefCache(persistentcache.PersistentCache):
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             self.clearPlatformData(labelStr)
+        except proddef.ProductDefinitionTroveNotFoundError:
+            raise
         except reposErrors.InsufficientPermission, err:
-            log.error("Failed to lookup platform definition on label %s: %s",
-                    labelStr, str(err))
+            log.info("Platform %s is not accessible because "
+                    "it is not entitled.", labelStr)
             self.clearPlatformData(labelStr)
             return None
         except:
@@ -1277,9 +1279,6 @@ class PlatformDefCache(persistentcache.PersistentCache):
             platDef = self._getPlatDef(client, labelStr)
             return platDef
         except proddef.ProductDefinitionTroveNotFoundError, e:
-            log.error("Failed to find product definition  for platform.  Will "
-                      "try looking on platform source label.")
-
             # Need to look at inboundmirrors table to get the sourceurl 
             # for the platform so that we bypass the local repo.
             sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
@@ -1299,8 +1298,14 @@ class PlatformDefCache(persistentcache.PersistentCache):
                 client.repos.c.cache[host] = serverProxy
                 platDef = self._getPlatDef(client, labelStr)
                 return platDef
-            except Exception, e:
-                log.error("Platform Definition not found for %s: %s" % (labelStr, e))
+            except (proddef.ProductDefinitionTroveNotFoundError,
+                    reposErrors.InsufficientPermission):
+                log.info("Platform %s is not accessible because "
+                        "it is not entitled.", labelStr)
+                return None
+            except:
+                log.exception("Failed to lookup platform definition "
+                        "on label %s:", labelStr)
                 return None
 
     def _getPlatform(self, labelStr, platform, commit=True):
