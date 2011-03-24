@@ -57,6 +57,17 @@
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
     <field type="BooleanField" name="committed">False</field>
   </object>
+  <object pk="4" model="packages.packageversion">
+    <field to="packages.package" name="package" rel="ManyToOneRel">2</field>
+    <field type="TextField" name="name">6.6</field>
+    <field type="TextField" name="license">Proprietary</field>
+    <field type="BooleanField" name="consumable">True</field>
+    <field type="DateTimeField" name="created_date">2011-03-23 22:43:09</field>
+    <field type="DateTimeField" name="modified_date">2011-03-23 22:43:09</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">1</field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
+    <field type="BooleanField" name="committed">False</field>
+  </object>
   <object pk="1" model="packages.packageversionjob">
     <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">1</field>
     <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
@@ -147,6 +158,32 @@
     <field type="BooleanField" name="built">True</field>
     <field to="inventory.trove" name="trove" rel="ManyToOneRel">1</field>
   </object>
+  <object pk="1" model="packages.packagesourcejob">
+    <field to="packages.packagesource" name="package_source" rel="ManyToOneRel">2</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.job" name="job" rel="ManyToOneRel">1</field>
+    <field type="DateTimeField" name="created_date">2011-03-24 01:18:35</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 01:18:35</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+  </object>
+  <object pk="2" model="packages.packagesourcejob">
+    <field to="packages.packagesource" name="package_source" rel="ManyToOneRel">1</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.job" name="job" rel="ManyToOneRel">1</field>
+    <field type="DateTimeField" name="created_date">2011-03-24 01:20:54</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 01:20:54</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+  </object>
   <object pk="1" model="packages.packagebuild">
     <field to="packages.packagesource" name="package_source" rel="ManyToOneRel">1</field>
     <field type="DateTimeField" name="created_date">2011-03-23 19:14:22</field>
@@ -173,6 +210,32 @@
     </field>
     <field to="inventory.trove" name="troves" rel="ManyToManyRel">
       <object pk="2"/>
+    </field>
+  </object>
+  <object pk="1" model="packages.packagebuildjob">
+    <field to="packages.packagebuild" name="package_build" rel="ManyToOneRel">2</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.job" name="job" rel="ManyToOneRel">3</field>
+    <field type="DateTimeField" name="created_date">2011-03-24 01:31:15</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 01:31:15</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+  </object>
+  <object pk="2" model="packages.packagebuildjob">
+    <field to="packages.packagebuild" name="package_build" rel="ManyToOneRel">1</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field to="inventory.job" name="job" rel="ManyToOneRel">3</field>
+    <field type="DateTimeField" name="created_date">2011-03-24 01:31:57</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 01:31:57</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
     </field>
   </object>
   <object pk="1" model="packages.packageactiontype">
@@ -203,20 +266,6 @@
     <field type="DateTimeField" name="created_date">2011-03-23 19:40:28</field>
     <field type="DateTimeField" name="modified_date">2011-03-23 19:40:28</field>
   </object>
-  <object pk="1" model="inventory.version">
-    <field type="TextField" name="full">/contrib.rpath.org@rpl:2/1-1-1</field>
-    <field type="TextField" name="label">/contrib.rpath.org@rpl:2</field>
-    <field type="TextField" name="revision">1-1-1</field>
-    <field type="TextField" name="ordering">1234567891.13</field>
-    <field type="TextField" name="flavor">is:x86</field>
-  </object>
-  <object pk="2" model="inventory.version">
-    <field type="TextField" name="full">/contrib.rpath.org@rpl:2/1-2-1</field>
-    <field type="TextField" name="label">/contrib.rpath.org@rpl:2</field>
-    <field type="TextField" name="revision">1-2-1</field>
-    <field type="TextField" name="ordering">1234567891.14</field>
-    <field type="TextField" name="flavor">is:x86</field>
-  </object>
   <object pk="1" model="inventory.trove">
     <field type="TextField" name="name">httpd:source</field>
     <field to="inventory.version" name="version" rel="ManyToOneRel">1</field>
@@ -236,5 +285,19 @@
       <None/>
     </field>
     <field to="inventory.version" name="available_updates" rel="ManyToManyRel"/>
+  </object>
+  <object pk="1" model="inventory.version">
+    <field type="TextField" name="full">/contrib.rpath.org@rpl:2/1-1-1</field>
+    <field type="TextField" name="label">/contrib.rpath.org@rpl:2</field>
+    <field type="TextField" name="revision">1-1-1</field>
+    <field type="TextField" name="ordering">1234567891.13</field>
+    <field type="TextField" name="flavor">is:x86</field>
+  </object>
+  <object pk="2" model="inventory.version">
+    <field type="TextField" name="full">/contrib.rpath.org@rpl:2/1-2-1</field>
+    <field type="TextField" name="label">/contrib.rpath.org@rpl:2</field>
+    <field type="TextField" name="revision">1-2-1</field>
+    <field type="TextField" name="ordering">1234567891.14</field>
+    <field type="TextField" name="flavor">is:x86</field>
   </object>
 </django-objects>
