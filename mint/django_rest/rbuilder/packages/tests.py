@@ -11,12 +11,22 @@ from mint.django_rest.rbuilder.packages import manager
 from mint.django_rest.rbuilder.packages import models
 from mint.django_rest.rbuilder.packages import testsxml
 
+from lxml import etree
+from xobj import xobj
+
 class PackagesTestCase(XMLTestCase):
     fixtures = ['packages']
 
     def setUp(self):
         XMLTestCase.setUp(self)
         # self.mgr = manager.PackageManager()
+
+    def xobjResponse(self, url):
+        response = self._get(url,
+            username="admin", password="password")
+        xobjModel = xobj.parse(response.content)
+        root_name = etree.XML(response.content).tag
+        return getattr(xobjModel, root_name)
 
     def testAddPackage(self):
         # Create a new package
@@ -29,7 +39,6 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals(4, len(models.Package.objects.all()))
         package = models.Package.objects.get(name="conary")
         self.assertEquals("Conary Package Manager", package.description)
-
 
     def testAddPackageVersion(self):
         # create package version
@@ -86,8 +95,77 @@ class PackagesTestCase(XMLTestCase):
         # change name from 3.0 to 3.1
         r = self._put('/api/package_versions/1',
                  data=testsxml.package_version_put_xml,
-                 username="admin", password="password")   
+                 username="admin", password="password")
         self.assertEquals(200, r.status_code)         
         updatedPV = models.PackageVersion.objects.get(pk=1)
         self.assertEquals(u'3.1', updatedPV.name)
         self.assertEquals(False, updatedPV.consumable)
+        
+    def testGetPackage(self):
+        """docstring for testGetPackage"""
+        pkg = models.Package.objects.get(pk=1)
+        pkg_gotten = self.xobjResponse('/api/packages/1')
+        # p.package_id returns an int so cast to unicode string
+        self.assertEquals(unicode(pkg.package_id), pkg_gotten.package_id)
+        self.assertEquals(pkg.name, pkg_gotten.name)
+        self.assertEquals(pkg.description, pkg_gotten.description)
+        
+    def testGetPackages(self):
+        """docstring for testGetPackages"""
+        pkgs = models.Packages.objects.all()
+        pkgs_gotten = self.xobjResponse('/api/packages/')
+        self.assertEquals(len(list(pkgs)), len(pkgs_gotten))
+    
+    def testGetPackageVersion(self):
+        """docstring for testGetPackageVersion"""
+        pv = models.PackageVersion.objects.get(pk=1)
+        pv_gotten = self.xobjResponse('/api/package_versions/1')
+        self.assertEquals(unicode(pv.package_version_id), pv_gotten.package_version_id)
+        self.assertEquals(pv.name, pv_gotten.name)
+        self.assertEquals(pv.description, pv_gotten.description)
+        self.assertEquals(pv.license, pv_gotten.license)
+        # if don't cast to unicode then True != u'true' and False != u'false'
+        self.assertEquals(unicode(pv.consumable).lower(), pv_gotten.consumable)
+        self.assertEquals(unicode(pv.committed).lower(), pv_gotten.committed)
+        # FIXME pv.package_name is returning None when I *know* its not None
+        # self.assertEquals(pv.package_name, pv_gotten.package_name)
+      
+    def testGetPackageVersions(self):
+        """docstring for testGetPackageVersion"""
+        pvs = models.PackageVersions.objects.all()
+        pvs_gotten = self.xobjResponse('/api/package_versions/')
+        self.assertEquals(len(list(pvs)), len(pvs_gotten))
+        
+    # def testGetPackageUrl(self):
+    #     """docstring for testGetPackageUrl"""
+    #     pUrl = models.PackageVersionUrl.objects.get(pk=1)
+    #     pUrl_gotten = self.xobjResponse('/api/package_versions/1/url/1')
+    #     import pdb; pdb.set_trace()
+    #     pass
+        
+    def testGetPackageUrls(self):
+        """docstring for testGetPackageUrls"""
+        pUrls = models.PackageVersionUrls.objects.all()
+        pUrls_gotten = self.xobjResponse('/api/package_versions/1/urls/')
+        self.assertEquals(len(list(pUrls)), len(pUrls_gotten))
+    
+    
+    # complete crap, doesn't work...FIXME or take it out
+    def generateGETTests(self, model, url, pk=1, ignore=None):
+        """
+        Automatically calls self.assertEquals(api_value, db_value)
+        for each field on a model not in ignore=['ignored fields'] 
+        """
+        if not ignore:
+            ignore = []
+        from_api = self.xobjResponse(url)
+        from_db = model.objects.get(pk=pk)
+        fields = from_api._xobj.elements
+        for field in fields:
+            if field not in ignore:
+                from_db_field_value = getattr(from_db, field, None)
+                from_api_field_value = getattr(from_api, field, None)
+                if from_api_field_value and from_db_field_value:
+                    self.assertEquals(from_db_field_value, from_api_field_value)
+            else:
+                continue
