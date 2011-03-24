@@ -112,6 +112,7 @@ class PackageVersionManager(basemanager.BaseManager):
         packageSources = models.PackageSources()
         packageSources.package_source = list(
             models.PackageSource.objects.filter(package_version=packageVersion))
+        packageSources._parents = [packageVersion]
         return packageSources
 
     @exposed
