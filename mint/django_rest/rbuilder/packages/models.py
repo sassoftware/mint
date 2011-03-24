@@ -12,6 +12,7 @@ from xobj import xobj
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.lib import data as mintdata
 
 class Packages(modellib.Collection):
 
@@ -133,6 +134,11 @@ class PackageVersionAction(modellib.XObjIdModel):
         auto_now=True),
         "the date the package version action was last modified (UTC)")
 
+class JobData(modellib.XObjModel):
+    
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag="job_data")
 
 class PackageVersionJobs(modellib.XObjIdModel):
 
@@ -176,6 +182,15 @@ class PackageVersionJob(modellib.XObjIdModel):
         related_name="package_version_jobs_last_modified",
         text_field="username"),
         "the user that last modified the resource")
+
+    def serialize(self, *args, **kwargs):
+        xobjModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
+        if self.job_data:
+            unMarshalledJobData = mintdata.unmarshalGenericData(self.job_data)
+            xobjModel.job_data = JobData()
+            for k, v in unMarshalledJobData.items():
+                setattr(xobjModel.job_data, k, v)
+        return xobjModel
 
 class PackageVersionUrls(modellib.Collection):
 
