@@ -208,6 +208,8 @@ class PackageSource(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag="package_source")
     _xobj_hidden_accessors = set(["package_source_actions"])
 
+    url_key = ["package_version", "pk"]
+
     package_source_id = D(models.AutoField(primary_key=True), 
         "Database id of package source")
     package_version = D(modellib.DeferredForeignKey(PackageVersion,
