@@ -300,7 +300,7 @@ urlpatterns = patterns('',
         name='PackageBuilds'),
 
     url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
-         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>)/?$',
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/?$',
         packageviews.PackageBuildService(),
         name='PackageBuild'),
 

@@ -118,3 +118,17 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageSource(self, package_source_id):
         packageSource = models.PackageSource.objects.get(pk=package_source_id)
         return packageSource
+
+    @exposed
+    def getPackageBuilds(self, package_source_id):
+        packageSource = models.PackageSource.objects.get(pk=package_source_id)
+        packageBuilds = models.PackageBuilds()
+        packageBuilds.package_build = list(
+            models.PackageBuild.objects.filter(package_source=packageSource))
+        packageBuilds._parents = [packageSource]
+        return packageBuilds
+
+    @exposed
+    def getPackageBuild(self, package_build_id):
+        packageBuild = models.PackageBuild.objects.get(pk=package_build_id)
+        return packageBuild

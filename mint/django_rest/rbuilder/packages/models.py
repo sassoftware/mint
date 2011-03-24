@@ -298,6 +298,15 @@ class PackageSourceJob(modellib.XObjIdModel):
         "the user that last modified the resource")
 
 
+class PackageBuilds(modellib.Collection):
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='package_builds')
+    list_fields = ['package_build']
+
+
 class PackageBuild(modellib.XObjIdModel):
 
     class Meta:
@@ -305,10 +314,14 @@ class PackageBuild(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag="package_build")
     _xobj_hidden_accessors = set(["package_build_actions"])
 
+    url_key = ["package_source", "pk"]
+
     package_build_id = D(models.AutoField(primary_key=True), 
         "Database id of package build")
-    package_source = D(modellib.ForeignKey(PackageSource,
-        related_name="package_builds"),
+    package_source = D(modellib.DeferredForeignKey(PackageSource,
+        related_name="package_builds",
+        view_name="PackageBuilds",
+        ref_name="id"),
         "Package Source")
     actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageBuildAction"),
