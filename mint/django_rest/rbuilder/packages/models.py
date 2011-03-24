@@ -67,6 +67,7 @@ class PackageVersion(modellib.XObjIdModel):
     class Meta:
         db_table = "packages_package_version"
     _xobj = xobj.XObjMetadata(tag="package_version")
+    _xobj_hidden_accessors = set(["package_version_actions"])
 
     package_version_id = D(models.AutoField(primary_key=True), 
         "Database id of package version")
