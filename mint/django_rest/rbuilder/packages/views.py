@@ -89,6 +89,20 @@ class PackageVersionService(service.BaseService):
         else:
             return self.mgr.getAllPackageVersions()
 
+class PackageVersionUrlService(service.BaseService):
+    """docstring for PackageUrlVersionService"""
+    
+    @return_xml
+    def rest_GET(self, request, package_version_id, package_version_url_id=None):
+        """docstring for rest_GET"""
+        return self.get(package_version_id, package_version_url_id)
+
+    def get(self, package_version_id, package_version_url_id):
+        if package_version_url_id:
+            return self.mgr.getPackageVersionUrl(package_version_id,
+                package_version_url_id)
+        else:
+            return self.mgr.getPackageVersionUrls(package_version_id)
 
 class PackageVersionJobService(service.BaseService):
 

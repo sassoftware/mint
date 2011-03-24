@@ -168,6 +168,13 @@ class PackageVersionJob(modellib.XObjIdModel):
         related_name="package_version_jobs_last_modified"),
         "the user that last modified the resource")
 
+class PackageVersionUrls(modellib.Collection):
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag='package_version_urls')
+    list_fields = ['package_version_url']
 
 class PackageVersionUrl(modellib.XObjIdModel):
 
@@ -175,10 +182,13 @@ class PackageVersionUrl(modellib.XObjIdModel):
         db_table = "packages_package_version_url"
     _xobj = xobj.XObjMetadata(tag="package_version_url")
     
+    url_key = ["package_version", "pk"]
+
     package_version_url_id = D(models.AutoField(primary_key=True),
         "Database id of package version url")
-    package_version = D(modellib.ForeignKey(PackageVersion,
-        related_name="package_version_urls"),
+    package_version = D(modellib.DeferredForeignKey(PackageVersion,
+        related_name="package_version_urls", view_name="PackageVersionUrls",
+        ref_name="id"),
         "Package version for this url")
     url = D(models.TextField(),
         "The url")

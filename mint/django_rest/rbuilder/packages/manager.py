@@ -88,6 +88,23 @@ class PackageVersionManager(basemanager.BaseManager):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         return packageVersion
 
+
+    @exposed
+    def getPackageVersionUrls(self, package_version_id):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        packageVersionUrls = models.PackageVersionUrls()
+        packageVersionUrls.package_version_url = list(
+            models.PackageVersionUrl.objects.filter(package_version=packageVersion))
+        packageVersionUrls._parents = [packageVersion]
+        return packageVersionUrls
+
+    @exposed
+    def getPackageVersionUrl(self, package_version_id,
+                             package_version_url_id):
+        packageVersionUrl = models.PackageVersionUrl.objects.get(
+            pk=package_version_url_id)
+        return packageVersionUrl
+
     @exposed
     def getPackageVersionJobs(self, package_version_id):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
