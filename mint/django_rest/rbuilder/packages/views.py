@@ -104,6 +104,12 @@ class PackageVersionService(service.BaseService):
         else:
             return self.mgr.getAllPackageVersions()
 
+    @requires('package_version')
+    @return_xml
+    def rest_PUT(self, request, package_version_id, package_version):
+        """docstring for rest_PUT"""
+        return self.mgr.updatePackageVersion(package_version_id, package_version)
+
 class PackageVersionUrlService(service.BaseService):
     """docstring for PackageUrlVersionService"""
     

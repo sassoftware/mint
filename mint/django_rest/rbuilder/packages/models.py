@@ -54,7 +54,7 @@ class PackageVersions(modellib.Collection):
     _xobj = xobj.XObjMetadata(
                 tag='package_versions')
     list_fields = ['package_version']
-
+    
 
 class AllPackageVersions(PackageVersions):
 

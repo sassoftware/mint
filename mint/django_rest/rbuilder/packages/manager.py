@@ -171,6 +171,7 @@ class PackageVersionManager(basemanager.BaseManager):
     def updatePackageVersion(self, package_version_id, package_version):
         """docstring for updatePackageVersion"""
         package_version.save()
+        return package_version
         
     @exposed
     def deletePackageVersion(self, package_version_id):

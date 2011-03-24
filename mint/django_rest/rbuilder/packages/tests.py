@@ -62,11 +62,37 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals("http://httpd.apache.org/download.cgi#apache31",
             pv.package_version_urls.all()[1].url)
 
-
     def testUpdatePackage(self):
-        pass
-
+        # 1 already in fixture
+        pkg = models.Package.objects.get(pk=1)
+        # change name from apache to Apache and change desciption
+        # from Apache Web Server (httpd) to Apache Renamed
+        r = self._put('/api/packages/1',
+            data=testsxml.package_put_xml,
+            username='admin', password='password')
+        updatedPkg = models.Package.objects.get(pk=1)
+        # Check that name and description are updated
+        self.assertEquals('Apache', updatedPkg.name)
+        self.assertEquals('Apache Renamed', updatedPkg.description)
+        # Check that modified date has been incremented
+        original_modified_date = pkg.modified_date
+        new_modified_date = updatedPkg.modified_date
+        self.assertTrue(new_modified_date > original_modified_date)
 
     def testUpdatePackageVersion(self):
-        pass
-
+        # Change consumable from true to false and
+        # set name from 3.0 to 3.1
+        # r = self._put('/api/packages/1/package_versions/',
+        #                  data=testsxml.package_version_put_xml,
+        #                  username="admin", password="password")
+        
+        pv = models.PackageVersion.objects.get(pk=1)
+        
+        r = self._put('/api/package_versions/1',
+                 data=testsxml.package_version_put_xml,
+                 username="admin", password="password")
+                 
+        self.assertEquals(200, r.status_code)         
+        
+        updatedPV = models.PackageVersion.objects.get(pk=1)
+        self.assertEquals(u'3.1', updatedPV.name)

@@ -13,6 +13,14 @@ package_post_xml = """\
 </package>
 """
 
+package_put_xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<package>
+  <name>Apache</name>
+  <description>Apache Renamed</description>
+</package>
+"""
+
 package_version_post_xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
   <package_version>
@@ -20,6 +28,16 @@ package_version_post_xml = """\
     <license>Apache</license>
     <package id="http://127.0.0.1:8000/api/packages/1"/>
     <consumable>true</consumable>
+  </package_version>
+"""
+
+package_version_put_xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+  <package_version>
+    <name>3.1</name>
+    <license>Apache</license>
+    <package id="http://127.0.0.1:8000/api/packages/1"/>
+    <consumable>false</consumable>
   </package_version>
 """
 
