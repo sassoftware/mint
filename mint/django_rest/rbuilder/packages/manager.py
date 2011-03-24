@@ -248,6 +248,17 @@ class PackageVersionManager(basemanager.BaseManager):
         return packageSourceJob
 
     @exposed
+    def addPackageSourceJob(self, package_source_id, package_source_job):
+        packageSource = models.PackageSource.objects.get(pk=package_source_id)
+        package_source_job.package_source = packageSource
+        package_source_job.save()
+        self.dispatchPackageSourceJob(package_source_job)
+        return package_source_job
+
+    def dispatchPackageSourceJob(self, package_source_job):
+        pass
+
+    @exposed
     def getPackageBuilds(self, package_source_id):
         packageSource = models.PackageSource.objects.get(pk=package_source_id)
         packageBuilds = models.PackageBuilds()
@@ -276,3 +287,5 @@ class PackageVersionManager(basemanager.BaseManager):
             pk=package_build_job_id) 
         return packageBuildJob
 
+    def _dispatchJob(self):
+        pass

@@ -325,6 +325,8 @@ class PackageSourceJob(modellib.XObjIdModel):
 
     url_key = ["package_source", "pk"]
 
+    objects = modellib.PackageJobManager()
+
     package_source_job_id = D(models.AutoField(primary_key=True),
         "Database id of package source job")
     package_source = D(modellib.DeferredForeignKey(PackageSource,
@@ -336,6 +338,8 @@ class PackageSourceJob(modellib.XObjIdModel):
         "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
+    job_data = D(models.TextField(null=True),
+        "Job data")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package source job was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
@@ -436,6 +440,8 @@ class PackageBuildJob(modellib.XObjIdModel):
 
     url_key = ["package_build", "pk"]
 
+    objects = modellib.PackageJobManager()
+
     package_build_job_id = D(models.AutoField(primary_key=True),
         "Database id of package build job")
     package_build = D(modellib.DeferredForeignKey(PackageBuild,
@@ -447,6 +453,8 @@ class PackageBuildJob(modellib.XObjIdModel):
         "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
+    job_data = D(models.TextField(null=True),
+        "Job data")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package build job was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,

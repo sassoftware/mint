@@ -944,7 +944,7 @@ class Job(modellib.XObjIdModel):
     status_text = D(models.TextField(default='Initializing'), "the message associated with the current status")
     status_detail = D(XObjHidden(models.TextField(null=True)), "documentation missing")
     event_type = D(APIReadOnly(modellib.InlinedForeignKey(EventType,
-        visible='name', related_name="jobs")), "documentation missing")
+        visible='name', related_name="jobs", null=True)), "documentation missing")
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was created (UTC)")
     time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was updated (UTC)")
     job_type = D(modellib.SyntheticField(), "the job type")
