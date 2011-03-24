@@ -11,8 +11,6 @@ from mint.django_rest.rbuilder.packages import manager
 from mint.django_rest.rbuilder.packages import models
 from mint.django_rest.rbuilder.packages import testsxml
 
-from xobj import xobj
-
 class PackagesTestCase(XMLTestCase):
     fixtures = ['packages']
 
