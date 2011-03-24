@@ -25,6 +25,7 @@ package_version_post_xml = """\
 <?xml version='1.0' encoding='UTF-8'?>
   <package_version>
     <name>3.0</name>
+    <description>3.0</description>
     <license>Apache</license>
     <package id="http://127.0.0.1:8000/api/packages/1"/>
     <consumable>true</consumable>
