@@ -16,7 +16,7 @@ class PackageManager(basemanager.BaseManager):
     def getPackages(self):
         """docstring for getPackage"""
         Packages = models.Packages()
-        Packages.package = list(models.Package.objects.all())
+        Packages.package = models.Package.objects.all()
         return Packages
     
     @exposed
@@ -65,7 +65,7 @@ class PackageVersionManager(basemanager.BaseManager):
     @exposed
     def getAllPackageVersions(self):
         packageVersions = models.AllPackageVersions()
-        packageVersions.package_version = list(models.PackageVersion.objects.all())
+        packageVersions.package_version = models.PackageVersion.objects.all()
         return packageVersions
 
     @exposed
@@ -73,8 +73,8 @@ class PackageVersionManager(basemanager.BaseManager):
         """docstring for getPackageVersions"""
         package = models.Package.objects.get(pk=package_id)
         packageVersions = models.PackageVersions()
-        packageVersions.package_version = list(
-            models.PackageVersion.objects.filter(package=package))
+        packageVersions.package_version = \
+            models.PackageVersion.objects.filter(package=package)
         packageVersions._parents = [package]
         return packageVersions
 
@@ -88,8 +88,8 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageVersionUrls(self, package_version_id):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         packageVersionUrls = models.PackageVersionUrls()
-        packageVersionUrls.package_version_url = list(
-            models.PackageVersionUrl.objects.filter(package_version=packageVersion))
+        packageVersionUrls.package_version_url = \
+            models.PackageVersionUrl.objects.filter(package_version=packageVersion)
         packageVersionUrls._parents = [packageVersion]
         return packageVersionUrls
 
@@ -111,8 +111,8 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageVersionJobs(self, package_version_id):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         packageVersionJobs = models.PackageVersionJobs()
-        packageVersionJobs.package_version_job = list(
-            models.PackageVersionJob.objects.filter(package_version=packageVersion))
+        packageVersionJobs.package_version_job = \
+            models.PackageVersionJob.objects.filter(package_version=packageVersion)
         packageVersionJobs._parents = [packageVersion]
         return packageVersionJobs
 
@@ -146,8 +146,8 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageSources(self, package_version_id):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         packageSources = models.PackageSources()
-        packageSources.package_source = list(
-            models.PackageSource.objects.filter(package_version=packageVersion))
+        packageSources.package_source = \
+            models.PackageSource.objects.filter(package_version=packageVersion)
         packageSources._parents = [packageVersion]
         return packageSources
 
@@ -160,8 +160,8 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageSourceJobs(self, package_source_id):
         packageSource = models.PackageSource.objects.get(pk=package_source_id)
         packageSourceJobs = models.PackageSourceJobs()
-        packageSourceJobs.package_source_job = list(
-            models.PackageSourceJob.objects.filter(package_source=packageSource))
+        packageSourceJobs.package_source_job = \
+            models.PackageSourceJob.objects.filter(package_source=packageSource)
         packageSourceJobs._parents = [packageSource]
         return packageSourceJobs
 
@@ -175,8 +175,8 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageBuilds(self, package_source_id):
         packageSource = models.PackageSource.objects.get(pk=package_source_id)
         packageBuilds = models.PackageBuilds()
-        packageBuilds.package_build = list(
-            models.PackageBuild.objects.filter(package_source=packageSource))
+        packageBuilds.package_build = \
+            models.PackageBuild.objects.filter(package_source=packageSource)
         packageBuilds._parents = [packageSource]
         return packageBuilds
 
@@ -189,8 +189,8 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageBuildJobs(self, package_build_id):
         packageBuild = models.PackageBuild.objects.get(pk=package_build_id)
         packageBuildJobs = models.PackageBuildJobs()
-        packageBuildJobs.package_build_job = list(
-            models.PackageBuildJob.objects.filter(package_build=packageBuild))
+        packageBuildJobs.package_build_job = \
+            models.PackageBuildJob.objects.filter(package_build=packageBuild)
         packageBuildJobs._parents = [packageBuild]
         return packageBuildJobs
 
