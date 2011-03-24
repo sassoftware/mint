@@ -50,6 +50,17 @@ class PackagesTestCase(XMLTestCase):
             username="admin", password="password")
         self.assertEquals(200, r.status_code)
         self.assertEquals(1, len(pv.package_version_urls.all()))
+        self.assertEquals("http://httpd.apache.org/download.cgi#apache30",
+            pv.package_version_urls.all()[0].url)
+
+        # add another url
+        r = self._post('/api/package_versions/5/urls/',
+            data=testsxml.package_version_url_post_xml2,
+            username="admin", password="password")
+        self.assertEquals(200, r.status_code)
+        self.assertEquals(2, len(pv.package_version_urls.all()))
+        self.assertEquals("http://httpd.apache.org/download.cgi#apache31",
+            pv.package_version_urls.all()[1].url)
 
 
     def testUpdatePackage(self):

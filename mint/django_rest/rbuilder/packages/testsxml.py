@@ -30,3 +30,11 @@ package_version_url_post_xml = """\
   <package_version id="http://127.0.0.1:8000/api/package_versions/1"/>
 </package_version_url>
 """
+
+package_version_url_post_xml2 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<package_version_url>
+  <url>http://httpd.apache.org/download.cgi#apache31</url>
+  <package_version id="http://127.0.0.1:8000/api/package_versions/1"/>
+</package_version_url>
+"""
