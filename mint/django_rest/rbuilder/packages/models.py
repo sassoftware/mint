@@ -77,7 +77,7 @@ class PackageVersion(modellib.XObjIdModel):
         "Package for this package version")
     name = D(models.TextField(),
         "Version")
-    license = D(models.TextField(),
+    license = D(models.TextField(null=True),
         "License")
     consumable = D(models.BooleanField(),
         "Consumable")
