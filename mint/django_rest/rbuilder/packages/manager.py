@@ -104,9 +104,12 @@ class PackageVersionManager(basemanager.BaseManager):
         return packageVersionJob
 
     @exposed
-    def addPackageVersion(self, package_version):
+    def addPackageVersion(self, package_id, package_version):
         """docstring for addPackageVersion"""
+        package = models.Package.objects.get(pk=package_id)
+        package_version.package = package
         package_version.save()
+        return package_version
         
     @exposed
     def updatePackageVersion(self, package_version_id, package_version):
