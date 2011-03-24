@@ -252,10 +252,10 @@ urlpatterns = patterns('',
         name='Package'),
         
     # Package Actions
-    url(r'^api/package_actions/?$',
+    url(r'^api/package_action_types/?$',
         packageviews.PackageActionTypeService(),
         name='PackageActionTypes'),
-    url(r'^api/package_actions/(?P<package_action_type_id>\d+)/?$',
+    url(r'^api/package_action_types/(?P<package_action_type_id>\d+)/?$',
         packageviews.PackageActionTypeService(),
         name='PackageActionType'),
 

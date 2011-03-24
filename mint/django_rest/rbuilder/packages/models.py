@@ -118,7 +118,8 @@ class PackageVersionAction(modellib.XObjIdModel):
         related_name="actions"),
         "Package Version")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_version_actions"),
+        related_name="package_version_actions", text_field="name",
+        ref_name="id"),
         "Package action type")
     visible = D(models.BooleanField(),
         "If the action is visible")
@@ -432,14 +433,14 @@ class PackageActionTypes(modellib.Collection):
     class Meta:
         abstract = True
     _xobj = xobj.XObjMetadata(
-                tag='package_actions')
-    list_fields = ['package_action']
+                tag='package_action_types')
+    list_fields = ['package_action_type']
 
 class PackageActionType(modellib.XObjIdModel):
 
     class Meta:
         db_table = "packages_package_action_type"
-    _xobj = xobj.XObjMetadata(tag="package_action")
+    _xobj = xobj.XObjMetadata(tag="package_action_type")
     _xobj_hidden_accessors = set(["package_version_actions",
         "package_source_actions", "package_build_actions",
         "package_version_jobs", "package_source_jobs",

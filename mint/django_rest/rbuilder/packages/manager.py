@@ -131,7 +131,7 @@ class PackageVersionManager(basemanager.BaseManager):
     @exposed
     def getPackageActionTypes(self):
         packageActionTypes = models.PackageActionTypes()
-        packageActionTypes.package_action = \
+        packageActionTypes.package_action_type = \
             models.PackageActionType.objects.all()
         return packageActionTypes
 
