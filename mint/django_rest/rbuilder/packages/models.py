@@ -67,7 +67,7 @@ class PackageVersion(modellib.XObjIdModel):
     class Meta:
         db_table = "packages_package_version"
     _xobj = xobj.XObjMetadata(tag="package_version")
-    _xobj_hidden_accessors = set(["package_version_actions"])
+    _xobj_hidden_m2m = set(["possible_actions"])
 
     package_version_id = D(models.AutoField(primary_key=True), 
         "Database id of package version")
@@ -81,7 +81,7 @@ class PackageVersion(modellib.XObjIdModel):
         "License")
     consumable = D(models.BooleanField(),
         "Consumable")
-    actions = D(modellib.ManyToManyField("PackageActionType",
+    possible_actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageVersionAction"),
         "Package version actions")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -115,9 +115,10 @@ class PackageVersionAction(modellib.XObjIdModel):
     package_version_action_id = D(models.AutoField(primary_key=True), 
         "Database id of package version action")
     package_version = D(modellib.ForeignKey(PackageVersion,
-        related_name="package_version_actions"),
+        related_name="actions"),
         "Package Version")
-    package_action_type = D(modellib.ForeignKey("PackageActionType"),
+    package_action_type = D(modellib.ForeignKey("PackageActionType",
+        related_name="package_version_actions"),
         "Package action type")
     visible = D(models.BooleanField(),
         "If the action is visible")
@@ -265,7 +266,8 @@ class PackageSourceAction(modellib.XObjIdModel):
     package_source = D(modellib.ForeignKey(PackageSource,
         related_name="package_source_actions"),
         "Package Source")
-    package_action_type = D(modellib.ForeignKey("PackageActionType"),
+    package_action_type = D(modellib.ForeignKey("PackageActionType",
+        related_name="package_source_actions"),
         "Package action type")
     enabled = D(models.BooleanField(),
         "If the action is enabled")
@@ -371,7 +373,8 @@ class PackageBuildAction(modellib.XObjIdModel):
     package_build = D(modellib.ForeignKey(PackageBuild,
         related_name="package_build_actions"),
         "Package Build")
-    package_action_type = D(modellib.ForeignKey("PackageActionType"),
+    package_action_type = D(modellib.ForeignKey("PackageActionType",
+        related_name="package_build_actions"),
         "Package action type")
     visible = D(models.BooleanField(),
         "If the action is visible")
@@ -429,6 +432,10 @@ class PackageActionType(modellib.XObjIdModel):
     class Meta:
         db_table = "packages_package_action_type"
     _xobj = xobj.XObjMetadata(tag="package_action_type")
+    _xobj_hidden_accessors = set(["package_version_actions",
+        "package_source_actions", "package_build_actions",
+        "package_version_jobs", "package_source_jobs",
+        "package_build_jobs"])
 
     DOWNLOAD = "download"
     DOWNLOAD_DESC = "download the urls for the package"

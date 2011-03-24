@@ -125,12 +125,36 @@ class PackageVersionManager(basemanager.BaseManager):
             pk=package_version_job_id)
         return packageVersionJob
 
+    def getPackageActionType(self, actionName):
+        return models.PackageActionType.objects.get(name=actionName)
+
     @exposed
     def addPackageVersion(self, package_id, package_version):
         """docstring for addPackageVersion"""
         package = models.Package.objects.get(pk=package_id)
         package_version.package = package
         package_version.save()
+
+        import epdb; epdb.st()  
+        # New package actions are download and commit
+        commitAction = self.getPackageActionType(
+            models.PackageActionType.COMMIT)
+        downloadAction = self.getPackageActionType(
+            models.PackageActionType.DOWNLOAD)
+        commitVersionAct = models.PackageVersionAction(
+            package_version=package_version,
+            package_action_type=commitAction,
+            visible=True,
+            enabled=False)
+        downloadVersionAct = models.PackageVersionAction(
+            package_version=package_version,
+            package_action_type=downloadAction,
+            visible=True,
+            enabled=True)
+
+        commitVersionAct.save()
+        downloadVersionAct.save()
+
         return package_version
         
     @exposed
