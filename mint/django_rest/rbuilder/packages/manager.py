@@ -27,19 +27,19 @@ class PackageManager(basemanager.BaseManager):
         
     @exposed
     def addPackage(self, package):
-        """docstring for addWorkspace"""
+        """docstring for addPackage"""
         package.save()
         return package
         
     @exposed
     def updatePackage(self, package_id, package):
-        """docstring for updateWorkspace"""
+        """docstring for updatePackage"""
         package.save()
         return package
     
     @exposed
     def deletePackage(self, package_id):
-        """docstring for deletePackageWorkspace"""
+        """docstring for deletePackage"""
         package = models.Package.objects.get(
             pk=package_id)
         package.delete()
