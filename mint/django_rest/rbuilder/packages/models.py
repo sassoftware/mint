@@ -97,6 +97,13 @@ class PackageVersion(modellib.XObjIdModel):
         "the user that last modified the resource")
     committed = D(models.BooleanField(default=False),
         "if the package version has been committed.")
+    package_name = D(modellib.SyntheticField(),
+        "name of the associated package")
+
+    def serialize(self, *args, **kwargs):
+        xobjModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
+        xobjModel.package_name = self.package.name
+        return xobjModel
 
 
 class PackageVersionAction(modellib.XObjIdModel):
