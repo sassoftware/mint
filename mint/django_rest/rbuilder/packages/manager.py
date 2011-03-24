@@ -125,6 +125,13 @@ class PackageVersionManager(basemanager.BaseManager):
             pk=package_version_job_id)
         return packageVersionJob
 
+    @exposed
+    def addPackageVersionJob(self, package_version_id, package_version_job):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        package_version_job.package_version = packageVersion
+        package_version_job.save()
+        return package_version_job
+
     def getPackageActionTypeByName(self, actionName):
         return models.PackageActionType.objects.get(name=actionName)
 
