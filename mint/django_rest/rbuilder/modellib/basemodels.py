@@ -22,6 +22,7 @@ from xobj import xobj
 
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
+from mint.lib import data as mintdata
 
 def XObjHidden(field):
     """
@@ -438,6 +439,22 @@ class BaseManager(models.Manager):
         model.oldModel = oldModel
 
         return model
+
+class PackageJobManager(BaseManager):
+
+    def add_fields(self, model, obj, request, save):
+        job_data = getattr(obj, "job_data", None)
+        
+        if job_data is not None:
+            obj.__dict__.pop("job_data")
+            job_data_dict = {}
+            for k, v in job_data.__dict__.items():
+                if not k.startswith("_"):
+                    job_data_dict[k] = v
+            marshalled_job_data = mintdata.marshalGenericData(job_data_dict) 
+            model.job_data = marshalled_job_data
+
+        return BaseManager.add_fields(self, model, obj, request, save)
 
 class TroveManager(BaseManager):
     def load_from_object(self, obj, request, save=True, load=True):

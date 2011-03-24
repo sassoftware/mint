@@ -138,6 +138,13 @@ class PackageVersionJobService(service.BaseService):
         else:
             return self.mgr.getPackageVersionJobs(package_version_id)
 
+    @requires("package_version_job")
+    @return_xml
+    def rest_POST(self, request, package_version_id, package_version_job):
+        return self.mgr.addPackageVersionJob(package_version_id,
+            package_version_job)
+        
+
 
 class PackageSourceService(service.BaseService):
 

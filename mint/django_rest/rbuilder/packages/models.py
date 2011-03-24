@@ -77,6 +77,8 @@ class PackageVersion(modellib.XObjIdModel):
         "Package for this package version")
     name = D(models.TextField(),
         "Version")
+    description = D(models.TextField(),
+        "Description")
     license = D(models.TextField(null=True),
         "License")
     consumable = D(models.BooleanField(),
@@ -147,6 +149,8 @@ class PackageVersionJob(modellib.XObjIdModel):
 
     url_key = ["package_version.package", "package_version", "pk"]
 
+    objects = modellib.PackageJobManager()
+
     package_version_job_id = D(models.AutoField(primary_key=True),
         "Database id of package version job")
     package_version = D(modellib.DeferredForeignKey(PackageVersion,
@@ -154,10 +158,12 @@ class PackageVersionJob(modellib.XObjIdModel):
         ref_name="id"),
         "Package version")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_version_jobs"),
+        related_name="package_version_jobs", text_field="name"),
         "Package action type")
-    job = D(modellib.ForeignKey(inventorymodels.Job),
+    job = D(modellib.ForeignKey(inventorymodels.Job, null=True),
         "Job")
+    job_data = D(models.TextField(null=True),
+        "Job data")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package version job was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
@@ -227,6 +233,7 @@ class PackageSource(modellib.XObjIdModel):
         db_table = "packages_package_source"
     _xobj = xobj.XObjMetadata(tag="package_source")
     _xobj_hidden_accessors = set(["package_source_actions"])
+    _xobj_hidden_m2m = set(["possible_actions"])
 
     url_key = ["package_version", "pk"]
 
@@ -236,7 +243,7 @@ class PackageSource(modellib.XObjIdModel):
         related_name="package_sources", view_name="PackageSources",
         ref_name="id"),
         "Package version")
-    actions = D(modellib.ManyToManyField("PackageActionType",
+    possible_actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageSourceAction"),
         "Package source actions")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -265,7 +272,7 @@ class PackageSourceAction(modellib.XObjIdModel):
     package_source_action_id = D(models.AutoField(primary_key=True), 
         "Database id of package source action")
     package_source = D(modellib.ForeignKey(PackageSource,
-        related_name="package_source_actions"),
+        related_name="actions"),
         "Package Source")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_source_actions"),
@@ -336,6 +343,7 @@ class PackageBuild(modellib.XObjIdModel):
         db_table = "packages_package_build"
     _xobj = xobj.XObjMetadata(tag="package_build")
     _xobj_hidden_accessors = set(["package_build_actions"])
+    _xobj_hidden_m2m = set(["possible_actions"])
 
     url_key = ["package_source", "pk"]
 
@@ -345,7 +353,7 @@ class PackageBuild(modellib.XObjIdModel):
         related_name="package_builds", view_name="PackageBuilds",
         ref_name="id"),
         "Package Source")
-    actions = D(modellib.ManyToManyField("PackageActionType",
+    possible_actions = D(modellib.ManyToManyField("PackageActionType",
         through="PackageBuildAction"),
         "Package build actions")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
@@ -372,7 +380,7 @@ class PackageBuildAction(modellib.XObjIdModel):
     package_build_action_id = D(models.AutoField(primary_key=True), 
         "Database id of package build action")
     package_build = D(modellib.ForeignKey(PackageBuild,
-        related_name="package_build_actions"),
+        related_name="actions"),
         "Package Build")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_build_actions"),
