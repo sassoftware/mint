@@ -109,6 +109,6 @@ class PackageBuildJobService(service.BaseService):
         if package_build_job_id:
             return self.mgr.getPackageBuildJob(package_build_job_id)
         else:
-            return self.mgr.getPackageBuildsJobs(package_build_id)
+            return self.mgr.getPackageBuildJobs(package_build_id)
 
 

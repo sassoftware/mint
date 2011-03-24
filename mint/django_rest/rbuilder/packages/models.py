@@ -274,9 +274,11 @@ class PackageSourceJob(modellib.XObjIdModel):
         db_table = "packages_package_source_job"
     _xobj = xobj.XObjMetadata(tag="package_source_job")
 
+    url_key = ["package_source", "pk"]
+
     package_source_job_id = D(models.AutoField(primary_key=True),
         "Database id of package source job")
-    package_source = D(modellib.ForeignKey(PackageSource,
+    package_source = D(modellib.DeferredForeignKey(PackageSource,
         related_name="package_source_jobs", view_name="PackageSourceJobs",
         ref_name="id"),
         "Package source")
@@ -319,8 +321,7 @@ class PackageBuild(modellib.XObjIdModel):
     package_build_id = D(models.AutoField(primary_key=True), 
         "Database id of package build")
     package_source = D(modellib.DeferredForeignKey(PackageSource,
-        related_name="package_builds",
-        view_name="PackageBuilds",
+        related_name="package_builds", view_name="PackageBuilds",
         ref_name="id"),
         "Package Source")
     actions = D(modellib.ManyToManyField("PackageActionType",
@@ -379,10 +380,12 @@ class PackageBuildJob(modellib.XObjIdModel):
         db_table = "packages_package_build_job"
     _xobj = xobj.XObjMetadata(tag="package_build_job")
 
+    url_key = ["package_build", "pk"]
+
     package_build_job_id = D(models.AutoField(primary_key=True),
         "Database id of package build job")
-    package_build = D(modellib.ForeignKey(PackageBuild,
-        related_name="package_builds_jobs", view_name="PackageBuildJobs",
+    package_build = D(modellib.DeferredForeignKey(PackageBuild,
+        related_name="package_build_jobs", view_name="PackageBuildJobs",
         ref_name="id"),
         "Package build")
     package_action_type = D(modellib.ForeignKey("PackageActionType",

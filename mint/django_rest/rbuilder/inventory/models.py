@@ -985,12 +985,12 @@ class Job(modellib.XObjIdModel):
                     self.job_state = failedState
             self.save()
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None):
         if parents:
             if isinstance(parents[0], JobState):
                 self.view_name = 'JobStateJobs'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents)
 
     def serialize(self, request=None, values=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request,

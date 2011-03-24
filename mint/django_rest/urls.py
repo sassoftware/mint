@@ -305,14 +305,14 @@ urlpatterns = patterns('',
         name='PackageBuild'),
 
     url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
-         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>)/'
-         'package_builds_jobs/?$',
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/'
+         'package_build_jobs/?$',
         packageviews.PackageBuildJobService(),
         name='PackageBuildJobs'),
 
     url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
-         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>)/'
-          'package_builds_jobs/(?P<package_build_job_id>)/?$',
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/'
+          'package_build_jobs/(?P<package_build_job_id>\d+)/?$',
         packageviews.PackageBuildJobService(),
         name='PackageBuildJob'),
 

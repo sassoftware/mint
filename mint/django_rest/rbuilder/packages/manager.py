@@ -89,6 +89,21 @@ class PackageVersionManager(basemanager.BaseManager):
         return packageVersion
 
     @exposed
+    def getPackageVersionJobs(self, package_version_id):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        packageVersionJobs = models.PackageVersionJobs()
+        packageVersionJobs.package_version_job = list(
+            models.PackageVersionJob.objects.filter(package_version=packageVersion))
+        packageVersionJobs._parents = [packageVersion]
+        return packageVersionJobs
+
+    @exposed
+    def getPackageVersionJob(self, package_version_job_id):
+        packageVersionJob = models.PackageVersionJob.objects.get(
+            pk=package_version_job_id)
+        return packageVersionJob
+
+    @exposed
     def addPackageVersion(self, package_version):
         """docstring for addPackageVersion"""
         package_version.save()
@@ -120,6 +135,21 @@ class PackageVersionManager(basemanager.BaseManager):
         return packageSource
 
     @exposed
+    def getPackageSourceJobs(self, package_source_id):
+        packageSource = models.PackageSource.objects.get(pk=package_source_id)
+        packageSourceJobs = models.PackageSourceJobs()
+        packageSourceJobs.package_source_job = list(
+            models.PackageSourceJob.objects.filter(package_source=packageSource))
+        packageSourceJobs._parents = [packageSource]
+        return packageSourceJobs
+
+    @exposed
+    def getPackageSourceJob(self, package_source_job_id):
+        packageSourceJob = models.PackageSourceJob.objects.get(
+            pk=package_source_job_id)
+        return packageSourceJob
+
+    @exposed
     def getPackageBuilds(self, package_source_id):
         packageSource = models.PackageSource.objects.get(pk=package_source_id)
         packageBuilds = models.PackageBuilds()
@@ -132,3 +162,18 @@ class PackageVersionManager(basemanager.BaseManager):
     def getPackageBuild(self, package_build_id):
         packageBuild = models.PackageBuild.objects.get(pk=package_build_id)
         return packageBuild
+
+    @exposed
+    def getPackageBuildJobs(self, package_build_id):
+        packageBuild = models.PackageBuild.objects.get(pk=package_build_id)
+        packageBuildJobs = models.PackageBuildJobs()
+        packageBuildJobs.package_build_job = list(
+            models.PackageBuildJob.objects.filter(package_build=packageBuild))
+        packageBuildJobs._parents = [packageBuild]
+        return packageBuildJobs
+
+    @exposed
+    def getPackageBuildJob(self, package_build_job_id):
+        packageBuildJob = models.PackageBuildJob.objects.get(
+            pk=package_build_job_id) 
+        return packageBuildJob
