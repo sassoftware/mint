@@ -272,6 +272,7 @@ urlpatterns = patterns('',
         packageviews.PackageVersionService(),
         name='PackageVersion'),
 
+    # Package Urls
     url(r'^api/package_versions/(?P<package_version_id>\d+)/urls/?$',
         packageviews.PackageVersionUrlService(),
         name='PackageVersionUrls'),
@@ -280,7 +281,8 @@ urlpatterns = patterns('',
           '(?P<package_version_url_id>\d+)/?$',
         packageviews.PackageVersionUrlService(),
         name='PackageVersionUrl'),
-      
+    
+    # Package Version Jobs  
     url(r'^api/package_versions/(?P<package_version_id>\d+)/package_version_jobs/?$',
         packageviews.PackageVersionJobService(),
         name='PackageVersionJobs'),
