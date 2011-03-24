@@ -128,6 +128,8 @@ class PackageVersionAction(modellib.XObjIdModel):
         "If the action is visible")
     enabled = D(models.BooleanField(default=False),
         "If the action is enabled")
+    descriptor = D(models.TextField(null=True),
+        "descriptor")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package version action was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
@@ -298,6 +300,8 @@ class PackageSourceAction(modellib.XObjIdModel):
         "If the action is enabled")
     visible = D(modellib.SyntheticField(),
         "If the action is visible")
+    descriptor = D(models.TextField(null=True),
+        "descriptor")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package source action was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
@@ -407,6 +411,8 @@ class PackageBuildAction(modellib.XObjIdModel):
         "If the action is visible")
     enabled = D(models.BooleanField(),
         "If the action is enabled")
+    descriptor = D(models.TextField(null=True),
+        "descriptor")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package build action was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
@@ -498,8 +504,6 @@ class PackageActionType(modellib.XObjIdModel):
         "name")
     description = D(models.TextField(),
         "description")
-    descriptor = D(models.TextField(),
-        "descriptor")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package action type was created (UTC)")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
