@@ -8,6 +8,7 @@ import datetime
 from dateutil import tz
 
 from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.packages import errors
 from mint.django_rest.rbuilder.packages import models
 
 exposed = basemanager.exposed
@@ -155,6 +156,11 @@ class PackageVersionManager(basemanager.BaseManager):
     @exposed
     def addPackageVersionJob(self, package_version_id, package_version_job):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        enabledAction = packageVersion.actions.filter(enabled=True,
+            package_action_type=package_version_job.package_action_type)
+        if not enabledAction:
+            raise errors.PackageActionNotEnabled(
+                packageActionTypeName=package_version_job.package_action_type.name)
         package_version_job.package_version = packageVersion
         package_version_job.save()
         self.dispatchPackageVersionJob(package_version_job)
