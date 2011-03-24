@@ -140,7 +140,7 @@ class PackageVersionJob(modellib.XObjIdModel):
     package_version_job_id = D(models.AutoField(primary_key=True),
         "Database id of package version job")
     package_version = D(modellib.DeferredForeignKey(PackageVersion,
-        related_name="package_version_jobs", view_name="PackageVersionJobs",
+        related_name="jobs", view_name="PackageVersionJobs",
         ref_name="id"),
         "Package version")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
@@ -279,7 +279,7 @@ class PackageSourceJob(modellib.XObjIdModel):
     package_source_job_id = D(models.AutoField(primary_key=True),
         "Database id of package source job")
     package_source = D(modellib.DeferredForeignKey(PackageSource,
-        related_name="package_source_jobs", view_name="PackageSourceJobs",
+        related_name="jobs", view_name="PackageSourceJobs",
         ref_name="id"),
         "Package source")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
@@ -385,7 +385,7 @@ class PackageBuildJob(modellib.XObjIdModel):
     package_build_job_id = D(models.AutoField(primary_key=True),
         "Database id of package build job")
     package_build = D(modellib.DeferredForeignKey(PackageBuild,
-        related_name="package_build_jobs", view_name="PackageBuildJobs",
+        related_name="jobs", view_name="PackageBuildJobs",
         ref_name="id"),
         "Package build")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
