@@ -40,10 +40,10 @@ class Package(modellib.XObjIdModel):
         auto_now=True),
         "the date the package was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="packages_created"),
+        related_name="packages_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="packages_last_modified"),
+        related_name="packages_last_modified", text_field="username"),
         "the user that last modified the resource")
 
 
@@ -92,10 +92,10 @@ class PackageVersion(modellib.XObjIdModel):
         auto_now=True),
         "the date the package version was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_versions_created"),
+        related_name="package_versions_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_versions_last_modified"),
+        related_name="package_versions_last_modified", text_field="username"),
         "the user that last modified the resource")
     committed = D(models.BooleanField(default=False),
         "if the package version has been committed.")
@@ -170,10 +170,11 @@ class PackageVersionJob(modellib.XObjIdModel):
         auto_now=True),
         "the date the package version job was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_version_jobs_created"),
+        related_name="package_version_jobs_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_version_jobs_last_modified"),
+        related_name="package_version_jobs_last_modified",
+        text_field="username"),
         "the user that last modified the resource")
 
 class PackageVersionUrls(modellib.Collection):
@@ -212,10 +213,10 @@ class PackageVersionUrl(modellib.XObjIdModel):
         auto_now=True),
         "the date the package version url was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_version_urls_created"),
+        related_name="package_version_urls_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_version_urls_last_modified"),
+        related_name="package_version_urls_last_modified", text_field="username"),
         "the user that last modified the resource")
 
 
@@ -252,10 +253,10 @@ class PackageSource(modellib.XObjIdModel):
         auto_now=True),
         "the date the package source was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_sources_created"),
+        related_name="package_sources_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_sources_last_modified"),
+        related_name="package_sources_last_modified", text_field="username"),
         "the user that last modified the resource")
     built = D(models.BooleanField(default=False),
         "if the package source has been built")
@@ -321,10 +322,11 @@ class PackageSourceJob(modellib.XObjIdModel):
         auto_now=True),
         "the date the package source job was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_source_jobs_created"),
+        related_name="package_source_jobs_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_source_jobs_last_modified"),
+        related_name="package_source_jobs_last_modified",
+        text_field="username"),
         "the user that last modified the resource")
 
 
@@ -362,10 +364,10 @@ class PackageBuild(modellib.XObjIdModel):
         auto_now=True),
         "the date the package build was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_builds_created"),
+        related_name="package_builds_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_builds_last_modified"),
+        related_name="package_builds_last_modified", text_field="username"),
         "the user that last modified the resource")
     troves = D(modellib.ManyToManyField(inventorymodels.Trove),
         "built binary troves")
@@ -429,10 +431,11 @@ class PackageBuildJob(modellib.XObjIdModel):
         auto_now=True),
         "the date the package build job was last modified (UTC)")
     created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_build_jobs_created"),
+        related_name="package_build_jobs_created", text_field="username"),
         "the user that created the resource")
     modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_builds_jobs_last_modified"),
+        related_name="package_builds_jobs_last_modified",
+        text_field="username"),
         "the user that last modified the resource")
 
 
