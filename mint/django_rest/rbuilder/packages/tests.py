@@ -44,6 +44,13 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals('3.0', pv.name)
         self.assertEquals(True, pv.consumable)
 
+        # now add an url
+        r = self._post('/api/package_versions/5/urls/',
+            data=testsxml.package_version_url_post_xml,
+            username="admin", password="password")
+        self.assertEquals(200, r.status_code)
+        self.assertEquals(1, len(pv.package_version_urls.all()))
+
 
     def testUpdatePackage(self):
         pass

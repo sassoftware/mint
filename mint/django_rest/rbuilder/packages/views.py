@@ -104,6 +104,12 @@ class PackageVersionUrlService(service.BaseService):
         else:
             return self.mgr.getPackageVersionUrls(package_version_id)
 
+    @requires("package_version_url")
+    @return_xml
+    def rest_POST(self, request, package_version_id, package_version_url):
+        return self.mgr.addPackageVersionUrl(package_version_id,
+            package_version_url)
+
 class PackageVersionJobService(service.BaseService):
 
     @return_xml
