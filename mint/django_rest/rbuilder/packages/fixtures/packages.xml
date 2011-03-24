@@ -72,6 +72,82 @@
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
     <field type="BooleanField" name="committed">False</field>
   </object>
+  <object pk="5" model="packages.packageversion">
+    <field to="packages.package" name="package" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="name">3.0</field>
+    <field type="TextField" name="description">3.0</field>
+    <field type="TextField" name="license">Apache</field>
+    <field type="BooleanField" name="consumable">True</field>
+    <field type="DateTimeField" name="created_date">2011-03-24 20:50:34</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 20:50:34</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="BooleanField" name="committed">False</field>
+  </object>
+  <object pk="6" model="packages.packageversion">
+    <field to="packages.package" name="package" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="name">3.0</field>
+    <field type="TextField" name="description">3.0</field>
+    <field type="TextField" name="license">Apache</field>
+    <field type="BooleanField" name="consumable">True</field>
+    <field type="DateTimeField" name="created_date">2011-03-24 20:54:47</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:01:22</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field type="BooleanField" name="committed">False</field>
+  </object>
+  <object pk="1" model="packages.packageversionaction">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">5</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field type="BooleanField" name="visible">True</field>
+    <field type="BooleanField" name="enabled">False</field>
+    <field type="TextField" name="descriptor">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 20:50:34</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 20:50:34</field>
+  </object>
+  <object pk="2" model="packages.packageversionaction">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">5</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">5</field>
+    <field type="BooleanField" name="visible">True</field>
+    <field type="BooleanField" name="enabled">True</field>
+    <field type="TextField" name="descriptor">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 20:50:34</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 20:50:34</field>
+  </object>
+  <object pk="3" model="packages.packageversionaction">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field type="BooleanField" name="visible">True</field>
+    <field type="BooleanField" name="enabled">False</field>
+    <field type="TextField" name="descriptor">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 21:01:33</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:01:33</field>
+  </object>
+  <object pk="4" model="packages.packageversionaction">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">5</field>
+    <field type="BooleanField" name="visible">True</field>
+    <field type="BooleanField" name="enabled">True</field>
+    <field type="TextField" name="descriptor">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 21:01:33</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:01:33</field>
+  </object>
   <object pk="1" model="packages.packageversionjob">
     <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">1</field>
     <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
@@ -139,7 +215,7 @@
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
   </object>
   <object pk="3" model="packages.packageversionurl">
-    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">3</field>
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
     <field type="TextField" name="url">http://httpd.apache.org/download.cgi#apache23</field>
     <field type="TextField" name="file_path">
       <None/>
@@ -151,9 +227,51 @@
       <None/>
     </field>
     <field type="DateTimeField" name="created_date">2011-03-23 19:13:25</field>
-    <field type="DateTimeField" name="modified_date">2011-03-23 19:13:25</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:00:31</field>
     <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">1</field>
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="4" model="packages.packageversionurl">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field type="TextField" name="url">http://www.example.com/foo</field>
+    <field type="TextField" name="file_path">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="downloaded_date">
+      <None/>
+    </field>
+    <field type="IntegerField" name="file_size">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 20:50:34</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:00:32</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+  </object>
+  <object pk="5" model="packages.packageversionurl">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field type="TextField" name="url">http://www.rpath.com/foo</field>
+    <field type="TextField" name="file_path">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="downloaded_date">
+      <None/>
+    </field>
+    <field type="IntegerField" name="file_size">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 20:50:34</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:00:33</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
+      <None/>
+    </field>
   </object>
   <object pk="1" model="packages.packagesource">
     <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">1</field>
