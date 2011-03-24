@@ -15,11 +15,14 @@ class PackageService(service.BaseService):
     @return_xml
     def rest_GET(self, request, package_id=None):
         """docstring for rest_GET"""
+        return self.get(package_id)
+    
+    def get(self, package_id):
         if package_id:
             return self.mgr.getPackage(package_id)
         else:
             return self.mgr.getPackages()
-    
+
     # access.admin
     @requires('package')
     @return_xml
@@ -46,14 +49,17 @@ class PackagePackageVersionService(service.BaseService):
     @return_xml
     def rest_GET(self, request, package_id):
         """docstring for rest_GET"""
+        return self.get(package_id)
+
+    def get(self, package_id):
         return self.mgr.getPackagePackageVersions(package_id)
 
     # access.admin
     @requires('package_version')
     @return_xml
-    def rest_POST(self, request, package_version):
+    def rest_POST(self, request, package_id, package_version):
         """docstring for rest_POST"""
-        return self.mgr.addPackageVersion(package_version)
+        return self.mgr.addPackageVersion(package_id, package_version)
 
     # @access.admin
     @requires('package_version')
@@ -75,6 +81,9 @@ class PackageVersionService(service.BaseService):
     @return_xml
     def rest_GET(self, request, package_version_id=None):
         """docstring for rest_GET"""
+        return self.get(package_version_id)
+
+    def get(self, package_version_id):
         if package_version_id:
             return self.mgr.getPackageVersion(package_version_id)
         else:
@@ -86,6 +95,9 @@ class PackageVersionJobService(service.BaseService):
     @return_xml
     def rest_GET(self, request, package_version_id, package_version_job_id=None):
         """docstring for rest_GET"""
+        return self.get(package_version_id, package_version_job_id)
+
+    def get(self, package_version_id, package_version_job_id):
         if package_version_job_id:
             return self.mgr.getPackageVersionJob(package_version_job_id)
         else:
@@ -97,6 +109,9 @@ class PackageSourceService(service.BaseService):
     @return_xml
     def rest_GET(self, request, package_version_id, package_source_id=None):
         """docstring for rest_GET"""
+        return self.get(package_version_id, package_source_id)
+
+    def get(self, package_version_id, package_source_id):
         if package_source_id:
             return self.mgr.getPackageSource(package_source_id)
         else:
@@ -109,6 +124,11 @@ class PackageSourceJobService(service.BaseService):
     def rest_GET(self, request, package_version_id, package_source_id,
         package_source_job_id=None):
         """docstring for rest_GET"""
+        return self.get(package_version_id, package_source_id,
+            package_source_job_id)
+
+    def get(self, package_version_id, package_source_id,
+            package_source_job_id):
         if package_source_job_id:
             return self.mgr.getPackageSourceJob(package_source_job_id)
         else:
@@ -121,6 +141,10 @@ class PackageBuildService(service.BaseService):
     def rest_GET(self, request, package_version_id, package_source_id,
         package_build_id=None):
         """docstring for rest_GET"""
+        return self.get(package_version_id, package_source_id,
+            package_build_id)
+
+    def get(self, package_version_id, package_source_id, package_build_id):
         if package_build_id:
             return self.mgr.getPackageBuild(package_build_id)
         else:
@@ -133,6 +157,11 @@ class PackageBuildJobService(service.BaseService):
     def rest_GET(self, request, package_version_id, package_source_id,
         package_build_id, package_build_job_id=None):
         """docstring for rest_GET"""
+        return self.get(package_version_id, package_source_id,
+            package_build_id, package_build_job_id)
+
+    def get(self, package_version_id, package_source_id,
+        package_build_id, package_build_job_id):
         if package_build_job_id:
             return self.mgr.getPackageBuildJob(package_build_job_id)
         else:
