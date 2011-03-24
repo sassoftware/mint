@@ -14,7 +14,6 @@ from mint.django_rest.rbuilder.inventory.manager import repeatermgr
 from mint.django_rest.rbuilder.inventory.manager import jobmgr
 
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
-from mint.django_rest.rbuilder.packages.manager import PackageManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager, PackageVersionManager
 
