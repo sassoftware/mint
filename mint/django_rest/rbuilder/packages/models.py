@@ -430,6 +430,8 @@ class PackageActionType(modellib.XObjIdModel):
         db_table = "packages_package_action_type"
     _xobj = xobj.XObjMetadata(tag="package_action_type")
 
+    DOWNLOAD = "download"
+    DOWNLOAD_DESC = "download the urls for the package"
     COMMIT = "commit"
     COMMIT_DESC = "commit the package version"
     BUILD = "build"
@@ -440,6 +442,7 @@ class PackageActionType(modellib.XObjIdModel):
     PROMOTE_DESC = "promote the package"
 
     ACTION_CHOICES = (
+        (DOWNLOAD, DOWNLOAD_DESC),
         (COMMIT, COMMIT_DESC),
         (BUILD, BUILD_DESC),
         (PROMOTE_VERSION, PROMOTE_VERSION_DESC),
