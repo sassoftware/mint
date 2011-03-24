@@ -180,6 +180,10 @@ class BaseManager(models.Manager):
 
         href = getattr(xobjModel, refAttr, None)
 
+        # Check id as well
+        if not href:
+            href = getattr(xobjModel, "id", None)
+
         if href:
             path = urlparse.urlparse(href)[2]
             # Look up the view function that corresponds to the href using the
