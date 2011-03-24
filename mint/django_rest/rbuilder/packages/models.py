@@ -124,9 +124,9 @@ class PackageVersionAction(modellib.XObjIdModel):
         related_name="package_version_actions", text_field="name",
         ref_name="id"),
         "Package action type")
-    visible = D(models.BooleanField(),
+    visible = D(models.BooleanField(default=True),
         "If the action is visible")
-    enabled = D(models.BooleanField(),
+    enabled = D(models.BooleanField(default=False),
         "If the action is enabled")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package version action was created (UTC)")
@@ -234,6 +234,7 @@ class PackageVersionUrl(modellib.XObjIdModel):
         related_name="package_version_urls_last_modified", text_field="username"),
         "the user that last modified the resource")
 
+    load_fields = [url]
 
 class PackageSources(modellib.Collection):
 

@@ -4,6 +4,9 @@
 # All Rights Reserved
 #
 
+import datetime
+from dateutil import tz
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.packages import models
 
@@ -109,6 +112,30 @@ class PackageVersionManager(basemanager.BaseManager):
         package_version_url.package_version = packageVersion
         package_version_url.save()
         return package_version_url
+
+    @exposed
+    def updatePackageVersionUrls(self, package_version_id,
+                                 package_version_urls):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        packageVersion.package_version_urls.all().delete()
+        canCommit = True
+        for pvUrl in package_version_urls.package_version_url:
+            pvUrl.package_version = packageVersion
+            if not pvUrl.file_path:
+                canCommit = False
+            pvUrl.downloaded_date = datetime.datetime.now(tz.tzutc())
+            pvUrl.modified_by = self.user
+            pvUrl.save()
+
+        if canCommit:
+            commitActionType = self.getPackageActionTypeByName(
+                models.PackageActionType.COMMIT)
+            packageVersionAction, created = packageVersion.actions.get_or_create(
+                package_action_type=commitActionType)
+            packageVersionAction.enabled = True
+            packageVersionAction.save()
+
+        return self.getPackageVersionUrls(package_version_id)
 
     @exposed
     def getPackageVersionJobs(self, package_version_id):

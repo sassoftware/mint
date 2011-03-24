@@ -134,7 +134,8 @@ class PackageVersionUrlService(service.BaseService):
     @requires("package_version_urls")
     @return_xml
     def rest_PUT(self, request, package_version_id, package_version_urls):
-        pass
+        return self.mgr.updatePackageVersionUrls(package_version_id,
+            package_version_urls)
 
 class PackageVersionJobService(service.BaseService):
 
