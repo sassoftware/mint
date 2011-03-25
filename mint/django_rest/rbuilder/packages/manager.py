@@ -162,6 +162,8 @@ class PackageVersionManager(basemanager.BaseManager):
             raise errors.PackageActionNotEnabled(
                 packageActionTypeName=package_version_job.package_action_type.name)
         package_version_job.package_version = packageVersion
+        package_version_job.created_by = self.user
+        package_version_job.modified_by = self.user
         package_version_job.save()
         self.dispatchPackageVersionJob(package_version_job)
         return package_version_job
