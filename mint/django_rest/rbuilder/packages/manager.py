@@ -363,6 +363,16 @@ class PackageVersionManager(basemanager.BaseManager):
         return package_source
 
     @exposed
+    def updatePackageSources(self, package_version_id, package_sources):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        packageVersion.package_sources.all().delete()
+
+        for packageSource in package_sources.package_source:
+            self.addPackageSource(package_version_id, packageSource)
+        
+        return self.getPackageSources()
+
+    @exposed
     def getPackageSourceJobs(self, package_source_id):
         packageSource = models.PackageSource.objects.get(pk=package_source_id)
         packageSourceJobs = models.PackageSourceJobs()
