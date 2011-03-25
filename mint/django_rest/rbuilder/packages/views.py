@@ -171,6 +171,11 @@ class PackageSourceService(service.BaseService):
             return self.mgr.getPackageSource(package_source_id)
         else:
             return self.mgr.getPackageSources(package_version_id)
+
+    @requires("package_source")
+    @return_xml
+    def rest_POST(self, package_version_id, package_source):
+        pass
         
 
 class PackageSourceJobService(service.BaseService):

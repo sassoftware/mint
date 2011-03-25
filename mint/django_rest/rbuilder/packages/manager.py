@@ -223,8 +223,12 @@ class PackageVersionManager(basemanager.BaseManager):
         repeaterClient = client.Client()
         params = rmakemodels.PackageSourceCommitParams(
             mincfg=mincfg, sourceData=sourceData)
+        packageSources = package_version_job.package_version.package_sources.model()
+        path = packageSources.get_absolute_url(
+            parents=[package_version_job.package_version], 
+            view_name="PackageSources")
         resultsLocation = repeaterClient.ResultsLocation(
-            path='/api/FIXME')
+            path=path)
         params.resultsLocation = resultsLocation
 
         job_uuid, job = repeaterClient.pc_packageSourceCommit(params)
