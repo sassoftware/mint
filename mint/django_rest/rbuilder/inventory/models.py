@@ -619,7 +619,7 @@ class System(modellib.XObjIdModel):
         return bool([j for j in jobs \
             if j.job_state_id == self.runningJobState.job_state_id])
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
         # the jobs m2m relationship as hidden, or else the bulk load fails
         if values is None:
@@ -629,8 +629,7 @@ class System(modellib.XObjIdModel):
             # only purpose is to prevent repeated database hits when we bulk
             # load
             jobs = [ x[0] for x in values.pop('jobs', []) ]
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
         xobj_model.has_running_jobs = self.areJobsRunning(jobs)
 
@@ -992,9 +991,8 @@ class Job(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, request,
             parents=parents)
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
             pk=self.event_type_id).name
         xobj_model.job_description = modellib.Cache.get(
@@ -1213,8 +1211,8 @@ class Stage(modellib.XObjIdModel):
         else:
             return None
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
         return xobj_model
 
