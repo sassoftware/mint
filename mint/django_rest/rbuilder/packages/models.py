@@ -166,7 +166,7 @@ class PackageVersionJob(modellib.XObjIdModel):
         ref_name="id"),
         "Package version")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_version_jobs", text_field="name"),
+        related_name="package_version_jobs", text_field="description"),
         "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job, null=True),
         "Job")
@@ -334,7 +334,7 @@ class PackageSourceJob(modellib.XObjIdModel):
         ref_name="id"),
         "Package source")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_source_jobs"),
+        related_name="package_source_jobs", text_field="description"),
         "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
@@ -449,7 +449,7 @@ class PackageBuildJob(modellib.XObjIdModel):
         ref_name="id"),
         "Package build")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_build_jobs"),
+        related_name="package_build_jobs", text_field="description"),
         "Package action type")
     job = D(modellib.ForeignKey(inventorymodels.Job),
         "Job")
@@ -488,9 +488,9 @@ class PackageActionType(modellib.XObjIdModel):
         "package_build_jobs"])
 
     DOWNLOAD = "download"
-    DOWNLOAD_DESC = "download the urls for the package"
+    DOWNLOAD_DESC = "Download package files"
     COMMIT = "commit"
-    COMMIT_DESC = "commit the package version"
+    COMMIT_DESC = "Commit package version"
     BUILD = "build"
     BUILD_DESC = "build the package version"
     PROMOTE_VERSION = "promote_version"
