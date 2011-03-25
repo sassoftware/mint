@@ -622,13 +622,7 @@ class System(modellib.XObjIdModel):
     def serialize(self, request=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
         # the jobs m2m relationship as hidden, or else the bulk load fails
-        if values is None:
-            jobs = self.jobs.all()
-        else:
-            # We're popping the jobs data structure from values because its
-            # only purpose is to prevent repeated database hits when we bulk
-            # load
-            jobs = [ x[0] for x in values.pop('jobs', []) ]
+        jobs = self.jobs.all()
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
         xobj_model.has_running_jobs = self.areJobsRunning(jobs)
