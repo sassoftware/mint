@@ -180,7 +180,7 @@ class PackageVersionManager(basemanager.BaseManager):
     def _dispatchDownloadJob(self, package_version_job):
         urls = []
         for url in package_version_job.package_version.package_version_urls.all():
-            urls.append(rmakemodels.DownloadFile(url=url))
+            urls.append(rmakemodels.DownloadFile(url=url.url))
 
         repeaterClient = client.Client()
         resultsLocation = repeaterClient.ResultsLocation(
