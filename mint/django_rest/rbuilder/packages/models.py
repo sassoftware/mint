@@ -121,7 +121,7 @@ class PackageVersionAction(modellib.XObjIdModel):
         related_name="actions"),
         "Package Version")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_version_actions", text_field="name",
+        related_name="package_version_actions", text_field="description",
         ref_name="id"),
         "Package action type")
     visible = D(models.BooleanField(default=True),
@@ -295,7 +295,7 @@ class PackageSourceAction(modellib.XObjIdModel):
         related_name="actions"),
         "Package Source")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_source_actions"),
+        related_name="package_source_actions", text_field="description"),
         "Package action type")
     enabled = D(models.BooleanField(),
         "If the action is enabled")
@@ -410,7 +410,7 @@ class PackageBuildAction(modellib.XObjIdModel):
         related_name="actions"),
         "Package Build")
     package_action_type = D(modellib.ForeignKey("PackageActionType",
-        related_name="package_build_actions"),
+        related_name="package_build_actions", text_field="description"),
         "Package action type")
     visible = D(models.BooleanField(),
         "If the action is visible")
