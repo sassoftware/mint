@@ -8,8 +8,12 @@ import datetime
 from dateutil import tz
 
 from mint.django_rest.rbuilder.manager import basemanager
+from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.packages import errors
 from mint.django_rest.rbuilder.packages import models
+
+from mint.rmake3_package_creator import models as rmakemodels
+from mint.rmake3_package_creator import client 
 
 exposed = basemanager.exposed
 
@@ -169,7 +173,32 @@ class PackageVersionManager(basemanager.BaseManager):
         return package_version_job
 
     def dispatchPackageVersionJob(self, package_version_job):
-        pass
+        if package_version_job.package_action_type.name == \
+            models.PackageActionType.DOWNLOAD:
+            return self._dispatchDownloadJob(package_version_job)
+
+    def _dispatchDownloadJob(self, package_version_job):
+        urls = []
+        for url in package_version_job.package_version.package_version_urls.all():
+            urls.append(rmakemodels.DownloadFile(url=url))
+
+        repeaterClient = client.Client()
+        resultsLocation = repeaterClient.ResultsLocation(
+            path=package_version_job.package_version.get_absolute_url())
+        params = rmakemodels.DownloadFilesParams()
+        params.urlList = urls
+        params.resultsLocation = resultsLocation
+        job_uuid, job = repeaterClient.pc_downloadFiles(params)
+
+        inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
+            job_state=inventorymodels.JobState.objects.get(
+                name=inventorymodels.JobState.QUEUED))
+        inventoryJob.save()
+        package_version_job.job = inventoryJob
+        package_version_job.save()
+
+        return inventoryJob
+
 
     def getPackageActionTypeByName(self, actionName):
         return models.PackageActionType.objects.get(name=actionName)
