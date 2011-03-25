@@ -23,8 +23,8 @@ class TaskCommitSource(BaseTask):
 
     def run(self):
         self.setConfiguration()
-        self.commitSource()
-        response = models.Response("Hoorah!")
+        pkgSource = self.commitSource()
+        response = models.Response(pkgSource.toXml())
         self.setData(response.freeze())
         self.sendStatus(constants.Codes.OK, "Done")
 
@@ -48,6 +48,12 @@ class TaskCommitSource(BaseTask):
             repos.commitChangeSet(cs)
         except:
             raise
+        trvCs = cs.iterNewTroveList().next()
+        trvName, trvVersion, trvFlavor = trvCs.getNewNameVersionFlavor()
+        trvModel = models.Trove.fromNameVersionFlavor(trvName,
+            trvVersion, trvFlavor)
+        pkgSource = models.PackageSource(trove=trvModel, built="true")
+        return pkgSource
 
     def getConaryClient(self):
         return conaryclient.ConaryClient(self.conarycfg)

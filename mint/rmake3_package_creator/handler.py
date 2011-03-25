@@ -80,8 +80,7 @@ class HandlerCommitSource(BaseHandler):
         return self._handleTask(task)
 
     def postResults(self, *args, **kwargs):
-        # XXX Fix this when we know what to do
-        pass
+        return ReportingMixIn.postResults(self, method="POST")
 
 class HandlerDownloadFiles(BaseHandler):
     jobType = constants.NS_JOB_DOWNLOAD_FILES

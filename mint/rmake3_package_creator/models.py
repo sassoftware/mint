@@ -15,7 +15,8 @@
 import StringIO
 from conary import conarycfg
 
-from rpath_repeater.models import _BaseSlotCompare
+from rpath_repeater.models import _BaseSlotCompare, _Serializable
+from rpath_repeater.models import Trove #pyflakes=ignore
 
 class ImmutableDict(_BaseSlotCompare):
     __slots = [ 'data', ]
@@ -111,3 +112,7 @@ class DownloadFilesParams(_BaseSlotCompare):
 
 class Response(_BaseSlotCompare):
     __slots__ = [ 'data', ]
+
+class PackageSource(_BaseSlotCompare, _Serializable):
+    __slots__ = ( 'trove', 'built', )
+    _tag = 'package_source'
