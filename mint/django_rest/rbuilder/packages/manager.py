@@ -346,6 +346,23 @@ class PackageVersionManager(basemanager.BaseManager):
         return packageSource
 
     @exposed
+    def addPackageSource(self, package_version_id, package_source):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        package_source.package_version = packageVersion
+        package_source.save()
+        
+        buildAction = self.getPackageActionTypeByName(
+            models.PackageActionType.BUILD)
+        buildSourceAct = models.PackageSourceAction(
+            package_source=package_source,
+            package_action_type=buildAction,
+            visible=True,
+            enabled=True)
+        buildSourceAct.save()
+
+        return package_source
+
+    @exposed
     def getPackageSourceJobs(self, package_source_id):
         packageSource = models.PackageSource.objects.get(pk=package_source_id)
         packageSourceJobs = models.PackageSourceJobs()

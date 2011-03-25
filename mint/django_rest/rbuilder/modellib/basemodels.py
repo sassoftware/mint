@@ -950,7 +950,10 @@ class XObjModel(models.Model):
         m2m_accessors = {}
         for m in self._meta.get_m2m_with_model():
             f = m[0]
-            m2m_accessors[f.name] = getattr(self, f.name)
+            try:
+                m2m_accessors[f.name] = getattr(self, f.name)
+            except ValueError:
+                pass
         return m2m_accessors
 
     def serialize_fields(self, xobj_model, fields, request):

@@ -299,7 +299,7 @@ class PackageSourceAction(modellib.XObjIdModel):
         "Package action type")
     enabled = D(models.BooleanField(),
         "If the action is enabled")
-    visible = D(modellib.SyntheticField(),
+    visible = D(models.BooleanField(),
         "If the action is visible")
     descriptor = D(models.TextField(null=True),
         "descriptor")

@@ -172,10 +172,10 @@ class PackageSourceService(service.BaseService):
         else:
             return self.mgr.getPackageSources(package_version_id)
 
-    @requires("package_source")
+    @requires("package_source", save=False)
     @return_xml
-    def rest_POST(self, package_version_id, package_source):
-        pass
+    def rest_POST(self, request, package_version_id, package_source):
+        return self.mgr.addPackageSource(package_version_id, package_source)
         
 
 class PackageSourceJobService(service.BaseService):
