@@ -172,11 +172,13 @@ class PackageSourceService(service.BaseService):
         else:
             return self.mgr.getPackageSources(package_version_id)
 
+    @access.anonymous
     @requires("package_source", save=False)
     @return_xml
     def rest_POST(self, request, package_version_id, package_source):
         return self.mgr.addPackageSource(package_version_id, package_source)
 
+    @access.anonymous
     @requires("package_sources", save=False)
     @return_xml
     def rest_PUT(self, request, package_version_id, package_sources):

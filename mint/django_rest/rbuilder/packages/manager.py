@@ -349,6 +349,10 @@ class PackageVersionManager(basemanager.BaseManager):
     def addPackageSource(self, package_version_id, package_source):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         package_source.package_version = packageVersion
+        package_source.trove.version.save()
+        package_source.trove.version = package_source.trove.version
+        package_source.trove.save()
+        package_source.trove = package_source.trove
         package_source.save()
         
         buildAction = self.getPackageActionTypeByName(
