@@ -925,6 +925,10 @@ class Job(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
+    _xobj_hidden_accessors = set([
+        "package_version_jobs",
+        "package_source_jobs",
+        "package_builds_jobs"])
 
     objects = modellib.JobManager()
 

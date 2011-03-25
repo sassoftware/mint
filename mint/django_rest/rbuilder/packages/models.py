@@ -169,7 +169,8 @@ class PackageVersionJob(modellib.XObjIdModel):
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_version_jobs", text_field="description"),
         "Package action type")
-    job = D(modellib.ForeignKey(inventorymodels.Job, null=True),
+    job = D(modellib.ForeignKey(inventorymodels.Job, null=True,
+        related_name="package_version_jobs"),
         "Job")
     job_data = D(models.TextField(null=True),
         "Job data")
@@ -337,7 +338,8 @@ class PackageSourceJob(modellib.XObjIdModel):
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_source_jobs", text_field="description"),
         "Package action type")
-    job = D(modellib.ForeignKey(inventorymodels.Job),
+    job = D(modellib.ForeignKey(inventorymodels.Job, null=True,
+        related_name="package_source_jobs"),
         "Job")
     job_data = D(models.TextField(null=True),
         "Job data")
@@ -452,7 +454,8 @@ class PackageBuildJob(modellib.XObjIdModel):
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_build_jobs", text_field="description"),
         "Package action type")
-    job = D(modellib.ForeignKey(inventorymodels.Job),
+    job = D(modellib.ForeignKey(inventorymodels.Job, null=True,
+        related_name="package_build_jobs"),
         "Job")
     job_data = D(models.TextField(null=True),
         "Job data")
