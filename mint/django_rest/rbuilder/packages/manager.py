@@ -191,11 +191,11 @@ class PackageVersionManager(basemanager.BaseManager):
             tmpf = tempfile.NamedTemporaryFile(dir=destDir, prefix=prefix)
             path = tmpf.name
             tmpf.close()
-            urls.append(rmakemodels.DownloadFile(url=url.url, path=path))
+            urls.append(rmakemodels.DownloadFile(url=str(url.url), path=path))
 
         repeaterClient = client.Client()
         resultsLocation = repeaterClient.ResultsLocation(
-            path=package_version_job.package_version.get_absolute_url() + \
+            path=str(package_version_job.package_version.get_absolute_url()) + \
             '/urls')
         params = rmakemodels.DownloadFilesParams()
         params.urlList = urls
@@ -204,7 +204,7 @@ class PackageVersionManager(basemanager.BaseManager):
 
         inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
             job_state=inventorymodels.JobState.objects.get(
-                name=inventorymodels.JobState.QUEUED))
+                name=inventorymodels.JobState.RUNNING))
         inventoryJob.save()
         package_version_job.job = inventoryJob
         package_version_job.save()
