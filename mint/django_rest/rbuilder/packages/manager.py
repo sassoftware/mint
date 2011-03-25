@@ -6,6 +6,7 @@
 
 import datetime
 from dateutil import tz
+import urlparse
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
@@ -180,11 +181,13 @@ class PackageVersionManager(basemanager.BaseManager):
     def _dispatchDownloadJob(self, package_version_job):
         urls = []
         for url in package_version_job.package_version.package_version_urls.all():
-            urls.append(rmakemodels.DownloadFile(url=url.url))
+            path = "/tmp/%s" % urlparse.urlparse(url.url).path.split('/')[-1]
+            urls.append(rmakemodels.DownloadFile(url=str(url.url),
+                path=path))
 
         repeaterClient = client.Client()
         resultsLocation = repeaterClient.ResultsLocation(
-            path=package_version_job.package_version.get_absolute_url() + \
+            path=str(package_version_job.package_version.get_absolute_url()) + \
             '/urls')
         params = rmakemodels.DownloadFilesParams()
         params.urlList = urls
@@ -193,7 +196,7 @@ class PackageVersionManager(basemanager.BaseManager):
 
         inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
             job_state=inventorymodels.JobState.objects.get(
-                name=inventorymodels.JobState.QUEUED))
+                name=inventorymodels.JobState.RUNNING))
         inventoryJob.save()
         package_version_job.job = inventoryJob
         package_version_job.save()

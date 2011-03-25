@@ -7,7 +7,7 @@
 from django.http import HttpResponse
 
 from mint.django_rest.rbuilder import service
-from mint.django_rest.deco import requires, return_xml #, access, ACCESS
+from mint.django_rest.deco import requires, return_xml, access
 
 class PackageService(service.BaseService):
     """docstring for PackageService"""
@@ -131,6 +131,7 @@ class PackageVersionUrlService(service.BaseService):
         return self.mgr.addPackageVersionUrl(package_version_id,
             package_version_url)
 
+    @access.anonymous
     @requires("package_version_urls")
     @return_xml
     def rest_PUT(self, request, package_version_id, package_version_urls):

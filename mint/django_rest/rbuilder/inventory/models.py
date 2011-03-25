@@ -987,10 +987,12 @@ class Job(modellib.XObjIdModel):
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
-            pk=self.event_type_id).name
-        xobj_model.job_description = modellib.Cache.get(
-            self.event_type.__class__, pk=self.event_type_id).description
+        self.setValuesFromRmake()
+        if self.event_type:
+            xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
+                pk=self.event_type_id).name
+            xobj_model.job_description = modellib.Cache.get(
+                self.event_type.__class__, pk=self.event_type_id).description
         xobj_model.event_type = None
         return xobj_model
 
@@ -1015,14 +1017,14 @@ class SystemEvent(modellib.XObjIdModel):
     def dispatchImmediately(self):
         return self.event_type.priority >= EventType.ON_DEMAND_BASE
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
             if isinstance(parents[0], EventType):
                 self.view_name = 'SystemEventsByType'
             elif isinstance(parents[0], System):
                 self.view_name = 'SystemsSystemEvent'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents, *args, **kwargs)
 
     def save(self, *args, **kw):
         if not self.priority:
