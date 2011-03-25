@@ -185,7 +185,8 @@ class PackageVersionManager(basemanager.BaseManager):
 
     def _dispatchCommitJob(self, package_version_job):
         label = 'murftest.eng.rpath.com@rpath:murftest-1-devel'
-        packageName = str(package_version_job.package_version.name)
+        packageName = str(package_version_job.package_version.package.name)
+        packageVersion = str(package_version_job.package_version.name)
 
         cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
         cfg.configLine('name Automatic Commit from rBuilder')
@@ -210,7 +211,7 @@ class PackageVersionManager(basemanager.BaseManager):
         mincfg = rmakemodels.MinimalConaryConfiguration.fromConaryConfig(cfg)
         mincfg.createConaryConfig().writeToFile("/tmp/conarycfg")
         sourceData = rmakemodels.SourceData(name='%s:source' % packageName,
-            label=label, version='1.0',
+            label=label, version=packageVersion,
             productDefinitionLocation=pdl,
             factory='capsule-rpm-pc=/centos.rpath.com@rpath:centos-5-common/1.0-1-1',
             stageLabel='devel', commitMessage="Committing\n",
