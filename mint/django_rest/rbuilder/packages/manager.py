@@ -8,6 +8,8 @@ import datetime
 import tempfile
 from dateutil import tz
 
+from conary import conarycfg
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.packages import errors
@@ -177,6 +179,63 @@ class PackageVersionManager(basemanager.BaseManager):
         if package_version_job.package_action_type.name == \
             models.PackageActionType.DOWNLOAD:
             return self._dispatchDownloadJob(package_version_job)
+        if package_version_job.package_action_type.name == \
+            models.PackageActionType.COMMIT:
+            return self._dispatchCommitJob(package_version_job)
+
+    def _dispatchCommitJob(self, package_version_job):
+        label = 'murftest.eng.rpath.com@rpath:murftest-1-devel'
+        packageName = str(package_version_job.package_version.name)
+
+        cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
+        cfg.configLine('name Automatic Commit from rBuilder')
+        cfg.configLine('contact slagle@rpath.com')
+        cfg.configLine('buildLabel %s' % label)
+        cfg.configLine('repositoryMap murftest.eng.rpath.com '
+            'https://rbalast.eng.rpath.com/repos/murftest/')
+        cfg.configLine('user * admin tclmeSRS')
+
+        pdl = rmakemodels.ProductDefinitionLocation(
+            hostname='murftest.eng.rpath.com',
+            shortname='murftest', namespace='rpath', version='1')
+
+        recipeContents = """
+        class OverrideRecipe(FactoryRecipeClass):
+            def preProcess(r):
+                '''This function is run at the beginning of setup'''
+            def postProcess(r):",
+                '''This function is run at the end of setup'''
+        """
+
+        mincfg = rmakemodels.MinimalConaryConfiguration.fromConaryConfig(cfg)
+        mincfg.createConaryConfig().writeToFile("/tmp/conarycfg")
+        sourceData = rmakemodels.SourceData(name='%s:source' % packageName,
+            label=label, version='1.0',
+            productDefinitionLocation=pdl,
+            factory='capsule-rpm-pc=/centos.rpath.com@rpath:centos-5-common/1.0-1-1',
+            stageLabel='devel', commitMessage="Committing\n",
+        )
+        sourceData.fileList = rmakemodels.ImmutableList([
+            rmakemodels.File(name="%s.recipe" % packageName, contents = recipeContents)
+        ])
+
+        repeaterClient = client.Client()
+        params = rmakemodels.PackageSourceCommitParams(
+            mincfg=mincfg, sourceData=sourceData)
+        resultsLocation = repeaterClient.ResultsLocation(
+            path='/api/FIXME')
+        params.resultsLocation = resultsLocation
+
+        job_uuid, job = repeaterClient.pc_packageSourceCommit(params)
+        
+        inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
+            job_state=inventorymodels.JobState.objects.get(
+                name=inventorymodels.JobState.RUNNING))
+        inventoryJob.save()
+        package_version_job.job = inventoryJob
+        package_version_job.save()
+
+        return inventoryJob
 
     def _dispatchDownloadJob(self, package_version_job):
         # XXX we should use the config for this
