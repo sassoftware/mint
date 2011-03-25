@@ -116,6 +116,10 @@ class Pk(object):
     def __init__(self, pk):
         self.pk = pk
 
+    def get_url_key(self, *args, **kwargs):
+        return self.pk
+
+
 class Versions(modellib.XObjIdModel):
     productVersionId = models.AutoField(primary_key=True,
         db_column='productversionid')

@@ -54,6 +54,9 @@ class Pk(object):
     def __init__(self, pk):
         self.pk = pk
 
+    def get_url_key(self, *args, **kwargs):
+        return self.pk
+
 class Inventory(modellib.XObjModel):
 
     #FIXME Inventory needs class attribute XSL for generatecomments to do
@@ -207,8 +210,7 @@ class Credentials(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
     
 class Configuration(modellib.XObjIdModel):
@@ -228,8 +230,7 @@ class Configuration(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
     
 class ConfigurationDescriptor(modellib.XObjIdModel):
@@ -246,8 +247,7 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
 
 class Zone(modellib.XObjIdModel):
@@ -669,8 +669,7 @@ class System(modellib.XObjIdModel):
 
             def __init__(self, request, system):
                 self.view_name = 'SystemJobs'
-                self.id = self.get_absolute_url(request, parents=[system],
-                    model=xobj_model)
+                self.id = self.get_absolute_url(request, parents=[system])
                 self.view_name = 'SystemJobStateJobs'
                 parents = [system, Cache.get(JobState, name=JobState.QUEUED)]
                 self.queued_jobs = modellib.XObjHrefModel(
@@ -748,10 +747,10 @@ class InstalledSoftware(modellib.XObjIdModel):
     list_fields = ['trove']
     objects = modellib.InstalledSoftwareManager()
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents, *args, **kwargs):
         if parents:
             return modellib.XObjIdModel.get_absolute_url(self, request,
-                parents=parents, model=model)
+                parents, *args, **kwargs)
         return request.build_absolute_uri(request.get_full_path())
 
 class EventType(modellib.XObjIdModel):
@@ -908,7 +907,7 @@ class Jobs(modellib.XObjIdModel):
     list_fields = ['job']
     job = []
     
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, *args, **kwargs):
         """
         This implementation of get_absolute_url is a bit different since the
         jobs collection can be serialized on it's own from 2 different places
@@ -978,12 +977,12 @@ class Job(modellib.XObjIdModel):
                     self.job_state = failedState
             self.save()
 
-    def get_absolute_url(self, request, parents=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
             if isinstance(parents[0], JobState):
                 self.view_name = 'JobStateJobs'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents)
+            parents=parents, *args, **kwargs)
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
@@ -1069,13 +1068,13 @@ class SystemLog(modellib.XObjIdModel):
     system_log_id = D(models.AutoField(primary_key=True), "the database ID for the system log")
     system = D(modellib.DeferredForeignKey(System, related_name='system_log'), "a entry point to the system this log is for")
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if not parents:
             parents = [self.system]
         if isinstance(parents[0], System):
             self.view_name = 'SystemLog'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents, *args, **kwargs)
 
 class SystemLogEntry(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
@@ -1123,16 +1122,13 @@ class Trove(modellib.XObjIdModel):
 
     load_fields = [ name, version, flavor ]
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, *args, **kwargs):
         """
         model is an optional xobj model to use when computing the URL.
         It helps avoid additional database queries.
         """
         # Build an id to crest
-        if model is None:
-            conaryVersion = self.version.conaryVersion
-        else:
-            conaryVersion = Version.getConaryVersion(model.version)
+        conaryVersion = self.version.conaryVersion
         label = conaryVersion.trailingLabel()
         revision = conaryVersion.trailingRevision()
         shortname = label.getHost().split('.')[0]
