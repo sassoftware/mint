@@ -493,9 +493,9 @@ class PackageActionType(modellib.XObjIdModel):
     COMMIT = "commit"
     COMMIT_DESC = "Commit package version"
     BUILD = "build"
-    BUILD_DESC = "build the package version"
+    BUILD_DESC = "Build package source"
     PROMOTE_VERSION = "promote_version"
-    PROMOTE_VERSION_DESC = "promote the package version"
+    PROMOTE_VERSION_DESC = "Promote package build"
     PROMOTE = "promote"
     PROMOTE_DESC = "promote the package"
 
