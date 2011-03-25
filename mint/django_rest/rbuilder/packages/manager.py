@@ -191,7 +191,7 @@ class PackageVersionManager(basemanager.BaseManager):
             tmpf = tempfile.NamedTemporaryFile(dir=destDir, prefix=prefix)
             path = tmpf.name
             tmpf.close()
-            urls.append(rmakemodels.DownloadFile(url=url.url, path=path))
+            urls.append(rmakemodels.DownloadFile(url=str(url.url), path=path))
  
         repeaterClient = client.Client()
         resultsLocation = repeaterClient.ResultsLocation(
