@@ -184,7 +184,9 @@ class PackageVersionManager(basemanager.BaseManager):
 
         repeaterClient = client.Client()
         resultsLocation = repeaterClient.ResultsLocation(
-            path=package_version_job.package_version.get_absolute_url())
+            path=package_version_job.package_version.get_absolute_url() + \
+            '/urls')
+        import epdb; epdb.st()  
         params = rmakemodels.DownloadFilesParams()
         params.urlList = urls
         params.resultsLocation = resultsLocation
