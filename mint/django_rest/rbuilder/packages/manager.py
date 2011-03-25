@@ -5,8 +5,8 @@
 #
 
 import datetime
+import tempfile
 from dateutil import tz
-import urlparse
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
@@ -179,12 +179,20 @@ class PackageVersionManager(basemanager.BaseManager):
             return self._dispatchDownloadJob(package_version_job)
 
     def _dispatchDownloadJob(self, package_version_job):
+        # XXX we should use the config for this
+        destDir = "/srv/rbuilder/package-creator-downloads"
+        prefix = "pc-file-download-"
         urls = []
         for url in package_version_job.package_version.package_version_urls.all():
-            path = "/tmp/%s" % urlparse.urlparse(url.url).path.split('/')[-1]
-            urls.append(rmakemodels.DownloadFile(url=str(url.url),
-                path=path))
-
+            # Create a temporary file just to get a unique path. We'll close
+            # it immediately after that. The file will disappear, which is
+            # good, because rmake runs as user rmake while we're running as
+            # apache.
+            tmpf = tempfile.NamedTemporaryFile(dir=destDir, prefix=prefix)
+            path = tmpf.name
+            tmpf.close()
+            urls.append(rmakemodels.DownloadFile(url=url.url, path=path))
+ 
         repeaterClient = client.Client()
         resultsLocation = repeaterClient.ResultsLocation(
             path=str(package_version_job.package_version.get_absolute_url()) + \
