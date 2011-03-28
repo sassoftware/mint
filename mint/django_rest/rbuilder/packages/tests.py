@@ -5,9 +5,9 @@
 # All rights reserved.
 #
 
-# from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
+from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 
-from mint.django_rest.rbuilder.packages import manager
+# from mint.django_rest.rbuilder.packages import manager
 from mint.django_rest.rbuilder.packages import models
 from mint.django_rest.rbuilder.packages import testsxml
 
