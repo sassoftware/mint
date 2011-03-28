@@ -1,4 +1,6 @@
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
+from mint.django_rest.urls import urlpatterns
+from mint.django_rest.rbuilder.packages import models
 
 class test(object):
     """
