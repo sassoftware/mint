@@ -158,7 +158,7 @@ class PackageVersionManager(basemanager.BaseManager):
         return
         filePaths = [u.file_path \
             for u in package_version_job.package_version.package_version_urls \
-            if u.file_path is not None]
+            if u.file_path is not None] # pyflakes ignore
 
         commitActionType = self.getPackageActionTypeByName(
             models.PackageActionType.COMMIT)
@@ -381,7 +381,7 @@ class PackageVersionManager(basemanager.BaseManager):
 
         commitVersionAct.save()
         downloadVersionAct.save()
-        analyzeVersinAct.save()
+        analyzeVersionAct.save()
 
         return package_version
         
