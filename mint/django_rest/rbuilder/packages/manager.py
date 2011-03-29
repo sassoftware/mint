@@ -132,6 +132,13 @@ class PackageVersionManager(basemanager.BaseManager):
             pvUrl.modified_by = self.user
             pvUrl.save()
 
+        analyzeActionType = self.getPackageActionTypeByName(
+            models.PackageActionType.ANALYZE)
+        packageVersionAction, created = packageVersion.actions.get_or_create(
+            package_action_type=analyzeActionType)
+        packageVersionAction.enabled = True
+        packageVersionAction.save()
+
         self.analyzeFiles()
 
         return self.getPackageVersionUrls(package_version_id)
