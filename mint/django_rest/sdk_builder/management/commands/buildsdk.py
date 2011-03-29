@@ -68,4 +68,3 @@ class Command(BaseCommand):
         
     def findModels(self):
         return [m for m in models.__dict__.values() if inspect.isclass(m)]
-    

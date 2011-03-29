@@ -160,4 +160,3 @@ class DjangoModelWrapper(object):
             new_field = getattr(Fields, d[k].__class__.__name__)
             _d[k] = new_field
         return _d
-     
