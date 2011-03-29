@@ -110,6 +110,27 @@ class PackageVersionService(service.BaseService):
         """docstring for rest_PUT"""
         return self.mgr.updatePackageVersion(package_version_id, package_version)
 
+class PackageVersionActionService(service.BaseService):
+    """docstring for PackagePackageVersionService"""
+    
+    @return_xml
+    def rest_GET(self, request, package_version_id, package_action_id=None):
+        """docstring for rest_GET"""
+        return self.get(package_version_id, package_action_id)
+
+    def get(self, package_version_id, package_action_id):
+        if package_action_id:
+            return self.mgr.getPackageVersionAction(package_action_id)
+        else:
+            return self.mgr.getPackageVersionActions(package_version_id)
+
+    @requires('package_action')
+    @return_xml
+    def rest_PUT(self, request, package_version_id, package_action):
+        """docstring for rest_PUT"""
+        return self.mgr.updatePackageVersionAction(package_version_id,
+            package_action)
+
 class PackageVersionUrlService(service.BaseService):
     """docstring for PackageUrlVersionService"""
     

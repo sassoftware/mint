@@ -115,6 +115,8 @@ class PackageVersionAction(modellib.XObjIdModel):
         db_table = "packages_package_version_actions"
     _xobj = xobj.XObjMetadata(tag="package_version_action")
 
+    url_key = ["package_version", "pk"]
+
     package_version_action_id = D(models.AutoField(primary_key=True), 
         "Database id of package version action")
     package_version = D(modellib.ForeignKey(PackageVersion,

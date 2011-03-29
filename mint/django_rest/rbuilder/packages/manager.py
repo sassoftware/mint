@@ -132,11 +132,55 @@ class PackageVersionManager(basemanager.BaseManager):
             pvUrl.modified_by = self.user
             pvUrl.save()
 
+        self.analyzeFiles()
+
         return self.getPackageVersionUrls(package_version_id)
 
     @exposed
     def analyzeFiles(self, package_version_id):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        analyzeActionType = self.getPackageActionTypeByName(
+            models.PackageActionType.ANALYZE)
+        packageVersionJob = models.PackageVersionJob(
+            package_version=packageVersion,
+            package_action_type=analyzeActionType)
+        return self.addPackageVersionJob(package_version_id, packageVersionJob)
+
+    def _dispatchAnalyzeJob(self, package_version_job):
+        filePaths = [u.file_path \
+            for u in package_version_job.package_version.package_version_urls \
+            if u.file_path is not None]
+
+        commitActionType = self.getPackageActionTypeByName(
+            models.PackageActionType.COMMIT)
+        packageVersionAction = models.PackageVersionAction.objects.get(
+            package_version=package_version_job.package_version,
+            package_action_type=commitActionType)
+        repeaterClient = client.Client()
+        resultsLocation = repeaterClient.ResultsLocation(
+            path=packageVersionAction.get_absolute_url())
+
+        params = rmakemodels.FileParams()
+        job_uuid, job = repeaterClient.pc_analyzeFiles(params) 
+        inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
+            job_state=inventorymodels.JobState.objects.get(
+                name=inventorymodels.JobState.RUNNING))
+        inventoryJob.save()
+        package_version_job.job = inventoryJob
+        package_version_job.save()
+
+        return inventoryJob
+
+    @exposed
+    def updatePackageVersionAction(self, package_version_id, package_action):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
+        package_action.package_version = packageVersion
+        package_action.save()
+
+        canCommit = True
+        for pvUrl in packageVersion.package_version_urls.all():
+            if not pvUrl.file_path:
+                canCommit = False
 
         if canCommit:
             commitActionType = self.getPackageActionTypeByName(
@@ -146,6 +190,7 @@ class PackageVersionManager(basemanager.BaseManager):
             packageVersionAction.enabled = True
             packageVersionAction.save()
 
+        return package_action
 
     @exposed
     def getPackageVersionJobs(self, package_version_id):
@@ -184,6 +229,9 @@ class PackageVersionManager(basemanager.BaseManager):
         if package_version_job.package_action_type.name == \
             models.PackageActionType.COMMIT:
             return self._dispatchCommitJob(package_version_job)
+        if package_version_job.package_action_type.name == \
+            models.PackageActionType.ANALYZE:
+            return self_dispatchAnalyzeJob(package_version_job)
 
     def _dispatchCommitJob(self, package_version_job):
         label = 'murftest.eng.rpath.com@rpath:murftest-1-devel'
@@ -299,24 +347,32 @@ class PackageVersionManager(basemanager.BaseManager):
         package_version.package = package
         package_version.save()
 
-        # New package actions are download and commit
-        commitAction = self.getPackageActionTypeByName(
+        # New package actions are download, commit, and analyze
+        commitActionType = self.getPackageActionTypeByName(
             models.PackageActionType.COMMIT)
-        downloadAction = self.getPackageActionTypeByName(
+        downloadActionType = self.getPackageActionTypeByName(
             models.PackageActionType.DOWNLOAD)
+        analyzeActionType = self.getPackageActionTypeByName(
+            models.PackageActionType.ANALYZE)
         commitVersionAct = models.PackageVersionAction(
             package_version=package_version,
-            package_action_type=commitAction,
+            package_action_type=commitActionType,
             visible=True,
             enabled=False)
         downloadVersionAct = models.PackageVersionAction(
             package_version=package_version,
-            package_action_type=downloadAction,
+            package_action_type=downloadActionType,
             visible=True,
             enabled=True)
+        analyzeVersionAct = models.PackageVersionAction(
+            package_version=package_version,
+            package_action_type=analyzeActionType,
+            visible=False,
+            enabled=False)
 
         commitVersionAct.save()
         downloadVersionAct.save()
+        analyzeVersinAct.save()
 
         return package_version
         
