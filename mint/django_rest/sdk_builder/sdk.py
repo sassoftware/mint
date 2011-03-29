@@ -34,30 +34,30 @@ def toSource(wrapped_cls):
                 string.Template(BODY).substitute(
                 {'field_name':k, 'field_value':name})
         except AttributeError:
-            continue   
+            continue
     return src
-      
     
+
 REGISTRY = {}
-   
         
+
 class Fields(object):
-            
+    
     class CharField(xobj.XObj):
         pass
     
     class DecimalField(xobj.XObj):
         pass
-        
+    
     class FloatField(xobj.XObj):
         pass
     
     class IntegerField(xobj.XObj):
         pass
-
+    
     class TextField(xobj.XObj):
         pass
-
+    
     class ForeignKey(xobj.XObj):
         pass
     
@@ -66,46 +66,46 @@ class Fields(object):
     
     class OneToOneField(xobj.XObj):
         pass
-
+    
     class AutoField(xobj.XObj):
         pass
-
+    
     class NullBooleanField(xobj.XObj):
         pass
-
+    
     class DateTimeUtcField(xobj.XObj):
         pass
-        
+    
     class SerializedForeignKey(xobj.XObj):
-        pass    
-        
+        pass
+    
     class HrefField(xobj.XObj):
         pass
-
+    
     class DeferredForeignKey(xobj.XObj):
         pass
-
+    
     class SmallIntegerField(xobj.XObj):
         pass
-
+    
     class XMLField(xobj.XObj):
         pass
-
+    
     class InlinedDeferredForeignKey(xobj.XObj):
         pass
-
+    
     class InlinedForeignKey(xobj.XObj):
         pass
-
+    
     class BooleanField(xobj.XObj):
         pass
-
+    
     class URLField(xobj.XObj):
         pass
 
 class DjangoModelWrapper(object):
     """docstring for DjangoModelWrapper"""
-
+    
     def __new__(cls, django_model):
         """docstring for __new__"""
         cls.model = django_model
@@ -139,8 +139,4 @@ class DjangoModelWrapper(object):
     
     @staticmethod
     def resolveField(self, field):
-        """docstring for resolveFields"""
-        
-# if list_fields is set then generate type list        
-
-        
+        """docstring for resolveFields"""     
