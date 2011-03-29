@@ -504,7 +504,7 @@ class PackageActionType(modellib.XObjIdModel):
     PROMOTE = "promote"
     PROMOTE_DESC = "promote the package"
     ANALYZE = "analyze"
-    ANALYZE_DESC = "analyze files for factory information"
+    ANALYZE_DESC = "analyze package files"
 
     ACTION_CHOICES = (
         (DOWNLOAD, DOWNLOAD_DESC),

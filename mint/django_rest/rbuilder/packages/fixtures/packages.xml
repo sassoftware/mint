@@ -435,6 +435,12 @@
     <field type="DateTimeField" name="created_date">2011-03-23 19:40:28</field>
     <field type="DateTimeField" name="modified_date">2011-03-23 19:40:28</field>
   </object>
+  <object pk="6" model="packages.packageactiontype">
+    <field type="TextField" name="name">analyze</field>
+    <field type="TextField" name="description">Analyze package files</field>
+    <field type="DateTimeField" name="created_date">2011-03-23 19:40:28</field>
+    <field type="DateTimeField" name="modified_date">2011-03-23 19:40:28</field>
+  </object>
   <object pk="1" model="inventory.trove">
     <field type="TextField" name="name">httpd:source</field>
     <field to="inventory.version" name="version" rel="ManyToOneRel">1</field>

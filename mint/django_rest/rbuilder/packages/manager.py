@@ -137,9 +137,10 @@ class PackageVersionManager(basemanager.BaseManager):
         packageVersionAction, created = packageVersion.actions.get_or_create(
             package_action_type=analyzeActionType)
         packageVersionAction.enabled = True
+        packageVersionAction.visible = False
         packageVersionAction.save()
 
-        self.analyzeFiles()
+        self.analyzeFiles(package_version_id)
 
         return self.getPackageVersionUrls(package_version_id)
 
@@ -154,6 +155,7 @@ class PackageVersionManager(basemanager.BaseManager):
         return self.addPackageVersionJob(package_version_id, packageVersionJob)
 
     def _dispatchAnalyzeJob(self, package_version_job):
+        return
         filePaths = [u.file_path \
             for u in package_version_job.package_version.package_version_urls \
             if u.file_path is not None]
@@ -238,7 +240,7 @@ class PackageVersionManager(basemanager.BaseManager):
             return self._dispatchCommitJob(package_version_job)
         if package_version_job.package_action_type.name == \
             models.PackageActionType.ANALYZE:
-            return self_dispatchAnalyzeJob(package_version_job)
+            return self._dispatchAnalyzeJob(package_version_job)
 
     def _dispatchCommitJob(self, package_version_job):
         label = 'murftest.eng.rpath.com@rpath:murftest-1-devel'
