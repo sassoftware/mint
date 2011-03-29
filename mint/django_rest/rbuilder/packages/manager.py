@@ -158,7 +158,7 @@ class PackageVersionManager(basemanager.BaseManager):
         return
         filePaths = [u.file_path \
             for u in package_version_job.package_version.package_version_urls \
-            if u.file_path is not None] # pyflakes ignore
+            if u.file_path is not None] # pyflakes=ignore
 
         commitActionType = self.getPackageActionTypeByName(
             models.PackageActionType.COMMIT)
@@ -167,7 +167,7 @@ class PackageVersionManager(basemanager.BaseManager):
             package_action_type=commitActionType)
         repeaterClient = client.Client()
         resultsLocation = repeaterClient.ResultsLocation(
-            path=packageVersionAction.get_absolute_url())
+            path=packageVersionAction.get_absolute_url()) # pyflakes=ignore
 
         params = rmakemodels.FileParams()
         job_uuid, job = repeaterClient.pc_analyzeFiles(params) 
