@@ -501,6 +501,8 @@ class PackageActionType(modellib.XObjIdModel):
     PROMOTE_VERSION_DESC = "Promote package build"
     PROMOTE = "promote"
     PROMOTE_DESC = "promote the package"
+    ANALYZE = "analyze"
+    ANALYZE_DESC = "analyze files for factory information"
 
     ACTION_CHOICES = (
         (DOWNLOAD, DOWNLOAD_DESC),
@@ -508,6 +510,7 @@ class PackageActionType(modellib.XObjIdModel):
         (BUILD, BUILD_DESC),
         (PROMOTE_VERSION, PROMOTE_VERSION_DESC),
         (PROMOTE, PROMOTE_DESC),
+        (ANALYZE, ANALYZE_DESC),
     )
 
     package_action_type_id = D(models.AutoField(primary_key=True), 
