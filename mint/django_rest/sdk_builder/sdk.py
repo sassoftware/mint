@@ -114,7 +114,7 @@ class Fields(object):
 
 class DjangoModelWrapper(object):
     """
-    Takes a django model and creates a new the code for its corresponding
+    Takes a django model and creates the code for its corresponding
     class stub.  For each model with a list_fields attribute,
     DjangoModelWrapper is called on the listed model, and the result placed
     inside a list for xobj to find it.
@@ -125,6 +125,11 @@ class DjangoModelWrapper(object):
         Takes care of generating the code for the class stub
         """
         fields_dict = cls.getModelFields(django_model)
+        # if getModelFields returns an empty dictionary
+        # then return None to indicate that the model
+        # doesn't have a _meta attribute (which can 
+        # happen if the cls passed to getModelFields
+        # is not an actual django_model)
         if not fields_dict:
             return None
         fields_dict = cls.convertFields(fields_dict)
