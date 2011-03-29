@@ -9,9 +9,6 @@ from django.http import HttpResponse
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml, access
 
-from mint.django_rest.rbuilder.packages.autotest import test
-
-@test
 class PackageService(service.BaseService):
     """docstring for PackageService"""
     
