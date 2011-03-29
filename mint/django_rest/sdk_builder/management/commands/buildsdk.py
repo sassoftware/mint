@@ -27,6 +27,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.models = self.findModels()
         wrapped = [sdk.DjangoModelWrapper(m) for m in self.models]
+        print wrapped # to shut pepflakes up
         
     def buildSDK(self):
         """docstring for buildSDK"""
