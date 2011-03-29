@@ -15,31 +15,39 @@
 from xobj import xobj
 import string
 
+from mint.django_rest.rbuilder.inventory import models
+
+
+def parseName(name):
+    """
+    ie: Changes management_nodes to ManagementNodes
+    """
+    return ''.join([s.capitalize() for s in name.split('_')])
+
 def toSource(wrapped_cls):
     """
     Creates python source code for xobj class stubs
     """
-    STUB = "class ${name}(xobj.XObj):\n"
+    STUB = "class ${cls_name}(xobj.XObj):\n"
     BODY = "    ${field_name} = ${field_value}\n"
     
-    src = string.Template(STUB).substitute({'name':wrapped_cls.__name__})
+    src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
     
-    for k in wrapped_cls.__dict__:
+    # k is name of field, v is cls that represents its value
+    for k, v in wrapped_cls.__dict__.iteritems():
         try:
-            name = wrapped_cls.__dict__[k].__name__
-            field = getattr(Fields, name, None)
-            if not field:
-                continue
-            src += \
-                string.Template(BODY).substitute(
-                {'field_name':k, 'field_value':name})
-        except AttributeError:
+            if isinstance(v, list):
+                name = '[%s]' % v[0].__name__
+            else:
+                name = v.__name__
+        # happens when v is None or doesn't have __name__        
+        except AttributeError: 
             continue
+        src += \
+            string.Template(BODY).substitute(
+            {'field_name':k.lower(), 'field_value':name})
     return src
-    
 
-REGISTRY = {}
-        
 
 class Fields(object):
     
@@ -103,21 +111,37 @@ class Fields(object):
     class URLField(xobj.XObj):
         pass
 
+
 class DjangoModelWrapper(object):
-    """docstring for DjangoModelWrapper"""
+    """
+    Takes a django model and creates a new the code for its corresponding
+    class stub.  For each model with a list_fields attribute,
+    DjangoModelWrapper is called on the listed model, and the result placed
+    inside a list for xobj to find it.
+    """
     
     def __new__(cls, django_model):
-        """docstring for __new__"""
-        cls.model = django_model
+        """
+        Takes care of generating the code for the class stub
+        """
         fields_dict = cls.getModelFields(django_model)
         if not fields_dict:
             return None
         fields_dict = cls.convertFields(fields_dict)
+        try:
+            dep_names = [parseName(m) for m in django_model.list_fields]
+            for name in dep_names:
+                model = getattr(models, name)
+                fields_dict[name] = [DjangoModelWrapper(model)]
+        except AttributeError:
+            pass
         return type(django_model.__name__, (xobj.XObj,), fields_dict)
     
     @staticmethod
     def getModelFields(django_model):
-        """docstring for getModelFields"""
+        """
+        Gets all of a django model's pre-converted fields
+        """
         d = {}
         try:
             for field in django_model._meta.fields:
@@ -136,7 +160,4 @@ class DjangoModelWrapper(object):
             new_field = getattr(Fields, d[k].__class__.__name__)
             _d[k] = new_field
         return _d
-    
-    @staticmethod
-    def resolveField(self, field):
-        """docstring for resolveFields"""     
+     
