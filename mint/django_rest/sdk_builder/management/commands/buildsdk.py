@@ -21,34 +21,50 @@ from mint.django_rest.sdk_builder import sdk
 
 import inspect
 
+from xobj import xobj
+
+###### Sample Crap For Testing Purposes ######
+PKGS_XML = \
+"""
+<packages>
+    <package id="http://localhost/api/packages/1">
+        <name>Apache</name>
+        <description>Server</description>
+    </package>
+    <package id="http://localhost/api/packages/2">
+        <name>Nano</name>
+        <description>Text Editor</description>
+    </package>
+</packages>
+""".strip()
+
+class Package(xobj.XObj):
+    id = sdk.Fields.URLField
+    name = sdk.Fields.CharField
+    description = sdk.Fields.TextField
+
+class Packages(xobj.XObj):
+    package = [Package]
+
+##############################################
+
 class Command(BaseCommand):
     help = "Generates python sdk"
 
     def handle(self, *args, **options):
         self.models = self.findModels()
         wrapped = [sdk.DjangoModelWrapper(m) for m in self.models]
-        print wrapped # to shut pepflakes up
+        with open('/mnt/hgfs/Dev/transfer/models.py', 'w') as f:
+            for w in wrapped:
+                try:
+                    src = sdk.toSource(w)
+                    f.writelines(src)
+                    f.write('\n')
+                except AttributeError: # happens when w is None
+                    continue
         
     def buildSDK(self):
-        """docstring for buildSDK"""
         pass
         
     def findModels(self):
-        """docstring for findModels"""
         return [m for m in models.__dict__.values() if inspect.isclass(m)]
-        
-    def buildModels(self):
-        """docstring for buildModels"""
-        pass
-    
-    def buildModel(self, model):
-        """docstring for buildModel"""
-        pass
-        
-    def analyzeModels(self):
-        """docstring for analyzePackages"""
-        pass
-
-    def analyzeModel(self, model):
-        """docstring for analyzePackage"""
-        pass
