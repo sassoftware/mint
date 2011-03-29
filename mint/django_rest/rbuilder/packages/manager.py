@@ -126,14 +126,17 @@ class PackageVersionManager(basemanager.BaseManager):
                                  package_version_urls):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         packageVersion.package_version_urls.all().delete()
-        canCommit = True
         for pvUrl in package_version_urls.package_version_url:
             pvUrl.package_version = packageVersion
-            if not pvUrl.file_path:
-                canCommit = False
             pvUrl.downloaded_date = datetime.datetime.now(tz.tzutc())
             pvUrl.modified_by = self.user
             pvUrl.save()
+
+        return self.getPackageVersionUrls(package_version_id)
+
+    @exposed
+    def analyzeFiles(self, package_version_id):
+        packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
 
         if canCommit:
             commitActionType = self.getPackageActionTypeByName(
@@ -143,7 +146,6 @@ class PackageVersionManager(basemanager.BaseManager):
             packageVersionAction.enabled = True
             packageVersionAction.save()
 
-        return self.getPackageVersionUrls(package_version_id)
 
     @exposed
     def getPackageVersionJobs(self, package_version_id):
