@@ -181,6 +181,12 @@ class PackageVersionManager(basemanager.BaseManager):
         return inventoryJob
 
     @exposed
+    def getPackageVersionAction(self, package_version_action_id):
+        packageAction = models.PackageVersionAction.objects.get(
+            pk=package_version_action_id)
+        return packageAction
+
+    @exposed
     def updatePackageVersionAction(self, package_version_id, package_action):
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         package_action.package_version = packageVersion
