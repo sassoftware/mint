@@ -23,6 +23,16 @@ class Zone(xobj.XObj):
     created_date = DateTimeUtcField
     name = CharField
 
+class SystemJobs(xobj.XObj):
+    """XObj Class Stub"""
+    job = [Job]
+
+class ConfigurationDescriptor(xobj.XObj):
+    """XObj Class Stub"""
+
+class Cache(xobj.XObj):
+    """XObj Class Stub"""
+
 class SystemState(xobj.XObj):
     """XObj Class Stub"""
     description = CharField
@@ -66,6 +76,10 @@ class ManagementNode(xobj.XObj):
     target_system_description = CharField
     created_date = DateTimeUtcField
 
+class SystemTypes(xobj.XObj):
+    """XObj Class Stub"""
+    systemtype = [SystemType]
+
 class Version(xobj.XObj):
     """XObj Class Stub"""
     full = TextField
@@ -74,6 +88,10 @@ class Version(xobj.XObj):
     revision = TextField
     version_id = AutoField
     label = TextField
+
+class SystemEvents(xobj.XObj):
+    """XObj Class Stub"""
+    systemevent = [SystemEvent]
 
 class Inventory(xobj.XObj):
     """XObj Class Stub"""
@@ -96,6 +114,13 @@ class SystemLog(xobj.XObj):
     system_log_id = AutoField
     system = DeferredForeignKey
 
+class EventTypes(xobj.XObj):
+    """XObj Class Stub"""
+    eventtype = [EventType]
+
+class Pk(xobj.XObj):
+    """XObj Class Stub"""
+
 class ErrorResponse(xobj.XObj):
     """XObj Class Stub"""
     code = TextField
@@ -112,6 +137,18 @@ class SystemEvent(xobj.XObj):
     system = DeferredForeignKey
     time_created = DateTimeUtcField
     system_event_id = AutoField
+
+class Zones(xobj.XObj):
+    """XObj Class Stub"""
+    zone = [Zone]
+
+class Jobs(xobj.XObj):
+    """XObj Class Stub"""
+    job = [Job]
+
+class InstalledSoftware(xobj.XObj):
+    """XObj Class Stub"""
+    trove = [Trove]
 
 class EventType(xobj.XObj):
     """XObj Class Stub"""
@@ -147,6 +184,12 @@ class JobSystem(xobj.XObj):
     job = ForeignKey
     system_id = IntegerField
     id = AutoField
+
+class Credentials(xobj.XObj):
+    """XObj Class Stub"""
+
+class Configuration(xobj.XObj):
+    """XObj Class Stub"""
 
 class Stage(xobj.XObj):
     """XObj Class Stub"""
@@ -203,10 +246,18 @@ class System(xobj.XObj):
     target_system_description = CharField
     created_date = DateTimeUtcField
 
+class SystemsLog(xobj.XObj):
+    """XObj Class Stub"""
+    systemlogentry = [SystemLogEntry]
+
 class JobState(xobj.XObj):
     """XObj Class Stub"""
     job_state_id = AutoField
     name = CharField
+
+class ManagementInterfaces(xobj.XObj):
+    """XObj Class Stub"""
+    managementinterface = [ManagementInterface]
 
 class SystemType(xobj.XObj):
     """XObj Class Stub"""
@@ -216,6 +267,10 @@ class SystemType(xobj.XObj):
     system_type_id = AutoField
     creation_descriptor = XMLField
     name = CharField
+
+class SystemStates(xobj.XObj):
+    """XObj Class Stub"""
+    systemstate = [SystemState]
 
 class SystemTargetCredentials(xobj.XObj):
     """XObj Class Stub"""
@@ -229,6 +284,10 @@ class Targets(xobj.XObj):
     targetname = CharField
     targetid = IntegerField
 
+class ManagementNodes(xobj.XObj):
+    """XObj Class Stub"""
+    managementnode = [ManagementNode]
+
 class SystemLogEntry(xobj.XObj):
     """XObj Class Stub"""
     system_log_entry_id = AutoField
@@ -240,6 +299,10 @@ class Networks(xobj.XObj):
     """XObj Class Stub"""
     systems = HrefField
     network = [Network]
+
+class JobStates(xobj.XObj):
+    """XObj Class Stub"""
+    jobstate = [JobState]
 
 class Systems(xobj.XObj):
     """XObj Class Stub"""

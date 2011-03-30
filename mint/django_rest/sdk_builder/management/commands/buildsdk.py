@@ -24,6 +24,10 @@ from xobj import xobj
 import os
 
 ###### Sample Crap For Testing Purposes ######
+from mint.django_rest.rbuilder.modellib.basemodels import XObjModel
+
+x = XObjModel()
+
 PKGS_XML = \
 """
 <packages>
@@ -45,6 +49,11 @@ class Package(xobj.XObj):
 
 class Packages(xobj.XObj):
     package = [Package]
+
+# want to see if I can add Data as an element
+# at runtime
+class Data(xobj.XObj):
+    data = sdk.Fields.TextField
 
 ##############################################
 
@@ -74,14 +83,18 @@ class Command(BaseCommand):
         
         ##### For testing purposes only #####
         # doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages})
+        # n = self.models[0]
+        # n2 = n().serialize()
         # import pdb; pdb.set_trace()
         # pass
         #####################################
-        
+    
+    # TODO: import * is messy, find another way to flatten out
+    # Fields to avoid this
     def buildSDKModels(self, models_path, wrapped):
         with open(models_path, 'w') as f:
             # write import Fields
-            f.write('from fields import *\n')
+            f.write('from fields import *  # pyflakes=ignore\n')
             f.write('from xobj import xobj\n')
             f.write('\n\n')
             for w in wrapped:
