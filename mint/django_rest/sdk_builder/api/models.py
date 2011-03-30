@@ -1,4 +1,4 @@
-from fields import Fields import *
+from fields import *
 from xobj import xobj
 
 

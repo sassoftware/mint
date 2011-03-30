@@ -81,7 +81,7 @@ class Command(BaseCommand):
     def buildSDKModels(self, models_path, wrapped):
         with open(models_path, 'w') as f:
             # write import Fields
-            f.write('from fields import Fields import *\n')
+            f.write('from fields import *\n')
             f.write('from xobj import xobj\n')
             f.write('\n\n')
             for w in wrapped:
