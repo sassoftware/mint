@@ -52,27 +52,51 @@ class Command(BaseCommand):
     help = "Generates python sdk"
 
     def handle(self, *args, **options):
-        self.models = self.findModels()
-        wrapped = [sdk.DjangoModelWrapper(m) for m in self.models]
+        """
+        Generates Python SDK for REST API
+        """
+        # Get paths where modules will be written on the filesystem
         current_location = os.path.dirname(__file__)
         index = current_location.find('sdk_builder')
-        filepath = os.path.join(
+        models_path = os.path.join(
                     current_location[0:index], 'sdk_builder/api/models.py')
-        with open(filepath, 'w') as f:
+        fields_path = os.path.join(
+                        current_location[0:index], 'sdk_builder/api/fields.py')
+                        
+        # First build class stubs then write them to the filesystem
+        self.models = self.findModels()
+        wrapped = [sdk.DjangoModelWrapper(m) for m in self.models]
+        self.buildSDKModels(models_path, wrapped)
+        
+        # Now generate a flattened copy of sdk.Fields and
+        # save it inside the package api
+        self.buildSDKFields(fields_path)
+        
+        ##### For testing purposes only #####
+        # doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages})
+        # import pdb; pdb.set_trace()
+        # pass
+        #####################################
+        
+    def buildSDKModels(self, models_path, wrapped):
+        with open(models_path, 'w') as f:
+            # write import Fields
+            f.write('from fields import Fields import *\n\n')
             for w in wrapped:
                 src = sdk.toSource(w)
                 if src:
                     f.writelines(src)
                     f.write('\n')
-        
-        ##### For testing purposes only #####
-        doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages})
-        # import pdb; pdb.set_trace()
-        pass
-        #####################################
-        
-    def buildSDK(self):
-        pass
+    
+    def buildSDKFields(self, fields_path):
+        with open(fields_path, 'w') as f:
+            d = sdk.Fields.__dict__
+            field_classes = [d[x] for x in d if inspect.isclass(d[x])]
+            for cls in field_classes:
+                src = sdk.toSource(cls)
+                if src:
+                    f.writelines(src)
+                    f.write('\n')
         
     def findModels(self):
         return [m for m in models.__dict__.values() if inspect.isclass(m)]

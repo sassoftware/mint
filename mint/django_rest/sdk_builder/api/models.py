@@ -1,4 +1,7 @@
+from fields import Fields import *
+
 class Network(xobj.XObj):
+    """XObj Class Stub"""
     ipv6_address = CharField
     network_id = AutoField
     dns_name = CharField
@@ -12,18 +15,21 @@ class Network(xobj.XObj):
     ip_address = CharField
 
 class Zone(xobj.XObj):
+    """XObj Class Stub"""
     zone_id = AutoField
     description = CharField
     created_date = DateTimeUtcField
     name = CharField
 
 class SystemState(xobj.XObj):
+    """XObj Class Stub"""
     description = CharField
     system_state_id = AutoField
     created_date = DateTimeUtcField
     name = CharField
 
 class ManagementNode(xobj.XObj):
+    """XObj Class Stub"""
     management_interface = ForeignKey
     appliance = ForeignKey
     ssl_client_key = CharField
@@ -59,6 +65,7 @@ class ManagementNode(xobj.XObj):
     created_date = DateTimeUtcField
 
 class Version(xobj.XObj):
+    """XObj Class Stub"""
     full = TextField
     ordering = TextField
     flavor = TextField
@@ -67,6 +74,7 @@ class Version(xobj.XObj):
     label = TextField
 
 class Inventory(xobj.XObj):
+    """XObj Class Stub"""
     system_states = HrefField
     inventory_systems = HrefField
     log = HrefField
@@ -82,16 +90,19 @@ class Inventory(xobj.XObj):
     system_types = HrefField
 
 class SystemLog(xobj.XObj):
+    """XObj Class Stub"""
     system_log_id = AutoField
     system = DeferredForeignKey
 
 class ErrorResponse(xobj.XObj):
+    """XObj Class Stub"""
     code = TextField
     traceback = TextField
     message = TextField
     product_code = TextField
 
 class SystemEvent(xobj.XObj):
+    """XObj Class Stub"""
     priority = SmallIntegerField
     event_type = DeferredForeignKey
     event_data = TextField
@@ -101,12 +112,14 @@ class SystemEvent(xobj.XObj):
     system_event_id = AutoField
 
 class EventType(xobj.XObj):
+    """XObj Class Stub"""
     name = CharField
     priority = SmallIntegerField
     event_type_id = AutoField
     description = CharField
 
 class ManagementInterface(xobj.XObj):
+    """XObj Class Stub"""
     credentials_descriptor = XMLField
     name = CharField
     created_date = DateTimeUtcField
@@ -116,6 +129,7 @@ class ManagementInterface(xobj.XObj):
     credentials_readonly = NullBooleanField
 
 class Job(xobj.XObj):
+    """XObj Class Stub"""
     time_updated = DateTimeUtcField
     job_id = AutoField
     status_code = IntegerField
@@ -127,23 +141,27 @@ class Job(xobj.XObj):
     event_type = InlinedForeignKey
 
 class JobSystem(xobj.XObj):
+    """XObj Class Stub"""
     job = ForeignKey
     system_id = IntegerField
     id = AutoField
 
 class Stage(xobj.XObj):
+    """XObj Class Stub"""
     stage_id = AutoField
     name = CharField
     major_version = ForeignKey
     label = TextField
 
 class SystemJob(xobj.XObj):
+    """XObj Class Stub"""
     system_job_id = AutoField
     system = ForeignKey
     job = DeferredForeignKey
     event_uuid = CharField
 
 class Trove(xobj.XObj):
+    """XObj Class Stub"""
     version = SerializedForeignKey
     name = TextField
     is_top_level = BooleanField
@@ -152,6 +170,7 @@ class Trove(xobj.XObj):
     last_available_update_refresh = DateTimeUtcField
 
 class System(xobj.XObj):
+    """XObj Class Stub"""
     management_interface = ForeignKey
     registration_date = DateTimeUtcField
     description = CharField
@@ -183,10 +202,12 @@ class System(xobj.XObj):
     created_date = DateTimeUtcField
 
 class JobState(xobj.XObj):
+    """XObj Class Stub"""
     job_state_id = AutoField
     name = CharField
 
 class SystemType(xobj.XObj):
+    """XObj Class Stub"""
     infrastructure = BooleanField
     description = CharField
     created_date = DateTimeUtcField
@@ -195,26 +216,31 @@ class SystemType(xobj.XObj):
     name = CharField
 
 class SystemTargetCredentials(xobj.XObj):
+    """XObj Class Stub"""
     credentials = ForeignKey
     id = AutoField
     system = ForeignKey
 
 class Targets(xobj.XObj):
+    """XObj Class Stub"""
     targettype = CharField
     targetname = CharField
     targetid = IntegerField
 
 class SystemLogEntry(xobj.XObj):
+    """XObj Class Stub"""
     system_log_entry_id = AutoField
     system_log = ForeignKey
     entry_date = DateTimeUtcField
     entry = CharField
 
 class Networks(xobj.XObj):
+    """XObj Class Stub"""
     systems = HrefField
     network = [Network]
 
 class Systems(xobj.XObj):
+    """XObj Class Stub"""
     count = IntegerField
     next_page = TextField
     num_pages = IntegerField

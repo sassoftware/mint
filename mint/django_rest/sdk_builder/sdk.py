@@ -24,31 +24,6 @@ def parseName(name):
     """
     return ''.join([s.capitalize() for s in name.split('_')])
 
-# def toSource(wrapped_cls):
-#     """
-#     Creates python source code for xobj class stubs
-#     """
-#     STUB = "class ${cls_name}(xobj.XObj):\n"
-#     BODY = "    ${field_name} = ${field_value}\n"
-#     
-#     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
-#     
-#     # k is name of field, v is cls that represents its value
-#     for k, v in wrapped_cls.__dict__.iteritems():
-#         try:
-#             if isinstance(v, list):
-#                 name = '[%s]' % v[0].__name__
-#             else:
-#                 name = v.__name__
-#         # happens when v is None or doesn't have __name__        
-#         except AttributeError: 
-#             continue
-#         src += \
-#             string.Template(BODY).substitute(
-#             {'field_name':k.lower(), 'field_value':name})
-#     return src
-
-
 def toSource(wrapped_cls):
     """
     Creates python source code for xobj class stubs
@@ -56,8 +31,8 @@ def toSource(wrapped_cls):
     if not wrapped_cls:
         return ''
     
-    STUB = "class ${cls_name}(xobj.XObj):\n"
-    BODY = "    ${field_name} = ${field_value}\n"
+    STUB = 'class ${cls_name}(xobj.XObj):\n    """XObj Class Stub"""\n'
+    BODY = '    ${field_name} = ${field_value}\n'
     
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
     
@@ -70,7 +45,7 @@ def toSource(wrapped_cls):
             # (which also implies that they are missing __name__)
             # could be attached to the wrapped_cls. Need to 
             # account for this.
-            if k in ['__module__', '__doc__']:
+            if k in ['__module__', '__doc__', '__name__']:
                 continue
             name = v.__name__
         src += \
