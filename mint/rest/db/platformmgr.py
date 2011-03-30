@@ -425,6 +425,9 @@ class Platforms(object):
             # Recreate anonymous and mintauth users.
             self.db.productMgr.reposMgr.populateUsers(repoHandle)
 
+            # Clear the cache of status information
+            self.platformCache.clearPlatformData(platform.label)
+
             callback._message('Load completed.')
             callback.done()
             os.unlink(outFilePath)
