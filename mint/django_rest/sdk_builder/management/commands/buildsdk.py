@@ -81,7 +81,9 @@ class Command(BaseCommand):
     def buildSDKModels(self, models_path, wrapped):
         with open(models_path, 'w') as f:
             # write import Fields
-            f.write('from fields import Fields import *\n\n')
+            f.write('from fields import Fields import *\n')
+            f.write('from xobj import xobj\n')
+            f.write('\n\n')
             for w in wrapped:
                 src = sdk.toSource(w)
                 if src:
@@ -90,6 +92,8 @@ class Command(BaseCommand):
     
     def buildSDKFields(self, fields_path):
         with open(fields_path, 'w') as f:
+            f.write('from xobj import xobj\n')
+            f.write('\n\n')
             d = sdk.Fields.__dict__
             field_classes = [d[x] for x in d if inspect.isclass(d[x])]
             for cls in field_classes:

@@ -1,4 +1,6 @@
 from fields import Fields import *
+from xobj import xobj
+
 
 class Network(xobj.XObj):
     """XObj Class Stub"""

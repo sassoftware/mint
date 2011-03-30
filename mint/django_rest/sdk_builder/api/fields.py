@@ -1,3 +1,6 @@
+from xobj import xobj
+
+
 class IntegerField(xobj.XObj):
     """XObj Class Stub"""
 
