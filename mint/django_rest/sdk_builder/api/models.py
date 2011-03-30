@@ -1,4 +1,4 @@
-from fields import *
+from fields import *  # pyflakes=ignore
 from xobj import xobj
 
 
