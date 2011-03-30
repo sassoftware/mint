@@ -115,7 +115,7 @@ system_filter_descriptor = """\
 			<field_description>name</field_description>
 			<field_key>appliance.name</field_key>
 			<field_label>Appliance Name</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -219,7 +219,7 @@ system_filter_descriptor = """\
 			<field_description>shortname</field_description>
 			<field_key>appliance.shortname</field_key>
 			<field_label>Appliance Unique Name</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -467,7 +467,7 @@ system_filter_descriptor = """\
 			<field_description>timecreated</field_description>
 			<field_key>appliance.timecreated</field_key>
 			<field_label>Appliance Created</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -501,7 +501,7 @@ system_filter_descriptor = """\
 			<field_description>timemodified</field_description>
 			<field_key>appliance.timemodified</field_key>
 			<field_label>Appliance Modified</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -601,7 +601,7 @@ system_filter_descriptor = """\
 			<field_description>username</field_description>
 			<field_key>appliance.creatorid.username</field_key>
 			<field_label>Appliance Creator (Username)</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -635,7 +635,7 @@ system_filter_descriptor = """\
 			<field_description>fullname</field_description>
 			<field_key>appliance.creatorid.fullname</field_key>
 			<field_label>Appliance Creator (Full Name)</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -972,7 +972,7 @@ system_filter_descriptor = """\
 			<field_description>the date the system was added to inventory (UTC)</field_description>
 			<field_key>created_date</field_key>
 			<field_label>System Record Created</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>datetime</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -1122,7 +1122,7 @@ system_filter_descriptor = """\
 			<field_description>description</field_description>
 			<field_key>current_state.description</field_key>
 			<field_label>Management State</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -1189,7 +1189,7 @@ system_filter_descriptor = """\
 			<field_description>the system description</field_description>
 			<field_key>description</field_key>
 			<field_label>Description</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -1227,7 +1227,7 @@ system_filter_descriptor = """\
 			<field_description>a UUID that is randomly generated</field_description>
 			<field_key>generated_uuid</field_key>
 			<field_label>UUID (Generated)</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -1265,7 +1265,7 @@ system_filter_descriptor = """\
 			<field_description>the system hostname</field_description>
 			<field_key>hostname</field_key>
 			<field_label>Hostname</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -2120,7 +2120,7 @@ system_filter_descriptor = """\
 			<field_description>the date the system was deployed (only applies if system is on a virtual target)</field_description>
 			<field_key>launch_date</field_key>
 			<field_label>Launched</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>datetime</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -2191,7 +2191,7 @@ system_filter_descriptor = """\
 			<field_description>username</field_description>
 			<field_key>launching_user.username</field_key>
 			<field_label>Launched By (Username)</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -2225,7 +2225,7 @@ system_filter_descriptor = """\
 			<field_description>fullname</field_description>
 			<field_key>launching_user.fullname</field_key>
 			<field_label>Launched By (Full Name)</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -2523,7 +2523,7 @@ system_filter_descriptor = """\
 			<field_description>a UUID created from the system hardware profile</field_description>
 			<field_key>local_uuid</field_key>
 			<field_label>UUID (Local)</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -4331,7 +4331,7 @@ system_filter_descriptor = """\
 			<field_description>name</field_description>
 			<field_key>managing_zone.name</field_key>
 			<field_label>Management Zone</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -4435,7 +4435,7 @@ system_filter_descriptor = """\
 			<field_description>the system name</field_description>
 			<field_key>name</field_key>
 			<field_label>Name</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -4823,7 +4823,7 @@ system_filter_descriptor = """\
 			<field_description>the date the system was registered in inventory (UTC)</field_description>
 			<field_key>registration_date</field_key>
 			<field_label>Registered</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>datetime</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -5071,7 +5071,7 @@ system_filter_descriptor = """\
 			<field_description>state_change_date</field_description>
 			<field_key>state_change_date</field_key>
 			<field_label>Last State Changed</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>datetime</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -5274,7 +5274,7 @@ system_filter_descriptor = """\
 			<field_description>the database ID for the system</field_description>
 			<field_key>system_id</field_key>
 			<field_label>System ID</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -5477,7 +5477,7 @@ system_filter_descriptor = """\
 			<field_description>whether or not the system type is infrastructure</field_description>
 			<field_key>system_type.infrastructure</field_key>
 			<field_label>rPath Infrastructure?</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>bool</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -6046,7 +6046,7 @@ system_filter_descriptor = """\
 			<field_description>targetname</field_description>
 			<field_key>target.targetname</field_key>
 			<field_label>Target</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
@@ -6253,7 +6253,7 @@ system_filter_descriptor = """\
 			<field_description>the system name as reported by its target (only applies if system is on a virtual target)</field_description>
 			<field_key>target_system_name</field_key>
 			<field_label>System Name on Target</field_label>
-			<basic_field>yes</basic_field>
+			<basic_field>true</basic_field>
 			<value_type>str</value_type>
 			<operator_choices>
 				<operator_choice>
