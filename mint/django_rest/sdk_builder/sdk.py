@@ -14,7 +14,7 @@
 
 from xobj import xobj
 import string
-
+import inspect
 from mint.django_rest.rbuilder.inventory import models
 
 
@@ -32,12 +32,16 @@ def toSource(wrapped_cls):
         return ''
     
     STUB = 'class ${cls_name}(xobj.XObj):\n    """XObj Class Stub"""\n'
-    BODY = '    ${field_name} = ${field_value}\n'
+    ATTRS = '    ${field_name} = ${field_value}\n'
     
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
     
     # k is name of field, v is cls that represents its type
-    for k, v in wrapped_cls.__dict__.iteritems():
+    for k, v in wrapped_cls.__dict__.items():
+        # take this out if in the future you want the body of a method
+        # to be written into the src
+        if inspect.ismethod(v):
+            continue
         if isinstance(v, list):
             name = '[%s]' % v[0].__name__
         else:
@@ -49,20 +53,20 @@ def toSource(wrapped_cls):
                 continue
             name = v.__name__
         src += \
-            string.Template(BODY).substitute(
+            string.Template(ATTRS).substitute(
             {'field_name':k.lower(), 'field_value':name})
     return src
 
 
 class Fields(object):
     """
-    Need to explicitly specify __name__ attr or else
-    it will be listed as 'type'.
+    Need to explicitly specify __name__ attr or else it
+    will be listed as 'type'.
     """
     
     class CharField(xobj.XObj):
         __name__ = 'CharField'
-    
+
     class DecimalField(xobj.XObj):
         __name__ = 'DecimalField'
     
@@ -134,13 +138,6 @@ class DjangoModelWrapper(object):
         Takes care of generating the code for the class stub
         """
         fields_dict = cls._getModelFields(django_model)
-        # if _getModelFields returns an empty dictionary
-        # then return None to indicate that the model
-        # doesn't have a _meta attribute (which can 
-        # happen if the cls passed to _getModelFields
-        # is not an actual django_model)
-        if not fields_dict:
-            return None
         fields_dict = cls._convertFields(fields_dict)
         if hasattr(django_model, 'list_fields'):
             dep_names = [parseName(m) for m in django_model.list_fields]
