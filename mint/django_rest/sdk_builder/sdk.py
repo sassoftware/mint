@@ -24,25 +24,55 @@ def parseName(name):
     """
     return ''.join([s.capitalize() for s in name.split('_')])
 
+# def toSource(wrapped_cls):
+#     """
+#     Creates python source code for xobj class stubs
+#     """
+#     STUB = "class ${cls_name}(xobj.XObj):\n"
+#     BODY = "    ${field_name} = ${field_value}\n"
+#     
+#     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
+#     
+#     # k is name of field, v is cls that represents its value
+#     for k, v in wrapped_cls.__dict__.iteritems():
+#         try:
+#             if isinstance(v, list):
+#                 name = '[%s]' % v[0].__name__
+#             else:
+#                 name = v.__name__
+#         # happens when v is None or doesn't have __name__        
+#         except AttributeError: 
+#             continue
+#         src += \
+#             string.Template(BODY).substitute(
+#             {'field_name':k.lower(), 'field_value':name})
+#     return src
+
+
 def toSource(wrapped_cls):
     """
     Creates python source code for xobj class stubs
     """
+    if not wrapped_cls:
+        return ''
+    
     STUB = "class ${cls_name}(xobj.XObj):\n"
     BODY = "    ${field_name} = ${field_value}\n"
     
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
     
-    # k is name of field, v is cls that represents its value
+    # k is name of field, v is cls that represents its type
     for k, v in wrapped_cls.__dict__.iteritems():
-        try:
-            if isinstance(v, list):
-                name = '[%s]' % v[0].__name__
-            else:
-                name = v.__name__
-        # happens when v is None or doesn't have __name__        
-        except AttributeError: 
-            continue
+        if isinstance(v, list):
+            name = '[%s]' % v[0].__name__
+        else:
+            # FIXME: as sdk grows, more non-field_type attrs
+            # (which also implies that they are missing __name__)
+            # could be attached to the wrapped_cls. Need to 
+            # account for this.
+            if k in ['__module__', '__doc__']:
+                continue
+            name = v.__name__
         src += \
             string.Template(BODY).substitute(
             {'field_name':k.lower(), 'field_value':name})
@@ -50,66 +80,70 @@ def toSource(wrapped_cls):
 
 
 class Fields(object):
+    """
+    Need to explicitly specify __name__ attr or else
+    it will be listed as 'type'.
+    """
     
     class CharField(xobj.XObj):
-        pass
+        __name__ = 'CharField'
     
     class DecimalField(xobj.XObj):
-        pass
+        __name__ = 'DecimalField'
     
     class FloatField(xobj.XObj):
-        pass
+        __name__ = 'FloatField'
     
     class IntegerField(xobj.XObj):
-        pass
+        __name__ = 'IntegerField'
     
     class TextField(xobj.XObj):
-        pass
+        __name__ = 'TextField'
     
     class ForeignKey(xobj.XObj):
-        pass
+        __name__ = 'ForeignKey'
     
     class ManyToManyField(xobj.XObj):
-        pass
+        __name__ = 'ManyToManyField'
     
     class OneToOneField(xobj.XObj):
-        pass
+        __name__ = 'OneToOneField'
     
     class AutoField(xobj.XObj):
-        pass
+        __name__ = 'AutoField'
     
     class NullBooleanField(xobj.XObj):
-        pass
+        __name__ = 'NullBooleanField'
     
     class DateTimeUtcField(xobj.XObj):
-        pass
+        __name__ = 'DateTimeUtcField'
     
     class SerializedForeignKey(xobj.XObj):
-        pass
+        __name__ = 'SerializedForeignKey'
     
     class HrefField(xobj.XObj):
-        pass
+        __name__ = 'HrefField'
     
     class DeferredForeignKey(xobj.XObj):
-        pass
+        __name__ = 'DeferredForeignKey'
     
     class SmallIntegerField(xobj.XObj):
-        pass
+        __name__ = 'SmallIntegerField'
     
     class XMLField(xobj.XObj):
-        pass
+        __name__ = 'XMLField'
     
     class InlinedDeferredForeignKey(xobj.XObj):
-        pass
+        __name__ = 'InlinedDeferredForeignKey'
     
     class InlinedForeignKey(xobj.XObj):
-        pass
+        __name__ = 'InlinedForeignKey'
     
     class BooleanField(xobj.XObj):
-        pass
+        __name__ = 'BooleanField'
     
     class URLField(xobj.XObj):
-        pass
+        __name__ = 'URLField'
 
 
 class DjangoModelWrapper(object):
@@ -124,41 +158,41 @@ class DjangoModelWrapper(object):
         """
         Takes care of generating the code for the class stub
         """
-        fields_dict = cls.getModelFields(django_model)
-        # if getModelFields returns an empty dictionary
+        fields_dict = cls._getModelFields(django_model)
+        # if _getModelFields returns an empty dictionary
         # then return None to indicate that the model
         # doesn't have a _meta attribute (which can 
-        # happen if the cls passed to getModelFields
+        # happen if the cls passed to _getModelFields
         # is not an actual django_model)
         if not fields_dict:
             return None
-        fields_dict = cls.convertFields(fields_dict)
-        try:
+        fields_dict = cls._convertFields(fields_dict)
+        if hasattr(django_model, 'list_fields'):
             dep_names = [parseName(m) for m in django_model.list_fields]
             for name in dep_names:
+                # FIXME: here we use ...rbuilder.inventory.models directly
+                # as a debugging hack. Need to do some magic to get around
+                # hard coding this so that tool works on other models
                 model = getattr(models, name)
+                # Recursive call to DjangoModelWrapper
                 fields_dict[name] = [DjangoModelWrapper(model)]
-        except AttributeError:
-            pass
         return type(django_model.__name__, (xobj.XObj,), fields_dict)
     
     @staticmethod
-    def getModelFields(django_model):
+    def _getModelFields(django_model):
         """
         Gets all of a django model's pre-converted fields
         """
         d = {}
-        try:
+        if hasattr(django_model, '_meta'):
             for field in django_model._meta.fields:
                 d[field.name] = field
-            return d
-        except AttributeError:
-            return {}
+        return d
     
     @staticmethod
-    def convertFields(d):
+    def _convertFields(d):
         """
-        Converts django fields to sdk classes
+        Converts django fields to sdk Field classes
         """
         _d = {}
         for k in d:

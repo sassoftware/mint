@@ -20,8 +20,8 @@ from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import sdk
 
 import inspect
-
 from xobj import xobj
+import os
 
 ###### Sample Crap For Testing Purposes ######
 PKGS_XML = \
@@ -54,14 +54,22 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.models = self.findModels()
         wrapped = [sdk.DjangoModelWrapper(m) for m in self.models]
-        with open('/mnt/hgfs/Dev/transfer/models.py', 'w') as f:
+        current_location = os.path.dirname(__file__)
+        index = current_location.find('sdk_builder')
+        filepath = os.path.join(
+                    current_location[0:index], 'sdk_builder/api/models.py')
+        with open(filepath, 'w') as f:
             for w in wrapped:
-                try:
-                    src = sdk.toSource(w)
+                src = sdk.toSource(w)
+                if src:
                     f.writelines(src)
                     f.write('\n')
-                except AttributeError: # happens when w is None
-                    continue
+        
+        ##### For testing purposes only #####
+        doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages})
+        # import pdb; pdb.set_trace()
+        pass
+        #####################################
         
     def buildSDK(self):
         pass
