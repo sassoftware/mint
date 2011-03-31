@@ -734,7 +734,6 @@ class MintServer(object):
             url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
                     (protocol, adminUser, adminPassword, urlhostname)
             transport = proxiedtransport.ProxiedTransport(
-                    https=(protocol == 'https'),
                     proxyMap=self.cfg.getProxyMap())
             sp = util.ServerProxy(url, transport=transport)
 
