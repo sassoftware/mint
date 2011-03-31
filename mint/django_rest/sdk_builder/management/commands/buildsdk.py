@@ -24,13 +24,15 @@ from xobj import xobj
 import os
 
 ###### Sample Crap For Testing Purposes ######
-from mint.django_rest.rbuilder.modellib.basemodels import XObjModel
+# from mint.django_rest.rbuilder.modellib.basemodels import XObjModel
+# 
+# x = XObjModel()
 
-x = XObjModel()
-
+    
 PKGS_XML = \
 """
 <packages>
+    <data pid="1">my data</data>
     <package id="http://localhost/api/packages/1">
         <name>Apache</name>
         <description>Server</description>
@@ -42,6 +44,31 @@ PKGS_XML = \
 </packages>
 """.strip()
 
+
+class Data(xobj.XObj):
+    """
+    Ok. So when 'pid' is left out then everything except
+    checking works (using uncommented checking).  However,
+    when 'pid' is there, checking works (both ways) but
+    doc.toxml lists data text as empty
+    """
+    pid = sdk.Fields.IntegerField
+
+    def __setattr__(self, k, v):
+        # only assert after initialization is complete
+        # during initialization, always passed a string
+        try:
+            # import pdb; pdb.set_trace()
+            assert(issubclass(v.__class__, Data.__dict__[k]))
+        except KeyError:
+            pass
+        # if hasattr(self, '_isInitialized'):
+        #     import pdb; pdb.set_trace()
+        #     assert(issubclass(v.__class__, Data.__dict__[k]))
+        # else:
+        #     self.__dict__['_isInitialized'] = True
+        self.__dict__[k] = v
+
 class Package(xobj.XObj):
     id = sdk.Fields.URLField
     name = sdk.Fields.CharField
@@ -49,12 +76,8 @@ class Package(xobj.XObj):
 
 class Packages(xobj.XObj):
     package = [Package]
-
-# want to see if I can add Data as an element
-# at runtime
-class Data(xobj.XObj):
-    data = sdk.Fields.TextField
-
+    data = Data
+    
 ##############################################
 
 class Command(BaseCommand):
@@ -64,29 +87,27 @@ class Command(BaseCommand):
         """
         Generates Python SDK for REST API
         """
-        # Get paths where modules will be written on the filesystem
-        current_location = os.path.dirname(__file__)
-        index = current_location.find('sdk_builder')
-        models_path = os.path.join(
-                    current_location[0:index], 'sdk_builder/api/models.py')
-        fields_path = os.path.join(
-                        current_location[0:index], 'sdk_builder/api/fields.py')
-                        
-        # First build class stubs then write them to the filesystem
-        self.models = self.findModels()
-        wrapped = [sdk.DjangoModelWrapper(m) for m in self.models]
-        self.buildSDKModels(models_path, wrapped)
-        
-        # Now generate a flattened copy of sdk.Fields and
-        # save it inside the package api
-        self.buildSDKFields(fields_path)
+        # # Get paths where modules will be written on the filesystem
+        # current_location = os.path.dirname(__file__)
+        # index = current_location.find('sdk_builder')
+        # models_path = os.path.join(
+        #                 current_location[0:index], 'sdk_builder/api/models.py')
+        # fields_path = os.path.join(
+        #                 current_location[0:index], 'sdk_builder/api/fields.py')
+        #                 
+        # # First build class stubs then write them to the filesystem
+        # self.models = self.findModels()
+        # wrapped = [sdk.DjangoModelWrapper(m) for m in self.models]
+        # self.buildSDKModels(models_path, wrapped)
+        # 
+        # # Now generate a flattened copy of sdk.Fields and
+        # # save it inside the package api
+        # self.buildSDKFields(fields_path)
         
         ##### For testing purposes only #####
-        # doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages})
-        # n = self.models[0]
-        # n2 = n().serialize()
-        # import pdb; pdb.set_trace()
-        # pass
+        doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages, 'data':Data})
+        import pdb; pdb.set_trace()
+        pass
         #####################################
     
     # TODO: import * is messy, find another way to flatten out
