@@ -1,0 +1,24 @@
+Inventory properties:
+    event_types - an entry point into the inventory events collection
+    image_import_metadata_descriptor - No documentation
+    infrastructure_systems - an entry point into the collection of infrastructure systems (all systems visible in the UI under Infrastructure)
+    inventory_systems - an entry point into the collection of inventory systems (all systems visible in the UI under Systems)
+    job_states - an entry point into the inventory job states collection
+    log - an entry point into inventory logging
+    management_interfaces - an entry point into the collection of management interfaces (CIM, WMI, etc.)
+    management_nodes - an entry point into the inventory management nodes collection (rPath Update Services)
+    networks - an entry point into the inventory system networks collection
+    system_states - an entry point into the inventory system states collection
+    system_types - an entry point into the inventory system types collection
+    systems - an entry point into the collection of all systems (all systems in inventory_systems and infrastructure systems combined)
+    zones - an entry point into the inventory management zones collection
+
+Methods:
+    GET:
+        Authentication: none
+    POST:
+        not supported
+    PUT:
+        not supported
+    DELETE:
+        not supported
