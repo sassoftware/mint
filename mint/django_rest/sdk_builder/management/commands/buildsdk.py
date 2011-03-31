@@ -55,13 +55,13 @@ class Data(xobj.XObj):
     pid = sdk.Fields.IntegerField
 
     def __setattr__(self, k, v):
-        # only assert after initialization is complete
-        # during initialization, always passed a string
         try:
             # import pdb; pdb.set_trace()
             assert(issubclass(v.__class__, Data.__dict__[k]))
         except KeyError:
             pass
+        # # only assert after initialization is complete
+        # # during initialization, always passed a string
         # if hasattr(self, '_isInitialized'):
         #     import pdb; pdb.set_trace()
         #     assert(issubclass(v.__class__, Data.__dict__[k]))
@@ -105,7 +105,7 @@ class Command(BaseCommand):
         # self.buildSDKFields(fields_path)
         
         ##### For testing purposes only #####
-        doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages, 'data':Data})
+        doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages, 'data':Data})  # pyflakes=ignore
         import pdb; pdb.set_trace()
         pass
         #####################################
