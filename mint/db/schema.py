@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(52, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(52, 3)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1374,6 +1374,7 @@ def _createInventorySchema(db, cfg):
                 "flavor" text NOT NULL,
                 "is_top_level" BOOL NOT NULL,
                 "last_available_update_refresh" timestamp with time zone,
+                "out_of_date" BOOL,
                 UNIQUE ("name", "version_id", "flavor")
             )""" % db.keywords)
 

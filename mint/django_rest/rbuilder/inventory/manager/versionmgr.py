@@ -234,6 +234,7 @@ class VersionManager(base.BaseManager):
         assert(len(troves) == 1)
 
         trove.available_updates.clear()
+        trove.out_of_date = False
 
         # findTroves returns a {} with keys of (name, version, flavor), values
         # of [(name, repoVersion, repoFlavor)], where repoVersion and
@@ -254,12 +255,11 @@ class VersionManager(base.BaseManager):
         # {version: [flavors]}.
         allVersions = allVersions[trvName]
 
-        newerVersions = {}
+        availableVersions = {}
         for v, fs in allVersions.iteritems():
             # getTroveVersionList doesn't search by label, so we need to
-            # compare the results to the label we're interested in, and make
-            # sure the version is newer.
-            if v.trailingLabel() == trvLabel and v > repoVersion:
+            # compare the results to the label we're interested in.
+            if v.trailingLabel() == trvLabel:
 
                 # Check that at least one of the flavors found satisfies the
                 # flavor we're interested in.
@@ -270,10 +270,10 @@ class VersionManager(base.BaseManager):
                     if f.satisfies(trvFlavor):
                         satisfiedFlavors.append(f)
                 if satisfiedFlavors:
-                    newerVersions[v] = satisfiedFlavors
+                    availableVersions[v] = satisfiedFlavors
 
-        if newerVersions:
-            for ver, fs in newerVersions.iteritems():
+        if availableVersions:
+            for ver, fs in availableVersions.iteritems():
                 for flv in fs:
                     new_version = models.Version()
                     new_version.fromConaryVersion(ver)
@@ -282,6 +282,11 @@ class VersionManager(base.BaseManager):
                         models.Version.objects.load_or_create(new_version)
                     new_version.save()
                     trove.available_updates.add(new_version)
+
+                    # Set out of date flag on True if there are newer versions
+                    # available.
+                    if ver > repoVersion:
+                        trove.out_of_date = True
 
         # Always add the current version as an available update, this is so
         # that remediation will work.

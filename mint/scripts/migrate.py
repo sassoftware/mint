@@ -2267,7 +2267,7 @@ windows.rpath.com@rpath:windows-common,Windows Foundation Platform,1,0
         return True
 
 class MigrateTo_52(SchemaMigration):
-    Version = (52, 2)
+    Version = (52, 3)
 
     def migrate(self):
         return True
@@ -2289,6 +2289,21 @@ class MigrateTo_52(SchemaMigration):
         cursor.execute("""
             ALTER TABLE inventory_system
                 DROP CONSTRAINT inventory_system_generated_uuid_key""")
+        return True
+        
+    def migrate3(self):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            ALTER TABLE inventory_trove
+            ADD out_of_date BOOL
+        """)
+
+        # Invalidate trove update cache so that all updates will be recomputed
+        cursor.execute("""
+            UPDATE inventory_trove
+            SET last_available_update_refresh = NULL
+        """)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
