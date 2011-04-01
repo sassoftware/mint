@@ -67,8 +67,8 @@ class Fields(object):
     class CharField(xobj.XObj):
         __name__ = 'CharField'
         
-        def __init__(self, data):
-            self._data = data
+        # def __init__(self, data):
+        #     self._data = data
             
     class DecimalField(xobj.XObj):
         __name__ = 'DecimalField'
@@ -79,8 +79,8 @@ class Fields(object):
     class IntegerField(xobj.XObj):
         __name__ = 'IntegerField'
         
-        def __init__(self, data):
-            self._data = data
+        # def __init__(self, data):
+        #     self._data = data
     
     class TextField(xobj.XObj):
         __name__ = 'TextField'
