@@ -23,6 +23,8 @@ def parseName(name):
     """
     return ''.join([s.capitalize() for s in name.split('_')])
 
+
+# FIXME: can't account for non-list intra and extra field references
 def toSource(wrapped_cls, app_label):
     """
     Creates python source code for xobj class stubs
@@ -43,6 +45,7 @@ def toSource(wrapped_cls, app_label):
         # to be written into the src
         if inspect.ismethod(v):
             continue
+        # FIXME:
         if isinstance(v, list):
             name = '[%s.%s]' % (app_label, v[0].__name__)
         else:
@@ -76,7 +79,9 @@ class DjangoModelWrapper(object):
         if hasattr(django_model, 'list_fields'):
             dep_names = [parseName(m) for m in django_model.list_fields]
             for name in dep_names:
-                model = getattr(module, name)
+                model = getattr(module, name, None)
+                if not model:
+                    raise Exception('Extra-Model reference required')
                 # Recursive call to DjangoModelWrapper
                 fields_dict[name] = [DjangoModelWrapper(model, module)]
         return type(django_model.__name__, (xobj.XObj,), fields_dict)
