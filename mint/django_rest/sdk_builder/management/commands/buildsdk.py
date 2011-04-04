@@ -38,75 +38,20 @@ def wrapped2src(wrapped, app_label):
         src += ''.join(lines)
     return src
 
-########## MAJOR HACK, not working yet -- see below for optimal way ##########
-# class Command(BaseCommand):
-#     help = "Generates python sdk"
-# 
-#     def handle(self, *args, **options):
-#         """
-#         Generates Python SDK for REST API
-#         """        
-#         # Get paths where modules will be written on the filesystem
-#         current_location = os.path.dirname(__file__)
-#         index = current_location.find('sdk_builder')
-#         models_path = os.path.join(
-#                         current_location[0:index], 'sdk_builder/sdk/Models.py')
-#         with open(models_path, 'w') as f:
-#             f.write('from sdk import Fields\n')
-#             f.write('from sdk import XObjMixin\n')
-#             f.write('from sdk import GetSetXMLAttrMeta\n')
-#             f.write('from xobj import xobj\n')
-#             f.write('\n\n')
-#             # First build class stubs then write them to the filesystem
-#             # HACK:
-#             for app_label, module in self.findAllModules().items():
-#                 if app_label in EXCLUDED_APPS:
-#                     continue
-#                 src = self.buildSDKModels(app_label, module)
-#                 if src:
-#                     f.writelines(src.strip())
-#                     f.write('\n\n')
-# 
-#     def buildSDKModels(self, app_label, module):
-#         models = [m for m in module.__dict__.values() if inspect.isclass(m)]
-#         wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
-#         return wrapped2src(wrapped, app_label)
-#     
-#     # HACK:
-#     def findAllModules(self):
-#         import mint.django_rest.rbuilder.changelog.models
-#         import mint.django_rest.rbuilder.inventory.models
-#         import mint.django_rest.rbuilder.metrics.models
-#         import mint.django_rest.rbuilder.packages.models
-#         import mint.django_rest.rbuilder.querysets.models
-#         import mint.django_rest.rbuilder.reporting.models
-#         import mint.django_rest.rbuilder.models
-#         
-#         d = {'changelog':mint.django_rest.rbuilder.changelog.models,
-#              'inventory':mint.django_rest.rbuilder.inventory.models,
-#              'metrics':mint.django_rest.rbuilder.metrics.models,
-#              'packages':mint.django_rest.rbuilder.packages.models,
-#              'querysets':mint.django_rest.rbuilder.querysets.models,
-#              'reporting':mint.django_rest.rbuilder.reporting.models,
-#              'rbuilder':mint.django_rest.rbuilder.models,
-#              }
-#              
-#         return d
-        
-########## OLD WAY, BEST WAY, however isn't importing list_fields on models ##########
+
 class Command(BaseCommand):
     help = "Generates python sdk"
 
     def handle(self, *args, **options):
         """
         Generates Python SDK for REST API
-        """        
-        # Get paths where modules will be written on the filesystem
+        """
+        # Get paths where module will be written on the filesystem
         current_location = os.path.dirname(__file__)
         index = current_location.find('sdk_builder')
         models_path = os.path.join(
                         current_location[0:index], 'sdk_builder/sdk/Models.py')
-        # First build class stubs then write them to the filesystem
+        # build class stubs then write them to the filesystem
         with open(models_path, 'w') as f:
             f.write('from sdk import Fields\n')
             f.write('from sdk import XObjMixin\n')
@@ -124,15 +69,18 @@ class Command(BaseCommand):
                     f.writelines(src.strip())
                     f.write('\n\n')
 
-    def buildSDKModels(self, app_label, models):
-        wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
+    def buildSDKModels(self, app_label, module):
+        wrapped = [rSDKUtils.DjangoModelWrapper(m, module) \
+            for m in module.__dict__.values() if inspect.isclass(m)]
         return wrapped2src(wrapped, app_label)
     
-    # FIXME: below should work but cache.get_models(app)
-    # causes the returned models to lack the list_fields
     def findAllModels(self):
         d = {}
         for app in cache.get_apps():
             app_label = app.__name__.split('.')[-2]
-            d[app_label] = cache.get_models(app)
+            # Doesn't work, leaves out some models
+            # d[app_label] = cache.get_models(app)
+            # Workaround:
+            # d[app_label] = [m for m in app.__dict__.values() if inspect.isclass(m)]
+            d[app_label] = app
         return d

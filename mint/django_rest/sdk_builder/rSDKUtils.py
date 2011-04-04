@@ -32,7 +32,7 @@ def toSource(wrapped_cls):
     
     STUB = 'class ${cls_name}(xobj.XObj, XObjMixin):\n    """XObj Class Stub"""\n'
     ATTRS = '    __metaclass__ = GetSetXMLAttrMeta\n'
-    FIELDS = '    ${field_name} = Fields.${field_value}\n'
+    FIELDS = '    ${field_name} = ${field_value}\n'
     
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
     src += ATTRS
@@ -52,7 +52,7 @@ def toSource(wrapped_cls):
             # account for this.
             if k in ['__module__', '__doc__', '__name__']:
                 continue
-            name = v.__name__
+            name = 'Fields.' + v.__name__
         src += \
             string.Template(FIELDS).substitute(
             {'field_name':k.lower(), 'field_value':name})
@@ -67,7 +67,7 @@ class DjangoModelWrapper(object):
     inside a list for xobj to find it.
     """
 
-    def __new__(cls, django_model, models):
+    def __new__(cls, django_model, module):
         """
         Takes care of generating the code for the class stub
         """
@@ -78,7 +78,7 @@ class DjangoModelWrapper(object):
             for name in dep_names:
                 model = getattr(models, name)
                 # Recursive call to DjangoModelWrapper
-                fields_dict[name] = [DjangoModelWrapper(model, models)]
+                fields_dict[name] = [DjangoModelWrapper(model, module)]
         return type(django_model.__name__, (xobj.XObj,), fields_dict)
 
     @staticmethod

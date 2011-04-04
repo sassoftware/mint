@@ -19,7 +19,7 @@ api.GET('/packages/') # get all packages
 api.GET('/packages/1') # get first package
 
 # POST
-pkg = sdk.Models.Package() # create
+pkg = sdk.Models.package.Package() # create
 pkg.name = 'xobj'
 pkg.description = 'A python to xml serialization library'
 api.POST('/packages/', pkg)

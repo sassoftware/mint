@@ -31,7 +31,7 @@ def connect(base_url, auth=None):
         api.GET('/packages/1') # get first package
 
         # POST
-        pkg = Models.Packages.Package() # create
+        pkg = Models.packages.Package() # create
         pkg.name = 'xobj'
         pkg.description = 'A python to xml serialization library'
         api.POST('/packages/', pkg)
