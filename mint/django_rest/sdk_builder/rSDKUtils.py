@@ -14,7 +14,6 @@
 
 import inspect
 import string
-from mint.django_rest.rbuilder.inventory import models
 from xobj import xobj
 from mint.django_rest.sdk_builder.rSDK import Fields
 
@@ -32,7 +31,7 @@ def toSource(wrapped_cls):
         return ''
     
     STUB = 'class ${cls_name}(xobj.XObj, XObjMixin):\n    """XObj Class Stub"""\n'
-    ATTRS = '    __metaclass__ = GetSetItemMeta\n'
+    ATTRS = '    __metaclass__ = GetSetAttrMeta\n'
     FIELDS = '    ${field_name} = Fields.${field_value}\n'
     
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
@@ -68,7 +67,7 @@ class DjangoModelWrapper(object):
     inside a list for xobj to find it.
     """
 
-    def __new__(cls, django_model):
+    def __new__(cls, django_model, models):
         """
         Takes care of generating the code for the class stub
         """
@@ -77,12 +76,9 @@ class DjangoModelWrapper(object):
         if hasattr(django_model, 'list_fields'):
             dep_names = [parseName(m) for m in django_model.list_fields]
             for name in dep_names:
-                # FIXME: here we use ...rbuilder.inventory.models directly
-                # as a debugging hack. Need to do some magic to get around
-                # hard coding this so that tool works on other models
                 model = getattr(models, name)
                 # Recursive call to DjangoModelWrapper
-                fields_dict[name] = [DjangoModelWrapper(model)]
+                fields_dict[name] = [DjangoModelWrapper(model, models)]
         return type(django_model.__name__, (xobj.XObj,), fields_dict)
 
     @staticmethod

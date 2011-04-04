@@ -12,15 +12,21 @@
 # full details.
 #
 
-# for debugging purposes, only use mint.django_rest.rbuilder.inventory.models
-# at first
-# from mint.django_rest.rbuilder.inventory import models
 from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDKUtils
 import os
 from django.db.models.loading import cache
 import string
 
+EXCLUDED_APPS = [
+    'auth',
+    'contenttypes',
+    'redirects',
+    'sessions',
+    'sites',
+    'debug_toolbar',
+    'sdk_builder',
+    ]
 
 class Command(BaseCommand):
     help = "Generates python sdk"
@@ -41,15 +47,17 @@ class Command(BaseCommand):
             f.write('from sdk import GetSetXMLAttrMeta\n')
             f.write('from xobj import xobj\n')
             f.write('\n\n')
-            for app_label, models in self.findModels().items():
+            for app_label, models in self.findAllModels().items():
+                if app_label in EXCLUDED_APPS:
+                    continue
                 src = self.buildSDKModels(app_label, models)
                 if src:
-                    f.writelines(src)
+                    f.writelines(src.strip())
                     f.write('\n\n')
     
     def buildSDKModels(self, app_label, models):
-        wrapped = [rSDKUtils.DjangoModelWrapper(m) for m in models]
-        cls_header = 'class %{app_label}(object):\n    """%{app_label}"""\n'
+        wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
+        cls_header = 'class ${app_label}(object):\n    """${app_label}"""\n\n'
         src = string.Template(cls_header).substitute({'app_label':app_label})
         for w in wrapped:
             lines = []
@@ -59,7 +67,7 @@ class Command(BaseCommand):
             src += ''.join(lines)
         return src
         
-    def findModels(self):
+    def findAllModels(self):
         d = {}
         for app in cache.get_apps():
             app_label = app.__name__.split('.')[-2]
