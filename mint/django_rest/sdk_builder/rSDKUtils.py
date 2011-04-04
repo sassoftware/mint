@@ -16,7 +16,7 @@ import inspect
 import string
 from mint.django_rest.rbuilder.inventory import models
 from xobj import xobj
-from mint.django_rest.sdk_builder.sdk import Fields
+from mint.django_rest.sdk_builder.rSDK import Fields
 
 def parseName(name):
     """
@@ -33,7 +33,7 @@ def toSource(wrapped_cls):
     
     STUB = 'class ${cls_name}(xobj.XObj, XObjMixin):\n    """XObj Class Stub"""\n'
     ATTRS = '    __metaclass__ = GetSetItemMeta\n'
-    FIELDS = '    ${field_name} = ${field_value}\n'
+    FIELDS = '    ${field_name} = Fields.${field_value}\n'
     
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
     src += ATTRS

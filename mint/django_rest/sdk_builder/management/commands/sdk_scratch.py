@@ -5,7 +5,7 @@
 # version 1.0. A copy of this license should have been distributed with this
 # source file in a file called LICENSE. If it is not present, the license
 # is always available at http://www.rpath.com/permanent/licenses/CPL-1.0.
-#
+#rSDK
 # This program is distributed in the hope that it will be useful, but
 # without any warranty; without even the implied warranty of merchantability
 # or fitness for a particular purpose. See the Common Public License for
@@ -13,7 +13,7 @@
 #
 
 from django.core.management.base import BaseCommand
-from mint.django_rest.sdk_builder import sdk
+from mint.django_rest.sdk_builder import rSDK
 from xobj import xobj
 
 ###### Sample Crap For Testing Purposes ######
@@ -46,33 +46,33 @@ CXML = \
 """.strip()
 
 
-class Url(xobj.XObj, sdk.XObjMixin):
-    __metaclass__ = sdk.GetSetXMLAttrMeta
+class Url(xobj.XObj, rSDK.XObjMixin):
+    __metaclass__ = rSDK.GetSetXMLAttrMeta
 
-    tags = sdk.Fields.TextField
+    tags = rSDK.Fields.TextField
 
-class Catalog(xobj.XObj, sdk.XObjMixin):
-    __metaclass__ = sdk.GetSetXMLAttrMeta
+class Catalog(xobj.XObj, rSDK.XObjMixin):
+    __metaclass__ = rSDK.GetSetXMLAttrMeta
 
-    cid = sdk.Fields.IntegerField
+    cid = rSDK.Fields.IntegerField
     url = [Url]
 
 
-class Data(xobj.XObj, sdk.XObjMixin):
-    __metaclass__ = sdk.GetSetXMLAttrMeta
+class Data(xobj.XObj, rSDK.XObjMixin):
+    __metaclass__ = rSDK.GetSetXMLAttrMeta
     
-    pid = sdk.Fields.IntegerField
+    pid = rSDK.Fields.IntegerField
     
 
-class Package(xobj.XObj, sdk.XObjMixin):
-    __metaclass__ = sdk.GetSetXMLAttrMeta
+class Package(xobj.XObj, rSDK.XObjMixin):
+    __metaclass__ = rSDK.GetSetXMLAttrMeta
     
-    pid = sdk.Fields.URLField
-    name = sdk.Fields.CharField
-    description = sdk.Fields.TextField
+    pid = rSDK.Fields.URLField
+    name = rSDK.Fields.CharField
+    description = rSDK.Fields.TextField
 
-class Packages(xobj.XObj, sdk.XObjMixin):
-    __metaclass__ = sdk.GetSetXMLAttrMeta
+class Packages(xobj.XObj, rSDK.XObjMixin):
+    __metaclass__ = rSDK.GetSetXMLAttrMeta
     
     package = [Package]
     data = Data
@@ -80,7 +80,7 @@ class Packages(xobj.XObj, sdk.XObjMixin):
 ##############################################
 
 class Command(BaseCommand):
-    help = "Generates python sdk"
+    help = "Generates python rSDK"
 
     def handle(self, *args, **options):
         """
@@ -100,7 +100,7 @@ class Command(BaseCommand):
         # doc.packages.data.pid = 1
         
         # assignment works and *should* work
-        # doc.packages.data.pid = sdk.Fields.IntegerField(1)
+        # doc.packages.data.pid = rSDK.Fields.IntegerField(1)
         
         # assignment works but shouldn't work (should throw assertion error)
         # doc.packages.package[0].pid = 2 # FIXED
@@ -126,11 +126,11 @@ class Command(BaseCommand):
         # we can assign an id -- below does *not* work and shouldn't work
         # doc.packages.data.pid = 'X'
         # we can assign an id -- below *does* work and should work
-        # doc.packages.data.pid = sdk.Fields.IntegerField(1)
+        # doc.packages.data.pid = rSDK.Fields.IntegerField(1)
         p = Package()
-        p.description = sdk.Fields.TextField('a new package')
-        p.pid = sdk.Fields.URLField('http://helloworld.com/')
-        p.name = sdk.Fields.CharField('my new pkg')
+        p.description = rSDK.Fields.TextField('a new package')
+        p.pid = rSDK.Fields.URLField('http://helloworld.com/')
+        p.name = rSDK.Fields.CharField('my new pkg')
         # doc.toxml() now renders what we expect to see
         doc.packages.package.append(p)
         

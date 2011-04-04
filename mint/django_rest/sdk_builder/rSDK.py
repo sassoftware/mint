@@ -13,7 +13,6 @@
 #
 
 from xobj import xobj
-from mint.django_rest.rbuilder.inventory import models
 
 
 class XObjMixin(object):
@@ -54,10 +53,10 @@ class GetSetXMLAttrMeta(type):
         """
         metaclass necessary to overload xml attribute access.
         because of the MRO, these methods can't be included
-        in XObjMixin, and its ugly to inline this code in
+        in XObjMixin and its ugly to inline this code in
         every class.
         
-        Overrides __getitem__ and __setitem__ such that
+        Overloads __getitem__ and __setitem__ such that
         
         class Catalog(xobj.XObj):
             pass
@@ -105,7 +104,10 @@ class GetSetXMLAttrMeta(type):
 class Fields(object):
     """
     Need to explicitly specify __name__ attr or else it
-    will be listed as 'type'.
+    will be listed as 'type'.  A copy of Fields is maintained
+    inside of sdk's __init__.  Any updates to Fields must
+    be propagated (sorry, I know bad technique, but its not
+    too much extra effort to maintain -- future FIXME)
     """
     
     class CharField(xobj.XObj):
@@ -167,3 +169,9 @@ class Fields(object):
     
     class URLField(xobj.XObj):
         __name__ = 'URLField'
+    
+    class DateTimeField(xobj.XObj):
+        __name__ = 'DateTimeField'
+        
+    class EmailField(xobj.XObj):
+        __name__ = 'EmailField'
