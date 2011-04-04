@@ -16,7 +16,7 @@ from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDKUtils
 from django.db.models.loading import cache
 import os
-import inspect
+import inspect  # pyflakes=ignore
 
 EXCLUDED_APPS = [
     'auth',
