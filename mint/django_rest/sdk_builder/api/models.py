@@ -1,6 +1,6 @@
+# pyflakes=ignore
 from fields import *  # pyflakes=ignore
 from xobj import xobj
-
 
 class Network(xobj.XObj):
     """XObj Class Stub"""

@@ -1,3 +1,4 @@
+# pyflakes=ignore
 #
 # Copyright (c) 2011 rPath, Inc.
 #
@@ -13,50 +14,94 @@
 #
 
 from xobj import xobj
-import string
-import inspect
 from mint.django_rest.rbuilder.inventory import models
 
 
-def parseName(name):
+class XObjMixin(object):
     """
-    ie: Changes management_nodes to ManagementNodes
+    Only do assertion after initialization is complete
+    during initialization, setattr always passed a string.
+    The idea behind validation in setattr is that once
+    the class is initialized, a class attribute may only
+    be assigned to if the assigned value is an instance
+    or an instance of a subclass of the original type.
     """
-    return ''.join([s.capitalize() for s in name.split('_')])
+    def __setattr__(self, k, v):
+        check = lambda x,y: issubclass(x.__class__, y)
+        try:
+            # self refers to instance of child class
+            item = self.__class__.__dict__[k]
 
-def toSource(wrapped_cls):
-    """
-    Creates python source code for xobj class stubs
-    """
-    if not wrapped_cls:
-        return ''
-    
-    STUB = 'class ${cls_name}(xobj.XObj):\n    """XObj Class Stub"""\n'
-    ATTRS = '    ${field_name} = ${field_value}\n'
-    
-    src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
-    
-    # k is name of field, v is cls that represents its type
-    for k, v in wrapped_cls.__dict__.items():
-        # take this out if in the future you want the body of a method
-        # to be written into the src
-        if inspect.ismethod(v):
-            continue
-        if isinstance(v, list):
-            name = '[%s]' % v[0].__name__
-        else:
-            # FIXME: as sdk grows, more non-field_type attrs
-            # (which also implies that they are missing __name__)
-            # could be attached to the wrapped_cls. Need to 
-            # account for this.
-            if k in ['__module__', '__doc__', '__name__']:
-                continue
-            name = v.__name__
-        src += \
-            string.Template(ATTRS).substitute(
-            {'field_name':k.lower(), 'field_value':name})
-    return src
+            # item is list if so indicated in class stub
+            if isinstance(item, list):
+                assert(len(item) == 1)
+                # FIXME
+                # not sure why, but sometimes v is
+                # an empty list ... and sometimes
+                # it isn't
+                if isinstance(v, list):
+                    pass
+                else:
+                    assert(check(v, item[0]))
+            else:
+                assert(check(v, item))
+        except KeyError: # __dict__ not initialized yet
+            pass
+        self.__dict__[k] = v
 
+
+class GetSetXMLAttrMeta(type):
+    def __init__(klass, name, bases, attrs):
+        """
+        metaclass necessary to overload xml attribute access.
+        because of the MRO, these methods can't be included
+        in XObjMixin, and its ugly to inline this code in
+        every class.
+        
+        Overrides __getitem__ and __setitem__ such that
+        
+        class Catalog(xobj.XObj):
+            pass
+        class Url(xobj.XObj):
+            pass
+        
+        <catalog cid="1">
+            <url>http://example.com</url>
+        </catalog>
+        ...
+        doc = parse(XML, typeMap={'catalog':Catalog, 'url':Url})
+        doc.catalog['cid'] == '1'
+        """
+        # must initialize type before modifying klass attrs
+        # because __getitem__ and __setitem__ will be overwritten
+        # by the methods inherited from bases at initialization
+        # time.
+        super(GetSetItemMeta, klass).__init__(name, bases, attrs)
+
+        def __getitem__(self, k):
+            if isinstance(k, str):
+                # FIXME: below should work
+                # return self._xobj.attributes[k]
+                # HACK:
+                if k in self._xobj.attributes:
+                    return getattr(self, k)
+                raise KeyError
+            else:
+                return xobj.XObj.__getitem__(self, k)
+
+        def __setitem__(self, k, v):
+            if isinstance(k, str):
+                # FIXME: below should work
+                # self._xobj.attributes[k] = v
+                # HACK:
+                if k in self._xobj.attributes:
+                    setattr(self, k, v)
+            else:
+                super(klass, self).__setitem__(k, v)
+
+        klass.__getitem__ = __getitem__
+        klass.__setitem__ = __setitem__
+    
 
 class Fields(object):
     """
@@ -66,9 +111,6 @@ class Fields(object):
     
     class CharField(xobj.XObj):
         __name__ = 'CharField'
-        
-        # def __init__(self, data):
-        #     self._data = data
             
     class DecimalField(xobj.XObj):
         __name__ = 'DecimalField'
@@ -78,9 +120,6 @@ class Fields(object):
     
     class IntegerField(xobj.XObj):
         __name__ = 'IntegerField'
-        
-        # def __init__(self, data):
-        #     self._data = data
     
     class TextField(xobj.XObj):
         __name__ = 'TextField'
@@ -129,51 +168,3 @@ class Fields(object):
     
     class URLField(xobj.XObj):
         __name__ = 'URLField'
-
-
-class DjangoModelWrapper(object):
-    """
-    Takes a django model and creates the code for its corresponding
-    class stub.  For each model with a list_fields attribute,
-    DjangoModelWrapper is called on the listed model, and the result placed
-    inside a list for xobj to find it.
-    """
-    
-    def __new__(cls, django_model):
-        """
-        Takes care of generating the code for the class stub
-        """
-        fields_dict = cls._getModelFields(django_model)
-        fields_dict = cls._convertFields(fields_dict)
-        if hasattr(django_model, 'list_fields'):
-            dep_names = [parseName(m) for m in django_model.list_fields]
-            for name in dep_names:
-                # FIXME: here we use ...rbuilder.inventory.models directly
-                # as a debugging hack. Need to do some magic to get around
-                # hard coding this so that tool works on other models
-                model = getattr(models, name)
-                # Recursive call to DjangoModelWrapper
-                fields_dict[name] = [DjangoModelWrapper(model)]
-        return type(django_model.__name__, (xobj.XObj,), fields_dict)
-    
-    @staticmethod
-    def _getModelFields(django_model):
-        """
-        Gets all of a django model's pre-converted fields
-        """
-        d = {}
-        if hasattr(django_model, '_meta'):
-            for field in django_model._meta.fields:
-                d[field.name] = field
-        return d
-    
-    @staticmethod
-    def _convertFields(d):
-        """
-        Converts django fields to sdk Field classes
-        """
-        _d = {}
-        for k in d:
-            new_field = getattr(Fields, d[k].__class__.__name__)
-            _d[k] = new_field
-        return _d
