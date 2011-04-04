@@ -16,7 +16,7 @@ import httplib2
 import urlparse
 from xobj import xobj
 
-def connect(base_url, auth=(,)):
+def connect(base_url, auth=None):
     """
     base_url = 'http://server.com/api/'
     auth = (username, password)

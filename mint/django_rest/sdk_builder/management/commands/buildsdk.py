@@ -17,7 +17,6 @@
 # from mint.django_rest.rbuilder.inventory import models
 from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDKUtils
-import inspect
 import os
 from django.db.models.loading import cache
 import string
