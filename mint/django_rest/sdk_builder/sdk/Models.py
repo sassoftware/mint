@@ -9,14 +9,14 @@ class changelog(object):
 
     class ChangeLog(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         change_log_id = Fields.AutoField
         resource_type = Fields.TextField
         resource_id = Fields.IntegerField
     
     class ChangeLogEntry(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         change_log_entry_id = Fields.AutoField
         change_log = Fields.ForeignKey
         entry_date = Fields.DateTimeUtcField
@@ -27,7 +27,7 @@ class reporting(object):
 
     class SystemUpdate(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         updateuser = Fields.CharField
         _updatetime = Fields.DecimalField
         servername = Fields.CharField
@@ -36,7 +36,7 @@ class reporting(object):
     
     class RepositoryLogStatus(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         inode = Fields.IntegerField
         logname = Fields.CharField
         logoffset = Fields.IntegerField
@@ -46,20 +46,20 @@ class rbuilder(object):
 
     class DatabaseVersion(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         version = Fields.SmallIntegerField
         id = Fields.AutoField
         minor = Fields.SmallIntegerField
     
     class UserGroups(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         usergroupid = Fields.AutoField
         usergroup = Fields.CharField
     
     class Users(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         username = Fields.CharField
         timecreated = Fields.DecimalField
         passwd = Fields.CharField
@@ -74,14 +74,14 @@ class rbuilder(object):
     
     class UserGroupMembers(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         userid = Fields.ForeignKey
         id = Fields.AutoField
         usergroupid = Fields.ForeignKey
     
     class Products(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         backupexternal = Fields.SmallIntegerField
         repositoryhostname = Fields.CharField
         domainname = Fields.CharField
@@ -101,7 +101,7 @@ class rbuilder(object):
     
     class Members(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         level = Fields.SmallIntegerField
         userid = Fields.ForeignKey
         id = Fields.AutoField
@@ -109,7 +109,7 @@ class rbuilder(object):
     
     class Versions(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         name = Fields.CharField
         timecreated = Fields.DecimalField
         productversionid = Fields.AutoField
@@ -119,7 +119,7 @@ class rbuilder(object):
     
     class Releases(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         timemirrored = Fields.DecimalField
         description = Fields.TextField
         timecreated = Fields.DecimalField
@@ -136,7 +136,7 @@ class rbuilder(object):
     
     class Images(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         status = Fields.IntegerField
         buildtype = Fields.IntegerField
         description = Fields.TextField
@@ -160,7 +160,7 @@ class rbuilder(object):
     
     class Downloads(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         ip = Fields.CharField
         timedownloaded = Fields.CharField
         id = Fields.AutoField
@@ -168,21 +168,21 @@ class rbuilder(object):
     
     class Sessions(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         sessionid = Fields.AutoField
         data = Fields.TextField
         sid = Fields.CharField
     
     class Targets(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         targettype = Fields.CharField
         targetname = Fields.CharField
         targetid = Fields.IntegerField
     
     class TargetData(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         name = Fields.CharField
         targetid = Fields.ForeignKey
         value = Fields.TextField
@@ -190,13 +190,13 @@ class rbuilder(object):
     
     class TargetCredentials(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         credentials = Fields.TextField
         targetcredentialsid = Fields.AutoField
     
     class TargetUserCredentials(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         targetid = Fields.ForeignKey
         userid = Fields.ForeignKey
         targetcredentialsid = Fields.ForeignKey
@@ -204,7 +204,7 @@ class rbuilder(object):
     
     class TargetImagesDeployed(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         targetid = Fields.ForeignKey
         id = Fields.AutoField
         targetimageid = Fields.CharField
@@ -212,7 +212,7 @@ class rbuilder(object):
     
     class PkiCertificates(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         is_ca = Fields.BooleanField
         pkey_pem = Fields.TextField
         fingerprint = Fields.TextField
@@ -225,7 +225,7 @@ class rbuilder(object):
     
     class Jobs(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         job_id = Fields.AutoField
         job_uuid = Fields.TextField
 
@@ -237,7 +237,7 @@ class inventory(object):
 
     class Zone(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         zone_id = Fields.AutoField
         description = Fields.CharField
         created_date = Fields.DateTimeUtcField
@@ -245,7 +245,7 @@ class inventory(object):
     
     class SystemState(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         description = Fields.CharField
         system_state_id = Fields.AutoField
         created_date = Fields.DateTimeUtcField
@@ -253,7 +253,7 @@ class inventory(object):
     
     class ManagementInterface(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         credentials_descriptor = Fields.XMLField
         name = Fields.CharField
         created_date = Fields.DateTimeUtcField
@@ -264,7 +264,7 @@ class inventory(object):
     
     class SystemType(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         infrastructure = Fields.BooleanField
         description = Fields.CharField
         created_date = Fields.DateTimeUtcField
@@ -274,7 +274,7 @@ class inventory(object):
     
     class System(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         management_interface = Fields.ForeignKey
         registration_date = Fields.DateTimeUtcField
         description = Fields.CharField
@@ -307,7 +307,7 @@ class inventory(object):
     
     class ManagementNode(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         management_interface = Fields.ForeignKey
         appliance = Fields.ForeignKey
         ssl_client_key = Fields.CharField
@@ -344,14 +344,14 @@ class inventory(object):
     
     class SystemTargetCredentials(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         credentials = Fields.ForeignKey
         id = Fields.AutoField
         system = Fields.ForeignKey
     
     class EventType(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         name = Fields.CharField
         priority = Fields.SmallIntegerField
         event_type_id = Fields.AutoField
@@ -359,13 +359,13 @@ class inventory(object):
     
     class JobState(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         job_state_id = Fields.AutoField
         name = Fields.CharField
     
     class Job(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         time_updated = Fields.DateTimeUtcField
         job_id = Fields.AutoField
         status_code = Fields.IntegerField
@@ -378,7 +378,7 @@ class inventory(object):
     
     class SystemEvent(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         priority = Fields.SmallIntegerField
         event_type = Fields.DeferredForeignKey
         event_data = Fields.TextField
@@ -389,7 +389,7 @@ class inventory(object):
     
     class Network(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         ipv6_address = Fields.CharField
         network_id = Fields.AutoField
         dns_name = Fields.CharField
@@ -404,13 +404,13 @@ class inventory(object):
     
     class SystemLog(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         system_log_id = Fields.AutoField
         system = Fields.DeferredForeignKey
     
     class SystemLogEntry(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         system_log_entry_id = Fields.AutoField
         system_log = Fields.ForeignKey
         entry_date = Fields.DateTimeUtcField
@@ -418,7 +418,7 @@ class inventory(object):
     
     class Trove(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         version = Fields.SerializedForeignKey
         name = Fields.TextField
         is_top_level = Fields.BooleanField
@@ -428,7 +428,7 @@ class inventory(object):
     
     class Stage(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         stage_id = Fields.AutoField
         name = Fields.CharField
         major_version = Fields.ForeignKey
@@ -436,7 +436,7 @@ class inventory(object):
     
     class Version(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         full = Fields.TextField
         ordering = Fields.TextField
         flavor = Fields.TextField
@@ -446,7 +446,7 @@ class inventory(object):
     
     class SystemJob(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         system_job_id = Fields.AutoField
         system = Fields.ForeignKey
         job = Fields.DeferredForeignKey
@@ -454,7 +454,7 @@ class inventory(object):
     
     class JobSystem(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         job = Fields.ForeignKey
         system_id = Fields.IntegerField
         id = Fields.AutoField
@@ -464,7 +464,7 @@ class querysets(object):
 
     class QuerySet(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         name = Fields.TextField
         can_modify = Fields.BooleanField
@@ -475,7 +475,7 @@ class querysets(object):
     
     class FilterEntry(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         value = Fields.TextField
         field = Fields.TextField
         filter_entry_id = Fields.AutoField
@@ -483,20 +483,20 @@ class querysets(object):
     
     class QueryTag(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         query_tag_id = Fields.AutoField
         query_set = Fields.ForeignKey
         name = Fields.TextField
     
     class InclusionMethod(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         inclusion_method_id = Fields.AutoField
         name = Fields.TextField
     
     class SystemTag(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         system_tag_id = Fields.AutoField
         system = Fields.ForeignKey
         inclusion_method = Fields.SerializedForeignKey
@@ -507,7 +507,7 @@ class packages(object):
 
     class Package(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         package_id = Fields.AutoField
         modified_by = Fields.ForeignKey
@@ -518,7 +518,7 @@ class packages(object):
     
     class PackageVersion(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         modified_by = Fields.ForeignKey
         description = Fields.TextField
@@ -533,7 +533,7 @@ class packages(object):
     
     class PackageVersionAction(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         visible = Fields.BooleanField
         package_version = Fields.ForeignKey
@@ -545,7 +545,7 @@ class packages(object):
     
     class PackageVersionJob(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         modified_by = Fields.ForeignKey
         package_version_job_id = Fields.AutoField
@@ -558,7 +558,7 @@ class packages(object):
     
     class PackageVersionUrl(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         modified_by = Fields.ForeignKey
         url = Fields.TextField
@@ -572,7 +572,7 @@ class packages(object):
     
     class PackageSource(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         modified_by = Fields.ForeignKey
         built = Fields.BooleanField
@@ -584,7 +584,7 @@ class packages(object):
     
     class PackageSourceAction(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         descriptor = Fields.TextField
         enabled = Fields.BooleanField
@@ -596,7 +596,7 @@ class packages(object):
     
     class PackageSourceJob(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         modified_by = Fields.ForeignKey
         package_source_job_id = Fields.AutoField
@@ -609,7 +609,7 @@ class packages(object):
     
     class PackageBuild(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         modified_by = Fields.ForeignKey
         created_by = Fields.ForeignKey
@@ -619,7 +619,7 @@ class packages(object):
     
     class PackageBuildAction(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         visible = Fields.BooleanField
         enabled = Fields.BooleanField
@@ -631,7 +631,7 @@ class packages(object):
     
     class PackageBuildJob(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         modified_by = Fields.ForeignKey
         job_data = Fields.TextField
@@ -644,7 +644,7 @@ class packages(object):
     
     class PackageActionType(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
-        __metaclass__ = GetSetAttrMeta
+        __metaclass__ = GetSetXMLAttrMeta
         modified_date = Fields.DateTimeUtcField
         description = Fields.TextField
         package_action_type_id = Fields.AutoField

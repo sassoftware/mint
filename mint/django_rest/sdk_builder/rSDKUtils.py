@@ -31,7 +31,7 @@ def toSource(wrapped_cls):
         return ''
     
     STUB = 'class ${cls_name}(xobj.XObj, XObjMixin):\n    """XObj Class Stub"""\n'
-    ATTRS = '    __metaclass__ = GetSetAttrMeta\n'
+    ATTRS = '    __metaclass__ = GetSetXMLAttrMeta\n'
     FIELDS = '    ${field_name} = Fields.${field_value}\n'
     
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
