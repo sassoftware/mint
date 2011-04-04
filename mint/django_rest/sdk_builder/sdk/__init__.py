@@ -68,22 +68,22 @@ def connect(base_url, auth=None):
         
         def GET(self, relative_url):
             url = self._relativeToAbsolute(relative_url)
-            r, c = h.request(url, 'GET')
+            r, c = self.h.request(url, 'GET')
             return c
             
         def POST(self, relative_url, obj):
             url = self._relativeToAbsolute(relative_url)
-            r, c = h.request(url, 'POST', headers=Client.HEADERS, body=obj.toxml())
+            r, c = self.h.request(url, 'POST', headers=Client.HEADERS, body=obj.toxml())
             return c        
         
         def PUT(self, relative_url, obj):
             url = self._relativeToAbsolute(relative_url)
-            r, c = h.request(url, 'PUT', headers=Client.HEADERS, body=obj.toxml())
+            r, c = self.h.request(url, 'PUT', headers=Client.HEADERS, body=obj.toxml())
             return c
             
         def DELETE(self, relative_url):
             url = self._relativeToAbsolute(relative_url)
-            r, c = h.request(url, 'DELETE')
+            r, c = self.h.request(url, 'DELETE')
             return None
             
         def _relativeToAbsolute(self, relative_url):
