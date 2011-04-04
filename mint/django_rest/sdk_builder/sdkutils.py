@@ -1,4 +1,3 @@
-#pyflakes=ignore
 #
 # Copyright (c) 2011 rPath, Inc.
 #
@@ -15,6 +14,9 @@
 
 import inspect
 import string
+from mint.django_rest.rbuilder.inventory import models
+from xobj import xobj
+from mint.django_rest.sdk_builder.sdk import Fields
 
 def parseName(name):
     """

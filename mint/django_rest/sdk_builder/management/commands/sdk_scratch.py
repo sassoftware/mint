@@ -1,4 +1,3 @@
-#pyflakes=ignore
 #
 # Copyright (c) 2011 rPath, Inc.
 #
@@ -13,16 +12,9 @@
 # full details.
 #
 
-# for debugging purposes, only use mint.django_rest.rbuilder.inventory.models
-# at first
-from mint.django_rest.rbuilder.inventory import models
-
 from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import sdk
-from mint.django_rest.sdk_builder import sdkutils
-import inspect
 from xobj import xobj
-import os
 
 ###### Sample Crap For Testing Purposes ######
     
@@ -54,32 +46,32 @@ CXML = \
 """.strip()
 
 
-class Url(xobj.XObj, XObjMixin):
+class Url(xobj.XObj, sdk.XObjMixin):
     __metaclass__ = sdk.GetSetXMLAttrMeta
 
     tags = sdk.Fields.TextField
 
-class Catalog(xobj.XObj, XObjMixin):
+class Catalog(xobj.XObj, sdk.XObjMixin):
     __metaclass__ = sdk.GetSetXMLAttrMeta
 
     cid = sdk.Fields.IntegerField
     url = [Url]
 
 
-class Data(xobj.XObj, XObjMixin):
+class Data(xobj.XObj, sdk.XObjMixin):
     __metaclass__ = sdk.GetSetXMLAttrMeta
     
     pid = sdk.Fields.IntegerField
     
 
-class Package(xobj.XObj, XObjMixin):
+class Package(xobj.XObj, sdk.XObjMixin):
     __metaclass__ = sdk.GetSetXMLAttrMeta
     
     pid = sdk.Fields.URLField
     name = sdk.Fields.CharField
     description = sdk.Fields.TextField
 
-class Packages(xobj.XObj, XObjMixin):
+class Packages(xobj.XObj, sdk.XObjMixin):
     __metaclass__ = sdk.GetSetXMLAttrMeta
     
     package = [Package]
@@ -103,8 +95,6 @@ class Command(BaseCommand):
         
         import pdb; pdb.set_trace()
         print doc.packages.data['pid']
-        
-        import pdb; pdb.set_trace()
         
         # assignment fails but *should* fail (throws assertion error)
         # doc.packages.data.pid = 1
@@ -150,7 +140,7 @@ class Command(BaseCommand):
         print '\n'
         
         doc2 = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
-        
+        print doc2.toxml()
         import pdb; pdb.set_trace()
         pass
         ############## END ##################

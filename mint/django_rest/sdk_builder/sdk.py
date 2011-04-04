@@ -1,4 +1,3 @@
-#pyflakes=ignore
 #
 # Copyright (c) 2011 rPath, Inc.
 #
@@ -76,7 +75,7 @@ class GetSetXMLAttrMeta(type):
         # because __getitem__ and __setitem__ will be overwritten
         # by the methods inherited from bases at initialization
         # time.
-        super(GetSetItemMeta, klass).__init__(name, bases, attrs)
+        super(GetSetXMLAttrMeta, klass).__init__(name, bases, attrs)
 
         def __getitem__(self, k):
             if isinstance(k, str):
