@@ -37,9 +37,9 @@ class Client(client.RepeaterClient):
             tmpf = tempfile.NamedTemporaryFile(dir=destDir, prefix=prefix)
             path = tmpf.name
             tmpf.close()
-            urlList.append(rmakemodels.DownloadFile(url=url, path=path))
+            urlList.append(models.DownloadFile(url=url, path=path))
 
-        params = rmakemodels.DownloadFilesParams()
+        params = models.DownloadFilesParams()
         params.urlList = urls
         params.resultsLocation = self.ResultsLocation(path=resultsLocation)
 
@@ -83,7 +83,7 @@ class Client(client.RepeaterClient):
         mincfg.createConaryConfig().writeToFile("/tmp/conarycfg")
 
         # TODO: again, not sure we can require stageLabel here
-        sourceData = rmakemodels.SourceData(name='%s:source' % name,
+        sourceData = models.SourceData(name='%s:source' % name,
             label=label, version=version,
             productDefinitionLocation=pdl,
             factory=factory,
