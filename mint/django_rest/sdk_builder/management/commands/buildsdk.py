@@ -14,9 +14,10 @@
 
 from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDKUtils
-import os
 from django.db.models.loading import cache
 import string
+import os
+import inspect
 
 EXCLUDED_APPS = [
     'auth',
@@ -47,15 +48,29 @@ class Command(BaseCommand):
             f.write('from sdk import GetSetXMLAttrMeta\n')
             f.write('from xobj import xobj\n')
             f.write('\n\n')
-            for app_label, models in self.findAllModels().items():
+            
+            # FIXME: below should work except for the problem with
+            # retrieving the list_fields attribute off the model
+            # therefore we have to hack it to use self.findAllModules
+            # for app_label, models in self.findAllModels().items():
+            #     if app_label in EXCLUDED_APPS:
+            #         continue
+            #     src = self.buildSDKModels(app_label, models)
+            #     if src:
+            #         f.writelines(src.strip())
+            #         f.write('\n\n')
+            
+            # HACK:
+            for app_label, module in self.findAllModules().items():
                 if app_label in EXCLUDED_APPS:
                     continue
-                src = self.buildSDKModels(app_label, models)
+                src = self.buildSDKModels(app_label, module)
                 if src:
                     f.writelines(src.strip())
                     f.write('\n\n')
-    
-    def buildSDKModels(self, app_label, models):
+
+    def buildSDKModels(self, app_label, module):
+        models = [m for m in module.__dict__.values() if inspect.isclass(m)]
         wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
         cls_header = 'class ${app_label}(object):\n    """${app_label}"""\n\n'
         src = string.Template(cls_header).substitute({'app_label':app_label})
@@ -66,10 +81,48 @@ class Command(BaseCommand):
                 lines.append(line)
             src += ''.join(lines)
         return src
+
+    # def buildSDKModels(self, app_label, models):
+    #     # below works for commented out method self.findAllModels
+    #     wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
+    #     cls_header = 'class ${app_label}(object):\n    """${app_label}"""\n\n'
+    #     src = string.Template(cls_header).substitute({'app_label':app_label})
+    #     for w in wrapped:
+    #         lines = []
+    #         for line in rSDKUtils.toSource(w).split('\n'):
+    #             line = ' ' * 4 + line + '\n'
+    #             lines.append(line)
+    #         src += ''.join(lines)
+    #     return src
+    
+    # FIXME: below should work but cache.get_models(app)
+    # causes the returned models to lack the list_fields
+    # attribute, therefore use findAllModules until this
+    # is fixed
+    # def findAllModels(self):
+    #     d = {}
+    #     for app in cache.get_apps():
+    #         app_label = app.__name__.split('.')[-2]
+    #         d[app_label] = cache.get_models(app)
+    #     return d
+    
+    # HACK: see above
+    def findAllModules(self):
+        import mint.django_rest.rbuilder.changelog.models
+        import mint.django_rest.rbuilder.inventory.models
+        import mint.django_rest.rbuilder.metrics.models
+        import mint.django_rest.rbuilder.packages.models
+        import mint.django_rest.rbuilder.querysets.models
+        import mint.django_rest.rbuilder.reporting.models
+        import mint.django_rest.rbuilder.models
         
-    def findAllModels(self):
-        d = {}
-        for app in cache.get_apps():
-            app_label = app.__name__.split('.')[-2]
-            d[app_label] = cache.get_models(app)
+        d = {'changelog':mint.django_rest.rbuilder.changelog.models,
+             'inventory':mint.django_rest.rbuilder.inventory.models,
+             'metrics':mint.django_rest.rbuilder.metrics.models,
+             'packages':mint.django_rest.rbuilder.packages.models,
+             'querysets':mint.django_rest.rbuilder.querysets.models,
+             'reporting':mint.django_rest.rbuilder.reporting.models,
+             'rbuilder':mint.django_rest.rbuilder.models,
+             }
+             
         return d
