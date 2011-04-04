@@ -29,6 +29,73 @@ EXCLUDED_APPS = [
     'sdk_builder',
     ]
 
+def wrapped2src(wrapped):
+    cls_header = 'class ${app_label}(object):\n    """${app_label}"""\n\n'
+    src = string.Template(cls_header).substitute({'app_label':app_label})
+    for w in wrapped:
+        lines = []
+        for line in rSDKUtils.toSource(w).split('\n'):
+            line = ' ' * 4 + line + '\n'
+            lines.append(line)
+        src += ''.join(lines)
+    return src
+
+
+# class Command(BaseCommand):
+#     help = "Generates python sdk"
+# 
+#     def handle(self, *args, **options):
+#         """
+#         Generates Python SDK for REST API
+#         """        
+#         # Get paths where modules will be written on the filesystem
+#         current_location = os.path.dirname(__file__)
+#         index = current_location.find('sdk_builder')
+#         models_path = os.path.join(
+#                         current_location[0:index], 'sdk_builder/sdk/Models.py')
+#         with open(models_path, 'w') as f:
+#             f.write('from sdk import Fields\n')
+#             f.write('from sdk import XObjMixin\n')
+#             f.write('from sdk import GetSetXMLAttrMeta\n')
+#             f.write('from xobj import xobj\n')
+#             f.write('\n\n')
+#             # First build class stubs then write them to the filesystem
+#             # HACK:
+#             for app_label, module in self.findAllModules().items():
+#                 if app_label in EXCLUDED_APPS:
+#                     continue
+#                 src = self.buildSDKModels(app_label, module)
+#                 if src:
+#                     f.writelines(src.strip())
+#                     f.write('\n\n')
+# 
+#     def buildSDKModels(self, app_label, module):
+#         models = [m for m in module.__dict__.values() if inspect.isclass(m)]
+#         wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
+#         return wrapped2src(wrapped)
+#     
+#     # HACK:
+#     def findAllModules(self):
+#         import mint.django_rest.rbuilder.changelog.models
+#         import mint.django_rest.rbuilder.inventory.models
+#         import mint.django_rest.rbuilder.metrics.models
+#         import mint.django_rest.rbuilder.packages.models
+#         import mint.django_rest.rbuilder.querysets.models
+#         import mint.django_rest.rbuilder.reporting.models
+#         import mint.django_rest.rbuilder.models
+#         
+#         d = {'changelog':mint.django_rest.rbuilder.changelog.models,
+#              'inventory':mint.django_rest.rbuilder.inventory.models,
+#              'metrics':mint.django_rest.rbuilder.metrics.models,
+#              'packages':mint.django_rest.rbuilder.packages.models,
+#              'querysets':mint.django_rest.rbuilder.querysets.models,
+#              'reporting':mint.django_rest.rbuilder.reporting.models,
+#              'rbuilder':mint.django_rest.rbuilder.models,
+#              }
+#              
+#         return d
+        
+########## OLD WAY, BEST WAY, isn't importing list_fields on models though ##########
 class Command(BaseCommand):
     help = "Generates python sdk"
 
@@ -51,78 +118,23 @@ class Command(BaseCommand):
             
             # FIXME: below should work except for the problem with
             # retrieving the list_fields attribute off the model
-            # therefore we have to hack it to use self.findAllModules
-            # for app_label, models in self.findAllModels().items():
-            #     if app_label in EXCLUDED_APPS:
-            #         continue
-            #     src = self.buildSDKModels(app_label, models)
-            #     if src:
-            #         f.writelines(src.strip())
-            #         f.write('\n\n')
-            
-            # HACK:
-            for app_label, module in self.findAllModules().items():
+            for app_label, models in self.findAllModels().items():
                 if app_label in EXCLUDED_APPS:
                     continue
-                src = self.buildSDKModels(app_label, module)
+                src = self.buildSDKModels(app_label, models)
                 if src:
                     f.writelines(src.strip())
                     f.write('\n\n')
 
-    def buildSDKModels(self, app_label, module):
-        models = [m for m in module.__dict__.values() if inspect.isclass(m)]
+    def buildSDKModels(self, app_label, models):
         wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
-        cls_header = 'class ${app_label}(object):\n    """${app_label}"""\n\n'
-        src = string.Template(cls_header).substitute({'app_label':app_label})
-        for w in wrapped:
-            lines = []
-            for line in rSDKUtils.toSource(w).split('\n'):
-                line = ' ' * 4 + line + '\n'
-                lines.append(line)
-            src += ''.join(lines)
-        return src
-
-    # def buildSDKModels(self, app_label, models):
-    #     # below works for commented out method self.findAllModels
-    #     wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
-    #     cls_header = 'class ${app_label}(object):\n    """${app_label}"""\n\n'
-    #     src = string.Template(cls_header).substitute({'app_label':app_label})
-    #     for w in wrapped:
-    #         lines = []
-    #         for line in rSDKUtils.toSource(w).split('\n'):
-    #             line = ' ' * 4 + line + '\n'
-    #             lines.append(line)
-    #         src += ''.join(lines)
-    #     return src
+        return wrapped2src(wrapped)
     
     # FIXME: below should work but cache.get_models(app)
     # causes the returned models to lack the list_fields
-    # attribute, therefore use findAllModules until this
-    # is fixed
-    # def findAllModels(self):
-    #     d = {}
-    #     for app in cache.get_apps():
-    #         app_label = app.__name__.split('.')[-2]
-    #         d[app_label] = cache.get_models(app)
-    #     return d
-    
-    # HACK: see above
-    def findAllModules(self):
-        import mint.django_rest.rbuilder.changelog.models
-        import mint.django_rest.rbuilder.inventory.models
-        import mint.django_rest.rbuilder.metrics.models
-        import mint.django_rest.rbuilder.packages.models
-        import mint.django_rest.rbuilder.querysets.models
-        import mint.django_rest.rbuilder.reporting.models
-        import mint.django_rest.rbuilder.models
-        
-        d = {'changelog':mint.django_rest.rbuilder.changelog.models,
-             'inventory':mint.django_rest.rbuilder.inventory.models,
-             'metrics':mint.django_rest.rbuilder.metrics.models,
-             'packages':mint.django_rest.rbuilder.packages.models,
-             'querysets':mint.django_rest.rbuilder.querysets.models,
-             'reporting':mint.django_rest.rbuilder.reporting.models,
-             'rbuilder':mint.django_rest.rbuilder.models,
-             }
-             
+    def findAllModels(self):
+        d = {}
+        for app in cache.get_apps():
+            app_label = app.__name__.split('.')[-2]
+            d[app_label] = cache.get_models(app)
         return d
