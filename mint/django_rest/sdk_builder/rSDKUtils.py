@@ -23,7 +23,7 @@ def parseName(name):
     """
     return ''.join([s.capitalize() for s in name.split('_')])
 
-def toSource(wrapped_cls):
+def toSource(wrapped_cls, app_label):
     """
     Creates python source code for xobj class stubs
     """
@@ -44,7 +44,7 @@ def toSource(wrapped_cls):
         if inspect.ismethod(v):
             continue
         if isinstance(v, list):
-            name = '[%s]' % v[0].__name__
+            name = '[%s.%s]' % (app_label, v[0].__name__)
         else:
             # FIXME: as sdk grows, more non-field_type attrs
             # (which also implies that they are missing __name__)
@@ -76,7 +76,7 @@ class DjangoModelWrapper(object):
         if hasattr(django_model, 'list_fields'):
             dep_names = [parseName(m) for m in django_model.list_fields]
             for name in dep_names:
-                model = getattr(models, name)
+                model = getattr(module, name)
                 # Recursive call to DjangoModelWrapper
                 fields_dict[name] = [DjangoModelWrapper(model, module)]
         return type(django_model.__name__, (xobj.XObj,), fields_dict)

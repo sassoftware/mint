@@ -32,7 +32,7 @@ def wrapped2src(wrapped, app_label):
     src = 'class %(label)s(object):\n    """%(label)s"""\n\n' % {'label':app_label}
     for w in wrapped:
         lines = []
-        for line in rSDKUtils.toSource(w).split('\n'):
+        for line in rSDKUtils.toSource(w, app_label).split('\n'):
             line = ' ' * 4 + line + '\n'
             lines.append(line)
         src += ''.join(lines)

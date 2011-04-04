@@ -20,7 +20,7 @@ class changelog(object):
         count = Fields.IntegerField
         next_page = Fields.TextField
         num_pages = Fields.IntegerField
-        changelog = [ChangeLog]
+        changelog = [changelog.ChangeLog]
         previous_page = Fields.TextField
         full_collection = Fields.TextField
         end_index = Fields.IntegerField
@@ -323,7 +323,7 @@ class inventory(object):
     class SystemJobs(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        job = [Job]
+        job = [inventory.Job]
     
     class ConfigurationDescriptor(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -381,7 +381,7 @@ class inventory(object):
     class SystemTypes(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        systemtype = [SystemType]
+        systemtype = [inventory.SystemType]
     
     class Version(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -396,7 +396,7 @@ class inventory(object):
     class SystemEvents(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        systemevent = [SystemEvent]
+        systemevent = [inventory.SystemEvent]
     
     class Inventory(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -424,7 +424,7 @@ class inventory(object):
     class EventTypes(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        eventtype = [EventType]
+        eventtype = [inventory.EventType]
     
     class Pk(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -452,17 +452,17 @@ class inventory(object):
     class Zones(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        zone = [Zone]
+        zone = [inventory.Zone]
     
     class Jobs(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        job = [Job]
+        job = [inventory.Job]
     
     class InstalledSoftware(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        trove = [Trove]
+        trove = [inventory.Trove]
     
     class EventType(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -573,7 +573,7 @@ class inventory(object):
     class SystemsLog(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        systemlogentry = [SystemLogEntry]
+        systemlogentry = [inventory.SystemLogEntry]
     
     class JobState(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -584,7 +584,7 @@ class inventory(object):
     class ManagementInterfaces(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        managementinterface = [ManagementInterface]
+        managementinterface = [inventory.ManagementInterface]
     
     class SystemType(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -599,7 +599,7 @@ class inventory(object):
     class SystemStates(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        systemstate = [SystemState]
+        systemstate = [inventory.SystemState]
     
     class SystemTargetCredentials(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -618,7 +618,7 @@ class inventory(object):
     class ManagementNodes(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        managementnode = [ManagementNode]
+        managementnode = [inventory.ManagementNode]
     
     class SystemLogEntry(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -632,12 +632,12 @@ class inventory(object):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
         systems = Fields.HrefField
-        network = [Network]
+        network = [inventory.Network]
     
     class JobStates(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        jobstate = [JobState]
+        jobstate = [inventory.JobState]
     
     class Systems(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -648,7 +648,7 @@ class inventory(object):
         previous_page = Fields.TextField
         full_collection = Fields.TextField
         end_index = Fields.IntegerField
-        system = [System]
+        system = [inventory.System]
         limit = Fields.TextField
         order_by = Fields.TextField
         per_page = Fields.IntegerField
@@ -729,7 +729,7 @@ class querysets(object):
         next_page = Fields.TextField
         num_pages = Fields.IntegerField
         previous_page = Fields.TextField
-        queryset = [QuerySet]
+        queryset = [querysets.QuerySet]
         full_collection = Fields.TextField
         end_index = Fields.IntegerField
         limit = Fields.TextField
@@ -753,14 +753,14 @@ class packages(object):
         limit = Fields.TextField
         order_by = Fields.TextField
         per_page = Fields.IntegerField
-        packageversion = [PackageVersion]
+        packageversion = [packages.PackageVersion]
         filter_by = Fields.TextField
         start_index = Fields.IntegerField
     
     class PackageBuildJobs(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        packagebuildjob = [PackageBuildJob]
+        packagebuildjob = [packages.PackageBuildJob]
     
     class PackageBuilds(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -775,7 +775,7 @@ class packages(object):
         order_by = Fields.TextField
         per_page = Fields.IntegerField
         filter_by = Fields.TextField
-        packagebuild = [PackageBuild]
+        packagebuild = [packages.PackageBuild]
         start_index = Fields.IntegerField
     
     class JobData(xobj.XObj, XObjMixin):
@@ -791,7 +791,7 @@ class packages(object):
         filter_by = Fields.TextField
         previous_page = Fields.TextField
         full_collection = Fields.TextField
-        packageactiontype = [PackageActionType]
+        packageactiontype = [packages.PackageActionType]
         limit = Fields.TextField
         order_by = Fields.TextField
         per_page = Fields.IntegerField
@@ -834,7 +834,7 @@ class packages(object):
         limit = Fields.TextField
         order_by = Fields.TextField
         per_page = Fields.IntegerField
-        packagesource = [PackageSource]
+        packagesource = [packages.PackageSource]
         filter_by = Fields.TextField
         start_index = Fields.IntegerField
     
@@ -857,7 +857,7 @@ class packages(object):
         count = Fields.IntegerField
         next_page = Fields.TextField
         num_pages = Fields.IntegerField
-        package = [Package]
+        package = [packages.Package]
         previous_page = Fields.TextField
         full_collection = Fields.TextField
         end_index = Fields.IntegerField
@@ -882,7 +882,7 @@ class packages(object):
         count = Fields.IntegerField
         next_page = Fields.TextField
         num_pages = Fields.IntegerField
-        packageversionurl = [PackageVersionUrl]
+        packageversionurl = [packages.PackageVersionUrl]
         previous_page = Fields.TextField
         full_collection = Fields.TextField
         end_index = Fields.IntegerField
@@ -927,7 +927,7 @@ class packages(object):
         limit = Fields.TextField
         order_by = Fields.TextField
         per_page = Fields.IntegerField
-        packageversion = [PackageVersion]
+        packageversion = [packages.PackageVersion]
         filter_by = Fields.TextField
         start_index = Fields.IntegerField
     
@@ -959,7 +959,7 @@ class packages(object):
     class PackageSourceJobs(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        packagesourcejob = [PackageSourceJob]
+        packagesourcejob = [packages.PackageSourceJob]
     
     class PackageVersion(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
@@ -1003,7 +1003,7 @@ class packages(object):
     class PackageVersionJobs(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
         __metaclass__ = GetSetXMLAttrMeta
-        packageversionjob = [PackageVersionJob]
+        packageversionjob = [packages.PackageVersionJob]
     
     class PackageSourceJob(xobj.XObj, XObjMixin):
         """XObj Class Stub"""
