@@ -249,54 +249,23 @@ class PackageVersionManager(basemanager.BaseManager):
             return self._dispatchAnalyzeJob(package_version_job)
 
     def _dispatchCommitJob(self, package_version_job):
+        # TODO: get these from the descriptor data
         label = 'murftest.eng.rpath.com@rpath:murftest-1-devel'
+        factory = 'capsule-rpm-pc=/centos.rpath.com@rpath:centos-5-common/1.0-1-1'
+
         packageName = str(package_version_job.package_version.package.name)
         packageVersion = str(package_version_job.package_version.name)
 
-        cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
-        cfg.configLine('name Automatic Commit from rBuilder')
-        cfg.configLine('contact slagle@rpath.com')
-        cfg.configLine('buildLabel %s' % label)
-        cfg.configLine('repositoryMap murftest.eng.rpath.com '
-            'https://rbalast.eng.rpath.com/repos/murftest/')
-        cfg.configLine('user * admin tclmeSRS')
-
-        pdl = rmakemodels.ProductDefinitionLocation(
-            hostname='murftest.eng.rpath.com',
-            shortname='murftest', namespace='rpath', version='1')
-
-        recipeContents = """
-        class OverrideRecipe(FactoryRecipeClass):
-            def preProcess(r):
-                '''This function is run at the beginning of setup'''
-            def postProcess(r):",
-                '''This function is run at the end of setup'''
-        """
-
-        mincfg = rmakemodels.MinimalConaryConfiguration.fromConaryConfig(cfg)
-        mincfg.createConaryConfig().writeToFile("/tmp/conarycfg")
-        sourceData = rmakemodels.SourceData(name='%s:source' % packageName,
-            label=label, version=packageVersion,
-            productDefinitionLocation=pdl,
-            factory='capsule-rpm-pc=/centos.rpath.com@rpath:centos-5-common/1.0-1-1',
-            stageLabel='devel', commitMessage="Committing\n",
-        )
-        sourceData.fileList = rmakemodels.ImmutableList([
-            rmakemodels.File(name="%s.recipe" % packageName, contents = recipeContents)
-        ])
-
-        repeaterClient = client.Client()
-        params = rmakemodels.PackageSourceCommitParams(
-            mincfg=mincfg, sourceData=sourceData)
         packageSources = package_version_job.package_version.package_sources.model()
-        path = packageSources.get_absolute_url(
+        resultsLocation = packageSources.get_absolute_url(
             parents=[package_version_job.package_version], 
             view_name="PackageSources")
-        resultsLocation = repeaterClient.ResultsLocation(
-            path=path)
-        params.resultsLocation = resultsLocation
 
-        job_uuid, job = repeaterClient.pc_packageSourceCommit(params)
+        repeaterClient = client.Client()
+
+        job_uuid, job = repeaterClient.pc_packageSourceCommit(
+            packageName, packageVersion, label, factory, self.cfg.authUser,
+            self.cfg.authPass, self.user.email, resultsLocation)
         
         inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
             job_state=inventorymodels.JobState.objects.get(
@@ -307,29 +276,15 @@ class PackageVersionManager(basemanager.BaseManager):
 
         return inventoryJob
 
+
+
     def _dispatchDownloadJob(self, package_version_job):
-        # XXX we should use the config for this
-        destDir = "/srv/rbuilder/package-creator-downloads"
-        prefix = "pc-file-download-"
-        urls = []
-        for url in package_version_job.package_version.package_version_urls.all():
-            # Create a temporary file just to get a unique path. We'll close
-            # it immediately after that. The file will disappear, which is
-            # good, because rmake runs as user rmake while we're running as
-            # apache.
-            tmpf = tempfile.NamedTemporaryFile(dir=destDir, prefix=prefix)
-            path = tmpf.name
-            tmpf.close()
-            urls.append(rmakemodels.DownloadFile(url=str(url.url), path=path))
+        urls = [u.url for u in 
+            package_version_job.package_version.package_version_urls.all()]
+        resultsLocation = package_version_job.package_version.get_absolute_url() + '/urls'
 
         repeaterClient = client.Client()
-        resultsLocation = repeaterClient.ResultsLocation(
-            path=str(package_version_job.package_version.get_absolute_url()) + \
-            '/urls')
-        params = rmakemodels.DownloadFilesParams()
-        params.urlList = urls
-        params.resultsLocation = resultsLocation
-        job_uuid, job = repeaterClient.pc_downloadFiles(params)
+        job_uuid, job = repeaterClient.pc_downloadFiles(urls, resultsLocation)
 
         inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
             job_state=inventorymodels.JobState.objects.get(
@@ -339,7 +294,6 @@ class PackageVersionManager(basemanager.BaseManager):
         package_version_job.save()
 
         return inventoryJob
-
 
     def getPackageActionTypeByName(self, actionName):
         return models.PackageActionType.objects.get(name=actionName)
