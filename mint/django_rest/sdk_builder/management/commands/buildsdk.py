@@ -15,7 +15,6 @@
 from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDKUtils
 from django.db.models.loading import cache
-import string
 import os
 import inspect
 
@@ -29,9 +28,8 @@ EXCLUDED_APPS = [
     'sdk_builder',
     ]
 
-def wrapped2src(wrapped):
-    cls_header = 'class ${app_label}(object):\n    """${app_label}"""\n\n'
-    src = string.Template(cls_header).substitute({'app_label':app_label})
+def wrapped2src(wrapped, app_label):
+    src = 'class %(label)s(object):\n    """%(label)s"""\n\n' % {'label':app_label}
     for w in wrapped:
         lines = []
         for line in rSDKUtils.toSource(w).split('\n'):
@@ -40,7 +38,7 @@ def wrapped2src(wrapped):
         src += ''.join(lines)
     return src
 
-
+########## MAJOR HACK, not working yet -- see below for optimal way ##########
 # class Command(BaseCommand):
 #     help = "Generates python sdk"
 # 
@@ -72,7 +70,7 @@ def wrapped2src(wrapped):
 #     def buildSDKModels(self, app_label, module):
 #         models = [m for m in module.__dict__.values() if inspect.isclass(m)]
 #         wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
-#         return wrapped2src(wrapped)
+#         return wrapped2src(wrapped, app_label)
 #     
 #     # HACK:
 #     def findAllModules(self):
@@ -95,7 +93,7 @@ def wrapped2src(wrapped):
 #              
 #         return d
         
-########## OLD WAY, BEST WAY, isn't importing list_fields on models though ##########
+########## OLD WAY, BEST WAY, however isn't importing list_fields on models ##########
 class Command(BaseCommand):
     help = "Generates python sdk"
 
@@ -128,7 +126,7 @@ class Command(BaseCommand):
 
     def buildSDKModels(self, app_label, models):
         wrapped = [rSDKUtils.DjangoModelWrapper(m, models) for m in models]
-        return wrapped2src(wrapped)
+        return wrapped2src(wrapped, app_label)
     
     # FIXME: below should work but cache.get_models(app)
     # causes the returned models to lack the list_fields
