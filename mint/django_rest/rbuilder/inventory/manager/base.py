@@ -24,4 +24,3 @@ class BaseManager(object):
     def user(self):
         return self.mgr.user
 
-
