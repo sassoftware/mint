@@ -170,7 +170,7 @@ class PlatformLoadStatusStub(Model):
         return ('platforms.load', self.platformId, self.jobId)
 
 class PlatformLoad(Model):
-    uri = fields.CharField()
+    loadUri = fields.CharField()
     jobId = fields.CharField()
     platformId = fields.IntegerField()
     job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
