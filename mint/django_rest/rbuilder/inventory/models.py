@@ -54,6 +54,9 @@ class Pk(object):
     def __init__(self, pk):
         self.pk = pk
 
+    def get_url_key(self, *args, **kwargs):
+        return self.pk
+
 class Inventory(modellib.XObjModel):
 
     #FIXME Inventory needs class attribute XSL for generatecomments to do
@@ -207,8 +210,7 @@ class Credentials(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
     
 class Configuration(modellib.XObjIdModel):
@@ -228,8 +230,7 @@ class Configuration(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
     
 class ConfigurationDescriptor(modellib.XObjIdModel):
@@ -246,8 +247,7 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
 
 class Zone(modellib.XObjIdModel):
@@ -619,18 +619,11 @@ class System(modellib.XObjIdModel):
         return bool([j for j in jobs \
             if j.job_state_id == self.runningJobState.job_state_id])
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
         # the jobs m2m relationship as hidden, or else the bulk load fails
-        if values is None:
-            jobs = self.jobs.all()
-        else:
-            # We're popping the jobs data structure from values because its
-            # only purpose is to prevent repeated database hits when we bulk
-            # load
-            jobs = [ x[0] for x in values.pop('jobs', []) ]
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+        jobs = self.jobs.all()
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
         xobj_model.has_running_jobs = self.areJobsRunning(jobs)
 
@@ -676,8 +669,7 @@ class System(modellib.XObjIdModel):
 
             def __init__(self, request, system):
                 self.view_name = 'SystemJobs'
-                self.id = self.get_absolute_url(request, parents=[system],
-                    model=xobj_model)
+                self.id = self.get_absolute_url(request, parents=[system])
                 self.view_name = 'SystemJobStateJobs'
                 parents = [system, Cache.get(JobState, name=JobState.QUEUED)]
                 self.queued_jobs = modellib.XObjHrefModel(
@@ -755,10 +747,10 @@ class InstalledSoftware(modellib.XObjIdModel):
     list_fields = ['trove']
     objects = modellib.InstalledSoftwareManager()
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents, *args, **kwargs):
         if parents:
             return modellib.XObjIdModel.get_absolute_url(self, request,
-                parents=parents, model=model)
+                parents, *args, **kwargs)
         return request.build_absolute_uri(request.get_full_path())
 
 class EventType(modellib.XObjIdModel):
@@ -915,7 +907,7 @@ class Jobs(modellib.XObjIdModel):
     list_fields = ['job']
     job = []
     
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, *args, **kwargs):
         """
         This implementation of get_absolute_url is a bit different since the
         jobs collection can be serialized on it's own from 2 different places
@@ -933,6 +925,10 @@ class Job(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
+    _xobj_hidden_accessors = set([
+        "package_version_jobs",
+        "package_source_jobs",
+        "package_builds_jobs"])
 
     objects = modellib.JobManager()
 
@@ -944,7 +940,7 @@ class Job(modellib.XObjIdModel):
     status_text = D(models.TextField(default='Initializing'), "the message associated with the current status")
     status_detail = D(XObjHidden(models.TextField(null=True)), "documentation missing")
     event_type = D(APIReadOnly(modellib.InlinedForeignKey(EventType,
-        visible='name', related_name="jobs")), "documentation missing")
+        visible='name', related_name="jobs", null=True)), "documentation missing")
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was created (UTC)")
     time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was updated (UTC)")
     job_type = D(modellib.SyntheticField(), "the job type")
@@ -985,20 +981,21 @@ class Job(modellib.XObjIdModel):
                     self.job_state = failedState
             self.save()
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
             if isinstance(parents[0], JobState):
                 self.view_name = 'JobStateJobs'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents, *args, **kwargs)
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
-        xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
-            pk=self.event_type_id).name
-        xobj_model.job_description = modellib.Cache.get(
-            self.event_type.__class__, pk=self.event_type_id).description
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        self.setValuesFromRmake()
+        if self.event_type:
+            xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
+                pk=self.event_type_id).name
+            xobj_model.job_description = modellib.Cache.get(
+                self.event_type.__class__, pk=self.event_type_id).description
         xobj_model.event_type = None
         return xobj_model
 
@@ -1023,14 +1020,14 @@ class SystemEvent(modellib.XObjIdModel):
     def dispatchImmediately(self):
         return self.event_type.priority >= EventType.ON_DEMAND_BASE
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
             if isinstance(parents[0], EventType):
                 self.view_name = 'SystemEventsByType'
             elif isinstance(parents[0], System):
                 self.view_name = 'SystemsSystemEvent'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents, *args, **kwargs)
 
     def save(self, *args, **kw):
         if not self.priority:
@@ -1075,13 +1072,13 @@ class SystemLog(modellib.XObjIdModel):
     system_log_id = D(models.AutoField(primary_key=True), "the database ID for the system log")
     system = D(modellib.DeferredForeignKey(System, related_name='system_log'), "a entry point to the system this log is for")
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if not parents:
             parents = [self.system]
         if isinstance(parents[0], System):
             self.view_name = 'SystemLog'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents, *args, **kwargs)
 
 class SystemLogEntry(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
@@ -1129,16 +1126,13 @@ class Trove(modellib.XObjIdModel):
 
     load_fields = [ name, version, flavor ]
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, *args, **kwargs):
         """
         model is an optional xobj model to use when computing the URL.
         It helps avoid additional database queries.
         """
         # Build an id to crest
-        if model is None:
-            conaryVersion = self.version.conaryVersion
-        else:
-            conaryVersion = Version.getConaryVersion(model.version)
+        conaryVersion = self.version.conaryVersion
         label = conaryVersion.trailingLabel()
         revision = conaryVersion.trailingRevision()
         shortname = label.getHost().split('.')[0]
@@ -1213,8 +1207,8 @@ class Stage(modellib.XObjIdModel):
         else:
             return None
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
         return xobj_model
 
