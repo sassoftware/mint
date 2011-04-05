@@ -453,8 +453,9 @@ class System(modellib.XObjIdModel):
                 attributes = {'id':str},
                 elements = ['networks', ])
     """
-      networks - a collection of network resources exposed by the system
-      system_events - a link to the collection of system events currently active on this sytem
+    networks - a collection of network resources exposed by the system
+    system_events - a link to the collection of system events currently 
+    active on this sytem
     """
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
@@ -471,21 +472,28 @@ class System(modellib.XObjIdModel):
     # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
     launch_date = D(modellib.DateTimeUtcField(null=True),
-        "the date the system was deployed (only applies if system is on a virtual target)")
-    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, text_field="targetname"),
-        "the virtual target the system was deployed to (only applies if system is on a virtual target)")
+        "the date the system was deployed (only applies if system is on a "
+        "virtual target)")
+    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, 
+        text_field="targetname"),
+        "the virtual target the system was deployed to (only applies if "
+        "system is on a virtual target)")
     target_system_id = D(models.CharField(max_length=255,
             null=True),
-        "the system ID as reported by its target (only applies if system is on a virtual target)")
+        "the system ID as reported by its target (only applies if system is "
+        "on a virtual target)")
     target_system_name = D(APIReadOnly(models.CharField(max_length=255,
             null=True)),
-        "the system name as reported by its target (only applies if system is on a virtual target)")
+        "the system name as reported by its target (only applies if system "
+        "is on a virtual target)")
     target_system_description = D(APIReadOnly(models.CharField(max_length=1024,
             null=True)),
-        "the system description as reported by its target (only applies if system is on a virtual target)")
+        "the system description as reported by its target (only applies if "
+        "system is on a virtual target)")
     target_system_state = D(APIReadOnly(models.CharField(max_length=64,
             null=True)),
-        "the system state as reported by its target (only applies if system is on a virtual target)")
+        "the system state as reported by its target (only applies if system "
+        "is on a virtual target)")
     registration_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was registered in inventory (UTC)")
     generated_uuid = D(models.CharField(max_length=64, null=True),
@@ -493,15 +501,19 @@ class System(modellib.XObjIdModel):
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile")
     ssl_client_certificate = D(APIReadOnly(models.CharField(
-            max_length=8092, null=True)),
-        "an x509 certificate of an authorized client that can use the system's CIM broker")
+        max_length=8092, null=True)),
+        "an x509 certificate of an authorized client that can use the "
+        "system's CIM broker")
     ssl_client_key = D(XObjHidden(APIReadOnly(models.CharField(
         max_length=8092, null=True))),
-        "an x509 private key of an authorized client that can use the system's CIM broker")
+        "an x509 private key of an authorized client that can use the "
+        "system's CIM broker")
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
-    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True, text_field="username"),
-        "the user that deployed the system (only applies if system is on a virtual target)")
+    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True, 
+        text_field="username"),
+        "the user that deployed the system (only applies if system is on a "
+        "virtual target)")
     current_state = D(modellib.SerializedForeignKey(
             SystemState, null=True, related_name='systems'),
         "the current state of the system")
@@ -519,23 +531,28 @@ class System(modellib.XObjIdModel):
         "a UUID used to link system events with their returned responses")
     boot_uuid = D(modellib.SyntheticField(),
         "a UUID used for tracking systems registering at startup time")
-    management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
+    management_interface = D(modellib.ForeignKey(ManagementInterface, 
+        null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
     credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name')),
+    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, 
+        text_field='name')),
         "the appliance stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, null=True,
+    major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, 
+        null=True,
         text_field='name')),
         "the appliance major version of the system")
-    appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, null=True,
+    appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, 
+        null=True,
         text_field='shortname')),
         "the appliance of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
-        "the descriptor of available fields to set system configuration parameters")
+        "the descriptor of available fields to set system configuration "
+        "parameters")
 
     logged_fields = ['name', 'installed_software']
 
@@ -747,7 +764,7 @@ class InstalledSoftware(modellib.XObjIdModel):
     list_fields = ['trove']
     objects = modellib.InstalledSoftwareManager()
 
-    def get_absolute_url(self, request, parents, *args, **kwargs):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
             return modellib.XObjIdModel.get_absolute_url(self, request,
                 parents, *args, **kwargs)
