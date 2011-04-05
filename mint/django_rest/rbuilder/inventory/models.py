@@ -1212,6 +1212,8 @@ class Stage(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='stage')
     _xobj_hidden_accessors = set(['version_set',])
 
+    url_key = ["major_version", "name"]
+
     stage_id = models.AutoField(primary_key=True)
     major_version = models.ForeignKey(rbuildermodels.Versions, null=True)
     name = models.CharField(max_length=256)
@@ -1219,10 +1221,8 @@ class Stage(modellib.XObjIdModel):
 
     def get_absolute_url(self, request, *args, **kwargs):
         if self.major_version:
-            parents = [Pk(self.major_version.productId.shortname),
-                Pk(self.major_version.name), Pk(self.name)]
             return modellib.XObjIdModel.get_absolute_url(
-                self, request, parents)
+                self, request, *args, **kwargs)
         else:
             return None
 

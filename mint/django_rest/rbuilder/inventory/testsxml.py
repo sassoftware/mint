@@ -1865,7 +1865,7 @@ installed_software_response_xml = """
 
 system_version_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2">
+<system id="http://testserver/api/inventory/systems/3">
   %s
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <local_uuid>testsystemlocaluuid</local_uuid>
