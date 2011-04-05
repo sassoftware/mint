@@ -7,7 +7,7 @@
 
 from django import http
 
-from mint.django_rest.deco import return_xml, requires, access, ACCESS
+from mint.django_rest.deco import return_xml, requires, access
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.querysets import filterdescriptors
