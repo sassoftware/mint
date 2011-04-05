@@ -138,7 +138,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         self.client = Client()
         self.mgr = rbuildermanager.RbuilderManager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
-        rbuildermanager.repeatermgr.repeater_client = None
+        from mint.django_rest.rbuilder.inventory.manager import repeatermgr
+        repeatermgr.repeater_client = None
         views.BaseInventoryService._setMintAuth = lambda *args: None
 
         # Default to 10 items per page in the tests

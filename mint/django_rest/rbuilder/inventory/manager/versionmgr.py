@@ -23,6 +23,7 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.rest.errors import ProductNotFound
 
 log = logging.getLogger(__name__)
+exposed = basemanager.exposed
 
 class VersionManager(basemanager.BaseManager):
     """
@@ -30,7 +31,7 @@ class VersionManager(basemanager.BaseManager):
     """
     
     def __init__(self, *args, **kwargs):
-        base.BaseManager.__init__(self, *args, **kwargs)
+        basemanager.BaseManager.__init__(self, *args, **kwargs)
         self._cclient = None
 
     def get_software_versions(self, system):
@@ -59,7 +60,7 @@ class VersionManager(basemanager.BaseManager):
 
         return oldInstalled, newInstalled, toAdd
 
-    @base.exposed
+    @exposed
     def setInstalledSoftware(self, system, new_versions):
         oldInstalled, newInstalled, toAdd = \
             self._diffVersions(system, new_versions)
@@ -113,7 +114,7 @@ class VersionManager(basemanager.BaseManager):
         system.major_version = majorVersion
         system.appliance = project
 
-    @base.exposed
+    @exposed
     def updateInstalledSoftware(self, system_id, new_versions):
         system = models.System.objects.get(pk=system_id)
         troveSpecs = ["%s=%s[%s]" % x.getNVF()
@@ -170,7 +171,7 @@ class VersionManager(basemanager.BaseManager):
             trove=trove, trove_available_update=update_trove)
         available_update.save()
 
-    @base.exposed
+    @exposed
     def refreshCachedUpdates(self, name, label):
         troves = models.Trove.objects.filter(name=name, 
             version__label=label)
@@ -187,7 +188,7 @@ class VersionManager(basemanager.BaseManager):
         return (trove.last_available_update_refresh + one_day) < \
             datetime.datetime.now(tz.tzutc())
 
-    @base.exposed
+    @exposed
     def set_available_updates(self, trove, force=False):
 
         # Hack to make sure utc is set as the timezone on
@@ -288,7 +289,7 @@ class VersionManager(basemanager.BaseManager):
 
         return True
 
-    @base.exposed
+    @exposed
     def getConfigurationDescriptor(self, system):
         
         # remove this when you want it to work for real
