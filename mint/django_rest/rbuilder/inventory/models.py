@@ -1111,9 +1111,11 @@ class Trove(modellib.XObjIdModel):
         db_table = 'inventory_trove'
         unique_together = (('name', 'version', 'flavor'),)
 
+    _xobj = xobj.XObjMetadata(tag='trove')
+    _xobj_hidden_accessors = set(['package_sources',])
+    
     objects = modellib.TroveManager()
 
-    _xobj = xobj.XObjMetadata(tag='trove')
     trove_id = models.AutoField(primary_key=True)
     name = models.TextField()
     version = modellib.SerializedForeignKey('Version')
