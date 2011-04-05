@@ -8,11 +8,10 @@ import weakref
 
 from mint.django_rest.rbuilder.manager import basemanager
 
-from mint.django_rest.rbuilder.inventory.manager import systemmgr
-from mint.django_rest.rbuilder.inventory.manager import versionmgr
-from mint.django_rest.rbuilder.inventory.manager import repeatermgr
-from mint.django_rest.rbuilder.inventory.manager import jobmgr
-
+from mint.django_rest.rbuilder.inventory.manager.systemmgr import SystemManager
+from mint.django_rest.rbuilder.inventory.manager.versionmgr import VersionManager
+from mint.django_rest.rbuilder.inventory.manager.repeatermgr import RepeaterManager
+from mint.django_rest.rbuilder.inventory.manager.jobmgr import JobManager
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager, PackageVersionManager
@@ -20,10 +19,10 @@ from mint.django_rest.rbuilder.packages.manager import PackageManager, PackageVe
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
     MANAGERS = {
-        'sysMgr' : systemmgr.SystemManager,
-        'versionMgr' : versionmgr.VersionManager,
-        'repeaterMgr' : repeatermgr.RepeaterManager,
-        'jobMgr' : jobmgr.JobManager,
+        'sysMgr' : SystemManager,
+        'versionMgr' : VersionManager,
+        'repeaterMgr' : RepeaterManager,
+        'jobMgr' : JobManager,
         'querySetMgr' : QuerySetManager,
         'packageMgr' : PackageManager,
         'changeLogMgr' : ChangeLogManager,
