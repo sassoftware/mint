@@ -945,7 +945,7 @@ class Job(modellib.XObjIdModel):
     _xobj_hidden_accessors = set([
         "package_version_jobs",
         "package_source_jobs",
-        "package_builds_jobs"])
+        "package_build_jobs"])
 
     objects = modellib.JobManager()
 
