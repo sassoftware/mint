@@ -1166,7 +1166,7 @@ system_post_xml = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <system_tags/>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1351,7 +1351,7 @@ system_post_xml_dup = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
