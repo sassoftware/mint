@@ -282,7 +282,8 @@ class PackageSource(modellib.XObjIdModel):
         "the user that last modified the resource")
     built = D(models.BooleanField(default=False),
         "if the package source has been built")
-    trove = D(modellib.ForeignKey(inventorymodels.Trove, null=True),
+    trove = D(modellib.ForeignKey(inventorymodels.Trove, null=True,
+        related_name="package_sources"),
         "committed source trove")
 
 
