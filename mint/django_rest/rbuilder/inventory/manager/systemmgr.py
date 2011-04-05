@@ -25,13 +25,13 @@ from mint.lib import data as mintdata
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.inventory.manager import base
+from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
 
-class SystemManager(base.BaseManager):
+class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
     PollEvents = set([
         models.EventType.SYSTEM_POLL,

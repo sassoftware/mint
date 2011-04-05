@@ -18,14 +18,13 @@ from conary.errors import RepositoryError
 from django.core.exceptions import ObjectDoesNotExist
 
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.rest.errors import ProductNotFound
 
-import base
-
 log = logging.getLogger(__name__)
 
-class VersionManager(base.BaseManager):
+class VersionManager(basemanager.BaseManager):
     """
     Class encapsulating all logic around versions, available updates, etc.
     """
