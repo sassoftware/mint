@@ -621,7 +621,7 @@ management_node_post_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -729,7 +729,7 @@ management_node_zone_post_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
