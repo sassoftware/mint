@@ -2752,15 +2752,15 @@ class SystemVersionsTestCase(XMLTestCase):
         self.mock_set_available_updates_called = False
         self.mgr.sysMgr.scheduleSystemPollEvent = self.mock_scheduleSystemPollEvent
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
-        rbuildermanager.systemmgr.SystemManager.scheduleSystemApplyUpdateEvent = self.mock_scheduleSystemApplyUpdateEvent
+        rbuildermanager.SystemManager.scheduleSystemApplyUpdateEvent = self.mock_scheduleSystemApplyUpdateEvent
         self.sources = []
-        rbuildermanager.versionmgr.VersionManager.set_available_updates = \
+        rbuildermanager.VersionManager.set_available_updates = \
             self.mock_set_available_updates
         models.Job.getRmakeJob = self.mockGetRmakeJob
 
         self.mockGetStagesCalled = False
         self.mockStages = []
-        rbuildermanager.versionmgr.VersionManager.getStages = \
+        rbuildermanager.VersionManager.getStages = \
             self.mockGetStages
 
     def mockGetStages(self, *args, **kwargs):
@@ -2855,7 +2855,7 @@ class SystemVersionsTestCase(XMLTestCase):
         def mock_set_available_updates(self, trove, *args, **kwargs):
             trove.available_updates.add(version_update3)
 
-        rbuildermanager.versionmgr.VersionManager.set_available_updates = \
+        rbuildermanager.VersionManager.set_available_updates = \
             mock_set_available_updates
 
         self.mgr.versionMgr.refreshCachedUpdates(name, label)
@@ -3112,10 +3112,10 @@ class SystemEventTestCase(XMLTestCase):
         self.mock_dispatchSystemEvent_called = False
         self.mgr.sysMgr.dispatchSystemEvent = self.mock_dispatchSystemEvent
 
-        self.old_DispatchSystemEvent = rbuildermanager.systemmgr.SystemManager._dispatchSystemEvent
+        self.old_DispatchSystemEvent = rbuildermanager.SystemManager._dispatchSystemEvent
 
     def tearDown(self):
-        rbuildermanager.systemmgr.SystemManager._dispatchSystemEvent = self.old_DispatchSystemEvent
+        rbuildermanager.SystemManager._dispatchSystemEvent = self.old_DispatchSystemEvent
         XMLTestCase.tearDown(self)
 
     def mock_dispatchSystemEvent(self, event):
@@ -3352,7 +3352,7 @@ class SystemEventTestCase(XMLTestCase):
                 event_uuid=str(random.random()))
             systemJob.save()
 
-        rbuildermanager.systemmgr.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
+        rbuildermanager.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
 
         url = '/api/inventory/systems/%d/system_events/' % self.system.system_id
         response = self._post(url,
