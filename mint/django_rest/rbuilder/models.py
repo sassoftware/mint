@@ -88,6 +88,7 @@ class Products(modellib.XObjModel):
     members = models.ManyToManyField(Users, through="Members", related_name='members')
     
     view_name = 'Projects'
+    objects = modellib.ProductsManager()
     
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS

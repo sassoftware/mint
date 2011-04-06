@@ -667,6 +667,10 @@ class ManagementNodesManager(SystemsManager):
 class InstalledSoftwareManager(SystemsManager):
     pass
 
+class ProductsManager(BaseManager):
+    def load_from_href(self, *args, **kwargs):
+        return None
+
 class XObjModel(models.Model):
     """
     Common model class all models should inherit from.  Overrides the default
