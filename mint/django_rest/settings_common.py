@@ -92,15 +92,15 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'debug_toolbar',
+    'mint.django_rest.sdk_builder',
     'mint.django_rest.rbuilder',
     'mint.django_rest.rbuilder.reporting',
     'mint.django_rest.rbuilder.inventory',
     'mint.django_rest.rbuilder.metrics',
     'mint.django_rest.rbuilder.querysets',
-    'mint.django_rest.rbuilder.packages',
     'mint.django_rest.rbuilder.changelog',
+    'mint.django_rest.rbuilder.packages',
     'mint.django_rest.rbuilder.projects',
-    'mint.django_rest.rbuilder.packageworkspaces',
 )
 
 AUTHENTICATION_BACKENDS = (

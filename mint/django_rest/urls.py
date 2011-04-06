@@ -16,7 +16,6 @@ from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
 from mint.django_rest.rbuilder.projects import views as projectviews
-from mint.django_rest.rbuilder.packageworkspaces import views as pkgworkspaceviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -227,7 +226,7 @@ urlpatterns = patterns('',
     url(r'^api/query_sets/(?P<query_set_id>\d+)/child/?$',
         querysetviews.QuerySetChildResultService(),
         name='QuerySetChildResult'),
-    url(r'^api/query_sets/(?P<query_set_id>\d+)/filter_descriptor/?$',
+    url(r'^api/query_sets/filter_descriptor/?$',
         querysetviews.QuerySetFilterDescriptorService(),
         name='QuerySetFilterDescriptor'),
     url(r'^api/query_sets/(?P<query_set_id>\d+)/query_tags/?$',
@@ -236,14 +235,6 @@ urlpatterns = patterns('',
     url(r'^api/query_sets/(?P<query_set_id>\d+)/query_tags/(?P<query_tag_id>\d+)/?$',
         querysetviews.QueryTagService(),
         name='QueryTag'),
-
-    # Packages
-    url(r'^api/packages/?$',
-        packageviews.PackageService(),
-        name='Packages'),
-    url(r'^api/packages/(?P<package_id>\d+)/?$',
-        packageviews.PackageService(),
-        name='Package'),
 
     # Change Logs
     url(r'^api/changelogs/?$',
@@ -298,6 +289,92 @@ urlpatterns = patterns('',
         pkgworkspaceviews.PackageSessionService(),
         name='PackageSession'),
 
+
+    # Package Versions
+    url(r'^api/packages/(?P<package_id>\d+)/package_versions/?$',
+        packageviews.PackagePackageVersionService(),
+        name='PackageVersions'),
+
+     url(r'^api/package_versions/?$',
+        packageviews.PackageVersionService(),
+        name='AllPackageVersions'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/?$',
+        packageviews.PackageVersionService(),
+        name='PackageVersion'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/'
+         'package_actions/?$',
+        packageviews.PackageVersionActionService(),
+        name='PackageVersionActions'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/'
+         'package_actions/(?P<package_version_action_id>\d+)/?$',
+        packageviews.PackageVersionActionService(),
+        name='PackageVersionAction'),
+
+    # Package Version Urls
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/urls/?$',
+        packageviews.PackageVersionUrlService(),
+        name='PackageVersionUrls'),
+
+     url(r'^api/package_versions/(?P<package_version_id>\d+)/urls/'
+          '(?P<package_version_url_id>\d+)/?$',
+        packageviews.PackageVersionUrlService(),
+        name='PackageVersionUrl'),
+    
+    # Package Version Jobs  
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_version_jobs/?$',
+        packageviews.PackageVersionJobService(),
+        name='PackageVersionJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_version_jobs/'
+         '(?P<package_version_job_id>\d+)/?$',
+        packageviews.PackageVersionJobService(),
+        name='PackageVersionJob'),
+
+    # Package Sources
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/?$',
+        packageviews.PackageSourceService(),
+        name='PackageSources'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/?$',
+        packageviews.PackageSourceService(),
+        name='PackageSource'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_source_jobs/?$',
+        packageviews.PackageSourceJobService(),
+        name='PackageSourceJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_source_jobs/(?P<package_source_job_id>\d+)/?$',
+        packageviews.PackageSourceJobService(),
+        name='PackageSourceJob'),
+
+    # Package Builds
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/?$',
+        packageviews.PackageBuildService(),
+        name='PackageBuilds'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/?$',
+        packageviews.PackageBuildService(),
+        name='PackageBuild'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/'
+         'package_build_jobs/?$',
+        packageviews.PackageBuildJobService(),
+        name='PackageBuildJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/'
+          'package_build_jobs/(?P<package_build_job_id>\d+)/?$',
+        packageviews.PackageBuildJobService(),
+        name='PackageBuildJob'),
 
 )
 

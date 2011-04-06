@@ -17,7 +17,6 @@ class QuerySetTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.mgr = manager.QuerySetManager()
 
     def testPostQuerySet(self):
         response = self._post('/api/query_sets/',
@@ -43,7 +42,6 @@ class QuerySetFixturedTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.mgr = manager.QuerySetManager()
 
     def xobjResponse(self, url):
         response = self._get(url,
@@ -292,7 +290,6 @@ class QuerySetChildFixturedTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.mgr = manager.QuerySetManager()
 
     def xobjResponse(self, url):
         response = self._get(url,

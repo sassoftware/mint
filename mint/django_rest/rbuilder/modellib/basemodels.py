@@ -23,6 +23,7 @@ import jobj
 
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
+from mint.lib import data as mintdata
 
 def XObjHidden(field):
     """
@@ -180,6 +181,10 @@ class BaseManager(models.Manager):
             return None
 
         href = getattr(xobjModel, refAttr, None)
+
+        # Check id as well
+        if not href:
+            href = getattr(xobjModel, "id", None)
 
         if href:
             path = urlparse.urlparse(href)[2]
@@ -371,7 +376,7 @@ class BaseManager(models.Manager):
                     objlist = [ objlist ]
             for rel_obj in objlist or []:
                 modelCls = m2m_mgr.model
-                refName = getattr(modelCls, 'refName', 'href')
+                refName = getattr(modelCls, 'ref_name', 'href')
                 rel_mod = modelCls.objects.load_from_href(rel_obj, refName)
                 if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
@@ -436,6 +441,22 @@ class BaseManager(models.Manager):
 
         return model
 
+class PackageJobManager(BaseManager):
+
+    def add_fields(self, model, obj, request, save):
+        job_data = getattr(obj, "job_data", None)
+        
+        if job_data is not None:
+            obj.__dict__.pop("job_data")
+            job_data_dict = {}
+            for k, v in job_data.__dict__.items():
+                if not k.startswith("_"):
+                    job_data_dict[k] = v
+            marshalled_job_data = mintdata.marshalGenericData(job_data_dict) 
+            model.job_data = marshalled_job_data
+
+        return BaseManager.add_fields(self, model, obj, request, save)
+
 class TroveManager(BaseManager):
     def load_from_object(self, obj, request, save=True, load=True):
         # None flavor fixup
@@ -462,6 +483,9 @@ class TroveManager(BaseManager):
         if nmodel.flavor is None:
             nmodel.flavor = ''
         return nmodel
+
+    def load_from_href(self, *args, **kwargs):
+        return None
 
 class VersionManager(BaseManager):
     def add_fields(self, model, obj, request, save=True):
@@ -935,7 +959,10 @@ class XObjModel(models.Model):
         m2m_accessors = {}
         for m in self._meta.get_m2m_with_model():
             f = m[0]
-            m2m_accessors[f.name] = getattr(self, f.name)
+            try:
+                m2m_accessors[f.name] = getattr(self, f.name)
+            except ValueError:
+                pass
         return m2m_accessors
 
     def serialize_fields(self, xobj_model, fields, request):
@@ -983,7 +1010,7 @@ class XObjModel(models.Model):
                 text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
-                refName = getattr(field, 'refName', 'href')
+                refName = getattr(field, 'ref_name', 'href')
                 if val:
                     if visible:
                         # If the visible prop is set, we want to copy the
@@ -1274,15 +1301,19 @@ class ManyToManyField(models.ManyToManyField):
     """
     Wrapper of ManyToManyFields
 
-    Adds the ability to specify refName, which is an attribute name whose
+    Adds the ability to specify ref_name, which is an attribute name whose
     value will be an absolute url of the model.
     """
     def __init__(self, *args, **kwargs):
-        self.refName = 'href'
-        try:
-            self.refName = kwargs.pop('refName')
-        except KeyError:
-            pass # text wasn't specified, that is fine
+        # ref_name is the attribute name to use when bulding the url for the
+        # m2m accessor on the parent model.  Usually it is either id
+        # or href.  We have to support both and default to href as older code
+        # expects it to be href.
+        if kwargs.has_key('ref_name'):
+            self.ref_name = kwargs['ref_name']
+            kwargs.pop('ref_name')
+        else:
+            self.ref_name = 'href'
 
         super(ManyToManyField, self).__init__(*args, **kwargs)
 
