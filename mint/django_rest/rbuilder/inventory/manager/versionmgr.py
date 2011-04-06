@@ -20,7 +20,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.projects.models import Project
 from mint.rest.errors import ProductNotFound
 
