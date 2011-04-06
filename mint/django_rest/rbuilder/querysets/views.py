@@ -93,9 +93,8 @@ class QuerySetChildResultService(BaseQuerySetService):
 
 class QuerySetFilterDescriptorService(BaseQuerySetService):
 
-    def rest_GET(self, request, query_set_id):
+    def rest_GET(self, request):
         filterDescriptor = models.FilterDescriptor()
-        filterDescriptor._parents = [rbuildermodels.Pk(query_set_id)]
         filterDescriptorId = filterDescriptor.get_absolute_url(request)
         code = 200
         response = http.HttpResponse(status=code, content_type='text/xml')
