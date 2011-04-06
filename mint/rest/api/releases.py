@@ -83,4 +83,4 @@ class ProductReleasesController(base.BaseController):
             images.images = []
         self.db.updateImagesForRelease(hostname, releaseId,
 			       [x.imageId for x in images.images])
-        return self.get(request, hostname, releaseId)
+        return self.images(request, hostname, releaseId)

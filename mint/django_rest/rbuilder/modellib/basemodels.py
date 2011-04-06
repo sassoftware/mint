@@ -483,6 +483,9 @@ class TroveManager(BaseManager):
             nmodel.flavor = ''
         return nmodel
 
+    def load_from_href(self, *args, **kwargs):
+        return None
+
 class VersionManager(BaseManager):
     def add_fields(self, model, obj, request, save=True):
         # Fix up label and revision

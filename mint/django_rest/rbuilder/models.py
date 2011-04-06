@@ -69,6 +69,9 @@ class UserGroupMembers(modellib.XObjModel):
         db_table = u'usergroupmembers'
     
 class Products(modellib.XObjModel):
+
+    url_key = ["shortname"]
+
     productId = models.AutoField(primary_key=True, db_column='projectid', blank=True)
     hostname = models.CharField(unique=True, max_length=63)
     name = models.CharField(unique=True, max_length=128)
@@ -99,11 +102,6 @@ class Products(modellib.XObjModel):
     def _attributes(self):
         return ({'id': self.hostname})
 
-    def get_absolute_url(self, request=None, parents=None, values=None):
-        parents = [Pk(self.shortname)]
-        return modellib.XObjModel.get_absolute_url(self, request, parents,
-            values)
-
 class Members(modellib.XObjModel):
     productId = models.ForeignKey(Products, db_column='projectid', related_name='product')
     userid = models.ForeignKey(Users, db_column='userid', related_name='user')
@@ -121,6 +119,9 @@ class Pk(object):
 
 
 class Versions(modellib.XObjIdModel):
+
+    url_key = ["productId", "name"]
+
     productVersionId = models.AutoField(primary_key=True,
         db_column='productversionid')
     productId = models.ForeignKey(Products, db_column='projectid')
@@ -136,11 +137,6 @@ class Versions(modellib.XObjIdModel):
     def __unicode__(self):
         return self.name
         
-    def get_absolute_url(self, request=None, parents=None, values=None):
-        parents = [Pk(self.productId.shortname), Pk(self.name)]
-        return modellib.XObjIdModel.get_absolute_url(self, request, parents,
-            values)
-
     def serialize(self, request=None, values=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request, values)
         xobj_model._xobj.text = self.name

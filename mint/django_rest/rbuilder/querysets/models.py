@@ -112,7 +112,6 @@ class QuerySet(modellib.XObjIdModel):
         xobjModel.child_members = childM.serialize(request)
 
         fd = FilterDescriptor()
-        fd._parents = [self]
         xobjModel.filter_descriptor = fd.serialize(request)
 
         from mint.django_rest.rbuilder.querysets import manager

@@ -470,6 +470,10 @@ def conaryHandler(context):
             proxycfg.proxyContentsDir = cfg.proxyContentsDir
             proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
             proxycfg.tmpDir = cfg.proxyTmpDir
+            if actualRepName:
+                restDb = _addCapsuleConfig(context, proxycfg, actualRepName)
+            else:
+                restDb = None
 
             # set a proxy (if it was configured)
             proxycfg.proxy = cfg.proxy
@@ -480,9 +484,6 @@ def conaryHandler(context):
                 domain = cfg.siteDomainName + ':%(port)d'
             urlBase = "%%(protocol)s://%s.%s/" % \
                     (cfg.hostName, domain)
-            # XXX For now we won't support injection into external projects
-            # that are not mirrored
-            restDb = None
             proxyServer = proxy_repository = ProxyRepositoryServer(
                     restDb, proxycfg, urlBase)
 
