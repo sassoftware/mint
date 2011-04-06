@@ -28,12 +28,15 @@ EXCLUDED_APPS = [
     'sdk_builder',
     ]
 
+
 def wrapped2src(wrapped, app_label):
-    src = 'class %(label)s(object):\n    """%(label)s"""\n\n' % {'label':app_label}
+    # src = 'class %(label)s(object):\n    """%(label)s"""\n\n' % {'label':app_label}
+    src = ''
     for w in wrapped:
         lines = []
         for line in rSDKUtils.toSource(w, app_label).split('\n'):
-            line = ' ' * 4 + line + '\n'
+            # line = ' ' * 4 + line + '\n'
+            line = line + '\n'
             lines.append(line)
         src += ''.join(lines)
     return src
@@ -49,25 +52,22 @@ class Command(BaseCommand):
         # Get paths where module will be written on the filesystem
         current_location = os.path.dirname(__file__)
         index = current_location.find('sdk_builder')
-        models_path = os.path.join(
-                        current_location[0:index], 'sdk_builder/sdk/Models.py')
-        # build class stubs then write them to the filesystem
-        with open(models_path, 'w') as f:
-            f.write('from sdk import Fields\n')
-            f.write('from sdk import XObjMixin\n')
-            f.write('from sdk import GetSetXMLAttrMeta\n')
-            f.write('from xobj import xobj\n')
-            f.write('\n\n')
-            
-            # FIXME: below should work except for the problem with
-            # retrieving the list_fields attribute off the model
-            for app_label, models in self.findAllModels().items():
-                if app_label in EXCLUDED_APPS:
-                    continue
+        for app_label, models in self.findAllModels().items():
+            models_path = os.path.join(
+                    current_location[0:index], 'sdk_builder/sdk/%s.py' % app_label)
+            if app_label in EXCLUDED_APPS:
+                continue
+            with open(models_path, 'w') as f:
+                f.write('from rSDK import Fields\n')
+                f.write('from rSDK import XObjMixin\n')
+                f.write('from rSDK import GetSetXMLAttrMeta\n')
+                f.write('from xobj import xobj\n')
+                f.write('\n\n')
                 src = self.buildSDKModels(app_label, models)
                 if src:
                     f.writelines(src.strip())
                     f.write('\n\n')
+
 
     def buildSDKModels(self, app_label, module):
         wrapped = [rSDKUtils.DjangoModelWrapper(m, module) \

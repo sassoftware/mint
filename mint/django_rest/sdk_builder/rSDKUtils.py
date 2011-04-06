@@ -17,6 +17,121 @@ import string
 from xobj import xobj
 from mint.django_rest.sdk_builder.rSDK import Fields
 
+REGISTRY = []
+
+FCN = \
+"""
+def %(name)s(%(args)s):
+%(docstring)s
+%(body)s
+""".strip()
+
+CLASS = \
+"""
+class %(name)s(%(bases)s):
+%(doc)s
+%(attrs)s
+""".strip()
+
+DICT = "dict(%(kwargs)s)"
+
+LIST = "[%(elements)s]"
+
+class ClassStub(object):
+    def __init__(self, cls, key_parser=None, value_parser=None):
+        self.cls = cls
+        self.kp = key_parser
+        self.vp = value_parser
+
+    def doc2src(self):
+        indented = indent(getattr(self.cls, '__doc__', ''))
+        return '    \"\"\"\n' + indented + '    \"\"\"'
+
+    def bases2src(self):
+        return ', '.join(b.__name__ for b in self.cls.__bases__)
+
+    def attrs2src(self):
+        
+        def getName(x):
+            if inspect.isclass(x):
+                return x.__name__
+            else:
+                return x.__class__.__name__
+                
+        def resolveDict(d):
+            _d = {}
+            for _k, _v in d.items():
+                if isinstance(_v, (str, unicode, int, float)):
+                    _d[_k] = _v
+                elif isinstance(_v, dict):
+                    _d[_k] = resolveDict(_v)
+                elif isinstance(_v, list):
+                    _d[_k] = resolveList(_v)
+                else:
+                    _d[k] = getName(_v)
+            return _d
+
+        def resolveList(L):
+            _l = []
+            for _v in L:
+                if isinstance(_v, (str, unicode, int, float)):
+                    _l.append(_v)
+                elif isinstance(_v, dict):
+                    _l.append(resolveDict(_v))
+                elif isinstance(_v, list):
+                    _l.append(resolveList(_v))
+                else:
+                    _l.append(getName(_v))
+            return _l
+            
+        src = []
+        
+        for k, v in self.cls.__dict__.items():
+            # don't inline magic methods
+            text = ''
+            if k in ['__module__', '__doc__', '__name__'] or inspect.isfunction(v):
+                continue
+            if self.kp:
+                k = self.kp(k)
+            if self.vp:
+                v = self.vp(v)
+            
+            if isinstance(v, dict):
+                v = resolveDict(v)
+                text = '%s = %s' % (k, v) 
+            elif isinstance(v, list):
+                v = resolveList(v)
+                if isinstance(v, list):
+                    text = '%s = [%s]' % (k, v[0])
+                else:
+                    text = '%s = %s' % (k, v)
+            else:
+                v = getName(v)
+                text = '%s = %s' % (k, v)
+                
+            src.append(indent(text))
+        return ''.join(src)
+
+    def tosrc(self):
+        name = self.cls.__name__
+        bases = self.bases2src()
+        doc = self.doc2src()
+        attrs = self.attrs2src()
+        src = CLASS % dict(name=name, bases=bases, doc=doc, attrs=attrs)
+        return src
+
+def indent(txt, n=1):
+    """
+    n is the number of times txt should be indented
+    """
+    if txt is None:
+        return ''
+    splitted = ['    ' + line + '\n' for line in txt.split('\n')]
+    joined = ''.join(splitted)
+    if n > 1:
+        joined = indent(joined, n - 1)
+    return joined
+
 def parseName(name):
     """
     ie: Changes management_nodes to ManagementNodes
@@ -27,7 +142,9 @@ def parseName(name):
 # FIXME: can't account for non-list intra and extra field references
 def toSource(wrapped_cls, app_label):
     """
-    Creates python source code for xobj class stubs
+    Creates python source code for xobj class stubs.  Remember
+    that each class is actually a nested class whose out class
+    is named after the django app that it belongs to.
     """
     if not wrapped_cls:
         return ''
@@ -35,7 +152,7 @@ def toSource(wrapped_cls, app_label):
     STUB = 'class ${cls_name}(xobj.XObj, XObjMixin):\n    """XObj Class Stub"""\n'
     ATTRS = '    __metaclass__ = GetSetXMLAttrMeta\n'
     FIELDS = '    ${field_name} = ${field_value}\n'
-    
+    METADATA = '_xobj = xobj.XObjMetadata(${metadata})'
     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
     src += ATTRS
     
@@ -45,9 +162,13 @@ def toSource(wrapped_cls, app_label):
         # to be written into the src
         if inspect.ismethod(v):
             continue
-        # FIXME:
+        # FIXME: while this will most likely not cause problems
+        # for our use case, as almost every complex field is not
+        # a base field but rather a user-defined one that lives
+        # in the same models.py.  However, this will not do the case
+        # that a complex field is of base field type
         if isinstance(v, list):
-            name = '[%s.%s]' % (app_label, v[0].__name__)
+            name = '[%s]' % v[0].__name__
         else:
             # FIXME: as sdk grows, more non-field_type attrs
             # (which also implies that they are missing __name__)
@@ -83,9 +204,15 @@ class DjangoModelWrapper(object):
                 if not model:
                     raise Exception('Extra-Model reference required')
                 # Recursive call to DjangoModelWrapper
+                # TESTME: check that fields_dict[name] should always
+                # be a list of a wrapped django_model, ie that a model
+                # with a list_fields attr must be represented as a list
+                # inside the class stub
                 fields_dict[name] = [DjangoModelWrapper(model, module)]
+        if hasattr(model, '_xobj'):
+            fields_dict['_xobj'] = getattr(model, '_xobj')
         return type(django_model.__name__, (xobj.XObj,), fields_dict)
-
+        
     @staticmethod
     def _getModelFields(django_model):
         """
@@ -107,3 +234,6 @@ class DjangoModelWrapper(object):
             new_field = getattr(Fields, d[k].__class__.__name__)
             _d[k] = new_field
         return _d
+        
+def generateTypemap():
+    pass
