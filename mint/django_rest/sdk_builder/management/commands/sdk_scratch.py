@@ -171,6 +171,59 @@ class Command(BaseCommand):
         print src.tosrc()
         print '\n'
         
-        print resolveDict({'1':1, '2':[2], '3':{'a':'a', 'b':'b'}})
+        class A(object):
+            pass
+
+        class B(object):
+            pass
+
+        class A2(object):
+            pass
+
+        class C1(object):
+            list_fields = [A, A2]
+
+        class C2(object):
+            list_fields = [C1, B]
+
+        class C3(object):
+            list_fields = [A, C1]
+
+        # ['A', 'A2', 'B', 'C1', 'C2']
+
+        # def sortByListFields(*fields):
+        #     REGISTRY = []
+        #     for cls in fields:
+        #         listed = getattr(cls, 'list_fields', None)
+        #         if listed:
+        #             for c in listed:
+        #                 if cls not in REGISTRY:
+        #                     REGISTRY.append(cls)
+        #                 else:
+        #                     REGISTRY.remove(cls)
+        #                     REGISTRY.append(cls)
+        #         else:
+        #             REGISTRY.insert(0, cls)
+        #     return REGISTRY
+        
+        def sortByListFields(*fields):
+            registry = []
+            for cls in fields:
+                listed = getattr(cls, 'list_fields', None)
+                if listed:
+                    for c in listed:
+                        if cls not in registry:
+                            registry.append(cls)
+                        else:
+                            registry.remove(cls)
+                            registry.append(cls)
+                elif cls in registry:
+                    continue
+                else:
+                    registry.insert(0, cls)
+            return registry
         
         ############## END ##################
+        print [c.__name__ for c in sortByListFields(B, A2, C1, A, C3, C2)]
+        # print [c.__name__ for c in sortByListFields(*sortByListFields(A, B, A2, C1, C2, C3))]
+        print ClassStub(C2).tosrc()
