@@ -28,7 +28,7 @@ class CollectionPageNotFound(RbuilderError):
     "The requested page of the collection was not found."
     status = NOT_FOUND
 
-class UknownFilterOperator(RbuilderError):
+class UnknownFilterOperator(RbuilderError):
     "%(filter)s is an invalid filter operator."
     status = BAD_REQUEST
 
