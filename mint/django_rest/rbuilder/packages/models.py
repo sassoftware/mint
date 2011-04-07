@@ -152,7 +152,17 @@ class PackageVersionJobs(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag="package_version_jobs")
     list_fields = ["package_version_job"]
 
-class PackageVersionJob(modellib.XObjIdModel):
+class PackageJobSerializerMixin(object):
+    def serialize(self, *args, **kwargs):
+        xobjModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
+        if self.job_data:
+            unMarshalledJobData = mintdata.unmarshalGenericData(self.job_data)
+            xobjModel.job_data = JobData()
+            for k, v in unMarshalledJobData.items():
+                setattr(xobjModel.job_data, k, v)
+        return xobjModel
+
+class PackageVersionJob(modellib.XObjIdModel, PackageJobSerializerMixin):
     
     class Meta:
         db_table = "packages_package_version_job"
@@ -188,15 +198,6 @@ class PackageVersionJob(modellib.XObjIdModel):
         related_name="package_version_jobs_last_modified",
         text_field="username"),
         "the user that last modified the resource")
-
-    def serialize(self, *args, **kwargs):
-        xobjModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
-        if self.job_data:
-            unMarshalledJobData = mintdata.unmarshalGenericData(self.job_data)
-            xobjModel.job_data = JobData()
-            for k, v in unMarshalledJobData.items():
-                setattr(xobjModel.job_data, k, v)
-        return xobjModel
 
 class PackageVersionUrls(modellib.Collection):
 
@@ -322,7 +323,7 @@ class PackageSourceJobs(modellib.XObjIdModel):
     list_fields = ["package_source_job"]
 
 
-class PackageSourceJob(modellib.XObjIdModel):
+class PackageSourceJob(modellib.XObjIdModel, PackageJobSerializerMixin):
     
     class Meta:
         db_table = "packages_package_source_job"
@@ -438,7 +439,7 @@ class PackageBuildJobs(modellib.XObjIdModel):
     list_fields = ["package_build_job"]
 
 
-class PackageBuildJob(modellib.XObjIdModel):
+class PackageBuildJob(modellib.XObjIdModel, PackageJobSerializerMixin):
     
     class Meta:
         db_table = "packages_package_build_job"
