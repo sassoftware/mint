@@ -1,7 +1,10 @@
 from sdk.Fields import *  # pyflakes=ignore
 from sdk.rSDK import XObjMixin
-from xobj.xobj import XObj
+from sdk.rSDK import RegistryMeta
+from xobj.xobj import XObj, XObjMetadata
 
+
+REGISTRY = {}
 
 class SystemLogEntry(XObj, XObjMixin):
     """
@@ -304,80 +307,80 @@ class SystemJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    job = [Job]
+    job = ['Job']
 
 class SystemTypes(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    system_type = [SystemType]
+    system_type = ['SystemType']
 
 class SystemEvents(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    system_event = [SystemEvent]
+    system_event = ['SystemEvent']
 
 class EventTypes(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    event_type = [EventType]
+    event_type = ['EventType']
 
 class Zones(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    zone = [Zone]
+    zone = ['Zone']
 
 class Jobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    job = [Job]
+    job = ['Job']
 
 class InstalledSoftware(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    trove = [Trove]
+    trove = ['Trove']
 
 class SystemsLog(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    system_log_entry = [SystemLogEntry]
+    system_log_entry = ['SystemLogEntry']
 
 class ManagementInterfaces(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    management_interface = [ManagementInterface]
+    management_interface = ['ManagementInterface']
 
 class SystemStates(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    system_state = [SystemState]
+    system_state = ['SystemState']
 
 class ManagementNodes(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    management_node = [ManagementNode]
+    management_node = ['ManagementNode']
 
 class Networks(XObj, XObjMixin):
     """
     """
     systems = HrefField
     _xobj = XObjMetadata
-    network = [Network]
+    network = ['Network']
 
 class JobStates(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    job_state = [JobState]
+    job_state = ['JobState']
 
 class Systems(XObj, XObjMixin):
     """
@@ -394,5 +397,12 @@ class Systems(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    system = [System]
+    system = ['System']
+
+# DO NOT TOUCH #
+GLOBALS = globals()
+for k, v in REGISTRY.items():
+    for _k, _v in v.items():
+        if _v in GLOBALS:
+            setattr(GLOBALS[k], _k, GLOBALS[_v])
 

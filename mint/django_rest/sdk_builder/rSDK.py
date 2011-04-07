@@ -16,15 +16,15 @@ from xobj import xobj
 
 
 class XObjMixin(object):
-    """
-    Only do assertion after initialization is complete
-    during initialization, setattr always passed a string.
-    The idea behind validation in setattr is that once
-    the class is initialized, a class attribute may only
-    be assigned to if the assigned value is an instance
-    or an instance of a subclass of the original type.
-    """
     def __setattr__(self, k, v):
+        """
+        Only do assertion after initialization is complete
+        during initialization, setattr always passed a string.
+        The idea behind validation in setattr is that once
+        the class is initialized, a class attribute may only
+        be assigned to if the assigned value is an instance
+        or an instance of a subclass of the original type.
+        """
         check = lambda x,y: issubclass(x.__class__, y)
         try:
             # self refers to instance of child class
@@ -46,6 +46,20 @@ class XObjMixin(object):
         except KeyError: # __dict__ not initialized yet
             pass
         self.__dict__[k] = v
+
+# TODO: combine RegistryMeta and GetSetXMLAttrMeta #
+class RegistryMeta(type):
+    """
+    this is what allows fk and m2m fields to work.
+    requires that the module define an empty dictionary
+    called REGISTRY
+    """
+    def __new__(meta, name, bases, attrs):
+        REGISTRY[name] = {}
+        for k, v in attrs.items():
+            if isinstance(v, list):
+                REGISTRY[name][k] = v[0]
+        return type(name, bases, attrs)
 
 
 class GetSetXMLAttrMeta(type):

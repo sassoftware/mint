@@ -1,7 +1,10 @@
 from sdk.Fields import *  # pyflakes=ignore
 from sdk.rSDK import XObjMixin
-from xobj.xobj import XObj
+from sdk.rSDK import RegistryMeta
+from xobj.xobj import XObj, XObjMetadata
 
+
+REGISTRY = {}
 
 class ChangeLogEntry(XObj, XObjMixin):
     """
@@ -35,5 +38,12 @@ class ChangeLogs(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    change_log = [ChangeLog]
+    change_log = ['ChangeLog']
+
+# DO NOT TOUCH #
+GLOBALS = globals()
+for k, v in REGISTRY.items():
+    for _k, _v in v.items():
+        if _v in GLOBALS:
+            setattr(GLOBALS[k], _k, GLOBALS[_v])
 

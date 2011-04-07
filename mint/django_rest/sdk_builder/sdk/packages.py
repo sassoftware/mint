@@ -1,7 +1,10 @@
 from sdk.Fields import *  # pyflakes=ignore
 from sdk.rSDK import XObjMixin
-from xobj.xobj import XObj
+from sdk.rSDK import RegistryMeta
+from xobj.xobj import XObj, XObjMetadata
 
+
+REGISTRY = {}
 
 class PackageSourceJob(XObj, XObjMixin):
     """
@@ -181,13 +184,13 @@ class PackageVersions(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    package_version = [PackageVersion]
+    package_version = ['PackageVersion']
 
 class PackageBuildJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    package_build_job = [PackageBuildJob]
+    package_build_job = ['PackageBuildJob']
 
 class PackageBuilds(XObj, XObjMixin):
     """
@@ -204,7 +207,7 @@ class PackageBuilds(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    package_build = [PackageBuild]
+    package_build = ['PackageBuild']
 
 class PackageActionTypes(XObj, XObjMixin):
     """
@@ -221,7 +224,7 @@ class PackageActionTypes(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    package_action_type = [PackageActionType]
+    package_action_type = ['PackageActionType']
 
 class PackageSources(XObj, XObjMixin):
     """
@@ -238,7 +241,7 @@ class PackageSources(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    package_source = [PackageSource]
+    package_source = ['PackageSource']
 
 class Packages(XObj, XObjMixin):
     """
@@ -255,7 +258,7 @@ class Packages(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    package = [Package]
+    package = ['Package']
 
 class PackageVersionUrls(XObj, XObjMixin):
     """
@@ -272,7 +275,7 @@ class PackageVersionUrls(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    package_version_url = [PackageVersionUrl]
+    package_version_url = ['PackageVersionUrl']
 
 class AllPackageVersions(XObj, XObjMixin):
     """
@@ -289,17 +292,24 @@ class AllPackageVersions(XObj, XObjMixin):
     end_index = IntegerField
     count = IntegerField
     _xobj = XObjMetadata
-    package_version = [PackageVersion]
+    package_version = ['PackageVersion']
 
 class PackageSourceJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    package_source_job = [PackageSourceJob]
+    package_source_job = ['PackageSourceJob']
 
 class PackageVersionJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    package_version_job = [PackageVersionJob]
+    package_version_job = ['PackageVersionJob']
+
+# DO NOT TOUCH #
+GLOBALS = globals()
+for k, v in REGISTRY.items():
+    for _k, _v in v.items():
+        if _v in GLOBALS:
+            setattr(GLOBALS[k], _k, GLOBALS[_v])
 

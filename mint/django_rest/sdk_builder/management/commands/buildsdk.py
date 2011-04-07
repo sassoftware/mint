@@ -29,6 +29,16 @@ EXCLUDED_APPS = [
     'sdk_builder',
     ]
 
+MODULE_LEVEL_CODE = \
+"""
+# DO NOT TOUCH #
+GLOBALS = globals()
+for k, v in REGISTRY.items():
+    for _k, _v in v.items():
+        if _v in GLOBALS:
+            setattr(GLOBALS[k], _k, GLOBALS[_v])
+""".strip()
+
 class Command(BaseCommand):
     help = "Generates python sdk"
 
@@ -36,24 +46,33 @@ class Command(BaseCommand):
         """
         Generates Python SDK for REST API
         """
-        # Get paths where module will be written on the filesystem
+        # Get paths where modules will be written on the filesystem
         current_location = os.path.dirname(__file__)
         index = current_location.find('sdk_builder')
+        # Generate src code for each Models.py and write it to
+        # its own module
         for app_label, module in self.findAllModels().items():
+            # Place everything inside sdk package, which lives in sdk_builder
             models_path = os.path.join(
                     current_location[0:index], 'sdk_builder/sdk/%s.py' % app_label)
+            # Keep out extraneous crap
             if app_label in EXCLUDED_APPS:
                 continue
+            # Actually write the module
             with open(models_path, 'w') as f:
                 f.write('from sdk.Fields import *  # pyflakes=ignore\n')
                 f.write('from sdk.rSDK import XObjMixin\n')
                 # FIXME: can't get ClassStub to correctly include metaclass
                 # f.write('from sdk.rSDK import GetSetXMLAttrMeta  # pyflakes=ignore\n')
-                f.write('from xobj.xobj import XObj\n')
+                f.write('from sdk.rSDK import RegistryMeta\n')
+                f.write('from xobj.xobj import XObj, XObjMetadata\n')
                 f.write('\n\n')
+                f.write('REGISTRY = {}\n\n')
                 src = self.buildSDKModels(module)
                 if src:
                     f.writelines(src.strip())
+                    f.write('\n\n')
+                    f.writelines(MODULE_LEVEL_CODE)
                     f.write('\n\n')
         # now copy over rSDK into sdk package
         pass
