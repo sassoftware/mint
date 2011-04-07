@@ -1,6 +1,5 @@
 from sdk.Fields import *  # pyflakes=ignore
 from sdk.rSDK import XObjMixin
-from sdk.rSDK import GetSetXMLAttrMeta  # pyflakes=ignore
 from xobj.xobj import XObj
 
 
