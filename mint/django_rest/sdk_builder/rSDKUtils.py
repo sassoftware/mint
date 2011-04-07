@@ -15,7 +15,6 @@
 # NOT TO BE INCLUDED IN CLIENT SIDE DISTRIBUTION #
 
 import inspect
-import string
 from xobj import xobj
 from mint.django_rest.sdk_builder.rSDK import Fields, GetSetXMLAttrMeta, XObjMixin
 
@@ -205,23 +204,39 @@ class DjangoModelsWrapper(object):
         """
         docstring here
         """
+        # all generated classes go into registry, don't mess around
+        # with the ordering of stuff in registry (except for sorting
+        # it before iteration) as the ordering is important
         registry = []
         django_models = [m for m in module.__dict__.values() if inspect.isclass(m)]
+        # TESTME: sortByListFields is kind of a lucky hack, not sure if it
+        # will always work -- come back and test
         for django_model in sortByListFields(*django_models):
             fields_dict = cls._getModelFields(django_model)
             fields_dict = cls._convertFields(fields_dict)
+            # process listed fields
             if hasattr(django_model, 'list_fields'):
                 dep_names = [parseName(m) for m in django_model.list_fields]
                 for name in dep_names:
+                    # dunno if its possible for a model to reference another model
+                    # outside of the Models.py it lives in.  if it can, then 
+                    # throw an error as that contingency is not covered
                     model = getattr(module, name, None)
                     if not model:
                         raise Exception('Extra-Model reference required, only intra-model references supported')
+                    # Generate new fields
                     new_fields = cls._getModelFields(model)
                     new_fields = cls._convertFields(new_fields)
+                    # new class is a standin for the one in listed fields. this
+                    # is *not* the corresponding class that exists in registry,
+                    # it will not recieve an _xobj attr.  this isn't crucial but
+                    # can be fixed at a later time.
                     new = type(model.__name__, (xobj.XObj, XObjMixin), new_fields)
                     fields_dict[name] = [new]
+            # make sure to extract _xobj metadata
             if hasattr(django_model, '_xobj'):
                 fields_dict['_xobj'] = getattr(django_model, '_xobj')
+            # *don't* forget that the order of classes in registry is important
             registry.append(type(django_model.__name__, (xobj.XObj, XObjMixin), fields_dict))
         return registry
 
@@ -246,107 +261,3 @@ class DjangoModelsWrapper(object):
             new_field = getattr(Fields, d[k].__class__.__name__)
             _d[k] = new_field
         return _d
-
-
-
-
-
-    
-    
-# class DjangoModelWrapper(object):
-#     """
-#     Takes a django model and creates the code for its corresponding
-#     class stub.  For each model with a list_fields attribute,
-#     DjangoModelWrapper is called on the listed model, and the result placed
-#     inside a list for xobj to find it.
-#     """
-# 
-#     def __new__(cls, django_model, module):
-#         """
-#         Takes care of generating the code for the class stub
-#         """
-#         fields_dict = cls._getModelFields(django_model)
-#         fields_dict = cls._convertFields(fields_dict)
-#         if hasattr(django_model, 'list_fields'):
-#             dep_names = [parseName(m) for m in django_model.list_fields]
-#             for name in dep_names:
-#                 model = getattr(module, name, None)
-#                 if not model:
-#                     raise Exception('Extra-Model reference required')
-#                 # Recursive call to DjangoModelWrapper
-#                 # TESTME: check that fields_dict[name] should always
-#                 # be a list of a wrapped django_model, ie that a model
-#                 # with a list_fields attr must be represented as a list
-#                 # inside the class stub
-#                 fields_dict[name] = [DjangoModelWrapper(model, module)]
-#         if hasattr(model, '_xobj'):
-#             fields_dict['_xobj'] = getattr(model, '_xobj')
-#         return type(django_model.__name__, (xobj.XObj,), fields_dict)
-#         
-#     @staticmethod
-#     def _getModelFields(django_model):
-#         """
-#         Gets all of a django model's pre-converted fields
-#         """
-#         d = {}
-#         if hasattr(django_model, '_meta'):
-#             for field in django_model._meta.fields:
-#                 d[field.name] = field
-#         return d
-# 
-#     @staticmethod
-#     def _convertFields(d):
-#         """
-#         Converts django fields to sdk Field classes
-#         """
-#         _d = {}
-#         for k in d:
-#             new_field = getattr(Fields, d[k].__class__.__name__)
-#             _d[k] = new_field
-#         return _d
-#         
-# def generateTypemap():
-#     pass
-#     
-# # FIXME: can't account for non-list intra and extra field references
-# def toSource(wrapped_cls, app_label):
-#     """
-#     Creates python source code for xobj class stubs.  Remember
-#     that each class is actually a nested class whose out class
-#     is named after the django app that it belongs to.
-#     """
-#     if not wrapped_cls:
-#         return ''
-# 
-#     STUB = 'class ${cls_name}(xobj.XObj, XObjMixin):\n    """XObj Class Stub"""\n'
-#     ATTRS = '    __metaclass__ = GetSetXMLAttrMeta\n'
-#     FIELDS = '    ${field_name} = ${field_value}\n'
-#     METADATA = '_xobj = xobj.XObjMetadata(${metadata})'
-#     src = string.Template(STUB).substitute({'cls_name':wrapped_cls.__name__})
-#     src += ATTRS
-# 
-#     # k is name of field, v is cls that represents its type
-#     for k, v in wrapped_cls.__dict__.items():
-#         # take this out if in the future you want the body of a method
-#         # to be written into the src
-#         if inspect.ismethod(v):
-#             continue
-#         # FIXME: while this will most likely not cause problems
-#         # for our use case, as almost every complex field is not
-#         # a base field but rather a user-defined one that lives
-#         # in the same models.py.  However, this will not do the case
-#         # that a complex field is of base field type
-#         if isinstance(v, list):
-#             name = '[%s]' % v[0].__name__
-#         else:
-#             # FIXME: as sdk grows, more non-field_type attrs
-#             # (which also implies that they are missing __name__)
-#             # could be attached to the wrapped_cls. Need to 
-#             # account for this.
-#             if k in ['__module__', '__doc__', '__name__']:
-#                 continue
-#             name = 'Fields.' + v.__name__
-#         src += \
-#             string.Template(FIELDS).substitute(
-#             {'field_name':k.lower(), 'field_value':name})
-#     return src
