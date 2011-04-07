@@ -700,9 +700,10 @@ class System(modellib.XObjIdModel):
 
         # Set out of date flag on xobj_model
         out_of_date = False
-        for trove in xobj_model.installed_software.trove:
-            if len(trove.available_updates.version) > 1:
+        for trove in self.installed_software.all():
+            if trove.out_of_date:
                 out_of_date = True
+                break
         xobj_model.out_of_date = out_of_date
 
         return xobj_model
@@ -1126,6 +1127,7 @@ class Trove(modellib.XObjIdModel):
         null=True)
     available_updates = models.ManyToManyField('Version',
         related_name='available_updates')
+    out_of_date = models.BooleanField(null=True)
 
     load_fields = [ name, version, flavor ]
 

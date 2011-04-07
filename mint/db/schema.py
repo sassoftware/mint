@@ -30,7 +30,6 @@ log = logging.getLogger(__name__)
 # database schema major version
 RBUILDER_DB_VERSION = sqllib.DBversion(53, 5)
 
-
 def _createTrigger(db, table, column = "changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
     retUpdate = db.createTrigger(table, column, "UPDATE")
@@ -1375,6 +1374,7 @@ def _createInventorySchema(db, cfg):
                 "flavor" text NOT NULL,
                 "is_top_level" BOOL NOT NULL,
                 "last_available_update_refresh" timestamp with time zone,
+                "out_of_date" BOOL,
                 UNIQUE ("name", "version_id", "flavor")
             )""" % db.keywords)
 
