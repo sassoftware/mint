@@ -16,6 +16,11 @@ from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDK
 from xobj import xobj
 
+from mint.django_rest.sdk_builder.rSDKUtils import ClassStub
+
+from django.db.models.loading import cache
+from mint.django_rest.rbuilder.modellib.basemodels import XObjModel
+
 ###### Sample Crap For Testing Purposes ######
     
 PKGS_XML = \
@@ -45,13 +50,17 @@ CXML = \
 </catalog>
 """.strip()
 
+from xobj.xobj import Document
+from xobj.xobj import XObjMetadata
 
 class Url(xobj.XObj, rSDK.XObjMixin):
     __metaclass__ = rSDK.GetSetXMLAttrMeta
-
+    
     tags = rSDK.Fields.TextField
+    _xobj = XObjMetadata(tag='url', attributes={'tags':tags})
 
-class Catalog(xobj.XObj, rSDK.XObjMixin):
+
+class Catalog(xobj.XObj):
     __metaclass__ = rSDK.GetSetXMLAttrMeta
 
     cid = rSDK.Fields.IntegerField
@@ -66,18 +75,27 @@ class Data(xobj.XObj, rSDK.XObjMixin):
 
 class Package(xobj.XObj, rSDK.XObjMixin):
     __metaclass__ = rSDK.GetSetXMLAttrMeta
-    
     pid = rSDK.Fields.URLField
     name = rSDK.Fields.CharField
     description = rSDK.Fields.TextField
+    _xobj = xobj.XObjMetadata(tag='package', attributes={'pid':pid})
+
 
 class Packages(xobj.XObj, rSDK.XObjMixin):
     __metaclass__ = rSDK.GetSetXMLAttrMeta
     
     package = [Package]
     data = Data
-    
+
+
+
 ##############################################
+
+from xobj.xobj import Document
+
+class Doc(Document):
+    __metaclass__ = rSDK.GetSetXMLAttrMeta
+
 
 class Command(BaseCommand):
     help = "Generates python rSDK"
@@ -87,60 +105,143 @@ class Command(BaseCommand):
         Generates Python SDK for REST API
         """
         
-        ##### For testing purposes only #####
-        doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages, 'data':Data})  # pyflakes=ignore
+        # ##### For testing purposes only #####
+        # import pdb; pdb.set_trace()
+        # doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages, 'data':Data})  # pyflakes=ignore
+        # 
+        # # assignment works but shouldn't work (should throw assertion error)
+        # # doc.packages.package[0].name = u'new name' # FIXED
+        # 
+        # import pdb; pdb.set_trace()
+        # print doc.packages.data['pid']
+        # 
+        # # assignment fails but *should* fail (throws assertion error)
+        # # doc.packages.data.pid = 1
+        # 
+        # # assignment works and *should* work
+        # # doc.packages.data.pid = rSDK.Fields.IntegerField(1)
+        # 
+        # # assignment works but shouldn't work (should throw assertion error)
+        # # doc.packages.package[0].pid = 2 # FIXED
+        # 
+        # # notice that doc.toxml() leaves doc.packages.data empty
+        # # this is still most likely because Data is being registered
+        # # as a complexType.  Also is weird because if I leave the Data
+        # # class stub as empty, the data+id are correctly displayed.
+        # # This doesn't make sense because I don't have this problem
+        # # with Package.
+        # print doc.toxml()
+        # # notice that this should also fail, I should *not* be able to
+        # # assign an integer where instance of Data is needed.
+        # # doc.packages.data = 3 # FIXED
+        # 
+        # import pdb; pdb.set_trace()
+        # # however, the following works (and should work)
+        # doc.packages.data = Data('Hello World')
+        # # doc.toxml() correctly includes and renders doc.packages.data
+        # # however it is missing the id:
+        # import pdb; pdb.set_trace()
+        # print doc.toxml()
+        # # we can assign an id -- below does *not* work and shouldn't work
+        # # doc.packages.data.pid = 'X'
+        # # we can assign an id -- below *does* work and should work
+        # # doc.packages.data.pid = rSDK.Fields.IntegerField(1)
+        # p = Package()
+        # p.description = rSDK.Fields.TextField('a new package')
+        # p.pid = rSDK.Fields.URLField('http://helloworld.com/')
+        # p.name = rSDK.Fields.CharField('my new pkg')
+        # # doc.toxml() now renders what we expect to see
+        # doc.packages.package.append(p)
+        # 
+        # print doc.toxml()
+        # 
+        # print '\n'
+        # print '\n'
+        # 
+        # doc2 = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
+        # print doc2.toxml()
+        # import pdb; pdb.set_trace()
+        # pass
         
-        # assignment works but shouldn't work (should throw assertion error)
-        # doc.packages.package[0].name = u'new name' # FIXED
+        # d = xobj.parse("<catalog />", typeMap={'catalog':Catalog, 'url':Url})
+        # u = Url('http://helloworld.com/')
+        # # u['tags'] = 'hello, greeting, common'
+        # import pdb; pdb.set_trace()
+        # pass
         
-        import pdb; pdb.set_trace()
-        print doc.packages.data['pid']
         
-        # assignment fails but *should* fail (throws assertion error)
-        # doc.packages.data.pid = 1
-        
-        # assignment works and *should* work
-        # doc.packages.data.pid = rSDK.Fields.IntegerField(1)
-        
-        # assignment works but shouldn't work (should throw assertion error)
-        # doc.packages.package[0].pid = 2 # FIXED
-        
-        # notice that doc.toxml() leaves doc.packages.data empty
-        # this is still most likely because Data is being registered
-        # as a complexType.  Also is weird because if I leave the Data
-        # class stub as empty, the data+id are correctly displayed.
-        # This doesn't make sense because I don't have this problem
-        # with Package.
-        print doc.toxml()
-        # notice that this should also fail, I should *not* be able to
-        # assign an integer where instance of Data is needed.
-        # doc.packages.data = 3 # FIXED
-        
-        import pdb; pdb.set_trace()
-        # however, the following works (and should work)
-        doc.packages.data = Data('Hello World')
-        # doc.toxml() correctly includes and renders doc.packages.data
-        # however it is missing the id:
-        import pdb; pdb.set_trace()
-        print doc.toxml()
-        # we can assign an id -- below does *not* work and shouldn't work
-        # doc.packages.data.pid = 'X'
-        # we can assign an id -- below *does* work and should work
-        # doc.packages.data.pid = rSDK.Fields.IntegerField(1)
-        p = Package()
-        p.description = rSDK.Fields.TextField('a new package')
-        p.pid = rSDK.Fields.URLField('http://helloworld.com/')
-        p.name = rSDK.Fields.CharField('my new pkg')
-        # doc.toxml() now renders what we expect to see
-        doc.packages.package.append(p)
-        
-        print doc.toxml()
-        
+        src = ClassStub(Packages)
+        print src.tosrc()
         print '\n'
-        print '\n'
         
-        doc2 = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
-        print doc2.toxml()
+        class A(object):
+            pass
+
+        class B(object):
+            pass
+
+        class A2(object):
+            pass
+
+        class C1(object):
+            list_fields = [A, A2]
+
+        class C2(object):
+            list_fields = [C1, B]
+
+        class C3(object):
+            list_fields = [A, C1]
+
+        # ['A', 'A2', 'B', 'C1', 'C2']
+
+        # def sortByListFields(*fields):
+        #     REGISTRY = []
+        #     for cls in fields:
+        #         listed = getattr(cls, 'list_fields', None)
+        #         if listed:
+        #             for c in listed:
+        #                 if cls not in REGISTRY:
+        #                     REGISTRY.append(cls)
+        #                 else:
+        #                     REGISTRY.remove(cls)
+        #                     REGISTRY.append(cls)
+        #         else:
+        #             REGISTRY.insert(0, cls)
+        #     return REGISTRY
+        
+        def sortByListFields(*fields):
+            registry = []
+            for cls in fields:
+                listed = getattr(cls, 'list_fields', None)
+                if listed:
+                    for c in listed:
+                        if cls not in registry:
+                            registry.append(cls)
+                        else:
+                            registry.remove(cls)
+                            registry.append(cls)
+                elif cls in registry:
+                    continue
+                else:
+                    registry.insert(0, cls)
+            return registry
+        
+        def findAllModels():
+             d = {}
+             for app in cache.get_apps():
+                 app_label = app.__name__.split('.')[-2]
+                 d[app_label] = app
+             return d
+        
+        ############## END ##################
+        print [c.__name__ for c in sortByListFields(B, A2, C1, A, C3, C2)]
+        # print [c.__name__ for c in sortByListFields(*sortByListFields(A, B, A2, C1, C2, C3))]
+        print ClassStub(C2).tosrc()
+        x = XObjModel()
+        models_dict = findAllModels()
+        packages = models_dict['packages']
+        pObj = packages.Packages().serialize()
+        pbj = packages.PackageBuildJob()
+        serialized = pbj.serialize()
         import pdb; pdb.set_trace()
         pass
-        ############## END ##################

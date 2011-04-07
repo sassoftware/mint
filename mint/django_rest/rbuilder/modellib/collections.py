@@ -334,11 +334,17 @@ class Collection(XObjIdModel):
             return XObjIdModel.serialize(self, request)
 
         modelList = getattr(self, listField)
+        
+        # NEW
+        if request:
+            modelList = self.filterBy(request, modelList)
+            modelList = self.orderBy(request, modelList)
+            self.paginate(request, listField, modelList)
 
-        modelList = self.filterBy(request, modelList)
-        modelList = self.orderBy(request, modelList)
-
-        self.paginate(request, listField, modelList)
+        # OLD
+        # modelList = self.filterBy(request, modelList)
+        # modelList = self.orderBy(request, modelList)
+        # self.paginate(request, listField, modelList)
 
         xobj_model = XObjIdModel.serialize(self, request)
 
