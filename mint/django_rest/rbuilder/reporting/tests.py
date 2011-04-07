@@ -1,5 +1,5 @@
-from mint.django_rest.rbuilder.models import Images, Products, Users, Versions
-from mint.django_rest.rbuilder.reporting.models import Report, Reports
+from mint.django_rest.rbuilder.models import Images, Users, Versions
+from mint.django_rest.rbuilder.appliances.models import Appliance
 
 from django.test.client import Client
 
@@ -64,7 +64,7 @@ class ImagesPerProductTestCase(unittest.TestCase):
         self.user = Users.objects.create(username='user',fullname='User T. Foo',passwd='foo',
             email='foo@bar.com', timecreated=str(time.time()), timeaccessed=str(time.time()),
             active=1)
-        self.product = Products.objects.create(hostname='foo',name='foo Applicance', 
+        self.product = Appliance.objects.create(hostname='foo',name='foo Applicance', 
             namespace='rpath',domainname='eng.rpath.com',repositoryHostName='foo.eng.rpath.com',
             prodtype='Appliance',hidden=0,creatorid=self.user,timecreated=str(time.time()),
             timemodified=str(time.time()), shortname='foo')

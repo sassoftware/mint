@@ -115,7 +115,7 @@ class LocalSetMintAdminMiddleware(BaseMiddleware):
         request._is_admin = True
         request._is_authenticated = True
         request._authUser = rbuildermodels.Users.objects.get(pk=1)
-        request._auth = ("admin", "admin")
+        request._auth = ("admin", "password")
         return None
 
 class SetMintAuthenticatedMiddleware(BaseMiddleware):
@@ -303,7 +303,13 @@ class SerializeXmlMiddleware(BaseMiddleware):
             if metrics:
                 return response
 
-            response.write(response.model.to_xml(request))
+            format = request.GET.get('format', 'xml')
+            if format == 'json':
+                response.write(response.model.to_json(request))
+                response['Content-Type'] = 'application/json'
+            else:
+                response.write(response.model.to_xml(request))
+                response['Content-Type'] = 'text/xml'
 
         return response
         

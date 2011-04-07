@@ -15,6 +15,7 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
+from mint.django_rest.rbuilder.projects import views as projectviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -235,14 +236,6 @@ urlpatterns = patterns('',
         querysetviews.QueryTagService(),
         name='QueryTag'),
 
-    # Packages
-    url(r'^api/packages/?$',
-        packageviews.PackageService(),
-        name='Packages'),
-    url(r'^api/packages/(?P<package_id>\d+)/?$',
-        packageviews.PackageService(),
-        name='Package'),
-
     # Change Logs
     url(r'^api/changelogs/?$',
         changelogviews.ChangeLogService(),
@@ -250,6 +243,138 @@ urlpatterns = patterns('',
     url(r'^api/changelogs/(?P<change_log_id>\d+)/?$',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
+
+    # Projects
+    url(r'^api/projects/?$',
+        projectviews.ProjectService(),
+        name='Projects'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/?$',
+        projectviews.ProjectService(),
+        name='Project'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersions'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/members/?$',
+        projectviews.ProjectMemberService(),
+        name='ProjectMembers'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersion'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/(?P<stage_name>[a-zA-Z0-9]+)/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStage'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/(?P<image_id>\d+)/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImage'),
+
+    # Package Workspaces
+    url(r'^api/package_workspaces/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspaces'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspace'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSessions'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/(?P<package_session_id>\d+)/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSession'),
+
+
+    # Package Versions
+    url(r'^api/packages/(?P<package_id>\d+)/package_versions/?$',
+        packageviews.PackagePackageVersionService(),
+        name='PackageVersions'),
+
+     url(r'^api/package_versions/?$',
+        packageviews.PackageVersionService(),
+        name='AllPackageVersions'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/?$',
+        packageviews.PackageVersionService(),
+        name='PackageVersion'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/'
+         'package_actions/?$',
+        packageviews.PackageVersionActionService(),
+        name='PackageVersionActions'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/'
+         'package_actions/(?P<package_version_action_id>\d+)/?$',
+        packageviews.PackageVersionActionService(),
+        name='PackageVersionAction'),
+
+    # Package Version Urls
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/urls/?$',
+        packageviews.PackageVersionUrlService(),
+        name='PackageVersionUrls'),
+
+     url(r'^api/package_versions/(?P<package_version_id>\d+)/urls/'
+          '(?P<package_version_url_id>\d+)/?$',
+        packageviews.PackageVersionUrlService(),
+        name='PackageVersionUrl'),
+    
+    # Package Version Jobs  
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_version_jobs/?$',
+        packageviews.PackageVersionJobService(),
+        name='PackageVersionJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_version_jobs/'
+         '(?P<package_version_job_id>\d+)/?$',
+        packageviews.PackageVersionJobService(),
+        name='PackageVersionJob'),
+
+    # Package Sources
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/?$',
+        packageviews.PackageSourceService(),
+        name='PackageSources'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/?$',
+        packageviews.PackageSourceService(),
+        name='PackageSource'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_source_jobs/?$',
+        packageviews.PackageSourceJobService(),
+        name='PackageSourceJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_source_jobs/(?P<package_source_job_id>\d+)/?$',
+        packageviews.PackageSourceJobService(),
+        name='PackageSourceJob'),
+
+    # Package Builds
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/?$',
+        packageviews.PackageBuildService(),
+        name='PackageBuilds'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/?$',
+        packageviews.PackageBuildService(),
+        name='PackageBuild'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/'
+         'package_build_jobs/?$',
+        packageviews.PackageBuildJobService(),
+        name='PackageBuildJobs'),
+
+    url(r'^api/package_versions/(?P<package_version_id>\d+)/package_sources/'
+         '(?P<package_source_id>\d+)/package_builds/(?P<package_build_id>\d+)/'
+          'package_build_jobs/(?P<package_build_job_id>\d+)/?$',
+        packageviews.PackageBuildJobService(),
+        name='PackageBuildJob'),
 
 )
 
