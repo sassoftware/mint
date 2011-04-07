@@ -4,6 +4,7 @@
 
 import logging
 import simplejson
+import weakref
 
 from conary import changelog, conaryclient
 from conary.conaryclient import filetypes
@@ -12,6 +13,7 @@ from conary.conaryclient import filetypes
 from rmake3.worker import plug_worker
 from mint.rmake3_package_creator import constants
 from mint.rmake3_package_creator import models
+from mint.rmake3_package_creator import trovebuilder
 
 log = logging.getLogger('rmake3.task')
 
@@ -91,7 +93,52 @@ class TaskCommitSource(BaseTask):
                 config = bool(fileModel.isConfig))
         return fmap
 
+class TaskBuildSource(BaseTask):
+    taskType = constants.NS_TASK_BUILD_SOURCE
+
+    class CB(trovebuilder.Callback):
+        def __init__(self, task):
+            self.taskref = weakref.ref(task)
+
+        def _notify(self, sense, builder, job):
+            task = self.taskref()
+            isDone, statusCode, statusMsg = builder.getBuildStatusForJob(job)
+            if isDone:
+                code = constants.Codes.OK
+            else:
+                code = constants.Codes.MSG_STATUS
+
+            task.sendStatus(code, statusMsg)
+
+        def notify_error(self, builder, job):
+            return self._notify("error", builder, job)
+
+        def notify_built(self, builder, job):
+            return self._notify("built", builder, job)
+
+        def notify_committed(self, builder, job):
+            return self._notify("committed", builder, job)
+
+    def run(self):
+        self.setConfiguration()
+        pkgs = self.buildSource()
+        response = models.Response(pkgs.toXml())
+        self.setData(response.freeze())
+        self.sendStatus(constants.Codes.OK, "Done")
+
+    def setConfiguration(self):
+        data = self.getData()
+        self.rmakeCfg = data.rmakeCfg
+        self.buildSpecs = data.buildSpecs.thaw()
+
+    def buildSource(self):
+        cb = self.CB(self)
+        builder = trovebuilder.TroveBuilder(self.rmakeCfg, callback=cb)
+        builder.build(list(self.buildSpecs), commit=True)
+        return models.PackageBuilds([])
+
 class TaskDownloadFiles(BaseTask):
+    # Downloads happen on the front-end, this is not used
     taskType = constants.NS_TASK_DOWNLOAD_FILES
 
     def run(self):

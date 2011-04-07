@@ -14,8 +14,9 @@
 
 import StringIO
 from conary import conarycfg
+from rmake.build import buildcfg as rmakeBuildCfg
 
-from rpath_repeater.models import _BaseSlotCompare, _Serializable
+from rpath_repeater.models import _BaseSlotCompare, _Serializable, _SerializableListMixIn
 from rpath_repeater.models import Trove #pyflakes=ignore
 
 class ImmutableDict(_BaseSlotCompare):
@@ -45,10 +46,33 @@ class ImmutableList(_BaseSlotCompare):
                 item = item.thaw()
             yield item
 
+class ConaryConfiguration(_BaseSlotCompare):
+    __slots__ = [ 'data' ]
+
+    Class = conarycfg.ConaryConfiguration
+
+    @classmethod
+    def fromConfigObject(cls, cfg):
+        sio = StringIO.StringIO()
+        cfg.store(sio, includeDocs=False)
+        self = cls(data=sio.getvalue())
+        return self
+
+    def toConfigObject(self):
+        obj = self.Class(readConfigFiles=False)
+        for line in self.data.splitlines():
+            obj.configLine(line)
+        return obj
+
+class RmakeConfiguration(ConaryConfiguration):
+    Class = rmakeBuildCfg.BuildConfiguration
+
 class MinimalConaryConfiguration(_BaseSlotCompare):
     __slots__ = [ 'lines' ]
-    fields = ['name', 'contact', 'repositoryMap', 'buildLabel', 'user',
-                 'installLabelPath', 'searchPath', 'entitlement', 'conaryProxy']
+    fields = ['name', 'contact',
+              'repositoryMap', 'buildLabel', 'user',
+              'installLabelPath', 'searchPath', 'entitlement', 'conaryProxy',
+              'macros', 'autoLoadRecipes', 'windowsBuildService', ]
 
     @classmethod
     def fromConaryConfig(cls, cfg):
@@ -116,3 +140,13 @@ class Response(_BaseSlotCompare):
 class PackageSource(_BaseSlotCompare, _Serializable):
     __slots__ = ( 'trove', 'built', )
     _tag = 'package_source'
+
+class PackageBuild(_BaseSlotCompare, _Serializable):
+    __slots__ = ( 'trove', )
+    _tag = 'package_build'
+
+class PackageBuilds(ImmutableList, _SerializableListMixIn):
+    _tag = 'package_builds'
+
+class PackageSourceBuildParams(_BaseSlotCompare):
+    __slots__ = ( 'rmakeCfg', 'buildSpecs', 'resultsLocation', )

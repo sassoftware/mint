@@ -82,6 +82,20 @@ class HandlerCommitSource(BaseHandler):
     def postResults(self, *args, **kwargs):
         return ReportingMixIn.postResults(self, method="POST")
 
+class HandlerBuildSource(BaseHandler):
+    jobType = constants.NS_JOB_BUILD_SOURCE
+
+    def run(self):
+        self.setStatus(constants.Codes.MSG_START, "Waiting for processing")
+        task = self.newTask(constants.NS_TASK_BUILD_SOURCE,
+            constants.NS_TASK_BUILD_SOURCE, self.data)
+        self.watchTask(task, self.jobUpdateCallback)
+        return self._handleTask(task)
+
+    def postResults(self, *args, **kwargs):
+        return # XXX until we figure out the results reporting
+        return ReportingMixIn.postResults(self, method="POST")
+
 class HandlerDownloadFiles(BaseHandler):
     jobType = constants.NS_JOB_DOWNLOAD_FILES
     ReportingXmlTag = 'package_version_url'

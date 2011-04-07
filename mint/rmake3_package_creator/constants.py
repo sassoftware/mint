@@ -10,6 +10,9 @@ NS_TASK_COMMIT_SOURCE = NS_JOB_COMMIT_SOURCE
 NS_JOB_DOWNLOAD_FILES = 'com.rpath.rbuilder.rmake.packages.download-files'
 NS_TASK_DOWNLOAD_FILES = NS_JOB_DOWNLOAD_FILES
 
+NS_JOB_BUILD_SOURCE = 'com.rpath.rbuilder.rmake.packages.build'
+NS_TASK_BUILD_SOURCE = NS_JOB_BUILD_SOURCE
+
 class Codes(object):
     # 100
     MSG_START = 101

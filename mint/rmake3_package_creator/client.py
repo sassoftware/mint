@@ -101,3 +101,8 @@ class Client(client.RepeaterClient):
         assert isinstance(params, models.PackageSourceCommitParams)
         assert isinstance(params.resultsLocation, self.ResultsLocation)
         return self.createJob(constants.NS_JOB_COMMIT_SOURCE, params)
+
+    def pc_packageSourceBuild(self, params):
+        assert isinstance(params, models.PackageSourceBuildParams)
+        assert isinstance(params.resultsLocation, self.ResultsLocation)
+        return self.createJob(constants.NS_JOB_BUILD_SOURCE, params)

@@ -9,6 +9,7 @@ import logging
 import sys
 import datetime
 import os
+import random
 import time
 import traceback
 from dateutil import tz
@@ -395,7 +396,21 @@ class SystemManager(basemanager.BaseManager):
             pass
         
         return nodes
-    
+
+    @base.exposed
+    def getWindowsBuildServiceDestination(self):
+        nodes = self.getWindowsBuildServiceNodes()
+        if not nodes:
+            return None
+        node = random.choice(nodes)
+        network = self.extractNetworkToUse(node)
+        if not network:
+            return None
+        r = network.ip_address or network.dns_name
+        dest = str(r.strip())
+        log.info("Selected Windows Build Service with network address %s", dest)
+        return dest
+
     @exposed
     def addWindowsBuildService(self, name, description, network_address):
         log.info("Adding Windows Build Service with name '%s', description '%s', and network address '%s'" % (name, description, network_address))
