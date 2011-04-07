@@ -48,7 +48,7 @@ class Command(BaseCommand):
             with open(models_path, 'w') as f:
                 f.write('from sdk.Fields import *  # pyflakes=ignore\n')
                 f.write('from sdk.rSDK import XObjMixin\n')
-                f.write('from sdk.rSDK import GetSetXMLAttrMeta\n')
+                f.write('from sdk.rSDK import GetSetXMLAttrMeta  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj\n')
                 f.write('\n\n')
                 src = self.buildSDKModels(module)
