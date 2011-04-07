@@ -1184,20 +1184,14 @@ class XObjModel(models.Model):
         fields = self.get_field_dict()
         m2m_accessors = self.get_m2m_accessor_dict()
 
-        # self.serialize_fields(xobj_model, fields, request)
-        # self.serialize_fk_fields(xobj_model, fields, request)
-        # if self.serialize_accessors:
-        #     accessors = self.get_accessor_dict()
-        #     self.serialize_fk_accessors(xobj_model, accessors, request)
-        # self.serialize_m2m_accessors(xobj_model, m2m_accessors, request)
-        # self.serialize_list_fields(xobj_model, request)
-
         self.serialize_fields(xobj_model, fields, request)
-        try:
-            self.serialize_fk_fields(xobj_model, fields, request)
-        except:
-            # import pdb; pdb.set_trace()
-            pass
+        self.serialize_fk_fields(xobj_model, fields, request)
+        if self.serialize_accessors:
+            accessors = self.get_accessor_dict()
+            self.serialize_fk_accessors(xobj_model, accessors, request)
+        self.serialize_m2m_accessors(xobj_model, m2m_accessors, request)
+        self.serialize_list_fields(xobj_model, request)
+
         if self.serialize_accessors:
             accessors = self.get_accessor_dict()
             self.serialize_fk_accessors(xobj_model, accessors, request)
