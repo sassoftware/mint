@@ -8,7 +8,6 @@ import cPickle
 import logging
 import sys
 import datetime
-import os
 import random
 import time
 import traceback
@@ -397,7 +396,7 @@ class SystemManager(basemanager.BaseManager):
         
         return nodes
 
-    @base.exposed
+    @exposed
     def getWindowsBuildServiceDestination(self):
         nodes = self.getWindowsBuildServiceNodes()
         if not nodes:
