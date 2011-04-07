@@ -1,17 +1,17 @@
-from rSDK.Fields import *  # pyflakes=ignore
-from rSDK import XObjMixin
-from rSDK import GetSetXMLAttrMeta
-from xobj import xobj
+from sdk.Fields import *  # pyflakes=ignore
+from sdk.rSDK import XObjMixin
+from sdk.rSDK import GetSetXMLAttrMeta
+from xobj.xobj import XObj
 
 
 class SystemLogEntry(XObj, XObjMixin):
     """
     """
     system_log_entry_id = AutoField
-    _xobj = XObjMetadata
     system_log = ForeignKey
     entry_date = DateTimeUtcField
     entry = CharField
+    _xobj = XObjMetadata
 
 class Targets(XObj, XObjMixin):
     """
@@ -23,90 +23,90 @@ class Targets(XObj, XObjMixin):
 class SystemTargetCredentials(XObj, XObjMixin):
     """
     """
-    credentials = ForeignKey
-    id = AutoField
     system = ForeignKey
+    id = AutoField
+    credentials = ForeignKey
 
 class SystemType(XObj, XObjMixin):
     """
     """
+    system_type_id = AutoField
+    name = CharField
     infrastructure = BooleanField
     description = CharField
-    created_date = DateTimeUtcField
-    system_type_id = AutoField
-    _xobj = XObjMetadata
     creation_descriptor = XMLField
-    name = CharField
+    created_date = DateTimeUtcField
+    _xobj = XObjMetadata
 
 class JobState(XObj, XObjMixin):
     """
     """
-    job_state_id = AutoField
     name = CharField
+    job_state_id = AutoField
     _xobj = XObjMetadata
 
 class System(XObj, XObjMixin):
     """
     """
-    management_interface = ForeignKey
-    registration_date = DateTimeUtcField
-    description = CharField
-    _xobj = XObjMetadata
-    ssl_client_certificate = CharField
-    target_system_id = CharField
-    ssl_client_key = CharField
-    target_system_name = CharField
-    major_version = ForeignKey
-    system_type = ForeignKey
-    credentials = TextField
-    generated_uuid = CharField
-    configuration = TextField
-    agent_port = IntegerField
-    stage = ForeignKey
-    name = CharField
-    ssl_server_certificate = CharField
-    local_uuid = CharField
-    managing_zone = ForeignKey
-    appliance = ForeignKey
-    hostname = CharField
-    current_state = SerializedForeignKey
     target_system_state = CharField
-    system_id = AutoField
-    launching_user = ForeignKey
-    target = ForeignKey
-    state_change_date = DateTimeUtcField
-    launch_date = DateTimeUtcField
+    target_system_name = CharField
+    target_system_id = CharField
     target_system_description = CharField
+    target = ForeignKey
+    system_type = ForeignKey
+    system_id = AutoField
+    state_change_date = DateTimeUtcField
+    stage = ForeignKey
+    ssl_server_certificate = CharField
+    ssl_client_key = CharField
+    ssl_client_certificate = CharField
+    registration_date = DateTimeUtcField
+    name = CharField
+    managing_zone = ForeignKey
+    management_interface = ForeignKey
+    major_version = ForeignKey
+    local_uuid = CharField
+    launching_user = ForeignKey
+    launch_date = DateTimeUtcField
+    hostname = CharField
+    generated_uuid = CharField
+    description = CharField
+    current_state = SerializedForeignKey
+    credentials = TextField
     created_date = DateTimeUtcField
+    configuration = TextField
+    appliance = ForeignKey
+    agent_port = IntegerField
+    _xobj = XObjMetadata
 
 class Trove(XObj, XObjMixin):
     """
     """
     version = SerializedForeignKey
-    name = TextField
-    is_top_level = BooleanField
-    _xobj = XObjMetadata
-    flavor = TextField
     trove_id = AutoField
+    name = TextField
     last_available_update_refresh = DateTimeUtcField
+    is_top_level = BooleanField
+    flavor = TextField
+    _xobj = XObjMetadata
 
 class SystemJob(XObj, XObjMixin):
     """
     """
     system_job_id = AutoField
-    _xobj = XObjMetadata
     system = ForeignKey
     job = DeferredForeignKey
     event_uuid = CharField
+    _xobj = XObjMetadata
 
 class Stage(XObj, XObjMixin):
     """
     """
     stage_id = AutoField
     name = CharField
-    _xobj = XObjMetadata
     major_version = ForeignKey
     label = TextField
+    _xobj = XObjMetadata
 
 class Configuration(XObj, XObjMixin):
     """
@@ -121,65 +121,65 @@ class Credentials(XObj, XObjMixin):
 class JobSystem(XObj, XObjMixin):
     """
     """
-    job = ForeignKey
     system_id = IntegerField
+    job = ForeignKey
     id = AutoField
 
 class Job(XObj, XObjMixin):
     """
     """
     time_updated = DateTimeUtcField
-    job_id = AutoField
-    status_code = IntegerField
-    job_state = InlinedDeferredForeignKey
     time_created = DateTimeUtcField
-    status_detail = TextField
-    _xobj = XObjMetadata
     status_text = TextField
+    status_detail = TextField
+    status_code = IntegerField
     job_uuid = CharField
+    job_state = InlinedDeferredForeignKey
+    job_id = AutoField
     event_type = InlinedForeignKey
+    _xobj = XObjMetadata
 
 class ManagementInterface(XObj, XObjMixin):
     """
     """
+    port = IntegerField
     name = CharField
     management_interface_id = AutoField
-    _xobj = XObjMetadata
-    credentials_readonly = NullBooleanField
-    created_date = DateTimeUtcField
-    credentials_descriptor = XMLField
-    port = IntegerField
     description = CharField
+    credentials_readonly = NullBooleanField
+    credentials_descriptor = XMLField
+    created_date = DateTimeUtcField
+    _xobj = XObjMetadata
 
 class EventType(XObj, XObjMixin):
     """
     """
-    name = CharField
-    _xobj = XObjMetadata
     priority = SmallIntegerField
+    name = CharField
     event_type_id = AutoField
     description = CharField
+    _xobj = XObjMetadata
 
 class SystemEvent(XObj, XObjMixin):
     """
     """
-    event_type = DeferredForeignKey
-    _xobj = XObjMetadata
-    system = DeferredForeignKey
-    time_created = DateTimeUtcField
-    event_data = TextField
-    priority = SmallIntegerField
     time_enabled = DateTimeUtcField
+    time_created = DateTimeUtcField
     system_event_id = AutoField
+    system = DeferredForeignKey
+    priority = SmallIntegerField
+    event_type = DeferredForeignKey
+    event_data = TextField
+    _xobj = XObjMetadata
 
 class ErrorResponse(XObj, XObjMixin):
     """
     """
+    traceback = TextField
+    product_code = TextField
+    message = TextField
     code = TextField
     _xobj = XObjMetadata
-    traceback = TextField
-    message = TextField
-    product_code = TextField
 
 class Pk(XObj, XObjMixin):
     """
@@ -194,78 +194,78 @@ class SystemLog(XObj, XObjMixin):
 class Inventory(XObj, XObjMixin):
     """
     """
+    zones = HrefField
+    systems = HrefField
+    system_types = HrefField
     system_states = HrefField
-    inventory_systems = HrefField
-    log = HrefField
-    _xobj = XObjMetadata
+    networks = HrefField
     management_nodes = HrefField
+    management_interfaces = HrefField
+    log = HrefField
+    job_states = HrefField
+    inventory_systems = HrefField
     infrastructure_systems = HrefField
     image_import_metadata_descriptor = HrefField
-    zones = HrefField
-    job_states = HrefField
-    systems = HrefField
-    management_interfaces = HrefField
     event_types = HrefField
-    networks = HrefField
-    system_types = HrefField
+    _xobj = XObjMetadata
 
 class Version(XObj, XObjMixin):
     """
     """
-    full = TextField
-    ordering = TextField
-    _xobj = XObjMetadata
-    flavor = TextField
-    revision = TextField
     version_id = AutoField
+    revision = TextField
+    ordering = TextField
     label = TextField
+    full = TextField
+    flavor = TextField
+    _xobj = XObjMetadata
 
 class ManagementNode(XObj, XObjMixin):
     """
     """
-    management_interface = ForeignKey
-    _xobj = XObjMetadata
-    ssl_client_key = CharField
-    system_type = ForeignKey
-    generated_uuid = CharField
-    ssl_server_certificate = CharField
-    managing_zone = ForeignKey
-    appliance = ForeignKey
-    hostname = CharField
-    system_id = AutoField
-    launching_user = ForeignKey
-    state_change_date = DateTimeUtcField
-    launch_date = DateTimeUtcField
-    local = NullBooleanField
-    registration_date = DateTimeUtcField
-    description = CharField
-    ssl_client_certificate = CharField
-    target_system_id = CharField
-    target_system_name = CharField
     zone = ForeignKey
-    credentials = TextField
-    configuration = TextField
-    node_jid = CharField
-    agent_port = IntegerField
-    stage = ForeignKey
-    name = CharField
-    system_ptr = OneToOneField
-    local_uuid = CharField
     target_system_state = CharField
-    major_version = ForeignKey
-    current_state = SerializedForeignKey
-    target = ForeignKey
+    target_system_name = CharField
+    target_system_id = CharField
     target_system_description = CharField
+    target = ForeignKey
+    system_type = ForeignKey
+    system_ptr = OneToOneField
+    system_id = AutoField
+    state_change_date = DateTimeUtcField
+    stage = ForeignKey
+    ssl_server_certificate = CharField
+    ssl_client_key = CharField
+    ssl_client_certificate = CharField
+    registration_date = DateTimeUtcField
+    node_jid = CharField
+    name = CharField
+    managing_zone = ForeignKey
+    management_interface = ForeignKey
+    major_version = ForeignKey
+    local_uuid = CharField
+    local = NullBooleanField
+    launching_user = ForeignKey
+    launch_date = DateTimeUtcField
+    hostname = CharField
+    generated_uuid = CharField
+    description = CharField
+    current_state = SerializedForeignKey
+    credentials = TextField
     created_date = DateTimeUtcField
+    configuration = TextField
+    appliance = ForeignKey
+    agent_port = IntegerField
+    _xobj = XObjMetadata
 
 class SystemState(XObj, XObjMixin):
     """
     """
-    description = CharField
-    _xobj = XObjMetadata
     system_state_id = AutoField
-    created_date = DateTimeUtcField
     name = CharField
+    description = CharField
+    created_date = DateTimeUtcField
+    _xobj = XObjMetadata
 
 class Cache(XObj, XObjMixin):
     """
@@ -280,120 +280,120 @@ class Zone(XObj, XObjMixin):
     """
     """
     zone_id = AutoField
-    _xobj = XObjMetadata
+    name = CharField
     description = CharField
     created_date = DateTimeUtcField
-    name = CharField
+    _xobj = XObjMetadata
 
 class Network(XObj, XObjMixin):
     """
     """
-    ipv6_address = CharField
-    network_id = AutoField
-    dns_name = CharField
-    required = NullBooleanField
     system = ForeignKey
-    device_name = CharField
-    netmask = CharField
+    required = NullBooleanField
     port_type = CharField
-    _xobj = XObjMetadata
-    active = NullBooleanField
+    network_id = AutoField
+    netmask = CharField
+    ipv6_address = CharField
     ip_address = CharField
+    dns_name = CharField
+    device_name = CharField
     created_date = DateTimeUtcField
+    active = NullBooleanField
+    _xobj = XObjMetadata
 
 class SystemJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    Job = [Job]
+    job = [Job]
 
 class SystemTypes(XObj, XObjMixin):
     """
     """
-    SystemType = [SystemType]
     _xobj = XObjMetadata
+    system_type = [SystemType]
 
 class SystemEvents(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    SystemEvent = [SystemEvent]
+    system_event = [SystemEvent]
 
 class EventTypes(XObj, XObjMixin):
     """
     """
-    EventType = [EventType]
     _xobj = XObjMetadata
+    event_type = [EventType]
 
 class Zones(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    Zone = [Zone]
+    zone = [Zone]
 
 class Jobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    Job = [Job]
+    job = [Job]
 
 class InstalledSoftware(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    Trove = [Trove]
+    trove = [Trove]
 
 class SystemsLog(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    SystemLogEntry = [SystemLogEntry]
+    system_log_entry = [SystemLogEntry]
 
 class ManagementInterfaces(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    ManagementInterface = [ManagementInterface]
+    management_interface = [ManagementInterface]
 
 class SystemStates(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    SystemState = [SystemState]
+    system_state = [SystemState]
 
 class ManagementNodes(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    ManagementNode = [ManagementNode]
+    management_node = [ManagementNode]
 
 class Networks(XObj, XObjMixin):
     """
     """
-    _xobj = XObjMetadata
     systems = HrefField
-    Network = [Network]
+    _xobj = XObjMetadata
+    network = [Network]
 
 class JobStates(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    JobState = [JobState]
+    job_state = [JobState]
 
 class Systems(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    end_index = IntegerField
-    System = [System]
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    filter_by = TextField
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    system = [System]
 

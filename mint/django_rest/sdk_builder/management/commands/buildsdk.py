@@ -12,6 +12,8 @@
 # full details.
 #
 
+# NOT TO BE INCLUDED IN CLIENT SIDE DISTRIBUTION #
+
 from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDKUtils
 from django.db.models.loading import cache
@@ -44,15 +46,17 @@ class Command(BaseCommand):
             if app_label in EXCLUDED_APPS:
                 continue
             with open(models_path, 'w') as f:
-                f.write('from rSDK.Fields import *  # pyflakes=ignore\n')
-                f.write('from rSDK import XObjMixin\n')
-                f.write('from rSDK import GetSetXMLAttrMeta\n')
-                f.write('from xobj import xobj\n')
+                f.write('from sdk.Fields import *  # pyflakes=ignore\n')
+                f.write('from sdk.rSDK import XObjMixin\n')
+                f.write('from sdk.rSDK import GetSetXMLAttrMeta\n')
+                f.write('from xobj.xobj import XObj\n')
                 f.write('\n\n')
                 src = self.buildSDKModels(module)
                 if src:
                     f.writelines(src.strip())
                     f.write('\n\n')
+        # now copy over rSDK into sdk package
+        pass
 
     def buildSDKModels(self, module):
         wrapped = rSDKUtils.DjangoModelsWrapper(module)
@@ -65,10 +69,6 @@ class Command(BaseCommand):
         d = {}
         for app in cache.get_apps():
             app_label = app.__name__.split('.')[-2]
-            # Doesn't work, leaves out some models
-            # d[app_label] = cache.get_models(app)
-            # Workaround:
-            # d[app_label] = [m for m in app.__dict__.values() if inspect.isclass(m)]
             d[app_label] = app
         return d
 

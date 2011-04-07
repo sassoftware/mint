@@ -1,15 +1,15 @@
-from rSDK.Fields import *  # pyflakes=ignore
-from rSDK import XObjMixin
-from rSDK import GetSetXMLAttrMeta
-from xobj import xobj
+from sdk.Fields import *  # pyflakes=ignore
+from sdk.rSDK import XObjMixin
+from sdk.rSDK import GetSetXMLAttrMeta
+from xobj.xobj import XObj
 
 
 class RepositoryLogStatus(XObj, XObjMixin):
     """
     """
-    inode = IntegerField
-    logname = CharField
     logoffset = IntegerField
+    logname = CharField
+    inode = IntegerField
 
 class Report(XObj, XObjMixin):
     """
@@ -23,9 +23,9 @@ class Reports(XObj, XObjMixin):
 class SystemUpdate(XObj, XObjMixin):
     """
     """
-    updateUser = CharField
+    update_user = CharField
+    server_name = CharField
+    repository_name = CharField
     _updatetime = DecimalField
-    serverName = CharField
-    repositoryName = CharField
     _systemupdateid = AutoField
 

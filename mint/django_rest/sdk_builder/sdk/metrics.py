@@ -1,25 +1,25 @@
-from rSDK.Fields import *  # pyflakes=ignore
-from rSDK import XObjMixin
-from rSDK import GetSetXMLAttrMeta
-from xobj import xobj
+from sdk.Fields import *  # pyflakes=ignore
+from sdk.rSDK import XObjMixin
+from sdk.rSDK import GetSetXMLAttrMeta
+from xobj.xobj import XObj
 
 
 class ServerVersions(XObj, XObjMixin):
     """
     """
-    _xobj = XObjMetadata
-    debug_toolbar_version = TextField
     django_version = TextField
+    debug_toolbar_version = TextField
+    _xobj = XObjMetadata
 
 class Timer(XObj, XObjMixin):
     """
     """
-    elapsed_time = TextField
-    total_cpu_time = TextField
     user_cpu_time = TextField
-    _xobj = XObjMetadata
-    context_switches = TextField
+    total_cpu_time = TextField
     system_cpu_time = TextField
+    elapsed_time = TextField
+    context_switches = TextField
+    _xobj = XObjMetadata
 
 class Metrics(XObj, XObjMixin):
     """

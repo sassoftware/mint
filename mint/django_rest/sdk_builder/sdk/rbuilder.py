@@ -1,7 +1,7 @@
-from rSDK.Fields import *  # pyflakes=ignore
-from rSDK import XObjMixin
-from rSDK import GetSetXMLAttrMeta
-from xobj import xobj
+from sdk.Fields import *  # pyflakes=ignore
+from sdk.rSDK import XObjMixin
+from sdk.rSDK import GetSetXMLAttrMeta
+from xobj.xobj import XObj
 
 
 class Targets(XObj, XObjMixin):
@@ -14,26 +14,26 @@ class Targets(XObj, XObjMixin):
 class Images(XObj, XObjMixin):
     """
     """
-    status = IntegerField
-    buildtype = IntegerField
-    description = TextField
-    pubreleaseid = ForeignKey
-    deleted = SmallIntegerField
-    trovelastchanged = DecimalField
-    imageId = AutoField
-    timeupdated = DecimalField
-    productversionid = ForeignKey
-    statusmessage = TextField
-    name = CharField
-    stagename = CharField
-    timecreated = DecimalField
-    troveversion = CharField
-    troveflavor = CharField
-    trovename = CharField
-    createdby = ForeignKey
     updatedby = ForeignKey
+    troveversion = CharField
+    trovename = CharField
+    trovelastchanged = DecimalField
+    troveflavor = CharField
+    timeupdated = DecimalField
+    timecreated = DecimalField
+    statusmessage = TextField
+    status = IntegerField
+    stagename = CharField
+    pubreleaseid = ForeignKey
+    productversionid = ForeignKey
+    product_id = ForeignKey
+    name = CharField
+    image_id = AutoField
+    description = TextField
+    deleted = SmallIntegerField
+    createdby = ForeignKey
+    buildtype = IntegerField
     buildcount = IntegerField
-    productId = ForeignKey
 
 class UserGroups(XObj, XObjMixin):
     """
@@ -44,149 +44,149 @@ class UserGroups(XObj, XObjMixin):
 class TargetUserCredentials(XObj, XObjMixin):
     """
     """
-    targetid = ForeignKey
     userid = ForeignKey
+    targetid = ForeignKey
     targetcredentialsid = ForeignKey
     id = AutoField
 
 class Products(XObj, XObjMixin):
     """
     """
-    backupexternal = SmallIntegerField
-    repositoryHostName = CharField
-    domainname = CharField
-    creatorid = ForeignKey
-    hidden = SmallIntegerField
-    description = TextField
-    projecturl = CharField
-    name = CharField
-    timecreated = DecimalField
-    hostname = CharField
-    namespace = CharField
-    commitemail = CharField
-    prodtype = CharField
-    shortname = CharField
     timemodified = DecimalField
-    productId = AutoField
+    timecreated = DecimalField
+    shortname = CharField
+    repository_host_name = CharField
+    projecturl = CharField
+    product_id = AutoField
+    prodtype = CharField
+    namespace = CharField
+    name = CharField
+    hostname = CharField
+    hidden = SmallIntegerField
+    domainname = CharField
+    description = TextField
+    creatorid = ForeignKey
+    commitemail = CharField
+    backupexternal = SmallIntegerField
 
 class PkiCertificates(XObj, XObjMixin):
     """
     """
-    is_ca = BooleanField
-    pkey_pem = TextField
-    fingerprint = TextField
-    time_expired = DateTimeUtcField
-    ca_serial_index = IntegerField
-    purpose = TextField
     x509_pem = TextField
-    issuer_fingerprint = ForeignKey
     time_issued = DateTimeUtcField
+    time_expired = DateTimeUtcField
+    purpose = TextField
+    pkey_pem = TextField
+    issuer_fingerprint = ForeignKey
+    is_ca = BooleanField
+    fingerprint = TextField
+    ca_serial_index = IntegerField
 
 class Fault(XObj, XObjMixin):
     """
     """
+    traceback = TextField
     message = CharField
     code = IntegerField
-    traceback = TextField
 
 class UserGroupMembers(XObj, XObjMixin):
     """
     """
     userid = ForeignKey
-    id = AutoField
     usergroupid = ForeignKey
+    id = AutoField
 
 class TargetImagesDeployed(XObj, XObjMixin):
     """
     """
+    targetimageid = CharField
     targetid = ForeignKey
     id = AutoField
-    targetimageid = CharField
     fileid = IntegerField
 
 class DatabaseVersion(XObj, XObjMixin):
     """
     """
     version = SmallIntegerField
-    id = AutoField
     minor = SmallIntegerField
+    id = AutoField
 
 class Members(XObj, XObjMixin):
     """
     """
-    level = SmallIntegerField
     userid = ForeignKey
+    product_id = ForeignKey
+    level = SmallIntegerField
     id = AutoField
-    productId = ForeignKey
 
 class Versions(XObj, XObjMixin):
     """
     """
-    name = CharField
     timecreated = DecimalField
-    productVersionId = AutoField
-    description = TextField
+    product_version_id = AutoField
+    product_id = ForeignKey
     namespace = CharField
-    productId = ForeignKey
+    name = CharField
+    description = TextField
 
 class Downloads(XObj, XObjMixin):
     """
     """
-    ip = CharField
     timedownloaded = CharField
+    ip = CharField
+    image_id = ForeignKey
     id = AutoField
-    imageId = ForeignKey
 
 class Sessions(XObj, XObjMixin):
     """
     """
-    sessionId = AutoField
-    data = TextField
     sid = CharField
+    session_id = AutoField
+    data = TextField
 
 class Releases(XObj, XObjMixin):
     """
     """
-    timemirrored = DecimalField
-    description = TextField
-    timecreated = DecimalField
-    pubreleaseid = AutoField
-    timepublished = DecimalField
-    updatedby = ForeignKey
-    name = CharField
     version = CharField
-    shouldmirror = SmallIntegerField
-    createdby = ForeignKey
+    updatedby = ForeignKey
     timeupdated = DecimalField
+    timepublished = DecimalField
+    timemirrored = DecimalField
+    timecreated = DecimalField
+    shouldmirror = SmallIntegerField
+    pubreleaseid = AutoField
     publishedby = ForeignKey
-    productId = ForeignKey
+    product_id = ForeignKey
+    name = CharField
+    description = TextField
+    createdby = ForeignKey
 
 class Users(XObj, XObjMixin):
     """
     """
     username = CharField
-    timecreated = DecimalField
-    passwd = CharField
     userid = AutoField
+    timecreated = DecimalField
+    timeaccessed = DecimalField
+    salt = TextField
+    passwd = CharField
+    fullname = CharField
+    email = CharField
     displayemail = TextField
     blurb = TextField
     active = SmallIntegerField
-    fullname = CharField
-    salt = TextField
-    email = CharField
-    timeaccessed = DecimalField
 
 class Jobs(XObj, XObjMixin):
     """
     """
-    job_id = AutoField
     job_uuid = TextField
+    job_id = AutoField
 
 class TargetCredentials(XObj, XObjMixin):
     """
     """
-    credentials = TextField
     targetcredentialsid = AutoField
+    credentials = TextField
 
 class Pk(XObj, XObjMixin):
     """
@@ -195,8 +195,8 @@ class Pk(XObj, XObjMixin):
 class TargetData(XObj, XObjMixin):
     """
     """
-    name = CharField
-    targetid = ForeignKey
     value = TextField
+    targetid = ForeignKey
+    name = CharField
     id = AutoField
 

@@ -12,6 +12,8 @@
 # full details.
 #
 
+# NOT TO BE INCLUDED IN CLIENT SIDE DISTRIBUTION #
+
 import inspect
 import string
 from xobj import xobj
@@ -34,8 +36,24 @@ def parseName(name):
     """
     ie: Changes management_nodes to ManagementNodes
     """
-    return ''.join([s.capitalize() for s in name.split('_')])
+    return ''.join(s.capitalize() for s in name.split('_'))
 
+def unparseName(name):
+    """
+    ie: Changes ManagementNodes to management_nodes
+    """
+    new_name = []
+    for idx, char in enumerate(name):
+        if char.isupper():
+            if idx == 0:
+                new_name.append(char.lower())
+            else:
+                new_name.append('_' + char.lower())
+        else:
+            new_name.append(char)
+    return ''.join(new_name)
+
+# TESTME: Not 100% sure this works
 def sortByListFields(*models):
     registry = []
     for cls in models:
@@ -67,12 +85,9 @@ class %(name)s(%(bases)s):
 %(attrs)s
 """.strip()
 
-
 class ClassStub(object):
-    def __init__(self, cls, key_parser=None, value_parser=None):
+    def __init__(self, cls):
         self.cls = cls
-        self.kp = key_parser
-        self.vp = value_parser
 
     def doc2src(self):
         indented = indent(getattr(self.cls, '__doc__', ''))
@@ -90,6 +105,16 @@ class ClassStub(object):
                 return x.__class__.__name__
                 
         def resolveDict(d):
+            """
+            Breaks down contents of dict into a form suitable for string
+            interpolation into the class stub.  ie:
+                >>> class Tag(object): pass
+                >>> d = {'id':1, 'cls':{'inner':Tag}}
+                >>> print d 
+                {'id': 1, 'cls': {'inner': <class '__main__.Tag'>}}
+                >>> print resolveDict(d)
+                {'id': 1, 'cls': {'inner': 'Tag'}}
+            """
             _d = {}
             for _k, _v in d.items():
                 if isinstance(_v, (str, unicode, int, float)):
@@ -99,10 +124,20 @@ class ClassStub(object):
                 elif isinstance(_v, list):
                     _d[_k] = resolveList(_v)
                 else:
-                    _d[k] = getName(_v)
+                    _d[_k] = getName(_v)
             return _d
 
         def resolveList(L):
+            """
+            Breaks down contents of list into a form suitable for string
+            interpolation into the class stub.  ie:
+                >>> class Tag(object): pass
+                >>> L = list(Tag, 'a', 1, [Tag()])
+                >>> print L
+                [<class '__main__.Tag'>, 'a', 1, [<__main__.Tag object at 0x100541190>]]
+                >>> print resolveList(L)
+                ['Tag', 'a', 1, ['Tag']]
+            """
             _l = []
             for _v in L:
                 if isinstance(_v, (str, unicode, int, float)):
@@ -118,16 +153,24 @@ class ClassStub(object):
         src = []
         EXCLUDED = ['__module__', '__doc__', '__name__', '__weakref__', '__dict__']
         
-        for k, v in self.cls.__dict__.items():
-            # don't inline magic methods
+        # because _xobj.XObjMetadata references fields defined in the class
+        # stub, if the metadata declaration comes before the referenced field then
+        # an error will be thrown.  therefore sort in reverse order to force the
+        # metadata to be included last
+        #
+        # FIXME: _xobj appears after fields (correctly) but before listed
+        # fields (incorrectly)
+        # FIXME: not including metaclass declaration
+        for k, v in sorted(self.cls.__dict__.items(), reverse=True):
             text = ''
+            # don't inline methods (or magic attrs)
             if k in EXCLUDED or inspect.isfunction(v):
                 continue
-            if self.kp:
-                k = self.kp(k)
-            if self.vp:
-                v = self.vp(v)
+                
+            k = unparseName(k)
             
+            # TODO: this is kind of an ugly way to solve the problem,
+            # come back and clean up later
             if isinstance(v, dict):
                 v = resolveDict(v)
                 text = '%s = %s' % (k, v) 
@@ -172,7 +215,7 @@ class DjangoModelsWrapper(object):
                 for name in dep_names:
                     model = getattr(module, name, None)
                     if not model:
-                        raise Exception('Extra-Model reference required')
+                        raise Exception('Extra-Model reference required, only intra-model references supported')
                     new_fields = cls._getModelFields(model)
                     new_fields = cls._convertFields(new_fields)
                     new = type(model.__name__, (xobj.XObj, XObjMixin), new_fields)

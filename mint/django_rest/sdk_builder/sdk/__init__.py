@@ -15,9 +15,7 @@
 import httplib2
 import urlparse
 from xobj import xobj
-from sdk import packages
-# from rSDK import Fields
-from Models import changelog
+import packages
 # sample typemap
 TYPEMAP = {'packages':packages.Packages, 'package':packages.Package}
 
@@ -28,15 +26,15 @@ def connect(base_url, auth=None):
     """
     class Client(object):
         """
-        from sdk import Models
-        api = connect('http://server/api/', (uname, pswd))
+        from sdk import packages
+        api = connect('http://server/api/', (username, passwd))
 
         # GET
         api.GET('/packages/') # get all packages
         api.GET('/packages/1') # get first package
 
         # POST
-        pkg = Models.packages.Package() # create
+        pkg = packages.Package() # create
         pkg.name = 'xobj'
         pkg.description = 'A python to xml serialization library'
         api.POST('/packages/', pkg)
@@ -74,7 +72,6 @@ def connect(base_url, auth=None):
         def GET(self, relative_url):
             url = self._relativeToAbsoluteUrl(relative_url)
             r, c = self.h.request(url, 'GET')
-            import pdb; pdb.set_trace()
             return xobj.parse(c, typeMap=TYPEMAP)
             
         def POST(self, relative_url, obj):

@@ -1,166 +1,166 @@
-from rSDK.Fields import *  # pyflakes=ignore
-from rSDK import XObjMixin
-from rSDK import GetSetXMLAttrMeta
-from xobj import xobj
+from sdk.Fields import *  # pyflakes=ignore
+from sdk.rSDK import XObjMixin
+from sdk.rSDK import GetSetXMLAttrMeta
+from xobj.xobj import XObj
 
 
 class PackageSourceJob(XObj, XObjMixin):
     """
     """
+    package_source_job_id = AutoField
+    package_source = DeferredForeignKey
+    package_action_type = ForeignKey
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    package_source_job_id = AutoField
-    created_date = DateTimeUtcField
     job_data = TextField
-    package_source = DeferredForeignKey
     job = ForeignKey
-    package_action_type = ForeignKey
+    created_date = DateTimeUtcField
     created_by = ForeignKey
     _xobj = XObjMetadata
 
 class PackageVersionUrl(XObj, XObjMixin):
     """
     """
+    url = TextField
+    package_version_url_id = AutoField
+    package_version = DeferredForeignKey
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    url = TextField
-    _xobj = XObjMetadata
-    package_version = DeferredForeignKey
+    file_size = IntegerField
+    file_path = TextField
+    downloaded_date = DateTimeUtcField
     created_date = DateTimeUtcField
     created_by = ForeignKey
-    downloaded_date = DateTimeUtcField
-    file_size = IntegerField
-    package_version_url_id = AutoField
-    file_path = TextField
+    _xobj = XObjMetadata
 
 class PackageBuild(XObj, XObjMixin):
     """
     """
+    package_source = DeferredForeignKey
+    package_build_id = AutoField
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    created_by = ForeignKey
     created_date = DateTimeUtcField
+    created_by = ForeignKey
     _xobj = XObjMetadata
-    package_build_id = AutoField
-    package_source = DeferredForeignKey
 
 class PackageVersion(XObj, XObjMixin):
     """
     """
+    package_version_id = AutoField
+    package = DeferredForeignKey
+    name = TextField
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    description = TextField
     license = TextField
-    package = DeferredForeignKey
-    _xobj = XObjMetadata
-    committed = BooleanField
-    created_by = ForeignKey
+    description = TextField
     created_date = DateTimeUtcField
+    created_by = ForeignKey
     consumable = BooleanField
-    package_version_id = AutoField
-    name = TextField
+    committed = BooleanField
+    _xobj = XObjMetadata
 
 class PackageVersionJob(XObj, XObjMixin):
     """
     """
+    package_version_job_id = AutoField
+    package_version = DeferredForeignKey
+    package_action_type = ForeignKey
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    package_version_job_id = AutoField
-    _xobj = XObjMetadata
-    package_version = DeferredForeignKey
     job_data = TextField
-    created_by = ForeignKey
     job = ForeignKey
-    package_action_type = ForeignKey
     created_date = DateTimeUtcField
+    created_by = ForeignKey
+    _xobj = XObjMetadata
 
 class PackageVersionAction(XObj, XObjMixin):
     """
     """
-    modified_date = DateTimeUtcField
     visible = BooleanField
-    _xobj = XObjMetadata
+    package_version_action_id = AutoField
     package_version = ForeignKey
+    package_action_type = ForeignKey
+    modified_date = DateTimeUtcField
     enabled = BooleanField
     descriptor = TextField
-    package_action_type = ForeignKey
     created_date = DateTimeUtcField
-    package_version_action_id = AutoField
+    _xobj = XObjMetadata
 
 class Package(XObj, XObjMixin):
     """
     """
+    package_id = AutoField
+    name = CharField
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    name = CharField
-    _xobj = XObjMetadata
-    created_by = ForeignKey
-    package_id = AutoField
-    created_date = DateTimeUtcField
     description = TextField
+    created_date = DateTimeUtcField
+    created_by = ForeignKey
+    _xobj = XObjMetadata
 
 class PackageSourceAction(XObj, XObjMixin):
     """
     """
-    modified_date = DateTimeUtcField
-    descriptor = TextField
-    _xobj = XObjMetadata
-    enabled = BooleanField
-    package_source = ForeignKey
     visible = BooleanField
-    package_action_type = ForeignKey
-    created_date = DateTimeUtcField
     package_source_action_id = AutoField
+    package_source = ForeignKey
+    package_action_type = ForeignKey
+    modified_date = DateTimeUtcField
+    enabled = BooleanField
+    descriptor = TextField
+    created_date = DateTimeUtcField
+    _xobj = XObjMetadata
 
 class PackageActionType(XObj, XObjMixin):
     """
     """
+    package_action_type_id = AutoField
+    name = TextField
     modified_date = DateTimeUtcField
     description = TextField
     created_date = DateTimeUtcField
     _xobj = XObjMetadata
-    package_action_type_id = AutoField
-    name = TextField
 
 class PackageBuildJob(XObj, XObjMixin):
     """
     """
+    package_build_job_id = AutoField
+    package_build = DeferredForeignKey
+    package_action_type = ForeignKey
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    _xobj = XObjMetadata
     job_data = TextField
-    created_by = ForeignKey
     job = ForeignKey
-    package_action_type = ForeignKey
-    package_build = DeferredForeignKey
     created_date = DateTimeUtcField
-    package_build_job_id = AutoField
+    created_by = ForeignKey
+    _xobj = XObjMetadata
 
 class PackageBuildAction(XObj, XObjMixin):
     """
     """
-    modified_date = DateTimeUtcField
     visible = BooleanField
-    _xobj = XObjMetadata
+    package_build_action_id = AutoField
+    package_build = ForeignKey
+    package_action_type = ForeignKey
+    modified_date = DateTimeUtcField
     enabled = BooleanField
     descriptor = TextField
-    package_action_type = ForeignKey
-    package_build = ForeignKey
     created_date = DateTimeUtcField
-    package_build_action_id = AutoField
+    _xobj = XObjMetadata
 
 class PackageSource(XObj, XObjMixin):
     """
     """
+    trove = ForeignKey
+    package_version = DeferredForeignKey
+    package_source_id = AutoField
     modified_date = DateTimeUtcField
     modified_by = ForeignKey
-    built = BooleanField
-    package_source_id = AutoField
-    package_version = DeferredForeignKey
-    trove = ForeignKey
-    created_by = ForeignKey
-    _xobj = XObjMetadata
     created_date = DateTimeUtcField
+    created_by = ForeignKey
+    built = BooleanField
+    _xobj = XObjMetadata
 
 class JobData(XObj, XObjMixin):
     """
@@ -170,137 +170,137 @@ class JobData(XObj, XObjMixin):
 class PackageVersions(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    end_index = IntegerField
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    PackageVersion = [PackageVersion]
-    filter_by = TextField
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    package_version = [PackageVersion]
 
 class PackageBuildJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    PackageBuildJob = [PackageBuildJob]
+    package_build_job = [PackageBuildJob]
 
 class PackageBuilds(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    end_index = IntegerField
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    filter_by = TextField
-    PackageBuild = [PackageBuild]
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    package_build = [PackageBuild]
 
 class PackageActionTypes(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    filter_by = TextField
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    PackageActionType = [PackageActionType]
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    end_index = IntegerField
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    package_action_type = [PackageActionType]
 
 class PackageSources(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    end_index = IntegerField
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    PackageSource = [PackageSource]
-    filter_by = TextField
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    package_source = [PackageSource]
 
 class Packages(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    Package = [Package]
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    end_index = IntegerField
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    filter_by = TextField
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    package = [Package]
 
 class PackageVersionUrls(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    PackageVersionUrl = [PackageVersionUrl]
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    end_index = IntegerField
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    filter_by = TextField
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    package_version_url = [PackageVersionUrl]
 
 class AllPackageVersions(XObj, XObjMixin):
     """
     """
-    count = IntegerField
-    next_page = TextField
-    num_pages = IntegerField
-    _xobj = XObjMetadata
-    previous_page = TextField
-    full_collection = TextField
-    end_index = IntegerField
-    limit = TextField
-    order_by = TextField
-    per_page = IntegerField
-    PackageVersion = [PackageVersion]
-    filter_by = TextField
     start_index = IntegerField
+    previous_page = TextField
+    per_page = IntegerField
+    order_by = TextField
+    num_pages = IntegerField
+    next_page = TextField
+    limit = TextField
+    full_collection = TextField
+    filter_by = TextField
+    end_index = IntegerField
+    count = IntegerField
+    _xobj = XObjMetadata
+    package_version = [PackageVersion]
 
 class PackageSourceJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    PackageSourceJob = [PackageSourceJob]
+    package_source_job = [PackageSourceJob]
 
 class PackageVersionJobs(XObj, XObjMixin):
     """
     """
     _xobj = XObjMetadata
-    PackageVersionJob = [PackageVersionJob]
+    package_version_job = [PackageVersionJob]
 

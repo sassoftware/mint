@@ -18,6 +18,9 @@ from xobj import xobj
 
 from mint.django_rest.sdk_builder.rSDKUtils import ClassStub
 
+from django.db.models.loading import cache
+from mint.django_rest.rbuilder.modellib.basemodels import XObjModel
+
 ###### Sample Crap For Testing Purposes ######
     
 PKGS_XML = \
@@ -223,7 +226,22 @@ class Command(BaseCommand):
                     registry.insert(0, cls)
             return registry
         
+        def findAllModels():
+             d = {}
+             for app in cache.get_apps():
+                 app_label = app.__name__.split('.')[-2]
+                 d[app_label] = app
+             return d
+        
         ############## END ##################
         print [c.__name__ for c in sortByListFields(B, A2, C1, A, C3, C2)]
         # print [c.__name__ for c in sortByListFields(*sortByListFields(A, B, A2, C1, C2, C3))]
         print ClassStub(C2).tosrc()
+        x = XObjModel()
+        models_dict = findAllModels()
+        packages = models_dict['packages']
+        pObj = packages.Packages().serialize()
+        pbj = packages.PackageBuildJob()
+        serialized = pbj.serialize()
+        import pdb; pdb.set_trace()
+        pass
