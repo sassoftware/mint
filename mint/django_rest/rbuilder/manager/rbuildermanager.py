@@ -24,7 +24,6 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'repeaterMgr' : RepeaterManager,
         'jobMgr' : JobManager,
         'querySetMgr' : QuerySetManager,
-        'packageMgr' : PackageManager,
         'changeLogMgr' : ChangeLogManager,
         'packageMgr' : PackageManager,
         'packageVersionMgr' : PackageVersionManager,
