@@ -621,7 +621,7 @@ management_node_post_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -729,7 +729,7 @@ management_node_zone_post_xml = """\
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1166,7 +1166,7 @@ system_post_xml = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <system_tags/>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1351,7 +1351,7 @@ system_post_xml_dup = """\
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
-    <network id="http://testserver/api/inventory/networks/1">
+    <network>
       <active/>
       <device_name>eth0</device_name>
       <dns_name>testnetwork.example.com</dns_name>
@@ -1865,7 +1865,7 @@ installed_software_response_xml = """
 
 system_version_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/inventory/systems/2">
+<system id="http://testserver/api/inventory/systems/3">
   %s
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <local_uuid>testsystemlocaluuid</local_uuid>

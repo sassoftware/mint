@@ -25,6 +25,9 @@ Methods:
 )
 
 def parseName(name):
+    """
+    changes management_nodes to ManagementNodes
+    """
     return ''.join([s.capitalize() for s in name.split('_')])
 
 class Command(BaseCommand):
