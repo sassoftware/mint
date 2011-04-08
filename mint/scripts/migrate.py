@@ -2561,13 +2561,8 @@ class MigrateTo_53(SchemaMigration):
 
     def migrate6(self):
         cu = self.db.cursor()
-        cu.execute("""
-            SELECT attname FROM pg_attribute, pg_type 
-            WHERE typname = 'inventory_trove'
-            AND attrelid = typrelid
-        """)
 
-        if "out_of_date" not in cu.fetchall():
+        if not columnExists(self.db, "inventory_trove", "out_of_date"):
             cu.execute("""
                 ALTER TABLE inventory_trove
                 ADD out_of_date BOOL
