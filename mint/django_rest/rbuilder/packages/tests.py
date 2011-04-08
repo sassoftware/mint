@@ -102,7 +102,6 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals(False, updatedPV.consumable)
         
     def testGetPackage(self):
-        """docstring for testGetPackage"""
         pkg = models.Package.objects.get(pk=1)
         pkg_gotten = self.xobjResponse('/api/packages/1')
         # p.package_id returns an int so cast to unicode string
@@ -111,13 +110,11 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals(pkg.description, pkg_gotten.description)
         
     def testGetPackages(self):
-        """docstring for testGetPackages"""
         pkgs = models.Packages.objects.all()
         pkgs_gotten = self.xobjResponse('/api/packages/')
         self.assertEquals(len(list(pkgs)), len(pkgs_gotten))
     
     def testGetPackageVersion(self):
-        """docstring for testGetPackageVersion"""
         pv = models.PackageVersion.objects.get(pk=1)
         pv_gotten = self.xobjResponse('/api/package_versions/1')
         self.assertEquals(unicode(pv.package_version_id), pv_gotten.package_version_id)
@@ -131,13 +128,11 @@ class PackagesTestCase(XMLTestCase):
         # self.assertEquals(pv.package_name, pv_gotten.package_name)
       
     def testGetPackageVersions(self):
-        """docstring for testGetPackageVersion"""
         pvs = models.PackageVersions.objects.all()
         pvs_gotten = self.xobjResponse('/api/package_versions/')
         self.assertEquals(len(list(pvs)), len(pvs_gotten))
         
     def testGetPackageUrl(self):
-        """docstring for testGetPackageUrl"""
         pUrl = models.PackageVersionUrl.objects.get(pk=1)
         pUrl_gotten = self.xobjResponse('/api/package_versions/1/urls/1')
         self.assertEquals(pUrl.url, pUrl_gotten.url)
@@ -146,7 +141,6 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals(pUrl.description, pUrl_gotten.description)
         
     def testGetPackageUrls(self):
-        """docstring for testGetPackageUrls"""
         pUrls = models.PackageVersionUrls.objects.all()
         pUrls_gotten = self.xobjResponse('/api/package_versions/1/urls/')
         self.assertEquals(len(list(pUrls)), len(pUrls_gotten))
