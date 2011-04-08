@@ -1,6 +1,6 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta
-from xobj.xobj import XObj, XObjMetadata
+from sdk.rSDK import RegistryMeta  # pyflakes=ignore
+from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
@@ -99,6 +99,7 @@ class Trove(XObj):
     
     version = SerializedForeignKey
     trove_id = AutoField
+    out_of_date = NullBooleanField
     name = TextField
     last_available_update_refresh = DateTimeUtcField
     is_top_level = BooleanField

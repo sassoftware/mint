@@ -1,6 +1,6 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta
-from xobj.xobj import XObj, XObjMetadata
+from sdk.rSDK import RegistryMeta  # pyflakes=ignore
+from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
@@ -20,6 +20,12 @@ class PackageSourceJob(XObj):
     created_date = DateTimeUtcField
     created_by = Users
     _xobj = XObjMetadata
+
+class PackageJobSerializerMixin(XObj):
+    """
+    """
+    __metaclass__ = RegistryMeta
+    
 
 class PackageVersionUrl(XObj):
     """
@@ -259,6 +265,14 @@ class PackageActionTypes(XObj):
     _xobj = XObjMetadata
     package_action_type = ['PackageActionType']
 
+class PackageSourceJobs(XObj):
+    """
+    """
+    __metaclass__ = RegistryMeta
+    
+    _xobj = XObjMetadata
+    package_source_job = ['PackageSourceJob']
+
 class PackageSources(XObj):
     """
     """
@@ -334,14 +348,6 @@ class AllPackageVersions(XObj):
     count = IntegerField
     _xobj = XObjMetadata
     package_version = ['PackageVersion']
-
-class PackageSourceJobs(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    _xobj = XObjMetadata
-    package_source_job = ['PackageSourceJob']
 
 class PackageVersionJobs(XObj):
     """

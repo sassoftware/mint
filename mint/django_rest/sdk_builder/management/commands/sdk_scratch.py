@@ -246,6 +246,3 @@ class Command(BaseCommand):
         # serialized = pbj.serialize()
         # import pdb; pdb.set_trace()
         # pass
-        # 
-        # def getFK(field):
-        #                     return field.related.parent_model

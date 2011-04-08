@@ -1,6 +1,6 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta
-from xobj.xobj import XObj, XObjMetadata
+from sdk.rSDK import RegistryMeta  # pyflakes=ignore
+from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
