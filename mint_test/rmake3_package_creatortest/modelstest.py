@@ -11,8 +11,6 @@ import tempfile
 import testsetup
 from testrunner import testcase
 
-from testrunner import pathManager
-
 from conary import conarycfg
 
 from mint.rmake3_package_creator import models

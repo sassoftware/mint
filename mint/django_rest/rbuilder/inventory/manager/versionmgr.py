@@ -20,6 +20,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.projects.models import Project
 from mint.rest.errors import ProductNotFound
 
 log = logging.getLogger(__name__)
@@ -101,7 +102,7 @@ class VersionManager(basemanager.BaseManager):
 
         stage = stage[0]
         try:
-            project = rbuildermodels.Products.objects.get(repositoryHostName=hostname)
+            project = Project.objects.get(repositoryHostName=hostname)
             majorVersion = rbuildermodels.Versions.objects.get(productId=project,
                 name=majorVersionName)
         except ObjectDoesNotExist:
