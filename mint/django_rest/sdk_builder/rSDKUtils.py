@@ -16,7 +16,7 @@
 
 import inspect
 from xobj import xobj
-from mint.django_rest.sdk_builder.rSDK import Fields, GetSetXMLAttrMeta, XObjMixin  # pyflakes=ignore
+from mint.django_rest.sdk_builder.rSDK import Fields, XObjMixin  # pyflakes=ignore
 
 
 def indent(txt, n=1):
@@ -137,8 +137,10 @@ class %(name)s(%(bases)s):
 """.strip()
 
 class ClassStub(object):
-    def __init__(self, cls):
+    def __init__(self, cls, key_parser=None, value_parser=None):
         self.cls = cls
+        self.kp = key_parser
+        self.vp = value_parser
 
     def doc2src(self):
         indented = indent(getattr(self.cls, '__doc__', ''))
@@ -148,7 +150,8 @@ class ClassStub(object):
         return ', '.join(b.__name__ for b in self.cls.__bases__)
 
     def attrs2src(self):
-        src = []
+        # HACK: hardcode __metaclass__
+        src = [indent('__metaclass__ = RegistryMeta\n')]
         EXCLUDED = ['__module__', '__doc__', '__name__', '__weakref__', '__dict__']
         
         # because _xobj.XObjMetadata references fields defined in the class
@@ -166,6 +169,11 @@ class ClassStub(object):
                 continue
                 
             k = unparseName(k)
+            
+            if self.kp:
+                k = self.kp(k)
+            if self.vp:
+                v = self.vp(v)
             
             # TODO: this is an UGLY way to solve the problem,
             # come back and clean up
@@ -210,70 +218,70 @@ class ClassStub(object):
         return src
 
 
-class DjangoModelsWrapper(object):
+def DjangoModelsWrapper(module):
     """
     docstring here
     """
+    # all generated classes go into collected, don't mess around
+    # with the ordering of stuff in collected (except for sorting
+    # it before iteration) as the ordering is important
+    collected = []
+    django_models = [m for m in module.__dict__.values() if inspect.isclass(m)]
+    # TESTME: sortByListFields is kind of a lucky hack, not sure if it
+    # will always work -- come back and test
+    for django_model in sortByListFields(*django_models):
+        fields_dict = _getModelFields(django_model)
+        fields_dict = _convertFields(fields_dict)
+        # process listed fields
+        if hasattr(django_model, 'list_fields'):
+            dep_names = [parseName(m) for m in django_model.list_fields]
+            for name in dep_names:
+                # FIXME: this is totally possible, *CONFIRMED PROBLEM*
+                # dunno if its possible for a model to reference another model
+                # outside of the Models.py it lives in.  if it can, then 
+                # throw an error as that contingency is not covered
+                model = getattr(module, name, None)
+                if not model:
+                    raise Exception('Extra-model reference required, only intra-model references supported')
+                # Generate new fields
+                new_fields = _getModelFields(model)
+                new_fields = _convertFields(new_fields)
+                # new class is a standin for the one in listed fields. this
+                # is *not* the corresponding class that exists in collected,
+                # it will not recieve an _xobj attr.  this isn't crucial but
+                # can be fixed at a later time.
+                # new = type(model.__name__, (xobj.XObj, XObjMixin), new_fields)
+                new = type(model.__name__, (xobj.XObj,), new_fields)
+                fields_dict[name] = [new]
+        # make sure to extract _xobj metadata
+        if hasattr(django_model, '_xobj'):
+            fields_dict['_xobj'] = getattr(django_model, '_xobj')
+        # don't forget that the order of classes in collected is important
+        # collected.append(type(django_model.__name__, (xobj.XObj, XObjMixin), fields_dict))
+        collected.append(type(django_model.__name__, (xobj.XObj,), fields_dict))
+    return collected
 
-    def __new__(cls, module):
-        """
-        docstring here
-        """
-        # all generated classes go into wrapped, don't mess around
-        # with the ordering of stuff in wrapped (except for sorting
-        # it before iteration) as the ordering is important
-        collected = []
-        django_models = [m for m in module.__dict__.values() if inspect.isclass(m)]
-        # TESTME: sortByListFields is kind of a lucky hack, not sure if it
-        # will always work -- come back and test
-        for django_model in sortByListFields(*django_models):
-            fields_dict = cls._getModelFields(django_model)
-            fields_dict = cls._convertFields(fields_dict)
-            # process listed fields
-            if hasattr(django_model, 'list_fields'):
-                dep_names = [parseName(m) for m in django_model.list_fields]
-                for name in dep_names:
-                    # FIXME: this is totally possible, *CONFIRMED PROBLEM*
-                    # dunno if its possible for a model to reference another model
-                    # outside of the Models.py it lives in.  if it can, then 
-                    # throw an error as that contingency is not covered
-                    model = getattr(module, name, None)
-                    if not model:
-                        raise Exception('Extra-model reference required, only intra-model references supported')
-                    # Generate new fields
-                    new_fields = cls._getModelFields(model)
-                    new_fields = cls._convertFields(new_fields)
-                    # new class is a standin for the one in listed fields. this
-                    # is *not* the corresponding class that exists in collected,
-                    # it will not recieve an _xobj attr.  this isn't crucial but
-                    # can be fixed at a later time.
-                    new = type(model.__name__, (xobj.XObj, XObjMixin), new_fields)
-                    fields_dict[name] = [new]
-            # make sure to extract _xobj metadata
-            if hasattr(django_model, '_xobj'):
-                fields_dict['_xobj'] = getattr(django_model, '_xobj')
-            # don't forget that the order of classes in collected is important
-            collected.append(type(django_model.__name__, (xobj.XObj, XObjMixin), fields_dict))
-        return collected
+def _getModelFields(django_model):
+    """
+    Gets all of a django model's pre-converted fields
+    """
+    d = {}
+    if hasattr(django_model, '_meta'):
+        for field in django_model._meta.fields:
+            d[field.name] = field
+    return d
 
-    @staticmethod
-    def _getModelFields(django_model):
-        """
-        Gets all of a django model's pre-converted fields
-        """
-        d = {}
-        if hasattr(django_model, '_meta'):
-            for field in django_model._meta.fields:
-                d[field.name] = field
-        return d
+def _convertFields(d):
+    """
+    Converts django fields to sdk Field classes
+    """
+    new_d = {}
+    for k in d:
+        new_field = getattr(Fields, d[k].__class__.__name__)
+        if issubclass(new_field, (Fields.ForeignKey, Fields.ManyToManyField)):
+            new_field = _getReferenced(d[k])
+        new_d[k] = new_field
+    return new_d
 
-    @staticmethod
-    def _convertFields(d):
-        """
-        Converts django fields to sdk Field classes
-        """
-        _d = {}
-        for k in d:
-            new_field = getattr(Fields, d[k].__class__.__name__)
-            _d[k] = new_field
-        return _d
+def _getReferenced(field):
+        return field.related.parent_model

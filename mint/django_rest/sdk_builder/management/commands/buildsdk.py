@@ -18,6 +18,7 @@ from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDKUtils
 from django.db.models.loading import cache
 import os
+import shutil
 
 EXCLUDED_APPS = [
     'auth',
@@ -33,10 +34,17 @@ MODULE_LEVEL_CODE = \
 """
 # DO NOT TOUCH #
 GLOBALS = globals()
-for k, v in REGISTRY.items():
-    for _k, _v in v.items():
-        if _v in GLOBALS:
-            setattr(GLOBALS[k], _k, GLOBALS[_v])
+for tag, clsAttrs in REGISTRY.items():
+    if tag in GLOBALS:
+        TYPEMAP[tag.lower()] = GLOBALS[tag]
+    for attrName, refClsOrName in clsAttrs.items():
+        if refClsOrName in GLOBALS:
+            cls = GLOBALS[tag]
+            refCls = GLOBALS[refClsOrName]
+            if isinstance(getattr(cls, attrName), list):
+                setattr(cls, attrName, [refCls])
+            else:
+                setattr(cls, attrName, refCls)
 """.strip()
 
 class Command(BaseCommand):
@@ -61,13 +69,14 @@ class Command(BaseCommand):
             # Actually write the module
             with open(models_path, 'w') as f:
                 f.write('from sdk.Fields import *  # pyflakes=ignore\n')
-                f.write('from sdk.rSDK import XObjMixin\n')
+                # f.write('from sdk.rSDK import XObjMixin\n')
                 # FIXME: can't get ClassStub to correctly include metaclass
                 # f.write('from sdk.rSDK import GetSetXMLAttrMeta  # pyflakes=ignore\n')
                 f.write('from sdk.rSDK import RegistryMeta\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata\n')
-                f.write('\n\n')
-                f.write('REGISTRY = {}\n\n')
+                f.write('\n')
+                f.write('REGISTRY = {}\n')
+                f.write('TYPEMAP = {}\n\n')
                 src = self.buildSDKModels(module)
                 if src:
                     f.writelines(src.strip())
@@ -75,7 +84,11 @@ class Command(BaseCommand):
                     f.writelines(MODULE_LEVEL_CODE)
                     f.write('\n\n')
         # now copy over rSDK into sdk package
-        pass
+        rSDK_orig_path = os.path.join(
+                current_location[0:index], 'sdk_builder/rSDK.py')
+        rSDK_new_path = os.path.join(
+                current_location[0:index], 'sdk_builder/sdk/rSDK.py')
+        shutil.copyfile(rSDK_orig_path, rSDK_new_path)
 
     def buildSDKModels(self, module):
         wrapped = rSDKUtils.DjangoModelsWrapper(module)

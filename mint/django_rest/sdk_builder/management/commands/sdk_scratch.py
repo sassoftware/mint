@@ -53,36 +53,36 @@ CXML = \
 from xobj.xobj import Document
 from xobj.xobj import XObjMetadata
 
-class Url(xobj.XObj, rSDK.XObjMixin):
-    __metaclass__ = rSDK.GetSetXMLAttrMeta
+class Url(xobj.XObj):
+
     
     tags = rSDK.Fields.TextField
     _xobj = XObjMetadata(tag='url', attributes={'tags':tags})
 
 
 class Catalog(xobj.XObj):
-    __metaclass__ = rSDK.GetSetXMLAttrMeta
+
 
     cid = rSDK.Fields.IntegerField
     url = [Url]
 
 
-class Data(xobj.XObj, rSDK.XObjMixin):
-    __metaclass__ = rSDK.GetSetXMLAttrMeta
+class Data(xobj.XObj):
+
     
     pid = rSDK.Fields.IntegerField
     
 
-class Package(xobj.XObj, rSDK.XObjMixin):
-    __metaclass__ = rSDK.GetSetXMLAttrMeta
+class Package(xobj.XObj):
+
     pid = rSDK.Fields.URLField
     name = rSDK.Fields.CharField
     description = rSDK.Fields.TextField
     _xobj = xobj.XObjMetadata(tag='package', attributes={'pid':pid})
 
 
-class Packages(xobj.XObj, rSDK.XObjMixin):
-    __metaclass__ = rSDK.GetSetXMLAttrMeta
+class Packages(xobj.XObj):
+
     
     package = [Package]
     data = Data
@@ -106,9 +106,10 @@ class Command(BaseCommand):
         """
         
         # ##### For testing purposes only #####
-        # import pdb; pdb.set_trace()
-        # doc = xobj.parse(PKGS_XML, typeMap={'packages':Packages, 'data':Data})  # pyflakes=ignore
-        # 
+        doc = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})  # pyflakes=ignore
+        import pdb; pdb.set_trace()
+        pass
+        
         # # assignment works but shouldn't work (should throw assertion error)
         # # doc.packages.package[0].name = u'new name' # FIXED
         # 
@@ -243,8 +244,8 @@ class Command(BaseCommand):
         # pObj = packages.Packages().serialize()
         # pbj = packages.PackageBuildJob()
         # serialized = pbj.serialize()
-        import pdb; pdb.set_trace()
-        pass
-
-        def getFK(field):
-            return field.related.parent_model
+        # import pdb; pdb.set_trace()
+        # pass
+        # 
+        # def getFK(field):
+        #                     return field.related.parent_model

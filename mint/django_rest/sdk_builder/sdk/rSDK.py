@@ -12,18 +12,21 @@
 # full details.
 #
 
+# INCLUDED IN CLIENT SIDE DISTRIBUTION #
+
 from xobj import xobj
+import inspect
 
 class XObjMixin(object):
-    """
-    Only do assertion after initialization is complete
-    during initialization, setattr always passed a string.
-    The idea behind validation in setattr is that once
-    the class is initialized, a class attribute may only
-    be assigned to if the assigned value is an instance
-    or an instance of a subclass of the original type.
-    """
     def __setattr__(self, k, v):
+        """
+        Only do assertion after initialization is complete
+        during initialization, setattr always passed a string.
+        The idea behind validation in setattr is that once
+        the class is initialized, a class attribute may only
+        be assigned to if the assigned value is an instance
+        or an instance of a subclass of the original type.
+        """
         check = lambda x,y: issubclass(x.__class__, y)
         try:
             # self refers to instance of child class
@@ -46,6 +49,37 @@ class XObjMixin(object):
             pass
         self.__dict__[k] = v
 
+# TODO: combine RegistryMeta and GetSetXMLAttrMeta #
+# class RegistryMeta(type):
+#     """
+#     this is what allows fk and m2m fields to work.
+#     requires that the module define an empty dictionary
+#     called REGISTRY in addition to inlining some module
+#     level code to rebind referenced class attrs after loading
+#     """
+#     def __new__(meta, name, bases, attrs):
+#         REGISTRY[name] = {}
+#         for k, v in attrs.items():
+#             if isinstance(v, list):
+#                 REGISTRY[name][k] = v[0]
+#         return type(name, bases, attrs)
+
+
+class RegistryMeta(type):
+    """
+    this is what allows fk and m2m fields to work.
+    requires that the module define an empty dictionary
+    called REGISTRY in addition to inlining some module
+    level code to rebind referenced class attrs after loading
+    """
+    def __new__(meta, name, bases, attrs):
+        cls = type(name, bases, attrs)
+        module = inspect.getmodule(cls)
+        module.REGISTRY[name] = {}
+        for k, v in attrs.items():
+            if isinstance(v, list):
+                module.REGISTRY[name][k] = v[0]
+        return cls
 
 class GetSetXMLAttrMeta(type):
     def __init__(klass, name, bases, attrs):
@@ -104,7 +138,7 @@ class Fields(object):
     """
     Need to explicitly specify __name__ attr or else it
     will be listed as 'type'.  A copy of Fields is maintained
-    inside of sdk's __init__.  Any updates to Fields must
+    inside of sdk.  Any updates to Fields must
     be propagated (sorry, I know bad technique, but its not
     too much extra effort to maintain -- future FIXME)
     """

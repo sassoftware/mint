@@ -1,77 +1,98 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import XObjMixin
 from sdk.rSDK import RegistryMeta
 from xobj.xobj import XObj, XObjMetadata
 
-
 REGISTRY = {}
+TYPEMAP = {}
 
-class FilterDescriptor(XObj, XObjMixin):
+class FilterDescriptor(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     _xobj = XObjMetadata
 
-class ChosenMembers(XObj, XObjMixin):
+class ChosenMembers(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     _xobj = XObjMetadata
 
-class SystemTag(XObj, XObjMixin):
+class SystemTag(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     system_tag_id = AutoField
-    system = ForeignKey
-    query_tag = ForeignKey
+    system = System
+    query_tag = QueryTag
     inclusion_method = SerializedForeignKey
     _xobj = XObjMetadata
 
-class ChildMembers(XObj, XObjMixin):
+class ChildMembers(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     _xobj = XObjMetadata
 
-class CollectionId(XObj, XObjMixin):
+class CollectionId(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     _xobj = XObjMetadata
 
-class InclusionMethod(XObj, XObjMixin):
+class InclusionMethod(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     name = TextField
     inclusion_method_id = AutoField
     _xobj = XObjMetadata
 
-class FilteredMembers(XObj, XObjMixin):
+class FilteredMembers(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     _xobj = XObjMetadata
 
-class QueryTag(XObj, XObjMixin):
+class QueryTag(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     query_tag_id = AutoField
-    query_set = ForeignKey
+    query_set = QuerySet
     name = TextField
     _xobj = XObjMetadata
 
-class AllMembers(XObj, XObjMixin):
+class AllMembers(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     _xobj = XObjMetadata
 
-class FilterEntry(XObj, XObjMixin):
+class FilterEntry(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     value = TextField
     operator = TextField
     filter_entry_id = AutoField
     field = TextField
     _xobj = XObjMetadata
 
-class QuerySet(XObj, XObjMixin):
+class QuerySet(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     resource_type = TextField
     query_set_id = AutoField
     name = TextField
@@ -81,9 +102,11 @@ class QuerySet(XObj, XObjMixin):
     can_modify = BooleanField
     _xobj = XObjMetadata
 
-class QuerySets(XObj, XObjMixin):
+class QuerySets(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     start_index = IntegerField
     previous_page = TextField
     per_page = IntegerField
@@ -100,8 +123,15 @@ class QuerySets(XObj, XObjMixin):
 
 # DO NOT TOUCH #
 GLOBALS = globals()
-for k, v in REGISTRY.items():
-    for _k, _v in v.items():
-        if _v in GLOBALS:
-            setattr(GLOBALS[k], _k, GLOBALS[_v])
+for tag, clsAttrs in REGISTRY.items():
+    if tag in GLOBALS:
+        TYPEMAP[tag.lower()] = GLOBALS[tag]
+    for attrName, refClsOrName in clsAttrs.items():
+        if refClsOrName in GLOBALS:
+            cls = GLOBALS[tag]
+            refCls = GLOBALS[refClsOrName]
+            if isinstance(getattr(cls, attrName), list):
+                setattr(cls, attrName, [refCls])
+            else:
+                setattr(cls, attrName, refCls)
 

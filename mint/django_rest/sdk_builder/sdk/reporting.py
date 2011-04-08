@@ -1,30 +1,37 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import XObjMixin
 from sdk.rSDK import RegistryMeta
 from xobj.xobj import XObj, XObjMetadata
 
-
 REGISTRY = {}
+TYPEMAP = {}
 
-class RepositoryLogStatus(XObj, XObjMixin):
+class RepositoryLogStatus(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     logoffset = IntegerField
     logname = CharField
     inode = IntegerField
 
-class Report(XObj, XObjMixin):
+class Report(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     _xobj = XObjMetadata
 
-class Reports(XObj, XObjMixin):
+class Reports(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
 
-class SystemUpdate(XObj, XObjMixin):
+class SystemUpdate(XObj):
     """
     """
+    __metaclass__ = RegistryMeta
+    
     update_user = CharField
     server_name = CharField
     repository_name = CharField
@@ -33,8 +40,15 @@ class SystemUpdate(XObj, XObjMixin):
 
 # DO NOT TOUCH #
 GLOBALS = globals()
-for k, v in REGISTRY.items():
-    for _k, _v in v.items():
-        if _v in GLOBALS:
-            setattr(GLOBALS[k], _k, GLOBALS[_v])
+for tag, clsAttrs in REGISTRY.items():
+    if tag in GLOBALS:
+        TYPEMAP[tag.lower()] = GLOBALS[tag]
+    for attrName, refClsOrName in clsAttrs.items():
+        if refClsOrName in GLOBALS:
+            cls = GLOBALS[tag]
+            refCls = GLOBALS[refClsOrName]
+            if isinstance(getattr(cls, attrName), list):
+                setattr(cls, attrName, [refCls])
+            else:
+                setattr(cls, attrName, refCls)
 
