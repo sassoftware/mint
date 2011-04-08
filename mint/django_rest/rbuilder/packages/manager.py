@@ -276,8 +276,6 @@ class PackageVersionManager(basemanager.BaseManager):
 
         return inventoryJob
 
-
-
     def _dispatchDownloadJob(self, package_version_job):
         urls = [u.url for u in 
             package_version_job.package_version.package_version_urls.all()]
