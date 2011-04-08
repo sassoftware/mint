@@ -136,9 +136,6 @@ class PackagesTestCase(XMLTestCase):
         pUrl = models.PackageVersionUrl.objects.get(pk=1)
         pUrl_gotten = self.xobjResponse('/api/package_versions/1/urls/1')
         self.assertEquals(pUrl.url, pUrl_gotten.url)
-        self.assertEquals(pUrl.package_id, pUrl_gotten.package_id)
-        self.assertEquals(pUrl.name, pUrl_gotten.name)
-        self.assertEquals(pUrl.description, pUrl_gotten.description)
         
     def testGetPackageUrls(self):
         pUrls = models.PackageVersionUrls.objects.all()
