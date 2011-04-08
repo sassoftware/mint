@@ -15,7 +15,7 @@
 import httplib2
 import urlparse
 from xobj import xobj
-import packages
+
 # sample typemap
 from sdk.packages import TYPEMAP
 
