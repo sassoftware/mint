@@ -1127,7 +1127,7 @@ class Trove(modellib.XObjIdModel):
         null=True)
     available_updates = models.ManyToManyField('Version',
         related_name='available_updates')
-    out_of_date = models.BooleanField(null=True)
+    out_of_date = models.NullBooleanField()
 
     load_fields = [ name, version, flavor ]
 
