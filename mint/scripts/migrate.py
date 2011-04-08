@@ -2307,7 +2307,7 @@ class MigrateTo_52(SchemaMigration):
         return True
 
 class MigrateTo_53(SchemaMigration):
-    Version = (53, 5)
+    Version = (53, 6)
 
     def migrate(self):
         db = self.db
@@ -2558,6 +2558,29 @@ class MigrateTo_53(SchemaMigration):
         """)
 
         return True
+
+    def migrate6(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT attname FROM pg_attribute, pg_type 
+            WHERE typname = 'inventory_trove'
+            AND attrelid = typrelid
+        """)
+
+        if "out_of_date" not in cu.fetchall():
+            cu.execute("""
+                ALTER TABLE inventory_trove
+                ADD out_of_date BOOL
+            """)
+
+        # Invalidate trove update cache so that all updates will be recomputed
+        cu.execute("""
+            UPDATE inventory_trove
+            SET last_available_update_refresh = NULL
+        """)
+
+        return True
+
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
