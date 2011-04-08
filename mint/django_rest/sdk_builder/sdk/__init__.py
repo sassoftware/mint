@@ -17,7 +17,7 @@ import urlparse
 from xobj import xobj
 import packages
 # sample typemap
-TYPEMAP = {'packages':packages.Packages, 'package':packages.Package}
+from sdk.packages import TYPEMAP
 
 def connect(base_url, auth=None):
     """
