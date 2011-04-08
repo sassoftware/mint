@@ -14,8 +14,6 @@ from mint.django_rest.rbuilder.packages import testsxml
 from lxml import etree
 from xobj import xobj
 
-from mint.django_rest.rbuilder.packages import views
-
 class PackagesTestCase(XMLTestCase):
     fixtures = ['packages']
 
