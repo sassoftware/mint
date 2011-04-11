@@ -1629,6 +1629,7 @@ get_installed_software_xml = """\
       <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>group-clover-appliance</name>
+      <out_of_date>true</out_of_date>
       <trove_id>1</trove_id>
       <version>
         <flavor>~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</flavor>
@@ -1655,6 +1656,7 @@ get_installed_software_xml = """\
       <is_top_level_item>True</is_top_level_item>
       <last_available_update_refresh>%s</last_available_update_refresh>
       <name>emacs</name>
+      <out_of_date/>
       <trove_id>2</trove_id>
       <version>
         <flavor>desktop is: x86_64</flavor>
@@ -1938,6 +1940,7 @@ system_available_updates_xml = """\
   <installed_software id="http://testserver/api/inventory/systems/3/installed_software">
     <trove id="http://testserver/repos/clover/api/trove/group-clover-appliance%3D/clover.eng.rpath.com%40rpath%3Aclover-1-devel/1-2-1%5B%7E%21dom0%2C%7E%21domU%2Cvmware%2C%7E%21xen%20is%3A%20x86%28i486%2Ci586%2Ci686%2Csse%2Csse2%29%5D">
       <name>group-clover-appliance</name>
+      <out_of_date>true</out_of_date>
       <trove_id>1</trove_id>
       <available_updates>
         <version>
@@ -1980,6 +1983,7 @@ system_available_updates_xml = """\
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/emacs%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
       <name>emacs</name>
+      <out_of_date/>
       <trove_id>2</trove_id>
       <available_updates>
         <version>
@@ -2541,6 +2545,7 @@ system_installed_software_version_stage_xml = """\
   <installed_software id="http://testserver/api/inventory/systems/3/installed_software">
     <trove id="http://testserver/repos/chater-foo/api/trove/group-chater-foo-appliance%3D/chater-foo.eng.rpath.com%40rpath%3Achater-foo-1-devel/1-2-1%5Bis%3A%20x86%5D">
       <name>group-chater-foo-appliance</name>
+      <out_of_date/>
       <is_top_level_item>True</is_top_level_item>
       <trove_id>3</trove_id>
       <available_updates/>
@@ -2558,6 +2563,7 @@ system_installed_software_version_stage_xml = """\
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/vim%3D/contrib.rpath.org%40rpl%3A2/23.0.60cvs20080523-1-0.1%5Bdesktop%20is%3A%20x86_64%5D">
       <name>vim</name>
+      <out_of_date/>
       <is_top_level_item>True</is_top_level_item>
       <trove_id>4</trove_id>
       <available_updates/>
@@ -2575,6 +2581,7 @@ system_installed_software_version_stage_xml = """\
     </trove>
     <trove id="http://testserver/repos/contrib/api/trove/info-sfcb%3D/contrib.rpath.org%40rpl%3A2/1-1-1%5B%5D">
       <name>info-sfcb</name>
+      <out_of_date/>
       <is_top_level_item>True</is_top_level_item>
       <trove_id>5</trove_id>
       <available_updates/>
