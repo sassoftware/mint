@@ -64,12 +64,11 @@ def sortByListFields(*models):
     for cls in models:
         listed = getattr(cls, 'list_fields', None)
         if listed:
-            for c in listed:
-                if cls not in registry:
-                    registry.append(cls)
-                else:
-                    registry.remove(cls)
-                    registry.append(cls)
+            if cls not in registry:
+                registry.append(cls)
+            else:
+                registry.remove(cls)
+                registry.append(cls)
         elif cls in registry:
             continue
         else:
@@ -121,12 +120,6 @@ class ClassStub(object):
                 text = '_xobj = ' + str(XObjMetadataResolver(v))
             else:
                 text = '%s = \'%s\'' % (k, getName(v))
-                # import pdb; pdb.set_trace()
-                pass
-                # if getattr(module, getName(v), None):
-                #     text = '%s = %s' % (k, getName(v))
-                # else:
-                #     text = '%s = \'%s\'' % (k, getName(v))
             # compile src
             src.append(indent(text))
         return ''.join(src)
@@ -233,15 +226,19 @@ def _convertFields(d):
         new_field = getattr(Fields, d[k].__class__.__name__)
         if issubclass(new_field, classes):
             new_field = _getReferenced(d[k])
-        module = _resolveDynamicClassModule(new_field)
-        new_d[k] = type(new_field.__name__, (xobj.XObj,), {'__module__':module})
+        module_name = _resolveDynamicClassModule(new_field)
+        new_d[k] = type(new_field.__name__, (xobj.XObj,), {'__module__':module_name})
     return new_d
 
 def _getReferenced(field):
+    """
+    Returns the model referenced by some variant of a fk field
+    """
     return field.related.parent_model
     
 def _resolveDynamicClassModule(field):
     module = inspect.getmodule(field)
-    return module.__name__
+    # return module.__name__
+    return 'foobar'
     
     

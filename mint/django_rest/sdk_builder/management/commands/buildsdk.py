@@ -39,8 +39,7 @@ for tag, clsAttrs in REGISTRY.items():
         TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
     for attrName, refClsOrName in clsAttrs.items():
         if refClsOrName in GLOBALS:
-            cls = GLOBALS[tag]
-            refCls = GLOBALS[refClsOrName]
+            cls, refCls = GLOBALS[tag], GLOBALS[refClsOrName]
             if isinstance(getattr(cls, attrName), list):
                 setattr(cls, attrName, [refCls])
             else:
