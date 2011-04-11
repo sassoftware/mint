@@ -240,5 +240,3 @@ def _resolveDynamicClassModule(field):
     module = inspect.getmodule(field)
     # return module.__name__
     return 'foobar'
-    
-    

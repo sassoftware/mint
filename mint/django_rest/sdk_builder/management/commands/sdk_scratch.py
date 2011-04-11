@@ -16,9 +16,9 @@ from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDK
 from xobj import xobj
 
-from mint.django_rest.sdk_builder.rSDKUtils import ClassStub
+# from mint.django_rest.sdk_builder.rSDKUtils import ClassStub
 
-from django.db.models.loading import cache
+# from django.db.models.loading import cache
 # from mint.django_rest.rbuilder.modellib.basemodels import XObjModel
 # 
 # ###### Sample Crap For Testing Purposes ######
@@ -115,7 +115,7 @@ class Catalog(xobj.XObj, rSDK.XObjMixin):
 # 
 # ##############################################
 # 
-from xobj.xobj import Document
+# from xobj.xobj import Document
 # 
 # class Doc(Document):
 #     __metaclass__ = rSDK.GetSetXMLAttrMeta
@@ -128,7 +128,7 @@ class Command(BaseCommand):
         """
         Generates Python SDK for REST API
         """
-        doc = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
+        # doc = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
 
 
         import pdb; pdb.set_trace()
