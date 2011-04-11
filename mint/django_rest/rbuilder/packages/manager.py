@@ -5,10 +5,7 @@
 #
 
 import datetime
-import tempfile
 from dateutil import tz
-
-from conary import conarycfg
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
