@@ -10,14 +10,14 @@ class FilterDescriptor(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='filter_descriptor')
 
 class ChosenMembers(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='chosen_members')
 
 class SystemTag(XObj):
     """
@@ -28,21 +28,21 @@ class SystemTag(XObj):
     system = System
     query_tag = QueryTag
     inclusion_method = SerializedForeignKey
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_tag')
 
 class ChildMembers(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='child_members')
 
 class CollectionId(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='collection')
 
 class InclusionMethod(XObj):
     """
@@ -51,14 +51,14 @@ class InclusionMethod(XObj):
     
     name = TextField
     inclusion_method_id = AutoField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='inclusion_method')
 
 class FilteredMembers(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='filtered_members')
 
 class QueryTag(XObj):
     """
@@ -68,14 +68,14 @@ class QueryTag(XObj):
     query_tag_id = AutoField
     query_set = QuerySet
     name = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='query_tag')
 
 class AllMembers(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='all_members')
 
 class FilterEntry(XObj):
     """
@@ -86,7 +86,7 @@ class FilterEntry(XObj):
     operator = TextField
     filter_entry_id = AutoField
     field = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='filter_entry')
 
 class QuerySet(XObj):
     """
@@ -100,7 +100,7 @@ class QuerySet(XObj):
     description = TextField
     created_date = DateTimeUtcField
     can_modify = BooleanField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='query_set')
 
 class QuerySets(XObj):
     """
@@ -118,7 +118,7 @@ class QuerySets(XObj):
     filter_by = TextField
     end_index = IntegerField
     count = IntegerField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='query_sets',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     query_set = ['QuerySet']
 
 # DO NOT TOUCH #

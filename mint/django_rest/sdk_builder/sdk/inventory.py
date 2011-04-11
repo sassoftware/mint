@@ -14,7 +14,7 @@ class SystemLogEntry(XObj):
     system_log = SystemLog
     entry_date = DateTimeUtcField
     entry = CharField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_log_entry')
 
 class Targets(XObj):
     """
@@ -45,7 +45,7 @@ class SystemType(XObj):
     description = CharField
     creation_descriptor = XMLField
     created_date = DateTimeUtcField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_type',attributes={'id':str})
 
 class JobState(XObj):
     """
@@ -54,7 +54,7 @@ class JobState(XObj):
     
     name = CharField
     job_state_id = AutoField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='job_state',attributes={'id':str})
 
 class System(XObj):
     """
@@ -90,7 +90,7 @@ class System(XObj):
     configuration = TextField
     appliance = Products
     agent_port = IntegerField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system',attributes={'id':str},elements=['networks'])
 
 class Trove(XObj):
     """
@@ -104,7 +104,7 @@ class Trove(XObj):
     last_available_update_refresh = DateTimeUtcField
     is_top_level = BooleanField
     flavor = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='trove')
 
 class SystemJob(XObj):
     """
@@ -115,7 +115,7 @@ class SystemJob(XObj):
     system = System
     job = DeferredForeignKey
     event_uuid = CharField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='__systemjob')
 
 class Stage(XObj):
     """
@@ -126,21 +126,21 @@ class Stage(XObj):
     name = CharField
     major_version = Versions
     label = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='stage')
 
 class Configuration(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='configuration',attributes={'id':str})
 
 class Credentials(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='credentials',attributes={'id':str},elements=['ssl_client_certificate', 'ssl_client_key'])
 
 class JobSystem(XObj):
     """
@@ -165,7 +165,7 @@ class Job(XObj):
     job_state = InlinedDeferredForeignKey
     job_id = AutoField
     event_type = InlinedForeignKey
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='job',attributes={'id':str})
 
 class ManagementInterface(XObj):
     """
@@ -179,7 +179,7 @@ class ManagementInterface(XObj):
     credentials_readonly = NullBooleanField
     credentials_descriptor = XMLField
     created_date = DateTimeUtcField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='management_interface',attributes={'id':str})
 
 class EventType(XObj):
     """
@@ -190,7 +190,7 @@ class EventType(XObj):
     name = CharField
     event_type_id = AutoField
     description = CharField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='event_type')
 
 class SystemEvent(XObj):
     """
@@ -204,7 +204,7 @@ class SystemEvent(XObj):
     priority = SmallIntegerField
     event_type = DeferredForeignKey
     event_data = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_event',attributes={'id':str})
 
 class ErrorResponse(XObj):
     """
@@ -215,7 +215,7 @@ class ErrorResponse(XObj):
     product_code = TextField
     message = TextField
     code = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='fault')
 
 class Pk(XObj):
     """
@@ -249,7 +249,7 @@ class Inventory(XObj):
     infrastructure_systems = HrefField
     image_import_metadata_descriptor = HrefField
     event_types = HrefField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='inventory')
 
 class Version(XObj):
     """
@@ -262,7 +262,7 @@ class Version(XObj):
     label = TextField
     full = TextField
     flavor = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='version')
 
 class ManagementNode(XObj):
     """
@@ -302,7 +302,7 @@ class ManagementNode(XObj):
     configuration = TextField
     appliance = Products
     agent_port = IntegerField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='management_node',attributes={'id':str},elements=['networks'])
 
 class SystemState(XObj):
     """
@@ -313,7 +313,7 @@ class SystemState(XObj):
     name = CharField
     description = CharField
     created_date = DateTimeUtcField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(attributes={'id':str})
 
 class Cache(XObj):
     """
@@ -326,7 +326,7 @@ class ConfigurationDescriptor(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='configuration_descriptor',attributes={'id':str})
 
 class Zone(XObj):
     """
@@ -337,7 +337,7 @@ class Zone(XObj):
     name = CharField
     description = CharField
     created_date = DateTimeUtcField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='zone',attributes={'id':str})
 
 class Network(XObj):
     """
@@ -355,14 +355,14 @@ class Network(XObj):
     device_name = CharField
     created_date = DateTimeUtcField
     active = NullBooleanField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='network',attributes={'id':str})
 
 class SystemJobs(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_jobs')
     job = ['Job']
 
 class SystemTypes(XObj):
@@ -370,7 +370,7 @@ class SystemTypes(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_types',elements=['system_type'])
     system_type = ['SystemType']
 
 class SystemEvents(XObj):
@@ -378,7 +378,7 @@ class SystemEvents(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_events')
     system_event = ['SystemEvent']
 
 class EventTypes(XObj):
@@ -386,7 +386,7 @@ class EventTypes(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='event_types')
     event_type = ['EventType']
 
 class Zones(XObj):
@@ -394,7 +394,7 @@ class Zones(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='zones',elements=['zone'])
     zone = ['Zone']
 
 class Jobs(XObj):
@@ -402,7 +402,7 @@ class Jobs(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='jobs',attributes={'id':str},elements=['job'])
     job = ['Job']
 
 class InstalledSoftware(XObj):
@@ -410,7 +410,7 @@ class InstalledSoftware(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='installed_software',attributes={'id':str})
     trove = ['Trove']
 
 class SystemsLog(XObj):
@@ -418,7 +418,7 @@ class SystemsLog(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='systems_log')
     system_log_entry = ['SystemLogEntry']
 
 class ManagementInterfaces(XObj):
@@ -426,7 +426,7 @@ class ManagementInterfaces(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='management_interfaces',elements=['management_interface'])
     management_interface = ['ManagementInterface']
 
 class SystemStates(XObj):
@@ -434,7 +434,7 @@ class SystemStates(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='system_states')
     system_state = ['SystemState']
 
 class ManagementNodes(XObj):
@@ -442,7 +442,7 @@ class ManagementNodes(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='management_nodes')
     management_node = ['ManagementNode']
 
 class Networks(XObj):
@@ -451,7 +451,7 @@ class Networks(XObj):
     __metaclass__ = RegistryMeta
     
     systems = HrefField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='networks',elements=['network', 'systems'])
     network = ['Network']
 
 class JobStates(XObj):
@@ -459,7 +459,7 @@ class JobStates(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='job_states',elements=['job_state'])
     job_state = ['JobState']
 
 class Systems(XObj):
@@ -478,7 +478,7 @@ class Systems(XObj):
     filter_by = TextField
     end_index = IntegerField
     count = IntegerField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='systems',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     system = ['System']
 
 # DO NOT TOUCH #

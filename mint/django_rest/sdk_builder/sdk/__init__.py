@@ -21,6 +21,7 @@ from sdk.packages import TYPEMAP
 
 def connect(base_url, auth=None):
     """
+    ie:
     base_url = 'http://server.com/api/'
     auth = (username, password)
     """
@@ -29,31 +30,31 @@ def connect(base_url, auth=None):
         from sdk import packages
         api = connect('http://server/api/', (username, passwd))
 
-        # GET
+        [GET]
         api.GET('/packages/') # get all packages
         api.GET('/packages/1') # get first package
 
-        # POST
+        [POST]
         pkg = packages.Package() # create
         pkg.name = 'xobj'
         pkg.description = 'A python to xml serialization library'
         api.POST('/packages/', pkg)
 
-        # PUT
+        [PUT]
         pkg2 = api.GET('/packages/2')
         pkg2.name = 'Package 2 Renamed'
         api.PUT('/packages/2', pkg2)
 
-        # DELETE
+        [DELETE]
         api.DELETE('/packages/2')
 
-        # Navigate
+        [Navigate]
         pkgs = api.GET('/packages/')
         for p in pkgs.package:
             print 'id: %s' % p['id']
             print 'name: %s, description: %s' % (p.name, p.description)
 
-        # Validate
+        [Validate]
         pkg = api.GET('/packages/1')
         isinstance(pkg['id'], URLField) # is True
         pkg['id'] = 'bad id' # throws an assertion error

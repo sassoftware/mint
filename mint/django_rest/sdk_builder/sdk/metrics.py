@@ -12,7 +12,7 @@ class ServerVersions(XObj):
     
     django_version = TextField
     debug_toolbar_version = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='server_versions')
 
 class Timer(XObj):
     """
@@ -24,14 +24,14 @@ class Timer(XObj):
     system_cpu_time = TextField
     elapsed_time = TextField
     context_switches = TextField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='timer')
 
 class Metrics(XObj):
     """
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='metrics')
 
 # DO NOT TOUCH #
 GLOBALS = globals()

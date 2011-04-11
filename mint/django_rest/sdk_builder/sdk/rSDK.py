@@ -17,6 +17,41 @@
 from xobj import xobj
 import inspect
 
+def toUnderscore(name):
+    """
+    used to be unparseName
+    ie: Changes ManagementNodes to management_nodes
+    """
+    L = []
+    F = lambda i, c: L.append(c.lower()) if i == 0 else L.append('_' + c.lower())
+    for i, c in enumerate(name):
+        if c.isupper():
+            F(i, c)
+        else:
+            L.append(c)
+    return ''.join(L)
+
+class TypedProperty(object):
+    def __init__(self, name, type, default=None):
+        """docstring for __init__"""
+        self.name = '_' + name
+        self.type = type
+        self.default = type() if default is None else default
+        
+    def __get__(self, instance, cls):
+        """docstring for __get__"""
+        return getattr(instance, self.name, self.default) if instance else self
+        
+    def __set__(self, instance, value):
+        """docstring for __set__"""
+        if not isinstance(value, self.type):
+            raise TypeError('Must be a %s' % self.type)
+        setattr(instance, self.name, value)
+        
+    def __delete__(self, instance):
+        """docstring for __delete__"""
+        raise AttributeError("Can't delete attribute")
+    
 class XObjMixin(object):
     def __setattr__(self, k, v):
         """
@@ -31,7 +66,6 @@ class XObjMixin(object):
         try:
             # self refers to instance of child class
             item = self.__class__.__dict__[k]
-
             # item is list if so indicated in class stub
             if isinstance(item, list):
                 assert(len(item) == 1)
@@ -44,26 +78,11 @@ class XObjMixin(object):
                 else:
                     assert(check(v, item[0]))
             else:
-                assert(check(v, item))
+                if not k.startswith('_'):
+                    assert(check(v, item))
         except KeyError: # __dict__ not initialized yet
             pass
         self.__dict__[k] = v
-
-# TODO: combine RegistryMeta and GetSetXMLAttrMeta #
-# class RegistryMeta(type):
-#     """
-#     this is what allows fk and m2m fields to work.
-#     requires that the module define an empty dictionary
-#     called REGISTRY in addition to inlining some module
-#     level code to rebind referenced class attrs after loading
-#     """
-#     def __new__(meta, name, bases, attrs):
-#         REGISTRY[name] = {}
-#         for k, v in attrs.items():
-#             if isinstance(v, list):
-#                 REGISTRY[name][k] = v[0]
-#         return type(name, bases, attrs)
-
 
 class RegistryMeta(type):
     """
@@ -79,6 +98,8 @@ class RegistryMeta(type):
         for k, v in attrs.items():
             if isinstance(v, list):
                 module.REGISTRY[name][k] = v[0]
+            elif isinstance(v, str):
+                module.REGISTRY[name][k] = v
         return cls
 
 class GetSetXMLAttrMeta(type):
@@ -133,7 +154,6 @@ class GetSetXMLAttrMeta(type):
         klass.__getitem__ = __getitem__
         klass.__setitem__ = __setitem__
     
-
 class Fields(object):
     """
     Need to explicitly specify __name__ attr or else it

@@ -47,6 +47,8 @@ for tag, clsAttrs in REGISTRY.items():
                 setattr(cls, attrName, refCls)
 """.strip()
 
+
+
 class Command(BaseCommand):
     help = "Generates python sdk"
 

@@ -12,13 +12,13 @@
 # # full details.
 # #
 # 
-# from django.core.management.base import BaseCommand
-# from mint.django_rest.sdk_builder import rSDK
-# from xobj import xobj
-# 
-# from mint.django_rest.sdk_builder.rSDKUtils import ClassStub
-# 
-# from django.db.models.loading import cache
+from django.core.management.base import BaseCommand
+from mint.django_rest.sdk_builder import rSDK
+from xobj import xobj
+
+from mint.django_rest.sdk_builder.rSDKUtils import ClassStub
+
+from django.db.models.loading import cache
 # from mint.django_rest.rbuilder.modellib.basemodels import XObjModel
 # 
 # ###### Sample Crap For Testing Purposes ######
@@ -38,33 +38,57 @@
 # </packages>
 # """.strip()
 # 
-# CXML = \
-# """
-# <catalog cid="1">
-#     <url tags="hello world, greeting, common">
-#         http://helloworld.com/
-#     </url>
-#     <url tags="goodbye world, farewell, common">
-#         http://goodbyeworld.com/
-#     </url>
-# </catalog>
-# """.strip()
+CXML = \
+"""
+<catalog cid="1">
+    <url tags="hello world, greeting, common">
+        http://helloworld.com/
+    </url>
+    <url tags="goodbye world, farewell, common">
+        http://goodbyeworld.com/
+    </url>
+</catalog>
+""".strip()
+
+class TypedProperty(object):
+    def __init__(self, name, type, default=None):
+        """docstring for __init__"""
+        self.name = '_' + name
+        self.type = type
+        self.default = type() if default is None else default
+        
+    def __get__(self, instance, cls):
+        """docstring for __get__"""
+        return getattr(instance, self.name, self.default) if instance else self
+        
+    def __set__(self, instance, value):
+        """docstring for __set__"""
+        if not isinstance(value, self.type):
+            raise TypeError('Must be a %s' % self.type)
+        setattr(instance, self.name, value)
+        
+    def __delete__(self, instance):
+        """docstring for __delete__"""
+        raise AttributeError("Can't delete attribute")
+
+    def __call__(self, data=None, *args, **kwargs):
+        return type(data)
+        
 # 
 # from xobj.xobj import Document
-# from xobj.xobj import XObjMetadata
+from xobj.xobj import XObjMetadata
 # 
-# class Url(xobj.XObj):
-# 
-#     
-#     tags = rSDK.Fields.TextField
-#     _xobj = XObjMetadata(tag='url', attributes={'tags':tags})
-# 
-# 
-# class Catalog(xobj.XObj):
-# 
-# 
-#     cid = rSDK.Fields.IntegerField
-#     url = [Url]
+class Url(xobj.XObj, rSDK.XObjMixin):
+    tags = rSDK.Fields.TextField
+    _xobj = XObjMetadata(tag='url', attributes={'tags':tags})
+
+class Catalog(xobj.XObj, rSDK.XObjMixin):
+    cid = rSDK.Fields.IntegerField
+    url = [Url]
+    _xobj = XObjMetadata(tag='Catalog', attributes={'cid':cid})
+
+    
+    
 # 
 # 
 # class Data(xobj.XObj):
@@ -91,20 +115,25 @@
 # 
 # ##############################################
 # 
-# from xobj.xobj import Document
+from xobj.xobj import Document
 # 
 # class Doc(Document):
 #     __metaclass__ = rSDK.GetSetXMLAttrMeta
 # 
 # 
-# class Command(BaseCommand):
-#     help = "Generates python rSDK"
-# 
-#     def handle(self, *args, **options):
-#         """
-#         Generates Python SDK for REST API
-#         """
-#         
+class Command(BaseCommand):
+    help = "Generates python rSDK"
+
+    def handle(self, *args, **options):
+        """
+        Generates Python SDK for REST API
+        """
+        doc = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
+
+
+        import pdb; pdb.set_trace()
+        pass
+
 #         # ##### For testing purposes only #####
 #         doc = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})  # pyflakes=ignore
 #         import pdb; pdb.set_trace()
@@ -246,3 +275,5 @@
 #         # serialized = pbj.serialize()
 #         # import pdb; pdb.set_trace()
 #         # pass
+
+"dict(tag=%(tag))"

@@ -19,7 +19,7 @@ class Report(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(attributes={'id':str},elements=['name', 'description', 'descriptor', 'data', 'timeCreated'])
 
 class Reports(XObj):
     """

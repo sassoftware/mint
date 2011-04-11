@@ -14,7 +14,7 @@ class ChangeLogEntry(XObj):
     entry_date = DateTimeUtcField
     change_log_entry_id = AutoField
     change_log = ChangeLog
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='change_log_entry')
 
 class ChangeLog(XObj):
     """
@@ -24,7 +24,7 @@ class ChangeLog(XObj):
     resource_type = TextField
     resource_id = IntegerField
     change_log_id = AutoField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='change_log')
 
 class ChangeLogs(XObj):
     """
@@ -42,7 +42,7 @@ class ChangeLogs(XObj):
     filter_by = TextField
     end_index = IntegerField
     count = IntegerField
-    _xobj = XObjMetadata
+    _xobj = xobj.XObjMetadata(tag='change_logs',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     change_log = ['ChangeLog']
 
 # DO NOT TOUCH #
