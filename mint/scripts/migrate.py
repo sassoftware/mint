@@ -2561,7 +2561,6 @@ class MigrateTo_53(SchemaMigration):
 
     def migrate6(self):
         cu = self.db.cursor()
-
         if not columnExists(self.db, "inventory_trove", "out_of_date"):
             cu.execute("""
                 ALTER TABLE inventory_trove
@@ -2574,8 +2573,11 @@ class MigrateTo_53(SchemaMigration):
             SET last_available_update_refresh = NULL
         """)
 
-        return True
+class MigrateTo_54(SchemaMigration):
+    Version = (54, 0)
 
+    def migrate(self):
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
