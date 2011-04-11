@@ -36,7 +36,7 @@ MODULE_LEVEL_CODE = \
 GLOBALS = globals()
 for tag, clsAttrs in REGISTRY.items():
     if tag in GLOBALS:
-        TYPEMAP[tag.lower()] = GLOBALS[tag]
+        TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
     for attrName, refClsOrName in clsAttrs.items():
         if refClsOrName in GLOBALS:
             cls = GLOBALS[tag]
@@ -74,7 +74,7 @@ class Command(BaseCommand):
                 # f.write('from sdk.rSDK import XObjMixin\n')
                 # FIXME: can't get ClassStub to correctly include metaclass
                 # f.write('from sdk.rSDK import GetSetXMLAttrMeta  # pyflakes=ignore\n')
-                f.write('from sdk.rSDK import RegistryMeta  # pyflakes=ignore\n')
+                f.write('from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')
                 f.write('REGISTRY = {}\n')

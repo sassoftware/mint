@@ -1,5 +1,5 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta  # pyflakes=ignore
+from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -10,9 +10,9 @@ class RepositoryLogStatus(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    logoffset = IntegerField
-    logname = CharField
-    inode = IntegerField
+    logoffset = 'IntegerField'
+    logname = 'CharField'
+    inode = 'IntegerField'
 
 class Report(XObj):
     """
@@ -32,17 +32,17 @@ class SystemUpdate(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    update_user = CharField
-    server_name = CharField
-    repository_name = CharField
-    _updatetime = DecimalField
-    _systemupdateid = AutoField
+    update_user = 'CharField'
+    server_name = 'CharField'
+    repository_name = 'CharField'
+    _updatetime = 'DecimalField'
+    _systemupdateid = 'AutoField'
 
 # DO NOT TOUCH #
 GLOBALS = globals()
 for tag, clsAttrs in REGISTRY.items():
     if tag in GLOBALS:
-        TYPEMAP[tag.lower()] = GLOBALS[tag]
+        TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
     for attrName, refClsOrName in clsAttrs.items():
         if refClsOrName in GLOBALS:
             cls = GLOBALS[tag]

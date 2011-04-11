@@ -1,5 +1,5 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta  # pyflakes=ignore
+from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -10,8 +10,8 @@ class ServerVersions(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    django_version = TextField
-    debug_toolbar_version = TextField
+    django_version = 'TextField'
+    debug_toolbar_version = 'TextField'
     _xobj = xobj.XObjMetadata(tag='server_versions')
 
 class Timer(XObj):
@@ -19,11 +19,11 @@ class Timer(XObj):
     """
     __metaclass__ = RegistryMeta
     
-    user_cpu_time = TextField
-    total_cpu_time = TextField
-    system_cpu_time = TextField
-    elapsed_time = TextField
-    context_switches = TextField
+    user_cpu_time = 'TextField'
+    total_cpu_time = 'TextField'
+    system_cpu_time = 'TextField'
+    elapsed_time = 'TextField'
+    context_switches = 'TextField'
     _xobj = xobj.XObjMetadata(tag='timer')
 
 class Metrics(XObj):
@@ -37,7 +37,7 @@ class Metrics(XObj):
 GLOBALS = globals()
 for tag, clsAttrs in REGISTRY.items():
     if tag in GLOBALS:
-        TYPEMAP[tag.lower()] = GLOBALS[tag]
+        TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
     for attrName, refClsOrName in clsAttrs.items():
         if refClsOrName in GLOBALS:
             cls = GLOBALS[tag]

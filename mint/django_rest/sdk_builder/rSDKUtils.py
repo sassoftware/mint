@@ -107,21 +107,23 @@ class ClassStub(object):
         # FIXME: _xobj appears after fields (correctly) but before listed
         # fields (incorrectly).
         # FIXME: not automatically including metaclass declaration
+        
+        module = inspect.getmodule(self.cls)
+        
         for k, v in sorted(self.cls.__dict__.items(), reverse=True):
             text = ''
             # don't inline methods (or magic attrs)
             if k in EXCLUDED or inspect.isfunction(v):
                 continue
-                
             k = toUnderscore(k)
-            
+            # parse attrs and generate src code
             if isinstance(v, list):
                 text = '%s = [\'%s\']' % (k, v[0].__name__)
             elif isinstance(v, xobj.XObjMetadata):
                 text = '_xobj = ' + str(XObjMetadataResolver(v))
             else:
-                text = '%s = %s' % (k, getName(v))
-                
+                text = '%s = \'%s\'' % (k, getName(v))
+            # compile src
             src.append(indent(text))
         return ''.join(src)
 
@@ -140,10 +142,6 @@ class XObjMetadataResolver(object):
         self.fromTemplate = lambda (name, val): '%s%s%s' % (
                     name if val else '', '=' if val else '', val if val else '')
 
-    def resolveMetadata(self):
-        return [('tag', self.resolveTag()), ('attributes', self.resolveAttributes()), 
-                ('text', self.resolveText()), ('elements', self.resolveElements())]
-
     def resolveTag(self):
         return "\'%s\'" % self._xobj.tag.lower() if self._xobj.tag else ''
 
@@ -158,6 +156,10 @@ class XObjMetadataResolver(object):
 
     def resolveText(self):
         return "\'%s\'" % self._xobj.text.strip() if self._xobj.text else ''
+
+    def resolveMetadata(self):
+        return [('tag', self.resolveTag()), ('attributes', self.resolveAttributes()), 
+                ('text', self.resolveText()), ('elements', self.resolveElements())]
 
     def __str__(self):
         metadata = self.resolveMetadata()
@@ -225,7 +227,8 @@ def _convertFields(d):
     new_d = {}
     for k in d:
         new_field = getattr(Fields, d[k].__class__.__name__)
-        if issubclass(new_field, (Fields.ForeignKey, Fields.ManyToManyField)):
+        classes = (Fields.ForeignKey, Fields.ManyToManyField, Fields.DeferredForeignKey)
+        if issubclass(new_field, classes):
             new_field = _getReferenced(d[k])
         new_d[k] = type(new_field.__name__, (xobj.XObj,), {})
     return new_d
