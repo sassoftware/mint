@@ -17,7 +17,7 @@
 import inspect
 from xobj import xobj
 from mint.django_rest.sdk_builder.rSDK import Fields, XObjMixin  # pyflakes=ignore
-
+import imp
 
 def indent(txt, n=1):
     """
@@ -52,6 +52,12 @@ def toUnderscore(name):
             L.append(c)
     return ''.join(L)
 
+def getName(x):
+    if inspect.isclass(x):
+        return x.__name__
+    else:
+        return x.__class__.__name__
+
 # TESTME: Not 100% sure this works
 def sortByListFields(*models):
     registry = []
@@ -69,12 +75,6 @@ def sortByListFields(*models):
         else:
             registry.insert(0, cls)
     return registry
-
-def getName(x):
-    if inspect.isclass(x):
-        return x.__name__
-    else:
-        return x.__class__.__name__
 
 CLASS = \
 """
@@ -108,8 +108,6 @@ class ClassStub(object):
         # fields (incorrectly).
         # FIXME: not automatically including metaclass declaration
         
-        module = inspect.getmodule(self.cls)
-        
         for k, v in sorted(self.cls.__dict__.items(), reverse=True):
             text = ''
             # don't inline methods (or magic attrs)
@@ -123,6 +121,12 @@ class ClassStub(object):
                 text = '_xobj = ' + str(XObjMetadataResolver(v))
             else:
                 text = '%s = \'%s\'' % (k, getName(v))
+                # import pdb; pdb.set_trace()
+                pass
+                # if getattr(module, getName(v), None):
+                #     text = '%s = %s' % (k, getName(v))
+                # else:
+                #     text = '%s = \'%s\'' % (k, getName(v))
             # compile src
             src.append(indent(text))
         return ''.join(src)
@@ -205,9 +209,8 @@ def DjangoModelsWrapper(module):
         # make sure to extract _xobj metadata
         if hasattr(django_model, '_xobj'):
             fields_dict['_xobj'] = getattr(django_model, '_xobj')
-        # don't forget that the order of classes in collected is important
-        # collected.append(type(django_model.__name__, (xobj.XObj, XObjMixin), fields_dict))
-        collected.append(type(django_model.__name__, (xobj.XObj,), fields_dict))
+        klass = type(django_model.__name__, (xobj.XObj,), fields_dict)
+        collected.append(klass)
     return collected
 
 def _getModelFields(django_model):
@@ -225,13 +228,20 @@ def _convertFields(d):
     Converts django fields to sdk Field classes
     """
     new_d = {}
+    classes = (Fields.ForeignKey, Fields.ManyToManyField, Fields.DeferredForeignKey)
     for k in d:
         new_field = getattr(Fields, d[k].__class__.__name__)
-        classes = (Fields.ForeignKey, Fields.ManyToManyField, Fields.DeferredForeignKey)
         if issubclass(new_field, classes):
             new_field = _getReferenced(d[k])
-        new_d[k] = type(new_field.__name__, (xobj.XObj,), {})
+        module = _resolveDynamicClassModule(new_field)
+        new_d[k] = type(new_field.__name__, (xobj.XObj,), {'__module__':module})
     return new_d
 
 def _getReferenced(field):
     return field.related.parent_model
+    
+def _resolveDynamicClassModule(field):
+    module = inspect.getmodule(field)
+    return module.__name__
+    
+    
