@@ -20,7 +20,19 @@ from mint.rmake3_package_creator import client
 
 exposed = basemanager.exposed
 
-class PackageManager(basemanager.BaseManager):
+class BaseManager(basemanager.BaseManager):
+    @exposed
+    def getConaryConfig(self):
+        cfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
+        cfg.configLine('name %s' % self.user.fullname)
+        cfg.configLine('contact %s' % self.user.email)
+        # TODO: figure how to set the host
+        host = "127.0.0.1"
+        #cfg.configLine("includeConfigFile https://%s/conaryrc" % host)
+        cfg.configLine('user * %s %s' % (self.cfg.authUser, self.cfg.authPass))
+        return cfg
+
+class PackageManager(BaseManager):
     """docstring for PackageManager"""
     
     @exposed
@@ -74,7 +86,7 @@ class PackageManager(basemanager.BaseManager):
         pass
 
 
-class PackageVersionManager(basemanager.BaseManager):
+class PackageVersionManager(BaseManager):
     
     @exposed
     def getAllPackageVersions(self):
@@ -458,3 +470,4 @@ class PackageVersionManager(basemanager.BaseManager):
 
     def _dispatchJob(self):
         pass
+

@@ -31,7 +31,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
     }
 
     def __init__(self, cfg=None, userName=None):
-        super(self.__class__, self).__init__(cfg=cfg, userName=userName)
+        super(RbuilderManager, self).__init__(cfg=cfg, userName=userName)
         for name, manager in self.MANAGERS.items():
             mgr = manager(weakref.proxy(self))
             setattr(self, name, mgr)

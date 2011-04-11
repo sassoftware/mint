@@ -15,7 +15,7 @@ try:
     DATABASE_NAME = os.environ['MINT_LOCAL_DB']  # Or path to database file if using sqlite3.
 except:
     DATABASE_NAME = os.path.realpath('../mint-local.db')
-TEST_DATABASE_NAME = '../test-mint-local.db'
+TEST_DATABASE_NAME = os.path.realpath('../test-mint-local.db')
 
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
