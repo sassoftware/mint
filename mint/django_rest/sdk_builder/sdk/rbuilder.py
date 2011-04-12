@@ -1,245 +1,225 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore
+from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
-class Targets(XObj):
+class Targets(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    targettype = 'CharField'
-    targetname = 'CharField'
+    __metaclass__ = SDKClassMeta
     targetid = 'IntegerField'
+    targetname = 'CharField'
+    targettype = 'CharField'
 
-class Images(XObj):
+class Images(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    updatedby = 'Users'
-    troveversion = 'CharField'
-    trovename = 'CharField'
-    trovelastchanged = 'DecimalField'
-    troveflavor = 'CharField'
-    timeupdated = 'DecimalField'
-    timecreated = 'DecimalField'
-    statusmessage = 'TextField'
-    status = 'IntegerField'
-    stagename = 'CharField'
-    pubreleaseid = 'Releases'
-    productversionid = 'Versions'
-    product_id = 'Products'
-    name = 'CharField'
-    image_id = 'AutoField'
-    description = 'TextField'
-    deleted = 'SmallIntegerField'
-    createdby = 'Users'
-    buildtype = 'IntegerField'
+    __metaclass__ = SDKClassMeta
     buildcount = 'IntegerField'
-
-class UserGroups(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    usergroupid = 'AutoField'
-    usergroup = 'CharField'
-
-class TargetUserCredentials(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    userid = 'Users'
-    targetid = 'Targets'
-    targetcredentialsid = 'TargetCredentials'
-    id = 'AutoField'
-
-class Products(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    timemodified = 'DecimalField'
-    timecreated = 'DecimalField'
-    shortname = 'CharField'
-    repository_host_name = 'CharField'
-    projecturl = 'CharField'
-    product_id = 'AutoField'
-    prodtype = 'CharField'
-    namespace = 'CharField'
-    name = 'CharField'
-    hostname = 'CharField'
-    hidden = 'SmallIntegerField'
-    domainname = 'CharField'
-    description = 'TextField'
-    creatorid = 'Users'
-    commitemail = 'CharField'
-    backupexternal = 'SmallIntegerField'
-
-class PkiCertificates(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    x509_pem = 'TextField'
-    time_issued = 'DateTimeUtcField'
-    time_expired = 'DateTimeUtcField'
-    purpose = 'TextField'
-    pkey_pem = 'TextField'
-    issuer_fingerprint = 'PkiCertificates'
-    is_ca = 'BooleanField'
-    fingerprint = 'TextField'
-    ca_serial_index = 'IntegerField'
-
-class Fault(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    traceback = 'TextField'
-    message = 'CharField'
-    code = 'IntegerField'
-
-class UserGroupMembers(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    userid = 'Users'
-    usergroupid = 'UserGroups'
-    id = 'AutoField'
-
-class TargetImagesDeployed(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    targetimageid = 'CharField'
-    targetid = 'Targets'
-    id = 'AutoField'
-    fileid = 'IntegerField'
-
-class DatabaseVersion(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    version = 'SmallIntegerField'
-    minor = 'SmallIntegerField'
-    id = 'AutoField'
-
-class Members(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    userid = 'Users'
-    product_id = 'Products'
-    level = 'SmallIntegerField'
-    id = 'AutoField'
-
-class Versions(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    timecreated = 'DecimalField'
-    product_version_id = 'AutoField'
-    product_id = 'Products'
-    namespace = 'CharField'
-    name = 'CharField'
-    description = 'TextField'
-
-class Downloads(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    timedownloaded = 'CharField'
-    ip = 'CharField'
-    image_id = 'Images'
-    id = 'AutoField'
-
-class Sessions(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    sid = 'CharField'
-    session_id = 'AutoField'
-    data = 'TextField'
-
-class Releases(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    version = 'CharField'
-    updatedby = 'Users'
-    timeupdated = 'DecimalField'
-    timepublished = 'DecimalField'
-    timemirrored = 'DecimalField'
-    timecreated = 'DecimalField'
-    shouldmirror = 'SmallIntegerField'
-    pubreleaseid = 'AutoField'
-    publishedby = 'Users'
-    product_id = 'Products'
-    name = 'CharField'
-    description = 'TextField'
+    buildtype = 'IntegerField'
     createdby = 'Users'
-
-class Users(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    username = 'CharField'
-    userid = 'AutoField'
-    timecreated = 'DecimalField'
-    timeaccessed = 'DecimalField'
-    salt = 'TextField'
-    passwd = 'CharField'
-    fullname = 'CharField'
-    email = 'CharField'
-    displayemail = 'TextField'
-    blurb = 'TextField'
-    active = 'SmallIntegerField'
-
-class Jobs(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    job_uuid = 'TextField'
-    job_id = 'AutoField'
-
-class TargetCredentials(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    targetcredentialsid = 'AutoField'
-    credentials = 'TextField'
-
-class Pk(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-
-class TargetData(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    value = 'TextField'
-    targetid = 'Targets'
+    deleted = 'SmallIntegerField'
+    description = 'TextField'
+    image_id = 'AutoField'
     name = 'CharField'
+    product_id = 'Products'
+    productversionid = 'Versions'
+    pubreleaseid = 'Releases'
+    stagename = 'CharField'
+    status = 'IntegerField'
+    statusmessage = 'TextField'
+    timecreated = 'DecimalField'
+    timeupdated = 'DecimalField'
+    troveflavor = 'CharField'
+    trovelastchanged = 'DecimalField'
+    trovename = 'CharField'
+    troveversion = 'CharField'
+    updatedby = 'Users'
+
+class UserGroups(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    usergroup = 'CharField'
+    usergroupid = 'AutoField'
+
+class TargetUserCredentials(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
     id = 'AutoField'
+    targetcredentialsid = 'TargetCredentials'
+    targetid = 'Targets'
+    userid = 'Users'
+
+class Products(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    backupexternal = 'SmallIntegerField'
+    commitemail = 'CharField'
+    creatorid = 'Users'
+    description = 'TextField'
+    domainname = 'CharField'
+    hidden = 'SmallIntegerField'
+    hostname = 'CharField'
+    name = 'CharField'
+    namespace = 'CharField'
+    prodtype = 'CharField'
+    product_id = 'AutoField'
+    projecturl = 'CharField'
+    repository_host_name = 'CharField'
+    shortname = 'CharField'
+    timecreated = 'DecimalField'
+    timemodified = 'DecimalField'
+
+class PkiCertificates(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    ca_serial_index = 'IntegerField'
+    fingerprint = 'TextField'
+    is_ca = 'BooleanField'
+    issuer_fingerprint = 'PkiCertificates'
+    pkey_pem = 'TextField'
+    purpose = 'TextField'
+    time_expired = 'DateTimeUtcField'
+    time_issued = 'DateTimeUtcField'
+    x509_pem = 'TextField'
+
+class Fault(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    code = 'IntegerField'
+    message = 'CharField'
+    traceback = 'TextField'
+
+class UserGroupMembers(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    id = 'AutoField'
+    usergroupid = 'UserGroups'
+    userid = 'Users'
+
+class TargetImagesDeployed(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    fileid = 'IntegerField'
+    id = 'AutoField'
+    targetid = 'Targets'
+    targetimageid = 'CharField'
+
+class DatabaseVersion(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    id = 'AutoField'
+    minor = 'SmallIntegerField'
+    version = 'SmallIntegerField'
+
+class Members(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    id = 'AutoField'
+    level = 'SmallIntegerField'
+    product_id = 'Products'
+    userid = 'Users'
+
+class Versions(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    description = 'TextField'
+    name = 'CharField'
+    namespace = 'CharField'
+    product_id = 'Products'
+    product_version_id = 'AutoField'
+    timecreated = 'DecimalField'
+
+class Downloads(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    id = 'AutoField'
+    image_id = 'Images'
+    ip = 'CharField'
+    timedownloaded = 'CharField'
+
+class Sessions(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    data = 'TextField'
+    session_id = 'AutoField'
+    sid = 'CharField'
+
+class Releases(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    createdby = 'Users'
+    description = 'TextField'
+    name = 'CharField'
+    product_id = 'Products'
+    publishedby = 'Users'
+    pubreleaseid = 'AutoField'
+    shouldmirror = 'SmallIntegerField'
+    timecreated = 'DecimalField'
+    timemirrored = 'DecimalField'
+    timepublished = 'DecimalField'
+    timeupdated = 'DecimalField'
+    updatedby = 'Users'
+    version = 'CharField'
+
+class Users(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    active = 'SmallIntegerField'
+    blurb = 'TextField'
+    displayemail = 'TextField'
+    email = 'CharField'
+    fullname = 'CharField'
+    passwd = 'CharField'
+    salt = 'TextField'
+    timeaccessed = 'DecimalField'
+    timecreated = 'DecimalField'
+    userid = 'AutoField'
+    username = 'CharField'
+
+class Jobs(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    job_id = 'AutoField'
+    job_uuid = 'TextField'
+
+class TargetCredentials(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    credentials = 'TextField'
+    targetcredentialsid = 'AutoField'
+
+class Pk(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+
+class TargetData(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    id = 'AutoField'
+    name = 'CharField'
+    targetid = 'Targets'
+    value = 'TextField'
 
 # DO NOT TOUCH #
 GLOBALS = globals()

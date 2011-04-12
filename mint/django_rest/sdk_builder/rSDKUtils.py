@@ -16,8 +16,7 @@
 
 import inspect
 from xobj import xobj
-from mint.django_rest.sdk_builder.rSDK import Fields, XObjMixin  # pyflakes=ignore
-import imp
+from mint.django_rest.sdk_builder import Fields  # pyflakes=ignore
 
 def indent(txt, n=1):
     """
@@ -95,19 +94,10 @@ class ClassStub(object):
 
     def attrs2src(self):
         # HACK: hardcode __metaclass__
-        src = [indent('__metaclass__ = RegistryMeta\n')]
+        src = [indent('__metaclass__ = SDKClassMeta')]
         EXCLUDED = ['__module__', '__doc__', '__name__', '__weakref__', '__dict__']
-        
-        # because _xobj.XObjMetadata references fields defined in the class
-        # stub, if the metadata declaration comes before the referenced field then
-        # an error will be thrown.  therefore sort in reverse order to force the
-        # metadata to be included last
-        #
-        # FIXME: _xobj appears after fields (correctly) but before listed
-        # fields (incorrectly).
-        # FIXME: not automatically including metaclass declaration
-        
-        for k, v in sorted(self.cls.__dict__.items(), reverse=True):
+        # FIXME: not automatically including metaclass declaration        
+        for k, v in sorted(self.cls.__dict__.items()):
             text = ''
             # don't inline methods (or magic attrs)
             if k in EXCLUDED or inspect.isfunction(v):
@@ -115,12 +105,11 @@ class ClassStub(object):
             k = toUnderscore(k)
             # parse attrs and generate src code
             if isinstance(v, list):
-                text = '%s = [\'%s\']' % (k, v[0].__name__)
+                text = '%s = [%r]' % (k, v[0].__name__)
             elif isinstance(v, xobj.XObjMetadata):
                 text = '_xobj = ' + str(XObjMetadataResolver(v))
             else:
                 text = '%s = \'%s\'' % (k, getName(v))
-            # compile src
             src.append(indent(text))
         return ''.join(src)
 
@@ -134,13 +123,17 @@ class ClassStub(object):
 
 
 class XObjMetadataResolver(object):
+    """
+    converts _xobj = xobj.XObjMetadata( ... ) into src code
+    """
+    
     def __init__(self, _xobj):
         self._xobj = _xobj
         self.fromTemplate = lambda (name, val): '%s%s%s' % (
                     name if val else '', '=' if val else '', val if val else '')
 
     def resolveTag(self):
-        return "\'%s\'" % self._xobj.tag.lower() if self._xobj.tag else ''
+        return "%r" % self._xobj.tag.lower() if self._xobj.tag else ''
 
     def resolveElements(self):
         return self._xobj.elements
@@ -161,7 +154,7 @@ class XObjMetadataResolver(object):
     def __str__(self):
         metadata = self.resolveMetadata()
         src = [s for s in map(self.fromTemplate, metadata) if s]
-        if src: return 'xobj.XObjMetadata(' + ','.join(src) + ')'
+        if src: return 'XObjMetadata(' + ','.join(src) + ')'
         return ''
 
 def DjangoModelsWrapper(module):
@@ -193,16 +186,18 @@ def DjangoModelsWrapper(module):
                 new_fields = _getModelFields(model)
                 new_fields = _convertFields(new_fields)
                 # new class is a standin for the one in listed fields. this
-                # is *not* the corresponding class that exists in collected,
-                # it will not recieve an _xobj attr.  this isn't crucial but
-                # can be fixed at a later time.
-                # new = type(model.__name__, (xobj.XObj, XObjMixin), new_fields)
-                new = type(model.__name__, (xobj.XObj,), new_fields)
+                # is *not* the corresponding class that exists in collected
+                new = type(model.__name__, (object,), new_fields)
                 fields_dict[name] = [new]
         # make sure to extract _xobj metadata
         if hasattr(django_model, '_xobj'):
             fields_dict['_xobj'] = getattr(django_model, '_xobj')
-        klass = type(django_model.__name__, (xobj.XObj,), fields_dict)
+        # Have tried attaching __module__ here to no avail
+        # the custom __module__ "should" be set inside fields_dict
+        # however, upon inspection, it isn't.  hard coding 
+        # coding it *does* seem to work
+        klass = type(django_model.__name__, (object,), fields_dict)
+        klass.__module__ = _resolveDynamicClassModule(django_model)
         collected.append(klass)
     return collected
 
@@ -218,25 +213,34 @@ def _getModelFields(django_model):
 
 def _convertFields(d):
     """
-    Converts django fields to sdk Field classes
+    Converts django fields to sdk Field classes.
+    If django field is fk or m2m it will also be
+    converted.
     """
     new_d = {}
-    classes = (Fields.ForeignKey, Fields.ManyToManyField, Fields.DeferredForeignKey)
+    classes = (Fields.ForeignKey, Fields.ManyToManyField,
+               Fields.DeferredForeignKey, Fields.SerializedForeignKey)
     for k in d:
         new_field = getattr(Fields, d[k].__class__.__name__)
         if issubclass(new_field, classes):
             new_field = _getReferenced(d[k])
-        module_name = _resolveDynamicClassModule(new_field)
-        new_d[k] = type(new_field.__name__, (xobj.XObj,), {'__module__':module_name})
+        new_d[k] = new_field
     return new_d
 
 def _getReferenced(field):
     """
-    Returns the model referenced by some variant of a fk field
+    Returns the model referenced by some variant of a
+    fk or m2m field
     """
     return field.related.parent_model
     
 def _resolveDynamicClassModule(field):
-    module = inspect.getmodule(field)
-    # return module.__name__
-    return 'foobar'
+    """
+    mint.django_rest.rbuilder.packages.models
+    """
+    module = inspect.getmodule(field).__name__.split('.')
+    return '.'.join(['sdk', module[-2], field.__name__])
+    
+    
+    
+    

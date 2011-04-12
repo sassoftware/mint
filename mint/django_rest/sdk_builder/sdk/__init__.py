@@ -48,17 +48,11 @@ def connect(base_url, auth=None):
         [DELETE]
         api.DELETE('/packages/2')
 
-        [Navigate]
-        pkgs = api.GET('/packages/')
-        for p in pkgs.package:
-            print 'id: %s' % p['id']
-            print 'name: %s, description: %s' % (p.name, p.description)
-
         [Validate]
         pkg = api.GET('/packages/1')
-        isinstance(pkg['id'], URLField) # is True
-        pkg['id'] = 'bad id' # throws an assertion error
-        pkg['id'] = 'http://validid.com/' # works
+        isinstance(pkg.id, URLField) # is True
+        pkg.id = 'bad id' # throws an assertion error
+        pkg.id = 'http://validid.com/' # works
         """
         
         HEADERS = {'content-type':'text/xml'}
