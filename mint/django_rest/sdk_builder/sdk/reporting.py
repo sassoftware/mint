@@ -1,42 +1,38 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore
+from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
-class RepositoryLogStatus(XObj):
+class RepositoryLogStatus(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    logoffset = 'IntegerField'
-    logname = 'CharField'
+    __metaclass__ = SDKClassMeta
     inode = 'IntegerField'
+    logname = 'CharField'
+    logoffset = 'IntegerField'
 
-class Report(XObj):
+class Report(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    _xobj = xobj.XObjMetadata(attributes={'id':str},elements=['name', 'description', 'descriptor', 'data', 'timeCreated'])
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(attributes={'id':str},elements=['name', 'description', 'descriptor', 'data', 'timeCreated'])
 
-class Reports(XObj):
+class Reports(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
+    __metaclass__ = SDKClassMeta
 
-class SystemUpdate(XObj):
+class SystemUpdate(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    update_user = 'CharField'
-    server_name = 'CharField'
-    repository_name = 'CharField'
-    _updatetime = 'DecimalField'
+    __metaclass__ = SDKClassMeta
     _systemupdateid = 'AutoField'
+    _updatetime = 'DecimalField'
+    repository_name = 'CharField'
+    server_name = 'CharField'
+    update_user = 'CharField'
 
 # DO NOT TOUCH #
 GLOBALS = globals()
