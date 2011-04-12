@@ -16,8 +16,7 @@
 
 import inspect
 from xobj import xobj
-from mint.django_rest.sdk_builder.rSDK import Fields, XObjMixin  # pyflakes=ignore
-import imp
+from mint.django_rest.sdk_builder import Fields  # pyflakes=ignore
 
 def indent(txt, n=1):
     """

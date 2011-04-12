@@ -70,9 +70,6 @@ class Command(BaseCommand):
             # Actually write the module
             with open(models_path, 'w') as f:
                 f.write('from sdk.Fields import *  # pyflakes=ignore\n')
-                # f.write('from sdk.rSDK import XObjMixin\n')
-                # FIXME: can't get ClassStub to correctly include metaclass
-                # f.write('from sdk.rSDK import GetSetXMLAttrMeta  # pyflakes=ignore\n')
                 f.write('from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')
@@ -84,12 +81,20 @@ class Command(BaseCommand):
                     f.write('\n\n')
                     f.writelines(MODULE_LEVEL_CODE)
                     f.write('\n\n')
+                    
         # now copy over rSDK into sdk package
         rSDK_orig_path = os.path.join(
                 current_location[0:index], 'sdk_builder/rSDK.py')
         rSDK_new_path = os.path.join(
                 current_location[0:index], 'sdk_builder/sdk/rSDK.py')
         shutil.copyfile(rSDK_orig_path, rSDK_new_path)
+        
+        # now copy over Fields into sdk package
+        Fields_orig_path = os.path.join(
+                current_location[0:index], 'sdk_builder/Fields.py')
+        Fields_new_path = os.path.join(
+                current_location[0:index], 'sdk_builder/sdk/Fields.py')
+        shutil.copyfile(Fields_orig_path, Fields_new_path)
 
     def buildSDKModels(self, module):
         wrapped = rSDKUtils.DjangoModelsWrapper(module)
