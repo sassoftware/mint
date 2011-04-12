@@ -31,27 +31,6 @@ def toUnderscore(name):
             L.append(c)
     return ''.join(L)
 
-class TypedProperty(object):
-    def __init__(self, name, type, default=None):
-        """docstring for __init__"""
-        self.name = '_' + name
-        self.type = type
-        self.default = type() if default is None else default
-        
-    def __get__(self, instance, cls):
-        """docstring for __get__"""
-        return getattr(instance, self.name, self.default) if instance else self
-        
-    def __set__(self, instance, value):
-        """docstring for __set__"""
-        if not isinstance(value, self.type):
-            raise TypeError('Must be a %s' % self.type)
-        setattr(instance, self.name, value)
-        
-    def __delete__(self, instance):
-        """docstring for __delete__"""
-        raise AttributeError("Can't delete attribute")
-    
 class XObjMixin(object):
     def __setattr__(self, k, v):
         """
@@ -84,17 +63,41 @@ class XObjMixin(object):
             pass
         self.__dict__[k] = v
 
-class RegistryMeta(type):
+class SDKClassMeta(type):
     """
     this is what allows fk and m2m fields to work.
     requires that the module define an empty dictionary
     called REGISTRY in addition to inlining some module
     level code to rebind referenced class attrs after loading
+    
+    additionally, redefining the cls's __init__ method allows
+    the instantiation of the class stubs using kwargs. ie:
+    >>> p = Package(name="Nano", package_id=1)
+    >>> p.name
+    Nano
+    >>> type(p.name)
+    <class 'sdk.Fields.CharField'>
     """
     def __new__(meta, name, bases, attrs):
+        # __init__ allows initializing cls
+        # using kwargs
+        def __init__(self, *args, **kwargs):
+            if kwargs:
+                for k, v in kwargs.items():
+                    # shadow cls attr
+                    try:
+                        attr = getattr(cls, k)(v)
+                        setattr(self, k, attr)
+                    except TypeError:
+                        setattr(self, k, v)
+        # Build cls and set __init__
         cls = type(name, bases, attrs)
+        cls.__init__ = __init__
+        # Get REGISTRY bound to cls's module
         module = inspect.getmodule(cls)
         module.REGISTRY[name] = {}
+        # Rebind cls attributes with their
+        # corresponding classes
         for k, v in attrs.items():
             if isinstance(v, list):
                 module.REGISTRY[name][k] = v[0]
@@ -165,6 +168,18 @@ class Fields(object):
     
     class CharField(xobj.XObj):
         __name__ = 'CharField'
+        
+        def __init__(self, data=None):
+            self.data = data
+        
+        def __get__(self, instance, owner):
+            print 'Got!'
+            return self.data
+            
+        def __set__(self, instance, value):
+            print 'Value is: ' + value
+            self.data = value
+            
             
     class DecimalField(xobj.XObj):
         __name__ = 'DecimalField'

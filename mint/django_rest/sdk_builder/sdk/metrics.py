@@ -1,37 +1,34 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore
+from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
-class ServerVersions(XObj):
+class ServerVersions(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    django_version = 'TextField'
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='server_versions')
     debug_toolbar_version = 'TextField'
-    _xobj = xobj.XObjMetadata(tag='server_versions')
+    django_version = 'TextField'
 
-class Timer(XObj):
+class Timer(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    user_cpu_time = 'TextField'
-    total_cpu_time = 'TextField'
-    system_cpu_time = 'TextField'
-    elapsed_time = 'TextField'
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='timer')
     context_switches = 'TextField'
-    _xobj = xobj.XObjMetadata(tag='timer')
+    elapsed_time = 'TextField'
+    system_cpu_time = 'TextField'
+    total_cpu_time = 'TextField'
+    user_cpu_time = 'TextField'
 
-class Metrics(XObj):
+class Metrics(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    _xobj = xobj.XObjMetadata(tag='metrics')
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='metrics')
 
 # DO NOT TOUCH #
 GLOBALS = globals()

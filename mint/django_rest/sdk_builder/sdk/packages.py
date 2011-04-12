@@ -1,361 +1,337 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore
+from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
-class PackageSourceJob(XObj):
+class PackageSourceJob(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_source_job')
+    created_by = 'Users'
+    created_date = 'DateTimeUtcField'
+    job = 'Job'
+    job_data = 'TextField'
+    modified_by = 'Users'
+    modified_date = 'DateTimeUtcField'
+    package_action_type = 'PackageActionType'
+    package_source = 'PackageSource'
     package_source_job_id = 'AutoField'
-    package_source = 'PackageSource'
-    package_action_type = 'PackageActionType'
-    modified_date = 'DateTimeUtcField'
-    modified_by = 'Users'
-    job_data = 'TextField'
-    job = 'Job'
-    created_date = 'DateTimeUtcField'
+
+class PackageJobSerializerMixin(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+
+class PackageVersionUrl(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_version_url')
     created_by = 'Users'
-    _xobj = xobj.XObjMetadata(tag='package_source_job')
-
-class PackageJobSerializerMixin(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-
-class PackageVersionUrl(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    url = 'TextField'
-    package_version_url_id = 'AutoField'
-    package_version = 'PackageVersion'
-    modified_date = 'DateTimeUtcField'
-    modified_by = 'Users'
-    file_size = 'IntegerField'
-    file_path = 'TextField'
+    created_date = 'DateTimeUtcField'
     downloaded_date = 'DateTimeUtcField'
-    created_date = 'DateTimeUtcField'
-    created_by = 'Users'
-    _xobj = xobj.XObjMetadata(tag='package_version_url')
+    file_path = 'TextField'
+    file_size = 'IntegerField'
+    modified_by = 'Users'
+    modified_date = 'DateTimeUtcField'
+    package_version = 'PackageVersion'
+    package_version_url_id = 'AutoField'
+    url = 'TextField'
 
-class PackageBuild(XObj):
+class PackageBuild(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    package_source = 'PackageSource'
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_build')
+    created_by = 'Users'
+    created_date = 'DateTimeUtcField'
+    modified_by = 'Users'
+    modified_date = 'DateTimeUtcField'
     package_build_id = 'AutoField'
-    modified_date = 'DateTimeUtcField'
-    modified_by = 'Users'
-    created_date = 'DateTimeUtcField'
-    created_by = 'Users'
-    _xobj = xobj.XObjMetadata(tag='package_build')
-
-class PackageVersion(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    package_version_id = 'AutoField'
-    package = 'Package'
-    name = 'TextField'
-    modified_date = 'DateTimeUtcField'
-    modified_by = 'Users'
-    license = 'TextField'
-    description = 'TextField'
-    created_date = 'DateTimeUtcField'
-    created_by = 'Users'
-    consumable = 'BooleanField'
-    committed = 'BooleanField'
-    _xobj = xobj.XObjMetadata(tag='package_version')
-
-class PackageVersionJob(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    package_version_job_id = 'AutoField'
-    package_version = 'PackageVersion'
-    package_action_type = 'PackageActionType'
-    modified_date = 'DateTimeUtcField'
-    modified_by = 'Users'
-    job_data = 'TextField'
-    job = 'Job'
-    created_date = 'DateTimeUtcField'
-    created_by = 'Users'
-    _xobj = xobj.XObjMetadata(tag='package_version_job')
-
-class PackageVersionAction(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    visible = 'BooleanField'
-    package_version_action_id = 'AutoField'
-    package_version = 'PackageVersion'
-    package_action_type = 'PackageActionType'
-    modified_date = 'DateTimeUtcField'
-    enabled = 'BooleanField'
-    descriptor = 'TextField'
-    created_date = 'DateTimeUtcField'
-    _xobj = xobj.XObjMetadata(tag='package_version_action')
-
-class Package(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    package_id = 'AutoField'
-    name = 'CharField'
-    modified_date = 'DateTimeUtcField'
-    modified_by = 'Users'
-    description = 'TextField'
-    created_date = 'DateTimeUtcField'
-    created_by = 'Users'
-    _xobj = xobj.XObjMetadata(tag='package')
-
-class PackageSourceAction(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    visible = 'BooleanField'
-    package_source_action_id = 'AutoField'
     package_source = 'PackageSource'
-    package_action_type = 'PackageActionType'
-    modified_date = 'DateTimeUtcField'
-    enabled = 'BooleanField'
-    descriptor = 'TextField'
-    created_date = 'DateTimeUtcField'
-    _xobj = xobj.XObjMetadata(tag='package_source_action')
 
-class PackageActionType(XObj):
+class PackageVersion(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    package_action_type_id = 'AutoField'
-    name = 'TextField'
-    modified_date = 'DateTimeUtcField'
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_version')
+    committed = 'BooleanField'
+    consumable = 'BooleanField'
+    created_by = 'Users'
+    created_date = 'DateTimeUtcField'
     description = 'TextField'
-    created_date = 'DateTimeUtcField'
-    _xobj = xobj.XObjMetadata(tag='package_action_type')
-
-class PackageBuildJob(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    package_build_job_id = 'AutoField'
-    package_build = 'PackageBuild'
-    package_action_type = 'PackageActionType'
-    modified_date = 'DateTimeUtcField'
+    license = 'TextField'
     modified_by = 'Users'
-    job_data = 'TextField'
+    modified_date = 'DateTimeUtcField'
+    name = 'TextField'
+    package = 'Package'
+    package_version_id = 'AutoField'
+
+class PackageVersionJob(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_version_job')
+    created_by = 'Users'
+    created_date = 'DateTimeUtcField'
     job = 'Job'
-    created_date = 'DateTimeUtcField'
-    created_by = 'Users'
-    _xobj = xobj.XObjMetadata(tag='package_build_job')
-
-class PackageBuildAction(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    visible = 'BooleanField'
-    package_build_action_id = 'AutoField'
-    package_build = 'PackageBuild'
-    package_action_type = 'PackageActionType'
-    modified_date = 'DateTimeUtcField'
-    enabled = 'BooleanField'
-    descriptor = 'TextField'
-    created_date = 'DateTimeUtcField'
-    _xobj = xobj.XObjMetadata(tag='package_build_action')
-
-class PackageSource(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    trove = 'Trove'
-    package_version = 'PackageVersion'
-    package_source_id = 'AutoField'
-    modified_date = 'DateTimeUtcField'
+    job_data = 'TextField'
     modified_by = 'Users'
+    modified_date = 'DateTimeUtcField'
+    package_action_type = 'PackageActionType'
+    package_version = 'PackageVersion'
+    package_version_job_id = 'AutoField'
+
+class PackageVersionAction(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_version_action')
     created_date = 'DateTimeUtcField'
+    descriptor = 'TextField'
+    enabled = 'BooleanField'
+    modified_date = 'DateTimeUtcField'
+    package_action_type = 'PackageActionType'
+    package_version = 'PackageVersion'
+    package_version_action_id = 'AutoField'
+    visible = 'BooleanField'
+
+class Package(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package')
     created_by = 'Users'
+    created_date = 'DateTimeUtcField'
+    description = 'TextField'
+    modified_by = 'Users'
+    modified_date = 'DateTimeUtcField'
+    name = 'CharField'
+    package_id = 'AutoField'
+
+class PackageSourceAction(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_source_action')
+    created_date = 'DateTimeUtcField'
+    descriptor = 'TextField'
+    enabled = 'BooleanField'
+    modified_date = 'DateTimeUtcField'
+    package_action_type = 'PackageActionType'
+    package_source = 'PackageSource'
+    package_source_action_id = 'AutoField'
+    visible = 'BooleanField'
+
+class PackageActionType(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_action_type')
+    created_date = 'DateTimeUtcField'
+    description = 'TextField'
+    modified_date = 'DateTimeUtcField'
+    name = 'TextField'
+    package_action_type_id = 'AutoField'
+
+class PackageBuildJob(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_build_job')
+    created_by = 'Users'
+    created_date = 'DateTimeUtcField'
+    job = 'Job'
+    job_data = 'TextField'
+    modified_by = 'Users'
+    modified_date = 'DateTimeUtcField'
+    package_action_type = 'PackageActionType'
+    package_build = 'PackageBuild'
+    package_build_job_id = 'AutoField'
+
+class PackageBuildAction(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_build_action')
+    created_date = 'DateTimeUtcField'
+    descriptor = 'TextField'
+    enabled = 'BooleanField'
+    modified_date = 'DateTimeUtcField'
+    package_action_type = 'PackageActionType'
+    package_build = 'PackageBuild'
+    package_build_action_id = 'AutoField'
+    visible = 'BooleanField'
+
+class PackageSource(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='package_source')
     built = 'BooleanField'
-    _xobj = xobj.XObjMetadata(tag='package_source')
+    created_by = 'Users'
+    created_date = 'DateTimeUtcField'
+    modified_by = 'Users'
+    modified_date = 'DateTimeUtcField'
+    package_source_id = 'AutoField'
+    package_version = 'PackageVersion'
+    trove = 'Trove'
 
-class JobData(XObj):
+class JobData(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    _xobj = xobj.XObjMetadata(tag='job_data')
+    __metaclass__ = SDKClassMeta
+    _xobj = XObjMetadata(tag='job_data')
 
-class PackageVersions(XObj):
+class PackageVersions(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = xobj.XObjMetadata(tag='package_versions',attributes={'next_page':str,'previous_page':str,'full_collection':str,'filter_by':str,'per_page':str,'order_by':str,'start_index':str,'count':int,'num_pages':str,'end_index':str,'limit':str})
+    __metaclass__ = SDKClassMeta
     package_version = ['PackageVersion']
+    _xobj = XObjMetadata(tag='package_versions',attributes={'next_page':str,'previous_page':str,'full_collection':str,'filter_by':str,'per_page':str,'order_by':str,'start_index':str,'count':int,'num_pages':str,'end_index':str,'limit':str})
+    count = 'IntegerField'
+    end_index = 'IntegerField'
+    filter_by = 'TextField'
+    full_collection = 'TextField'
+    limit = 'TextField'
+    next_page = 'TextField'
+    num_pages = 'IntegerField'
+    order_by = 'TextField'
+    per_page = 'IntegerField'
+    previous_page = 'TextField'
+    start_index = 'IntegerField'
 
-class PackageBuildJobs(XObj):
+class PackageBuildJobs(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    _xobj = xobj.XObjMetadata(tag='package_build_jobs')
+    __metaclass__ = SDKClassMeta
     package_build_job = ['PackageBuildJob']
+    _xobj = XObjMetadata(tag='package_build_jobs')
 
-class PackageBuilds(XObj):
+class PackageBuilds(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = xobj.XObjMetadata(tag='package_builds',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    __metaclass__ = SDKClassMeta
     package_build = ['PackageBuild']
-
-class PackageActionTypes(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
+    _xobj = XObjMetadata(tag='package_builds',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     count = 'IntegerField'
-    _xobj = xobj.XObjMetadata(tag='package_action_types',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    end_index = 'IntegerField'
+    filter_by = 'TextField'
+    full_collection = 'TextField'
+    limit = 'TextField'
+    next_page = 'TextField'
+    num_pages = 'IntegerField'
+    order_by = 'TextField'
+    per_page = 'IntegerField'
+    previous_page = 'TextField'
+    start_index = 'IntegerField'
+
+class PackageActionTypes(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
     package_action_type = ['PackageActionType']
+    _xobj = XObjMetadata(tag='package_action_types',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    count = 'IntegerField'
+    end_index = 'IntegerField'
+    filter_by = 'TextField'
+    full_collection = 'TextField'
+    limit = 'TextField'
+    next_page = 'TextField'
+    num_pages = 'IntegerField'
+    order_by = 'TextField'
+    per_page = 'IntegerField'
+    previous_page = 'TextField'
+    start_index = 'IntegerField'
 
-class PackageSourceJobs(XObj):
+class PackageSourceJobs(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    _xobj = xobj.XObjMetadata(tag='package_source_jobs')
+    __metaclass__ = SDKClassMeta
     package_source_job = ['PackageSourceJob']
+    _xobj = XObjMetadata(tag='package_source_jobs')
 
-class PackageSources(XObj):
+class PackageSources(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = xobj.XObjMetadata(tag='package_sources',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    __metaclass__ = SDKClassMeta
     package_source = ['PackageSource']
-
-class Packages(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
+    _xobj = XObjMetadata(tag='package_sources',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     count = 'IntegerField'
-    _xobj = xobj.XObjMetadata(tag='packages',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    end_index = 'IntegerField'
+    filter_by = 'TextField'
+    full_collection = 'TextField'
+    limit = 'TextField'
+    next_page = 'TextField'
+    num_pages = 'IntegerField'
+    order_by = 'TextField'
+    per_page = 'IntegerField'
+    previous_page = 'TextField'
+    start_index = 'IntegerField'
+
+class Packages(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
     package = ['Package']
-
-class PackageVersionUrls(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
+    _xobj = XObjMetadata(tag='packages',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     count = 'IntegerField'
-    _xobj = xobj.XObjMetadata(tag='package_version_urls',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    end_index = 'IntegerField'
+    filter_by = 'TextField'
+    full_collection = 'TextField'
+    limit = 'TextField'
+    next_page = 'TextField'
+    num_pages = 'IntegerField'
+    order_by = 'TextField'
+    per_page = 'IntegerField'
+    previous_page = 'TextField'
+    start_index = 'IntegerField'
+
+class PackageVersionUrls(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
     package_version_url = ['PackageVersionUrl']
-
-class AllPackageVersions(XObj):
-    """
-    """
-    __metaclass__ = RegistryMeta
-    
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
+    _xobj = XObjMetadata(tag='package_version_urls',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     count = 'IntegerField'
-    _xobj = xobj.XObjMetadata(tag='package_versions',attributes={'next_page':str,'previous_page':str,'full_collection':str,'filter_by':str,'per_page':str,'order_by':str,'start_index':str,'count':int,'num_pages':str,'end_index':str,'limit':str})
-    package_version = ['PackageVersion']
+    end_index = 'IntegerField'
+    filter_by = 'TextField'
+    full_collection = 'TextField'
+    limit = 'TextField'
+    next_page = 'TextField'
+    num_pages = 'IntegerField'
+    order_by = 'TextField'
+    per_page = 'IntegerField'
+    previous_page = 'TextField'
+    start_index = 'IntegerField'
 
-class PackageVersionJobs(XObj):
+class AllPackageVersions(object):
     """
     """
-    __metaclass__ = RegistryMeta
-    
-    _xobj = xobj.XObjMetadata(tag='package_version_jobs')
+    __metaclass__ = SDKClassMeta
+    package_version = ['PackageVersion']
+    _xobj = XObjMetadata(tag='package_versions',attributes={'next_page':str,'previous_page':str,'full_collection':str,'filter_by':str,'per_page':str,'order_by':str,'start_index':str,'count':int,'num_pages':str,'end_index':str,'limit':str})
+    count = 'IntegerField'
+    end_index = 'IntegerField'
+    filter_by = 'TextField'
+    full_collection = 'TextField'
+    limit = 'TextField'
+    next_page = 'TextField'
+    num_pages = 'IntegerField'
+    order_by = 'TextField'
+    per_page = 'IntegerField'
+    previous_page = 'TextField'
+    start_index = 'IntegerField'
+
+class PackageVersionJobs(object):
+    """
+    """
+    __metaclass__ = SDKClassMeta
     package_version_job = ['PackageVersionJob']
+    _xobj = XObjMetadata(tag='package_version_jobs')
 
 # DO NOT TOUCH #
 GLOBALS = globals()

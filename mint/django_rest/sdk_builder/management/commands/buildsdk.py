@@ -73,7 +73,7 @@ class Command(BaseCommand):
                 # f.write('from sdk.rSDK import XObjMixin\n')
                 # FIXME: can't get ClassStub to correctly include metaclass
                 # f.write('from sdk.rSDK import GetSetXMLAttrMeta  # pyflakes=ignore\n')
-                f.write('from sdk.rSDK import RegistryMeta, toUnderscore  # pyflakes=ignore\n')
+                f.write('from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')
                 f.write('REGISTRY = {}\n')
