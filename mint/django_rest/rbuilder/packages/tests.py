@@ -58,18 +58,18 @@ class PackagesTestCase(XMLTestCase):
             data=testsxml.package_version_url_post_xml,
             username="admin", password="password")
         self.assertEquals(200, r.status_code)
-        self.assertEquals(1, len(pv.package_version_urls.all()))
+        self.assertEquals(4, len(pv.package_version_urls.all()))
         self.assertEquals("http://httpd.apache.org/download.cgi#apache30",
-            pv.package_version_urls.all()[0].url)
+            pv.package_version_urls.all()[3].url)
 
         # add another url
         r = self._post('/api/package_versions/5/urls/',
             data=testsxml.package_version_url_post_xml2,
             username="admin", password="password")
         self.assertEquals(200, r.status_code)
-        self.assertEquals(2, len(pv.package_version_urls.all()))
+        self.assertEquals(5, len(pv.package_version_urls.all()))
         self.assertEquals("http://httpd.apache.org/download.cgi#apache31",
-            pv.package_version_urls.all()[1].url)
+            pv.package_version_urls.all()[4].url)
 
     def testUpdatePackage(self):
         # 1 already in fixture

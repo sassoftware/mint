@@ -215,7 +215,7 @@
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
   </object>
   <object pk="3" model="packages.packageversionurl">
-    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">5</field>
     <field type="TextField" name="url">http://httpd.apache.org/download.cgi#apache23</field>
     <field type="TextField" name="file_path">
       <None/>
@@ -232,7 +232,7 @@
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
   </object>
   <object pk="4" model="packages.packageversionurl">
-    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">5</field>
     <field type="TextField" name="url">http://www.example.com/foo</field>
     <field type="TextField" name="file_path">
       <None/>
@@ -253,7 +253,7 @@
     </field>
   </object>
   <object pk="5" model="packages.packageversionurl">
-    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">5</field>
     <field type="TextField" name="url">http://www.rpath.com/foo</field>
     <field type="TextField" name="file_path">
       <None/>
@@ -272,6 +272,49 @@
     <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">
       <None/>
     </field>
+  </object>
+  <object pk="6" model="packages.packageversionurl">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field type="TextField" name="url">http://httpd.apache.org/download.cgi#apache23</field>
+    <field type="TextField" name="file_path">/tmp/foo1</field>
+    <field type="DateTimeField" name="downloaded_date">2011-04-12 19:47:00</field>
+    <field type="IntegerField" name="file_size">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-04-12 19:47:00</field>
+    <field type="DateTimeField" name="modified_date">2011-04-12 19:47:00</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">1</field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="7" model="packages.packageversionurl">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field type="TextField" name="url">http://www.example.com/foo</field>
+    <field type="TextField" name="file_path">/tmp/foo2</field>
+    <field type="DateTimeField" name="downloaded_date">2011-04-12 19:47:00</field>
+    <field type="IntegerField" name="file_size">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-04-12 19:47:00</field>
+    <field type="DateTimeField" name="modified_date">2011-04-12 19:47:00</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="8" model="packages.packageversionurl">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field type="TextField" name="url">http://www.rpath.com/foo</field>
+    <field type="TextField" name="file_path">/tmp/foo3</field>
+    <field type="DateTimeField" name="downloaded_date">2011-04-12 19:47:00</field>
+    <field type="IntegerField" name="file_size">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-04-12 19:47:00</field>
+    <field type="DateTimeField" name="modified_date">2011-04-12 19:47:00</field>
+    <field to="rbuilder.users" name="created_by" rel="ManyToOneRel">
+      <None/>
+    </field>
+    <field to="rbuilder.users" name="modified_by" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="packages.packagesource">
     <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">1</field>
