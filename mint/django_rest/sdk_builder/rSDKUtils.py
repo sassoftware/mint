@@ -240,7 +240,3 @@ def _resolveDynamicClassModule(field):
     """
     module = inspect.getmodule(field).__name__.split('.')
     return '.'.join(['sdk', module[-2], field.__name__])
-    
-    
-    
-    
