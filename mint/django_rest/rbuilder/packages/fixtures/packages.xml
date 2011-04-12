@@ -127,9 +127,9 @@
     <field type="DateTimeField" name="modified_date">2011-03-24 20:50:34</field>
   </object>
   <object pk="3" model="packages.packageversionaction">
-    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
-    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
-    <field type="BooleanField" name="visible">True</field>
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">5</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">6</field>
+    <field type="BooleanField" name="visible">False</field>
     <field type="BooleanField" name="enabled">False</field>
     <field type="TextField" name="descriptor">
       <None/>
@@ -139,8 +139,30 @@
   </object>
   <object pk="4" model="packages.packageversionaction">
     <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">1</field>
+    <field type="BooleanField" name="visible">True</field>
+    <field type="BooleanField" name="enabled">True</field>
+    <field type="TextField" name="descriptor">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 21:01:33</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:01:33</field>
+  </object>
+  <object pk="5" model="packages.packageversionaction">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
     <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">5</field>
     <field type="BooleanField" name="visible">True</field>
+    <field type="BooleanField" name="enabled">True</field>
+    <field type="TextField" name="descriptor">
+      <None/>
+    </field>
+    <field type="DateTimeField" name="created_date">2011-03-24 21:01:33</field>
+    <field type="DateTimeField" name="modified_date">2011-03-24 21:01:33</field>
+  </object>  
+  <object pk="6" model="packages.packageversionaction">
+    <field to="packages.packageversion" name="package_version" rel="ManyToOneRel">6</field>
+    <field to="packages.packageactiontype" name="package_action_type" rel="ManyToOneRel">6</field>
+    <field type="BooleanField" name="visible">False</field>
     <field type="BooleanField" name="enabled">True</field>
     <field type="TextField" name="descriptor">
       <None/>
