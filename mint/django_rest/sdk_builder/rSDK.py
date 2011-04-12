@@ -83,8 +83,8 @@ class SDKClassMeta(type):
         # using kwargs
         def __init__(self, *args, **kwargs):
             if kwargs:
+                # shadow cls attr
                 for k, v in kwargs.items():
-                    # shadow cls attr
                     try:
                         attr = getattr(cls, k)(v)
                         setattr(self, k, attr)
@@ -93,11 +93,10 @@ class SDKClassMeta(type):
         # Build cls and set __init__
         cls = type(name, bases, attrs)
         cls.__init__ = __init__
-        # Get REGISTRY bound to cls's module
+        # Get REGISTRY that's bound to cls's module
         module = inspect.getmodule(cls)
         module.REGISTRY[name] = {}
-        # Rebind cls attributes with their
-        # corresponding classes
+        # Prepare REGISTRY
         for k, v in attrs.items():
             if isinstance(v, list):
                 module.REGISTRY[name][k] = v[0]

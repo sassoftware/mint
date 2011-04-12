@@ -90,6 +90,11 @@ class SDKClassMeta(type):
                         setattr(self, k, attr)
                     except TypeError:
                         setattr(self, k, v)
+        def __get__(self, instance, owner):
+            print 'Got!'
+            return self
+
+            
         # Build cls and set __init__
         cls = type(name, bases, attrs)
         cls.__init__ = __init__
@@ -166,7 +171,7 @@ class Fields(object):
     too much extra effort to maintain -- future FIXME)
     """
     
-    class CharField(xobj.XObj):
+    class CharField(object):
         __name__ = 'CharField'
         
         def __init__(self, data=None):
@@ -174,12 +179,12 @@ class Fields(object):
         
         def __get__(self, instance, owner):
             print 'Got!'
-            return self.data
+            return instance.data
             
         def __set__(self, instance, value):
             print 'Value is: ' + value
-            self.data = value
-            
+            instance.data = value
+
             
     class DecimalField(xobj.XObj):
         __name__ = 'DecimalField'

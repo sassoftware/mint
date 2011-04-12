@@ -14,9 +14,31 @@
 
 from xobj import xobj
 
+class GetSetMixin(object):
+    def __get__(self, instance, owner):
+        return self._data
+        
+    def __set__(self, instance, value):
+        self._data = self._validate(value)
 
-class CharField(xobj.XObj):
+
+class XObjInitializer(object):
+    def __init__(self, data=None):
+        self._data = self._validate(data)
+
+    def __str__(self):
+        return str(self._data)
+        
+    __repr__ = __str__
+
+class CharField(XObjInitializer, GetSetMixin):
     __name__ = 'CharField'
+
+    def _validate(self, value):
+        if value:
+            assert(isinstance(value, (str, unicode)))
+        return value
+
         
 class DecimalField(xobj.XObj):
     __name__ = 'DecimalField'
