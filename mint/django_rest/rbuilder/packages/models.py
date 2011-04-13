@@ -162,7 +162,7 @@ class PackageJobSerializerMixin(object):
                 setattr(xobjModel.job_data, k, v)
         return xobjModel
 
-class PackageVersionJob(modellib.XObjIdModel, PackageJobSerializerMixin):
+class PackageVersionJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     
     class Meta:
         db_table = "packages_package_version_job"
@@ -323,7 +323,7 @@ class PackageSourceJobs(modellib.XObjIdModel):
     list_fields = ["package_source_job"]
 
 
-class PackageSourceJob(modellib.XObjIdModel, PackageJobSerializerMixin):
+class PackageSourceJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     
     class Meta:
         db_table = "packages_package_source_job"
@@ -439,7 +439,7 @@ class PackageBuildJobs(modellib.XObjIdModel):
     list_fields = ["package_build_job"]
 
 
-class PackageBuildJob(modellib.XObjIdModel, PackageJobSerializerMixin):
+class PackageBuildJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     
     class Meta:
         db_table = "packages_package_build_job"

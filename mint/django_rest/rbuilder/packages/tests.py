@@ -168,6 +168,20 @@ class PackagesTestCase(XMLTestCase):
         self.assertEquals('testlabel.eng.rpath.com@rpath:test-1-devel',
             unMarshalledJobData['commit_label'])
 
+        # Now GET the job and verify it
+        response = self._get(
+            '/api/package_versions/6/package_version_jobs/%s' % \
+            job.package_version_job_id,
+            username="admin", password="password")
+        self.assertEquals(200, response.status_code)
+        job = xobj.parse(response.content).package_version_job
+        self.assertEquals("testlabel.eng.rpath.com@rpath:test-1-devel",
+            job.job_data.commit_label)
+        self.assertEquals("admin", job.created_by)
+        self.assertEquals("admin", job.modified_by)
+        self.assertEquals("Commit package version",
+            job.package_action_type)
+
     # complete crap, doesn't work...FIXME or take it out
     def generateGETTests(self, model, url, pk=1, ignore=None):
         """
