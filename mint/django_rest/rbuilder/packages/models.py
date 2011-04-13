@@ -33,7 +33,7 @@ class Package(modellib.XObjIdModel):
         "Database id of package")
     name = D(models.CharField(max_length=100, unique=True),
         "Name of package")
-    description = D(models.TextField(),
+    description = D(models.TextField(null=True),
         "Description of package")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the package was created (UTC)")
