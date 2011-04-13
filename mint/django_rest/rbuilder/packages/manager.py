@@ -33,24 +33,20 @@ class BaseManager(basemanager.BaseManager):
         return cfg
 
 class PackageManager(BaseManager):
-    """docstring for PackageManager"""
     
     @exposed
     def getPackages(self):
-        """docstring for getPackage"""
         Packages = models.Packages()
         Packages.package = models.Package.objects.all()
         return Packages
     
     @exposed
     def getPackage(self, package_id):
-        """docstring for Package"""
         package = models.Package.objects.get(pk=package_id)
         return package
         
     @exposed
     def addPackage(self, package):
-        """docstring for addPackage"""
         package.save()
         package.created_by = self.user
         package.modified_by = self.user
@@ -58,14 +54,12 @@ class PackageManager(BaseManager):
         
     @exposed
     def updatePackage(self, package_id, package):
-        """docstring for updatePackage"""
         package.modified_by = self.user
         package.save()
         return package
     
     @exposed
     def deletePackage(self, package_id):
-        """docstring for deletePackage"""
         package = models.Package.objects.get(
             pk=package_id)
         package.delete()
@@ -96,7 +90,6 @@ class PackageVersionManager(BaseManager):
 
     @exposed
     def getPackagePackageVersions(self, package_id):
-        """docstring for getPackageVersions"""
         package = models.Package.objects.get(pk=package_id)
         packageVersions = models.PackageVersions()
         packageVersions.package_version = \
@@ -106,7 +99,6 @@ class PackageVersionManager(BaseManager):
 
     @exposed
     def getPackageVersion(self, package_version_id):
-        """docstring for getPackageVersion"""
         packageVersion = models.PackageVersion.objects.get(pk=package_version_id)
         return packageVersion
 
@@ -321,7 +313,6 @@ class PackageVersionManager(BaseManager):
 
     @exposed
     def addPackageVersion(self, package_id, package_version):
-        """docstring for addPackageVersion"""
         package = models.Package.objects.get(pk=package_id)
         package_version.package = package
         package_version.save()
@@ -357,13 +348,11 @@ class PackageVersionManager(BaseManager):
         
     @exposed
     def updatePackageVersion(self, package_version_id, package_version):
-        """docstring for updatePackageVersion"""
         package_version.save()
         return package_version
         
     @exposed
     def deletePackageVersion(self, package_version_id):
-        """docstring for deletePackageVersion"""
         packageversion = models.PackageVersion.objects.get(
             pk=package_version_id)
         packageversion.delete()
