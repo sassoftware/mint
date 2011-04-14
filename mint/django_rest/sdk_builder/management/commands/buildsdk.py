@@ -78,9 +78,9 @@ class Command(BaseCommand):
                 src = self.buildSDKModels(module)
                 if src:
                     f.writelines(src.strip())
-                    # f.write('\n\n')
-                    # f.writelines(MODULE_LEVEL_CODE)
-                    # f.write('\n\n')
+                    f.write('\n\n')
+                    f.writelines(MODULE_LEVEL_CODE)
+                    f.write('\n\n')
                     
         # now copy over rSDK into sdk package
         rSDK_orig_path = os.path.join(

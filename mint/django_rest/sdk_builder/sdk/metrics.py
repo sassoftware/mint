@@ -29,3 +29,17 @@ class Metrics(object):
     """
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='metrics')
+
+# DO NOT TOUCH #
+GLOBALS = globals()
+for tag, clsAttrs in REGISTRY.items():
+    if tag in GLOBALS:
+        TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
+    for attrName, refClsOrName in clsAttrs.items():
+        if refClsOrName in GLOBALS:
+            cls, refCls = GLOBALS[tag], GLOBALS[refClsOrName]
+            if isinstance(getattr(cls, attrName), list):
+                setattr(cls, attrName, [refCls])
+            else:
+                setattr(cls, attrName, refCls)
+

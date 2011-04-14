@@ -17,9 +17,9 @@ import urlparse
 from xobj import xobj
 
 # sample typemap
-from sdk.packages import TYPEMAP
+# from sdk.packages import TYPEMAP
 
-def connect(base_url, auth=None):
+def connect(base_url, typeMap, auth=None):
     """
     ie:
     base_url = 'http://server.com/api/'
@@ -63,21 +63,22 @@ def connect(base_url, auth=None):
             self.h = httplib2.Http()
             if auth:
                 self.h.add_credentials(*auth)
+            self.typeMap = typeMap
         
         def GET(self, relative_url):
             url = self._relativeToAbsoluteUrl(relative_url)
             r, c = self.h.request(url, 'GET')
-            return xobj.parse(c, typeMap=TYPEMAP)
+            return xobj.parse(c, typeMap=self.typeMap)
             
         def POST(self, relative_url, obj):
             url = self._relativeToAbsoluteUrl(relative_url)
             r, c = self.h.request(url, 'POST', headers=Client.HEADERS, body=obj.toxml())
-            return xobj.parse(c, typeMap=TYPEMAP)
+            return xobj.parse(c, typeMap=self.typeMap)
         
         def PUT(self, relative_url, obj):
             url = self._relativeToAbsoluteUrl(relative_url)
             r, c = self.h.request(url, 'PUT', headers=Client.HEADERS, body=obj.toxml())
-            return xobj.parse(c, typeMap=TYPEMAP)
+            return xobj.parse(c, typeMap=self.typeMap)
             
         def DELETE(self, relative_url):
             url = self._relativeToAbsolute(relative_url.strip('/'))
