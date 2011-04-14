@@ -55,6 +55,7 @@ class RbuilderRestServer(RestController):
                                      hostName=os.uname()[1],
                                      isRBO=self.cfg.rBuilderOnline, 
                                      isExternalRba=self.cfg.rBuilderExternal, 
+                                     accountCreationRequiresAdmin=self.cfg.adminNewUsers,
                                      identity=identity,
                                      maintMode=maintMode,
                                      inventoryConfigurationEnabled=self.cfg.inventoryConfigurationEnabled,

@@ -42,6 +42,7 @@ class SiteTest(restbase.BaseRestTest):
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
   <isExternalRba>false</isExternalRba>
+  <accountCreationRequiresAdmin>false</accountCreationRequiresAdmin>
   <identity>
     <rbuilderId></rbuilderId>
     <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>
