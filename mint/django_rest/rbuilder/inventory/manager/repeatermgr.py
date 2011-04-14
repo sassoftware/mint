@@ -6,7 +6,7 @@
 
 import logging
 
-import base
+from mint.django_rest.rbuilder.manager import basemanager
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ except:
     log.info("Failed loading repeater client, expected in local mode only")
     repeater_client = None  # pyflakes=ignore
 
-class RepeaterManager(base.BaseManager):
+class RepeaterManager(basemanager.BaseManager):
     @property
     def repeaterClient(self):
         if repeater_client is None:
