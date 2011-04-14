@@ -10,16 +10,23 @@ from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 # from mint.django_rest.rbuilder.packages import manager
 from mint.django_rest.rbuilder.packages import models
 from mint.django_rest.rbuilder.packages import testsxml
+from mint.rmake3_package_creator import client 
+from mint.lib import data as mintdata
 
 from lxml import etree
 from xobj import xobj
+from testutils import mock
 
 class PackagesTestCase(XMLTestCase):
     fixtures = ['packages']
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        # self.mgr = manager.PackageManager()
+        mock.mock(client.Client, "pc_packageSourceCommit")
+
+    def tearDown(self):
+        mock.unmockAll()
+        XMLTestCase.tearDown(self)
 
     def xobjResponse(self, url):
         response = self._get(url,
@@ -142,6 +149,39 @@ class PackagesTestCase(XMLTestCase):
         pUrls_gotten = self.xobjResponse('/api/package_versions/1/urls/')
         self.assertEquals(len(list(pUrls)), len(pUrls_gotten))
     
+
+    def testCommitPackageVersion(self):
+        client.Client.pc_packageSourceCommit._mock.setDefaultReturn(
+            ("testjobuuid", None))
+        response = self._post('/api/package_versions/6/package_version_jobs',
+            data=testsxml.package_version_commit_job_post_xml,
+            username='admin', password='password')
+        self.assertEquals(200, response.status_code)         
+        packageVersion = models.PackageVersion.objects.get(pk=6)
+
+        # job was created
+        self.assertEquals(1, len(packageVersion.jobs.all()))
+        job = packageVersion.jobs.all()[0]
+        self.assertEquals("testjobuuid", job.job.job_uuid)
+
+        unMarshalledJobData = mintdata.unmarshalGenericData(job.job_data)
+        self.assertEquals('testlabel.eng.rpath.com@rpath:test-1-devel',
+            unMarshalledJobData['commit_label'])
+
+        # Now GET the job and verify it
+        response = self._get(
+            '/api/package_versions/6/package_version_jobs/%s' % \
+            job.package_version_job_id,
+            username="admin", password="password")
+        self.assertEquals(200, response.status_code)
+        job = xobj.parse(response.content).package_version_job
+        self.assertEquals("testlabel.eng.rpath.com@rpath:test-1-devel",
+            job.job_data.commit_label)
+        self.assertEquals("admin", job.created_by)
+        self.assertEquals("admin", job.modified_by)
+        self.assertEquals("Commit package version",
+            job.package_action_type)
+
     # complete crap, doesn't work...FIXME or take it out
     def generateGETTests(self, model, url, pk=1, ignore=None):
         """

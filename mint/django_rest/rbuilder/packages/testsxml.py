@@ -57,3 +57,14 @@ package_version_url_post_xml2 = """\
   <package_version id="http://127.0.0.1:8000/api/package_versions/1"/>
 </package_version_url>
 """
+
+package_version_commit_job_post_xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+  <package_version_job>
+    <package_version id="http://127.0.0.1:8000/api/package_versions/6"/>
+    <package_action_type href="http://127.0.0.1:8000/api/package_action_types/1"/>
+    <job_data>
+        <commit_label>testlabel.eng.rpath.com@rpath:test-1-devel</commit_label> 
+    </job_data>
+  </package_version_job>
+"""
