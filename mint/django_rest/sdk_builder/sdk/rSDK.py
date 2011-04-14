@@ -55,10 +55,12 @@ class XObjInitializer(xobj.XObj):
     def __init__(self, data=None):
         self._data = self._validate(data)
 
-    def __str__(self):
-        return str(self._data)
+    # def __str__(self):
+    #     return super(GetSetMixin, self).__str__(self._data)
+    
+    # def __repr__(self):
+    #     return super(GetSetMixin, self).__repr__(self._data)
 
-    __repr__ = __str__
 
 class SDKClassMeta(type):
     """
@@ -74,32 +76,54 @@ class SDKClassMeta(type):
     Nano
     >>> type(p.name)
     <class 'sdk.Fields.CharField'>
+    
+    finally, redefining the __init__ method is necessary for
+    the descriptors (which power the validators) to work. ie:
+    >>> p = Package(name="Nano", package_id=1)
+    >>> p.name = 1
+    TypeError: Value must be of type str or unicode
+    >>> p.name = 'nano, lowercase'
+    >>> p.name
+    nano, lowercase
     """
     def __new__(meta, name, bases, attrs):
-        
-        # __init__ allows initializing cls
-        # using kwargs
-        def __init__(self, *args, **kwargs):
-            if kwargs:
-                # shadow cls attr
-                for k, v in kwargs.items():
-                    try:
-                        attr = getattr(cls, k)(v)
-                        setattr(self, k, attr)
-                    except TypeError:
-                        setattr(self, k, v)
-                        
-        # Build cls and set __init__
-        cls = type(name, bases, attrs)
-        cls.__init__ = __init__
-        
-        # Get REGISTRY that's bound to cls's module
-        module = inspect.getmodule(cls)
+        """
+        Complicated but necessary -- redefines a __new__ method to
+        return a nested class with a dynamically generated __init__
+        """
+        def new(cls, *args, **kwargs):
+            class inner(object):
+                def __init__(self, *args, **kwargs):
+                    # cast to dict since cls.__dict__ is actually a dictproxy
+                    d = dict(cls.__dict__)
+                    d.update(kwargs)
+                    # if one of the kwargs, with key k and value v, is left out
+                    # then v is actually a class, not an instance
+                    for k, v in d.items():
+                        try:
+                            if inspect.isfunction(v) or k.startswith('_'):
+                                continue
+                            elif inspect.isclass(v):
+                                attr = getattr(cls, k)('')
+                            else:
+                                attr = getattr(cls, k)(v)
+                            setattr(inner, k, attr)
+                        except TypeError:
+                            # this occurs when an extra-module reference is required
+                            # exception unhandled during development phase but will
+                            # raise an exception in production version
+                            pass
+            return inner(*args, **kwargs)
+        # rebind __new__ and create class
+        attrs['__new__'] = new
+        klass = type(name, bases, attrs)
+        # have to get the REGISTRY that exists inside of
+        # the class's module
+        module = inspect.getmodule(klass)
         module.REGISTRY[name] = {}
-        # Prepare REGISTRY
         for k, v in attrs.items():
             if isinstance(v, list):
                 module.REGISTRY[name][k] = v[0]
             elif isinstance(v, str):
                 module.REGISTRY[name][k] = v
-        return cls
+        return klass
