@@ -236,7 +236,7 @@ class Platforms(object):
         platformDef = self.platformCache.get(str(platform.label))
         return platformDef.getPlatformVersionTrove()
 
-    def getPlatformVersions(self, platformId):
+    def getPlatformVersions(self, platformId, revision=None):
         platform = self.getById(platformId)
         platformTroveName = self._getPlatformTrove(platform)
         host = platform.label.split('@')[:1][0]
@@ -257,17 +257,27 @@ class Platforms(object):
         _platformVersions = []
         for platformTrove in platformTroves:
             version = platformTrove[1]
-            revision = version.trailingRevision().asString()
+            versionRevision = version.trailingRevision().asString()
+                
             platformVersion = models.PlatformVersion(
                 name=platformTroveName, version=version.asString(),
-                revision=revision)
+                revision=versionRevision)
             platformVersion._platformId = platformId
+
+            if revision is not None and \
+                revision == versionRevision:
+                return platformVersion
+
             _platformVersions.append(platformVersion)
 
         platformVersions = models.PlatformVersions()
         platformVersions.platformVersion = _platformVersions
 
         return platformVersions
+
+    def getPlatformVersion(self, platformId, revision):
+        return self.getPlatformVersions(platformId, revision)
+        
 
     def _updatePlatformFromPlatformDefinition(self, platformModel, platformDef):
         if platformDef is None:
@@ -1072,6 +1082,9 @@ class PlatformManager(manager.Manager):
 
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
+
+    def getPlatformVersion(self, platformId, platformVersionId):
+        return self.platforms.getPlatformVersion(platformId, platformVersionId)
 
     def getPlatformVersions(self, platformId):
         return self.platforms.getPlatformVersions(platformId)

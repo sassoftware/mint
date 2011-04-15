@@ -137,10 +137,15 @@ class PlatformLoadController(base.BaseController):
         return self.db.loadPlatform(platformId, platformLoad)
 
 class PlatformVersionController(base.BaseController):
+    modelName = 'platformVersionId'
 
     @auth.public
     def index(self, request, platformId):
         return self.db.getPlatformVersions(platformId)
+
+    @auth.public
+    def get(self, request, platformId, platformVersionId):
+        return self.db.getPlatformVersion(platformId, platformVersionId)
 
 class PlatformController(base.BaseController):
     modelName = "platformId"
