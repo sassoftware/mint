@@ -758,7 +758,7 @@ class Database(DBInterface):
 
     @commitafter
     def getPlatformVersions(self, platformId):
-        return self.getPlatformMgr.getPlatformVersions(platformId)
+        return self.platformMgr.getPlatformVersions(platformId)
 
     @commitafter
     def createPlatform(self, platform, createPlatDef=True):

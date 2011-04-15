@@ -240,10 +240,13 @@ class Platforms(object):
         platform = self.getById(platformId)
         platformTroveName = self._getPlatformTrove(platform)
         host = platform.label.split('@')[:1][0]
-        conaryLabel = versions.VersionFromString(platform.label).label()
+        label = platform.label
+        if not label.startswith('/'):
+            label = '/%s' % label
+        conaryLabel = versions.VersionFromString(label).label()
         repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
         repoTroves = repos.findTroves(conaryLabel, 
-            [(platformTroveName, None, None)])
+            [(platformTroveName, None, None)], getLeaves=False)
 
         try:
             platformTroves = repoTroves[(platformTroveName, None, None)]
@@ -258,6 +261,7 @@ class Platforms(object):
             platformVersion = models.PlatformVersion(
                 name=platformTroveName, version=version.asString(),
                 revision=revision)
+            platformVersion._platformId = platformId
             _platformVersions.append(platformVersion)
 
         platformVersions = models.PlatformVersions()
