@@ -2818,6 +2818,7 @@ class SystemVersionsTestCase(XMLTestCase):
         trove.available_updates.add(version)
         trove.available_updates.add(version_update)
         trove.available_updates.add(version_update2)
+        trove.out_of_date = True
         trove.save()
 
         version2 = models.Version()

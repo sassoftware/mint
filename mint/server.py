@@ -3087,8 +3087,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if buildDict['productVersionId'] is not None:
                     pd = self._getProductDefinitionForVersionObj(
                             buildDict['productVersionId'])
-                    tags = pd.getPlatformInformation(
-                            ).platformClassifier.tags.split()
+                    platInfo = pd.getPlatformInformation()
+                    tags = []
+                    if platInfo:
+                        tags = platInfo.platformClassifier.tags.split()
                     if 'windows' in tags:
                         return self.startWindowsImageJob(buildId, jobData)
 
