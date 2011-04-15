@@ -250,7 +250,7 @@ class Platforms(object):
 
         try:
             platformTroves = repoTroves[(platformTroveName, None, None)]
-        except ItemError, e:
+        except KeyError, e:
             # TODO: something else?
             raise e
 
