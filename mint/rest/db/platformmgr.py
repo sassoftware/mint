@@ -232,6 +232,39 @@ class Platforms(object):
             self._addComputedFields(platform)
         return platform
 
+    def _getPlatformTrove(self, platform):
+        platformDef = self.platformCache.get(str(platform.label))
+        return platformDef.getPlatformVersionTrove()
+
+    def getPlatformVersions(self, platformId):
+        platform = self.getById(platformId)
+        platformTroveName = self._getPlatformTrove(platform)
+        host = platform.label.split('@')[:1][0]
+        conaryLabel = versions.VersionFromString(platform.label).label()
+        repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
+        repoTroves = repos.findTroves(conaryLabel, 
+            [(platformTroveName, None, None)])
+
+        try:
+            platformTroves = repoTroves[(platformTroveName, None, None)]
+        except ItemError, e:
+            # TODO: something else?
+            raise e
+
+        _platformVersions = []
+        for platformTrove in platformTroves:
+            version = platformTrove[1]
+            revision = version.trailingRevision().asString()
+            platformVersion = models.PlatformVersion(
+                name=platformTroveName, version=version.asString(),
+                revision=revision)
+            _platformVersions.append(platformVersion)
+
+        platformVersions = models.PlatformVersions()
+        platformVersions.platformVersion = _platformVersions
+
+        return platformVersions
+
     def _updatePlatformFromPlatformDefinition(self, platformModel, platformDef):
         if platformDef is None:
             platformName = platformModel.platformName
@@ -1035,6 +1068,9 @@ class PlatformManager(manager.Manager):
 
     def getPlatform(self, platformId):
         return self.platforms.getById(platformId)
+
+    def getPlatformVersions(self, platformId):
+        return self.platforms.getPlatformVersions(platformId)
 
     def _lookupFromRepository(self, platformLabel, createPlatDef):
         # If there is a product definition, this call will publish it as a

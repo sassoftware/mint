@@ -117,6 +117,21 @@ class SourceInstances(Model):
         name = 'instances'
     instance = fields.ListField(Source, displayName='contentSource')
 
+class PlatformVersion(Model):
+    class Meta(object):
+        name = 'platformVersions'
+    name = fields.CharField()
+    version = fields.CharField()
+    revision = fields.CharField()
+
+    id = fields.AbsoluteUrlField(isAttribute=True)
+
+    def get_absolute_url(self):
+        return ('platforms.platformVersions', self.platformId, self.id)
+
+class PlatformVersions(Model):
+    platformVersion = fields.ListField(PlatformVersion)
+
 class Platform(Model):
     platformId = fields.CharField()
     platformTroveName = fields.CharField()
@@ -144,6 +159,8 @@ class Platform(Model):
     imageTypeDefinitions = fields.UrlField('platforms.imageTypeDefinitions',
                                          ['platformId'])
     isPlatform = fields.BooleanField()
+    platformVersions = fields.UrlField('platforms.platformVersions',
+        ['platformId'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
