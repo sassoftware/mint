@@ -1301,16 +1301,16 @@ class SystemManager(base.BaseManager):
             return models.ManagementInterface.CIM
         return system.management_interface.name
 
-    def _computeDispatcherMethodParams(self, repClient, system, destination, eventUuid):
+    def _computeDispatcherMethodParams(self, repClient, system, destination, eventUuid, requiredNetwork):
         methodMap = {
             models.ManagementInterface.CIM : self._cimParams,
             models.ManagementInterface.WMI : self._wmiParams,
         }
         mgmtInterfaceName = self.getSystemManagementInterfaceName(system)
         method = methodMap[mgmtInterfaceName]
-        return method(repClient, system, destination, eventUuid)
+        return method(repClient, system, destination, eventUuid, requiredNetwork)
 
-    def _cimParams(self, repClient, system, destination, eventUuid):
+    def _cimParams(self, repClient, system, destination, eventUuid, requiredNetwork):
         if system.target_id is not None:
             targetName = system.target.targetname
             targetType = system.target.targettype
@@ -1322,6 +1322,7 @@ class SystemManager(base.BaseManager):
             eventUuid=eventUuid,
             clientCert=system.ssl_client_certificate,
             clientKey=system.ssl_client_key,
+            requiredNetwork=requiredNetwork,
             # XXX These three do not belong to cimParams
             instanceId=system.target_system_id,
             targetName=targetName,
@@ -1337,7 +1338,7 @@ class SystemManager(base.BaseManager):
                 cimParams.clientKey = outCert.pkey_pem
         return cimParams
 
-    def _wmiParams(self, repClient, system, destination, eventUuid):
+    def _wmiParams(self, repClient, system, destination, eventUuid, requiredNetwork):
         kwargs = {}
         credentialsString = system.credentials
         if credentialsString:
@@ -1345,7 +1346,8 @@ class SystemManager(base.BaseManager):
         kwargs.update(
             host=destination,
             port=system.agent_port,
-            eventUuid=eventUuid)
+            eventUuid=eventUuid,
+            requiredNetwork=requiredNetwork)
 
         # SlotCompare objects are smart enough to ignore unknown keywords
         wmiParams = repClient.WmiParams(**kwargs)
@@ -1372,11 +1374,12 @@ class SystemManager(base.BaseManager):
             destination = network.ip_address or network.dns_name
         else:
             destination = None
+        requiredNetwork = (network.required and destination) or None
 
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
         params = self._computeDispatcherMethodParams(repClient, event.system,
-            destination, eventUuid)
+            destination, eventUuid, requiredNetwork)
         resultsLocation = repClient.ResultsLocation(
             path = "/api/inventory/systems/%d" % event.system.pk,
             port = 80)
@@ -1384,10 +1387,9 @@ class SystemManager(base.BaseManager):
         mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)
 
         if eventType in self.RegistrationEvents:
-            requiredNetwork = (network.required and destination) or None
             method = getattr(repClient, "register_" + mgmtInterfaceName)
             self._runSystemEvent(event, method, params,
-                resultsLocation, zone=zone, requiredNetwork=requiredNetwork)
+                resultsLocation, zone=zone)
         elif eventType in self.PollEvents:
             method = getattr(repClient, "poll_" + mgmtInterfaceName)
             self._runSystemEvent(event, method,

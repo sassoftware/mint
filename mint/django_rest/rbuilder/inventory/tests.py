@@ -3714,6 +3714,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             eventUuid='really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem,
+                            requiredNetwork=None,
                             targetName=None,
                             targetType=None,
                             instanceId=None,
@@ -3746,13 +3747,14 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             eventUuid = 'really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem,
+                            requiredNetwork=None,
                             targetName=None,
                             targetType=None,
                             instanceId=None,
                             launchWaitTime=300),
                         resLoc(path='/api/inventory/systems/4', port=80),
                     ),
-                    dict(requiredNetwork=None, zone='Local rBuilder'),
+                    dict(zone='Local rBuilder'),
                 ),
             ])
         system = self.mgr.getSystem(self.system2.system_id)
@@ -3823,7 +3825,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
         wmiDict = credDict.copy()
         wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
-            port=12345)
+            requiredNetwork=None, port=12345)
 
         self.failUnlessEqual(repClient.methodsCalled,
             [
@@ -3856,7 +3858,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
         wmiDict = credDict.copy()
         wmiDict.update(eventUuid='really-unique-id', host='superduper.com',
-            port=12345)
+            port=12345, requiredNetwork=None)
 
         self.failUnlessEqual(repClient.methodsCalled,
             [
@@ -3921,6 +3923,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             eventUuid='really-unique-id',
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem,
+                            requiredNetwork=None,
                             targetName=None,
                             targetType=None,
                             instanceId=None,
@@ -3929,7 +3932,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                                 systemCim.pk,
                             port=80),
                     ),
-                    dict(requiredNetwork=None, zone='Local rBuilder'),
+                    dict(zone='Local rBuilder'),
                 ),
             ])
 
@@ -4003,6 +4006,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
                             eventUuid=eventUuid,
                             clientKey=testsxml.pkey_pem,
                             clientCert=testsxml.x509_pem,
+                            requiredNetwork='3.3.3.3',
                             targetName=None,
                             targetType=None,
                             instanceId=None,
