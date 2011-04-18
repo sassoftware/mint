@@ -15,10 +15,17 @@
 import httplib2
 import urlparse
 from xobj import xobj
+import sys
 
-# sample typemap
-# from sdk.packages import TYPEMAP
+MIN_ALLOWED_PYTHON_VERSION = (2, 5) # still needs to be tested on 2.5
+MAX_ALLOWED_PYTHON_VERSION = (2, 7, 1)
+VERSION_INFO = sys.version_info
 
+if VERSION_INFO[0:2] < MIN_ALLOWED_PYTHON_VERSION:
+    raise Exception("Must use python 2.5 or greater")
+elif VERSION_INFO[0:3] > MAX_ALLOWED_PYTHON_VERSION:
+    raise Exception("Untested for python versions greater than 2.7.1")
+    
 def connect(base_url, auth=None):
     """
     ie:
@@ -51,7 +58,7 @@ def connect(base_url, auth=None):
         [Validate]
         pkg = api.GET('/packages/1')
         isinstance(pkg.id, URLField) # is True
-        pkg.id = 'bad id' # throws an assertion error
+        pkg.id = 'bad id' # throws an error
         pkg.id = 'http://validid.com/' # works
         """
         

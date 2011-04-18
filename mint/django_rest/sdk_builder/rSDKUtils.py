@@ -51,17 +51,24 @@ def toUnderscore(name):
             L.append(c)
     return ''.join(L)
 
-def getName(x):
-    if inspect.isclass(x):
-        return x.__name__
-    else:
-        return x.__class__.__name__
+class DjangoMetadata(object):
+    def __init__(self, django_model):
+        self.django_model = django_model
+        self.module = inspect.getmodule(django_model)
+        self.fields = _getModelFields(django_model)
+        self.referenced = {}
+        for field in self.fields.values():
+            try:
+                self.referenced[field.name] = field.related.parent_model
+            except:
+                pass
+        self.list_fields = getattr(django_model, 'list_fields', [])
+        self._xobj = getattr(django_model, '_xobj', None)
 
-# TESTME: Not 100% sure this works
 def sortByListFields(*models):
     registry = []
     for cls in models:
-        listed = getattr(cls, 'list_fields', None)
+        listed = getattr(cls, 'list_fields', [])
         if listed:
             if cls not in registry:
                 registry.append(cls)
@@ -76,28 +83,29 @@ def sortByListFields(*models):
 
 CLASS = \
 """
+@register
 class %(name)s(%(bases)s):
 %(doc)s
 %(attrs)s
 """.strip()
 
 class ClassStub(object):
-    def __init__(self, cls):
+    def __init__(self, cls, django_metadata):
         self.cls = cls
-
+        self.metadata = django_metadata
+    
     def doc2src(self):
         indented = indent(getattr(self.cls, '__doc__', ''))
         return '    \"\"\"\n' + indented + '    \"\"\"'
-
+    
     def bases2src(self):
         return ', '.join(b.__name__ for b in self.cls.__bases__)
-
+    
     def attrs2src(self):
-        # HACK: hardcode __metaclass__
+        # hardcode __metaclass__
         src = [indent('__metaclass__ = SDKClassMeta')]
         EXCLUDED = ['__module__', '__doc__', '__name__', '__weakref__', '__dict__']
-        # FIXME: not automatically including metaclass declaration        
-        for k, v in sorted(self.cls.__dict__.items()):
+        for k, v in sorted(self.cls.__dict__.items(), reverse=True):
             text = ''
             # don't inline methods (or magic attrs)
             if k in EXCLUDED or inspect.isfunction(v):
@@ -105,14 +113,14 @@ class ClassStub(object):
             k = toUnderscore(k)
             # parse attrs and generate src code
             if isinstance(v, list):
-                text = '%s = [%r]' % (k, v[0].__name__)
+                text = '%s = [%r]' % (k, self.resolveName(v[0]))
             elif isinstance(v, xobj.XObjMetadata):
                 text = '_xobj = ' + str(XObjMetadataResolver(v))
             else:
-                text = '%s = \'%s\'' % (k, getName(v))
+                text = '%s = %r' % (k, self.resolveName(v))
             src.append(indent(text))
         return ''.join(src)
-
+    
     def tosrc(self):
         name = self.cls.__name__
         bases = self.bases2src()
@@ -121,7 +129,20 @@ class ClassStub(object):
         src = CLASS % dict(name=name, bases=bases, doc=doc, attrs=attrs)
         return src
 
-
+    def resolveName(self, field):
+        # FIXME: needs to account for case
+        # that another module specifices model
+        # of same name as one in current module
+        metadata = self.metadata
+        name = field.__name__
+        if name in metadata.module.__dict__:
+            return name
+        elif name in Fields.__dict__:
+            return name
+        else:
+            name = _resolveDynamicClassModule(field)
+            return name
+            
 class XObjMetadataResolver(object):
     """
     converts _xobj = xobj.XObjMetadata( ... ) into src code
@@ -131,26 +152,26 @@ class XObjMetadataResolver(object):
         self._xobj = _xobj
         self.fromTemplate = lambda (name, val): '%s%s%s' % (
                     name if val else '', '=' if val else '', val if val else '')
-
+    
     def resolveTag(self):
         return "%r" % self._xobj.tag.lower() if self._xobj.tag else ''
-
+    
     def resolveElements(self):
         return self._xobj.elements
-
+    
     def resolveAttributes(self):
         d_body = []
         for k, v in self._xobj.attributes.items():
             d_body.append("\'%s\':%s" % (k, v.__name__))
         return '{' + ','.join(d_body) + '}' if d_body else ''
-
+    
     def resolveText(self):
         return "\'%s\'" % self._xobj.text.strip() if self._xobj.text else ''
-
+    
     def resolveMetadata(self):
-        return [('tag', self.resolveTag()), ('attributes', self.resolveAttributes()), 
+        return [('tag', self.resolveTag()), ('attributes', self.resolveAttributes()),
                 ('text', self.resolveText()), ('elements', self.resolveElements())]
-
+    
     def __str__(self):
         metadata = self.resolveMetadata()
         src = [s for s in map(self.fromTemplate, metadata) if s]
@@ -158,47 +179,25 @@ class XObjMetadataResolver(object):
         return ''
 
 def DjangoModelsWrapper(module):
-    """
-    docstring here
-    """
-    # all generated classes go into collected, don't mess around
-    # with the ordering of stuff in collected (except for sorting
-    # it before iteration) as the ordering is important
     collected = []
     django_models = [m for m in module.__dict__.values() if inspect.isclass(m)]
-    # TESTME: sortByListFields is kind of a lucky hack, not sure if it
-    # will always work -- come back and test
     for django_model in sortByListFields(*django_models):
         fields_dict = _getModelFields(django_model)
         fields_dict = _convertFields(fields_dict)
-        # process listed fields
         if hasattr(django_model, 'list_fields'):
             dep_names = [toCamelCase(m) for m in django_model.list_fields]
             for name in dep_names:
-                # FIXME: this is totally possible, *CONFIRMED PROBLEM*
-                # dunno if its possible for a model to reference another model
-                # outside of the Models.py it lives in.  if it can, then 
-                # throw an error as that contingency is not covered
                 model = getattr(module, name, None)
                 if not model:
-                    raise Exception('Extra-model reference required, only intra-model references supported')
-                # Generate new fields
+                    raise Exception('Extra-module reference')
                 new_fields = _getModelFields(model)
                 new_fields = _convertFields(new_fields)
-                # new class is a standin for the one in listed fields. this
-                # is *not* the corresponding class that exists in collected
                 new = type(model.__name__, (object,), new_fields)
                 fields_dict[name] = [new]
-        # make sure to extract _xobj metadata
         if hasattr(django_model, '_xobj'):
             fields_dict['_xobj'] = getattr(django_model, '_xobj')
-        # Have tried attaching __module__ here to no avail
-        # the custom __module__ "should" be set inside fields_dict
-        # however, upon inspection, it isn't.  hard coding 
-        # coding it *does* seem to work
         klass = type(django_model.__name__, (object,), fields_dict)
-        klass.__module__ = _resolveDynamicClassModule(django_model)
-        collected.append(klass)
+        collected.append((klass, DjangoMetadata(django_model)))
     return collected
 
 def _getModelFields(django_model):
@@ -233,10 +232,19 @@ def _getReferenced(field):
     fk or m2m field
     """
     return field.related.parent_model
-    
+
 def _resolveDynamicClassModule(field):
     """
     mint.django_rest.rbuilder.packages.models
+    to
+    rbuilder.packages
     """
-    module = inspect.getmodule(field).__name__.split('.')
-    return '.'.join(['sdk', module[-2], field.__name__])
+    prefix = 'mint.django_rest.rbuilder.'
+    import_path = inspect.getmodule(field) .__name__.replace(prefix, '')
+    # if is case then inside rbuilder
+    if import_path.startswith('models'):
+        new_path = 'rbuilder' + '.' + field.__name__
+    else:
+        new_path = '.'.join(import_path.split('.')[0:-1] + [field.__name__])
+    return new_path
+    

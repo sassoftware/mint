@@ -19,6 +19,7 @@ from mint.django_rest.sdk_builder import rSDKUtils
 from django.db.models.loading import cache
 import os
 import shutil
+import inspect
 
 EXCLUDED_APPS = [
     'auth',
@@ -70,8 +71,9 @@ class Command(BaseCommand):
             # Actually write the module
             with open(models_path, 'w') as f:
                 f.write('from sdk.Fields import *  # pyflakes=ignore\n')
-                f.write('from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore\n')
+                f.write('from sdk.rSDK import SDKClassMeta, toUnderscore, register  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore\n')
+                # f.write('from sdk.xobj_debug import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')
                 f.write('REGISTRY = {}\n')
                 f.write('TYPEMAP = {}\n\n')
@@ -95,12 +97,12 @@ class Command(BaseCommand):
         Fields_new_path = os.path.join(
                 current_location[0:index], 'sdk_builder/sdk/Fields.py')
         shutil.copyfile(Fields_orig_path, Fields_new_path)
-
+            
     def buildSDKModels(self, module):
         wrapped = rSDKUtils.DjangoModelsWrapper(module)
         L = []
         for w in wrapped:
-            L.append(rSDKUtils.ClassStub(w).tosrc())
+            L.append(rSDKUtils.ClassStub(*w).tosrc())
         return '\n'.join(L)
 
     def findAllModels(self):

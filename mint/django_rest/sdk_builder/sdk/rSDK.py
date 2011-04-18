@@ -15,6 +15,7 @@
 # INCLUDED IN CLIENT SIDE DISTRIBUTION #
 
 from xobj import xobj
+# import xobj_debug as xobj
 import inspect
 
 
@@ -55,22 +56,30 @@ class XObjInitializer(xobj.XObj):
     def __init__(self, data=None):
         self._data = self._validate(data)
 
-    # def __str__(self):
-    #     return super(GetSetMixin, self).__str__(self._data)
-    
-    # def __repr__(self):
-    #     return super(GetSetMixin, self).__repr__(self._data)
+
+def register(cls):
+    """
+    cls decorator that initializes the registry. this is
+    what allows fk and m2m fields to work. it requires
+    that the module define an empty dictionary called
+    REGISTRY in addition to inlining some module level
+    code to rebind referenced class attrs after loading
+    """
+    name = cls.__name__
+    module = inspect.getmodule(cls)
+    module.REGISTRY[name] = {}
+    for k, v in cls.__dict__.items():
+        if isinstance(v, list):
+            module.REGISTRY[name][k] = v[0]
+        elif isinstance(v, str):
+            module.REGISTRY[name][k] = v
+    return cls
 
 
 class SDKClassMeta(type):
     """
-    this is what allows fk and m2m fields to work.
-    requires that the module define an empty dictionary
-    called REGISTRY in addition to inlining some module
-    level code to rebind referenced class attrs after loading
-    
-    additionally, redefining the cls's __init__ method allows
-    the instantiation of the class stubs using kwargs. ie:
+    redefining the cls's __init__ method allows the
+    instantiation of the class stubs using kwargs. ie:
     >>> p = Package(name="Nano", package_id=1)
     >>> p.name
     Nano
@@ -78,7 +87,7 @@ class SDKClassMeta(type):
     <class 'sdk.Fields.CharField'>
     
     finally, redefining the __init__ method is necessary for
-    the descriptors (which power the validators) to work. ie:
+    the descriptors (which power the validation) to work. ie:
     >>> p = Package(name="Nano", package_id=1)
     >>> p.name = 1
     TypeError: Value must be of type str or unicode
@@ -89,7 +98,7 @@ class SDKClassMeta(type):
     def __new__(meta, name, bases, attrs):
         """
         Complicated but necessary -- redefines a __new__ method to
-        return a nested class with a dynamically generated __init__
+        return an inlined class with a dynamically generated __init__
         """
         def new(cls, *args, **kwargs):
             class inner(object):
@@ -98,7 +107,7 @@ class SDKClassMeta(type):
                     d = dict(cls.__dict__)
                     d.update(kwargs)
                     # if one of the kwargs, with key k and value v, is left out
-                    # then v is actually a class, not an instance
+                    # then v is actually a class, not an instance of some class
                     for k, v in d.items():
                         try:
                             if inspect.isfunction(v) or k.startswith('_'):
@@ -109,21 +118,12 @@ class SDKClassMeta(type):
                                 attr = getattr(cls, k)(v)
                             setattr(inner, k, attr)
                         except TypeError:
-                            # this occurs when an extra-module reference is required
-                            # exception unhandled during development phase but will
+                            # this occurs when an extra-module reference is required.
+                            # TypeError unhandled during development phase but will
                             # raise an exception in production version
                             pass
             return inner(*args, **kwargs)
         # rebind __new__ and create class
         attrs['__new__'] = new
-        klass = type(name, bases, attrs)
-        # have to get the REGISTRY that exists inside of
-        # the class's module
-        module = inspect.getmodule(klass)
-        module.REGISTRY[name] = {}
-        for k, v in attrs.items():
-            if isinstance(v, list):
-                module.REGISTRY[name][k] = v[0]
-            elif isinstance(v, str):
-                module.REGISTRY[name][k] = v
+        klass = type.__new__(meta, name, bases, attrs)
         return klass

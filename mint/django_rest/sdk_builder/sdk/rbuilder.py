@@ -1,225 +1,245 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import SDKClassMeta, toUnderscore  # pyflakes=ignore
+from sdk.rSDK import SDKClassMeta, toUnderscore, register  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
+@register
 class Targets(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    targetid = 'IntegerField'
-    targetname = 'CharField'
     targettype = 'CharField'
+    targetname = 'CharField'
+    targetid = 'IntegerField'
 
+@register
 class Images(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    buildcount = 'IntegerField'
-    buildtype = 'IntegerField'
-    createdby = 'Users'
-    deleted = 'SmallIntegerField'
-    description = 'TextField'
-    image_id = 'AutoField'
-    name = 'CharField'
-    product_id = 'Products'
-    productversionid = 'Versions'
-    pubreleaseid = 'Releases'
-    stagename = 'CharField'
-    status = 'IntegerField'
-    statusmessage = 'TextField'
-    timecreated = 'DecimalField'
-    timeupdated = 'DecimalField'
-    troveflavor = 'CharField'
-    trovelastchanged = 'DecimalField'
-    trovename = 'CharField'
-    troveversion = 'CharField'
     updatedby = 'Users'
+    troveversion = 'CharField'
+    trovename = 'CharField'
+    trovelastchanged = 'DecimalField'
+    troveflavor = 'CharField'
+    timeupdated = 'DecimalField'
+    timecreated = 'DecimalField'
+    statusmessage = 'TextField'
+    status = 'IntegerField'
+    stagename = 'CharField'
+    pubreleaseid = 'Releases'
+    productversionid = 'Versions'
+    product_id = 'Products'
+    name = 'CharField'
+    image_id = 'AutoField'
+    description = 'TextField'
+    deleted = 'SmallIntegerField'
+    createdby = 'Users'
+    buildtype = 'IntegerField'
+    buildcount = 'IntegerField'
 
+@register
 class UserGroups(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    usergroup = 'CharField'
     usergroupid = 'AutoField'
+    usergroup = 'CharField'
 
+@register
 class TargetUserCredentials(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    id = 'AutoField'
-    targetcredentialsid = 'TargetCredentials'
-    targetid = 'Targets'
     userid = 'Users'
+    targetid = 'Targets'
+    targetcredentialsid = 'TargetCredentials'
+    id = 'AutoField'
 
+@register
 class Products(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    backupexternal = 'SmallIntegerField'
-    commitemail = 'CharField'
-    creatorid = 'Users'
-    description = 'TextField'
-    domainname = 'CharField'
-    hidden = 'SmallIntegerField'
-    hostname = 'CharField'
-    name = 'CharField'
-    namespace = 'CharField'
-    prodtype = 'CharField'
-    product_id = 'AutoField'
-    projecturl = 'CharField'
-    repository_host_name = 'CharField'
-    shortname = 'CharField'
-    timecreated = 'DecimalField'
     timemodified = 'DecimalField'
+    timecreated = 'DecimalField'
+    shortname = 'CharField'
+    repository_host_name = 'CharField'
+    projecturl = 'CharField'
+    product_id = 'AutoField'
+    prodtype = 'CharField'
+    namespace = 'CharField'
+    name = 'CharField'
+    hostname = 'CharField'
+    hidden = 'SmallIntegerField'
+    domainname = 'CharField'
+    description = 'TextField'
+    creatorid = 'Users'
+    commitemail = 'CharField'
+    backupexternal = 'SmallIntegerField'
 
+@register
 class PkiCertificates(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    ca_serial_index = 'IntegerField'
-    fingerprint = 'TextField'
-    is_ca = 'BooleanField'
-    issuer_fingerprint = 'PkiCertificates'
-    pkey_pem = 'TextField'
-    purpose = 'TextField'
-    time_expired = 'DateTimeUtcField'
-    time_issued = 'DateTimeUtcField'
     x509_pem = 'TextField'
+    time_issued = 'DateTimeUtcField'
+    time_expired = 'DateTimeUtcField'
+    purpose = 'TextField'
+    pkey_pem = 'TextField'
+    issuer_fingerprint = 'PkiCertificates'
+    is_ca = 'BooleanField'
+    fingerprint = 'TextField'
+    ca_serial_index = 'IntegerField'
 
+@register
 class Fault(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    code = 'IntegerField'
-    message = 'CharField'
     traceback = 'TextField'
+    message = 'CharField'
+    code = 'IntegerField'
 
+@register
 class UserGroupMembers(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    id = 'AutoField'
-    usergroupid = 'UserGroups'
     userid = 'Users'
+    usergroupid = 'UserGroups'
+    id = 'AutoField'
 
+@register
 class TargetImagesDeployed(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    fileid = 'IntegerField'
-    id = 'AutoField'
-    targetid = 'Targets'
     targetimageid = 'CharField'
+    targetid = 'Targets'
+    id = 'AutoField'
+    fileid = 'IntegerField'
 
+@register
 class DatabaseVersion(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    id = 'AutoField'
-    minor = 'SmallIntegerField'
     version = 'SmallIntegerField'
+    minor = 'SmallIntegerField'
+    id = 'AutoField'
 
+@register
 class Members(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    id = 'AutoField'
-    level = 'SmallIntegerField'
-    product_id = 'Products'
     userid = 'Users'
+    product_id = 'Products'
+    level = 'SmallIntegerField'
+    id = 'AutoField'
 
+@register
 class Versions(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    description = 'TextField'
-    name = 'CharField'
-    namespace = 'CharField'
-    product_id = 'Products'
-    product_version_id = 'AutoField'
     timecreated = 'DecimalField'
+    product_version_id = 'AutoField'
+    product_id = 'Products'
+    namespace = 'CharField'
+    name = 'CharField'
+    description = 'TextField'
 
+@register
 class Downloads(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    id = 'AutoField'
-    image_id = 'Images'
-    ip = 'CharField'
     timedownloaded = 'CharField'
+    ip = 'CharField'
+    image_id = 'Images'
+    id = 'AutoField'
 
+@register
 class Sessions(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    data = 'TextField'
-    session_id = 'AutoField'
     sid = 'CharField'
+    session_id = 'AutoField'
+    data = 'TextField'
 
+@register
 class Releases(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    createdby = 'Users'
-    description = 'TextField'
-    name = 'CharField'
-    product_id = 'Products'
-    publishedby = 'Users'
-    pubreleaseid = 'AutoField'
-    shouldmirror = 'SmallIntegerField'
-    timecreated = 'DecimalField'
-    timemirrored = 'DecimalField'
-    timepublished = 'DecimalField'
-    timeupdated = 'DecimalField'
-    updatedby = 'Users'
     version = 'CharField'
+    updatedby = 'Users'
+    timeupdated = 'DecimalField'
+    timepublished = 'DecimalField'
+    timemirrored = 'DecimalField'
+    timecreated = 'DecimalField'
+    shouldmirror = 'SmallIntegerField'
+    pubreleaseid = 'AutoField'
+    publishedby = 'Users'
+    product_id = 'Products'
+    name = 'CharField'
+    description = 'TextField'
+    createdby = 'Users'
 
+@register
 class Users(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    active = 'SmallIntegerField'
-    blurb = 'TextField'
-    displayemail = 'TextField'
-    email = 'CharField'
-    fullname = 'CharField'
-    passwd = 'CharField'
-    salt = 'TextField'
-    timeaccessed = 'DecimalField'
-    timecreated = 'DecimalField'
-    userid = 'AutoField'
     username = 'CharField'
+    userid = 'AutoField'
+    timecreated = 'DecimalField'
+    timeaccessed = 'DecimalField'
+    salt = 'TextField'
+    passwd = 'CharField'
+    fullname = 'CharField'
+    email = 'CharField'
+    displayemail = 'TextField'
+    blurb = 'TextField'
+    active = 'SmallIntegerField'
 
+@register
 class Jobs(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    job_id = 'AutoField'
     job_uuid = 'TextField'
+    job_id = 'AutoField'
 
+@register
 class TargetCredentials(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    credentials = 'TextField'
     targetcredentialsid = 'AutoField'
+    credentials = 'TextField'
 
+@register
 class Pk(object):
     """
     """
     __metaclass__ = SDKClassMeta
 
+@register
 class TargetData(object):
     """
     """
     __metaclass__ = SDKClassMeta
-    id = 'AutoField'
-    name = 'CharField'
-    targetid = 'Targets'
     value = 'TextField'
+    targetid = 'Targets'
+    name = 'CharField'
+    id = 'AutoField'
 
 # DO NOT TOUCH #
 GLOBALS = globals()
