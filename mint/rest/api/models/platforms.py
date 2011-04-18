@@ -129,7 +129,7 @@ class PlatformVersion(Model):
 
     def get_absolute_url(self):
         return ('platforms', self._platformId,
-                'platformVersions', self.revision)
+                'platformVersions', '%s=%s' % (self.name, self.revision))
 
 class PlatformVersions(Model):
     platformVersion = fields.ListField(PlatformVersion)

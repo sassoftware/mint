@@ -236,9 +236,15 @@ class Platforms(object):
         platformDef = self.platformCache.get(str(platform.label))
         return platformDef.getPlatformVersionTrove()
 
-    def getPlatformVersions(self, platformId, revision=None):
+    def getPlatformVersions(self, platformId, platformVersionId=None):
         platform = self.getById(platformId)
         platformTroveName = self._getPlatformTrove(platform)
+
+        if platformVersionId:
+            name, revision = platformVersionId.split('=')
+        else:
+            name = revision = None
+
         host = platform.label.split('@')[:1][0]
         label = platform.label
         if not label.startswith('/'):
@@ -275,9 +281,8 @@ class Platforms(object):
 
         return platformVersions
 
-    def getPlatformVersion(self, platformId, revision):
-        return self.getPlatformVersions(platformId, revision)
-        
+    def getPlatformVersion(self, platformId, platformVersionId):
+        return self.getPlatformVersions(platformId, platformVersionId)
 
     def _updatePlatformFromPlatformDefinition(self, platformModel, platformDef):
         if platformDef is None:
