@@ -89,16 +89,17 @@ class BuildDefinitionMixIn(object):
 
     @classmethod
     def computeBuildDefinitionDigest(cls, buildDef):
-        # Since we don't have unique IDs for builds, we need to manufacture
-        # some - we'll digest the three refs.
-        digest = digestlib.md5()
-        if buildDef.containerTemplateRef:
-            digest.update(buildDef.containerTemplateRef)
-        if buildDef.architectureRef:
-            digest.update(buildDef.architectureRef)
-        if buildDef.flavorSetRef:
-            digest.update(buildDef.flavorSetRef)
+        # We'll serialize the build def and hash it to get an ID
+        digest = cls.Digester_md5()
+        buildDef.export(digest, level=0, namespace_='')
         return digest.hexdigest()
+
+    class Digester_md5(object):
+        def __init__(self):
+            self._digest = digestlib.md5()
+            self.hexdigest = self._digest.hexdigest
+        def write(self, data):
+            self._digest.update(data)
 
 class PromotionJobStatusController(base.BaseController):
     modelName = 'jobs'

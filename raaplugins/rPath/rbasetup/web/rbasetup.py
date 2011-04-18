@@ -426,6 +426,4 @@ class rBASetup(rAAWebPlugin):
         
         # redirect to the rbuilder login screen
         fqdn = raa.web.getRequestHostname()
-        query = { 'username': self.getPropertyValue('RBA_ADMIN', 'admin'),
-                  'msg': urllib.quote("Please sign in below to enable platforms and complete the setup process.") }
-        raa.web.raiseHttpRedirect("http://%s/ui/#/login?%s" % (fqdn, "&".join(["%s=%s" % (k, query[k]) for k in query.keys()])))
+        raa.web.raiseHttpRedirect("http://%s" % fqdn)

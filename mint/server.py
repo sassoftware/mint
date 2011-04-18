@@ -1421,8 +1421,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin \
                  or not self.cfg.adminNewUsers):
             raise mint_error.PermissionDenied
-        if active and not (list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin):
-            raise mint_error.PermissionDenied
+        # per https://issues.rpath.com/browse/RBL-8350, don't enforce this anymore unless rBO or flagged external
+        if self.cfg.rBuilderOnline or self.cfg.rBuilderExternal:
+            if active and not (list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin):
+                raise mint_error.PermissionDenied
         return self.users.registerNewUser(username, password, fullName, email,
                                           displayEmail, blurb, active)
 
@@ -4996,8 +4998,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._getPackageCreatorClient(callback)
 
     def _getPackageCreatorClient(self, callback):
-        from mint.django_rest.rbuilder.inventory import manager
-        mgr = manager.Manager()
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        mgr = rbuildermanager.RbuilderManager()
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
             callback=callback, djangoManager=mgr)
 

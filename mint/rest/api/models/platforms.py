@@ -117,6 +117,23 @@ class SourceInstances(Model):
         name = 'instances'
     instance = fields.ListField(Source, displayName='contentSource')
 
+class PlatformVersion(Model):
+    class Meta(object):
+        name = 'platformVersions'
+    name = fields.CharField()
+    version = fields.CharField()
+    revision = fields.CharField()
+    _platformId = fields.CharField()
+
+    id = fields.AbsoluteUrlField(isAttribute=True)
+
+    def get_absolute_url(self):
+        return ('platforms', self._platformId,
+                'platformVersions', self.revision)
+
+class PlatformVersions(Model):
+    platformVersion = fields.ListField(PlatformVersion)
+
 class Platform(Model):
     platformId = fields.CharField()
     platformTroveName = fields.CharField()
@@ -144,6 +161,8 @@ class Platform(Model):
     imageTypeDefinitions = fields.UrlField('platforms.imageTypeDefinitions',
                                          ['platformId'])
     isPlatform = fields.BooleanField()
+    platformVersions = fields.UrlField('platforms.platformVersions',
+        ['platformId'])
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
@@ -170,7 +189,7 @@ class PlatformLoadStatusStub(Model):
         return ('platforms.load', self.platformId, self.jobId)
 
 class PlatformLoad(Model):
-    uri = fields.CharField()
+    loadUri = fields.CharField()
     jobId = fields.CharField()
     platformId = fields.IntegerField()
     job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
