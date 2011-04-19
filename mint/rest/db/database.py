@@ -452,6 +452,33 @@ class Database(DBInterface):
         self.productMgr.updateProductVersion(hostname,
                                              version, productVersion.description)
 
+    def getProductVersionPlatform(self, hostname, version):
+        self.auth.requireProductReadAccess(hostname)
+        pd = self.productMgr.getProductVersionDefinition(hostname, version)
+        platformName = pd.getPlatformName()
+        sourceTrove = pd.getPlatformSourceTrove()
+        if not sourceTrove:
+            return models.ProductPlatform(platformTroveName='',
+                platformVersion='', label='', platformName=platformName,
+                hostname=hostname, productVersion=version)
+        n,v,f = cmdline.parseTroveSpec(sourceTrove)
+        v = versions.VersionFromString(v)
+        # convert trove name from unicode
+        platformLabel = str(v.trailingLabel())
+        localPlatform = self.platformMgr.getPlatformByLabel(platformLabel)
+        platformId = None
+        platformEnabled = None
+        if localPlatform:
+            platformId = localPlatform.platformId
+            platformEnabled = bool(localPlatform.enabled)
+        return models.ProductPlatform(platformTroveName=str(n),
+            platformVersion=str(v.trailingRevision()),
+            label=platformLabel,
+            platformName=platformName,
+            hostname=hostname,
+            productVersion=version,
+            enabled=platformEnabled,
+            platformId = platformId)
 
     def getProductVersionPlatformVersion(self, hostname, version):
         self.auth.requireProductReadAccess(hostname)
