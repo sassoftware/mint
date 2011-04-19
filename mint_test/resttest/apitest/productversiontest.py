@@ -985,6 +985,7 @@ class ProductVersionTest(restbase.BaseRestTest):
   <timeCreated></timeCreated>
   <timeModified></timeModified>
   <hidden>false</hidden>
+  <role>User</role>
   <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
   <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
   <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
@@ -997,7 +998,7 @@ class ProductVersionTest(restbase.BaseRestTest):
             resp = re.sub("<%s>.*</%s>" % (pat, pat),
              "<%s></%s>" % (pat, pat),
             resp)
-        self.failUnlessEqual(resp,
+        self.assertXMLEquals(resp,
              exp % dict(port = client.port, server = client.server))
 
     def testGetProductVersions(self):
