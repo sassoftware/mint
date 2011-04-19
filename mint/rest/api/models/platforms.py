@@ -119,7 +119,7 @@ class SourceInstances(Model):
 
 class PlatformVersion(Model):
     class Meta(object):
-        name = 'platformVersions'
+        name = 'platformVersion'
     name = fields.CharField()
     version = fields.CharField()
     revision = fields.CharField()

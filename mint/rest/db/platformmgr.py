@@ -234,11 +234,21 @@ class Platforms(object):
 
     def _getPlatformTrove(self, platform):
         platformDef = self.platformCache.get(str(platform.label))
-        return platformDef.getPlatformVersionTrove()
+        srcTroves = [s for s in platformDef.getSearchPaths() \
+            if s.isPlatformTrove]
+        assert(1, len(srcTroves))
+        srcTrove = srcTroves[0]
+        return srcTrove
+
+    def _getPlatformTroveName(self, platform):
+        return self._getPlatformTrove(platform).troveName
+
+    def _getPlatformTroveVersion(self, platform):
+        return self._getPlatformTrove(platform).version
 
     def getPlatformVersions(self, platformId, platformVersionId=None):
         platform = self.getById(platformId)
-        platformTroveName = self._getPlatformTrove(platform)
+        platformTroveName = self._getPlatformTroveName(platform)
 
         if platformVersionId:
             name, revision = platformVersionId.split('=')
