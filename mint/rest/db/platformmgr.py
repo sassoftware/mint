@@ -248,12 +248,12 @@ class Platforms(object):
 
     def getPlatformVersions(self, platformId, platformVersionId=None):
         platform = self.getById(platformId)
-        platformTroveName = self._getPlatformTroveName(platform)
 
         if platformVersionId:
-            name, revision = platformVersionId.split('=')
+            platformTroveName, revision = platformVersionId.split('=')
         else:
-            name = revision = None
+            platformTroveName = self._getPlatformTroveName(platform)
+            revision = None
 
         host = platform.label.split('@')[:1][0]
         label = platform.label
