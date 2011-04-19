@@ -215,11 +215,11 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     @requires('platformVersion', models.PlatformVersion)
     def setPlatformVersion(self, request, hostname, version, platformVersion):
         self.db.rebaseProductVersionPlatform(hostname, version, platformVersion)
-        return self.getPlatform(request, hostname, version)
+        return self.getPlatformVersion(request, hostname, version)
 
     def updatePlatformVersion(self, request, hostname, version):
         self.db.rebaseProductVersionPlatform(hostname, version)
-        return self.getPlatform(request, hostname, version)
+        return self.getPlatformVersion(request, hostname, version)
 
     @auth.public
     def getImageTypeDefinitions(self, request, hostname, version):
