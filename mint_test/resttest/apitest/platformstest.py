@@ -329,7 +329,7 @@ class PlatformsTest(BaseTest):
         client = self.getRestClient(admin=True)
         req, platform = client.call('PUT', uri, body=platformPUTXml)
         xml = self._toXml(platform, client, req)
-        self.assertXMLEquals(platformPUTXml, xml)
+        self.assertXMLEquals(platformGETXml, xml)
 
     def testGetPlatformStatus(self):
         self._getPlatforms()

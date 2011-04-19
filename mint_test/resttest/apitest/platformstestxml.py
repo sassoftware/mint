@@ -18,6 +18,7 @@ platformsXml = """\
     <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
     <load href="http://localhost:8000/api/platforms/1/load/"/>
     <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
+    <platformVersions href="http://localhost:8000/api/platforms/1/platformVersions/"/>
   </platform>
   <platform id="http://localhost:8000/api/platforms/2">
     <platformId>2</platformId>
@@ -36,11 +37,14 @@ platformsXml = """\
     <contentSourceTypes href="http://localhost:8000/api/platforms/2/contentSourceTypes"/>
     <load href="http://localhost:8000/api/platforms/2/load/"/>
     <imageTypeDefinitions href="http://localhost:8000/api/platforms/2/imageTypeDefinitions"/>
+    <platformVersions href="http://localhost:8000/api/platforms/2/platformVersions/"/>
   </platform>
 </platforms>
 """
 
-platformXml = """\
+platformVersions = """<platformVersions href="http://localhost:8000/api/platforms/1/platformVersions/"/>"""
+
+platformXmlTempl = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <platform id="http://localhost:8000/api/platforms/1">
   <platformId>1</platformId>
@@ -49,7 +53,7 @@ platformXml = """\
   <platformName>Crowbar Linux 1</platformName>
   <platformUsageTerms>Terms of Use 1</platformUsageTerms>
   <mode>manual</mode>
-  <enabled>false</enabled>
+  <enabled>%(enabled)s</enabled>
   <configurable>true</configurable>
   <abstract>false</abstract>
   <mirrorPermission>true</mirrorPermission>
@@ -58,9 +62,14 @@ platformXml = """\
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
   <load href="http://localhost:8000/api/platforms/1/load/"/>
-  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
+  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>%(platformVersions)s
 </platform>
 """
+
+platformXml = platformXmlTempl % dict(
+    enabled="false",
+    platformVersions="""
+    %s""" % platformVersions)
 
 platformSourcesXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -450,27 +459,14 @@ contentSourcePUTXml2 = """\
 </contentSource>
 """
 
-platformPUTXml = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<platform id="http://localhost:8000/api/platforms/1">
-  <platformId>1</platformId>
-  <repositoryHostname>localhost</repositoryHostname>
-  <label>localhost@rpath:plat-1</label>
-  <platformName>Crowbar Linux 1</platformName>
-  <platformUsageTerms>Terms of Use 1</platformUsageTerms>
-  <mode>manual</mode>
-  <enabled>true</enabled>
-  <configurable>true</configurable>
-  <abstract>false</abstract>
-  <mirrorPermission>true</mirrorPermission>
-  <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
-  <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
-  <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
-  <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>
-  <load href="http://localhost:8000/api/platforms/1/load/"/>
-  <imageTypeDefinitions href="http://localhost:8000/api/platforms/1/imageTypeDefinitions"/>
-</platform>
-"""
+platformPUTXml = platformXmlTempl % dict(
+    enabled="true",
+    platformVersions="")
+
+platformGETXml = platformXmlTempl % dict(
+    enabled="true",
+    platformVersions="""
+    %s""" % platformVersions)
 
 sourcePOSTXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
