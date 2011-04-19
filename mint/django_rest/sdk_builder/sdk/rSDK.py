@@ -85,13 +85,13 @@ class SDKClassMeta(type):
     >>> p.name
     Nano
     >>> type(p.name)
-    <class 'sdk.Fields.CharField'>
+    <type 'str'>
 
     finally, redefining the __init__ method is necessary for
     the descriptors (which power the validation) to work. ie:
     >>> p = Package(name="Nano", package_id=1)
     >>> p.name = 1
-    TypeError: Value must be of type str or unicode
+    ValidationError: Value must be of type str or unicode
     >>> p.name = 'nano, lowercase'
     >>> p.name
     nano, lowercase
@@ -102,6 +102,33 @@ class SDKClassMeta(type):
         return an inlined class with a dynamically generated __init__
         """
         def new(cls, *args, **kwargs):
+
+            def make(k, v):
+                attr = getattr(cls, k)
+                # for fields in list_fields, attr is a list
+                # containing one or more elements
+                if isinstance(attr, list):
+                    # if field k not specified in kwargs then v will
+                    # be a list containing a single item which will be
+                    # a class. in this case set v to empty.  otherwise
+                    # v will be a list containing zero or more instances
+                    # inner.
+                    # HACK: checking by __name__
+                    if isinstance(v, list) and not v[0].__name__ is 'inner':
+                        attrVal = []
+                    else:
+                        assert(isinstance(v, list))
+                        attrVal = v
+                # when field not in list_fields
+                else:
+                    # when k not in kwargs
+                    if inspect.isclass(v):
+                        attrVal = attr('')
+                    # when k in kwargs
+                    else:
+                        attrVal = attr(v)
+                return attrVal
+
             class inner(object):
                 def __init__(self, *args, **kwargs):
                     # cast to dict since cls.__dict__ is actually a dictproxy
@@ -115,24 +142,33 @@ class SDKClassMeta(type):
                                 continue
                             elif k.startswith('_xobj'):
                                 attr = v
-                            elif inspect.isclass(v):
-                                attr = getattr(cls, k)('')
                             else:
-                                attr = getattr(cls, k)(v)
+                                # make attr based on how and what input
+                                # parameters are passed in kwargs
+                                attr = make(k, v)
                             setattr(inner, k, attr)
                         except TypeError:
                             # happens when v should be a class but
-                            # is instead the name of a class.  this
+                            # is instead the name of a class. this
                             # occurs when the class attributes (which
                             # comprise of names of classes) have not
-                            # been rebound.  if v is not a str or unicode
-                            # then something *really* funky is going on
+                            # been rebound with the actual class. if
+                            # v is not a str or unicode then something
+                            # really funky is going on
                             assert(isinstance(v, (str, unicode)))
                             raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
-                
+
                 def __getattribute__(self, k):
+                    # necessary for xobj to generate correct xml
                     return getattr(inner, k)
-                
+
+                def __setattr__(self, k, v):
+                    attr = inner.__dict__[k]
+                    if hasattr(attr, '__set__'):
+                        attr.__set__(attr, v)
+                    else:
+                        setattr(inner, k, v)
+
             return inner(*args, **kwargs)
         # rebind __new__ and create class
         attrs['__new__'] = new

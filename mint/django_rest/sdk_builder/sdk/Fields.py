@@ -47,6 +47,8 @@ class TextField(XObjInitializer, GetSetMixin):
     __name__ = 'TextField'
     
     def _validate(self, value):
+        if value and not isinstance(value, (str, unicode)):
+            raise ValidationError('Value must be of type str or unicode')
         return value
 
 class ForeignKey(XObjInitializer, GetSetMixin):

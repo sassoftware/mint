@@ -130,13 +130,17 @@ class Command(BaseCommand):
         Generates Python SDK for REST API
         """
         # doc = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
-
-        class Package(object):
-            def __init__(self, name):
-                self.name = name
-
-        doc = xobj.Document()
-        doc.package = Package('nano')
+        from mint.django_rest.sdk_builder.sdk.packages import Package, Packages
+        p1 = Package(name='nano', description='HELLO WORLD')
+        pkgs = Packages(package=[p1])
+        print pkgs.package
+        p2 = Package(name='apache', description='GOODBYE WORLD')
+        pkgs.package.append(p2)
+        print pkgs.package
+        pkgs.package = [p1, p2]
+        print pkgs.package
+        from xobj.xobj import Document
+        doc = Document()
         import pdb; pdb.set_trace()
         pass
 
