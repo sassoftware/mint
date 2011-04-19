@@ -13,7 +13,7 @@
 # #
 # 
 from django.core.management.base import BaseCommand
-from mint.django_rest.sdk_builder import rSDK
+# from mint.django_rest.sdk_builder import rSDK
 from mint.django_rest.sdk_builder import Fields
 from xobj import xobj
 
