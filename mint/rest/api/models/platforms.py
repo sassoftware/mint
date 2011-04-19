@@ -90,6 +90,7 @@ class SourceType(Model):
     class Meta(object):
         name = 'contentSourceType'
     contentSourceType = fields.CharField()
+    required = fields.BooleanField()
     singleton = fields.BooleanField()
     instances = fields.UrlField('contentSources.instances', ['contentSourceType'])
     configDescriptor = fields.UrlField('contentSources.descriptor', ['contentSourceType'])
