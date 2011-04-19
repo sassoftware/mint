@@ -172,9 +172,9 @@ class ProductVersionDefinition(base.BaseController):
 class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
 
     modelName = 'version'
-    urls = {'platform'   : dict(GET='getPlatform',
-                                PUT='setPlatform',
-                                POST='updatePlatform'),
+    urls = {'platformVersion' : dict(GET='getPlatform',
+                                     PUT='setPlatform',
+                                     POST='updatePlatform'),
             'stages'     : ProductVersionStages,
             'definition' : ProductVersionDefinition,
             'images'     : dict(GET='getImages'),
@@ -207,9 +207,9 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     def getPlatform(self, request, hostname, version):
         return self.db.getProductVersionPlatform(hostname, version)
 
-    @requires('platform', models.Platform)
-    def setPlatform(self, request, hostname, version, platform):
-        self.db.rebaseProductVersionPlatform(hostname, version, platform.label)
+    @requires('platformVersion', models.PlatformVersion)
+    def setPlatform(self, request, hostname, version, platformVersion):
+        self.db.rebaseProductVersionPlatform(hostname, version, platformVersion)
         return self.getPlatform(request, hostname, version)
 
     def updatePlatform(self, request, hostname, version):

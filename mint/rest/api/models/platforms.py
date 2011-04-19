@@ -123,6 +123,7 @@ class PlatformVersion(Model):
     name = fields.CharField()
     version = fields.CharField()
     revision = fields.CharField()
+    label = fields.CharField()
     _platformId = fields.CharField()
 
     id = fields.AbsoluteUrlField(isAttribute=True)

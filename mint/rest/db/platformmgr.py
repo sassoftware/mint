@@ -267,7 +267,7 @@ class Platforms(object):
                 
             platformVersion = models.PlatformVersion(
                 name=platformTroveName, version=version.asString(),
-                revision=versionRevision)
+                revision=versionRevision, label=label)
             platformVersion._platformId = platformId
 
             if revision is not None and \
