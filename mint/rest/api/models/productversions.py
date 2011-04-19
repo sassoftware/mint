@@ -6,7 +6,6 @@
 #
 
 from mint import jobstatus
-from mint.rest.api.models import PlatformVersion
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
