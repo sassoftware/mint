@@ -239,7 +239,7 @@ class Platforms(object):
         platformDef = self.platformCache.get(str(platform.label))
         srcTroves = [s for s in platformDef.getSearchPaths() \
             if s.isPlatformTrove]
-        assert(1, len(srcTroves))
+        assert 1 == len(srcTroves)
         srcTrove = srcTroves[0]
         return srcTrove
 
