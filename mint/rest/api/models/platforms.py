@@ -119,17 +119,18 @@ class SourceInstances(Model):
 
 class PlatformVersion(Model):
     class Meta(object):
-        name = 'platformVersions'
+        name = 'platformVersion'
     name = fields.CharField()
     version = fields.CharField()
     revision = fields.CharField()
+    label = fields.CharField()
     _platformId = fields.CharField()
 
     id = fields.AbsoluteUrlField(isAttribute=True)
 
     def get_absolute_url(self):
         return ('platforms', self._platformId,
-                'platformVersions', self.revision)
+                'platformVersions', '%s=%s' % (self.name, self.revision))
 
 class PlatformVersions(Model):
     platformVersion = fields.ListField(PlatformVersion)

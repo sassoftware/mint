@@ -6,6 +6,7 @@
 #
 
 from mint import jobstatus
+from mint.rest.api.models import PlatformVersion
 from mint.rest.modellib import Model
 from mint.rest.modellib import fields
 
@@ -20,6 +21,8 @@ class ProductVersion(Model):
     platformLabel = fields.CharField()
     timeCreated = fields.DateTimeField(editable=False)
     platform = fields.UrlField('products.versions.platform', 
+                                ('hostname', 'name'))
+    platformVersion = fields.UrlField('products.versions.platformVersion', 
                                 ('hostname', 'name'))
     stages = fields.UrlField('products.versions.stages', ('hostname', 'name'))
     definition = fields.UrlField('products.versions.definition', 

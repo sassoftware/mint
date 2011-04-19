@@ -515,10 +515,12 @@ class ProductManager(manager.Manager):
         prodDef.saveToRepository(cclient,
                 'Product Definition commit from rBuilder\n')
 
-    def rebaseProductVersionPlatform(self, fqdn, version, platformLabel):
+    def rebaseProductVersionPlatform(self, fqdn, version, platformVersion):
         pd = self.getProductVersionDefinition(fqdn, version)
         cclient = self.reposMgr.getUserClient()
-        pd.rebase(cclient, platformLabel)
+        label = platformVersion.label
+        revision = platformVersion.revision
+        pd.rebase(cclient, label, platformVersion=revision)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
 

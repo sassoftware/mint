@@ -172,9 +172,10 @@ class ProductVersionDefinition(base.BaseController):
 class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
 
     modelName = 'version'
-    urls = {'platform'   : dict(GET='getPlatform',
-                                PUT='setPlatform',
-                                POST='updatePlatform'),
+    urls = {'platformVersion' : dict(GET='getPlatformVersion',
+                                     PUT='setPlatformVersion',
+                                     POST='updatePlatformVersion'),
+            'platform' : dict(GET='getPlatform'),
             'stages'     : ProductVersionStages,
             'definition' : ProductVersionDefinition,
             'images'     : dict(GET='getImages'),
@@ -207,14 +208,18 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
     def getPlatform(self, request, hostname, version):
         return self.db.getProductVersionPlatform(hostname, version)
 
-    @requires('platform', models.Platform)
-    def setPlatform(self, request, hostname, version, platform):
-        self.db.rebaseProductVersionPlatform(hostname, version, platform.label)
-        return self.getPlatform(request, hostname, version)
+    @auth.public
+    def getPlatformVersion(self, request, hostname, version):
+        return self.db.getProductVersionPlatformVersion(hostname, version)
 
-    def updatePlatform(self, request, hostname, version):
+    @requires('platformVersion', models.PlatformVersion)
+    def setPlatformVersion(self, request, hostname, version, platformVersion):
+        self.db.rebaseProductVersionPlatform(hostname, version, platformVersion)
+        return self.getPlatformVersion(request, hostname, version)
+
+    def updatePlatformVersion(self, request, hostname, version):
         self.db.rebaseProductVersionPlatform(hostname, version)
-        return self.getPlatform(request, hostname, version)
+        return self.getPlatformVersion(request, hostname, version)
 
     @auth.public
     def getImageTypeDefinitions(self, request, hostname, version):
