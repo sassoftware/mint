@@ -31,22 +31,30 @@ EXCLUDED_APPS = [
     'sdk_builder',
     ]
 
+# MODULE_LEVEL_CODE = \
+# """
+# # DO NOT TOUCH #
+# GLOBALS = globals()
+# for tag, clsAttrs in REGISTRY.items():
+#     if tag in GLOBALS:
+#         TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
+#     for attrName, refClsOrName in clsAttrs.items():
+#         if refClsOrName in GLOBALS and refClsOrName not in ['__module__', '__doc__']:
+#             cls, refCls = GLOBALS[tag], GLOBALS[refClsOrName]
+#             if isinstance(getattr(cls, attrName), list):
+#                 setattr(cls, attrName, [refCls])
+#             else:
+#                 setattr(cls, attrName, refCls)
+# """.strip()
+
 MODULE_LEVEL_CODE = \
 """
-# DO NOT TOUCH #
 GLOBALS = globals()
-for tag, clsAttrs in REGISTRY.items():
+DynamicImportResolver(GLOBALS).rebind()
+for tag in REGISTRY.keys():
     if tag in GLOBALS:
         TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
-    for attrName, refClsOrName in clsAttrs.items():
-        if refClsOrName in GLOBALS:
-            cls, refCls = GLOBALS[tag], GLOBALS[refClsOrName]
-            if isinstance(getattr(cls, attrName), list):
-                setattr(cls, attrName, [refCls])
-            else:
-                setattr(cls, attrName, refCls)
 """.strip()
-
 
 
 class Command(BaseCommand):
@@ -71,7 +79,7 @@ class Command(BaseCommand):
             # Actually write the module
             with open(models_path, 'w') as f:
                 f.write('from sdk.Fields import *  # pyflakes=ignore\n')
-                f.write('from sdk.rSDK import SDKClassMeta, toUnderscore, register  # pyflakes=ignore\n')
+                f.write('from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore\n')
                 # f.write('from sdk.xobj_debug import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')

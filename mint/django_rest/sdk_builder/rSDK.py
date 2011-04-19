@@ -15,9 +15,8 @@
 # INCLUDED IN CLIENT SIDE DISTRIBUTION #
 
 from xobj import xobj
-# import xobj_debug as xobj
 import inspect
-
+import imp
 
 def toCamelCase(name):
     """
@@ -37,6 +36,9 @@ def toUnderscore(name):
         else:
             L.append(c)
     return ''.join(L)
+
+class ValidationError(Exception):
+    pass
 
 class GetSetMixin(object):
     """
@@ -85,7 +87,7 @@ class SDKClassMeta(type):
     Nano
     >>> type(p.name)
     <class 'sdk.Fields.CharField'>
-    
+
     finally, redefining the __init__ method is necessary for
     the descriptors (which power the validation) to work. ie:
     >>> p = Package(name="Nano", package_id=1)
@@ -110,20 +112,74 @@ class SDKClassMeta(type):
                     # then v is actually a class, not an instance of some class
                     for k, v in d.items():
                         try:
-                            if inspect.isfunction(v) or k.startswith('_'):
+                            if inspect.isfunction(v) or k.startswith('__'):
                                 continue
+                            elif k.startswith('_xobj'):
+                                attr = v
                             elif inspect.isclass(v):
                                 attr = getattr(cls, k)('')
                             else:
                                 attr = getattr(cls, k)(v)
                             setattr(inner, k, attr)
                         except TypeError:
-                            # this occurs when an extra-module reference is required.
-                            # TypeError unhandled during development phase but will
-                            # raise an exception in production version
-                            pass
+                            # happens when v should be a class but
+                            # is instead the name of a class.  this
+                            # occurs when the class attributes (which
+                            # comprise of names of classes) have not
+                            # been rebound.  if v is not a str or unicode
+                            # then something *really* funky is going on
+                            assert(isinstance(v, (str, unicode)))
+                            raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
             return inner(*args, **kwargs)
         # rebind __new__ and create class
         attrs['__new__'] = new
-        klass = type.__new__(meta, name, bases, attrs)
-        return klass
+        return type.__new__(meta, name, bases, attrs)
+
+
+
+class DynamicImportResolver(object):
+
+    def __init__(self, GLOBALS):
+        self.globals = GLOBALS
+        self.registry = GLOBALS['REGISTRY']
+
+    def rebind(self):
+        self.rebindLocals()
+        self.rebindGlobals()
+
+    def rebindLocals(self):
+        # go before rebindGlobals
+        for tag, clsAttrs in self.registry.items():
+            for attrName, refClsOrName in clsAttrs.items():
+                # use globals not registry since we are doing
+                # from Fields import *
+                # inside of the the module that runs this code
+                if refClsOrName in self.globals and attrName not in ['__module__', '__doc__']:
+                    cls, refCls = self.globals[tag], self.globals[refClsOrName]
+                    self._setAttr(cls, attrName, refCls)
+
+    def rebindGlobals(self):
+        # go after rebindLocals
+        for tag, clsAttrs in self.registry.items():
+            for attrName, refClsOrName in clsAttrs.items():
+                if refClsOrName not in self.globals and attrName not in ['__module__', '__doc__']:
+                    cls, refCls = self.globals[tag], self._findRefCls(refClsOrName)
+                    self._setAttr(cls, attrName, refCls)
+
+    def _setAttr(self, cls, attrName, refCls):
+          if isinstance(getattr(cls, attrName), list):
+              setattr(cls, attrName, [refCls])
+          else:
+              setattr(cls, attrName, refCls)
+
+    def _findRefCls(self, refClsName):
+        """
+        refClsName = 'rbuilder.Users'
+        """
+        splitted = refClsName.split('.')
+        mod_import_path = '.'.join(splitted[0:-1])
+        clsname = splitted[-1]
+        if 'sdk' not in mod_import_path:
+            mod_import_path = 'sdk.' + mod_import_path
+        module = __import__(mod_import_path, globals(), locals(), -1)
+        return module.__dict__[clsname]

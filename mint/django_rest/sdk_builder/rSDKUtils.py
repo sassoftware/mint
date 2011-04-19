@@ -135,9 +135,7 @@ class ClassStub(object):
         # of same name as one in current module
         metadata = self.metadata
         name = field.__name__
-        if name in metadata.module.__dict__:
-            return name
-        elif name in Fields.__dict__:
+        if name in metadata.module.__dict__ or name in Fields.__dict__:
             return name
         else:
             name = _resolveDynamicClassModule(field)
@@ -182,16 +180,14 @@ def DjangoModelsWrapper(module):
     collected = []
     django_models = [m for m in module.__dict__.values() if inspect.isclass(m)]
     for django_model in sortByListFields(*django_models):
-        fields_dict = _getModelFields(django_model)
-        fields_dict = _convertFields(fields_dict)
+        fields_dict = _convert(django_model)
         if hasattr(django_model, 'list_fields'):
             dep_names = [toCamelCase(m) for m in django_model.list_fields]
             for name in dep_names:
                 model = getattr(module, name, None)
                 if not model:
-                    raise Exception('Extra-module reference')
-                new_fields = _getModelFields(model)
-                new_fields = _convertFields(new_fields)
+                    raise Exception('Extra-module reference inside list_fields not accounted for')
+                new_fields = _convert(model)
                 new = type(model.__name__, (object,), new_fields)
                 fields_dict[name] = [new]
         if hasattr(django_model, '_xobj'):
@@ -226,6 +222,10 @@ def _convertFields(d):
         new_d[k] = new_field
     return new_d
 
+def _convert(model):
+    fields_dict = _getModelFields(model)
+    return _convertFields(fields_dict)
+
 def _getReferenced(field):
     """
     Returns the model referenced by some variant of a
@@ -235,9 +235,9 @@ def _getReferenced(field):
 
 def _resolveDynamicClassModule(field):
     """
-    mint.django_rest.rbuilder.packages.models
+    takes PackageVersions and mint.django_rest.rbuilder.packages.models
     to
-    rbuilder.packages
+    packages.PackageVersions
     """
     prefix = 'mint.django_rest.rbuilder.'
     import_path = inspect.getmodule(field) .__name__.replace(prefix, '')

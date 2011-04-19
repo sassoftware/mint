@@ -15,13 +15,14 @@
 # INCLUDED IN CLIENT SIDE DISTRIBUTION #
 
 from rSDK import GetSetMixin, XObjInitializer
+from rSDK import ValidationError
 
 class CharField(XObjInitializer, GetSetMixin):
     __name__ = 'CharField'
     
     def _validate(self, value):
         if value and not isinstance(value, (str, unicode)):
-            raise TypeError('Value must be of type str or unicode')
+            raise ValidationError('Value must be of type str or unicode')
         return value
         
 class DecimalField(XObjInitializer, GetSetMixin):

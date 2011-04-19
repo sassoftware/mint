@@ -1,5 +1,5 @@
 from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import SDKClassMeta, toUnderscore, register  # pyflakes=ignore
+from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -45,16 +45,9 @@ class ChangeLogs(object):
     _xobj = XObjMetadata(tag='change_logs',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     change_log = ['ChangeLog']
 
-# DO NOT TOUCH #
 GLOBALS = globals()
-for tag, clsAttrs in REGISTRY.items():
+DynamicImportResolver(GLOBALS).rebind()
+for tag in REGISTRY.keys():
     if tag in GLOBALS:
         TYPEMAP[toUnderscore(tag)] = GLOBALS[tag]
-    for attrName, refClsOrName in clsAttrs.items():
-        if refClsOrName in GLOBALS:
-            cls, refCls = GLOBALS[tag], GLOBALS[refClsOrName]
-            if isinstance(getattr(cls, attrName), list):
-                setattr(cls, attrName, [refCls])
-            else:
-                setattr(cls, attrName, refCls)
 
