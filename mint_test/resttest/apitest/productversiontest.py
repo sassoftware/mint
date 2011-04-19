@@ -929,6 +929,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <timeCreated></timeCreated>
     <timeModified></timeModified>
     <hidden>false</hidden>
+    <role>User</role>
     <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
     <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
