@@ -247,4 +247,3 @@ def _resolveDynamicClassModule(field):
     else:
         new_path = '.'.join(import_path.split('.')[0:-1] + [field.__name__])
     return new_path
-    

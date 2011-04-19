@@ -19,7 +19,6 @@ from mint.django_rest.sdk_builder import rSDKUtils
 from django.db.models.loading import cache
 import os
 import shutil
-import inspect
 
 EXCLUDED_APPS = [
     'auth',

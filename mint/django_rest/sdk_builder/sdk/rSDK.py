@@ -16,7 +16,6 @@
 
 from xobj import xobj
 import inspect
-import imp
 
 def toCamelCase(name):
     """
