@@ -298,6 +298,7 @@ contentSourceTypesXml = """\
 <contentSourceTypes>
   <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
     <contentSourceType>RHN</contentSourceType>
+    <required>true</required>
     <singleton>true</singleton>
     <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
@@ -305,6 +306,7 @@ contentSourceTypesXml = """\
   </contentSourceType>
   <contentSourceType id="http://localhost:8000/api/contentSources/satellite">
     <contentSourceType>satellite</contentSourceType>
+    <required>false</required>
     <instances href="http://localhost:8000/api/contentSources/satellite/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
     <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>
@@ -316,6 +318,7 @@ contentSourceTypeXml = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
   <contentSourceType>RHN</contentSourceType>
+  <required>true</required>
   <singleton>true</singleton>
   <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
   <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
@@ -411,6 +414,7 @@ contentSourceTypesByPlatformXml = """\
 <contentSourceTypes>
   <contentSourceType id="http://localhost:8000/api/contentSources/RHN">
     <contentSourceType>RHN</contentSourceType>
+    <required>true</required>
     <singleton>true</singleton>
     <instances href="http://localhost:8000/api/contentSources/RHN/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/RHN/descriptor"/>
@@ -418,6 +422,7 @@ contentSourceTypesByPlatformXml = """\
   </contentSourceType>
   <contentSourceType id="http://localhost:8000/api/contentSources/satellite">
     <contentSourceType>satellite</contentSourceType>
+    <required>false</required>
     <instances href="http://localhost:8000/api/contentSources/satellite/instances/"/>
     <configDescriptor href="http://localhost:8000/api/contentSources/satellite/descriptor"/>
     <statusTest href="http://localhost:8000/api/contentSources/satellite/statusTest"/>

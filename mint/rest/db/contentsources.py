@@ -75,6 +75,7 @@ class ContentSourceType(object):
     fields = []
     model = None
     _ContentSourceTypeName = None
+    isRequired = False
 
     def __init__(self, proxyMap = None):
         self.proxyMap = proxyMap
@@ -152,6 +153,7 @@ class Rhn(_RhnSourceType):
     model = models.RhnSource
     sourceUrl = 'https://rhn.redhat.com'
     _ContentSourceTypeName = 'Red Hat Network'
+    isRequired = True
 
 class Satellite(_RhnSourceType):
     fields = [Name, Username, Password, SourceUrl]

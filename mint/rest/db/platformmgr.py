@@ -85,11 +85,13 @@ class ContentSourceTypes(object):
         self.cfg = cfg
         self.mgr = weakref.ref(mgr)
 
-    def _contentSourceTypeModelFactory(self, name, singleton = None, id = None):
+    @classmethod
+    def contentSourceTypeModelFactory(cls, name, singleton = None, id = None,
+            required=False):
         if id is None:
             id = name
         return models.SourceType(contentSourceType=name, singleton=singleton,
-            id = name)
+            id = name, required=required)
 
     def _listFromCfg(self):
         allTypesMap = dict()
@@ -99,14 +101,15 @@ class ContentSourceTypes(object):
             sourceTypes = platform._sourceTypes
             for t, isSingleton in sourceTypes or []:
                 if t not in allTypes:
+                    cst = contentsources.contentSourceTypes[t]
                     allTypes.append(t)
-                    allTypesMap[t] = isSingleton
+                    allTypesMap[t] = (isSingleton, cst.isRequired)
 
         stypes = []
         for stype in allTypes:
-            isSingleton = allTypesMap[stype]
-            stype = self._contentSourceTypeModelFactory(name=stype,
-                singleton=isSingleton)
+            isSingleton, isRequired = allTypesMap[stype]
+            stype = self.contentSourceTypeModelFactory(name=stype,
+                singleton=isSingleton, required=isRequired)
             stypes.append(stype)
 
         return stypes
@@ -1255,8 +1258,10 @@ class PlatformManager(manager.Manager):
         platform = self.platforms.getById(platformId)
         types = []
         for sourceType, isSingleton in platform._sourceTypes:
-            types.append(models.SourceType(contentSourceType=sourceType,
-                singleton=isSingleton))
+            cst = contentsources.contentSourceTypes[sourceType]
+            types.append(ContentSourceTypes.contentSourceTypeModelFactory(
+                name=sourceType, singleton=isSingleton,
+                required=cst.isRequired))
 
         return models.SourceTypes(types)
 
