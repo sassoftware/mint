@@ -14,6 +14,7 @@
 # 
 from django.core.management.base import BaseCommand
 from mint.django_rest.sdk_builder import rSDK
+from mint.django_rest.sdk_builder import Fields
 from xobj import xobj
 
 # from mint.django_rest.sdk_builder.rSDKUtils import ClassStub
@@ -78,12 +79,12 @@ class TypedProperty(object):
 # from xobj.xobj import Document
 from xobj.xobj import XObjMetadata
 # 
-class Url(xobj.XObj, rSDK.XObjMixin):
-    tags = rSDK.Fields.TextField
+class Url(xobj.XObj):
+    tags = Fields.TextField
     _xobj = XObjMetadata(tag='url', attributes={'tags':tags})
 
-class Catalog(xobj.XObj, rSDK.XObjMixin):
-    cid = rSDK.Fields.IntegerField
+class Catalog(xobj.XObj):
+    cid = Fields.IntegerField
     url = [Url]
     _xobj = XObjMetadata(tag='Catalog', attributes={'cid':cid})
 
@@ -130,7 +131,12 @@ class Command(BaseCommand):
         """
         # doc = xobj.parse(CXML, typeMap={'catalog':Catalog, 'url':Url})
 
+        class Package(object):
+            def __init__(self, name):
+                self.name = name
 
+        doc = xobj.Document()
+        doc.package = Package('nano')
         import pdb; pdb.set_trace()
         pass
 
@@ -276,4 +282,3 @@ class Command(BaseCommand):
 #         # import pdb; pdb.set_trace()
 #         # pass
 
-"dict(tag=%(tag))"

@@ -129,6 +129,10 @@ class SDKClassMeta(type):
                             # then something *really* funky is going on
                             assert(isinstance(v, (str, unicode)))
                             raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
+                
+                def __getattribute__(self, k):
+                    return getattr(inner, k)
+                
             return inner(*args, **kwargs)
         # rebind __new__ and create class
         attrs['__new__'] = new
