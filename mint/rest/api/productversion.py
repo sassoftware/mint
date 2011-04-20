@@ -217,8 +217,9 @@ class ProductVersionController(base.BaseController, BuildDefinitionMixIn):
         self.db.rebaseProductVersionPlatform(hostname, version, platformVersion)
         return self.getPlatformVersion(request, hostname, version)
 
-    def updatePlatformVersion(self, request, hostname, version):
-        self.db.rebaseProductVersionPlatform(hostname, version)
+    @requires('platformVersion', models.PlatformVersion)
+    def updatePlatformVersion(self, request, hostname, version, platformVersion):
+        self.db.rebaseProductVersionPlatform(hostname, version, platformVersion)
         return self.getPlatformVersion(request, hostname, version)
 
     @auth.public
