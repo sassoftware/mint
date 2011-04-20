@@ -76,7 +76,6 @@ def register(cls):
             module.REGISTRY[name][k] = v
     return cls
 
-
 class SDKClassMeta(type):
     """
     redefining the cls's __init__ method allows the
@@ -163,11 +162,12 @@ class SDKClassMeta(type):
                     return getattr(inner, k)
 
                 def __setattr__(self, k, v):
+                    # necessary for validation to work
                     attr = inner.__dict__[k]
                     if hasattr(attr, '__set__'):
                         attr.__set__(attr, v)
-                    else:
-                        setattr(inner, k, v)
+                        v = attr.__get__(attr)
+                    setattr(inner, k, v)
 
             return inner(*args, **kwargs)
         # rebind __new__ and create class
