@@ -17,11 +17,13 @@
 from xobj import xobj
 import inspect
 
+
 def toCamelCase(name):
     """
     ie: Changes management_nodes to ManagementNodes
     """
     return ''.join(s.capitalize() for s in name.split('_'))
+
 
 def toUnderscore(name):
     """
@@ -36,8 +38,10 @@ def toUnderscore(name):
             L.append(c)
     return ''.join(L)
 
+
 class ValidationError(Exception):
     pass
+
 
 class GetSetMixin(object):
     """
@@ -49,6 +53,7 @@ class GetSetMixin(object):
 
     def __set__(self, instance, value):
         self._data = self._validate(value)
+
 
 class XObjInitializer(xobj.XObj):
     """
@@ -166,15 +171,13 @@ class SDKClassMeta(type):
                     # necessary for validation to work
                     attr = inner.__dict__[k]
                     if hasattr(attr, '__set__'):
-                        attr.__set__(attr, v)
-                        v = attr.__get__(attr)
+                        v = make(k, v)
                     setattr(inner, k, v)
 
             return inner(*args, **kwargs)
         # rebind __new__ and create class
         attrs['__new__'] = new
         return type.__new__(meta, name, bases, attrs)
-
 
 
 class DynamicImportResolver(object):
