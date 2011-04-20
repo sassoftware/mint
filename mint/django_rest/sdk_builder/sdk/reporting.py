@@ -38,6 +38,7 @@ class SystemUpdate(object):
     _updatetime = 'DecimalField'
     _systemupdateid = 'AutoField'
 
+# DO NOT TOUCH #
 GLOBALS = globals()
 DynamicImportResolver(GLOBALS).rebind()
 for tag in REGISTRY.keys():

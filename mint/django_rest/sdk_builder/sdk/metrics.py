@@ -33,6 +33,7 @@ class Metrics(object):
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='metrics')
 
+# DO NOT TOUCH #
 GLOBALS = globals()
 DynamicImportResolver(GLOBALS).rebind()
 for tag in REGISTRY.keys():

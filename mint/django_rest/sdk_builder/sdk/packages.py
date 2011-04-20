@@ -357,6 +357,7 @@ class PackageVersionJobs(object):
     _xobj = XObjMetadata(tag='package_version_jobs')
     package_version_job = ['PackageVersionJob']
 
+# DO NOT TOUCH #
 GLOBALS = globals()
 DynamicImportResolver(GLOBALS).rebind()
 for tag in REGISTRY.keys():

@@ -121,6 +121,7 @@ class QuerySets(object):
     _xobj = XObjMetadata(tag='query_sets',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
     query_set = ['QuerySet']
 
+# DO NOT TOUCH #
 GLOBALS = globals()
 DynamicImportResolver(GLOBALS).rebind()
 for tag in REGISTRY.keys():

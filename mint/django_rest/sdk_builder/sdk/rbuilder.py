@@ -241,6 +241,7 @@ class TargetData(object):
     name = 'CharField'
     id = 'AutoField'
 
+# DO NOT TOUCH #
 GLOBALS = globals()
 DynamicImportResolver(GLOBALS).rebind()
 for tag in REGISTRY.keys():

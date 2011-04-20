@@ -117,9 +117,9 @@ class SDKClassMeta(type):
                     # be a list containing a single item which will be
                     # a class. in this case set v to empty.  otherwise
                     # v will be a list containing zero or more instances
-                    # inner.
+                    # of class object inner.
                     # HACK: checking by __name__
-                    if isinstance(v, list) and not v[0].__name__ is 'inner':
+                    if isinstance(v, list) and not v[0].__name__.startswith('converted'):
                         attrVal = []
                     else:
                         assert(isinstance(v, list))
@@ -155,8 +155,8 @@ class SDKClassMeta(type):
                         except TypeError:
                             # happens when v should be a class but
                             # is instead the name of a class. this
-                            # occurs when the class attributes (which
-                            # comprise of names of classes) have not
+                            # occurs when a class attribute (which
+                            # is the name of a classe) has not
                             # been rebound with the actual class. if
                             # v is not a str or unicode then something
                             # really funky is going on
@@ -168,12 +168,14 @@ class SDKClassMeta(type):
                     return getattr(inner, k)
 
                 def __setattr__(self, k, v):
-                    # necessary for validation to work
+                    # necessary for validation to continue
+                    # to work after attribute assignment
                     attr = inner.__dict__[k]
                     if hasattr(attr, '__set__'):
                         v = make(k, v)
                     setattr(inner, k, v)
 
+            inner.__name__ = 'converted_%s' % cls.__name__
             return inner(*args, **kwargs)
         # rebind __new__ and create class
         attrs['__new__'] = new
