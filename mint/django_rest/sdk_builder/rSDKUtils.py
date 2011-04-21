@@ -95,8 +95,13 @@ class ClassStub(object):
         self.metadata = django_metadata
     
     def doc2src(self):
-        indented = indent(getattr(self.cls, '__doc__', ''))
-        return '    \"\"\"\n' + indented + '    \"\"\"'
+        doc = getattr(self.cls, '__doc__', '')
+        if doc:
+            indented = indent('\"\"\"\n') + indent(doc) + indent('\"\"\"')
+        else:
+            indented = indent('\"\"\" \"\"\"')
+        return indented
+
     
     def bases2src(self):
         return ', '.join(b.__name__ for b in self.cls.__bases__)

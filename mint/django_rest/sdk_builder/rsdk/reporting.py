@@ -1,5 +1,5 @@
-from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.Fields import *  # pyflakes=ignore
+from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -7,8 +7,8 @@ TYPEMAP = {}
 
 @register
 class RepositoryLogStatus(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     logoffset = 'IntegerField'
     logname = 'CharField'
@@ -16,21 +16,21 @@ class RepositoryLogStatus(object):
 
 @register
 class Report(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(attributes={'id':str},elements=['name', 'description', 'descriptor', 'data', 'timeCreated'])
 
 @register
 class Reports(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
 
 @register
 class SystemUpdate(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     update_user = 'CharField'
     server_name = 'CharField'

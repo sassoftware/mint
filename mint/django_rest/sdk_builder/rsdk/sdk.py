@@ -156,7 +156,7 @@ class SDKClassMeta(type):
                             # happens when v should be a class but
                             # is instead the name of a class. this
                             # occurs when a class attribute (which
-                            # is the name of a classe) has not
+                            # is the name of a class) has not
                             # been rebound with the actual class. if
                             # v is not a str or unicode then something
                             # really funky is going on
@@ -226,7 +226,7 @@ class DynamicImportResolver(object):
         splitted = refClsName.split('.')
         mod_import_path = '.'.join(splitted[0:-1])
         clsname = splitted[-1]
-        if 'sdk' not in mod_import_path:
-            mod_import_path = 'sdk.' + mod_import_path
+        if 'rsdk' not in mod_import_path:
+            mod_import_path = 'rsdk.' + mod_import_path
         module = __import__(mod_import_path, globals(), locals(), -1)
         return module.__dict__[clsname]

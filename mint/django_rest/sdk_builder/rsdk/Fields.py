@@ -14,8 +14,7 @@
 
 # INCLUDED IN CLIENT SIDE DISTRIBUTION #
 
-from rSDK import GetSetMixin, XObjInitializer
-from rSDK import ValidationError
+from sdk import GetSetMixin, XObjInitializer, ValidationError
 
 class CharField(XObjInitializer, GetSetMixin):
     __name__ = 'CharField'
@@ -48,7 +47,6 @@ class TextField(XObjInitializer, GetSetMixin):
     
     def _validate(self, value):
         if value and not isinstance(value, (str, unicode)):
-            import pdb; pdb.set_trace()
             raise ValidationError('Value is of type %s, but must be of type str or unicode' % type(value))
         return value
 

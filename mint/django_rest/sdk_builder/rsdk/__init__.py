@@ -38,25 +38,25 @@ def connect(base_url, auth=None):
         api = connect('http://server/api/', (username, passwd))
 
         [GET]
-        api.GET('/packages/') # get all packages
-        api.GET('/packages/1') # get first package
+        api.GET('packages/') # get all packages
+        api.GET('packages/1') # get first package
 
         [POST]
         pkg = packages.Package() # create
         pkg.name = 'xobj'
         pkg.description = 'A python to xml serialization library'
-        api.POST('/packages/', pkg)
+        api.POST('packages/', pkg)
 
         [PUT]
-        pkg2 = api.GET('/packages/2')
+        pkg2 = api.GET('packages/2')
         pkg2.name = 'Package 2 Renamed'
-        api.PUT('/packages/2', pkg2)
+        api.PUT('packages/2', pkg2)
 
         [DELETE]
-        api.DELETE('/packages/2')
+        api.DELETE('packages/2')
 
         [Validate]
-        pkg = api.GET('/packages/1')
+        pkg = api.GET('packages/1')
         isinstance(pkg.id, URLField) # is True
         pkg.id = 'bad id' # throws an error
         pkg.id = 'http://validid.com/' # works

@@ -1,5 +1,5 @@
-from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.Fields import *  # pyflakes=ignore
+from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -7,8 +7,8 @@ TYPEMAP = {}
 
 @register
 class ChangeLogEntry(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     entry_text = 'TextField'
     entry_date = 'DateTimeUtcField'
@@ -18,8 +18,8 @@ class ChangeLogEntry(object):
 
 @register
 class ChangeLog(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     resource_type = 'TextField'
     resource_id = 'IntegerField'
@@ -28,8 +28,8 @@ class ChangeLog(object):
 
 @register
 class ChangeLogs(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'

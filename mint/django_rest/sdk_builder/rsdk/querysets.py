@@ -1,5 +1,5 @@
-from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.Fields import *  # pyflakes=ignore
+from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -7,22 +7,22 @@ TYPEMAP = {}
 
 @register
 class FilterDescriptor(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='filter_descriptor')
 
 @register
 class ChosenMembers(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='chosen_members')
 
 @register
 class SystemTag(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     system_tag_id = 'AutoField'
     system = 'inventory.System'
@@ -32,22 +32,22 @@ class SystemTag(object):
 
 @register
 class ChildMembers(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='child_members')
 
 @register
 class CollectionId(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='collection')
 
 @register
 class InclusionMethod(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     name = 'TextField'
     inclusion_method_id = 'AutoField'
@@ -55,15 +55,15 @@ class InclusionMethod(object):
 
 @register
 class FilteredMembers(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='filtered_members')
 
 @register
 class QueryTag(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     query_tag_id = 'AutoField'
     query_set = 'QuerySet'
@@ -72,15 +72,15 @@ class QueryTag(object):
 
 @register
 class AllMembers(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='all_members')
 
 @register
 class FilterEntry(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     value = 'TextField'
     operator = 'TextField'
@@ -90,8 +90,8 @@ class FilterEntry(object):
 
 @register
 class QuerySet(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     resource_type = 'TextField'
     query_set_id = 'AutoField'
@@ -104,8 +104,8 @@ class QuerySet(object):
 
 @register
 class QuerySets(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'

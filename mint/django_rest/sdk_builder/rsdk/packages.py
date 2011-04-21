@@ -1,5 +1,5 @@
-from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.Fields import *  # pyflakes=ignore
+from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -7,8 +7,8 @@ TYPEMAP = {}
 
 @register
 class PackageSourceJob(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     package_source_job_id = 'AutoField'
     package_source = 'PackageSource'
@@ -23,14 +23,14 @@ class PackageSourceJob(object):
 
 @register
 class PackageJobSerializerMixin(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
 
 @register
 class PackageVersionUrl(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     url = 'TextField'
     package_version_url_id = 'AutoField'
@@ -46,8 +46,8 @@ class PackageVersionUrl(object):
 
 @register
 class PackageBuild(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     package_source = 'PackageSource'
     package_build_id = 'AutoField'
@@ -59,8 +59,8 @@ class PackageBuild(object):
 
 @register
 class PackageVersion(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     package_version_id = 'AutoField'
     package = 'Package'
@@ -77,8 +77,8 @@ class PackageVersion(object):
 
 @register
 class PackageVersionJob(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     package_version_job_id = 'AutoField'
     package_version = 'PackageVersion'
@@ -93,8 +93,8 @@ class PackageVersionJob(object):
 
 @register
 class PackageVersionAction(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     visible = 'BooleanField'
     package_version_action_id = 'AutoField'
@@ -108,8 +108,8 @@ class PackageVersionAction(object):
 
 @register
 class Package(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     package_id = 'AutoField'
     name = 'CharField'
@@ -122,8 +122,8 @@ class Package(object):
 
 @register
 class PackageSourceAction(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     visible = 'BooleanField'
     package_source_action_id = 'AutoField'
@@ -137,8 +137,8 @@ class PackageSourceAction(object):
 
 @register
 class PackageActionType(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     package_action_type_id = 'AutoField'
     name = 'TextField'
@@ -149,8 +149,8 @@ class PackageActionType(object):
 
 @register
 class PackageBuildJob(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     package_build_job_id = 'AutoField'
     package_build = 'PackageBuild'
@@ -165,8 +165,8 @@ class PackageBuildJob(object):
 
 @register
 class PackageBuildAction(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     visible = 'BooleanField'
     package_build_action_id = 'AutoField'
@@ -180,8 +180,8 @@ class PackageBuildAction(object):
 
 @register
 class PackageSource(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     trove = 'inventory.Trove'
     package_version = 'PackageVersion'
@@ -195,15 +195,15 @@ class PackageSource(object):
 
 @register
 class JobData(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='job_data')
 
 @register
 class PackageVersions(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'
@@ -221,16 +221,16 @@ class PackageVersions(object):
 
 @register
 class PackageBuildJobs(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='package_build_jobs')
     package_build_job = ['PackageBuildJob']
 
 @register
 class PackageBuilds(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'
@@ -248,8 +248,8 @@ class PackageBuilds(object):
 
 @register
 class PackageActionTypes(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'
@@ -267,16 +267,16 @@ class PackageActionTypes(object):
 
 @register
 class PackageSourceJobs(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='package_source_jobs')
     package_source_job = ['PackageSourceJob']
 
 @register
 class PackageSources(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'
@@ -294,8 +294,8 @@ class PackageSources(object):
 
 @register
 class Packages(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'
@@ -313,8 +313,8 @@ class Packages(object):
 
 @register
 class PackageVersionUrls(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'
@@ -332,8 +332,8 @@ class PackageVersionUrls(object):
 
 @register
 class AllPackageVersions(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     start_index = 'IntegerField'
     previous_page = 'TextField'
@@ -351,8 +351,8 @@ class AllPackageVersions(object):
 
 @register
 class PackageVersionJobs(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='package_version_jobs')
     package_version_job = ['PackageVersionJob']

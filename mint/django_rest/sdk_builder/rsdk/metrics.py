@@ -1,5 +1,5 @@
-from sdk.Fields import *  # pyflakes=ignore
-from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.Fields import *  # pyflakes=ignore
+from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
@@ -7,8 +7,8 @@ TYPEMAP = {}
 
 @register
 class ServerVersions(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     django_version = 'TextField'
     debug_toolbar_version = 'TextField'
@@ -16,8 +16,8 @@ class ServerVersions(object):
 
 @register
 class Timer(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     user_cpu_time = 'TextField'
     total_cpu_time = 'TextField'
@@ -28,8 +28,8 @@ class Timer(object):
 
 @register
 class Metrics(object):
-    """
-    """
+    """ """
+
     __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='metrics')
 
