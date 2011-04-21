@@ -56,14 +56,14 @@ class Command(BaseCommand):
         for app_label, module in self.findAllModels().items():
             # Place everything inside sdk package, which lives in sdk_builder
             models_path = os.path.join(
-                    current_location[0:index], 'sdk_builder/sdk/%s.py' % app_label)
+                    current_location[0:index], 'sdk_builder/rsdk/%s.py' % app_label)
             # Keep out extraneous crap
             if app_label in EXCLUDED_APPS:
                 continue
             # Actually write the module
             with open(models_path, 'w') as f:
-                f.write('from sdk.Fields import *  # pyflakes=ignore\n')
-                f.write('from sdk.rSDK import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore\n')
+                f.write('from rsdk.Fields import *  # pyflakes=ignore\n')
+                f.write('from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore\n')
                 # f.write('from sdk.xobj_debug import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')
@@ -78,16 +78,16 @@ class Command(BaseCommand):
                     
         # now copy over rSDK into sdk package
         rSDK_orig_path = os.path.join(
-                current_location[0:index], 'sdk_builder/rSDK.py')
+                current_location[0:index], 'sdk_builder/sdk.py')
         rSDK_new_path = os.path.join(
-                current_location[0:index], 'sdk_builder/sdk/rSDK.py')
+                current_location[0:index], 'sdk_builder/rsdk/sdk.py')
         shutil.copyfile(rSDK_orig_path, rSDK_new_path)
         
         # now copy over Fields into sdk package
         Fields_orig_path = os.path.join(
                 current_location[0:index], 'sdk_builder/Fields.py')
         Fields_new_path = os.path.join(
-                current_location[0:index], 'sdk_builder/sdk/Fields.py')
+                current_location[0:index], 'sdk_builder/rsdk/Fields.py')
         shutil.copyfile(Fields_orig_path, Fields_new_path)
             
     def buildSDKModels(self, module):
