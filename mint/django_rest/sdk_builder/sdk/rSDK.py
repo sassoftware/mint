@@ -169,8 +169,10 @@ class SDKClassMeta(type):
 
                 def __setattr__(self, k, v):
                     # necessary for validation to continue
-                    # to work after attribute assignment
-                    attr = inner.__dict__[k]
+                    # to work after attribute assignment,
+                    # use get for the case where k is '_xobj'
+                    # and it can't be found (dunno why)
+                    attr = inner.__dict__.get(k, None)
                     if hasattr(attr, '__set__'):
                         v = make(k, v)
                     setattr(inner, k, v)

@@ -22,7 +22,7 @@ class CharField(XObjInitializer, GetSetMixin):
     
     def _validate(self, value):
         if value and not isinstance(value, (str, unicode)):
-            raise ValidationError('Value must be of type str or unicode')
+            raise ValidationError('Value is of type %s, but must be of type str or unicode' % type(value))
         return value
         
 class DecimalField(XObjInitializer, GetSetMixin):
@@ -48,7 +48,8 @@ class TextField(XObjInitializer, GetSetMixin):
     
     def _validate(self, value):
         if value and not isinstance(value, (str, unicode)):
-            raise ValidationError('Value must be of type str or unicode')
+            import pdb; pdb.set_trace()
+            raise ValidationError('Value is of type %s, but must be of type str or unicode' % type(value))
         return value
 
 class ForeignKey(XObjInitializer, GetSetMixin):
