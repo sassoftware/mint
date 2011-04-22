@@ -2597,7 +2597,6 @@ class MigrateTo_57(SchemaMigration):
     def migrate(self):
         return True
 
-
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
