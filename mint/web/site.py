@@ -946,6 +946,20 @@ class SiteHandler(WebHandler):
             if t == self.cfg.redirectUrlType:
                 overrideRedirect = u
 
+        redirects = {
+            43085: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/kde/foresight-2.5.0+2011.03.23-x86-dvd1.iso',
+            43067: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/kde/foresight-2.5.0+2011.03.23-x86_64-dvd1.iso',
+            43082: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/xfce/foresight-2.5.0+2011.03.23-x86-dvd1.iso',
+            43064: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/xfce/foresight-2.5.0+2011.03.23-x86_64-dvd1.iso',
+            43073: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/gnome/foresight-2.5.0+2011.03.23-x86-dvd1.iso',
+            43070: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/gnome/foresight-2.5.0+2011.03.23-x86_64-dvd1.iso',
+            43076: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/devel/downloadImage%3ffileId=43076',
+            43079: 'http://ftp.linux.ncsu.edu/pub/foresight/2.5.0/devel/downloadImage%3ffileId=43079',
+        }
+
+        if int(fileId) in redirects:
+            overrideRedirect = redirects[int(fileId)]
+
         # For urltype.LOCAL, construct the redirect URL
         # Use override redirect if it's set (e.g. redirecting to Amazon S3).
 
