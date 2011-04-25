@@ -3088,7 +3088,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     platInfo = pd.getPlatformInformation()
                     tags = []
                     if (platInfo and hasattr(platInfo, 'platformClassifier')
-                        and hasattr(platInfo.platformClassifier.tags)):
+                        and hasattr(platInfo.platformClassifier, 'tags')):
                         tags = platInfo.platformClassifier.tags.split()
                     if 'windows' in tags:
                         return self.startWindowsImageJob(buildId, jobData)
