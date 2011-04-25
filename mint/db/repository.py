@@ -242,7 +242,7 @@ class RepositoryHandle(object):
         return self._projectInfo['fqdn']
     @property
     def hasDatabase(self):
-        return self._projectInfo['database'] is not None
+        return (not self.isExternal) or self.isLocalMirror
     @property
     def isExternal(self):
         return bool(self._projectInfo['external'])
