@@ -14,140 +14,162 @@
 
 # INCLUDED IN CLIENT SIDE DISTRIBUTION #
 
-from sdk import GetSetMixin, XObjInitializer, ValidationError
+from sdk import XObjInitializer, ValidationError
 
-class CharField(XObjInitializer, GetSetMixin):
+class CharField(XObjInitializer):
     __name__ = 'CharField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         if value and not isinstance(value, (str, unicode)):
             raise ValidationError('Value is of type %s, but must be of type str or unicode' % type(value))
         return value
         
-class DecimalField(XObjInitializer, GetSetMixin):
+class DecimalField(XObjInitializer):
     __name__ = 'DecimalField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class FloatField(XObjInitializer, GetSetMixin):
+class FloatField(XObjInitializer):
     __name__ = 'FloatField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
         
-class IntegerField(XObjInitializer, GetSetMixin):
+class IntegerField(XObjInitializer):
     __name__ = 'IntegerField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class TextField(XObjInitializer, GetSetMixin):
+class TextField(XObjInitializer):
     __name__ = 'TextField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         if value and not isinstance(value, (str, unicode)):
             raise ValidationError('Value is of type %s, but must be of type str or unicode' % type(value))
         return value
 
-class ForeignKey(XObjInitializer, GetSetMixin):
+class ForeignKey(XObjInitializer):
     __name__ = 'ForeignKey'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class ManyToManyField(XObjInitializer, GetSetMixin):
+class ManyToManyField(XObjInitializer):
     __name__ = 'ManyToManyField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class OneToOneField(XObjInitializer, GetSetMixin):
+class OneToOneField(XObjInitializer):
     __name__ = 'OneToOneField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class AutoField(XObjInitializer, GetSetMixin):
+class AutoField(XObjInitializer):
     __name__ = 'AutoField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class NullBooleanField(XObjInitializer, GetSetMixin):
+class NullBooleanField(XObjInitializer):
     __name__ = 'NullBooleanField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class DateTimeUtcField(XObjInitializer, GetSetMixin):
+class DateTimeUtcField(XObjInitializer):
     __name__ = 'DateTimeUtcField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class SerializedForeignKey(XObjInitializer, GetSetMixin):
+class SerializedForeignKey(XObjInitializer):
     __name__ = 'SerializedForeignKey'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class HrefField(XObjInitializer, GetSetMixin):
+class HrefField(XObjInitializer):
     __name__ = 'HrefField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class DeferredForeignKey(XObjInitializer, GetSetMixin):
+class DeferredForeignKey(XObjInitializer):
     __name__ = 'DeferredForeignKey'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class SmallIntegerField(XObjInitializer, GetSetMixin):
+class SmallIntegerField(XObjInitializer):
     __name__ = 'SmallIntegerField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class XMLField(XObjInitializer, GetSetMixin):
+class XMLField(XObjInitializer):
     __name__ = 'XMLField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class InlinedDeferredForeignKey(XObjInitializer, GetSetMixin):
+class InlinedDeferredForeignKey(XObjInitializer):
     __name__ = 'InlinedDeferredForeignKey'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class InlinedForeignKey(XObjInitializer, GetSetMixin):
+class InlinedForeignKey(XObjInitializer):
     __name__ = 'InlinedForeignKey'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class BooleanField(XObjInitializer, GetSetMixin):
+class BooleanField(XObjInitializer):
     __name__ = 'BooleanField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class URLField(XObjInitializer, GetSetMixin):
+class URLField(XObjInitializer):
     __name__ = 'URLField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
 
-class DateTimeField(XObjInitializer, GetSetMixin):
+class DateTimeField(XObjInitializer):
     __name__ = 'DateTimeField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value
     
-class EmailField(XObjInitializer, GetSetMixin):
+class EmailField(XObjInitializer):
     __name__ = 'EmailField'
     
-    def _validate(self, value):
+    @staticmethod
+    def _validate(value):
         return value

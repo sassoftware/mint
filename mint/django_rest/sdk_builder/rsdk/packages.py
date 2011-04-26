@@ -205,18 +205,7 @@ class PackageVersions(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='package_versions',attributes={'next_page':str,'previous_page':str,'full_collection':str,'filter_by':str,'per_page':str,'order_by':str,'start_index':str,'count':int,'num_pages':str,'end_index':str,'limit':str})
+    _xobj = XObjMetadata(tag='package_versions')
     package_version = ['PackageVersion']
 
 @register
@@ -232,18 +221,7 @@ class PackageBuilds(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='package_builds',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='package_builds')
     package_build = ['PackageBuild']
 
 @register
@@ -251,18 +229,7 @@ class PackageActionTypes(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='package_action_types',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='package_action_types')
     package_action_type = ['PackageActionType']
 
 @register
@@ -278,18 +245,7 @@ class PackageSources(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='package_sources',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='package_sources')
     package_source = ['PackageSource']
 
 @register
@@ -297,18 +253,7 @@ class Packages(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='packages',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='packages')
     package = ['Package']
 
 @register
@@ -316,18 +261,7 @@ class PackageVersionUrls(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='package_version_urls',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='package_version_urls')
     package_version_url = ['PackageVersionUrl']
 
 @register
@@ -335,18 +269,7 @@ class AllPackageVersions(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='package_versions',attributes={'next_page':str,'previous_page':str,'full_collection':str,'filter_by':str,'per_page':str,'order_by':str,'start_index':str,'count':int,'num_pages':str,'end_index':str,'limit':str})
+    _xobj = XObjMetadata(tag='package_versions')
     package_version = ['PackageVersion']
 
 @register

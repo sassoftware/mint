@@ -43,18 +43,6 @@ class ValidationError(Exception):
     pass
 
 
-class GetSetMixin(object):
-    """
-    Turns what inherits from it into a descriptor.
-    Is the basis for the validation framework.
-    """
-    def __get__(self, instance, owner=None):
-        return self._data
-
-    def __set__(self, instance, value):
-        self._data = self._validate(value)
-
-
 class XObjInitializer(xobj.XObj):
     """
     Just initializes a field, doing validation in the process
@@ -119,7 +107,8 @@ class SDKClassMeta(type):
                     # v will be a list containing zero or more instances
                     # of class object inner.
                     # HACK: checking by __name__
-                    if isinstance(v, list) and not v[0].__name__.startswith('converted'):
+                    if isinstance(v, list) and not \
+                        v[0].__class__.__name__.startswith('converted'):
                         attrVal = []
                     else:
                         assert(isinstance(v, list))
@@ -151,7 +140,7 @@ class SDKClassMeta(type):
                                 # make attr based on how and what input
                                 # parameters are passed in kwargs
                                 attr = make(k, v)
-                            setattr(inner, k, attr)
+                            self.__dict__[k] = attr
                         except TypeError:
                             # happens when v should be a class but
                             # is instead the name of a class. this
@@ -163,19 +152,11 @@ class SDKClassMeta(type):
                             assert(isinstance(v, (str, unicode)))
                             raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
 
-                def __getattribute__(self, k):
-                    # necessary for xobj to generate correct xml
-                    return getattr(inner, k)
-
                 def __setattr__(self, k, v):
-                    # necessary for validation to continue
-                    # to work after attribute assignment,
-                    # use get for the case where k is '_xobj'
-                    # and it can't be found (dunno why)
-                    attr = inner.__dict__.get(k, None)
-                    if hasattr(attr, '__set__'):
-                        v = make(k, v)
-                    setattr(inner, k, v)
+                    attr = cls.__dict__.get(k, None)
+                    if hasattr(attr, '_validate'):
+                        v = attr._validate(v)
+                    self.__dict__[k] = v
 
             inner.__name__ = 'converted_%s' % cls.__name__
             return inner(*args, **kwargs)

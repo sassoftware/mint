@@ -45,7 +45,7 @@ class SystemType(object):
     description = 'CharField'
     creation_descriptor = 'XMLField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(tag='system_type',attributes={'id':str})
+    _xobj = XObjMetadata(tag='system_type')
 
 @register
 class JobState(object):
@@ -54,7 +54,7 @@ class JobState(object):
     __metaclass__ = SDKClassMeta
     name = 'CharField'
     job_state_id = 'AutoField'
-    _xobj = XObjMetadata(tag='job_state',attributes={'id':str})
+    _xobj = XObjMetadata(tag='job_state')
 
 @register
 class System(object):
@@ -90,7 +90,7 @@ class System(object):
     configuration = 'TextField'
     appliance = 'rbuilder.Products'
     agent_port = 'IntegerField'
-    _xobj = XObjMetadata(tag='system',attributes={'id':str},elements=['networks'])
+    _xobj = XObjMetadata(tag='system',elements=['networks'])
 
 @register
 class Trove(object):
@@ -133,14 +133,14 @@ class Configuration(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='configuration',attributes={'id':str})
+    _xobj = XObjMetadata(tag='configuration')
 
 @register
 class Credentials(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='credentials',attributes={'id':str},elements=['ssl_client_certificate', 'ssl_client_key'])
+    _xobj = XObjMetadata(tag='credentials',elements=['ssl_client_certificate', 'ssl_client_key'])
 
 @register
 class JobSystem(object):
@@ -165,7 +165,7 @@ class Job(object):
     job_state = 'InlinedDeferredForeignKey'
     job_id = 'AutoField'
     event_type = 'InlinedForeignKey'
-    _xobj = XObjMetadata(tag='job',attributes={'id':str})
+    _xobj = XObjMetadata(tag='job')
 
 @register
 class ManagementInterface(object):
@@ -179,7 +179,7 @@ class ManagementInterface(object):
     credentials_readonly = 'NullBooleanField'
     credentials_descriptor = 'XMLField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(tag='management_interface',attributes={'id':str})
+    _xobj = XObjMetadata(tag='management_interface')
 
 @register
 class EventType(object):
@@ -204,7 +204,7 @@ class SystemEvent(object):
     priority = 'SmallIntegerField'
     event_type = 'EventType'
     event_data = 'TextField'
-    _xobj = XObjMetadata(tag='system_event',attributes={'id':str})
+    _xobj = XObjMetadata(tag='system_event')
 
 @register
 class ErrorResponse(object):
@@ -302,7 +302,7 @@ class ManagementNode(object):
     configuration = 'TextField'
     appliance = 'rbuilder.Products'
     agent_port = 'IntegerField'
-    _xobj = XObjMetadata(tag='management_node',attributes={'id':str},elements=['networks'])
+    _xobj = XObjMetadata(tag='management_node',elements=['networks'])
 
 @register
 class SystemState(object):
@@ -313,7 +313,6 @@ class SystemState(object):
     name = 'CharField'
     description = 'CharField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(attributes={'id':str})
 
 @register
 class Cache(object):
@@ -326,7 +325,7 @@ class ConfigurationDescriptor(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='configuration_descriptor',attributes={'id':str})
+    _xobj = XObjMetadata(tag='configuration_descriptor')
 
 @register
 class Zone(object):
@@ -337,7 +336,7 @@ class Zone(object):
     name = 'CharField'
     description = 'CharField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(tag='zone',attributes={'id':str})
+    _xobj = XObjMetadata(tag='zone')
 
 @register
 class Network(object):
@@ -355,7 +354,7 @@ class Network(object):
     device_name = 'CharField'
     created_date = 'DateTimeUtcField'
     active = 'NullBooleanField'
-    _xobj = XObjMetadata(tag='network',attributes={'id':str})
+    _xobj = XObjMetadata(tag='network')
 
 @register
 class SystemJobs(object):
@@ -402,7 +401,7 @@ class Jobs(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='jobs',attributes={'id':str},elements=['job'])
+    _xobj = XObjMetadata(tag='jobs',elements=['job'])
     job = ['Job']
 
 @register
@@ -410,7 +409,7 @@ class InstalledSoftware(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='installed_software',attributes={'id':str})
+    _xobj = XObjMetadata(tag='installed_software')
     trove = ['Trove']
 
 @register
@@ -467,18 +466,7 @@ class Systems(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='systems',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='systems')
     system = ['System']
 
 # DO NOT TOUCH #
