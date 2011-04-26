@@ -235,19 +235,14 @@ class Platforms(object):
             self._addComputedFields(platform)
         return platform
 
-    def _getPlatformTrove(self, platform):
+    def _getPlatformTroveName(self, platform):
         platformDef = self.platformCache.get(str(platform.label))
         srcTroves = [s for s in platformDef.getSearchPaths() \
             if s.isPlatformTrove]
-        assert 1 == len(srcTroves)
-        srcTrove = srcTroves[0]
-        return srcTrove
-
-    def _getPlatformTroveName(self, platform):
-        return self._getPlatformTrove(platform).troveName
-
-    def _getPlatformTroveVersion(self, platform):
-        return self._getPlatformTrove(platform).version
+        if srcTroves:
+            return srcTroves[0].troveName
+        else:
+            return None
 
     def getPlatformVersions(self, platformId, platformVersionId=None):
         platform = self.getById(platformId)
@@ -256,6 +251,8 @@ class Platforms(object):
             platformTroveName, revision = platformVersionId.split('=')
         else:
             platformTroveName = self._getPlatformTroveName(platform)
+            if not platformTroveName:
+                return models.PlatformVersions()
             revision = None
 
         host = platform.label.split('@')[:1][0]

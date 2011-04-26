@@ -495,7 +495,8 @@ class Database(DBInterface):
         if localPlatform:
             platformTroves = [pt for pt in pd.getPlatformSearchPaths() \
                 if pt.isPlatformTrove]
-            assert(1==len(platformTroves))
+            if not platformTroves:
+                return models.PlatformVersion()
             platformTrove = platformTroves[0]
             name = str(platformTrove.troveName)
             revision = str(platformTrove.version)
