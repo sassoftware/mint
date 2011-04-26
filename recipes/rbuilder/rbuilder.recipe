@@ -14,6 +14,8 @@ rbuilder_dirs = {
     'finished-images':              (0775, ('root', 'apache')),
     'jobs':                         (0775, ('root', 'apache')),
     'notices':                      (0775, ('root', 'apache')),
+    # Packages are downloaded by rmake, but could be removed from apache
+    'package-creator-downloads':    (0775, ('rmake', 'apache')),
     'proxy-contents':               (0775, ('root', 'apache')),
     'repos':                        (0775, ('root', 'apache')),
     'run':                          (0775, ('root', 'apache')),

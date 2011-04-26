@@ -15,7 +15,7 @@
 	</object>
 	<object pk="2000" model="rbuilder.users">
 	    <field type="CharField" name="username">testuser</field>
-	    <field type="CharField" name="fullname"/>
+            <field type="CharField" name="fullname">Test User</field>
 	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
 	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
 	    <field type="CharField" name="email">testuser@rpath.com</field>
