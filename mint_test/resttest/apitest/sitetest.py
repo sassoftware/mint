@@ -42,6 +42,7 @@ class SiteTest(restbase.BaseRestTest):
   <hostName>%(hostname)s</hostName>
   <isRBO>false</isRBO>
   <isExternalRba>false</isExternalRba>
+  <accountCreationRequiresAdmin>false</accountCreationRequiresAdmin>
   <identity>
     <rbuilderId></rbuilderId>
     <serviceLevel status="Unknown" daysRemaining="-1" expired="true" limited="true"/>
@@ -53,11 +54,13 @@ class SiteTest(restbase.BaseRestTest):
   <registration href="http://%(server)s:%(port)s/api/registration"/>
   <reports href="http://%(server)s:%(port)s/api/reports/"/>
   <inventory href="http://%(server)s:%(port)s/api/inventory/"/>
+  <query_sets href="http://localhost:8000/api/query_sets/"/>
+  <packages href="http://localhost:8000/api/packages/"/>
   <moduleHooks href="http://%(server)s:%(port)s/api/moduleHooks/"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>
   <inventoryConfigurationEnabled>true</inventoryConfigurationEnabled>
-  <imageImportEnabled>false</imageImportEnabled>
+  <imageImportEnabled>true</imageImportEnabled>
 </rbuilderStatus>
 """
         self.assertBlobEquals(response,

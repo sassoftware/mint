@@ -34,6 +34,8 @@ class RbuilderRestServer(RestController):
             'capsules'  : capsules.CapsulesController,
             'reports/'  : 'djangoHandoff',
             'inventory/' : 'djangoHandoff',
+            'query_sets/' : 'djangoHandoff',
+            'packages/' : 'djangoHandoff',
             'moduleHooks' : modulehooks.ModuleController,}
 
     def __init__(self, cfg, db):
@@ -55,6 +57,7 @@ class RbuilderRestServer(RestController):
                                      hostName=os.uname()[1],
                                      isRBO=self.cfg.rBuilderOnline, 
                                      isExternalRba=self.cfg.rBuilderExternal, 
+                                     accountCreationRequiresAdmin=self.cfg.adminNewUsers,
                                      identity=identity,
                                      maintMode=maintMode,
                                      inventoryConfigurationEnabled=self.cfg.inventoryConfigurationEnabled,

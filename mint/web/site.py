@@ -378,9 +378,8 @@ class SiteHandler(WebHandler):
                             error = "Password must be 6 characters or longer.")
             else:
                 self.user.setPassword(password1)
-                self._redirectHttp("logout")
 
-        self._redirectHttp('/')
+        self._redirectHttp('/api')
         
     @requiresAuth
     @listFields(str, projects=[])

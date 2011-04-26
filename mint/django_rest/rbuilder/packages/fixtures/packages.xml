@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+
+  <object pk="4" model="rbuilder.products">
+    <field type="CharField" name="hostname">centos</field>
+    <field type="CharField" name="name">CentOS 5</field>
+    <field type="CharField" name="namespace">
+      <None/>
+    </field>
+    <field type="CharField" name="domainname">rpath.com</field>
+    <field type="CharField" name="shortname">centos</field>
+    <field type="CharField" name="projecturl"/>
+    <field type="CharField" name="repositoryHostName">centos.rpath.com</field>
+    <field type="TextField" name="description"/>
+    <field type="CharField" name="prodtype"/>
+    <field type="CharField" name="commitemail"/>
+    <field type="SmallIntegerField" name="backupexternal">0</field>
+    <field type="DecimalField" name="timecreated">1295464800.617</field>
+    <field type="DecimalField" name="timemodified">1295464800.617</field>
+    <field type="SmallIntegerField" name="hidden">0</field>
+    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">
+      <None/>
+    </field>
+  </object>
+
+  <object pk="20350" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">exim-mon</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/4.63_5.el5_5.1-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20351" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">system-config-lvm</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/1.1.5_4.el5-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20352" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gtk+-devel</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/1.2.10_56.el5-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20353" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">libhbalinux</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/1.0.7_3.el5-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20354" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">bsf-javadoc</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/2.3.0_11jpp.1-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20355" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">rsyslog</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/3.22.1_3.el5-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20356" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">kdegraphics-devel</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/3.5.4_17.el5_5.1-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20357" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">Global_File_System-en-US</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/5.2_1.el5.centos-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20358" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">spamassassin</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/3.2.5_1.el5-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20359" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">libmlx4</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/1.0.1_5.el5-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20360" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">compat-readline43</field>
+    <field type="TextField" name="version">/centos.rpath.com@rpath:centos-5e/4.3_3-1-1</field>
+    <field type="TextField" name="server_name">centos.rpath.com</field>
+    <field type="TextField" name="branch_name">rpath:centos-5e</field>
+    <field type="IntegerField" name="is_source">0</field>
+  </object>
+  <object pk="20361" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version">/conary.rpath.com@rpl:devel/0-1</field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name">rpl:devel</field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
+  <object pk="20362" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version"></field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name"></field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
+  <object pk="20363" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version">/conary.rpath.com@rpl:devel//1-devel/1.5.3-9</field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name">rpl:1-devel</field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
+  <object pk="20364" model="packages.package">
+    <field to="rbuilder.products" name="project" rel="ManyToOneRel">4</field>
+    <field type="TextField" name="name">gnome-volume-manager:source</field>
+    <field type="TextField" name="version">/conary.rpath.com@rpl:devel//1-qa/1.5.3-9</field>
+    <field type="TextField" name="server_name">conary.rpath.com</field>
+    <field type="TextField" name="branch_name">rpl:1-qa</field>
+    <field type="IntegerField" name="is_source">1</field>
+  </object>
+</django-objects>
