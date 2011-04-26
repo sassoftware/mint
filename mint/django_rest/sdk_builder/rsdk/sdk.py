@@ -80,8 +80,8 @@ class SDKClassMeta(type):
     >>> type(p.name)
     <type 'str'>
 
-    finally, redefining the __init__ method is necessary for
-    the descriptors (which power the validation) to work. ie:
+    finally, redefining the __setattr__ method is necessary for
+    the validation to work. ie:
     >>> p = Package(name="Nano", package_id=1)
     >>> p.name = 1
     ValidationError: Value must be of type str or unicode

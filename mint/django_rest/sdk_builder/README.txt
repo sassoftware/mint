@@ -12,34 +12,38 @@
 # full details.
 #
 
-api = connect('http://server/api/')
+##############################################################################
+Client Side Features:
+##############################################################################
 
-# GET
-api.GET('/packages/') # get all packages
-api.GET('/packages/1') # get first package
+* Able to initialize via keyword args OR attribute assignment,
+        p = Package(name='Nano')
+                or
+        p = Package(); p.name = 'Nano'
 
-# POST
-pkg = sdk.Models.package.Package() # create
-pkg.name = 'xobj'
-pkg.description = 'A python to xml serialization library'
-api.POST('/packages/', pkg)
+* For classes containing a list_fields (such as Packages), are be able 
+to initialize via keyword arguments as well as attribute assignment,
+        p = Package(name='Nano'); pkgs = Packages(package=[p])
+                or
+        p = Package(name='Nano'); pkgs = Packages(); pkgs.package = [p]
 
-# PUT
-pkg2 = api.GET('/packages/2')
-pkg2.name = 'Package 2 Renamed'
-api.PUT('/packages/2', pkg2)
+* Validation works for both keyword arguments and attribute assignment,
+        p = Package(name=1) # throws sdk.ValidationError
+                or
+        p = Package(); p.name = 1 # throws sdk.ValidationError
+        (where name is a CharField which means it only accepts str or unicode)
 
-# DELETE
-api.DELETE('/packages/2')
+* Serialize python to xml using xobj,
+        doc = xobj.Document()
+        doc.package = Package(name='Nano', description='Text Editor')
+        print doc.toxml()
 
-# Navigate
-pkgs = api.GET('/packages/')
-for p in pkgs.package:
-    print 'id: %s' % p['id']
-    print 'name: %s, description: %s' % (p.name, p.description)
-    
-# Validate
-pkg = api.GET('/packages/1')
-isinstance(pkg['id'], sdk.Fields.URLField) # is True
-pkg['id'] = 'bad id' # throws an assertion error
-pkg['id'] = 'http://validid.com/' # works
+* Deserialize xml to python using xobj
+        doc = xobj.parse(packages_xml, typeMap=TYPEMAP)
+        print doc.packages.package[0].name
+
+##############################################################################
+TODO:
+##############################################################################
+finish validators
+clean up documentation
