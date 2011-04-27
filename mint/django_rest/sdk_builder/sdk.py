@@ -18,7 +18,7 @@ from xobj import xobj
 import inspect
 
 
-def toCamelCase(name):
+def toCamelCaps(name):
     """
     ie: Changes management_nodes to ManagementNodes
     """
@@ -48,7 +48,7 @@ class XObjInitializer(xobj.XObj):
     Just initializes a field, doing validation in the process
     """
     def __init__(self, data=None):
-        self._data = self._validate(data)
+        self._data = self._validate(self.__class__.__name__, data)
 
 
 def register(cls):
@@ -105,7 +105,7 @@ class SDKClassMeta(type):
                     # be a list containing a single item which will be
                     # a class. in this case set v to empty.  otherwise
                     # v will be a list containing zero or more instances
-                    # of class object inner.
+                    # of inner.
                     # HACK: checking by __name__
                     if isinstance(v, list) and not \
                         v[0].__class__.__name__.startswith('converted'):
@@ -118,6 +118,11 @@ class SDKClassMeta(type):
                     # when k not in kwargs
                     if inspect.isclass(v):
                         attrVal = attr('')
+                    # when k in kwargs and v isinstance of converted attr. not
+                    # sure why this case can happen but regardless, this works
+                    # HACK: checking by __name__
+                    elif v.__class__.__name__ == ('converted_' + attr.__name__):
+                        attrVal = v
                     # when k in kwargs
                     else:
                         attrVal = attr(v)
@@ -155,7 +160,7 @@ class SDKClassMeta(type):
                 def __setattr__(self, k, v):
                     attr = cls.__dict__.get(k, None)
                     if hasattr(attr, '_validate'):
-                        v = attr._validate(v)
+                        v = attr._validate(k, v)
                     self.__dict__[k] = v
 
             inner.__name__ = 'converted_%s' % cls.__name__
