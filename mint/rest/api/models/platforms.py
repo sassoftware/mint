@@ -133,6 +133,10 @@ class PlatformVersion(Model):
         return ('platforms', self._platformId,
                 'platformVersions', '%s=%s' % (self.name, self.revision))
 
+class EmptyPlatformVersion(Model):
+    class Meta(object):
+        name = 'platformVersion'
+
 class PlatformVersions(Model):
     platformVersion = fields.ListField(PlatformVersion)
 

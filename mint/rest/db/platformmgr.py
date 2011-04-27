@@ -252,7 +252,9 @@ class Platforms(object):
         else:
             platformTroveName = self._getPlatformTroveName(platform)
             if not platformTroveName:
-                return models.PlatformVersions()
+                platformVersions = models.PlatformVersions()
+                platformVersions.platformVersion = []
+                return platformVersions
             revision = None
 
         host = platform.label.split('@')[:1][0]
