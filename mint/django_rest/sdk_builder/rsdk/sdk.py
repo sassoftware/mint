@@ -105,7 +105,7 @@ class SDKClassMeta(type):
                     # be a list containing a single item which will be
                     # a class. in this case set v to empty.  otherwise
                     # v will be a list containing zero or more instances
-                    # of class object inner.
+                    # of inner.
                     # HACK: checking by __name__
                     if isinstance(v, list) and not \
                         v[0].__class__.__name__.startswith('converted'):

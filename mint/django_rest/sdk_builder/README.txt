@@ -21,8 +21,8 @@ Client Side Features:
                 or
         p = Package(); p.name = 'Nano'
 
-* For classes containing a list_fields (such as Packages), are be able 
-to initialize via keyword arguments as well as attribute assignment,
+* For classes containing subelements (such as Packages), are be able 
+  to initialize via keyword arguments as well as attribute assignment,
         p = Package(name='Nano'); pkgs = Packages(package=[p])
                 or
         p = Package(name='Nano'); pkgs = Packages(); pkgs.package = [p]

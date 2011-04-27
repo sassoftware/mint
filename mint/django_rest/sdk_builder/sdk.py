@@ -118,7 +118,7 @@ class SDKClassMeta(type):
                     # when k not in kwargs
                     if inspect.isclass(v):
                         attrVal = attr('')
-                    # when k in kwargs and v isinstance of converted attr. not
+                    # when k in kwargs and v isinstance of converted attr, not
                     # sure why this case can happen but regardless, this works
                     # HACK: checking by __name__
                     elif v.__class__.__name__ == ('converted_' + attr.__name__):
