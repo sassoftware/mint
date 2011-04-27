@@ -36,7 +36,6 @@ log = logging.getLogger(__name__)
 
 # Global cached objects
 repositories = {}
-proxy_repository = None
 
 
 def post(port, isSecure, repos, cfg, db, req):
@@ -446,7 +445,6 @@ def conaryHandler(context):
         # it's completely external
         # use the Internal Conary Proxy if it's configured and we're
         # passing a fully qualified url
-        global proxy_repository
         if (not cfg.useInternalConaryProxy
             or not urllib.splittype(req.unparsed_uri)[0]):
             # don't use the proxy we set up if the configuration says
@@ -463,29 +461,25 @@ def conaryHandler(context):
                     'loop (request %s, via %s)' % (req.hostname, via))
             raise apache.SERVER_RETURN, apache.HTTP_BAD_GATEWAY
 
-        if proxy_repository:
-            proxyServer = proxy_repository
+        proxycfg = netserver.ServerConfig()
+        proxycfg.proxyContentsDir = cfg.proxyContentsDir
+        proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
+        proxycfg.tmpDir = cfg.proxyTmpDir
+        if actualRepName:
+            restDb = _addCapsuleConfig(context, proxycfg, actualRepName)
         else:
-            proxycfg = netserver.ServerConfig()
-            proxycfg.proxyContentsDir = cfg.proxyContentsDir
-            proxycfg.changesetCacheDir = cfg.proxyChangesetCacheDir
-            proxycfg.tmpDir = cfg.proxyTmpDir
-            if actualRepName:
-                restDb = _addCapsuleConfig(context, proxycfg, actualRepName)
-            else:
-                restDb = None
+            restDb = None
 
-            # set a proxy (if it was configured)
-            proxycfg.proxy = cfg.proxy
+        # set a proxy (if it was configured)
+        proxycfg.proxy = cfg.proxy
 
-            if ':' in cfg.siteDomainName:
-                domain = cfg.siteDomainName
-            else:
-                domain = cfg.siteDomainName + ':%(port)d'
-            urlBase = "%%(protocol)s://%s.%s/" % \
-                    (cfg.hostName, domain)
-            proxyServer = proxy_repository = ProxyRepositoryServer(
-                    restDb, proxycfg, urlBase)
+        if ':' in cfg.siteDomainName:
+            domain = cfg.siteDomainName
+        else:
+            domain = cfg.siteDomainName + ':%(port)d'
+        urlBase = "%%(protocol)s://%s.%s/" % \
+                (cfg.hostName, domain)
+        proxyServer = ProxyRepositoryServer(restDb, proxycfg, urlBase)
 
         # inject known authentication (userpass and entitlement)
         proxyServer.cfg.entitlement = conarycfg.EntitlementList()
