@@ -25,5 +25,9 @@ AUTHENTICATION_BACKENDS = (
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
     ('mint.django_rest.middleware.LocalQueryParameterMiddleware',)
 
+installedAppsList = list(INSTALLED_APPS)
+installedAppsList.append('mint.django_rest.sdk_builder')
+INSTALLED_APPS = tuple(installedAppsList)
+
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True
