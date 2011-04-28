@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = rbuilder templates
+SUBDIRS = rbuilder sdk_builder templates
 
 python_files = $(wildcard *.py)
 
