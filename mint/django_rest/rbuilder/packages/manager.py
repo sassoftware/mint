@@ -7,6 +7,8 @@
 import datetime
 from dateutil import tz
 
+from conary import conarycfg
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.packages import errors
