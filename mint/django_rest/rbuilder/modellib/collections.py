@@ -245,6 +245,8 @@ class Collection(XObjIdModel):
     def get_absolute_url(self, request=None, parents=None, model=None,
                          page=None, full=None):
         url = XObjIdModel.get_absolute_url(self, request, parents, model)
+        if url is None:
+            return url
         if not page and not full:
             page = getattr(self, 'page', None)
         if page:
