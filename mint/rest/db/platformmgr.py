@@ -1435,3 +1435,4 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def clearPlatformData(self, labelStr, commit=True):
         self._clearMirrorPermission(labelStr, commit=commit)
         self._clearStatus(labelStr, commit=commit)
+        self.clearKey(labelStr, commit)
