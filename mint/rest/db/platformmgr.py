@@ -275,11 +275,13 @@ class Platforms(object):
         _platformVersions = []
         for platformTrove in platformTroves:
             version = platformTrove[1]
-            versionRevision = version.trailingRevision().asString()
+            versionRevision = version.trailingRevision()
+            timeStamp = versionRevision.timeStamp
                 
             platformVersion = models.PlatformVersion(
                 name=platformTroveName, version=version.asString(),
-                revision=versionRevision, label=label)
+                revision=versionRevision.asString(), label=label,
+                ordering=timeStamp)
             platformVersion._platformId = platformId
 
             if revision is not None and \
