@@ -16,6 +16,7 @@ import httplib2
 import urlparse
 from xobj import xobj
 import sys
+import inspect
 
 MIN_ALLOWED_PYTHON_VERSION = (2, 5) # still needs to be tested on 2.5
 MAX_ALLOWED_PYTHON_VERSION = (2, 7, 1)
@@ -48,9 +49,9 @@ def connect(base_url, auth=None):
         got_1 = api.GET('packages/1', TYPEMAP) # get first package
 
         # [POST]
-        pkg = Package() # create
-        pkg.name = 'xobj'
+        pkg = Package(name='xobj') # create
         pkg.description = 'A python to xml serialization library'
+        # ... process package obj further ...
         doc = xobj.Document()
         doc.package = pkg
         posted = api.POST('packages/', doc, TYPEMAP)
@@ -58,6 +59,7 @@ def connect(base_url, auth=None):
         # [PUT]
         pkg_2 = api.GET('packages/2')
         pkg_2.package.name = 'Package 2 Renamed'
+        # ... process package obj further ...
         putted = api.PUT('packages/2', pkg_2, TYPEMAP)
 
         # [DELETE]
@@ -121,3 +123,13 @@ def purgeByNode(root, node_name):
                 if e_name == node_name:
                     delattr(root, e_name)
                 purgeByNode(child, node_name)
+                
+                
+def rebind(new, typemap):
+    for tag, cls in typemap.items():
+        for name, field in cls.__dict__.items():
+            if isinstance(field, list):
+                field = field[0]
+            if inspect.isclass(field):
+                if issubclass(new, field):
+                    setattr(cls, name, new)

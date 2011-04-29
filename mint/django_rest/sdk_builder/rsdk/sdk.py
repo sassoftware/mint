@@ -137,7 +137,10 @@ class SDKClassMeta(type):
                     # then v is actually a class, not an instance of some class
                     for k, v in d.items():
                         try:
-                            if inspect.isfunction(v) or k.startswith('__'):
+                            if inspect.isfunction(v):
+                                setattr(inner, k, v)
+                                continue
+                            elif k.startswith('__'):
                                 continue
                             elif k.startswith('_xobj'):
                                 attr = v
