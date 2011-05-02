@@ -1,15 +1,14 @@
 from rsdk.Fields import *  # pyflakes=ignore
-from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.sdk import SDKModel, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
 @register
-class ChangeLogEntry(object):
+class ChangeLogEntry(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     entry_text = 'TextField'
     entry_date = 'DateTimeUtcField'
     change_log_entry_id = 'AutoField'
@@ -17,20 +16,18 @@ class ChangeLogEntry(object):
     _xobj = XObjMetadata(tag='change_log_entry')
 
 @register
-class ChangeLog(object):
+class ChangeLog(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     resource_type = 'TextField'
     resource_id = 'IntegerField'
     change_log_id = 'AutoField'
     _xobj = XObjMetadata(tag='change_log')
 
 @register
-class ChangeLogs(object):
+class ChangeLogs(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='change_logs')
     change_log = ['ChangeLog']
 

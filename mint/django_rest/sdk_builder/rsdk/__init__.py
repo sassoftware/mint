@@ -108,7 +108,7 @@ def purgeByType(root, type_name):
     else:
         if hasattr(root, '__dict__'):
             for e_name, child in root.__dict__.items():
-                if child.__class__.__name__ == 'converted_' + type_name:
+                if child.__class__.__name__ == type_name:
                     delattr(root, e_name)
                 purgeByType(child, type_name)
 

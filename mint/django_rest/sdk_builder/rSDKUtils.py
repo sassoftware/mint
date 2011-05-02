@@ -105,18 +105,16 @@ class ClassStub(object):
 
     
     def bases2src(self):
-        return ', '.join(b.__name__ for b in self.cls.__bases__)
+        # return ', '.join(b.__name__ for b in self.cls.__bases__)
+        return 'SDKModel'
     
     def attrs2src(self):
         # hardcode __metaclass__
-        src = [indent('__metaclass__ = SDKClassMeta')]
+        src = []
         EXCLUDED = ['__module__', '__doc__', '__name__', '__weakref__', '__dict__']
         for k, v in sorted(self.cls.__dict__.items(), reverse=True):
             text = ''
             # don't inline methods (or magic attrs)
-            if k is '__unicode__':
-                text = inspect.getsource(v)
-                src.append(text)
             if k in EXCLUDED or inspect.isfunction(v):
                 continue
             else:

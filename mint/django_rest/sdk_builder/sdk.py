@@ -70,110 +70,6 @@ def register(cls):
     return cls
 
 
-class SDKClassMeta(type):
-    """
-    redefining the cls's __init__ method allows the
-    instantiation of the class stubs using kwargs. ie:
-    >>> p = Package(name="Nano", package_id=1)
-    >>> p.name
-    Nano
-    >>> type(p.name)
-    <type 'str'>
-
-    finally, redefining the __setattr__ method is necessary for
-    the validation to work. ie:
-    >>> p = Package(name="Nano", package_id=1)
-    >>> p.name = 1
-    ValidationError: Value must be of type str or unicode
-    >>> p.name = 'nano, lowercase'
-    >>> p.name
-    nano, lowercase
-    """
-    def __new__(meta, name, bases, attrs):
-        """
-        Complicated but necessary -- redefines a __new__ method to
-        return an inlined class with a dynamically generated __init__
-        """
-        def new(cls, *args, **kwargs):
-
-            def make(k, v):
-                attr = getattr(cls, k)
-                # for fields in list_fields, attr is a list
-                # containing one or more elements
-                if isinstance(attr, list):
-                    # if field k not specified in kwargs then v will
-                    # be a list containing a single item which will be
-                    # a class. in this case set v to empty.  otherwise
-                    # v will be a list containing zero or more instances
-                    # of inner.
-                    # HACK: checking by __name__
-                    if isinstance(v, list) and not \
-                        v[0].__class__.__name__.startswith('converted'):
-                        attrVal = []
-                    else:
-                        assert(isinstance(v, list))
-                        attrVal = v
-                # when field not in list_fields
-                else:
-                    # when k not in kwargs
-                    if inspect.isclass(v):
-                        attrVal = attr('')
-                    # when k in kwargs and v isinstance of converted attr, not
-                    # sure why this case can happen but regardless, this works
-                    # HACK: checking by __name__
-                    elif v.__class__.__name__ == ('converted_' + attr.__name__):
-                        attrVal = v
-                    # when k in kwargs
-                    else:
-                        attrVal = attr(v)
-                return attrVal
-
-            class inner(object):
-                def __init__(self, *args, **kwargs):
-                    # cast to dict since cls.__dict__ is actually a dictproxy
-                    d = dict(cls.__dict__)
-                    d.update(kwargs)
-                    # if one of the kwargs, with key k and value v, is left out
-                    # then v is actually a class, not an instance of some class
-                    for k, v in d.items():
-                        try:
-                            if inspect.isfunction(v):
-                                setattr(inner, k, v)
-                                continue
-                            elif k.startswith('__'):
-                                continue
-                            elif k.startswith('_xobj'):
-                                attr = v
-                            else:
-                                # make attr based on how and what input
-                                # parameters are passed in kwargs
-                                attr = make(k, v)
-                            self.__dict__[k] = attr
-                        except TypeError:
-                            # happens when v should be a class but
-                            # is instead the name of a class. this
-                            # occurs when a class attribute (which
-                            # is the name of a class) has not
-                            # been rebound with the actual class. if
-                            # v is not a str or unicode then something
-                            # really funky is going on
-                            import pdb; pdb.set_trace()
-                            assert(isinstance(v, (str, unicode)))
-                            raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
-
-                def __setattr__(self, k, v):
-                    attr = cls.__dict__.get(k, None)
-                    if hasattr(attr, '_validate'):
-                        v = attr._validate(k, v)
-                    self.__dict__[k] = v
-
-            inner.__name__ = 'converted_%s' % cls.__name__
-            return inner(*args, **kwargs)
-        # rebind __new__ and create class
-        attrs['__new__'] = new
-        return type.__new__(meta, name, bases, attrs)
-
-
 class DynamicImportResolver(object):
 
     def __init__(self, GLOBALS):
@@ -220,3 +116,82 @@ class DynamicImportResolver(object):
             mod_import_path = 'rsdk.' + mod_import_path
         module = __import__(mod_import_path, globals(), locals(), -1)
         return module.__dict__[clsname]
+
+
+class RestrictedInheritanceException(Exception):
+    pass
+
+
+class SDKClassMeta(type):
+    def __new__(meta, name, bases, attrs):
+        if len(bases) > 1:
+            raise RestrictedInheritanceException('Multiple Inheritance is not allowed')
+        inherited = dict(bases[0].__dict__)
+        inherited.update(attrs)
+        return type.__new__(meta, name, bases, inherited)
+
+
+class SDKModel(object):
+
+    __metaclass__ = SDKClassMeta
+
+    def __init__(self, *args, **kwargs):
+        cls = self.__class__
+        d = dict(cls.__dict__)
+        d.update(kwargs)
+        # if one of the kwargs, with key k and value v, is left out
+        # then v is actually a class, not an instance of some class
+        for k, v in d.items():
+            try:
+                if inspect.isfunction(v) or k.startswith('__'):
+                    continue
+                if k.startswith('_xobj'):
+                    attrVal = v
+                else:
+                    # make attr based on how and what input
+                    # parameters are passed in kwargs
+                    attrVal = self.make(k, v)
+                self.__dict__[k] = attrVal
+            except TypeError:
+                # happens when v should be a class but
+                # is instead the name of a class. this
+                # occurs when a class attribute (which
+                # is the name of a class) has not
+                # been rebound with the actual class. if
+                # v is not a str or unicode then something
+                # really funky is going on
+                assert(isinstance(v, (str, unicode)))
+                raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
+
+    def __setattr__(self, k, v):
+        attr = self.__class__.__dict__.get(k, None)
+        if hasattr(attr, '_validate'):
+            v = attr._validate(k, v)
+        self.__dict__[k] = v
+        
+    def make(self, k, v):
+        attr = getattr(self.__class__, k)
+        if isinstance(attr, list):
+            attrVal = self.resolveComplexType(attr, k, v)
+        else:
+            attrVal = self.resolveSimpleType(attr, k, v)
+        return attrVal
+        
+    def resolveComplexType(self, attr, k, v):
+        if isinstance(v, list) and len(v) > 0:
+            if not issubclass(v[0].__class__, SDKModel):
+                attrVal = []
+            else:
+                assert(isinstance(v, list))
+                attrVal = v
+        else:
+            assert(isinstance(v, list))
+            attrVal = v
+        return attrVal
+        
+    def resolveSimpleType(self, attr, k, v):
+        if inspect.isclass(v):
+            attrVal = attr('')
+        else:
+            attrVal = attr(v)
+        return attrVal
