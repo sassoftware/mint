@@ -12,6 +12,7 @@ from xobj import xobj
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.lib import data as mintdata
 
 class Packages(modellib.Collection):
@@ -181,7 +182,7 @@ class PackageVersionJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_version_jobs", text_field="description"),
         "Package action type")
-    job = D(modellib.ForeignKey(inventorymodels.Job, null=True,
+    job = D(modellib.ForeignKey(jobmodels.Job, null=True,
         related_name="package_version_jobs"),
         "Job")
     job_data = D(models.TextField(null=True),
@@ -342,7 +343,7 @@ class PackageSourceJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_source_jobs", text_field="description"),
         "Package action type")
-    job = D(modellib.ForeignKey(inventorymodels.Job, null=True,
+    job = D(modellib.ForeignKey(jobmodels.Job, null=True,
         related_name="package_source_jobs"),
         "Job")
     job_data = D(models.TextField(null=True),
@@ -458,7 +459,7 @@ class PackageBuildJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     package_action_type = D(modellib.ForeignKey("PackageActionType",
         related_name="package_build_jobs", text_field="description"),
         "Package action type")
-    job = D(modellib.ForeignKey(inventorymodels.Job, null=True,
+    job = D(modellib.ForeignKey(jobmodels.Job, null=True,
         related_name="package_build_jobs"),
         "Job")
     job_data = D(models.TextField(null=True),
