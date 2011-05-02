@@ -101,19 +101,27 @@ def connect(base_url, auth=None):
     return Client()
 
 
-def purgeByType(root, type_name):
+def purgeByType(root, node_type):
+    """
+    removes all nodes that are (sub)classes of a certain type, ie:
+    purgeByType(pkgs, rbuilder.Users)
+    """
     if isinstance(root, list):
         for e in root:
-            purgeByType(e, type_name)
+            purgeByType(e, node_type)
     else:
         if hasattr(root, '__dict__'):
             for e_name, child in root.__dict__.items():
-                if child.__class__.__name__ == type_name:
+                if issubclass(root.__class__, node_type):
                     delattr(root, e_name)
-                purgeByType(child, type_name)
+                purgeByType(child, node_type)
 
 
 def purgeByNode(root, node_name):
+    """
+    removes nodes by their name, ie:
+    purgeByNode(pkgs, 'created_by')
+    """
     if isinstance(root, list):
         for e in root:
             purgeByNode(e, node_name)
@@ -126,10 +134,10 @@ def purgeByNode(root, node_name):
                 
                 
 def rebind(new, typemap):
-    for tag, cls in typemap.items():
-        for name, field in cls.__dict__.items():
+    for tag, model in typemap.items():
+        for name, field in model.__dict__.items():
             if isinstance(field, list):
                 field = field[0]
             if inspect.isclass(field):
-                if issubclass(new, field):
-                    setattr(cls, name, new)
+                if issubclass(new, field) or issubclass(field, new):
+                    setattr(model, name, new)

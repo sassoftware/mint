@@ -122,7 +122,10 @@ class RestrictedInheritanceException(Exception):
     pass
 
 
-class SDKClassMeta(type):
+class SDKModelMeta(type):
+    """
+    allows cls attributes to be inherited
+    """
     def __new__(meta, name, bases, attrs):
         if len(bases) > 1:
             raise RestrictedInheritanceException('Multiple Inheritance is not allowed')
@@ -133,7 +136,7 @@ class SDKClassMeta(type):
 
 class SDKModel(object):
 
-    __metaclass__ = SDKClassMeta
+    __metaclass__ = SDKModelMeta
 
     def __init__(self, *args, **kwargs):
         cls = self.__class__
@@ -156,9 +159,9 @@ class SDKModel(object):
                 # happens when v should be a class but
                 # is instead the name of a class. this
                 # occurs when a class attribute (which
-                # is the name of a class) has not
-                # been rebound with the actual class. if
-                # v is not a str or unicode then something
+                # starts off as the name of a class) has
+                # not been rebound with the actual class.
+                # if v is not a str or unicode then something
                 # really funky is going on
                 assert(isinstance(v, (str, unicode)))
                 raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
@@ -171,6 +174,8 @@ class SDKModel(object):
         
     def make(self, k, v):
         attr = getattr(self.__class__, k)
+        # for fk and m2m fields, attr is a list
+        # containing one or more elements
         if isinstance(attr, list):
             attrVal = self.resolveComplexType(attr, k, v)
         else:
@@ -178,6 +183,11 @@ class SDKModel(object):
         return attrVal
         
     def resolveComplexType(self, attr, k, v):
+        # if field k is not specified in kwargs then v will
+        # be a list containing a single item which will be
+        # a class.  in this case, set v to an empty list.
+        # otherwise, v will be a list containing zero or
+        # more instances of class/subclass SDKModel
         if isinstance(v, list) and len(v) > 0:
             if not issubclass(v[0].__class__, SDKModel):
                 attrVal = []
@@ -190,8 +200,10 @@ class SDKModel(object):
         return attrVal
         
     def resolveSimpleType(self, attr, k, v):
+        # when k not in kwargs
         if inspect.isclass(v):
             attrVal = attr('')
+        # when k in kwargs
         else:
             attrVal = attr(v)
         return attrVal
