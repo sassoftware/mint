@@ -66,5 +66,3 @@ class UserGroupMembersService(service.BaseService):
     @return_xml
     def rest_GET(self, request, user_group_id):
         return self.mgr.getUserGroupMembers(user_group_id)
-    
-    
