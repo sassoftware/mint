@@ -285,7 +285,7 @@ class Platforms(object):
             platformVersion._platformId = platformId
 
             if revision is not None and \
-                revision == versionRevision:
+                revision == versionRevision.asString():
                 return platformVersion
 
             _platformVersions.append(platformVersion)
