@@ -16,8 +16,6 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest import settings
 from xobj import xobj
 
-XObjHidden = modellib.XObjHidden
-
 
 class UserGroups(modellib.Collection):
     class Meta:
@@ -37,6 +35,7 @@ class UserGroup(modellib.XObjIdModel):
 
     def __unicode__(self):
         return self.user_group
+
 
 class Users(modellib.Collection):
     class Meta:
