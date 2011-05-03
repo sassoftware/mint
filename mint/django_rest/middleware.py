@@ -42,7 +42,6 @@ class BaseMiddleware(object):
             return handler.handleException(request, e)
 
     def process_response(self, request, response):
-        # import pdb; pdb.set_trace()
         try:
             return self._process_response(request, response)
         except Exception, e:

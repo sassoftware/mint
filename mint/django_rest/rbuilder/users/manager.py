@@ -21,13 +21,13 @@ exposed = basemanager.exposed
 class UsersManager(basemanager.BaseManager):
     @exposed
     def getUser(self, user_id):
-        user = models.Users.objects.get(pk=user_id)
+        user = models.User.objects.get(pk=user_id)
         return user
 
     @exposed
     def getUsers(self):
         Users = models.Users()
-        Users.user = models.Users.objects.all()
+        Users.user = models.User.objects.all()
         return Users
     
     @exposed
@@ -42,20 +42,20 @@ class UsersManager(basemanager.BaseManager):
         
     @exposed
     def deleteUser(self, user_id):
-        user = models.Users.objects.get(pk=user_id)
+        user = models.User.objects.get(pk=user_id)
         user.delete()
     
     
 class UserGroupsManager(basemanager.BaseManager):
     @exposed
     def getUserGroup(self, user_group_id):
-        user_group = models.UserGroups.objects.get(pk=user_group_id)
+        user_group = models.UserGroup.objects.get(pk=user_group_id)
         return user_group
         
     @exposed
     def getUserGroups(self):
         UserGroups = models.UserGroups()
-        UserGroups.user_group = models.UserGroups.objects.all()
+        UserGroups.user_group = models.UserGroup.objects.all()
         return UserGroups
     
     @exposed
@@ -70,7 +70,7 @@ class UserGroupsManager(basemanager.BaseManager):
         
     @exposed
     def deleteUserGroup(self, user_group_id):
-        user_group = models.UserGroups.objects.get(pk=user_group_id)
+        user_group = models.UserGroup.objects.get(pk=user_group_id)
         user_group.delete()
         
 class UserGroupMembersManager(basemanager.BaseManager):
