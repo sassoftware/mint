@@ -15,6 +15,7 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
+from mint.django_rest.rbuilder.users import views as usersviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -167,10 +168,10 @@ urlpatterns = patterns('',
         inventoryviews.InventoryEventTypesService(),
         name='EventType'),
 
-    # Users
-    url(r'^api/inventory/users/([a-zA-Z0-9]+)/?$',
-        inventoryviews.InventoryUsersService(),
-        name='Users'),
+    # # Users
+    # url(r'^api/inventory/users/([a-zA-Z0-9]+)/?$',
+    #     inventoryviews.InventoryUsersService(),
+    #     name='Users'),
 
     # Jobs
     url(r'^api/inventory/jobs/?$',
@@ -345,6 +346,28 @@ urlpatterns = patterns('',
         packageviews.PackageBuildJobService(),
         name='PackageBuildJob'),
 
+    # Users
+    url(r'^api/users/?$',
+        usersviews.UsersService(),
+        name='Users'),
+    
+    url(r'^api/users/(?P<user_id>\d+)/?$',
+        usersviews.UsersService(),
+        name='User'),
+        
+    # UserGroups
+    url(r'^api/user_groups/?$',
+        usersviews.UserGroupsService(),
+        name='UserGroups'),
+    
+    url(r'^api/user_groups/(?P<user_group_id>\d+)/?$',
+        usersviews.UserGroupsService(),
+        name='UserGroup'),
+        
+    # UserGroupMembers
+    url(r'^api/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
+        usersviews.UserGroupMembersService(),
+        name='UserGroupMembers'),
 )
 
 
