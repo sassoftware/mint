@@ -33,6 +33,8 @@ class UserGroup(modellib.XObjIdModel):
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroups'
 
+    _xobj = xobj.XObjMetadata(tag='user_group')
+
     def __unicode__(self):
         return self.user_group
 
@@ -63,6 +65,8 @@ class User(modellib.XObjIdModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
+    
+    _xobj = xobj.XObjMetadata(tag='user')
         
     def __unicode__(self):
         return self.user_name
