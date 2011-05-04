@@ -273,19 +273,27 @@ class Platforms(object):
             raise e
 
         _platformVersions = []
+        seenRevisions = []
         for platformTrove in platformTroves:
             version = platformTrove[1]
             versionRevision = version.trailingRevision()
+            strRevision = versionRevision.asString()
+
+            # Because of flavors, there may be multiples of the same revision.
+            # We don't need to worry about flavors when rebasing.
+            if strRevision in seenRevisions:
+                continue
+
+            seenRevisions.append(strRevision)
             timeStamp = versionRevision.timeStamp
                 
             platformVersion = models.PlatformVersion(
                 name=platformTroveName, version=version.asString(),
-                revision=versionRevision.asString(), label=label,
+                revision=strRevision, label=label,
                 ordering=timeStamp)
             platformVersion._platformId = platformId
 
-            if revision is not None and \
-                revision == versionRevision.asString():
+            if revision is not None and revision == strRevision:
                 return platformVersion
 
             _platformVersions.append(platformVersion)
