@@ -523,9 +523,7 @@ class ProductManager(manager.Manager):
         # support rebase to latest if special string is sent
         # see RBL-8673
         kwargs = {}
-        if name == "rebase-to-latest-on-versionless-platform":
-            kwargs['useLatest'] = True
-        else:
+        if name != "rebase-to-latest-on-versionless-platform":
             kwargs['platformVersion'] = platformVersion.revision
         pd.rebase(cclient, label, **kwargs)
         pd.saveToRepository(cclient, 
