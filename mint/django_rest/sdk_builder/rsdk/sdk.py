@@ -18,7 +18,7 @@ from xobj import xobj
 import inspect
 
 
-def toCamelCase(name):
+def toCamelCaps(name):
     """
     ie: Changes management_nodes to ManagementNodes
     """
@@ -43,24 +43,12 @@ class ValidationError(Exception):
     pass
 
 
-class GetSetMixin(object):
-    """
-    Turns what inherits from it into a descriptor.
-    Is the basis for the validation framework.
-    """
-    def __get__(self, instance, owner=None):
-        return self._data
-
-    def __set__(self, instance, value):
-        self._data = self._validate(value)
-
-
 class XObjInitializer(xobj.XObj):
     """
     Just initializes a field, doing validation in the process
     """
     def __init__(self, data=None):
-        self._data = self._validate(data)
+        self._data = self._validate(self.__class__.__name__, data)
 
 
 def register(cls):
@@ -92,8 +80,8 @@ class SDKClassMeta(type):
     >>> type(p.name)
     <type 'str'>
 
-    finally, redefining the __init__ method is necessary for
-    the descriptors (which power the validation) to work. ie:
+    finally, redefining the __setattr__ method is necessary for
+    the validation to work. ie:
     >>> p = Package(name="Nano", package_id=1)
     >>> p.name = 1
     ValidationError: Value must be of type str or unicode
@@ -117,9 +105,10 @@ class SDKClassMeta(type):
                     # be a list containing a single item which will be
                     # a class. in this case set v to empty.  otherwise
                     # v will be a list containing zero or more instances
-                    # of class object inner.
+                    # of inner.
                     # HACK: checking by __name__
-                    if isinstance(v, list) and not v[0].__name__.startswith('converted'):
+                    if isinstance(v, list) and not \
+                        v[0].__class__.__name__.startswith('converted'):
                         attrVal = []
                     else:
                         assert(isinstance(v, list))
@@ -129,6 +118,11 @@ class SDKClassMeta(type):
                     # when k not in kwargs
                     if inspect.isclass(v):
                         attrVal = attr('')
+                    # when k in kwargs and v isinstance of converted attr, not
+                    # sure why this case can happen but regardless, this works
+                    # HACK: checking by __name__
+                    elif v.__class__.__name__ == ('converted_' + attr.__name__):
+                        attrVal = v
                     # when k in kwargs
                     else:
                         attrVal = attr(v)
@@ -151,7 +145,7 @@ class SDKClassMeta(type):
                                 # make attr based on how and what input
                                 # parameters are passed in kwargs
                                 attr = make(k, v)
-                            setattr(inner, k, attr)
+                            self.__dict__[k] = attr
                         except TypeError:
                             # happens when v should be a class but
                             # is instead the name of a class. this
@@ -163,19 +157,11 @@ class SDKClassMeta(type):
                             assert(isinstance(v, (str, unicode)))
                             raise Exception('class attribute "%s" was not correctly rebound, cannot instantiate' % k)
 
-                def __getattribute__(self, k):
-                    # necessary for xobj to generate correct xml
-                    return getattr(inner, k)
-
                 def __setattr__(self, k, v):
-                    # necessary for validation to continue
-                    # to work after attribute assignment,
-                    # use get for the case where k is '_xobj'
-                    # and it can't be found (dunno why)
-                    attr = inner.__dict__.get(k, None)
-                    if hasattr(attr, '__set__'):
-                        v = make(k, v)
-                    setattr(inner, k, v)
+                    attr = cls.__dict__.get(k, None)
+                    if hasattr(attr, '_validate'):
+                        v = attr._validate(k, v)
+                    self.__dict__[k] = v
 
             inner.__name__ = 'converted_%s' % cls.__name__
             return inner(*args, **kwargs)

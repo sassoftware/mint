@@ -21,10 +21,12 @@ MIN_ALLOWED_PYTHON_VERSION = (2, 5) # still needs to be tested on 2.5
 MAX_ALLOWED_PYTHON_VERSION = (2, 7, 1)
 VERSION_INFO = sys.version_info
 
+
 if VERSION_INFO[0:2] < MIN_ALLOWED_PYTHON_VERSION:
     raise Exception("Must use python 2.5 or greater")
 elif VERSION_INFO[0:3] > MAX_ALLOWED_PYTHON_VERSION:
     raise Exception("Untested for python versions greater than 2.7.1")
+    
     
 def connect(base_url, auth=None):
     """
@@ -34,32 +36,32 @@ def connect(base_url, auth=None):
     """
     class Client(object):
         """
-        from sdk import packages
+        # Depending on the HTTP method, purgeNode or
+        # purgeType may need to be used (ie: to remove all
+        # empty references to Users before a PUT or POST)
+        
+        from sdk.packages import Package, TYPEMAP
         api = connect('http://server/api/', (username, passwd))
 
-        [GET]
-        api.GET('packages/') # get all packages
-        api.GET('packages/1') # get first package
+        # [GET]
+        got = api.GET('packages/', TYPEMAP) # get all packages
+        got_1 = api.GET('packages/1', TYPEMAP) # get first package
 
-        [POST]
-        pkg = packages.Package() # create
+        # [POST]
+        pkg = Package() # create
         pkg.name = 'xobj'
         pkg.description = 'A python to xml serialization library'
-        api.POST('packages/', pkg)
+        doc = xobj.Document()
+        doc.package = pkg
+        posted = api.POST('packages/', doc, TYPEMAP)
 
-        [PUT]
-        pkg2 = api.GET('packages/2')
-        pkg2.name = 'Package 2 Renamed'
-        api.PUT('packages/2', pkg2)
+        # [PUT]
+        pkg_2 = api.GET('packages/2')
+        pkg_2.package.name = 'Package 2 Renamed'
+        putted = api.PUT('packages/2', pkg_2, TYPEMAP)
 
-        [DELETE]
+        # [DELETE]
         api.DELETE('packages/2')
-
-        [Validate]
-        pkg = api.GET('packages/1')
-        isinstance(pkg.id, URLField) # is True
-        pkg.id = 'bad id' # throws an error
-        pkg.id = 'http://validid.com/' # works
         """
         
         HEADERS = {'content-type':'text/xml'}
@@ -95,4 +97,27 @@ def connect(base_url, auth=None):
             return urlparse.urljoin(self.base_url, relative_url)
             
     return Client()
-    
+
+
+def purgeByType(root, type_name):
+    if isinstance(root, list):
+        for e in root:
+            purgeByType(e, type_name)
+    else:
+        if hasattr(root, '__dict__'):
+            for e_name, child in root.__dict__.items():
+                if child.__class__.__name__ == 'converted_' + type_name:
+                    delattr(root, e_name)
+                purgeByType(child, type_name)
+
+
+def purgeByNode(root, node_name):
+    if isinstance(root, list):
+        for e in root:
+            purgeByNode(e, node_name)
+    else:
+        if hasattr(root, '__dict__'):
+            for e_name, child in root.__dict__.items():
+                if e_name == node_name:
+                    delattr(root, e_name)
+                purgeByNode(child, node_name)

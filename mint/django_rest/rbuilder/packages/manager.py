@@ -5,7 +5,6 @@
 #
 
 import datetime
-import tempfile
 from dateutil import tz
 
 from conary import conarycfg

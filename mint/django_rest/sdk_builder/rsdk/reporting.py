@@ -19,7 +19,7 @@ class Report(object):
     """ """
 
     __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(attributes={'id':str},elements=['name', 'description', 'descriptor', 'data', 'timeCreated'])
+    _xobj = XObjMetadata(elements=['name', 'description', 'descriptor', 'data', 'timeCreated'])
 
 @register
 class Reports(object):

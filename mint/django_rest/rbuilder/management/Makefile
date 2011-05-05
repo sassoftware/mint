@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory metrics modellib manager querysets packages changelog projects
+SUBDIRS = commands
 
 python_files = $(wildcard *.py)
 
@@ -15,5 +15,5 @@ install: pyfiles-install default-install
 clean: default-clean
 
 
-include ../../../Make.rules
+include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
