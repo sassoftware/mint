@@ -16,6 +16,7 @@ import httplib2
 import urlparse
 from xobj import xobj
 import sys
+import inspect
 
 MIN_ALLOWED_PYTHON_VERSION = (2, 5) # still needs to be tested on 2.5
 MAX_ALLOWED_PYTHON_VERSION = (2, 7, 1)
@@ -48,9 +49,9 @@ def connect(base_url, auth=None):
         got_1 = api.GET('packages/1', TYPEMAP) # get first package
 
         # [POST]
-        pkg = Package() # create
-        pkg.name = 'xobj'
+        pkg = Package(name='xobj') # create
         pkg.description = 'A python to xml serialization library'
+        # ... process package obj further ...
         doc = xobj.Document()
         doc.package = pkg
         posted = api.POST('packages/', doc, TYPEMAP)
@@ -58,6 +59,7 @@ def connect(base_url, auth=None):
         # [PUT]
         pkg_2 = api.GET('packages/2')
         pkg_2.package.name = 'Package 2 Renamed'
+        # ... process package obj further ...
         putted = api.PUT('packages/2', pkg_2, TYPEMAP)
 
         # [DELETE]
@@ -99,19 +101,27 @@ def connect(base_url, auth=None):
     return Client()
 
 
-def purgeByType(root, type_name):
+def purgeByType(root, node_type):
+    """
+    removes all nodes that are (sub)classes of a certain type, ie:
+    purgeByType(pkgs, rbuilder.Users)
+    """
     if isinstance(root, list):
         for e in root:
-            purgeByType(e, type_name)
+            purgeByType(e, node_type)
     else:
         if hasattr(root, '__dict__'):
             for e_name, child in root.__dict__.items():
-                if child.__class__.__name__ == 'converted_' + type_name:
+                if issubclass(root.__class__, node_type):
                     delattr(root, e_name)
-                purgeByType(child, type_name)
+                purgeByType(child, node_type)
 
 
 def purgeByNode(root, node_name):
+    """
+    removes nodes by their name, ie:
+    purgeByNode(pkgs, 'created_by')
+    """
     if isinstance(root, list):
         for e in root:
             purgeByNode(e, node_name)
@@ -121,3 +131,13 @@ def purgeByNode(root, node_name):
                 if e_name == node_name:
                     delattr(root, e_name)
                 purgeByNode(child, node_name)
+                
+                
+def rebind(new, typemap):
+    for tag, model in typemap.items():
+        for name, field in model.__dict__.items():
+            if isinstance(field, list):
+                field = field[0]
+            if inspect.isclass(field):
+                if issubclass(new, field) or issubclass(field, new):
+                    setattr(model, name, new)

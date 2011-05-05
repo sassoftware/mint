@@ -1,37 +1,33 @@
 from rsdk.Fields import *  # pyflakes=ignore
-from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.sdk import SDKModel, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
 @register
-class RepositoryLogStatus(object):
+class RepositoryLogStatus(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     logoffset = 'IntegerField'
     logname = 'CharField'
     inode = 'IntegerField'
 
 @register
-class Report(object):
+class Report(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(elements=['name', 'description', 'descriptor', 'data', 'timeCreated'])
 
 @register
-class Reports(object):
+class Reports(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
 
 @register
-class SystemUpdate(object):
+class SystemUpdate(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     update_user = 'CharField'
     server_name = 'CharField'
     repository_name = 'CharField'

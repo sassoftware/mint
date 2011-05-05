@@ -15,6 +15,7 @@ from mint.django_rest.rbuilder.inventory.manager.jobmgr import JobManager
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager, PackageVersionManager
+from mint.django_rest.rbuilder.users.manager import UsersManager, UserGroupsManager, UserGroupMembersManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
@@ -27,6 +28,9 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'changeLogMgr' : ChangeLogManager,
         'packageMgr' : PackageManager,
         'packageVersionMgr' : PackageVersionManager,
+        'usersMgr' : UsersManager,
+        'userGroupsMgr': UserGroupsManager,
+        'userGroupMembersMgr': UserGroupMembersManager,
     }
 
     def __init__(self, cfg=None, userName=None):

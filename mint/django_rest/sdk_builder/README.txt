@@ -33,6 +33,21 @@ Client Side Features:
         p = Package(); p.name = 1 # throws sdk.ValidationError
         (where name is a CharField which means it only accepts str or unicode)
 
+* Subclass models,
+        from rsdk.rbuilder import Users, TYPEMAP
+        
+        class MyUsers(Users):
+            def __init__(self, *args, **kwargs):
+                if args and not kwargs:
+                    self.username = args[0]
+            
+            def __unicode__(self):
+                return self.username
+                
+        followed by,
+        
+        rebind(MyUsers, TYPEMAP)
+
 * Serialize python to xml using xobj,
         doc = xobj.Document()
         doc.package = Package(name='Nano', description='Text Editor')

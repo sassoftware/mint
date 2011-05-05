@@ -2597,6 +2597,12 @@ class MigrateTo_57(SchemaMigration):
     def migrate(self):
         return True
 
+class MigrateTo_58(SchemaMigration):
+    Version = (58, 0)
+
+    def migrate(self):
+        return True
+
 #### SCHEMA MIGRATIONS END HERE #############################################
 
 def _getMigration(major):
