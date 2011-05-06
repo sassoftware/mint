@@ -486,7 +486,7 @@ class Database(DBInterface):
         platformName = pd.getPlatformName()
         sourceTrove = pd.getPlatformSourceTrove()
         if not sourceTrove:
-            return models.PlatformVersion()
+            return models.EmptyPlatformVersion()
         n,v,f = cmdline.parseTroveSpec(sourceTrove)
         v = versions.VersionFromString(v)
         # convert trove name from unicode
@@ -495,7 +495,8 @@ class Database(DBInterface):
         if localPlatform:
             platformTroves = [pt for pt in pd.getPlatformSearchPaths() \
                 if pt.isPlatformTrove]
-            assert(1==len(platformTroves))
+            if not platformTroves:
+                return models.EmptyPlatformVersion()
             platformTrove = platformTroves[0]
             name = str(platformTrove.troveName)
             revision = str(platformTrove.version)
@@ -503,7 +504,7 @@ class Database(DBInterface):
                 localPlatform.platformId, 
                 "%s=%s" % (name, revision))
         else:
-            return models.PlatformVersion()
+            return models.EmptyPlatformVersion()
 
     def updateProductVersionStage(self, hostname, version, stageName, trove):
         return self.productMgr.updateProductVersionStage(hostname, version, stageName, trove)
