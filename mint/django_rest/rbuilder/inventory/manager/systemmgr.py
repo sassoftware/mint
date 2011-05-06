@@ -1220,9 +1220,10 @@ class SystemManager(basemanager.BaseManager):
         # If no ip address was set, fall back to dns_name
         if network:
             destination = network.ip_address or network.dns_name
+            requiredNetwork = (network.required and destination) or None
         else:
             destination = None
-        requiredNetwork = (network.required and destination) or None
+            requiredNetwork = None
 
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name

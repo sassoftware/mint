@@ -2573,6 +2573,8 @@ class MigrateTo_53(SchemaMigration):
             SET last_available_update_refresh = NULL
         """)
 
+        return True
+
 class MigrateTo_54(SchemaMigration):
     Version = (54, 0)
 
