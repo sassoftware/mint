@@ -125,6 +125,7 @@ class PlatformVersion(Model):
     version = fields.CharField()
     revision = fields.CharField()
     label = fields.CharField()
+    ordering = fields.CharField()
     _platformId = fields.CharField()
 
     id = fields.AbsoluteUrlField(isAttribute=True)
@@ -132,6 +133,10 @@ class PlatformVersion(Model):
     def get_absolute_url(self):
         return ('platforms', self._platformId,
                 'platformVersions', '%s=%s' % (self.name, self.revision))
+
+class EmptyPlatformVersion(Model):
+    class Meta(object):
+        name = 'platformVersion'
 
 class PlatformVersions(Model):
     platformVersion = fields.ListField(PlatformVersion)

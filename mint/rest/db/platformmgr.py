@@ -235,19 +235,14 @@ class Platforms(object):
             self._addComputedFields(platform)
         return platform
 
-    def _getPlatformTrove(self, platform):
+    def _getPlatformTroveName(self, platform):
         platformDef = self.platformCache.get(str(platform.label))
         srcTroves = [s for s in platformDef.getSearchPaths() \
             if s.isPlatformTrove]
-        assert 1 == len(srcTroves)
-        srcTrove = srcTroves[0]
-        return srcTrove
-
-    def _getPlatformTroveName(self, platform):
-        return self._getPlatformTrove(platform).troveName
-
-    def _getPlatformTroveVersion(self, platform):
-        return self._getPlatformTrove(platform).version
+        if srcTroves:
+            return srcTroves[0].troveName
+        else:
+            return None
 
     def getPlatformVersions(self, platformId, platformVersionId=None):
         platform = self.getById(platformId)
@@ -256,6 +251,10 @@ class Platforms(object):
             platformTroveName, revision = platformVersionId.split('=')
         else:
             platformTroveName = self._getPlatformTroveName(platform)
+            if not platformTroveName:
+                platformVersions = models.PlatformVersions()
+                platformVersions.platformVersion = []
+                return platformVersions
             revision = None
 
         host = platform.label.split('@')[:1][0]
@@ -274,17 +273,27 @@ class Platforms(object):
             raise e
 
         _platformVersions = []
+        seenRevisions = []
         for platformTrove in platformTroves:
             version = platformTrove[1]
-            versionRevision = version.trailingRevision().asString()
+            versionRevision = version.trailingRevision()
+            strRevision = versionRevision.asString()
+
+            # Because of flavors, there may be multiples of the same revision.
+            # We don't need to worry about flavors when rebasing.
+            if strRevision in seenRevisions:
+                continue
+
+            seenRevisions.append(strRevision)
+            timeStamp = versionRevision.timeStamp
                 
             platformVersion = models.PlatformVersion(
                 name=platformTroveName, version=version.asString(),
-                revision=versionRevision, label=label)
+                revision=strRevision, label=label,
+                ordering=timeStamp)
             platformVersion._platformId = platformId
 
-            if revision is not None and \
-                revision == versionRevision:
+            if revision is not None and revision == strRevision:
                 return platformVersion
 
             _platformVersions.append(platformVersion)
@@ -1436,3 +1445,4 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def clearPlatformData(self, labelStr, commit=True):
         self._clearMirrorPermission(labelStr, commit=commit)
         self._clearStatus(labelStr, commit=commit)
+        self.clearKey(labelStr, commit)
