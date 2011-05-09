@@ -11,3 +11,50 @@
 # or fitness for a particular purpose. See the Common Public License for
 # full details.
 #
+
+from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.django_rest.rbuilder.users import views as usersviews
+from mint.django_rest.rbuilder.users import manager as usersmanager
+from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
+
+class UsersTestCase(XMLTestCase):
+
+    fixtures = ['users']
+
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        
+    def tearDown(self):
+        XMLTestCase.tearDown(self)
+
+    def testGetUsers(self):
+        assert(False)
+        
+    def testGetUser(self):
+        assert(False)
+        
+    def testAddUser(self):
+        assert(False)
+        
+    def testUpdateUser(self):
+        assert(False)
+
+
+class UserGroupsTestCase(XMLTestCase):
+    
+    fixtures = ['users']
+    
+    def testGetUserGroups(self):
+        pass
+        
+    def testGetUserGroup(self):
+        pass
+        
+
+class UserGroupMembersTestCase(XMLTestCase):
+    
+    fixtures = ['users']
+    
+    def testGetUserGroupMembers(self):
+        pass
+    

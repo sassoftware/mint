@@ -4,7 +4,7 @@
 #
 # All rights reserved.
 #
-
+import decimal
 import datetime
 from dateutil import parser
 from dateutil import tz
@@ -992,6 +992,8 @@ class XObjModel(models.Model):
                     val = xobj.parse(val)
                 elif isinstance(field, HrefField):
                     val = field.serialize_value(request)
+                elif isinstance(field, djangofields.DecimalField):
+                    val = decimal.Decimal(val)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request):

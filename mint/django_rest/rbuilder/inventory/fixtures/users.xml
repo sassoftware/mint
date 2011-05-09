@@ -36,13 +36,13 @@
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
   </object>
-  <object pk="3" model="users.usergroups">
+  <object pk="3" model="users.usergroup">
     <field type="CharField" name="user_group">JeanValjean1</field>
   </object>
-  <object pk="4" model="users.usergroups">
+  <object pk="4" model="users.usergroup">
     <field type="CharField" name="user_group">JeanValjean2</field>
   </object>
-  <object pk="5" model="users.usergroups">
+  <object pk="5" model="users.usergroup">
     <field type="CharField" name="user_group">JeanValjean3</field>
   </object>
   <object pk="2" model="users.usergroupmembers">

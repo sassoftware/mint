@@ -122,7 +122,7 @@ class Pk(object):
 
 class Versions(modellib.XObjIdModel):
 
-    url_key = ["productId", "name"]
+    url_key = ["product_id", "name"]
 
     product_version_id = models.AutoField(primary_key=True,
         db_column='productversionid')
@@ -140,8 +140,7 @@ class Versions(modellib.XObjIdModel):
         return self.name
         
     def serialize(self, request=None, values=None):
-        import pdb; pdb.set_trace()
-        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
         return xobj_model
 

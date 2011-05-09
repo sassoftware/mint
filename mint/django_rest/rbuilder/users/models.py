@@ -30,7 +30,7 @@ class UserGroup(modellib.XObjIdModel):
     user_group = models.CharField(unique=True, max_length=128, db_column='usergroup')
 
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
+        # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroups'
 
     _xobj = xobj.XObjMetadata(tag='user_group')
@@ -63,7 +63,7 @@ class User(modellib.XObjIdModel):
     groups = models.ManyToManyField(UserGroup, through="UserGroupMembers", related_name='groups')
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
+        # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
     
     _xobj = xobj.XObjMetadata(tag='user')
@@ -77,5 +77,5 @@ class UserGroupMembers(modellib.XObjModel):
     user_id = models.ForeignKey(User, db_column='userid', related_name='usermember')
     
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
+        # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroupmembers'
