@@ -21,12 +21,6 @@ class UsersTestCase(XMLTestCase):
 
     fixtures = ['users']
 
-    def setUp(self):
-        XMLTestCase.setUp(self)
-        
-    def tearDown(self):
-        XMLTestCase.tearDown(self)
-
     def testGetUsers(self):
         assert(False)
         

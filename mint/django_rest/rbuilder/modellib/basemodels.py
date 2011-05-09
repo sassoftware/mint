@@ -993,7 +993,7 @@ class XObjModel(models.Model):
                 elif isinstance(field, HrefField):
                     val = field.serialize_value(request)
                 elif isinstance(field, djangofields.DecimalField):
-                    val = decimal.Decimal(val)
+                    val = float(val)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request):
