@@ -1,4 +1,4 @@
-# pyflakes=ignore
+#  pyflakes=ignore
 
 #
 # Copyright (c) 2011 rPath, Inc.
@@ -19,7 +19,7 @@ import urlparse
 from xobj2 import xobj2  # pyflakes=ignore
 import sys
 import inspect
-
+from xobj import xobj
 
 MIN_ALLOWED_PYTHON_VERSION = (2, 5) # still needs to be tested on 2.5
 MAX_ALLOWED_PYTHON_VERSION = (2, 7, 1)
