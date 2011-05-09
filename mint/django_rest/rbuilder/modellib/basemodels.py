@@ -4,7 +4,6 @@
 #
 # All rights reserved.
 #
-import decimal
 import datetime
 from dateutil import parser
 from dateutil import tz

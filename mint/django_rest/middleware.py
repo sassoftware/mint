@@ -16,7 +16,7 @@ from django.http import HttpResponseBadRequest
 from mint import config
 from mint.django_rest import handler
 from mint.django_rest.rbuilder import auth
-from mint.django_rest.rbuilder import models as rbuildermodels
+# from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils

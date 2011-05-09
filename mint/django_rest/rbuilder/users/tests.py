@@ -76,4 +76,3 @@ class UsersTestCase(XMLTestCase):
         # user_group_members = models.UserGroupMembers.objects.get(user_group_id=1)
         #         user_group_members_gotten = self.xobjResponse('/api/user_groups/1/user_group_members')
         #         self.assertEquals(len(user_group_members_gotten), len(user_group_members))
-    

@@ -2,7 +2,7 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 from mint.django_rest.rbuilder.models import Sessions
-from mint.django_rest.rbuilder.users.models import User, UserGroups
+from mint.django_rest.rbuilder.users.models import User, UserGroup
 from hashlib import md5
 import base64
 import cPickle

@@ -10,7 +10,7 @@ from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 
-from mint.django_rest.rbuilder import models as rbuildermodels
+# from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.lib import data as mintdata
