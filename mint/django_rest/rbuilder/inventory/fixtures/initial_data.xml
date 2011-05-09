@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
     <!--  please keep all user passwords as "password" with same salt -->
-    <object pk="1" model="rbuilder.users">
-	    <field type="CharField" name="username">admin</field>
-	    <field type="CharField" name="fullname">Administrator</field>
+    <object pk="1" model="users.user">
+	    <field type="CharField" name="user_name">admin</field>
+	    <field type="CharField" name="full_name">Administrator</field>
 	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
 	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
 	    <field type="CharField" name="email">admin@rpath.com</field>
-	    <field type="TextField" name="displayemail"/>
-	    <field type="DecimalField" name="timecreated">1283523987.852</field>
-	    <field type="DecimalField" name="timeaccessed">1283530322.491</field>
+	    <field type="TextField" name="display_email"/>
+	    <field type="DecimalField" name="time_created">1283523987.852</field>
+	    <field type="DecimalField" name="time_accessed">1283530322.491</field>
 	    <field type="SmallIntegerField" name="active">1</field>
 	    <field type="TextField" name="blurb"/>
 	</object>
-	<object pk="2000" model="rbuilder.users">
-	    <field type="CharField" name="username">testuser</field>
-            <field type="CharField" name="fullname">Test User</field>
+	<object pk="2000" model="users.user">
+	    <field type="CharField" name="user_name">testuser</field>
+            <field type="CharField" name="full_name">Test User</field>
 	    <field type="TextField" name="salt">\\256\\303\\325B)</field>
 	    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
 	    <field type="CharField" name="email">testuser@rpath.com</field>
-	    <field type="TextField" name="displayemail"/>
-	    <field type="DecimalField" name="timecreated">1283529921.387</field>
-	    <field type="DecimalField" name="timeaccessed">1283530359.041</field>
+	    <field type="TextField" name="display_email"/>
+	    <field type="DecimalField" name="time_created">1283529921.387</field>
+	    <field type="DecimalField" name="time_accessed">1283530359.041</field>
 	    <field type="SmallIntegerField" name="active">1</field>
 	    <field type="TextField" name="blurb">null</field>
 	</object>
-	<object pk="1" model="rbuilder.usergroups">
-      <field type="CharField" name="usergroup">admin</field>
+	<object pk="1" model="users.usergroup">
+      <field type="CharField" name="user_group">admin</field>
     </object>
-    <object pk="2" model="rbuilder.usergroups">
-      <field type="CharField" name="usergroup">MintAdmin</field>
+    <object pk="2" model="users.usergroup">
+      <field type="CharField" name="user_group">MintAdmin</field>
     </object>
-    <object pk="2000" model="rbuilder.usergroups">
-	    <field type="CharField" name="usergroup">testuser</field>
+    <object pk="2000" model="users.usergroup">
+	    <field type="CharField" name="user_group">testuser</field>
 	</object>
-	<object pk="1" model="rbuilder.usergroupmembers">
-	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">1</field>
-	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
+	<object pk="1" model="users.usergroupmembers">
+	    <field to="users.usergroups" name="user_group_id" rel="ManyToOneRel">1</field>
+	    <field to="users.user" name="user_id" rel="ManyToOneRel">1</field>
 	</object>
-	<object pk="2" model="rbuilder.usergroupmembers">
-        <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2</field>
-        <field to="rbuilder.users" name="userid" rel="ManyToOneRel">1</field>
+	<object pk="2" model="users.usergroupmembers">
+        <field to="users.usergroups" name="user_group_id" rel="ManyToOneRel">2</field>
+        <field to="users.User" name="user_id" rel="ManyToOneRel">1</field>
     </object>
-	<object pk="2000" model="rbuilder.usergroupmembers">
-	    <field to="rbuilder.usergroups" name="usergroupid" rel="ManyToOneRel">2000</field>
-	    <field to="rbuilder.users" name="userid" rel="ManyToOneRel">2000</field>
+	<object pk="2000" model="users.usergroupmembers">
+	    <field to="users.usergroups" name="user_group_id" rel="ManyToOneRel">2000</field>
+	    <field to="users.User" name="user_id" rel="ManyToOneRel">2000</field>
 	</object>
 	<object pk="1" model="inventory.managementinterface">
         <field type="CharField" name="name">cim</field>
@@ -108,7 +108,7 @@
       <required>true</required>
     </field>
     <field>
-      <name>username</name>
+      <name>user_name</name>
       <descriptions>
         <desc>User</desc>
       </descriptions>
@@ -394,7 +394,7 @@
         <field type="CharField" name="ssl_client_certificate"><None></None></field>
         <field type="CharField" name="ssl_client_key"><None></None></field>
         <field type="CharField" name="ssl_server_certificate"><None></None></field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.User" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -786,27 +786,27 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
   </object>
   <object pk="1" model="rbuilder.products">
-    <field type="CharField" name="hostname">chater-foo.eng.rpath.com</field>
+    <field type="CharField" name="host_name">chater-foo.eng.rpath.com</field>
     <field type="CharField" name="name">chater-foo</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">chater-foo</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">chater-foo.eng.rpath.com</field>
+    <field type="CharField" name="domain_name">eng.rpath.com</field>
+    <field type="CharField" name="short_name">chater-foo</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_host_name">chater-foo.eng.rpath.com</field>
     <field type="TextField" name="description">chater-foo</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
-    <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
+    <field type="SmallIntegerField" name="backup_external">0</field>
+    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field to="users.User" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">1</field>
+    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">1</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
 </django-objects>

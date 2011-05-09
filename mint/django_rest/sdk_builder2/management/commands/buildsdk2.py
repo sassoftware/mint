@@ -62,10 +62,10 @@ class Command(BaseCommand):
             with open(models_path, 'w') as f:
                 f.write('from rsdk.Fields import *  # pyflakes=ignore\n')
                 f.write('from rsdk.sdk import SDKModel, register, DynamicImportResolver  # pyflakes=ignore\n')
-                f.write('from xobj2.xobj2 import XObj, XObjMetadata  # pyflakes=ignore\n')
+                f.write('from xobj2.xobj2 import XObj, XObjMetadata, Field  # pyflakes=ignore\n')
                 # f.write('from sdk.xobj_debug import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')
-                f.write('REGISTRY = {}\n')
+                f.write('REGISTRY = {}\n\n')
                 src = self.buildSDKModels(module)
                 if src:
                     f.writelines(src.strip())
@@ -86,17 +86,27 @@ class Command(BaseCommand):
         Fields_new_path = os.path.join(
                 current_location[0:index], 'sdk_builder2/rsdk/Fields.py')
         shutil.copyfile(Fields_orig_path, Fields_new_path)
-            
+
     def buildSDKModels(self, module):
-        wrapped = rSDKUtils.DjangoModelsWrapper(module)
-        L = []
-        for w in wrapped:
-            L.append(rSDKUtils.ClassStub(*w).tosrc())
-        return '\n'.join(L)
+        mod_metadata = rSDKUtils.ModuleMetadata(module)
+        src = []
+        for tpl in mod_metadata.convertDjangoModels():
+            raw_code = rSDKUtils.ClassStub(*tpl).tosrc()
+            src.append(raw_code)
+        return '\n'.join(src)
+            
+    # def buildSDKModels(self, module):
+    #     wrapped = rSDKUtils.DjangoModelsWrapper(module)
+    #     L = []
+    #     for w in wrapped:
+    #         L.append(rSDKUtils.ClassStub(*w).tosrc())
+    #     return '\n'.join(L)
 
     def findAllModels(self):
         d = {}
         for app in cache.get_apps():
             app_label = app.__name__.split('.')[-2]
+            if app_label == 'rbuilder':
+                continue
             d[app_label] = app
         return d

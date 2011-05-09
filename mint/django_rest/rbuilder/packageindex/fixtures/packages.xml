@@ -7,18 +7,18 @@
     <field type="CharField" name="namespace">
       <None/>
     </field>
-    <field type="CharField" name="domainname">rpath.com</field>
-    <field type="CharField" name="shortname">centos</field>
-    <field type="CharField" name="projecturl"/>
-    <field type="CharField" name="repositoryHostName">centos.rpath.com</field>
+    <field type="CharField" name="domain_name">rpath.com</field>
+    <field type="CharField" name="short_name">centos</field>
+    <field type="CharField" name="project_url"/>
+    <field type="CharField" name="repository_host_name">centos.rpath.com</field>
     <field type="TextField" name="description"/>
-    <field type="CharField" name="prodtype"/>
-    <field type="CharField" name="commitemail"/>
-    <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">1295464800.617</field>
-    <field type="DecimalField" name="timemodified">1295464800.617</field>
+    <field type="CharField" name="prod_type"/>
+    <field type="CharField" name="commit_email"/>
+    <field type="SmallIntegerField" name="backup_external">0</field>
+    <field type="DecimalField" name="time_created">1295464800.617</field>
+    <field type="DecimalField" name="timem_odified">1295464800.617</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">
+    <field to="users" name="creator_id" rel="ManyToOneRel">
       <None/>
     </field>
   </object>

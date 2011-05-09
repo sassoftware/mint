@@ -64,7 +64,6 @@ class ValidationError(Exception):
 
 class SDKModel(xobj2.XObj):
     def __new__(cls, data='', *args, **kwargs):
-        cls.validate('initdata', data)
         return xobj2.XObj.__new__(cls, data)
 
     def __init__(self, *args, **kwargs):
@@ -79,22 +78,27 @@ class SDKModel(xobj2.XObj):
             for e in self._xobjMeta.elements:
                 if k == e.name:
                     typ = e.type if not isinstance(e.type, list) else e.type[0]
-                    if hasattr(typ, 'validate') and not isinstance(v, list):
+                    if hasattr(typ, '_validate') and not isinstance(v, list):
+                        typ._validate(k, v)
                         setattr(self, k, typ(v))
                     else:
                         setattr(self, k, v)
                     break
 
+        self._validators = {}
+        for e in self._xobjMeta.elements:
+            self._validators[e.name] = e.type._validate if not \
+                        isinstance(e.type, list) else e.type[0]._validate
+
     def __setattr__(self, k, v):
-        cls = self.__class__
-        if hasattr(cls, 'validate'):
-            cls.validate(k, v)
+        if hasattr(self, '_validators'):
+            validator = self._validators.get(k)
+            validator(k, v)
         self.__dict__[k] = v
 
-    @staticmethod
-    def validate(k, v):
+    def _validate(self, k, v):
         pass
-
+        
         
 class StubMetadata(dict):
     def __init__(self, cls):
@@ -116,7 +120,7 @@ class DynamicImportResolver(object):
         for clsname, metadata in self.registry.items():
             cls = metadata.cls
             for fieldname, typ in metadata.items():
-                newtyp = findRefCls(typ) if not 
+                newtyp = findRefCls(typ) if not \
                     isinstance(typ, list) else [findRefCls(typ)]
                 for i, e in enumerate(cls._xobjMeta.elements):
                     if fieldname == e.name:
@@ -124,7 +128,7 @@ class DynamicImportResolver(object):
 
     def findRefCls(self, typ):
         typ = typ if not isinstance(typ, list) else typ[0]
-        typname = typ.name
+        typname = typ.__name__
         modname = getattr(typ, '__module__', None)
         if modname:
             module = __import__(modname, globals(), locals(), -1)
