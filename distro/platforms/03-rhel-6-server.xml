@@ -1,0 +1,6 @@
+<platform>
+  <label>rhel.rpath.com@rpath:rhel-6-server</label>
+  <platformName>Red Hat Enterprise Linux 6</platformName>
+  <abstract>false</abstract>
+  <configurable>true</configurable>
+</platform>
