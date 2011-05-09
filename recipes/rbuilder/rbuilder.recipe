@@ -178,6 +178,8 @@ class rBuilderProduct(CPackageRecipe):
         # These files contain defaults or stubs and should always be
         # replaced.
         r.Transient(r'%(servicedir)s/rbuilder/config/(rbuilder|pcreator).conf')
+        r.Transient(r'/etc/sysconfig/pgsql/postgresql-rbuilder')
+        r.Transient(r'/usr/share/rbuilder/postgresql.conf')
 
         r.Transient(r'.*/\.keep[^/]*')
         r.Config(exceptions=r'.*/\.keep[^/]*')
