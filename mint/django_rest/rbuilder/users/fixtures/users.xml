@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="users.usergroup">
+    <field type="CharField" name="user_group">admin</field>
+  </object>
+  <object pk="2" model="users.usergroup">
+    <field type="CharField" name="user_group">MintAdmin</field>
+  </object>
+  <object pk="2000" model="users.usergroup">
+    <field type="CharField" name="user_group">testuser</field>
+  </object>
+  <object pk="1" model="users.user">
+    <field type="CharField" name="user_name">admin</field>
+    <field type="CharField" name="full_name">Administrator</field>
+    <field type="TextField" name="salt">\\256\\303\\325B)</field>
+    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+    <field type="CharField" name="email">admin@rpath.com</field>
+    <field type="TextField" name="display_email"></field>
+    <field type="DecimalField" name="time_created">1283523987.852</field>
+    <field type="DecimalField" name="time_accessed">1283530322.491</field>
+    <field type="SmallIntegerField" name="active">1</field>
+    <field type="TextField" name="blurb"></field>
+  </object>
+  <object pk="2000" model="users.user">
+    <field type="CharField" name="user_name">testuser</field>
+    <field type="CharField" name="full_name">Test User</field>
+    <field type="TextField" name="salt">\\256\\303\\325B)</field>
+    <field type="CharField" name="passwd">f0ae519bbcac24795abf2c2aa5414ed0</field>
+    <field type="CharField" name="email">testuser@rpath.com</field>
+    <field type="TextField" name="display_email"></field>
+    <field type="DecimalField" name="time_created">1283529921.387</field>
+    <field type="DecimalField" name="time_accessed">1283530359.041</field>
+    <field type="SmallIntegerField" name="active">1</field>
+    <field type="TextField" name="blurb">null</field>
+  </object>
+  <object pk="1" model="users.usergroupmembers">
+    <field to="users.usergroup" name="user_group_id" rel="ManyToOneRel">1</field>
+    <field to="users.user" name="user_id" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="2" model="users.usergroupmembers">
+    <field to="users.usergroup" name="user_group_id" rel="ManyToOneRel">2</field>
+    <field to="users.user" name="user_id" rel="ManyToOneRel">1</field>
+  </object>
+  <object pk="2000" model="users.usergroupmembers">
+    <field to="users.usergroup" name="user_group_id" rel="ManyToOneRel">2000</field>
+    <field to="users.user" name="user_id" rel="ManyToOneRel">2000</field>
+  </object>
+</django-objects>
