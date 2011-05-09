@@ -14,6 +14,7 @@
 
 from mint.django_rest.rbuilder.users import models
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
+from mint.django_rest.rbuilder.users import testsxml
 
 from xobj import xobj
 from lxml import etree
@@ -24,8 +25,11 @@ class UsersTestCase(XMLTestCase):
 
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
-        xobjModel = xobj.parse(response.content)
-        root_name = etree.XML(response.content).tag
+        return self.toXObj(response.content)
+
+    def toXObj(self, xml):
+        xobjModel = xobj.parse(xml)
+        root_name = etree.XML(xml).tag
         return getattr(xobjModel, root_name)
 
     def testGetUsers(self):
@@ -37,12 +41,26 @@ class UsersTestCase(XMLTestCase):
         user = models.User.objects.get(pk=1)
         user_gotten = self.xobjResponse('/api/users/1')
         self.assertEquals(unicode(user.user_name), user_gotten.user_name)
+        self.assertEquals(unicode(user.full_name), user_gotten.full_name)
         
     def testAddUser(self):
-        pass
+        response = self._post('/api/users/',
+            data=testsxml.users_post_xml,
+            username='admin', password='password'
+        )
+        user_posted = self.toXObj(response.content)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(u'dcohn', user_posted.user_name)
+        self.assertEquals(u'Dan Cohn', user_posted.full_name)
         
     def testUpdateUser(self):
-        pass
+        response = self._put('/api/users/1',
+            data=testsxml.users_put_xml,
+            username='admin', password='password')
+        user_putted = self.toXObj(response.content)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(u'Super Devil', user_putted.full_name)
+        self.assertEquals(u'fear me', user_putted.blurb)
     
     def testGetUserGroups(self):
         user_groups = models.UserGroups.objects.all()
@@ -54,6 +72,8 @@ class UsersTestCase(XMLTestCase):
         user_group_gotten = self.xobjResponse('/api/user_groups/1')
    
     def testGetUserGroupMembers(self):
-        user_group_members = models.UserGroupMembers.objects.all()
-        user_group_members_gotten = self.xobjResponse('/api/user_groups/1/user_group_members')
+        pass
+        # user_group_members = models.UserGroupMembers.objects.get(user_group_id=1)
+        #         user_group_members_gotten = self.xobjResponse('/api/user_groups/1/user_group_members')
+        #         self.assertEquals(len(user_group_members_gotten), len(user_group_members))
     

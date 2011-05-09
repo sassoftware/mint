@@ -20,6 +20,9 @@ class UsersService(service.BaseService):
     
     @return_xml
     def rest_GET(self, request, user_id=None):
+        return self.get(user_id)
+    
+    def get(self, user_id=None):
         if user_id:
             return self.mgr.getUser(user_id)
         else:
@@ -48,18 +51,18 @@ class UserGroupsService(service.BaseService):
         else:
             return self.mgr.getUserGroups()
     
-    # @requires('user_group')       
-    # @return_xml
-    # def rest_POST(self, request, user_group):
-    #     return self.mgr.addUserGroup(user_group)
-    # 
-    # @requires('user_group')
-    # @return_xml
-    # def rest_PUT(self, request, user_group_id, user_group):
-    #     return self.mgr.updateUserGroup(user_group_id, user_group)
-    # 
-    # def rest_DELETE(self, request, user_group_id):
-    #     self.mgr.deleteUserGroup(user_group_id)
+    @requires('user_group')       
+    @return_xml
+    def rest_POST(self, request, user_group):
+        return self.mgr.addUserGroup(user_group)
+    
+    @requires('user_group')
+    @return_xml
+    def rest_PUT(self, request, user_group_id, user_group):
+        return self.mgr.updateUserGroup(user_group_id, user_group)
+    
+    def rest_DELETE(self, request, user_group_id):
+        self.mgr.deleteUserGroup(user_group_id)
     
 class UserGroupMembersService(service.BaseService):
     

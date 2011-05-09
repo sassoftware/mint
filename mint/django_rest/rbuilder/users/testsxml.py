@@ -12,3 +12,27 @@
 # full details.
 #
 
+users_post_xml = \
+"""
+<user>
+<full_name>Dan Cohn</full_name>
+<display_email>True</display_email>
+<passwd>12345</passwd>
+<user_name>dcohn</user_name>
+<time_accessed>1283530322.49</time_accessed>
+<time_created>1283523987.85</time_created>
+<active>1</active>
+<salt>\\256\\303\\325B)</salt>
+<email>dcohn@rpath.com</email>
+<blurb>something here</blurb>
+</user>
+""".strip()
+
+
+users_put_xml = \
+"""
+<user>
+<full_name>Super Devil</full_name>
+<blurb>fear me</blurb>
+</user>
+""".strip()
