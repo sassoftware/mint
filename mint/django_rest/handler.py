@@ -97,12 +97,12 @@ def logError(request, e_type, e_value, e_tb, doEmail=True):
             'request_params'    : request.GET,
             'is_secure'         : request.is_secure,
             }
-    # if request.raw_post_data:
-    #     info.update(raw_post_data = request.raw_post_data)
-    # try:
-    #     logerror.logErrorAndEmail(request.cfg, e_type, e_value,
-    #             e_tb, 'API call (django handler)', info, doEmail=doEmail)
-    # except mint_error.MailError, err:
-    #     log.error("Error sending mail: %s", str(err))
+    if request.raw_post_data:
+        info.update(raw_post_data = request.raw_post_data)
+    try:
+        logerror.logErrorAndEmail(request.cfg, e_type, e_value,
+                e_tb, 'API call (django handler)', info, doEmail=doEmail)
+    except mint_error.MailError, err:
+        log.error("Error sending mail: %s", str(err))
 
 
