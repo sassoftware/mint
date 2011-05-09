@@ -180,6 +180,7 @@ class rBuilderProduct(CPackageRecipe):
         r.Transient(r'%(servicedir)s/rbuilder/config/(rbuilder|pcreator).conf')
         r.Transient(r'/etc/sysconfig/pgsql/postgresql-rbuilder')
         r.Transient(r'/usr/share/rbuilder/postgresql.conf')
+        r.Config(exceptions=r'/etc/sysconfig/pgsql/postgresql-rbuilder')
 
         r.Transient(r'.*/\.keep[^/]*')
         r.Config(exceptions=r'.*/\.keep[^/]*')
