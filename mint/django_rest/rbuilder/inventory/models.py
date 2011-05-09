@@ -19,7 +19,7 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
-
+from mint.django_rest.rbuilder.users import models as usersmodels
 from xobj import xobj
 
 Cache = modellib.Cache
@@ -510,7 +510,7 @@ class System(modellib.XObjIdModel):
         "system's CIM broker")
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
-    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True, 
+    launching_user = D(modellib.ForeignKey(usersmodels.User, null=True, 
         text_field="username"),
         "the user that deployed the system (only applies if system is on a "
         "virtual target)")
@@ -1323,5 +1323,8 @@ for mod_obj in sys.modules[__name__].__dict__.values():
         if mod_obj._xobj.tag:
             modellib.type_map[mod_obj._xobj.tag] = mod_obj
 for mod_obj in rbuildermodels.__dict__.values():
+    if hasattr(mod_obj, '_meta'):
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj
+for mod_obj in usersmodels.__dict__.values():
     if hasattr(mod_obj, '_meta'):
         modellib.type_map[mod_obj._meta.verbose_name] = mod_obj

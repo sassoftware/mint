@@ -32,12 +32,12 @@ class BaseService(resource.Resource):
         return resource.Resource.__call__(self, request, *args, **kw)
 
     def setManagerAuth(self, request):
-        username, password = request._auth
+        user_name, password = request._auth
         user = request._authUser
-        if username and password and user:
-            mintAuth = users.Authorization(username=username,
-                token=(username, password), admin=request._is_admin,
-                userId=user.userid)
+        if user_name and password and user:
+            mintAuth = users.Authorization(user_name=user_name,
+                token=(user_name, password), admin=request._is_admin,
+                user_id=user.user_id)
             self.mgr.setAuth(mintAuth, user)
 
     def read(self, request, *args, **kwargs):
