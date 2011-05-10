@@ -10,7 +10,7 @@ from django.db import models
 
 from mint import userlevels
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.users import models as usermodels
 
 from xobj import xobj
 
@@ -54,7 +54,7 @@ class Project(modellib.XObjIdModel):
     time_modified = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timemodified")
     hidden = models.SmallIntegerField(default=0)
-    creator = models.ForeignKey(rbuildermodels.Users,
+    creator = models.ForeignKey(usermodels.User,
         related_name="creator", null=True, db_column="creatorid")
     external = models.SmallIntegerField(default=0)
     disabled = models.SmallIntegerField(default=0)
@@ -62,7 +62,7 @@ class Project(modellib.XObjIdModel):
     version = models.CharField(max_length=128, null=True, blank=True,
         default='')
     database = models.CharField(max_length=128, null=True)
-    members = modellib.DeferredManyToManyField(rbuildermodels.Users, 
+    members = modellib.DeferredManyToManyField(usermodels.User, 
         through="Member")
 
     def __unicode__(self):
@@ -87,7 +87,7 @@ class Members(modellib.Collection):
 class Member(modellib.XObjModel):
     project = models.ForeignKey(Project, db_column='projectid',
         related_name='membership')
-    user = modellib.DeferredForeignKey(rbuildermodels.Users, db_column='userid',
+    user = modellib.DeferredForeignKey(usermodels.User, db_column='userid',
         related_name='project_membership')
     level = models.SmallIntegerField()
     class Meta:
@@ -161,15 +161,15 @@ class Release(modellib.XObjModel):
     description = models.TextField()
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         db_column='timeCreated', null=True)
-    created_by = modellib.ForeignKey(rbuildermodels.Users, db_column='createdby',
+    created_by = modellib.ForeignKey(usermodels.User, db_column='createdby',
         related_name='created_releases', null=True)
     time_updated = models.DecimalField(max_digits=14, decimal_places=3,
         null=True, db_column='timeUpdated')
-    updated_by = modellib.ForeignKey(rbuildermodels.Users, db_column='updatedby',
+    updated_by = modellib.ForeignKey(usermodels.User, db_column='updatedby',
         related_name='updated_releases', null=True)
     time_published = models.DecimalField(max_digits=14, decimal_places=3,
         db_column='timePublished', null=True)
-    published_by = modellib.ForeignKey(rbuildermodels.Users, 
+    published_by = modellib.ForeignKey(usermodels.User, 
         db_column='publishedby', related_name='published_releases',
         null=True)
     should_mirror = models.SmallIntegerField(db_column='shouldMirror',
@@ -207,11 +207,11 @@ class Image(modellib.XObjIdModel):
         decimal_places=3, null=True, db_column='troveLastChanged')
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         db_column='timeCreated')
-    created_by = modellib.ForeignKey(rbuildermodels.Users,
+    created_by = modellib.ForeignKey(usermodels.User,
         db_column='createdby', related_name='created_images')
     time_updated = models.DecimalField(max_digits=14, decimal_places=3,
         null=True, db_column='timeUpdated')
-    updated_by = modellib.ForeignKey(rbuildermodels.Users, db_column='updatedby',
+    updated_by = modellib.ForeignKey(usermodels.User, db_column='updatedby',
         related_name='updated_images', null=True)
     build_count = models.IntegerField(null=True, default=0)
     version = models.ForeignKey(Version, null=True,
