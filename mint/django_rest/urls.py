@@ -16,9 +16,11 @@ from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
 from mint.django_rest.rbuilder.users import views as usersviews
+from mint.django_rest.rbuilder.notices import views as noticesviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
+
 
 urlpatterns = patterns('',
     # Reporting urls
@@ -368,6 +370,21 @@ urlpatterns = patterns('',
     url(r'^api/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
         usersviews.UserGroupMembersService(),
         name='UserGroupMembers'),
+        
+    # UserNotices
+    # url(r'^api/users/(?P<user_id>\d+)/notices/?$',
+    #     noticesviews.UserNoticesService(),
+    #     name='UserNotices'),
+    
+    url(r'^api/notices/users/(?P<user_id>\d+)/?$',
+        noticesviews.UserNoticesService(),
+        name='UserNotices'),
+    
+    # GlobalNotices
+    url(r'^api/notices/?$',
+        noticesviews.GlobalNoticesService(),
+        name='GlobalNotices'),
+    
 )
 
 
