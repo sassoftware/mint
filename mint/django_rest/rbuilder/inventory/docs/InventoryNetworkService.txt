@@ -7,8 +7,8 @@ Network properties:
     ipv6_address - the network IPv6 address
     netmask - the network netmask
     network_id - the database ID for the network
+    pinned - whether or not a user has pinned this network device be the one used to manage the system
     port_type - the network port type
-    required - whether or not a user has required that this network device be the ones used to manage the system
     system - documentation missing
 
 Methods:

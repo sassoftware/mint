@@ -436,6 +436,25 @@ class SystemType(modellib.XObjIdModel):
 
     load_fields = [ name ]
 
+class NetworkAddress(modellib.XObjModel):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(
+            tag = 'network_address',
+            attributes = dict(pinned=bool, address=str),
+    )
+    address = D(models.CharField(max_length=8092),
+        "The address to use for contacting the system")
+    pinned = D(models.BooleanField(),
+        "true if the address is pinned")
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return (self.address == other.address and
+                bool(self.pinned) == bool(other.pinned))
+
 class System(modellib.XObjIdModel):
     XSL = "system.xsl"
     class Meta:
@@ -536,6 +555,7 @@ class System(modellib.XObjIdModel):
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
         "the descriptor of available fields to set system configuration parameters")
+    network_address = D(NetworkAddress, "Network address for this system")
 
     logged_fields = ['name', 'installed_software']
 
@@ -558,12 +578,38 @@ class System(modellib.XObjIdModel):
                 name = SystemType.INVENTORY)
         modellib.XObjIdModel.save(self, *args, **kw)
         self.createLog()
+        self.createNetworks()
 
     def createLog(self):
         system_log, created = SystemLog.objects.get_or_create(system=self)
         if created:
             system_log.save()
         return system_log
+
+    def createNetworks(self):
+        # * oldNetAddr is the state of the system in the db, before any
+        #   fields from the xobj model were copied
+        # * self.network_address comes originally from the DB, and updated
+        #   from the xobj model
+        # * curNetAddr is the state of the network in the db, which may
+        #   have been altered since we loaded the object.
+
+        currentNw = self.__class__.extractNetworkToUse(self)
+        curNetAddr = self.newNetworkAddress(currentNw)
+        if self.oldModel is None:
+            oldNetAddr = None
+        else:
+            oldNetAddr = getattr(self.oldModel, 'network_address', None)
+        if self.network_address is None or curNetAddr == self.network_address:
+            # This is calling the custom __eq__, and also covers
+            # None==None
+            return
+
+        self.networks.all().delete()
+        nw = Network(system=self, dns_name=self.network_address.address,
+            pinned=self.network_address.pinned)
+        nw.save()
+
 
     @property
     def isRegistered(self):
@@ -705,8 +751,48 @@ class System(modellib.XObjIdModel):
                 out_of_date = True
                 break
         xobj_model.out_of_date = out_of_date
-
+        xobj_model.network_address = self.__class__.extractNetworkAddress(self)
         return xobj_model
+
+    @classmethod
+    def extractNetworkToUse(cls, system):
+        trueSet = set([ "True", "true" ])
+        if hasattr(system.networks, 'all'):
+            networks = system.networks.all()
+        else:
+            networks = system.networks.network
+            for net in networks:
+                net.pinned = (net.pinned in trueSet)
+                net.active = (net.active in trueSet)
+
+        # first look for user pinned nets
+        nets = [ x for x in networks if x.pinned ]
+        if nets:
+            return nets[0]
+
+        # now look for a non-pinned active net
+        nets = [ x for x in networks if x.active ]
+        if nets:
+            return nets[0]
+
+        # If we only have one network, return that one and hope for the best
+        if len(networks) == 1:
+            return networks[0]
+        return None
+
+    @classmethod
+    def extractNetworkAddress(cls, system):
+        nw = cls.extractNetworkToUse(system)
+        return cls.newNetworkAddress(nw)
+
+    @classmethod
+    def newNetworkAddress(cls, network):
+        if network is None:
+            return None
+        pinned = network.pinned
+        address = network.ip_address or network.dns_name
+
+        return NetworkAddress(address=address, pinned=pinned)
 
 class ManagementNode(System):
     
@@ -1060,7 +1146,7 @@ class Network(modellib.XObjIdModel):
     netmask = D(models.CharField(max_length=20, null=True), "the network netmask")
     port_type = D(models.CharField(max_length=32, null=True), "the network port type")
     active = D(models.NullBooleanField(), "whether or not this is the active network device on the system")
-    required = D(models.NullBooleanField(), "whether or not a user has required that this network device be the ones used to manage the system")
+    pinned = D(models.NullBooleanField(db_column="required"), "whether or not a user has pinned this network device be the one used to manage the system")
 
     load_fields = [ip_address, dns_name]
 

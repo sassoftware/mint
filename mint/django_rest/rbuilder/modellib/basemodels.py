@@ -389,6 +389,25 @@ class BaseManager(models.Manager):
             setattr(model, fieldName, val)
         return model
 
+    def add_abstract_fields(self, model, obj):
+        abstractFields = getattr(model._meta, 'abstract_fields', None)
+        if not abstractFields:
+            return model
+        for fieldName, mdl in abstractFields.items():
+            val = getattr(obj, fieldName, None)
+            if val is None:
+                continue
+            currentVal = getattr(model, fieldName, None)
+            if currentVal is None:
+                mdlinst = mdl()
+                setattr(model, fieldName, mdlinst)
+            else:
+                mdlinst = currentVal
+
+            mdl.objects.add_fields(mdlinst, val, request=None)
+        return model
+
+
     def load_from_object(self, obj, request, save=True, load=True):
         """
         Given an object (obj) from xobj, create and return the  corresponding
@@ -431,6 +450,7 @@ class BaseManager(models.Manager):
         model = self.add_m2m_accessors(model, obj, request)
         model = self.add_list_fields(model, obj, request, save=save)
         model = self.add_accessors(model, accessors)
+        model = self.add_abstract_fields(model, obj)
         model.oldModel = oldModel
 
         return model
@@ -518,14 +538,14 @@ class SystemManager(BaseManager):
         if model_inst.system_id is not None:
             loaded_model = self.tryLoad(dict(system_id=model_inst.system_id))
             if loaded_model:
-                return loaded_model.serialize(), loaded_model
+                return self._fromDb(loaded_model)
         # only check uuids if they are not none
         if model_inst.local_uuid and model_inst.generated_uuid:
             loaded_model = self.tryLoad(dict(local_uuid=model_inst.local_uuid,
                 generated_uuid=model_inst.generated_uuid))
             if loaded_model:
-                # a system matching (local_uuid, generated_uuid) was found)
-                return loaded_model.serialize(), loaded_model
+                # a system matching (local_uuid, generated_uuid) was found
+                return self._fromDb(loaded_model)
         if model_inst.event_uuid:
             # Look up systems by event_uuid
             systems = [ x.system
@@ -533,7 +553,7 @@ class SystemManager(BaseManager):
                     event_uuid = model_inst.event_uuid) ]
             if systems:
                 system = systems[0]
-                return system.serialize(), system
+                return self._fromDb(system)
         if model_inst.boot_uuid:
             # Look up systems by old-style jobs
             cu = connection.cursor()
@@ -557,14 +577,20 @@ class SystemManager(BaseManager):
             rs = list(cu)
             if rs:
                 loaded_model = self.tryLoad(dict(system_id=rs[0][0]))
-                return loaded_model.serialize(), loaded_model
+                return self._fromDb(loaded_model)
         if model_inst.target and model_inst.target_system_id:
             loaded_model = self.tryLoad(dict(target=model_inst.target,
                 target_system_id=model_inst.target_system_id))
             if loaded_model:
-                return loaded_model.serialize(), loaded_model
+                return self._fromDb(loaded_model)
 
         return None, None
+
+    def _fromDb(self, obj):
+        if obj is None:
+            return None, None
+        obj.network_address = obj.__class__.extractNetworkAddress(obj)
+        return obj.serialize(), obj
 
     def tryLoad(self, loadDict):
         try:
@@ -1167,10 +1193,15 @@ class XObjIdModel(XObjModel):
             ret = XObjModel.__metaclass__.__new__(cls, name, bases, attrs)
             # Find synthetic fields
             ret._meta.synthetic_fields = synth = set()
+            ret._meta.abstract_fields = abstr = dict()
             for k, v in attrs.items():
                 if isinstance(v, SyntheticField):
                     synth.add(k)
                     # Default the value to None
+                    setattr(ret, k, None)
+                meta = getattr(v, '_meta', None)
+                if meta is not None and meta.abstract:
+                    abstr[k] = v
                     setattr(ret, k, None)
             return ret
 

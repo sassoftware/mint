@@ -1220,7 +1220,7 @@ class SystemManager(basemanager.BaseManager):
         # If no ip address was set, fall back to dns_name
         if network:
             destination = network.ip_address or network.dns_name
-            requiredNetwork = (network.required and destination) or None
+            requiredNetwork = (network.pinned and destination) or None
         else:
             destination = None
             requiredNetwork = None
@@ -1283,28 +1283,7 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def extractNetworkToUse(self, system):
-        if hasattr(system.networks, 'all'):
-            networks = system.networks.all()
-        else:
-            networks = system.networks.network
-            for net in networks:
-                net.required = (net.required == 'true' or net.required == 'True')
-                net.active = (net.active == 'true' or net.active == 'True')
-
-        # first look for user required nets
-        nets = [ x for x in networks if x.required ]
-        if nets:
-            return nets[0]
-
-        # now look for a non-required active net
-        nets = [ x for x in networks if x.active ]
-        if nets:
-            return nets[0]
-
-        # If we only have one network, return that one and hope for the best
-        if len(networks) == 1:
-            return networks[0]
-        return None
+        return models.System.extractNetworkToUse(system)
 
     def needsNewSynchronization(self, system):
         """
