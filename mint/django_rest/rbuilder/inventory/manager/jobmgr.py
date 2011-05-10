@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
 class JobManager(basemanager.BaseManager):
-
     @exposed
     def getJobs(self):
         return self._jobsFromIterator(models.Job.objects.all())

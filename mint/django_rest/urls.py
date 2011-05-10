@@ -15,6 +15,7 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
+from mint.django_rest.rbuilder.projects import views as projectviews
 from mint.django_rest.rbuilder.users import views as usersviews
 
 handler404 = 'mint.django_rest.handler.handler404'
@@ -244,21 +245,51 @@ urlpatterns = patterns('',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
 
-    # Packages
-    url(r'^api/packages/?$',
-        packageviews.PackageService(),
-        name='Packages'),
-    url(r'^api/packages/(?P<package_id>\d+)/?$',
-        packageviews.PackageService(),
-        name='Package'),
-        
-    # Package Actions
-    url(r'^api/package_action_types/?$',
-        packageviews.PackageActionTypeService(),
-        name='PackageActionTypes'),
-    url(r'^api/package_action_types/(?P<package_action_type_id>\d+)/?$',
-        packageviews.PackageActionTypeService(),
-        name='PackageActionType'),
+    # Projects
+    url(r'^api/projects/?$',
+        projectviews.ProjectService(),
+        name='Projects'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/?$',
+        projectviews.ProjectService(),
+        name='Project'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersions'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/members/?$',
+        projectviews.ProjectMemberService(),
+        name='ProjectMembers'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersion'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/(?P<stage_name>[a-zA-Z0-9]+)/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStage'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/(?P<image_id>\d+)/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImage'),
+
+    # Package Workspaces
+    url(r'^api/package_workspaces/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspaces'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/?$',
+        pkgworkspaceviews.PackageWorkspaceService(),
+        name='PackageWorkspace'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSessions'),
+    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/(?P<package_session_id>\d+)/?$',
+        pkgworkspaceviews.PackageSessionService(),
+        name='PackageSession'),
+
 
     # Package Versions
     url(r'^api/packages/(?P<package_id>\d+)/package_versions/?$',

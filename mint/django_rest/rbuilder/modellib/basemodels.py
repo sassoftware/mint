@@ -18,6 +18,7 @@ from django.core import exceptions
 from django.core import urlresolvers 
 
 from xobj import xobj
+import jobj
 
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
@@ -870,6 +871,11 @@ class XObjModel(models.Model):
         if not xobj_model:
             xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
+
+    def to_json(self, request=None, xobj_model=None):
+        if not xobj_model:
+            xobj_model = self.serialize(request)
+        return jobj.tojson(xobj_model)
 
     def get_url_key(self):
         if type(self.url_key) != type([]):
