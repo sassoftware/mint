@@ -1172,8 +1172,8 @@ class NetworksTestCase(XMLTestCase):
         
     def testExtractNetworkToUse(self):
         
-        # try a net with no required/active nets, but only one net
-        network = models.Network(dns_name="foo.com", active=False, required=False)
+        # try a net with no pinned/active nets, but only one net
+        network = models.Network(dns_name="foo.com", active=False, pinned=False)
         network.system = self.system
         network.save()
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
@@ -1181,31 +1181,31 @@ class NetworksTestCase(XMLTestCase):
 
         # Second network showed up, we assume no network
         network2 = models.Network(dns_name = "foo2.com", active=False,
-            required=False)
+            pinned=False)
         network2.system = self.system
         network2.save()
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net, None)
 
-        # try one with required only
-        network.required = True
+        # try one with pinned only
+        network.pinned = True
         network.save()
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.dns_name, "foo.com")
 
         # try one with active only
-        network.required = False
+        network.pinned = False
         network.active = True
         network.save()
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.dns_name, "foo.com")
 
-        # now add a required one in addition to active one to test order
-        network3 = models.Network(dns_name="foo3.com", active=False, required=True)
+        # now add a pinned one in addition to active one to test order
+        network3 = models.Network(dns_name="foo3.com", active=False, pinned=True)
         network3.system = self.system
         network3.save()
         self.failUnlessEqual(
-            sorted((x.dns_name, x.required, x.active)
+            sorted((x.dns_name, x.pinned, x.active)
                 for x in self.system.networks.all()),
             [
                 ('foo.com', False, True),
@@ -1486,15 +1486,15 @@ class SystemsTestCase(XMLTestCase):
             
     def testAddSystemNoNetwork(self):
         """
-        Ensure a network is not required per https://issues.rpath.com/browse/RBL-7152
+        Ensure a network is not pinned per https://issues.rpath.com/browse/RBL-7152
         """
         models.System.objects.all().delete()
         system = self.newSystem(name="foo", description="bar")
         self.mgr.addSystem(system)
-        
+
     def testPostSystemNoNetwork(self):
         """
-        Ensure a network is not required per https://issues.rpath.com/browse/RBL-7152
+        Ensure a network is not pinned per https://issues.rpath.com/browse/RBL-7152
         """
         models.System.objects.all().delete()
         system_xml = testsxml.system_post_no_network_xml
@@ -1504,7 +1504,210 @@ class SystemsTestCase(XMLTestCase):
             models.System.objects.get(pk=1)
         except models.System.DoesNotExist:
             self.assertTrue(False) # should exist
-        
+
+    def testPostSystemNetworkUnpinned(self):
+        """
+        Unpinned network_address
+        """
+        models.System.objects.all().delete()
+        system_xml = testsxml.system_post_network_unpinned
+        response = self._post('/api/inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
+        system = models.System.objects.get(pk=1)
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, False, ), ])
+        xml = system.to_xml()
+        self.failUnlessIn('<network_address pinned="False" address="1.2.3.4"/>',
+            xml)
+
+    def testPostSystemNetworkPinned(self):
+        """
+        Pinned network_address
+        """
+        models.System.objects.all().delete()
+        system_xml = testsxml.system_post_network_pinned
+        response = self._post('/api/inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
+        system = models.System.objects.get(pk=1)
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, True, ), ])
+        xml = system.to_xml()
+        self.failUnlessIn('<network_address pinned="True" address="1.2.3.4"/>',
+            xml)
+
+    def testPutSystemNetworkUnpinned(self):
+        models.System.objects.all().delete()
+        system = self.newSystem(name="aaa", description="bbb")
+        system.save()
+        # No networks initially
+        self.failUnlessEqual(list(system.networks.all()), [])
+
+        xml_data = testsxml.system_post_network_unpinned
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, False, ), ])
+
+        system = models.System.objects.get(pk=system.pk)
+
+        # Add a bunch of network addresses, none of them pinned
+        system.networks.all().delete()
+
+        network = models.Network(system=system, dns_name='blah1',
+            ip_address='10.1.1.1', active=True, pinned=False)
+        network.save()
+        network = models.Network(system=system, dns_name='blah2',
+            ip_address='10.2.2.2', active=False, pinned=False)
+        network.save()
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, False, ), ])
+
+        # Add a bunch of network addresses, none of them pinned
+        # Pretend the active interface is the same as the one the client
+        # specified.
+        system.networks.all().delete()
+
+        network = models.Network(system=system, dns_name='blah1',
+            ip_address='1.2.3.4', active=True, pinned=False)
+        network.save()
+        network = models.Network(system=system, dns_name='blah2',
+            ip_address='10.2.2.2', active=False, pinned=False)
+        network.save()
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.ip_address, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('blah1', '1.2.3.4', True, False, ),
+              ('blah2', '10.2.2.2', False, False, ) ])
+
+        # Add a bunch of network addresses, one of them pinned.
+        # We should unpin in this case.
+        system.networks.all().delete()
+
+        network = models.Network(system=system, dns_name='blah1',
+            ip_address='10.1.1.1', active=False, pinned=True)
+        network.save()
+        network = models.Network(system=system, dns_name='blah2',
+            ip_address='10.2.2.2', active=True, pinned=False)
+        network.save()
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, False, ), ])
+
+    def testPutSystemNetworkPinned(self):
+        models.System.objects.all().delete()
+        system = self.newSystem(name="aaa", description="bbb")
+        system.save()
+        # No networks initially
+        self.failUnlessEqual(list(system.networks.all()), [])
+
+        xml_data = testsxml.system_post_network_pinned
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, True, ), ])
+
+        system = models.System.objects.get(pk=system.pk)
+
+        # Add a bunch of network addresses, none of them pinned
+        system.networks.all().delete()
+
+        network = models.Network(system=system, dns_name='blah1',
+            ip_address='10.1.1.1', active=True, pinned=False)
+        network.save()
+        network = models.Network(system=system, dns_name='blah2',
+            ip_address='10.2.2.2', active=False, pinned=False)
+        network.save()
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, True, ), ])
+
+        # Add a bunch of network addresses, none of them pinned
+        # Pretend the active interface is the same as the one the client
+        # specified.
+        system.networks.all().delete()
+
+        network = models.Network(system=system, dns_name='blah1',
+            ip_address='1.2.3.4', active=True, pinned=False)
+        network.save()
+        network = models.Network(system=system, dns_name='blah2',
+            ip_address='10.2.2.2', active=False, pinned=False)
+        network.save()
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('1.2.3.4', None, True, ), ])
+
+        # Add a bunch of network addresses, one of them pinned.
+        # We should unpin in this case.
+        system.networks.all().delete()
+
+        network = models.Network(system=system, dns_name='blah1',
+            ip_address='1.2.3.4', active=False, pinned=True)
+        network.save()
+        network = models.Network(system=system, dns_name='blah2',
+            ip_address='10.2.2.2', active=True, pinned=False)
+        network.save()
+
+        response = self._put('/api/inventory/systems/%s' % system.pk,
+            data=xml_data,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        self.failUnlessEqual(
+            [ (x.dns_name, x.ip_address, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [ ('blah1', '1.2.3.4', False, True, ),
+              ('blah2', '10.2.2.2', True, False, ) ])
+
+
     def testGetSystems(self):
         system = self._saveSystem()
         response = self._get('/api/inventory/systems/', username="testuser", password="password")
@@ -2226,11 +2429,11 @@ class SystemsTestCase(XMLTestCase):
         system = self.newSystem(name = 'blippy')
         system.save()
         network = models.Network(dns_name="foo3.com", ip_address='1.2.3.4',
-            active=False, required=True, system=system)
+            active=False, pinned=True, system=system)
         network.save()
         xml = network.to_xml()
         self.failUnlessIn("<active>false</active>", xml)
-        self.failUnlessIn("<required>true</required>", xml)
+        self.failUnlessIn("<pinned>true</pinned>", xml)
 
     def testScheduleImmediatePollAfterRegistration(self):
         localUuid = 'localuuid001'
@@ -3642,7 +3845,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.system2 = system = self.newSystem(name="hey")
         system.save()
         network2 = models.Network(ip_address="2.2.2.2", active=True)
-        network3 = models.Network(ip_address="3.3.3.3", required=True)
+        network3 = models.Network(ip_address="3.3.3.3", pinned=True)
         system.networks.add(network2)
         system.networks.add(network3)
         system.save()

@@ -303,6 +303,7 @@ system_type_systems_xml="""
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
+    <network_address address="1.1.1.1"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/2">
         <active/>
@@ -313,8 +314,8 @@ system_type_systems_xml="""
         <netmask>255.255.255.0</netmask>
         <network_id>2</network_id>
         <port_type>lan</port_type>
-        <required/>
         <system href="http://testserver/api/inventory/systems/3"/>
+        <pinned/>
       </network>
     </networks>
     <out_of_date>False</out_of_date>
@@ -349,8 +350,8 @@ networks_xml = """\
     <netmask>255.255.255.0</netmask>
     <network_id>1</network_id>
     <port_type>lan</port_type>
-    <required/>
     <system href="http://testserver/api/inventory/systems/1"/>
+    <pinned/>
   </network>
 </networks>"""
 
@@ -366,8 +367,8 @@ network_xml = """\
   <netmask>255.255.255.0</netmask>
   <network_id>1</network_id>
   <port_type>lan</port_type>
-  <required/>
   <system href="http://testserver/api/inventory/systems/1"/>
+  <pinned/>
 </network>"""
 
 network_put_xml = """\
@@ -382,8 +383,8 @@ network_put_xml = """\
   <netmask>255.255.255.0</netmask>
   <network_id>1</network_id>
   <port_type>lan</port_type>
-  <required/>
   <system href="http://testserver/api/inventory/systems/1"/>
+  <pinned/>
 </network>"""
 
 system_states_xml = """\
@@ -486,6 +487,7 @@ management_nodes_xml = """\
     <generated_uuid>test management node guuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
     <has_running_jobs>False</has_running_jobs>
+    <network_address address="2.2.2.2"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">
         <active/>
@@ -497,8 +499,8 @@ management_nodes_xml = """\
         <netmask>255.255.255.0</netmask>
         <network_id>1</network_id>
         <port_type>lan</port_type>
-        <required/>
         <system href="http://testserver/api/inventory/systems/1"/>
+        <pinned/>
       </network>
     </networks>
     <node_jid>superduperjid2@rbuilder.rpath</node_jid>
@@ -558,6 +560,7 @@ management_node_xml = """\
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
+  <network_address address="2.2.2.2"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -569,8 +572,8 @@ management_node_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
+      <pinned/>
     </network>
   </networks>
   <node_jid>superduperjid2@rbuilder.rpath</node_jid>
@@ -630,7 +633,7 @@ management_node_post_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
+      <pinned/>
     </network>
   </networks>
   <node_jid>abcd</node_jid>
@@ -666,6 +669,7 @@ management_node_post_response_xml = """\
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
+  <network_address address="2.2.2.2"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -677,8 +681,8 @@ management_node_post_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
+      <pinned/>
     </network>
   </networks>
   <zone href="http://testserver/api/inventory/zones/1"/>
@@ -738,7 +742,7 @@ management_node_zone_post_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
+      <pinned/>
     </network>
   </networks>
   <node_jid>abcd</node_jid>
@@ -774,6 +778,7 @@ management_node_zone_post_response_xml = """\
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
+  <network_address address="2.2.2.2"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -785,8 +790,8 @@ management_node_zone_post_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
+      <pinned/>
     </network>
   </networks>
   <node_jid>abcd</node_jid>
@@ -866,6 +871,7 @@ systems_xml = """\
     <management_interface/>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
+    <network_address address="127.0.0.1"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">
         <active/>
@@ -877,8 +883,8 @@ systems_xml = """\
         <netmask/>
         <network_id>1</network_id>
         <port_type/>
-        <required/>
         <system href="http://testserver/api/inventory/systems/2"/>
+        <pinned/>
       </network>
     </networks>
     <ssl_client_certificate/>
@@ -928,6 +934,7 @@ systems_xml = """\
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
+    <network_address address="1.1.1.1"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/2">
         <active/>
@@ -939,8 +946,8 @@ systems_xml = """\
         <netmask>255.255.255.0</netmask>
         <network_id>2</network_id>
         <port_type>lan</port_type>
-        <required/>
         <system href="http://testserver/api/inventory/systems/3"/>
+        <pinned/>
       </network>
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -977,7 +984,7 @@ systems_put_xml = """\
         <netmask>255.255.255.0</netmask>
         <network_id>1</network_id>
         <port_type>lan</port_type>
-        <required/>
+        <pinned/>
       </network>
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1019,7 +1026,7 @@ systems_put_xml = """\
         <netmask>255.255.255.0</netmask>
         <network_id>2</network_id>
         <port_type>lan</port_type>
-        <required/>
+        <pinned/>
       </network>
     </networks>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1065,7 +1072,7 @@ systems_put_mothball_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1114,6 +1121,7 @@ system_xml = """\
   <has_running_jobs>False</has_running_jobs>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
+  <network_address address="1.1.1.1"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1125,8 +1133,8 @@ system_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1174,7 +1182,7 @@ system_post_xml = """\
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
       <port_type>lan</port_type>
-      <required/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1211,7 +1219,7 @@ system_mgmt_interface_put_xml = """\
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
       <port_type>lan</port_type>
-      <required/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1248,7 +1256,7 @@ system_delete_mgmt_interface_put_xml = """\
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
       <port_type>lan</port_type>
-      <required/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1284,6 +1292,7 @@ system_post_xml_response = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
+  <network_address address="1.1.1.1"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1295,8 +1304,8 @@ system_post_xml_response = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1342,6 +1351,24 @@ system_post_no_network_xml = """\
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
 </system>"""
 
+system_post_network_unpinned = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <name>testsystemname</name>
+  <description>testsystemlocaluuid</description>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+  <network_address address="1.2.3.4" pinned="false"/>
+</system>"""
+
+system_post_network_pinned = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+  <name>testsystemname</name>
+  <description>testsystemlocaluuid</description>
+  <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
+  <network_address address="1.2.3.4" pinned="true"/>
+</system>"""
+
 system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
@@ -1359,7 +1386,7 @@ system_post_xml_dup = """\
       <ipv6_address/>
       <netmask>255.255.255.0</netmask>
       <port_type>lan</port_type>
-      <required/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1398,6 +1425,7 @@ system_target_xml = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
+  <network_address address="1.1.1.1"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1409,8 +1437,8 @@ system_target_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/1"/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1749,6 +1777,7 @@ system_version_xml = """\
   <has_running_jobs>False</has_running_jobs>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
+  <network_address address="1.1.1.1"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
       <active/>
@@ -1760,8 +1789,8 @@ system_version_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>2</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/3"/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -1896,8 +1925,8 @@ system_version_put_response_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/2"/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -2019,6 +2048,7 @@ system_available_updates_xml = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
+  <network_address address="1.1.1.1"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
       <active/>
@@ -2030,8 +2060,8 @@ system_available_updates_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>2</network_id>
       <port_type>lan</port_type>
-      <required/>
       <system href="http://testserver/api/inventory/systems/3"/>
+      <pinned/>
     </network>
   </networks>
   <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
@@ -2330,8 +2360,8 @@ system_with_target = """\
       <ipv6_address/>
       <network_id>3</network_id>
       <dns_name>vsphere1-002</dns_name>
-      <required/>
       <system href="http://testserver/api/inventory/systems/4"/>
+      <pinned/>
       <device_name/>
       <netmask/>
       <port_type/>
@@ -2370,6 +2400,7 @@ system_with_target = """\
   <configuration_descriptor href="http://testserver/api/inventory/systems/4/configuration_descriptor"/>
   <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
+  <network_address address="vsphere1-002"/>
   <local_uuid/>
   <major_version/>
   <management_interface/>
@@ -2520,13 +2551,14 @@ system_installed_software_version_stage_xml = """\
   <has_running_jobs>True</has_running_jobs>
   <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
+  <network_address address="1.1.1.1"/>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
       <ipv6_address/>
       <network_id>2</network_id>
       <dns_name>testnetwork.example.com</dns_name>
-      <required/>
       <system href="http://testserver/api/inventory/systems/3"/>
+      <pinned/>
       <device_name>eth0</device_name>
       <netmask>255.255.255.0</netmask>
       <port_type>lan</port_type>
@@ -2747,13 +2779,14 @@ Methods:
 -->
 <systems count="201" next_page="http://testserver/api/inventory/systems;start_index=10;limit=10" num_pages="21" previous_page="" full_collection="http://testserver/api/inventory/systems" end_index="9" order_by="" per_page="10" filter_by="" id="http://testserver/api/inventory/systems;start_index=0;limit=10" limit="10" start_index="0">
   <system id="http://testserver/api/inventory/systems/2">
+    <network_address address="127.0.0.1"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">
         <ipv6_address/>
         <network_id>1</network_id>
         <dns_name>127.0.0.1</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/2"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -2810,13 +2843,14 @@ Methods:
     <created_date>2010-08-23T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
+    <network_address address="127.0.0.3"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/3">
         <ipv6_address/>
         <network_id>3</network_id>
         <dns_name>127.0.0.3</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/3"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -2873,13 +2907,14 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/4">
+    <network_address address="127.0.0.4"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/4">
         <ipv6_address/>
         <network_id>4</network_id>
         <dns_name>127.0.0.4</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/4"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -2936,13 +2971,14 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/5">
+    <network_address address="127.0.0.5"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/5">
         <ipv6_address/>
         <network_id>5</network_id>
         <dns_name>127.0.0.5</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/5"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -2999,12 +3035,13 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/6">
+    <network_address address="127.0.0.6"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/6">
         <ipv6_address/>
         <network_id>6</network_id>
         <dns_name>127.0.0.6</dns_name>
-        <required/>
+        <pinned/>
         <system href="http://testserver/api/inventory/systems/6"/>
         <device_name/>
         <netmask/>
@@ -3062,13 +3099,14 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/7">
+    <network_address address="127.0.0.7"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/7">
         <ipv6_address/>
         <network_id>7</network_id>
         <dns_name>127.0.0.7</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/7"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -3125,13 +3163,14 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/8">
+    <network_address address="127.0.0.8"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/8">
         <ipv6_address/>
         <network_id>8</network_id>
         <dns_name>127.0.0.8</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/8"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -3188,13 +3227,14 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/9">
+    <network_address address="127.0.0.9"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/9">
         <ipv6_address/>
         <network_id>9</network_id>
         <dns_name>127.0.0.9</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/9"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -3251,13 +3291,14 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/10">
+    <network_address address="127.0.0.10"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/10">
         <ipv6_address/>
         <network_id>10</network_id>
         <dns_name>127.0.0.10</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/10"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>
@@ -3314,13 +3355,14 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/11">
+    <network_address address="127.0.0.11"/>
     <networks>
       <network id="http://testserver/api/inventory/networks/11">
         <ipv6_address/>
         <network_id>11</network_id>
         <dns_name>127.0.0.11</dns_name>
-        <required/>
         <system href="http://testserver/api/inventory/systems/11"/>
+        <pinned/>
         <device_name/>
         <netmask/>
         <port_type/>

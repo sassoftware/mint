@@ -28,7 +28,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="4" model="inventory.system">
@@ -60,7 +60,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="5" model="inventory.system">
@@ -92,7 +92,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="6" model="inventory.system">
@@ -124,7 +124,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="7" model="inventory.system">
@@ -156,7 +156,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="8" model="inventory.system">
@@ -188,7 +188,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="9" model="inventory.system">
@@ -220,7 +220,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="10" model="inventory.system">
@@ -252,7 +252,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="11" model="inventory.system">
@@ -284,7 +284,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="12" model="inventory.system">
@@ -316,7 +316,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="13" model="inventory.system">
@@ -348,7 +348,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="14" model="inventory.system">
@@ -380,7 +380,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="15" model="inventory.system">
@@ -412,7 +412,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="16" model="inventory.system">
@@ -444,7 +444,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="17" model="inventory.system">
@@ -476,7 +476,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="18" model="inventory.system">
@@ -508,7 +508,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="19" model="inventory.system">
@@ -540,7 +540,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="20" model="inventory.system">
@@ -572,7 +572,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="21" model="inventory.system">
@@ -604,7 +604,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="22" model="inventory.system">
@@ -636,7 +636,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="23" model="inventory.system">
@@ -668,7 +668,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="24" model="inventory.system">
@@ -700,7 +700,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="25" model="inventory.system">
@@ -732,7 +732,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="26" model="inventory.system">
@@ -764,7 +764,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="27" model="inventory.system">
@@ -796,7 +796,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="28" model="inventory.system">
@@ -828,7 +828,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="29" model="inventory.system">
@@ -860,7 +860,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="30" model="inventory.system">
@@ -892,7 +892,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="31" model="inventory.system">
@@ -924,7 +924,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="32" model="inventory.system">
@@ -956,7 +956,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="33" model="inventory.system">
@@ -988,7 +988,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="34" model="inventory.system">
@@ -1020,7 +1020,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="35" model="inventory.system">
@@ -1052,7 +1052,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="36" model="inventory.system">
@@ -1084,7 +1084,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="37" model="inventory.system">
@@ -1116,7 +1116,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="38" model="inventory.system">
@@ -1148,7 +1148,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="39" model="inventory.system">
@@ -1180,7 +1180,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="40" model="inventory.system">
@@ -1212,7 +1212,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="41" model="inventory.system">
@@ -1244,7 +1244,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="42" model="inventory.system">
@@ -1276,7 +1276,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="43" model="inventory.system">
@@ -1308,7 +1308,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="44" model="inventory.system">
@@ -1340,7 +1340,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="45" model="inventory.system">
@@ -1372,7 +1372,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="46" model="inventory.system">
@@ -1404,7 +1404,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="47" model="inventory.system">
@@ -1436,7 +1436,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="48" model="inventory.system">
@@ -1468,7 +1468,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="49" model="inventory.system">
@@ -1500,7 +1500,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="50" model="inventory.system">
@@ -1532,7 +1532,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="51" model="inventory.system">
@@ -1564,7 +1564,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="52" model="inventory.system">
@@ -1596,7 +1596,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="53" model="inventory.system">
@@ -1628,7 +1628,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="54" model="inventory.system">
@@ -1660,7 +1660,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="55" model="inventory.system">
@@ -1692,7 +1692,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="56" model="inventory.system">
@@ -1724,7 +1724,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="57" model="inventory.system">
@@ -1756,7 +1756,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="58" model="inventory.system">
@@ -1788,7 +1788,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="59" model="inventory.system">
@@ -1820,7 +1820,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="60" model="inventory.system">
@@ -1852,7 +1852,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="61" model="inventory.system">
@@ -1884,7 +1884,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="62" model="inventory.system">
@@ -1916,7 +1916,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="63" model="inventory.system">
@@ -1948,7 +1948,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="64" model="inventory.system">
@@ -1980,7 +1980,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="65" model="inventory.system">
@@ -2012,7 +2012,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="66" model="inventory.system">
@@ -2044,7 +2044,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="67" model="inventory.system">
@@ -2076,7 +2076,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="68" model="inventory.system">
@@ -2108,7 +2108,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="69" model="inventory.system">
@@ -2140,7 +2140,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="70" model="inventory.system">
@@ -2172,7 +2172,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="71" model="inventory.system">
@@ -2204,7 +2204,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="72" model="inventory.system">
@@ -2236,7 +2236,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="73" model="inventory.system">
@@ -2268,7 +2268,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="74" model="inventory.system">
@@ -2300,7 +2300,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="75" model="inventory.system">
@@ -2332,7 +2332,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="76" model="inventory.system">
@@ -2364,7 +2364,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="77" model="inventory.system">
@@ -2396,7 +2396,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="78" model="inventory.system">
@@ -2428,7 +2428,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="79" model="inventory.system">
@@ -2460,7 +2460,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="80" model="inventory.system">
@@ -2492,7 +2492,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="81" model="inventory.system">
@@ -2524,7 +2524,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="82" model="inventory.system">
@@ -2556,7 +2556,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="83" model="inventory.system">
@@ -2588,7 +2588,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="84" model="inventory.system">
@@ -2620,7 +2620,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="85" model="inventory.system">
@@ -2652,7 +2652,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="86" model="inventory.system">
@@ -2684,7 +2684,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="87" model="inventory.system">
@@ -2716,7 +2716,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="88" model="inventory.system">
@@ -2748,7 +2748,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="89" model="inventory.system">
@@ -2780,7 +2780,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="90" model="inventory.system">
@@ -2812,7 +2812,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="91" model="inventory.system">
@@ -2844,7 +2844,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="92" model="inventory.system">
@@ -2876,7 +2876,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="93" model="inventory.system">
@@ -2908,7 +2908,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="94" model="inventory.system">
@@ -2940,7 +2940,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="95" model="inventory.system">
@@ -2972,7 +2972,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="96" model="inventory.system">
@@ -3004,7 +3004,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="97" model="inventory.system">
@@ -3036,7 +3036,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="98" model="inventory.system">
@@ -3068,7 +3068,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="99" model="inventory.system">
@@ -3100,7 +3100,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="100" model="inventory.system">
@@ -3132,7 +3132,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="101" model="inventory.system">
@@ -3164,7 +3164,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="102" model="inventory.system">
@@ -3196,7 +3196,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="103" model="inventory.system">
@@ -3228,7 +3228,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="104" model="inventory.system">
@@ -3260,7 +3260,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="105" model="inventory.system">
@@ -3292,7 +3292,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="106" model="inventory.system">
@@ -3324,7 +3324,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="107" model="inventory.system">
@@ -3356,7 +3356,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="108" model="inventory.system">
@@ -3388,7 +3388,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="109" model="inventory.system">
@@ -3420,7 +3420,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="110" model="inventory.system">
@@ -3452,7 +3452,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="111" model="inventory.system">
@@ -3484,7 +3484,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="112" model="inventory.system">
@@ -3516,7 +3516,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="113" model="inventory.system">
@@ -3548,7 +3548,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="114" model="inventory.system">
@@ -3580,7 +3580,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="115" model="inventory.system">
@@ -3612,7 +3612,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="116" model="inventory.system">
@@ -3644,7 +3644,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="117" model="inventory.system">
@@ -3676,7 +3676,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="118" model="inventory.system">
@@ -3708,7 +3708,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="119" model="inventory.system">
@@ -3740,7 +3740,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="120" model="inventory.system">
@@ -3772,7 +3772,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="121" model="inventory.system">
@@ -3804,7 +3804,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="122" model="inventory.system">
@@ -3836,7 +3836,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="123" model="inventory.system">
@@ -3868,7 +3868,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="124" model="inventory.system">
@@ -3900,7 +3900,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="125" model="inventory.system">
@@ -3932,7 +3932,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="126" model="inventory.system">
@@ -3964,7 +3964,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="127" model="inventory.system">
@@ -3996,7 +3996,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="128" model="inventory.system">
@@ -4028,7 +4028,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="129" model="inventory.system">
@@ -4060,7 +4060,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="130" model="inventory.system">
@@ -4092,7 +4092,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="131" model="inventory.system">
@@ -4124,7 +4124,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="132" model="inventory.system">
@@ -4156,7 +4156,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="133" model="inventory.system">
@@ -4188,7 +4188,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="134" model="inventory.system">
@@ -4220,7 +4220,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="135" model="inventory.system">
@@ -4252,7 +4252,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="136" model="inventory.system">
@@ -4284,7 +4284,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="137" model="inventory.system">
@@ -4316,7 +4316,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="138" model="inventory.system">
@@ -4348,7 +4348,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="139" model="inventory.system">
@@ -4380,7 +4380,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="140" model="inventory.system">
@@ -4412,7 +4412,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="141" model="inventory.system">
@@ -4444,7 +4444,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="142" model="inventory.system">
@@ -4476,7 +4476,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="143" model="inventory.system">
@@ -4508,7 +4508,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="144" model="inventory.system">
@@ -4540,7 +4540,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="145" model="inventory.system">
@@ -4572,7 +4572,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="146" model="inventory.system">
@@ -4604,7 +4604,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="147" model="inventory.system">
@@ -4636,7 +4636,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="148" model="inventory.system">
@@ -4668,7 +4668,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="149" model="inventory.system">
@@ -4700,7 +4700,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="150" model="inventory.system">
@@ -4732,7 +4732,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="151" model="inventory.system">
@@ -4764,7 +4764,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="152" model="inventory.system">
@@ -4796,7 +4796,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="153" model="inventory.system">
@@ -4828,7 +4828,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="154" model="inventory.system">
@@ -4860,7 +4860,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="155" model="inventory.system">
@@ -4892,7 +4892,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="156" model="inventory.system">
@@ -4924,7 +4924,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="157" model="inventory.system">
@@ -4956,7 +4956,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="158" model="inventory.system">
@@ -4988,7 +4988,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="159" model="inventory.system">
@@ -5020,7 +5020,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="160" model="inventory.system">
@@ -5052,7 +5052,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="161" model="inventory.system">
@@ -5084,7 +5084,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="162" model="inventory.system">
@@ -5116,7 +5116,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="163" model="inventory.system">
@@ -5148,7 +5148,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="164" model="inventory.system">
@@ -5180,7 +5180,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="165" model="inventory.system">
@@ -5212,7 +5212,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="166" model="inventory.system">
@@ -5244,7 +5244,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="167" model="inventory.system">
@@ -5276,7 +5276,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="168" model="inventory.system">
@@ -5308,7 +5308,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="169" model="inventory.system">
@@ -5340,7 +5340,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="170" model="inventory.system">
@@ -5372,7 +5372,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="171" model="inventory.system">
@@ -5404,7 +5404,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="172" model="inventory.system">
@@ -5436,7 +5436,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="173" model="inventory.system">
@@ -5468,7 +5468,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="174" model="inventory.system">
@@ -5500,7 +5500,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="175" model="inventory.system">
@@ -5532,7 +5532,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="176" model="inventory.system">
@@ -5564,7 +5564,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="177" model="inventory.system">
@@ -5596,7 +5596,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="178" model="inventory.system">
@@ -5628,7 +5628,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="179" model="inventory.system">
@@ -5660,7 +5660,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="180" model="inventory.system">
@@ -5692,7 +5692,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="181" model="inventory.system">
@@ -5724,7 +5724,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="182" model="inventory.system">
@@ -5756,7 +5756,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="183" model="inventory.system">
@@ -5788,7 +5788,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="184" model="inventory.system">
@@ -5820,7 +5820,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="185" model="inventory.system">
@@ -5852,7 +5852,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="186" model="inventory.system">
@@ -5884,7 +5884,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="187" model="inventory.system">
@@ -5916,7 +5916,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="188" model="inventory.system">
@@ -5948,7 +5948,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="189" model="inventory.system">
@@ -5980,7 +5980,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="190" model="inventory.system">
@@ -6012,7 +6012,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="191" model="inventory.system">
@@ -6044,7 +6044,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="192" model="inventory.system">
@@ -6076,7 +6076,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="193" model="inventory.system">
@@ -6108,7 +6108,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="194" model="inventory.system">
@@ -6140,7 +6140,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="195" model="inventory.system">
@@ -6172,7 +6172,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="196" model="inventory.system">
@@ -6204,7 +6204,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="197" model="inventory.system">
@@ -6236,7 +6236,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="198" model="inventory.system">
@@ -6268,7 +6268,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="199" model="inventory.system">
@@ -6300,7 +6300,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="200" model="inventory.system">
@@ -6332,7 +6332,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="201" model="inventory.system">
@@ -6364,7 +6364,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
     <object pk="202" model="inventory.system">
@@ -6396,6 +6396,6 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object></django-objects>
