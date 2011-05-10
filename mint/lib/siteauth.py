@@ -362,10 +362,11 @@ class SiteAuthorization(object):
 
     def isValid(self):
         "Does the authorization exist and contain a non-expired entitlement?"
-        if self.xml:
-            expired = self.xml.entitlement.identity.serviceLevel.expired
-            if expired is True or (expired and expired.lower() == 'true'):
-                return False
+        # don't honor expired anymore, see https://issues.rpath.com/browse/RBL-8708
+        # if self.xml:
+        #    expired = self.xml.entitlement.identity.serviceLevel.expired
+        #    if expired is True or (expired and expired.lower() == 'true'):
+        #        return False
         return True
 
     def getExpiration(self):
@@ -385,23 +386,23 @@ class SiteAuthorization(object):
             serviceLevel = model.ServiceLevel(
                     status=ident.serviceLevel.status,
                     daysRemaining=ident.serviceLevel.daysRemaining,
-                    expired=ident.serviceLevel.expired.lower() == 'true',
-                    limited=ident.serviceLevel.limited.lower() == 'true',
+                    expired=False,
+                    limited=False,
                     )
             identity = model.Identity(
                     rbuilderId=ident.rbuilderId,
                     serviceLevel=serviceLevel,
-                    registered=ident.registered,
+                    registered=True,
                     )
         else:
             serviceLevel = model.ServiceLevel(
                     status='Unknown',
                     daysRemaining=-1,
-                    expired=True, limited=True)
+                    expired=False, limited=False)
             identity = model.Identity(
                     rbuilderId='',
                     serviceLevel=serviceLevel,
-                    registered=False,
+                    registered=True,
                     )
         return identity
 
