@@ -303,7 +303,9 @@ system_type_systems_xml="""
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
-    <network_address address="1.1.1.1"/>
+    <network_address>
+      <address>1.1.1.1</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/2">
         <active/>
@@ -487,7 +489,9 @@ management_nodes_xml = """\
     <generated_uuid>test management node guuid</generated_uuid>
     <has_active_jobs>False</has_active_jobs>
     <has_running_jobs>False</has_running_jobs>
-    <network_address address="2.2.2.2"/>
+    <network_address>
+      <address>2.2.2.2</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">
         <active/>
@@ -560,7 +564,9 @@ management_node_xml = """\
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
-  <network_address address="2.2.2.2"/>
+  <network_address>
+    <address>2.2.2.2</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -669,7 +675,9 @@ management_node_post_response_xml = """\
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
-  <network_address address="2.2.2.2"/>
+  <network_address>
+    <address>2.2.2.2</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -778,7 +786,9 @@ management_node_zone_post_response_xml = """\
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
-  <network_address address="2.2.2.2"/>
+  <network_address>
+    <address>2.2.2.2</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -871,7 +881,9 @@ systems_xml = """\
     <management_interface/>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
-    <network_address address="127.0.0.1"/>
+    <network_address>
+      <address>127.0.0.1</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">
         <active/>
@@ -934,7 +946,9 @@ systems_xml = """\
     <management_interface href="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
-    <network_address address="1.1.1.1"/>
+    <network_address>
+      <address>1.1.1.1</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/2">
         <active/>
@@ -1121,7 +1135,9 @@ system_xml = """\
   <has_running_jobs>False</has_running_jobs>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
-  <network_address address="1.1.1.1"/>
+  <network_address>
+    <address>1.1.1.1</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1292,7 +1308,9 @@ system_post_xml_response = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
-  <network_address address="1.1.1.1"/>
+  <network_address>
+    <address>1.1.1.1</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1357,7 +1375,10 @@ system_post_network_unpinned = """\
   <name>testsystemname</name>
   <description>testsystemlocaluuid</description>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
-  <network_address address="1.2.3.4" pinned="false"/>
+  <network_address>
+    <address>1.2.3.4</address>
+    <pinned>false</pinned>
+  </network_address>
 </system>"""
 
 system_post_network_pinned = """\
@@ -1366,7 +1387,10 @@ system_post_network_pinned = """\
   <name>testsystemname</name>
   <description>testsystemlocaluuid</description>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
-  <network_address address="1.2.3.4" pinned="true"/>
+  <network_address>
+    <address>1.2.3.4</address>
+    <pinned>true</pinned>
+  </network_address>
 </system>"""
 
 system_post_xml_dup = """\
@@ -1425,7 +1449,9 @@ system_target_xml = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>True</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
-  <network_address address="1.1.1.1"/>
+  <network_address>
+    <address>1.1.1.1</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/1">
       <active/>
@@ -1777,7 +1803,9 @@ system_version_xml = """\
   <has_running_jobs>False</has_running_jobs>
   <managing_zone href="http://testserver/api/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
-  <network_address address="1.1.1.1"/>
+  <network_address>
+    <address>1.1.1.1</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
       <active/>
@@ -2048,7 +2076,9 @@ system_available_updates_xml = """\
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
-  <network_address address="1.1.1.1"/>
+  <network_address>
+    <address>1.1.1.1</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
       <active/>
@@ -2400,7 +2430,9 @@ system_with_target = """\
   <configuration_descriptor href="http://testserver/api/inventory/systems/4/configuration_descriptor"/>
   <target href="http://testserver/catalog/clouds/vmware/instances/vsphere1.eng.rpath.com">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
-  <network_address address="vsphere1-002"/>
+  <network_address>
+    <address>vsphere1-002</address>
+  </network_address>
   <local_uuid/>
   <major_version/>
   <management_interface/>
@@ -2551,7 +2583,9 @@ system_installed_software_version_stage_xml = """\
   <has_running_jobs>True</has_running_jobs>
   <system_type href="http://testserver/api/inventory/system_types/1">Inventory</system_type>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <network_address address="1.1.1.1"/>
+  <network_address>
+    <address>1.1.1.1</address>
+  </network_address>
   <networks>
     <network id="http://testserver/api/inventory/networks/2">
       <ipv6_address/>
@@ -2779,7 +2813,9 @@ Methods:
 -->
 <systems count="201" next_page="http://testserver/api/inventory/systems;start_index=10;limit=10" num_pages="21" previous_page="" full_collection="http://testserver/api/inventory/systems" end_index="9" order_by="" per_page="10" filter_by="" id="http://testserver/api/inventory/systems;start_index=0;limit=10" limit="10" start_index="0">
   <system id="http://testserver/api/inventory/systems/2">
-    <network_address address="127.0.0.1"/>
+    <network_address>
+      <address>127.0.0.1</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/1">
         <ipv6_address/>
@@ -2843,7 +2879,9 @@ Methods:
     <created_date>2010-08-23T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/3">
-    <network_address address="127.0.0.3"/>
+    <network_address>
+      <address>127.0.0.3</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/3">
         <ipv6_address/>
@@ -2907,7 +2945,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/4">
-    <network_address address="127.0.0.4"/>
+    <network_address>
+      <address>127.0.0.4</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/4">
         <ipv6_address/>
@@ -2971,7 +3011,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/5">
-    <network_address address="127.0.0.5"/>
+    <network_address>
+      <address>127.0.0.5</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/5">
         <ipv6_address/>
@@ -3035,7 +3077,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/6">
-    <network_address address="127.0.0.6"/>
+    <network_address>
+      <address>127.0.0.6</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/6">
         <ipv6_address/>
@@ -3099,7 +3143,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/7">
-    <network_address address="127.0.0.7"/>
+    <network_address>
+      <address>127.0.0.7</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/7">
         <ipv6_address/>
@@ -3163,7 +3209,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/8">
-    <network_address address="127.0.0.8"/>
+    <network_address>
+      <address>127.0.0.8</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/8">
         <ipv6_address/>
@@ -3227,7 +3275,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/9">
-    <network_address address="127.0.0.9"/>
+    <network_address>
+      <address>127.0.0.9</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/9">
         <ipv6_address/>
@@ -3291,7 +3341,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/10">
-    <network_address address="127.0.0.10"/>
+    <network_address>
+      <address>127.0.0.10</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/10">
         <ipv6_address/>
@@ -3355,7 +3407,9 @@ Methods:
     <created_date>2010-12-06T22:11:00+00:00</created_date>
   </system>
   <system id="http://testserver/api/inventory/systems/11">
-    <network_address address="127.0.0.11"/>
+    <network_address>
+      <address>127.0.0.11</address>
+    </network_address>
     <networks>
       <network id="http://testserver/api/inventory/networks/11">
         <ipv6_address/>

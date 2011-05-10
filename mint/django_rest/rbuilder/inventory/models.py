@@ -442,7 +442,6 @@ class NetworkAddress(modellib.XObjModel):
 
     _xobj = xobj.XObjMetadata(
             tag = 'network_address',
-            attributes = dict(pinned=bool, address=str),
     )
     address = D(models.CharField(max_length=8092),
         "The address to use for contacting the system")

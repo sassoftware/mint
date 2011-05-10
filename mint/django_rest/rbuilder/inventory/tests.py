@@ -1519,8 +1519,9 @@ class SystemsTestCase(XMLTestCase):
                 for x in system.networks.all() ],
             [ ('1.2.3.4', None, False, ), ])
         xml = system.to_xml()
-        self.failUnlessIn('<network_address pinned="False" address="1.2.3.4"/>',
-            xml)
+        x = xobj.parse(xml)
+        self.failUnlessEqual(x.system.network_address.address, "1.2.3.4")
+        self.failUnlessEqual(x.system.network_address.pinned, "False")
 
     def testPostSystemNetworkPinned(self):
         """
@@ -1536,8 +1537,9 @@ class SystemsTestCase(XMLTestCase):
                 for x in system.networks.all() ],
             [ ('1.2.3.4', None, True, ), ])
         xml = system.to_xml()
-        self.failUnlessIn('<network_address pinned="True" address="1.2.3.4"/>',
-            xml)
+        x = xobj.parse(xml)
+        self.failUnlessEqual(x.system.network_address.address, "1.2.3.4")
+        self.failUnlessEqual(x.system.network_address.pinned, "True")
 
     def testPutSystemNetworkUnpinned(self):
         models.System.objects.all().delete()
