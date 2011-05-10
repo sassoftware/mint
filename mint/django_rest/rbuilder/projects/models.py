@@ -8,7 +8,6 @@ import sys
 
 from django.db import models
 
-from mint import userlevels
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
 
