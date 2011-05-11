@@ -719,7 +719,7 @@ class SystemManager(basemanager.BaseManager):
             return
         self.checkInstalledSoftware(system)
         last_job = getattr(system, 'lastJob', None)
-        if last_job and last_job.job_state.name == models.JobState.COMPLETED:
+        if last_job and last_job.job_state.name == jobmodels.JobState.COMPLETED:
             # This will update the system state as a side-effect
             self.addSystem(system, generateCertificates=False,
                 withManagementInterfaceDetection=False)
@@ -774,7 +774,7 @@ class SystemManager(basemanager.BaseManager):
         # Return None if the state hasn't changed
         jobStateName = job.job_state.name
         eventTypeName = job.event_type.name
-        if jobStateName == models.JobState.COMPLETED:
+        if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName in self.RegistrationEvents:
                 # We don't trust that a registration action did anything, we
                 # won't transition to REGISTERED, rpath-register should be
@@ -798,7 +798,7 @@ class SystemManager(basemanager.BaseManager):
             else:
                 # Add more processing here if needed
                 return None
-        if jobStateName == models.JobState.FAILED:
+        if jobStateName == jobmodels.JobState.FAILED:
             currentStateName = system.current_state.name
             # Simple cases first.
             if job.status_code == 401:
@@ -1115,7 +1115,7 @@ class SystemManager(basemanager.BaseManager):
             self.dispatchSystemEvent(event)
 
     def checkEventCompatibility(self, event):
-        runningJobs = event.system.jobs.filter(job_state__name=models.JobState.RUNNING) 
+        runningJobs = event.system.jobs.filter(job_state__name=jobmodels.JobState.RUNNING) 
         runningEventTypes = [j.event_type.name for j in runningJobs]
 
         # Event types are incompatible with themselves
@@ -1371,10 +1371,10 @@ class SystemManager(basemanager.BaseManager):
 
         log.info("System %s (%s), task %s (%s) in progress" %
             (systemName, params.host, uuid, eventType))
-        job = models.Job()
+        job = jobmodels.Job()
         job.job_uuid = str(uuid)
         job.event_type = event.event_type
-        job.job_state = cls.jobState(models.JobState.RUNNING)
+        job.job_state = cls.jobState(jobmodels.JobState.RUNNING)
         job.save()
 
         sjob = models.SystemJob()
@@ -1395,7 +1395,7 @@ class SystemManager(basemanager.BaseManager):
 
     @classmethod
     def jobState(cls, name):
-        return models.JobState.objects.get(name=name)
+        return jobmodels.JobState.objects.get(name=name)
 
     @exposed
     def scheduleSystemPollEvent(self, system):

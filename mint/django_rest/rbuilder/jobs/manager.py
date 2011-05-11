@@ -6,6 +6,7 @@
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.jobs import models
+from mint.django_rest.rbuilder.inventory import models as inventorymodels
 
 exposed = basemanager.exposed
 
@@ -60,7 +61,7 @@ class JobManager(basemanager.BaseManager):
 
     @exposed
     def getSystemJobs(self, system_id):
-        system = models.System.objects.get(pk=system_id)
+        system = inventorymodels.System.objects.get(pk=system_id)
         return self._jobsFromIterator(system.jobs.all())
 
     @classmethod
