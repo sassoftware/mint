@@ -43,7 +43,7 @@ class Job(modellib.XObjIdModel):
     XSL = 'job.xsl'
     
     class Meta:
-        db_table = 'inventory_job'
+        db_table = 'jobs_job'
     _xobj = xobj.XObjMetadata(
                 tag = 'job',
                 attributes = {'id':str})
@@ -149,7 +149,7 @@ class JobState(modellib.XObjIdModel):
     XSL = 'jobState.xsl'
     
     class Meta:
-        db_table = "inventory_job_state"
+        db_table = "jobs_job_state"
     QUEUED = "Queued"
     RUNNING = "Running"
     COMPLETED = "Completed"

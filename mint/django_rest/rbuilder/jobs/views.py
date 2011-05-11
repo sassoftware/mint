@@ -22,6 +22,19 @@ class JobsService(service.BaseService):
         else:
             return self.mgr.getJobs()
 
+    @requires("job")
+    @return_xml
+    def rest_POST(self, job):
+        return self.mgr.addJob(job)
+
+    @requires("job")
+    @return_xml
+    def rest_PUT(self, job_id, job):
+        return self.mgr.updateJob(job_id, job)
+
+    def rest_DELETE(self, job_id):
+        return self.mgr.deleteJob(job_id)
+
 class JobStatesService(service.BaseService):
 
     @access.anonymous
