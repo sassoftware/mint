@@ -9,17 +9,15 @@ from mint.django_rest.rbuilder.jobs import models
 
 exposed = basemanager.exposed
 
-class JobManager(BaseManager):
-
+class JobManager(basemanager.BaseManager):
+    
     @exposed
     def getJobs(self):
-        jobs = models.Jobs()
-        jobs.job = models.Job.objects.all()
-        return jobs
+        return self._jobsFromIterator(models.Job.objects.all())
 
     @exposed
-    def getJob(self, jobId):
-        return models.Job.objects.get(pk=jobId)
+    def getJob(self, job_id):
+        return self._fillIn(models.Job.objects.get(pk=job_id))
 
     @exposed
     def updateJob(self, jobId, job):
@@ -47,3 +45,32 @@ class JobManager(BaseManager):
     def getJobState(self, jobStateId):
         jobState = models.JobState.objects.get(pk=jobStateId)
         return jobState
+
+    @exposed
+    def getJobsByJobState(self, job_state_id):
+        jobState = models.JobState.objects.get(pk=job_state_id)
+        return self._jobsFromIterator(models.Job.objects.filter(
+            job_state=jobState))
+
+    @exposed
+    def getSystemJobsByState(self, system_id, job_state_id):
+        system = models.System.objects.get(pk=system_id)
+        jobState = models.JobState.objects.get(pk=job_state_id)
+        return self._jobsFromIterator(system.jobs.filter(job_state=jobState))
+
+    @exposed
+    def getSystemJobs(self, system_id):
+        system = models.System.objects.get(pk=system_id)
+        return self._jobsFromIterator(system.jobs.all())
+
+    @classmethod
+    def _jobsFromIterator(cls, iterator):
+        jobs = models.Jobs()
+        for job in iterator:
+            jobs.job.append(cls._fillIn(job))
+        return jobs
+
+    @classmethod
+    def _fillIn(cls, job):
+        job.setValuesFromRmake()
+        return job

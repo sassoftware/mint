@@ -83,10 +83,13 @@ class Job(modellib.XObjIdModel):
 
     def getRmakeJob(self):
         # XXX we should be using the repeater client for this
-        from rmake3 import client
+        import rmake3
         RMAKE_ADDRESS = 'http://localhost:9998'
-        rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
-        rmakeJobs = rmakeClient.getJobs([self.job_uuid])
+        rmakeClient = rmake3.client.RmakeClient(RMAKE_ADDRESS)
+        try:
+            rmakeJobs = rmakeClient.getJobs([self.job_uuid])
+        except rmake3.errors.OpenError:
+            return None 
         if rmakeJobs:
             return rmakeJobs[0]
         return None

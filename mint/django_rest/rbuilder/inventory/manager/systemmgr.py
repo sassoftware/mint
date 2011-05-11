@@ -27,34 +27,35 @@ from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
 class SystemManager(basemanager.BaseManager):
-    RegistrationEvents = set([ models.EventType.SYSTEM_REGISTRATION ])
+    RegistrationEvents = set([ jobmodels.EventType.SYSTEM_REGISTRATION ])
     PollEvents = set([
-        models.EventType.SYSTEM_POLL,
-        models.EventType.SYSTEM_POLL_IMMEDIATE,
+        jobmodels.EventType.SYSTEM_POLL,
+        jobmodels.EventType.SYSTEM_POLL_IMMEDIATE,
     ])
     SystemUpdateEvents = set([
-        models.EventType.SYSTEM_APPLY_UPDATE,
-        models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
     ])
     ShutdownEvents = set([
-        models.EventType.SYSTEM_SHUTDOWN,
-        models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
+        jobmodels.EventType.SYSTEM_SHUTDOWN,
+        jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
     ])
     LaunchWaitForNetworkEvents = set([
-        models.EventType.LAUNCH_WAIT_FOR_NETWORK
+        jobmodels.EventType.LAUNCH_WAIT_FOR_NETWORK
     ])
     ManagementInterfaceEvents = set([
-        models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-        models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
+        jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+        jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
     ])
     SystemConfigurationEvents = set([
-        models.EventType.SYSTEM_CONFIG_IMMEDIATE,
+        jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
     ])
 
     IncompatibleEvents = {
@@ -63,23 +64,23 @@ class SystemManager(basemanager.BaseManager):
         # Can't shutdown and update at the same time
         # Can't shutdown and configure at the same time
 
-        models.EventType.SYSTEM_APPLY_UPDATE:\
-            [models.EventType.SYSTEM_SHUTDOWN,
-             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
-        models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE:\
-            [models.EventType.SYSTEM_SHUTDOWN,
-             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
-        models.EventType.SYSTEM_SHUTDOWN:\
-            [models.EventType.SYSTEM_APPLY_UPDATE,
-             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             models.EventType.SYSTEM_CONFIG_IMMEDIATE],
-        models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
-            [models.EventType.SYSTEM_APPLY_UPDATE,
-             models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             models.EventType.SYSTEM_CONFIG_IMMEDIATE],
-        models.EventType.SYSTEM_CONFIG_IMMEDIATE:\
-            [models.EventType.SYSTEM_SHUTDOWN,
-             models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE:\
+            [jobmodels.EventType.SYSTEM_SHUTDOWN,
+             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE:\
+            [jobmodels.EventType.SYSTEM_SHUTDOWN,
+             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_SHUTDOWN:\
+            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
+            [jobmodels.EventType.SYSTEM_APPLY_UPDATE,
+             jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+             jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE],
+        jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE:\
+            [jobmodels.EventType.SYSTEM_SHUTDOWN,
+             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
     }
 
     TZ = tz.tzutc()
@@ -100,13 +101,13 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getEventTypes(self):
-        EventTypes = models.EventTypes()
-        EventTypes.event_type = list(models.EventType.objects.all())
+        EventTypes = jobmodels.EventTypes()
+        EventTypes.event_type = list(jobmodels.EventType.objects.all())
         return EventTypes
 
     @exposed
     def getEventType(self, event_type_id):
-        eventType = models.EventType.objects.get(pk=event_type_id)
+        eventType = jobmodels.EventType.objects.get(pk=event_type_id)
         return eventType
     
     @exposed
@@ -1150,7 +1151,7 @@ class SystemManager(basemanager.BaseManager):
         self.cleanupSystemEvent(event)
 
         # create the next event if needed
-        if event.event_type.name == models.EventType.SYSTEM_POLL:
+        if event.event_type.name == jobmodels.EventType.SYSTEM_POLL:
             self.scheduleSystemPollEvent(event.system)
         else:
             log.debug("%s events do not trigger a new event creation" % event.event_type.name)
@@ -1390,7 +1391,7 @@ class SystemManager(basemanager.BaseManager):
 
     @classmethod
     def eventType(cls, name):
-        return models.EventType.objects.get(name=name)
+        return jobmodels.EventType.objects.get(name=name)
 
     @classmethod
     def jobState(cls, name):
@@ -1399,14 +1400,14 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def scheduleSystemPollEvent(self, system):
         '''Schedule an event for the system to be polled'''
-        return self._scheduleEvent(system, models.EventType.SYSTEM_POLL)
+        return self._scheduleEvent(system, jobmodels.EventType.SYSTEM_POLL)
 
     @exposed
     def scheduleSystemPollNowEvent(self, system):
         '''Schedule an event for the system to be polled now'''
         # happens on demand, so enable now
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_POLL_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE,
             enableTime=self.now())
 
     @exposed
@@ -1414,21 +1415,21 @@ class SystemManager(basemanager.BaseManager):
         '''Schedule an event for the system to be registered'''
         # registration events happen on demand, so enable now
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_REGISTRATION,
+            jobmodels.EventType.SYSTEM_REGISTRATION,
             enableTime=self.now())
 
     @exposed
     def scheduleSystemApplyUpdateEvent(self, system, sources):
         '''Schedule an event for the system to be updated'''
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
             eventData=sources)
 
     @exposed
     def scheduleSystemShutdownEvent(self, system):
         '''Schedule an event to shutdown the system.'''
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
 
     @exposed
     def scheduleLaunchWaitForNetworkEvent(self, system):
@@ -1438,7 +1439,7 @@ class SystemManager(basemanager.BaseManager):
         rpath-tools.
         """
         return self._scheduleEvent(system,
-            models.EventType.LAUNCH_WAIT_FOR_NETWORK,
+            jobmodels.EventType.LAUNCH_WAIT_FOR_NETWORK,
             enableTime=self.now())
 
     @exposed
@@ -1448,7 +1449,7 @@ class SystemManager(basemanager.BaseManager):
         on the system.
         """
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
             enableTime=self.now())
 
     @exposed
@@ -1457,7 +1458,7 @@ class SystemManager(basemanager.BaseManager):
         # registration events happen on demand, so enable now
         configData = self.configDictToXml(configuration)
         return self._scheduleEvent(system,
-            models.EventType.SYSTEM_CONFIG_IMMEDIATE,
+            jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
             enableTime=self.now(),
             eventData=configData)
 
@@ -1803,6 +1804,7 @@ class SystemManager(basemanager.BaseManager):
     def getSystemTag(self, system_id, system_tag_id):
         systemTag = querysetmodels.SystemTag.objects.get(pk=system_tag_id)
         return systemTag
+
 
 class Configuration(object):
     _xobj = xobj.XObjMetadata(
