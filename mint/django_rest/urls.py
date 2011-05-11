@@ -276,20 +276,21 @@ urlpatterns = patterns('',
         projectviews.ProjectImageService(),
         name='ProjectImage'),
 
-    # Package Workspaces
-    url(r'^api/package_workspaces/?$',
-        pkgworkspaceviews.PackageWorkspaceService(),
-        name='PackageWorkspaces'),
-    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/?$',
-        pkgworkspaceviews.PackageWorkspaceService(),
-        name='PackageWorkspace'),
-    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/?$',
-        pkgworkspaceviews.PackageSessionService(),
-        name='PackageSessions'),
-    url(r'^api/package_workspaces/(?P<package_workspace_id>\d+)/package_sessions/(?P<package_session_id>\d+)/?$',
-        pkgworkspaceviews.PackageSessionService(),
-        name='PackageSession'),
-
+    # Packages
+    url(r'^api/packages/?$',
+        packageviews.PackageService(),
+        name='Packages'),
+    url(r'^api/packages/(?P<package_id>\d+)/?$',
+        packageviews.PackageService(),
+        name='Package'),
+        
+    # Package Actions
+    url(r'^api/package_action_types/?$',
+        packageviews.PackageActionTypeService(),
+        name='PackageActionTypes'),
+    url(r'^api/package_action_types/(?P<package_action_type_id>\d+)/?$',
+        packageviews.PackageActionTypeService(),
+        name='PackageActionType'),
 
     # Package Versions
     url(r'^api/packages/(?P<package_id>\d+)/package_versions/?$',
