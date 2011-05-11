@@ -33,7 +33,9 @@ class JobsService(service.BaseService):
         return self.mgr.updateJob(job_id, job)
 
     def rest_DELETE(self, job_id):
-        return self.mgr.deleteJob(job_id)
+        self.mgr.deleteJob(job_id)
+        response = HttpResponse(status=204)
+        return response
 
 class JobStatesService(service.BaseService):
 

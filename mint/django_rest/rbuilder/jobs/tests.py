@@ -7,7 +7,6 @@
 
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 
-from mint.django_rest.rbuilder.jobs import manager
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.jobs import testsxml
 
