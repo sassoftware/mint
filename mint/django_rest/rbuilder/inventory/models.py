@@ -133,20 +133,6 @@ class ManagementNodes(modellib.XObjModel):
     def save(self):
         return [s.save() for s in self.management_node]
     
-class EventTypes(modellib.XObjModel):
-
-    XSL = 'eventTypes.xsl'
-
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = 'event_types')
-    list_fields = ['event_type']
-    event_type = []
-
-    def save(self):
-        return [s.save() for s in self.event_type]
-    
 class SystemsLog(modellib.XObjModel):
     class Meta:
         abstract = True

@@ -171,6 +171,20 @@ class JobState(modellib.XObjIdModel):
 
     load_fields = [ name ]
 
+class EventTypes(modellib.XObjModel):
+
+    XSL = 'eventTypes.xsl'
+
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'event_types')
+    list_fields = ['event_type']
+    event_type = []
+
+    def save(self):
+        return [s.save() for s in self.event_type]
+
 class EventType(modellib.XObjIdModel):
     
     XSL = 'eventType.xsl'
