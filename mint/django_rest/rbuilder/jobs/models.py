@@ -16,7 +16,7 @@ from xobj import xobj
 XObjHidden = modellib.XObjHidden
 APIReadOnly = modellib.APIReadOnly
 
-class Jobs(modellib.XObjIdModel):
+class Jobs(modellib.Collection):
     
     XSL = 'jobs.xsl'
     
@@ -135,7 +135,7 @@ class Job(modellib.XObjIdModel):
         xobj_model.event_type = None
         return xobj_model
 
-class JobStates(modellib.XObjModel):
+class JobStates(modellib.Collection):
     
     XSL = 'jobStates.xsl'
     
