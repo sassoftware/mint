@@ -182,8 +182,8 @@ class ProjectManager(basemanager.BaseManager):
         return versions
 
     @exposed
-    def getProjectVersion(self, shortName, versionName):
-        version = models.Version.objects.get(name=versionName)
+    def getProjectVersion(self, shortName, versionId):
+        version = models.Version.objects.get(pk=versionId)
         return version
 
     @exposed
