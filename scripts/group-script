@@ -130,6 +130,10 @@ if [ `uname -m` = "x86_64" ]; then
     rm -rf /usr/lib/raa/rPath/
 fi
 
+# Primary migration is done, exit maintenance mode now since some scripts need
+# to talk to local repositories.
+rm -f /srv/rbuilder/run/maintenance.lock
+
 # Generate rMake certificates IFF we're not chrooted; otherwise we
 # might end up sticking them pre-generated in the ISOs which would be
 # very bad.
