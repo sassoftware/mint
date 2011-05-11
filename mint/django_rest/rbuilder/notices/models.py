@@ -1,6 +1,5 @@
 from django.db import models
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.users.models import User
 from xobj import xobj
     
 class GlobalNotices(modellib.Collection):
