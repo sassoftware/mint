@@ -61,11 +61,6 @@ platformSourceUrls       https://rhn.redhat.com
 platformSourceNames      Red Hat Network
 platformSourceTypes      RHN
 
-platformSources         novell-updater
-platformSourceUrls      https://nu.novell.com/repo/$RCE
-platformSourceNames     Novell Update Service
-platformSourceTypes     nu
-
 # Include rAPA-generated proxy information
 includeConfigFile /etc/conary/config.d/httpProxy
 
