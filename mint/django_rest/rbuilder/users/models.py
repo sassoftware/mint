@@ -13,7 +13,6 @@
 #
 from django.db import models
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest import settings
 from xobj import xobj
 import sys
 
