@@ -1,6 +1,5 @@
 from mint.django_rest.rbuilder.models import Images, Products, Versions
 from mint.django_rest.rbuilder.users.models import Users
-from mint.django_rest.rbuilder.reporting.models import Report, Reports
 
 from django.test.client import Client
 
