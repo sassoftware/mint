@@ -58,8 +58,8 @@ class Job(modellib.XObjIdModel):
         "the database id of the job")
     job_uuid = D(models.CharField(max_length=64, unique=True),
         "a UUID for job tracking purposes")
-    job_state = D(modellib.InlinedDeferredForeignKey("JobState", visible='name',
-        related_name='jobs'),
+    job_state = D(modellib.DeferredForeignKey("JobState", 
+        text_field='name', related_name='jobs'),
         "the current state of the job")
     status_code = D(models.IntegerField(default=100),
         "the current status code of the job, typically an http status code")
@@ -67,8 +67,8 @@ class Job(modellib.XObjIdModel):
         "the message associated with the current status")
     status_detail = D(XObjHidden(models.TextField(null=True)),
         "documentation missing")
-    event_type = D(APIReadOnly(modellib.InlinedForeignKey("EventType",
-        visible='name', related_name="jobs", null=True)),
+    event_type = D(APIReadOnly(modellib.DeferredForeignKey("EventType",
+        text_field='name', related_name="jobs", null=True)),
         "documentation missing")
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was created (UTC)")
