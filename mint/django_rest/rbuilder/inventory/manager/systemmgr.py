@@ -833,7 +833,7 @@ class SystemManager(basemanager.BaseManager):
 
     def lookupTarget(self, targetType, targetName):
         return rbuildermodels.Targets.objects.get(
-            targettype=targetType, targetname=targetName)
+            target_type=targetType, target_name=targetName)
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
@@ -882,9 +882,9 @@ class SystemManager(basemanager.BaseManager):
 
     def _getCredentialsForUser(self, target):
         tucs = rbuildermodels.TargetUserCredentials.objects.filter(
-            targetid=target, userid=self.user)
+            target_id=target, user_id=self.user)
         for tuc in tucs:
-            return tuc.targetcredentialsid
+            return tuc.target_credentials_id
         return None
 
     def matchSystem(self, system):
@@ -1616,7 +1616,7 @@ class SystemManager(basemanager.BaseManager):
             desiredCredsMap.update((x.targetcredentialsid.targetcredentialsid,
                     x.targetcredentialsid)
                 for x in rbuildermodels.TargetUserCredentials.objects.filter(
-                    targetid=target, userid__username=userName))
+                    target_id=target, userid__username=userName))
         existingCredsSet = set(existingCredsMap)
         desiredCredsSet = set(desiredCredsMap)
 
@@ -1640,14 +1640,14 @@ class SystemManager(basemanager.BaseManager):
             userNames = []
             for cred in credentials:
                 tucs = rbuildermodels.TargetUserCredentials.objects.filter(
-                    targetid=target, targetcredentialsid=cred)
-                userNames.extend(x.userid.username for x in tucs)
+                    target_id=target, target_credentials_id=cred)
+                userNames.extend(x.user_id.user_name for x in tucs)
             if not userNames:
                 userNames = [ None ]
             for userName in userNames:
                 # We don't care about dnsName and system, they're not used for
                 # determining uniqueness
-                targetsData.addSystem(target.targettype, target.targetname,
+                targetsData.addSystem(target.target_type, target.target_name,
                     userName, system.target_system_id,
                     system.target_system_name,
                     system.target_system_description, None, None)
