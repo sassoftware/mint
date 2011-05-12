@@ -6,9 +6,9 @@ exposed = basemanager.exposed
 class UserNoticesManager(basemanager.BaseManager):
     @exposed
     def getUserNotices(self, user_id):
-        notices = models.UserNotices()
-        notices.notice = models.UserNotice.objects.all().filter(user_id=user_id)
-        return notices
+        UserNotices = models.UserNotices()
+        UserNotices.user_notice = models.UserNotice.objects.all().filter(user_id=user_id)
+        return UserNotices
     
     @exposed
     def createUserNotice(self, user_id, user_notice):
@@ -19,9 +19,9 @@ class UserNoticesManager(basemanager.BaseManager):
 class GlobalNoticesManager(basemanager.BaseManager):
     @exposed
     def getGlobalNotices(self):
-        notices = models.GlobalNotices()
-        notices.notice = models.GlobalNotice.objects.all()
-        return notices
+        GlobalNotices = models.GlobalNotices()
+        GlobalNotices.global_notice = models.GlobalNotice.objects.all()
+        return GlobalNotices
         
     @exposed
     def createGlobalNotice(self, global_notice):
