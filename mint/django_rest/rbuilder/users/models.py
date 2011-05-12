@@ -27,7 +27,7 @@ class UserGroups(modellib.Collection):
 
 class UserGroup(modellib.XObjIdModel):
     user_group_id = models.AutoField(primary_key=True, db_column='usergroupid')
-    user_group = models.CharField(unique=True, max_length=128, db_column='usergroup')
+    user_group_owner = models.CharField(unique=True, max_length=128, db_column='usergroup')
 
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
@@ -36,7 +36,7 @@ class UserGroup(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='user_group')
 
     def __unicode__(self):
-        return self.user_group
+        return self.user_group_owner
 
 
 class Users(modellib.Collection):
@@ -60,7 +60,7 @@ class User(modellib.XObjIdModel):
     time_accessed = models.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
     active = models.SmallIntegerField()
     blurb = models.TextField()
-    groups = models.ManyToManyField(UserGroup, through="UserGroupMembers", related_name='groups')
+    user_groups = models.ManyToManyField(UserGroup, through="UserGroupMembers", related_name='groups')
     
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
@@ -88,3 +88,5 @@ class UserGroupMembers(modellib.XObjModel):
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroupmembers'
+        
+    _xobj = xobj.XObjMetadata(tag='user_group_members')

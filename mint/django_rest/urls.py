@@ -372,9 +372,9 @@ urlpatterns = patterns('',
         name='UserGroupMembers'),
         
     # UserNotices
-    # url(r'^api/users/(?P<user_id>\d+)/notices/?$',
-    #     noticesviews.UserNoticesService(),
-    #     name='UserNotices'),
+    url(r'^api/users/(?P<user_id>\d+)/notices/?$',
+        noticesviews.UserNoticesService(),
+        name='UserNotices'),
     
     url(r'^api/notices/users/(?P<user_id>\d+)/?$',
         noticesviews.UserNoticesService(),
