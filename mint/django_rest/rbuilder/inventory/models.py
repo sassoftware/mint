@@ -604,7 +604,12 @@ class System(modellib.XObjIdModel):
             # None==None
             return
 
-        self.networks.all().delete()
+        if self.network_address.pinned:
+            # We only have to remove the pinned network address. The
+            # client maintains the rest
+            self.networks.filter(pinned=True).delete()
+        else:
+            self.networks.all().delete()
         nw = Network(system=self, dns_name=self.network_address.address,
             pinned=self.network_address.pinned)
         nw.save()

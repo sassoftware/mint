@@ -1661,9 +1661,13 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
         self.failUnlessEqual(
-            [ (x.dns_name, x.active, x.pinned)
+            [ (x.dns_name, x.ip_address, x.active, x.pinned)
                 for x in system.networks.all() ],
-            [ ('1.2.3.4', None, True, ), ])
+            [
+                ('blah1', '10.1.1.1', True, False),
+                ('blah2', '10.2.2.2', False, False),
+                ('1.2.3.4', None, None, True),
+            ])
 
         # Add a bunch of network addresses, none of them pinned
         # Pretend the active interface is the same as the one the client
@@ -1683,9 +1687,13 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
         self.failUnlessEqual(
-            [ (x.dns_name, x.active, x.pinned)
+            [ (x.dns_name, x.ip_address, x.active, x.pinned)
                 for x in system.networks.all() ],
-            [ ('1.2.3.4', None, True, ), ])
+            [
+                ('blah1', '1.2.3.4', True, False),
+                ('blah2', '10.2.2.2', False, False),
+                ('1.2.3.4', None, None, True),
+            ])
 
         # Add a bunch of network addresses, one of them pinned.
         # We should unpin in this case.
@@ -1709,6 +1717,71 @@ class SystemsTestCase(XMLTestCase):
             [ ('blah1', '1.2.3.4', False, True, ),
               ('blah2', '10.2.2.2', True, False, ) ])
 
+    def testPostSystemNetworkPreservePinned(self):
+        """
+        Pinned network_address
+        """
+        localUuid = 'localuuid001'
+        generatedUuid = 'generateduuid001'
+        params = dict(localUuid=localUuid, generatedUuid=generatedUuid)
+        xmlTempl = """\
+<system>
+  <local_uuid>%(localUuid)s</local_uuid>
+  <generated_uuid>%(generatedUuid)s</generated_uuid>
+  <networks>
+    <network>
+      <active>false</active>
+      <device_name>eth0</device_name>
+      <dns_name>10.1.1.1</dns_name>
+      <ip_address>10.1.1.1</ip_address>
+      <netmask>255.255.255.0</netmask>
+    </network>
+    <network>
+      <active>true</active>
+      <device_name>eth1</device_name>
+      <dns_name>blah2.example.com</dns_name>
+      <ip_address>10.2.2.2</ip_address>
+      <netmask>255.255.255.0</netmask>
+    </network>
+  </networks>
+</system>
+"""
+        models.System.objects.all().delete()
+        system = self.newSystem(name="aaa", description="bbb",
+            local_uuid=localUuid, generated_uuid=generatedUuid)
+        system.save()
+
+        # Add a bunch of network addresses, one of them pinned.
+        # We should preserve the pinned one
+        system.networks.all().delete()
+
+        network = models.Network(system=system, dns_name='blah1',
+            active=False, pinned=True)
+        network.save()
+        network = models.Network(system=system, dns_name='ignoreme',
+            active=False, pinned=True)
+        network.save()
+        network = models.Network(system=system, dns_name='blah2.example.com',
+            ip_address='10.2.2.2', netmask='255.255.255.0',
+            active=True, pinned=False, device_name='eth0')
+        network.save()
+
+        system_xml = xmlTempl % params
+        response = self._post('/api/inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
+        system = models.System.objects.get(pk=system.pk)
+        self.failUnlessEqual(
+            [ (x.dns_name, x.ip_address, x.active, x.pinned)
+                for x in system.networks.all() ],
+            [
+                ('10.1.1.1', '10.1.1.1', False, None, ),
+                ('blah2.example.com', '10.2.2.2', True, False, ),
+                ('blah1', None, None, True, ),
+            ])
+        xml = system.to_xml()
+        x = xobj.parse(xml)
+        self.failUnlessEqual(x.system.network_address.address, "blah1")
+        self.failUnlessEqual(x.system.network_address.pinned, "True")
 
     def testGetSystems(self):
         system = self._saveSystem()
