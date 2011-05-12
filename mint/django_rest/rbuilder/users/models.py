@@ -15,7 +15,7 @@ from django.db import models
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest import settings
 from xobj import xobj
-
+import sys
 
 class UserGroups(modellib.Collection):
     class Meta:
@@ -90,3 +90,9 @@ class UserGroupMembers(modellib.XObjModel):
         db_table = u'usergroupmembers'
         
     _xobj = xobj.XObjMetadata(tag='user_group_members')
+    
+    
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            modellib.type_map[mod_obj._xobj.tag] = mod_obj

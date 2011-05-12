@@ -55,7 +55,7 @@ class UserGroupsManager(basemanager.BaseManager):
     @exposed
     def getUserGroups(self):
         UserGroups = models.UserGroups()
-        UserGroups.group = models.UserGroup.objects.all()
+        UserGroups.user_group = models.UserGroup.objects.all()
         return UserGroups
     
     @exposed

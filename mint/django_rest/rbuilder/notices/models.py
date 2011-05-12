@@ -1,6 +1,7 @@
 from django.db import models
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
+import sys
 
 class GlobalNotices(modellib.Collection):
     class Meta:
@@ -37,3 +38,9 @@ class UserNotice(modellib.XObjIdModel):
     user_notice_id = models.AutoField(primary_key=True)
     notice = models.TextField()
     user_id = models.IntegerField()
+    
+
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            modellib.type_map[mod_obj._xobj.tag] = mod_obj
