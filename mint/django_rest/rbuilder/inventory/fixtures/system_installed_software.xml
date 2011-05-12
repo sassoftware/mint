@@ -44,7 +44,7 @@
     <field type="DecimalField" name="time_created">0</field>
     <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creator_id" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
 
   <object pk="2" model="rbuilder.versions">
@@ -138,7 +138,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">2</field>
