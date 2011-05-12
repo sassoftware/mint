@@ -24,6 +24,7 @@ from django.test.client import Client, FakePayload
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import views
 from mint.django_rest.rbuilder.manager import rbuildermanager
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import testsxml
 from mint.lib import x509
@@ -4206,9 +4207,9 @@ class TargetSystemImportTest(XMLTestCase):
 
     def testIsManageable(self):
         # First, make sure these two users have the same credentials
-        user1 = rbuildermodels.Users.objects.get(username='JeanValjean1')
-        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
-        user3 = rbuildermodels.Users.objects.get(username='JeanValjean3')
+        user1 = usersmodels.Users.objects.get(user_name='JeanValjean1')
+        user2 = usersmodels.Users.objects.get(user_name='JeanValjean2')
+        user3 = usersmodels.Users.objects.get(user_name='JeanValjean3')
         self.failUnlessEqual(
             rbuildermodels.TargetUserCredentials.objects.get(
                 targetid=self.tgt3, userid=user1).targetcredentialsid.pk,
@@ -4239,7 +4240,7 @@ class TargetSystemImportTest(XMLTestCase):
             ignoreNodes=['created_date'])
 
     def testAddLaunchedSystem(self):
-        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
+        user2 = usersmodels.Users.objects.get(user_name='JeanValjean2')
         self.mgr.user = user2
         params = dict(
             target_system_id = "target-system-id-001",

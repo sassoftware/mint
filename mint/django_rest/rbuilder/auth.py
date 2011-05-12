@@ -68,9 +68,9 @@ def isAuthenticated(user):
 
 class rBuilderBackend:
 
-    def authenticate(self, user_name=None, password=None):
+    def authenticate(self, username=None, password=None):
         try:
-       	    user = User.objects.get(user_name=user_name)
+       	    user = User.objects.get(user_name=username)
             m = md5(user.salt + password)
             if (m.hexdigest() == user.passwd):
        	        return user

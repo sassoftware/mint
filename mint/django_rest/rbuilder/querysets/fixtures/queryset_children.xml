@@ -158,7 +158,7 @@
         <field type="CharField" name="ssl_client_certificate">system-210-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-210-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-210-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -190,7 +190,7 @@
         <field type="CharField" name="ssl_client_certificate">system-211-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-211-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-211-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -222,7 +222,7 @@
         <field type="CharField" name="ssl_client_certificate">system-212-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-212-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-212-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -254,7 +254,7 @@
         <field type="CharField" name="ssl_client_certificate">system-213-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-213-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-213-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -286,7 +286,7 @@
         <field type="CharField" name="ssl_client_certificate">system-214-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-214-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-214-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -318,7 +318,7 @@
         <field type="CharField" name="ssl_client_certificate">system-215-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-215-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-215-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -350,7 +350,7 @@
         <field type="CharField" name="ssl_client_certificate">system-216-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-216-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-216-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
@@ -382,7 +382,7 @@
         <field type="CharField" name="ssl_client_certificate">system-217-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-217-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-217-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
