@@ -245,17 +245,16 @@ class Collection(XObjIdModel):
     def get_absolute_url(self, request=None, parents=None, model=None,
                          page=None, full=None):
         url = XObjIdModel.get_absolute_url(self, request, parents, model)
-        if url is None:
-            return url
-        if not page and not full:
-            page = getattr(self, 'page', None)
-        if page:
-            limit = request.GET.get('limit', settings.PER_PAGE)
-            url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
-        if self.order_by:
-            url += ';order_by=%s' % self.order_by
-        if self.filter_by:
-            url += ';filter_by=%s' % self.filter_by
+        if url:
+            if not page and not full:
+                page = getattr(self, 'page', None)
+            if page:
+                limit = request.GET.get('limit', settings.PER_PAGE)
+                url += ';start_index=%s;limit=%s' % (page.start_index(), limit)
+            if self.order_by:
+                url += ';order_by=%s' % self.order_by
+            if self.filter_by:
+                url += ';filter_by=%s' % self.filter_by
         return url
 
     def orderBy(self, request, modelList):

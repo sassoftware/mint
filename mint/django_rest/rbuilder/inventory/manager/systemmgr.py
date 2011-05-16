@@ -831,7 +831,7 @@ class SystemManager(basemanager.BaseManager):
 
     def lookupTarget(self, targetType, targetName):
         return rbuildermodels.Targets.objects.get(
-            targettype=targetType, targetname=targetName)
+            target_type=targetType, target_name=targetName)
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
@@ -874,15 +874,15 @@ class SystemManager(basemanager.BaseManager):
         else:
             self.scheduleLaunchWaitForNetworkEvent(system)
         self.log_system(system, "System launched in target %s (%s)" %
-            (target.targetname, target.targettype))
+            (target.target_name, target.target_type))
         self.addSystem(system)
         return system
 
     def _getCredentialsForUser(self, target):
         tucs = rbuildermodels.TargetUserCredentials.objects.filter(
-            targetid=target, userid=self.user)
+            target_id=target, user_id=self.user)
         for tuc in tucs:
-            return tuc.targetcredentialsid
+            return tuc.target_credentials_id
         return None
 
     def matchSystem(self, system):
@@ -896,7 +896,7 @@ class SystemManager(basemanager.BaseManager):
         return None
 
     def isManageable(self, managedSystem):
-        if managedSystem.launching_user.userid == self.user.userid:
+        if managedSystem.launching_user.user_id == self.user.user_id:
             # If we own the system, we can manage
             return True
         # Does the user who launched the system have the same credentials as
@@ -908,7 +908,7 @@ class SystemManager(basemanager.BaseManager):
               JOIN TargetUserCredentials tc2 USING (targetId, targetCredentialsId)
              WHERE tc1.userId = %s
                AND tc2.userId = %s
-         """, [ self.user.userid, managedSystem.launching_user.userid ])
+         """, [ self.user.user_id, managedSystem.launching_user.user_id ])
         row = cu.fetchone()
         return bool(row)
 
@@ -1566,7 +1566,7 @@ class SystemManager(basemanager.BaseManager):
             managing_zone = self.getLocalZone())
         if created:
             self.log_system(system, "System added as part of target %s (%s)" %
-                (target.targetname, target.targettype))
+                (target.target_name, target.target_type))
             # Having nothing else available, we copy the target's name
             system.name = targetSystem.instanceName
             system.description = targetSystem.instanceDescription
@@ -1598,11 +1598,11 @@ class SystemManager(basemanager.BaseManager):
             ipAddress = nw.ip_address and nw.ip_address or "ip unset"
             self.log_system(system,
                 "%s (%s): removing stale network information %s (%s)" %
-                (target.targetname, target.targettype, nw.dns_name,
+                (target.target_name, target.target_type, nw.dns_name,
                 ipAddress))
             nw.delete()
         self.log_system(system, "%s (%s): using %s as primary contact address" %
-            (target.targetname, target.targettype, dnsName))
+            (target.target_name, target.target_type, dnsName))
         nw = models.Network(system=system, dns_name=dnsName)
         nw.save()
 
@@ -1611,10 +1611,10 @@ class SystemManager(basemanager.BaseManager):
             for x in system.target_credentials.all())
         desiredCredsMap = dict()
         for userName in userNames:
-            desiredCredsMap.update((x.targetcredentialsid.targetcredentialsid,
-                    x.targetcredentialsid)
+            desiredCredsMap.update((x.target_credentials_id.target_credentials_id,
+                    x.target_credentials_id)
                 for x in rbuildermodels.TargetUserCredentials.objects.filter(
-                    targetid=target, userid__username=userName))
+                    target_id=target, user_id__user_name=userName))
         existingCredsSet = set(existingCredsMap)
         desiredCredsSet = set(desiredCredsMap)
 
@@ -1638,14 +1638,14 @@ class SystemManager(basemanager.BaseManager):
             userNames = []
             for cred in credentials:
                 tucs = rbuildermodels.TargetUserCredentials.objects.filter(
-                    targetid=target, targetcredentialsid=cred)
-                userNames.extend(x.userid.username for x in tucs)
+                    target_id=target, target_credentials_id=cred)
+                userNames.extend(x.user_id.user_name for x in tucs)
             if not userNames:
                 userNames = [ None ]
             for userName in userNames:
                 # We don't care about dnsName and system, they're not used for
                 # determining uniqueness
-                targetsData.addSystem(target.targettype, target.targetname,
+                targetsData.addSystem(target.target_type, target.target_name,
                     userName, system.target_system_id,
                     system.target_system_name,
                     system.target_system_description, None, None)

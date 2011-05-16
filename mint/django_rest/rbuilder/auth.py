@@ -55,8 +55,8 @@ def getAuth(request):
     
 def isAdmin(user):
      if user is not None and isinstance(user, User):
-         groups = user.groups.all()
-         admingroup = UserGroup.objects.get(user_group='MintAdmin')
+         groups = user.user_groups.all()
+         admingroup = UserGroup.objects.get(name='MintAdmin')
          if admingroup in groups:
              return True
      return False
@@ -68,9 +68,9 @@ def isAuthenticated(user):
 
 class rBuilderBackend:
 
-    def authenticate(self, user_name=None, password=None):
+    def authenticate(self, username=None, password=None):
         try:
-       	    user = User.objects.get(user_name=user_name)
+       	    user = User.objects.get(user_name=username)
             m = md5(user.salt + password)
             if (m.hexdigest() == user.passwd):
        	        return user

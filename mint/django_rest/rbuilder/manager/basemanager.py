@@ -10,7 +10,7 @@ from mint import config
 from mint import mint_error
 
 from mint.db import database
-from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.rest.db.database import Database as RestDatabase
 
 log = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class BaseRbuilderManager(object):
             # The salt field contains binary data that blows django's little
             # mind when it tries to decode it as UTF-8. Since we don't need it
             # here, defer the loading of that column
-            self.user = rbuildermodels.Users.objects.defer("salt").get(username=userName)
+            self.user = usersmodels.Users.objects.defer("salt").get(user_name=userName)
 
         # We instantiate _restDb lazily
         self._restDb = None

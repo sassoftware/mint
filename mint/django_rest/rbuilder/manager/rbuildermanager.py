@@ -16,7 +16,8 @@ from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager, PackageVersionManager
 from mint.django_rest.rbuilder.projects.manager import ProjectManager
-from mint.django_rest.rbuilder.users.manager import UsersManager, UserGroupsManager, UserGroupMembersManager
+from mint.django_rest.rbuilder.users.manager import UsersManager, UserGroupsManager, UserGroupMembersManager, UserUserGroupsManager
+from mint.django_rest.rbuilder.notices.manager import UserNoticesManager, GlobalNoticesManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
@@ -33,6 +34,9 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'userGroupsMgr': UserGroupsManager,
         'userGroupMembersMgr': UserGroupMembersManager,
         'projectManager' : ProjectManager,
+        'userNoticesManager' : UserNoticesManager,
+        'globalNoticesManager' : GlobalNoticesManager,
+        'userUserGroupsManager' : UserUserGroupsManager,
     }
 
     def __init__(self, cfg=None, userName=None):

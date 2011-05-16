@@ -101,6 +101,7 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.packages',
     'mint.django_rest.rbuilder.projects',
     'mint.django_rest.rbuilder.users',
+    'mint.django_rest.rbuilder.notices',
 )
 
 AUTHENTICATION_BACKENDS = (

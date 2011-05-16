@@ -73,8 +73,26 @@ class UserGroupsManager(basemanager.BaseManager):
         user_group = models.UserGroup.objects.get(pk=user_group_id)
         user_group.delete()
         
+        
+class UserUserGroupsManager(basemanager.BaseManager):
+    @exposed
+    def getUserUserGroups(self, user_id):
+        UserGroups = models.UserGroups()
+        user_groups = models.User.objects.get(user_id=user_id).user_groups.all()
+        UserGroups.user_group = user_groups
+        return UserGroups
+        
+    
+# class UserGroupMembersManager(basemanager.BaseManager):
+#     @exposed
+#     def getUserGroupMembers(self, user_group_id):
+#         user_group_members = models.UserGroupMembers.objects.get(pk=user_group_id)
+#         return user_group_members
+        
 class UserGroupMembersManager(basemanager.BaseManager):
     @exposed
     def getUserGroupMembers(self, user_group_id):
-        user_group_members = models.UserGroupMembers.objects.get(pk=user_group_id)
-        return user_group_members
+        UserGroupMembers = models.UserGroupMembers()
+        groups = models.User.user_groups.through.objects.filter(user_group_id=user_group_id)
+        UserGroupMembers.user_group_member = groups
+        return UserGroupMembers
