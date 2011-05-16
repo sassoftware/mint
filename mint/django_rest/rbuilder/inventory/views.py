@@ -14,7 +14,7 @@ from mint.db import database
 from mint import users
 from mint.django_rest.deco import requires, return_xml, access, ACCESS, \
     HttpAuthenticationRequired, getHeaderValue
-from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder import service
 from mint.django_rest.rbuilder.inventory import models
 
@@ -440,7 +440,7 @@ class InventoryUsersService(BaseInventoryService):
 
     # used by modeelib
     def get(self, user):
-        user = rbuildermodels.Users.objects.get(username=user)
+        user = usersmodels.Users.objects.get(user_name=user)
         return user
 
 class InventorySystemEventsService(BaseInventoryService):

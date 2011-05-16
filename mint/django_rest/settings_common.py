@@ -99,6 +99,8 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.querysets',
     'mint.django_rest.rbuilder.changelog',
     'mint.django_rest.rbuilder.packages',
+    'mint.django_rest.rbuilder.users',
+    'mint.django_rest.rbuilder.notices',
     'mint.django_rest.rbuilder.jobs',
 )
 

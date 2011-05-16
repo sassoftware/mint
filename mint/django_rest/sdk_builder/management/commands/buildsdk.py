@@ -63,7 +63,7 @@ class Command(BaseCommand):
             # Actually write the module
             with open(models_path, 'w') as f:
                 f.write('from rsdk.Fields import *  # pyflakes=ignore\n')
-                f.write('from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore\n')
+                f.write('from rsdk.sdk import SDKModel, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore\n')
                 f.write('from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore\n')
                 # f.write('from sdk.xobj_debug import XObj, XObjMetadata  # pyflakes=ignore\n')
                 f.write('\n')

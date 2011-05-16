@@ -10,6 +10,7 @@ from django.db import models
 from django.conf import settings
 
 from mint.django_rest.rbuilder import modellib
+from mint.django_rest.rbuilder.users import models as usersmodels
 
 XObjHidden = modellib.XObjHidden
 
@@ -27,68 +28,68 @@ class DatabaseVersion(modellib.XObjModel):
     version = models.SmallIntegerField(null=True)
     minor = models.SmallIntegerField(null=True)
 
-class UserGroups(modellib.XObjModel):
-    usergroupid = models.AutoField(primary_key=True)
-    usergroup = models.CharField(unique=True, max_length=128)
-    
-    class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
-        db_table = u'usergroups'
-        
-    def __unicode__(self):
-        return self.usergroup
+# class UserGroups(modellib.XObjModel):
+#     usergroupid = models.AutoField(primary_key=True)
+#     usergroup = models.CharField(unique=True, max_length=128)
+#     
+#     class Meta:
+#         managed = settings.MANAGE_RBUILDER_MODELS
+#         db_table = u'usergroups'
+#         
+#     def __unicode__(self):
+#         return self.usergroup
 
-class Users(modellib.XObjModel):
-    userid = models.AutoField(primary_key=True)
-    username = models.CharField(unique=True, max_length=128)
-    fullname = models.CharField(max_length=128)
-    # salt has binary data, django is unhappy about that.
-    salt = models.TextField() # This field type is a guess.
-    passwd = models.CharField(max_length=254)
-    email = models.CharField(max_length=128)
-    displayemail = models.TextField()
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    timeaccessed = models.DecimalField(max_digits=14, decimal_places=3)
-    active = models.SmallIntegerField()
-    blurb = models.TextField()
-    groups = models.ManyToManyField(UserGroups, through="UserGroupMembers", related_name='groups')
-    
-    class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
-        db_table = u'users'
+# class Users(modellib.XObjModel):
+#     userid = models.AutoField(primary_key=True)
+#     username = models.CharField(unique=True, max_length=128)
+#     fullname = models.CharField(max_length=128)
+#     # salt has binary data, django is unhappy about that.
+#     salt = models.TextField() # This field type is a guess.
+#     passwd = models.CharField(max_length=254)
+#     email = models.CharField(max_length=128)
+#     displayemail = models.TextField()
+#     timecreated = models.DecimalField(max_digits=14, decimal_places=3)
+#     timeaccessed = models.DecimalField(max_digits=14, decimal_places=3)
+#     active = models.SmallIntegerField()
+#     blurb = models.TextField()
+#     groups = models.ManyToManyField(UserGroups, through="UserGroupMembers", related_name='groups')
+#     
+#     class Meta:
+#         managed = settings.MANAGE_RBUILDER_MODELS
+#         db_table = u'users'
+#         
+#     def __unicode__(self):
+#         return self.username
         
-    def __unicode__(self):
-        return self.username
-        
-class UserGroupMembers(modellib.XObjModel):
-    usergroupid = models.ForeignKey(UserGroups, db_column='usergroupid', related_name='group')
-    userid = models.ForeignKey(Users, db_column='userid', related_name='usermember')
-    
-    class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
-        db_table = u'usergroupmembers'
+# class UserGroupMembers(modellib.XObjModel):
+#     usergroupid = models.ForeignKey(UserGroups, db_column='usergroupid', related_name='group')
+#     userid = models.ForeignKey(Users, db_column='userid', related_name='usermember')
+#     
+#     class Meta:
+#         managed = settings.MANAGE_RBUILDER_MODELS
+#         db_table = u'usergroupmembers'
     
 class Products(modellib.XObjModel):
 
-    url_key = ["shortname"]
+    url_key = ["short_name"]
 
-    productId = models.AutoField(primary_key=True, db_column='projectid', blank=True)
-    hostname = models.CharField(unique=True, max_length=63)
+    product_id = models.AutoField(primary_key=True, db_column='projectid', blank=True)
+    host_name = models.CharField(unique=True, max_length=63, db_column='hostname')
     name = models.CharField(unique=True, max_length=128)
     namespace = models.CharField(max_length=16, null=True)
-    domainname = models.CharField(max_length=128)
-    shortname = models.CharField(unique=True, max_length=63)
-    projecturl = models.CharField(max_length=128, null=True, blank=True)
-    repositoryHostName = models.CharField(max_length=255, db_column='fqdn')
+    domain_name = models.CharField(max_length=128, db_column='domainname')
+    short_name = models.CharField(unique=True, max_length=63, db_column='shortname')
+    project_url = models.CharField(max_length=128, null=True, blank=True, db_column='projecturl')
+    repository_host_name = models.CharField(max_length=255, db_column='fqdn')
     description = models.TextField(null=True, blank=True)
-    prodtype = models.CharField(max_length=128)
-    commitemail = models.CharField(max_length=128, null=True, blank=True)
-    backupexternal = models.SmallIntegerField(null=True, blank=True)
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3, blank=True)
-    timemodified = models.DecimalField(max_digits=14, decimal_places=3, blank=True)
+    prod_type = models.CharField(max_length=128, db_column='prodtype')
+    commit_email = models.CharField(max_length=128, null=True, blank=True, db_column='commitemail')
+    backup_external = models.SmallIntegerField(null=True, blank=True, db_column='backupexternal')
+    time_created = models.DecimalField(max_digits=14, decimal_places=3, blank=True, db_column='timecreated')
+    time_modified = models.DecimalField(max_digits=14, decimal_places=3, blank=True, db_column='timemodified')
     hidden = models.SmallIntegerField()
-    creatorid = models.ForeignKey(Users, db_column='creatorid', related_name='creator', null=True)
-    members = models.ManyToManyField(Users, through="Members", related_name='members')
+    creator_id = models.ForeignKey(usersmodels.User, db_column='creatorid', related_name='creator', null=True)
+    members = models.ManyToManyField(usersmodels.User, through="Members", related_name='members')
     
     view_name = 'Projects'
     objects = modellib.ProductsManager()
@@ -104,8 +105,8 @@ class Products(modellib.XObjModel):
         return ({'id': self.hostname})
 
 class Members(modellib.XObjModel):
-    productId = models.ForeignKey(Products, db_column='projectid', related_name='product')
-    userid = models.ForeignKey(Users, db_column='userid', related_name='user')
+    product_id = models.ForeignKey(Products, db_column='projectid', related_name='product')
+    user_id = models.ForeignKey(usersmodels.User, db_column='userid', related_name='user')
     level = models.SmallIntegerField()
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
@@ -121,15 +122,15 @@ class Pk(object):
 
 class Versions(modellib.XObjIdModel):
 
-    url_key = ["productId", "name"]
+    url_key = ["product_id", "name"]
 
-    productVersionId = models.AutoField(primary_key=True,
+    product_version_id = models.AutoField(primary_key=True,
         db_column='productversionid')
-    productId = models.ForeignKey(Products, db_column='projectid')
+    product_id = models.ForeignKey(Products, db_column='projectid')
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
+    time_created = models.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'productversions'
@@ -139,24 +140,24 @@ class Versions(modellib.XObjIdModel):
         return self.name
         
     def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
         return xobj_model
 
 class Releases(modellib.XObjModel):
-    pubreleaseid = models.AutoField(primary_key=True)
-    productId = models.ForeignKey(Products, db_column='projectid', related_name='releasesProduct')
+    pub_release_id = models.AutoField(primary_key=True, db_column='pubreleaseid')
+    product_id = models.ForeignKey(Products, db_column='projectid', related_name='releasesProduct')
     name = models.CharField(max_length=255)
     version = models.CharField(max_length=32)
     description = models.TextField()
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    createdby = models.ForeignKey(Users, db_column='createdby', related_name='releaseCreator')
-    timeupdated = models.DecimalField(max_digits=14, decimal_places=3)
-    updatedby = models.ForeignKey(Users, db_column='updatedby', related_name='releaseUpdater')
-    timepublished = models.DecimalField(max_digits=14, decimal_places=3)
-    publishedby = models.ForeignKey(Users, db_column='publishedby', related_name='releasePublisher')
-    shouldmirror = models.SmallIntegerField()
-    timemirrored = models.DecimalField(max_digits=14, decimal_places=3)
+    time_created = models.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
+    created_by = models.ForeignKey(usersmodels.User, db_column='createdby', related_name='releaseCreator')
+    time_updated = models.DecimalField(max_digits=14, decimal_places=3, db_column='timeupdated')
+    updated_by = models.ForeignKey(usersmodels.User, db_column='updatedby', related_name='releaseUpdater')
+    time_published = models.DecimalField(max_digits=14, decimal_places=3, db_column='timepublished')
+    published_by = models.ForeignKey(usersmodels.User, db_column='publishedby', related_name='releasePublisher')
+    should_mirror = models.SmallIntegerField(db_column='shouldmirror')
+    time_mirrored = models.DecimalField(max_digits=14, decimal_places=3, db_column='timemirrored')
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'publishedreleases'
@@ -165,26 +166,26 @@ class Releases(modellib.XObjModel):
         return self.name
                
 class Images(modellib.XObjModel):
-    imageId = models.AutoField(primary_key=True, db_column='buildid')
-    productId = models.ForeignKey(Products, db_column='projectid')
-    pubreleaseid = models.ForeignKey(Releases, null=True, db_column='pubreleaseid')
-    buildtype = models.IntegerField()
+    image_id = models.AutoField(primary_key=True, db_column='buildid')
+    product_id = models.ForeignKey(Products, db_column='projectid')
+    pub_release_id = models.ForeignKey(Releases, null=True, db_column='pubreleaseid')
+    build_type = models.IntegerField(db_column='buildtype')
     name = models.CharField(max_length=255)
     description = models.TextField()
-    trovename = models.CharField(max_length=128)
-    troveversion = models.CharField(max_length=255)
-    troveflavor = models.CharField(max_length=4096)
-    trovelastchanged = models.DecimalField(max_digits=14, decimal_places=3)
-    timecreated = models.DecimalField(max_digits=14, decimal_places=3)
-    createdby = models.ForeignKey(Users, db_column='createdby', related_name='imageCreator')
-    timeupdated = models.DecimalField(max_digits=14, decimal_places=3, null=True)
-    updatedby = models.ForeignKey(Users, db_column='updatedby', related_name='imageUpdater', null=True)
+    trove_name = models.CharField(max_length=128, db_column='trovename')
+    trove_version = models.CharField(max_length=255, db_column='troveversion')
+    trove_flavor = models.CharField(max_length=4096, db_column='troveflavor')
+    trove_last_changed = models.DecimalField(max_digits=14, decimal_places=3, db_column='trovelastchanged')
+    time_created = models.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
+    created_by = models.ForeignKey(usersmodels.User, db_column='createdby', related_name='imageCreator')
+    time_updated = models.DecimalField(max_digits=14, decimal_places=3, null=True, db_column='timeupdated')
+    updated_by = models.ForeignKey(usersmodels.User, db_column='updatedby', related_name='imageUpdater', null=True)
     deleted = models.SmallIntegerField()
-    buildcount = models.IntegerField()
-    productversionid = models.ForeignKey(Versions, db_column='productversionid')
-    stagename = models.CharField(max_length=255)
+    build_count = models.IntegerField(db_column='buildcount')
+    product_version_id = models.ForeignKey(Versions, db_column='productversionid')
+    stage_name = models.CharField(max_length=255, db_column='stagename')
     status = models.IntegerField()
-    statusmessage = models.TextField()
+    status_message = models.TextField(db_column='statusmessage')
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'builds'
@@ -193,8 +194,8 @@ class Images(modellib.XObjModel):
         return self.name
         
 class Downloads(modellib.XObjModel):
-    imageId = models.ForeignKey(Images, db_column='urlid')
-    timedownloaded = models.CharField(max_length=14)
+    image_id = models.ForeignKey(Images, db_column='urlid')
+    time_downloaded = models.CharField(max_length=14, db_column='timedownloaded')
     ip = models.CharField(max_length=64)
     
     class Meta:
@@ -202,7 +203,7 @@ class Downloads(modellib.XObjModel):
         db_table = u'urldownloads'
 
 class Sessions(modellib.XObjModel):
-    sessionId = models.AutoField(primary_key=True, db_column='sessidx')
+    session_id = models.AutoField(primary_key=True, db_column='sessidx')
     sid = models.CharField(max_length=64, unique=True)
     data = models.TextField()
     
@@ -211,16 +212,16 @@ class Sessions(modellib.XObjModel):
         db_table = u'sessions'
 
 class Targets(modellib.XObjModel):
-    targetid = models.IntegerField(primary_key=True)
-    targettype = models.CharField(max_length=255)
-    targetname = models.CharField(unique=True, max_length=255)
+    target_id = models.IntegerField(primary_key=True, db_column='targetid')
+    target_type = models.CharField(max_length=255, db_column='targettype')
+    target_name = models.CharField(unique=True, max_length=255, db_column='targetname')
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targets'
 
     def get_absolute_url(self, request=None, parents=None, values=None):
         path = '/catalog/clouds/%s/instances/%s' % \
-            (self.targettype, self.targetname)
+            (self.target_type, self.target_name)
         if request:
             uri = request.build_absolute_uri()
             parts = urlparse.urlparse(uri)
@@ -235,7 +236,7 @@ class TargetData(modellib.XObjModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetdata'
-    targetid = models.ForeignKey(Targets, db_column="targetid")
+    target_id = models.ForeignKey(Targets, db_column="targetid")
     name = models.CharField(max_length=255, null=False)
     value = models.TextField()
     # Uhm. django does not support multi-column PKs.
@@ -244,23 +245,23 @@ class TargetCredentials(modellib.XObjModel):
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetcredentials'
-    targetcredentialsid = models.AutoField(primary_key=True,
+    target_credentials_id = models.AutoField(primary_key=True,
         db_column="targetcredentialsid")
     credentials = models.TextField(null=False, unique=True)
 
 class TargetUserCredentials(modellib.XObjModel):
-    targetid = models.ForeignKey(Targets, db_column="targetid")
-    userid = models.ForeignKey(Users, db_column="userid")
-    targetcredentialsid = models.ForeignKey(TargetCredentials,
+    target_id = models.ForeignKey(Targets, db_column="targetid")
+    user_id = models.ForeignKey(usersmodels.User, db_column="userid")
+    target_credentials_id = models.ForeignKey(TargetCredentials,
         db_column="targetcredentialsid")
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetusercredentials'
 
 class TargetImagesDeployed(modellib.XObjModel):
-    targetid = models.ForeignKey(Targets, db_column="targetid")
-    fileid = models.IntegerField(null=False)
-    targetimageid = models.CharField(max_length=128)
+    target_id = models.ForeignKey(Targets, db_column="targetid")
+    file_id = models.IntegerField(null=False, db_column='fileid')
+    target_image_id = models.CharField(max_length=128, db_column='targetimageid')
     class Meta:
         managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'targetimagesdeployed'
