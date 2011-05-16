@@ -876,7 +876,7 @@ class SystemManager(basemanager.BaseManager):
         else:
             self.scheduleLaunchWaitForNetworkEvent(system)
         self.log_system(system, "System launched in target %s (%s)" %
-            (target.targetname, target.targettype))
+            (target.target_name, target.target_type))
         self.addSystem(system)
         return system
 
@@ -898,7 +898,7 @@ class SystemManager(basemanager.BaseManager):
         return None
 
     def isManageable(self, managedSystem):
-        if managedSystem.launching_user.userid == self.user.userid:
+        if managedSystem.launching_user.user_id == self.user.user_id:
             # If we own the system, we can manage
             return True
         # Does the user who launched the system have the same credentials as
@@ -910,7 +910,7 @@ class SystemManager(basemanager.BaseManager):
               JOIN TargetUserCredentials tc2 USING (targetId, targetCredentialsId)
              WHERE tc1.userId = %s
                AND tc2.userId = %s
-         """, [ self.user.userid, managedSystem.launching_user.userid ])
+         """, [ self.user.user_id, managedSystem.launching_user.user_id ])
         row = cu.fetchone()
         return bool(row)
 
@@ -1568,7 +1568,7 @@ class SystemManager(basemanager.BaseManager):
             managing_zone = self.getLocalZone())
         if created:
             self.log_system(system, "System added as part of target %s (%s)" %
-                (target.targetname, target.targettype))
+                (target.target_name, target.target_type))
             # Having nothing else available, we copy the target's name
             system.name = targetSystem.instanceName
             system.description = targetSystem.instanceDescription
@@ -1600,11 +1600,11 @@ class SystemManager(basemanager.BaseManager):
             ipAddress = nw.ip_address and nw.ip_address or "ip unset"
             self.log_system(system,
                 "%s (%s): removing stale network information %s (%s)" %
-                (target.targetname, target.targettype, nw.dns_name,
+                (target.target_name, target.target_type, nw.dns_name,
                 ipAddress))
             nw.delete()
         self.log_system(system, "%s (%s): using %s as primary contact address" %
-            (target.targetname, target.targettype, dnsName))
+            (target.target_name, target.target_type, dnsName))
         nw = models.Network(system=system, dns_name=dnsName)
         nw.save()
 
@@ -1613,10 +1613,10 @@ class SystemManager(basemanager.BaseManager):
             for x in system.target_credentials.all())
         desiredCredsMap = dict()
         for userName in userNames:
-            desiredCredsMap.update((x.targetcredentialsid.targetcredentialsid,
-                    x.targetcredentialsid)
+            desiredCredsMap.update((x.target_credentials_id.target_credentials_id,
+                    x.target_credentials_id)
                 for x in rbuildermodels.TargetUserCredentials.objects.filter(
-                    target_id=target, userid__username=userName))
+                    target_id=target, user_id__user_name=userName))
         existingCredsSet = set(existingCredsMap)
         desiredCredsSet = set(desiredCredsMap)
 

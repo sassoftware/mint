@@ -475,7 +475,7 @@ class System(modellib.XObjIdModel):
         "the date the system was deployed (only applies if system is on a "
         "virtual target)")
     target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, 
-        text_field="targetname"),
+        text_field="target_name"),
         "the virtual target the system was deployed to (only applies if "
         "system is on a virtual target)")
     target_system_id = D(models.CharField(max_length=255,
@@ -547,7 +547,7 @@ class System(modellib.XObjIdModel):
         "the appliance major version of the system")
     appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, 
         null=True,
-        text_field='shortname')),
+        text_field='short_name')),
         "the appliance of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 

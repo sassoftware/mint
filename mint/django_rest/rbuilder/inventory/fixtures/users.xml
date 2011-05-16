@@ -45,15 +45,15 @@
   <object pk="5" model="users.usergroup">
     <field type="CharField" name="name">JeanValjean3</field>
   </object>
-  <object pk="2" model="users.usergroupmembers">
+  <object pk="2" model="users.usergroupmember">
     <field to="users.usergroups" name="user_group_id" rel="ManyToOneRel">3</field>
     <field to="users" name="user_id" rel="ManyToOneRel">2</field>
   </object>
-  <object pk="3" model="users.usergroupmembers">
+  <object pk="3" model="users.usergroupmember">
     <field to="users.usergroups" name="user_group_id" rel="ManyToOneRel">4</field>
     <field to="users" name="user_id" rel="ManyToOneRel">3</field>
   </object>
-  <object pk="4" model="users.usergroupmembers">
+  <object pk="4" model="users.usergroupmember">
     <field to="users.usergroups" name="user_group_id" rel="ManyToOneRel">5</field>
     <field to="users" name="user_id" rel="ManyToOneRel">4</field>
   </object>

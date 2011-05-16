@@ -101,7 +101,7 @@ class VersionManager(basemanager.BaseManager):
 
         stage = stage[0]
         try:
-            project = rbuildermodels.Products.objects.get(repositoryHostName=hostname)
+            project = rbuildermodels.Products.objects.get(repository_host_name=hostname)
             majorVersion = rbuildermodels.Versions.objects.get(product_id=project,
                 name=majorVersionName)
         except ObjectDoesNotExist:

@@ -71,7 +71,7 @@ class DatabaseVersion(modellib.XObjModel):
     
 class Products(modellib.XObjModel):
 
-    url_key = ["shortname"]
+    url_key = ["short_name"]
 
     product_id = models.AutoField(primary_key=True, db_column='projectid', blank=True)
     host_name = models.CharField(unique=True, max_length=63, db_column='hostname')
