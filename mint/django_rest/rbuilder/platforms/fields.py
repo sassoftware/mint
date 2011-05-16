@@ -12,9 +12,7 @@
 # full details.
 #
 from django.db import models
-
-class Field(models.Field):
-    pass
+from conary import versions
 
 
 class ProtectedString(str):
@@ -25,26 +23,26 @@ class ProtectedString(str):
     __repr__ = __safe_str__
 
 
-class IntegerField(Field):
+class IntegerField(models.IntegerField):
     def to_python(self, value):
         if value is None or value == '':
             return None
         return int(value)
 
 
-class FloatField(Field):
+class FloatField(models.FloatField):
     def to_python(self, value):
         if value is None or value == '':
             return None
         return float(value)
 
 
-class CharField(Field):
-    def value_to_string(self, value):
-        if isinstance(value, str):
-            return value.decode('utf8', 'replace')
+class CharField(models.CharField):
+    def value_to_string(self, obj):
+        if isinstance(obj, str):
+            return obj.decode('utf8', 'replace')
         else:
-            return unicode(value)
+            return unicode(obj)
 
 
 class ProtectedField(CharField):
@@ -54,7 +52,7 @@ class ProtectedField(CharField):
         return ProtectedString(unicode(value))
 
 
-class BooleanField(Field):
+class BooleanField(models.BooleanField):
     def to_python(self, value):
         if value is None:
             return None
@@ -68,15 +66,15 @@ class BooleanField(Field):
         else:
             raise ValueError('Invalid boolean value %r' % (value,))
 
-    def value_to_string(self, value):
-        if value is None:
+    def value_to_string(self, obj):
+        if obj is None:
             return
-        if value:
+        if obj:
             return 'true'
         return 'false'
 
         
-class CalculatedField(Field):
+class CalculatedField(models.Field):
     #TODO : add errors for trying to pass this in.
     pass
 
@@ -84,8 +82,9 @@ class CalculatedField(Field):
 class AbstractUrlField(CalculatedField):
 
     class _Url(models.Model):
-        href = CharField(isAttribute=True)
-        value = CharField(isText=True)
+        href = CharField()
+        value = CharField()
+        
         def __repr__(self):
             if self.value:
                 return '_Url(%r, value=%r)' % (self.href, self.value)
@@ -104,3 +103,52 @@ class AbstractUrlField(CalculatedField):
         if url is None:
             return None
         return modelClass(href=url, value=value)
+
+
+
+class AbsoluteUrlField(CalculatedField):
+    handleNone = True
+
+    def value_to_string(self, obj):
+        pass
+
+
+class ImageDownloadField(CalculatedField):
+    handleNone = True
+
+    def value_to_string(self, obj):
+        pass
+
+
+class EmailField(Field):
+    pass
+
+
+class DateTimeField(Field):
+    pass
+
+
+class ObjectField(Field):
+    parser = None
+    _emptyIsNone = True
+
+    def to_python(self, value):
+        if value is None or (self._emptyIsNone and value == ''):
+            return None
+        return self.parser(value)
+
+    def value_to_string(self, obj):
+        return str(value)
+
+
+class VersionField(ObjectField):
+    parser = staticmethod(versions.VersionFromString)
+
+
+class LabelField(ObjectField):
+    parser = versions.Label
+
+
+class FlavorField(ObjectField):
+    _emptyIsNone = False
+    parser = staticmethod(deps.parseFlavor)
