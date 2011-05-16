@@ -8,6 +8,7 @@ class UserNoticesManager(basemanager.BaseManager):
     def getUserNotices(self, user_id):
         UserNotices = models.UserNotices()
         UserNotices.user_notice = models.UserNotice.objects.all().filter(user_id=user_id)
+        UserNotices.global_notice = models.GlobalNotice.objects.all()
         return UserNotices
     
     @exposed

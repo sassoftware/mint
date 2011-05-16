@@ -25,14 +25,17 @@ class UserGroups(modellib.Collection):
 
 
 class UserGroup(modellib.XObjIdModel):
-    user_group_id = models.AutoField(primary_key=True, db_column='usergroupid')
-    user_group_owner = models.CharField(unique=True, max_length=128, db_column='usergroup')
-
+    user_group_id = modellib.XObjHidden(models.AutoField(primary_key=True, db_column='usergroupid'))
+    user_group_name = models.CharField(unique=True, max_length=128, db_column='usergroup')
+    user_group_members = modellib.DeferredManyToManyField('User', through='UserGroupMember', db_column='userid')
+    
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroups'
 
     _xobj = xobj.XObjMetadata(tag='user_group')
+    _xobj_hidden_accessors = set(['user_members_group_id'])
+
 
     def __unicode__(self):
         return self.user_group_owner
@@ -59,7 +62,7 @@ class User(modellib.XObjIdModel):
     time_accessed = models.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
     active = models.SmallIntegerField()
     blurb = models.TextField()
-    user_groups = models.ManyToManyField(UserGroup, through="UserGroupMembers", related_name='groups')
+    user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
     
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
@@ -74,23 +77,30 @@ class User(modellib.XObjIdModel):
         'package_source_jobs_last_modified', 'package_builds_last_modified',
         'targetusercredentials_set', 'package_version_jobs_last_modified', 'package_sources_created',
         'system_set', 'package_builds_jobs_last_modified', 'package_sources_last_modified',
-        'usermember', 'package_versions_created', 'packages_created', 'group'])
+        'usermember', 'package_versions_created', 'packages_created', 'user'])
     
     def __unicode__(self):
         return self.user_name
+
         
-        
-class UserGroupMembers(modellib.XObjModel):
-    user_group_id = models.ForeignKey(UserGroup, db_column='usergroupid', related_name='group')
-    user_id = models.ForeignKey(User, db_column='userid', related_name='usermember')
+class UserGroupMembers(modellib.Collection):
+    list_fields = ['user_group_member']
+
+    _xobj = xobj.XObjMetadata(tag='user_group_members')
+
+
+class UserGroupMember(modellib.XObjIdModel):
     
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroupmembers'
-        
-    _xobj = xobj.XObjMetadata(tag='user_group_members')
     
+    user_group_id = modellib.XObjHidden(modellib.DeferredForeignKey(UserGroup, db_column='usergroupid', related_name='user_members_group_id'))
+    user_id = modellib.DeferredForeignKey(User, db_column='userid', related_name='usermember')
     
+    _xobj = xobj.XObjMetadata(tag='user_group_member')
+
+
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:

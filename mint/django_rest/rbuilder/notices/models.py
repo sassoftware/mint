@@ -24,20 +24,17 @@ class UserNotices(modellib.Collection):
     class Meta:
         abstract = True
 
-    list_fields = ['user_notice']
-    _xobj = xobj.XObjMetadata(tag='user_notices', elements=['global_notices', 'user_notice'])
-    global_notices = models.ForeignKey(GlobalNotice, db_tablespace='notices_globalnotice', null=True)
+    list_fields = ['user_notice', 'global_notice']
+    _xobj = xobj.XObjMetadata(tag='user_notices', elements=['global_notice', 'user_notice'])
 
 
 class UserNotice(modellib.XObjIdModel):
     class Meta:
         db_table = 'notices_usernotice'
 
-    _xobj_hidden_accessors = set(['user_id'])
-
     user_notice_id = models.AutoField(primary_key=True)
     notice = models.TextField()
-    user_id = models.IntegerField()
+    user_id = modellib.XObjHidden(models.IntegerField())
     
 
 for mod_obj in sys.modules[__name__].__dict__.values():

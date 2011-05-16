@@ -358,18 +358,26 @@ urlpatterns = patterns('',
         name='User'),
         
     # UserGroups
-    url(r'^api/user_groups/?$',
+    url(r'^api/users/user_groups/?$',
         usersviews.UserGroupsService(),
         name='UserGroups'),
     
-    url(r'^api/user_groups/(?P<user_group_id>\d+)/?$',
+    url(r'^api/users/(?P<user_id>\d+)/user_groups/?$',
+        usersviews.UserUserGroupsService(),
+        name='UserGroups'),
+    
+    url(r'^api/users/user_groups/(?P<user_group_id>\d+)/?$',
         usersviews.UserGroupsService(),
         name='UserGroup'),
         
-    # UserGroupMembers
-    url(r'^api/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
+    url(r'^api/users/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
         usersviews.UserGroupMembersService(),
         name='UserGroupMembers'),
+        
+    # GlobalNotices
+    url(r'^api/notices/?$',
+        noticesviews.GlobalNoticesService(),
+        name='GlobalNotices'),
         
     # UserNotices
     url(r'^api/users/(?P<user_id>\d+)/notices/?$',
@@ -379,11 +387,6 @@ urlpatterns = patterns('',
     url(r'^api/notices/users/(?P<user_id>\d+)/?$',
         noticesviews.UserNoticesService(),
         name='UserNotices'),
-    
-    # GlobalNotices
-    url(r'^api/notices/?$',
-        noticesviews.GlobalNoticesService(),
-        name='GlobalNotices'),
     
 )
 
