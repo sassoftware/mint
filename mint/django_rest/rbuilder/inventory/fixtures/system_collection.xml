@@ -1,4 +1,4 @@
-<?xml version="1.0" eusers.usersncoding="utf-8"?><django-objects version="1.0">
+<?xml version="1.0" encoding="utf-8"?><django-objects version="1.0">
     <object pk="3" model="inventory.system">
         <field type="CharField" name="name">System name 3</field>
         <field type="CharField" name="description">System description 3</field>
