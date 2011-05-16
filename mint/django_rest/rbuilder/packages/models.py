@@ -10,8 +10,9 @@ from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 
-from mint.django_rest.rbuilder import models as rbuildermodels
+# from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.lib import data as mintdata
 
@@ -41,11 +42,11 @@ class Package(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="packages_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="packages_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="packages_last_modified", text_field="username"),
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="packages_last_modified", text_field="user_name"),
         "the user that last modified the resource")
 
 
@@ -92,11 +93,11 @@ class PackageVersion(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package version was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_versions_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_versions_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_versions_last_modified", text_field="username"),
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_versions_last_modified", text_field="user_name"),
         "the user that last modified the resource")
     committed = D(models.BooleanField(default=False),
         "if the package version has been committed.")
@@ -189,12 +190,12 @@ class PackageVersionJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package version job was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_version_jobs_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_version_jobs_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
         related_name="package_version_jobs_last_modified",
-        text_field="username"),
+        text_field="user_name"),
         "the user that last modified the resource")
 
 class PackageVersionUrls(modellib.Collection):
@@ -231,11 +232,11 @@ class PackageVersionUrl(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package version url was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_version_urls_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_version_urls_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_version_urls_last_modified", text_field="username"),
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_version_urls_last_modified", text_field="user_name"),
         "the user that last modified the resource")
 
     load_fields = [url]
@@ -271,11 +272,11 @@ class PackageSource(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package source was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_sources_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_sources_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_sources_last_modified", text_field="username"),
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_sources_last_modified", text_field="user_name"),
         "the user that last modified the resource")
     built = D(models.BooleanField(default=False),
         "if the package source has been built")
@@ -347,12 +348,12 @@ class PackageSourceJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package source job was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_source_jobs_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_source_jobs_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
         related_name="package_source_jobs_last_modified",
-        text_field="username"),
+        text_field="user_name"),
         "the user that last modified the resource")
 
 
@@ -388,11 +389,11 @@ class PackageBuild(modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package build was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_builds_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_builds_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_builds_last_modified", text_field="username"),
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_builds_last_modified", text_field="user_name"),
         "the user that last modified the resource")
     troves = D(models.ManyToManyField(inventorymodels.Trove),
         "built binary troves")
@@ -461,12 +462,12 @@ class PackageBuildJob(PackageJobSerializerMixin, modellib.XObjIdModel):
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True,
         auto_now=True),
         "the date the package build job was last modified (UTC)")
-    created_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
-        related_name="package_build_jobs_created", text_field="username"),
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+        related_name="package_build_jobs_created", text_field="user_name"),
         "the user that created the resource")
-    modified_by = D(modellib.ForeignKey(rbuildermodels.Users, null=True,
+    modified_by = D(modellib.ForeignKey(usersmodels.User, null=True,
         related_name="package_builds_jobs_last_modified",
-        text_field="username"),
+        text_field="user_name"),
         "the user that last modified the resource")
 
 

@@ -1,15 +1,14 @@
 from rsdk.Fields import *  # pyflakes=ignore
-from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.sdk import SDKModel, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
 @register
-class SystemLogEntry(object):
+class SystemLogEntry(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system_log_entry_id = 'AutoField'
     system_log = 'SystemLog'
     entry_date = 'DateTimeUtcField'
@@ -17,50 +16,45 @@ class SystemLogEntry(object):
     _xobj = XObjMetadata(tag='system_log_entry')
 
 @register
-class Targets(object):
+class Targets(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     targettype = 'CharField'
     targetname = 'CharField'
     targetid = 'IntegerField'
 
 @register
-class SystemTargetCredentials(object):
+class SystemTargetCredentials(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system = 'System'
     id = 'AutoField'
     credentials = 'rbuilder.TargetCredentials'
 
 @register
-class SystemType(object):
+class SystemType(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system_type_id = 'AutoField'
     name = 'CharField'
     infrastructure = 'BooleanField'
     description = 'CharField'
     creation_descriptor = 'XMLField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(tag='system_type',attributes={'id':str})
+    _xobj = XObjMetadata(tag='system_type')
 
 @register
-class JobState(object):
+class JobState(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     name = 'CharField'
     job_state_id = 'AutoField'
-    _xobj = XObjMetadata(tag='job_state',attributes={'id':str})
+    _xobj = XObjMetadata(tag='job_state')
 
 @register
-class System(object):
+class System(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     target_system_state = 'CharField'
     target_system_name = 'CharField'
     target_system_id = 'CharField'
@@ -90,13 +84,12 @@ class System(object):
     configuration = 'TextField'
     appliance = 'rbuilder.Products'
     agent_port = 'IntegerField'
-    _xobj = XObjMetadata(tag='system',attributes={'id':str},elements=['networks'])
+    _xobj = XObjMetadata(tag='system',elements=['networks'])
 
 @register
-class Trove(object):
+class Trove(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     version = 'Version'
     trove_id = 'AutoField'
     out_of_date = 'NullBooleanField'
@@ -107,10 +100,9 @@ class Trove(object):
     _xobj = XObjMetadata(tag='trove')
 
 @register
-class SystemJob(object):
+class SystemJob(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system_job_id = 'AutoField'
     system = 'System'
     job = 'Job'
@@ -118,10 +110,9 @@ class SystemJob(object):
     _xobj = XObjMetadata(tag='__systemjob')
 
 @register
-class Stage(object):
+class Stage(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     stage_id = 'AutoField'
     name = 'CharField'
     major_version = 'rbuilder.Versions'
@@ -129,33 +120,29 @@ class Stage(object):
     _xobj = XObjMetadata(tag='stage')
 
 @register
-class Configuration(object):
+class Configuration(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='configuration',attributes={'id':str})
+    _xobj = XObjMetadata(tag='configuration')
 
 @register
-class Credentials(object):
+class Credentials(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='credentials',attributes={'id':str},elements=['ssl_client_certificate', 'ssl_client_key'])
+    _xobj = XObjMetadata(tag='credentials',elements=['ssl_client_certificate', 'ssl_client_key'])
 
 @register
-class JobSystem(object):
+class JobSystem(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system_id = 'IntegerField'
     job = 'Jobs'
     id = 'AutoField'
 
 @register
-class Job(object):
+class Job(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     time_updated = 'DateTimeUtcField'
     time_created = 'DateTimeUtcField'
     status_text = 'TextField'
@@ -165,13 +152,12 @@ class Job(object):
     job_state = 'InlinedDeferredForeignKey'
     job_id = 'AutoField'
     event_type = 'InlinedForeignKey'
-    _xobj = XObjMetadata(tag='job',attributes={'id':str})
+    _xobj = XObjMetadata(tag='job')
 
 @register
-class ManagementInterface(object):
+class ManagementInterface(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     port = 'IntegerField'
     name = 'CharField'
     management_interface_id = 'AutoField'
@@ -179,13 +165,12 @@ class ManagementInterface(object):
     credentials_readonly = 'NullBooleanField'
     credentials_descriptor = 'XMLField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(tag='management_interface',attributes={'id':str})
+    _xobj = XObjMetadata(tag='management_interface')
 
 @register
-class EventType(object):
+class EventType(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     priority = 'SmallIntegerField'
     name = 'CharField'
     event_type_id = 'AutoField'
@@ -193,10 +178,9 @@ class EventType(object):
     _xobj = XObjMetadata(tag='event_type')
 
 @register
-class SystemEvent(object):
+class SystemEvent(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     time_enabled = 'DateTimeUtcField'
     time_created = 'DateTimeUtcField'
     system_event_id = 'AutoField'
@@ -204,13 +188,12 @@ class SystemEvent(object):
     priority = 'SmallIntegerField'
     event_type = 'EventType'
     event_data = 'TextField'
-    _xobj = XObjMetadata(tag='system_event',attributes={'id':str})
+    _xobj = XObjMetadata(tag='system_event')
 
 @register
-class ErrorResponse(object):
+class ErrorResponse(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     traceback = 'TextField'
     product_code = 'TextField'
     message = 'TextField'
@@ -218,24 +201,21 @@ class ErrorResponse(object):
     _xobj = XObjMetadata(tag='fault')
 
 @register
-class Pk(object):
+class Pk(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
 
 @register
-class SystemLog(object):
+class SystemLog(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system_log_id = 'AutoField'
     system = 'System'
 
 @register
-class Inventory(object):
+class Inventory(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     zones = 'HrefField'
     systems = 'HrefField'
     system_types = 'HrefField'
@@ -252,10 +232,9 @@ class Inventory(object):
     _xobj = XObjMetadata(tag='inventory')
 
 @register
-class Version(object):
+class Version(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     version_id = 'AutoField'
     revision = 'TextField'
     ordering = 'TextField'
@@ -265,10 +244,9 @@ class Version(object):
     _xobj = XObjMetadata(tag='version')
 
 @register
-class ManagementNode(object):
+class ManagementNode(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     zone = 'Zone'
     target_system_state = 'CharField'
     target_system_name = 'CharField'
@@ -302,48 +280,42 @@ class ManagementNode(object):
     configuration = 'TextField'
     appliance = 'rbuilder.Products'
     agent_port = 'IntegerField'
-    _xobj = XObjMetadata(tag='management_node',attributes={'id':str},elements=['networks'])
+    _xobj = XObjMetadata(tag='management_node',elements=['networks'])
 
 @register
-class SystemState(object):
+class SystemState(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system_state_id = 'AutoField'
     name = 'CharField'
     description = 'CharField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(attributes={'id':str})
 
 @register
-class Cache(object):
+class Cache(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
 
 @register
-class ConfigurationDescriptor(object):
+class ConfigurationDescriptor(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='configuration_descriptor',attributes={'id':str})
+    _xobj = XObjMetadata(tag='configuration_descriptor')
 
 @register
-class Zone(object):
+class Zone(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     zone_id = 'AutoField'
     name = 'CharField'
     description = 'CharField'
     created_date = 'DateTimeUtcField'
-    _xobj = XObjMetadata(tag='zone',attributes={'id':str})
+    _xobj = XObjMetadata(tag='zone')
 
 @register
-class Network(object):
+class Network(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system = 'System'
     required = 'NullBooleanField'
     port_type = 'CharField'
@@ -355,130 +327,105 @@ class Network(object):
     device_name = 'CharField'
     created_date = 'DateTimeUtcField'
     active = 'NullBooleanField'
-    _xobj = XObjMetadata(tag='network',attributes={'id':str})
+    _xobj = XObjMetadata(tag='network')
 
 @register
-class SystemJobs(object):
+class SystemJobs(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='system_jobs')
     job = ['Job']
 
 @register
-class SystemTypes(object):
+class SystemTypes(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='system_types',elements=['system_type'])
     system_type = ['SystemType']
 
 @register
-class SystemEvents(object):
+class SystemEvents(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='system_events')
     system_event = ['SystemEvent']
 
 @register
-class EventTypes(object):
+class EventTypes(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='event_types')
     event_type = ['EventType']
 
 @register
-class Zones(object):
+class Zones(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='zones',elements=['zone'])
     zone = ['Zone']
 
 @register
-class Jobs(object):
+class Jobs(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='jobs',attributes={'id':str},elements=['job'])
+    _xobj = XObjMetadata(tag='jobs',elements=['job'])
     job = ['Job']
 
 @register
-class InstalledSoftware(object):
+class InstalledSoftware(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
-    _xobj = XObjMetadata(tag='installed_software',attributes={'id':str})
+    _xobj = XObjMetadata(tag='installed_software')
     trove = ['Trove']
 
 @register
-class SystemsLog(object):
+class SystemsLog(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='systems_log')
     system_log_entry = ['SystemLogEntry']
 
 @register
-class ManagementInterfaces(object):
+class ManagementInterfaces(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='management_interfaces',elements=['management_interface'])
     management_interface = ['ManagementInterface']
 
 @register
-class SystemStates(object):
+class SystemStates(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='system_states')
     system_state = ['SystemState']
 
 @register
-class ManagementNodes(object):
+class ManagementNodes(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='management_nodes')
     management_node = ['ManagementNode']
 
 @register
-class Networks(object):
+class Networks(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     systems = 'HrefField'
     _xobj = XObjMetadata(tag='networks',elements=['network', 'systems'])
     network = ['Network']
 
 @register
-class JobStates(object):
+class JobStates(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='job_states',elements=['job_state'])
     job_state = ['JobState']
 
 @register
-class Systems(object):
+class Systems(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='systems',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='systems')
     system = ['System']
 
 # DO NOT TOUCH #
