@@ -329,7 +329,7 @@ class PlatformsTest(BaseTest):
         client = self.getRestClient(admin=True)
         req, platform = client.call('PUT', uri, body=platformPUTXml)
         xml = self._toXml(platform, client, req)
-        self.assertXMLEquals(platformPUTXml, xml)
+        self.assertXMLEquals(platformGETXml, xml)
 
     def testGetPlatformStatus(self):
         self._getPlatforms()
@@ -363,7 +363,7 @@ class PlatformsTest(BaseTest):
         req, platforms = self._getPlatformModels()
         
         platformLoad = models.PlatformLoad()
-        platformLoad.uri = "http://no.such.host/1234"
+        platformLoad.loadUri = "http://no.such.host/1234"
         platformLoad.jobId = "abcd1234"
         platformLoad.platformId = platforms.platforms[0].platformId
 

@@ -1,5 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
+  <object pk="1" model="inventory.version">
+    <field type="TextField" name="full">/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</field>
+    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
+    <field type="TextField" name="revision">1-3-1</field>
+    <field type="TextField" name="ordering">1234567891.13</field>
+    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
+  </object>
+  <object pk="2" model="inventory.version">
+    <field type="TextField" name="full">/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</field>
+    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
+    <field type="TextField" name="revision">1-4-1</field>
+    <field type="TextField" name="ordering">1234567892.14</field>
+    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
+  </object>
+
+  <object pk="1" model="inventory.trove">
+    <field type="TextField" name="name">group-clover-appliance</field>
+    <field to="inventory.version" name="version" rel="ManyToOneRel">1</field>
+    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
+    <field type="BooleanField" name="is_top_level">True</field>
+    <field type="DateTimeField" name="last_available_update_refresh">
+      <None/>
+    </field>
+    <field to="inventory.version" name="available_updates" rel="ManyToManyRel">
+      <object pk="1"/>
+      <object pk="2"/>
+    </field>
+  </object>
+
+  <object pk="2" model="rbuilder.products">
+    <field type="CharField" name="hostname">clover.eng.rpath.com</field>
+    <field type="CharField" name="name">clover</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="domainname">eng.rpath.com</field>
+    <field type="CharField" name="shortname">clover</field>
+    <field type="CharField" name="projecturl">http://</field>
+    <field type="CharField" name="repositoryHostName">clover.eng.rpath.com</field>
+    <field type="TextField" name="description">clover</field>
+    <field type="CharField" name="prodtype">1</field>
+    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="SmallIntegerField" name="backupexternal">0</field>
+    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="timemodified">0</field>
+    <field type="SmallIntegerField" name="hidden">0</field>
+    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+  </object>
+
+  <object pk="2" model="rbuilder.versions">
+    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">2</field>
+    <field type="CharField" name="namespace">rpath</field>
+    <field type="CharField" name="name">1</field>
+    <field type="TextField" name="description">1</field>
+    <field type="DecimalField" name="timecreated">0</field>
+  </object>
+
   <object pk="1" model="inventory.stage">
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
     <field type="CharField" name="name">Development</field>
@@ -101,61 +156,6 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
     <field to="inventory.stage" name="stage" rel="ManyToOneRel">1</field>
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
     <field to="rbuilder.products" name="appliance" rel="ManyToOneRel">2</field>
-  </object>
-
-  <object pk="1" model="inventory.version">
-    <field type="TextField" name="full">/clover.eng.rpath.com@rpath:clover-1-devel/1-3-1</field>
-    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
-    <field type="TextField" name="revision">1-3-1</field>
-    <field type="TextField" name="ordering">1234567891.13</field>
-    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
-  </object>
-  <object pk="2" model="inventory.version">
-    <field type="TextField" name="full">/clover.eng.rpath.com@rpath:clover-1-devel/1-4-1</field>
-    <field type="TextField" name="label">clover.eng.rpath.com@rpath:clover-1-devel</field>
-    <field type="TextField" name="revision">1-4-1</field>
-    <field type="TextField" name="ordering">1234567892.14</field>
-    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
-  </object>
-
-  <object pk="1" model="inventory.trove">
-    <field type="TextField" name="name">group-clover-appliance</field>
-    <field to="inventory.version" name="version" rel="ManyToOneRel">1</field>
-    <field type="TextField" name="flavor">~!dom0,~!domU,vmware,~!xen is: x86(i486,i586,i686,sse,sse2)</field>
-    <field type="BooleanField" name="is_top_level">True</field>
-    <field type="DateTimeField" name="last_available_update_refresh">
-      <None/>
-    </field>
-    <field to="inventory.version" name="available_updates" rel="ManyToManyRel">
-      <object pk="1"/>
-      <object pk="2"/>
-    </field>
-  </object>
-
-  <object pk="2" model="rbuilder.products">
-    <field type="CharField" name="hostname">clover.eng.rpath.com</field>
-    <field type="CharField" name="name">clover</field>
-    <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">clover</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">clover.eng.rpath.com</field>
-    <field type="TextField" name="description">clover</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
-    <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
-    <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
-  </object>
-
-  <object pk="2" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">2</field>
-    <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="name">1</field>
-    <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
   </object>
 
     

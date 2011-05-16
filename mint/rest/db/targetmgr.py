@@ -11,6 +11,7 @@ from mint import mint_error
 from mint.lib import data as mintdata
 from mint.rest.db import manager
 
+
 log = logging.getLogger(__name__)
 
 class TargetManager(manager.Manager):
@@ -33,6 +34,7 @@ class TargetManager(manager.Manager):
     def addTarget(self, targetType, targetName, targetData):
         targetId = self._addTarget(targetType, targetName)
         self._addTargetData(targetId, targetData)
+        self._addTargetQuerySet(targetId, targetName, targetType)
 
     def deleteTarget(self, targetType, targetName):
         cu = self.db.cursor()
@@ -56,6 +58,26 @@ class TargetManager(manager.Manager):
             value = json.dumps(value)
             cu.execute("INSERT INTO TargetData VALUES(?, ?, ?)",
                     targetId, name, value)
+
+    def _addTargetQuerySet(self, targetId, targetName, targetType):
+        from mint.django_rest.rbuilder.manager import rbuildermanager
+        from mint.django_rest.rbuilder.querysets import models
+        log.info("Creating a new query set for target %s." % targetName)
+        filterEntry, created = models.FilterEntry.objects.get_or_create(
+            field='target.targetid', operator='EQUAL', value=targetId)
+        filterEntry.save()
+        querySetName = "All %s systems (%s)" % (targetName, targetType)
+        querySet, created = models.QuerySet.objects.get_or_create(name=querySetName, 
+            description=querySetName, resource_type='system')
+        if not created:
+            log.info("Already a query set named %s, not creating a new one." %
+                querySetName)
+            return
+        querySet.filter_entries.add(filterEntry)
+        rbuilderManager = rbuildermanager.RbuilderManager(self.cfg, 
+            self.auth.username)
+        querySet.can_modify = False
+        return rbuilderManager.addQuerySet(querySet)
 
     def getTargetData(self, targetType, targetName):
         cu = self.db.cursor()

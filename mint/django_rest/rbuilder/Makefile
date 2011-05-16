@@ -1,10 +1,10 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory
+SUBDIRS = platforms reporting inventory metrics modellib manager querysets packages changelog
 
 python_files = $(wildcard *.py)
 
