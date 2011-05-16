@@ -25,10 +25,10 @@ class UserGroups(modellib.Collection):
 
 
 class UserGroup(modellib.XObjIdModel):
-    user_group_id = modellib.XObjHidden(models.AutoField(primary_key=True, db_column='usergroupid'))
-    user_group_name = models.CharField(unique=True, max_length=128, db_column='usergroup')
-    user_group_members = modellib.DeferredManyToManyField('User', through='UserGroupMember', db_column='userid')
-    
+
+    user_group_id = models.AutoField(primary_key=True, db_column='usergroupid')
+    name = models.CharField(unique=True, max_length=128, db_column='usergroup')
+
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroups'
@@ -38,7 +38,7 @@ class UserGroup(modellib.XObjIdModel):
 
 
     def __unicode__(self):
-        return self.user_group_owner
+        return self.name
 
 
 class Users(modellib.Collection):

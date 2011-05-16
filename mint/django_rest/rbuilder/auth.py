@@ -56,7 +56,7 @@ def getAuth(request):
 def isAdmin(user):
      if user is not None and isinstance(user, User):
          groups = user.user_groups.all()
-         admingroup = UserGroup.objects.get(user_group='MintAdmin')
+         admingroup = UserGroup.objects.get(name='MintAdmin')
          if admingroup in groups:
              return True
      return False

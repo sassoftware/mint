@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <django-objects version="1.0">
   <object pk="1" model="users.usergroup">
-    <field type="CharField" name="user_group_owner">admin</field>
+    <field type="CharField" name="name">admin</field>
   </object>
   <object pk="2" model="users.usergroup">
-    <field type="CharField" name="user_group_owner">MintAdmin</field>
+    <field type="CharField" name="name">MintAdmin</field>
   </object>
   <object pk="2000" model="users.usergroup">
-    <field type="CharField" name="user_group_owner">testuser</field>
+    <field type="CharField" name="name">testuser</field>
   </object>
   <object pk="1" model="users.user">
     <field type="CharField" name="user_name">admin</field>
