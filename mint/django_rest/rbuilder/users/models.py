@@ -26,7 +26,7 @@ class UserGroups(modellib.Collection):
 
 class UserGroup(modellib.XObjIdModel):
     user_group_id = models.AutoField(primary_key=True, db_column='usergroupid')
-    user_group_owner = models.CharField(unique=True, max_length=128, db_column='usergroup')
+    name = models.CharField(unique=True, max_length=128, db_column='usergroup')
 
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
@@ -35,7 +35,7 @@ class UserGroup(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='user_group')
 
     def __unicode__(self):
-        return self.user_group_owner
+        return self.name
 
 
 class Users(modellib.Collection):
