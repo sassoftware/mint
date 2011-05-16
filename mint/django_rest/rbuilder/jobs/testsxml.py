@@ -61,22 +61,22 @@ job_states_xml = """\
 <job_states count="4" end_index="3" filter_by="" full_collection="http://testserver/api/job_states" id="http://testserver/api/job_states;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <job_state id="http://testserver/api/job_states/1">
     <job_state_id>1</job_state_id>
-    <jobs href="http://testserver/api/job_states/1/jobs"/>
+    <jobs id="http://testserver/api/job_states/1/jobs"/>
     <name>Queued</name>
   </job_state>
   <job_state id="http://testserver/api/job_states/2">
     <job_state_id>2</job_state_id>
-    <jobs href="http://testserver/api/job_states/2/jobs"/>
+    <jobs id="http://testserver/api/job_states/2/jobs"/>
     <name>Running</name>
   </job_state>
   <job_state id="http://testserver/api/job_states/3">
     <job_state_id>3</job_state_id>
-    <jobs href="http://testserver/api/job_states/3/jobs"/>
+    <jobs id="http://testserver/api/job_states/3/jobs"/>
     <name>Completed</name>
   </job_state>
   <job_state id="http://testserver/api/job_states/4">
     <job_state_id>4</job_state_id>
-    <jobs href="http://testserver/api/job_states/4/jobs"/>
+    <jobs id="http://testserver/api/job_states/4/jobs"/>
     <name>Failed</name>
   </job_state>
 </job_states>"""
@@ -85,7 +85,7 @@ job_state_xml = """\
 <?xml version="1.0"?>
 <job_state id="http://testserver/api/job_states/1">
   <job_state_id>1</job_state_id>
-  <jobs href="http://testserver/api/job_states/1/jobs"/>
+  <jobs id="http://testserver/api/job_states/1/jobs"/>
   <name>Queued</name>
 </job_state>"""
 

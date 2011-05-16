@@ -40,14 +40,6 @@ def APIReadOnly(field):
     field.APIReadOnly = True
     return field
 
-class DeferredForeignKeyMixIn(object):
-    """
-    Foreign Key that is deferred.  That means that as we enconter instances of
-    this foreign key during serialization, we will create an href for the
-    model instead of a full xml representation of the model.
-    """
-    Deferred = True
-
 type_map = {}
 
 class BaseManager(models.Manager):
@@ -169,7 +161,7 @@ class BaseManager(models.Manager):
 
         return oldModel, loaded_model
 
-    def load_from_href(self, xobjModel, refAttr="href"):
+    def load_from_href(self, xobjModel):
         """
         Given an xobjModel, and an attribute to look at on that xobjModel for
         a url, try to load the corresponding django model identified by that
@@ -179,11 +171,13 @@ class BaseManager(models.Manager):
         if xobjModel is None:
             return None
 
-        href = getattr(xobjModel, refAttr, None)
-
-        # Check id as well
-        if not href:
-            href = getattr(xobjModel, "id", None)
+        # Check both href and id, preferring id.
+        if hasattr(xobjModel, "id"):
+            href = getattr(xobjModel, "id")
+        elif hasattr(xobjModel, "href"):
+            href = getattr(xobjModel, "href")
+        else:
+            href = None
 
         if href:
             path = urlparse.urlparse(href)[2]
@@ -221,8 +215,11 @@ class BaseManager(models.Manager):
             # Special case for FK fields which should be hrefs.
             elif isinstance(field, SerializedForeignKey):
                 val = field.related.parent_model.objects.load_from_object(val, request, save=save)
-            elif isinstance(field, InlinedForeignKey):
-                lookup = { field.visible : str(val) }
+            elif isinstance(field, ForeignKey) and \
+                 field.text_field is not None and \
+                 str(val) is not '' and \
+                 hasattr(val, "_xobj"):
+                lookup = { field.text_field : str(val) }
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
             elif isinstance(field, related.RelatedField):
@@ -375,8 +372,7 @@ class BaseManager(models.Manager):
                     objlist = [ objlist ]
             for rel_obj in objlist or []:
                 modelCls = m2m_mgr.model
-                refName = getattr(modelCls, 'ref_name', 'href')
-                rel_mod = modelCls.objects.load_from_href(rel_obj, refName)
+                rel_mod = modelCls.objects.load_from_href(rel_obj)
                 if rel_mod is None:
                     rel_mod = modelCls.objects.load_from_object(
                         rel_obj, request)
@@ -1008,7 +1004,6 @@ class XObjModel(models.Model):
                 text_field = getattr(field, 'text_field', None)
                 serialized = getattr(field, 'serialized', False)
                 visible = getattr(field, 'visible', None)
-                refName = getattr(field, 'ref_name', 'href')
                 if val:
                     if visible:
                         # If the visible prop is set, we want to copy the
@@ -1019,8 +1014,8 @@ class XObjModel(models.Model):
                         refModel = type('%s_ref' % \
                             self.__class__.__name__, (object,), {})()
                         refModel._xobj = xobj.XObjMetadata(
-                                            attributes = {refName:str})
-                        setattr(refModel, refName, 
+                                            attributes = {"id":str})
+                        setattr(refModel, "id", 
                             val.get_absolute_url(request))
                         if text_field and getattr(val, text_field):
                             refModel._xobj.text = getattr(val, text_field)
@@ -1053,12 +1048,11 @@ class XObjModel(models.Model):
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
                 rel_mod = accessor.model()
-                ref_name = accessor.field.ref_name
                 href = rel_mod.get_absolute_url(request, parents=[self],
                     view_name=accessor.field.view_name)
                 accessor_model._xobj = xobj.XObjMetadata(
-                    attributes={ref_name:str})
-                setattr(accessor_model, ref_name, href)
+                    attributes={"id":str})
+                setattr(accessor_model, "id", href)
                 setattr(xobj_model, accessorName, accessor_model)
             else:
                 # In django, accessors are always lists of other models.
@@ -1242,9 +1236,9 @@ class XObjHrefModel(XObjModel):
     _xobj = xobj.XObjMetadata(
                 attributes = {})
 
-    def __init__(self, refValue, ref_name='href'):
-        self._xobj.attributes[ref_name] = str
-        setattr(self, ref_name, refValue)
+    def __init__(self, refValue):
+        self._xobj.attributes["id"] = str
+        setattr(self, "id", refValue)
         
 class HrefField(models.Field):
     def __init__(self, href=None):
@@ -1272,16 +1266,6 @@ class ForeignKey(models.ForeignKey):
         else:
             self.text_field = None
 
-        # ref_name is the attribute name to use when bulding the url for the
-        # foreign key accessor on the parent model.  Usually it is either id
-        # or href.  We have to support both and default to href as older code
-        # expects it to be href.
-        if kwargs.has_key('ref_name'):
-            self.ref_name = kwargs['ref_name']
-            kwargs.pop('ref_name')
-        else:
-            self.ref_name = 'href'
-
         # view_name is the name of the view from urls.py that should be used
         # to build a url for this accessor on the parent model.
         # E.g. Version has a Fk to Project, and the accessor is named
@@ -1295,51 +1279,28 @@ class ForeignKey(models.ForeignKey):
 
         super(ForeignKey, self).__init__(*args, **kwargs)
 
-class ManyToManyField(models.ManyToManyField):
-    """
-    Wrapper of ManyToManyFields
-
-    Adds the ability to specify ref_name, which is an attribute name whose
-    value will be an absolute url of the model.
-    """
-    def __init__(self, *args, **kwargs):
-        # ref_name is the attribute name to use when bulding the url for the
-        # m2m accessor on the parent model.  Usually it is either id
-        # or href.  We have to support both and default to href as older code
-        # expects it to be href.
-        if kwargs.has_key('ref_name'):
-            self.ref_name = kwargs['ref_name']
-            kwargs.pop('ref_name')
-        else:
-            self.ref_name = 'href'
-
-        super(ManyToManyField, self).__init__(*args, **kwargs)
-
 class SerializedForeignKey(ForeignKey):
     """
-    By default, Foreign Keys serialize to hrefs. Use this field class if you
-    want them to serialize to the full xml object representation instead.  Be
-    careful of self referenceing models that can cause infinite recursion.
+    By default, Foreign Keys serialize as hrefs on the originating model (the
+    model that contains the ForeignKey field). Use this field class if you
+    instead want them to serialize to the full xml object representation of
+    the target (destination) model.  Be careful of self referenceing models
+    that can cause infinite recursion.
     """
     def __init__(self, *args, **kwargs):
         self.text_field = None
         self.serialized = True
         super(SerializedForeignKey, self).__init__(*args, **kwargs)
 
-class InlinedForeignKey(ForeignKey):
+class DeferredForeignKeyMixIn(object):
     """
-    If you want a FK to be serialized as one of its fields, use the "visible"
-    argument
+    Foreign Key that is deferred.  That means that as we enconter instances of
+    this foreign key during serialization, we will create an href for the
+    model instead of a full xml representation of the model.
     """
-    def __init__(self, *args, **kwargs):
-        self.text_field = None
-        self.visible = kwargs.pop('visible')
-        super(InlinedForeignKey, self).__init__(*args, **kwargs)
+    Deferred = True
 
 class DeferredForeignKey(ForeignKey, DeferredForeignKeyMixIn):
-    pass
-
-class InlinedDeferredForeignKey(InlinedForeignKey, DeferredForeignKeyMixIn):
     pass
 
 class DeferredManyToManyField(models.ManyToManyField,

@@ -985,9 +985,9 @@ class ManagementNodesTestCase(XMLTestCase):
                 'boo!', zone2.zone_id,)
         ]
         self.failUnlessEqual(
-            [ (str(x.node_jid), int(os.path.basename(x.zone.href)),
+            [ (str(x.node_jid), int(os.path.basename(x.zone.id)),
                     str(x.local), str(x.name),
-                    int(os.path.basename(x.managing_zone.href)))
+                    int(os.path.basename(x.managing_zone.id)))
                 for x in nodes ],
             exp)
 

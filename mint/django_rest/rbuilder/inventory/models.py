@@ -636,26 +636,26 @@ class System(modellib.XObjIdModel):
             class CredentialsHref(object): 
                 _xobj = xobj.XObjMetadata(
                             tag='credentials',
-                            attributes={'href':str})
+                            attributes={'id':str})
 
                 def __init__(self, href):
-                    self.href = href
+                    self.id = href
                     
             class ConfigurationHref(object): 
                 _xobj = xobj.XObjMetadata(
                             tag='configuration',
-                            attributes={'href':str})
+                            attributes={'id':str})
 
                 def __init__(self, href):
-                    self.href = href
+                    self.id = href
                     
             class ConfigurationDescriptorHref(object): 
                 _xobj = xobj.XObjMetadata(
                             tag='configuration_descriptor',
-                            attributes={'href':str})
+                            attributes={'id':str})
 
                 def __init__(self, href):
-                    self.href = href
+                    self.id = href
 
             xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
                 '%s/credentials' % self.get_absolute_url(request)))

@@ -54,7 +54,7 @@ class ChangeLogEntry(modellib.XObjIdModel):
                 tag = "change_log_entry")
 
     change_log_entry_id = models.AutoField(primary_key=True)
-    change_log = modellib.ForeignKey(ChangeLog, ref_name='id',
+    change_log = modellib.ForeignKey(ChangeLog, 
         related_name='change_log_entries')
     entry_date = modellib.DateTimeUtcField(auto_now_add=True)
     entry_text = models.TextField()
