@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <django-objects version="1.0">
   <object pk="5" model="querysets.filterentry">
-    <field type="TextField" name="field">target.targetname</field>
+    <field type="TextField" name="field">target.target_name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">ec2</field>
   </object>
   <object pk="6" model="querysets.filterentry">
-    <field type="TextField" name="field">target.targetname</field>
+    <field type="TextField" name="field">target.target_name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">vsphere</field>
   </object>
   <object pk="7" model="querysets.filterentry">
-    <field type="TextField" name="field">target.targetname</field>
+    <field type="TextField" name="field">target.target_name</field>
     <field type="TextField" name="operator">EQUAL</field>
     <field type="TextField" name="value">esx</field>
   </object>
@@ -133,16 +133,16 @@
   </object>
 
   <object pk="1" model="rbuilder.targets">
-    <field type="CharField" name="targettype">aws</field>
-    <field type="CharField" name="targetname">ec2</field>
+    <field type="CharField" name="target_type">aws</field>
+    <field type="CharField" name="target_name">ec2</field>
   </object>
   <object pk="2" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">vsphere</field>
+    <field type="CharField" name="target_type">vmware</field>
+    <field type="CharField" name="target_name">vsphere</field>
   </object>
   <object pk="3" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">esx</field>
+    <field type="CharField" name="target_type">vmware</field>
+    <field type="CharField" name="target_name">esx</field>
   </object>
 
     <object pk="210" model="inventory.system">
