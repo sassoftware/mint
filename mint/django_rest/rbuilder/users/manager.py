@@ -96,6 +96,3 @@ class UserGroupMembersManager(basemanager.BaseManager):
         groups = models.User.user_groups.through.objects.filter(user_group_id=user_group_id)
         UserGroupMembers.user_group_member = groups
         return UserGroupMembers
-        
-    
-    
