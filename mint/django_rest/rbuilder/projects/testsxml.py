@@ -4,3 +4,6 @@
 #
 # All rights reserved.
 #
+
+projects_xml = """\
+"""
