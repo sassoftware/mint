@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-
 import os
 import logging
 
@@ -17,7 +16,8 @@ from django.http import HttpResponseBadRequest
 from mint import config
 from mint.django_rest import handler
 from mint.django_rest.rbuilder import auth
-from mint.django_rest.rbuilder import models as rbuildermodels
+# from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.lib import mintutils
 
@@ -114,7 +114,7 @@ class LocalSetMintAdminMiddleware(BaseMiddleware):
     def _process_request(self, request):
         request._is_admin = True
         request._is_authenticated = True
-        request._authUser = rbuildermodels.Users.objects.get(pk=1)
+        request._authUser = usersmodels.User.objects.get(pk=1)
         request._auth = ("admin", "admin")
         return None
 
