@@ -151,4 +151,3 @@ class LabelField(ObjectField):
 
 class FlavorField(ObjectField):
     _emptyIsNone = False
-    # parser = staticmethod(deps.parseFlavor)
