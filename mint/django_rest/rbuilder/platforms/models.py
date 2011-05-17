@@ -141,7 +141,7 @@ class PlatformVersion(modellib.XObjIdModel):
     revision = fields.CharField()
     label = fields.CharField()
     ordering = fields.CharField()
-    _platformId = fields.CharField()
+    platform_id = fields.CharField()
     # id = fields.AbsoluteUrlField(isAttribute=True)
     _xobj = xobj.XObjMetadata(tag='platform_version')
     
