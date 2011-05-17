@@ -23,7 +23,6 @@ from django.test.client import Client, FakePayload
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import views
-from mint.django_rest.rbuilder.management.commands import syncfulldb
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
