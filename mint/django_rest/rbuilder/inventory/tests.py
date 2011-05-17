@@ -1581,7 +1581,8 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'ssl_client_certificate',
-                            'time_created', 'time_updated'])
+                            'time_created', 'time_updated',
+                            'registration_date'])
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node

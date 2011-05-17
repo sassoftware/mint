@@ -2383,7 +2383,7 @@ system_installed_software_version_stage_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <management_interface id="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <system_events id="http://testserver/api/inventory/systems/3/system_events"/>
-  <project id="http://testserver/api/products/chater-foo">chater-foo</appliance>
+  <project id="http://testserver/api/products/chater-foo">chater-foo</project>
   <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
   <system_tags/>
   <has_running_jobs>True</has_running_jobs>
