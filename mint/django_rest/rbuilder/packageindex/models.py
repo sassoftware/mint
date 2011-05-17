@@ -31,7 +31,7 @@ class Package(modellib.XObjIdModel):
 
     package_id = models.AutoField(primary_key=True, db_column='pkgid')
     project = modellib.ForeignKey(Project,
-        db_column="projectid", ref_name='id')
+        db_column="projectid")
     name = models.TextField()
     version = models.TextField()
     server_name = models.TextField(db_column="servername")

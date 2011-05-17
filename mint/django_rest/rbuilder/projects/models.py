@@ -115,8 +115,7 @@ class Version(modellib.XObjIdModel):
     version_id = models.AutoField(primary_key=True,
         db_column='productversionid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
-        related_name="versions", view_name="ProjectVersions",
-        ref_name="id")
+        related_name="versions", view_name="ProjectVersions")
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
@@ -189,7 +188,7 @@ class Image(modellib.XObjIdModel):
 
     image_id = models.AutoField(primary_key=True, db_column='buildid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid',
-        related_name="images", view_name="ProjectImages", ref_name="id")
+        related_name="images", view_name="ProjectImages")
     release = models.ForeignKey(Release, null=True,
         db_column='pubreleaseid')
     build_type = models.IntegerField(db_column="buildType")
