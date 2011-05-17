@@ -32,7 +32,7 @@ class Package(modellib.XObjIdModel):
     
     package_id = D(models.AutoField(primary_key=True), 
         "Database id of package")
-    name = D(models.CharField(max_length=100, unique=True),
+    name = D(models.TextField(unique=True),
         "Name of package")
     description = D(models.TextField(null=True),
         "Description of package")
@@ -112,7 +112,7 @@ class PackageVersion(modellib.XObjIdModel):
 class PackageVersionAction(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packages_package_version_actions"
+        db_table = "packages_package_version_action"
     _xobj = xobj.XObjMetadata(tag="package_version_action")
 
     url_key = ["package_version", "pk"]
@@ -287,7 +287,7 @@ class PackageSource(modellib.XObjIdModel):
 class PackageSourceAction(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packages_package_source_actions"
+        db_table = "packages_package_source_action"
     _xobj = xobj.XObjMetadata(tag="package_source_action")
 
     package_source_action_id = D(models.AutoField(primary_key=True), 
@@ -401,7 +401,7 @@ class PackageBuild(modellib.XObjIdModel):
 class PackageBuildAction(modellib.XObjIdModel):
 
     class Meta:
-        db_table = "packages_package_build_actions"
+        db_table = "packages_package_build_action"
     _xobj = xobj.XObjMetadata(tag="package_build_action")
 
     package_build_action_id = D(models.AutoField(primary_key=True), 
