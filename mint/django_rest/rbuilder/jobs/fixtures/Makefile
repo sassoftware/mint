@@ -4,9 +4,8 @@
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory metrics modellib manager querysets packages changelog projects jobs
-
-python_files = $(wildcard *.py)
+# These fixtures files aren't py files, but they get installed the same way.
+python_files = $(wildcard *.xml)
 
 all: default-all
 
@@ -15,5 +14,5 @@ install: pyfiles-install default-install
 clean: default-clean
 
 
-include ../../../Make.rules
+include ../../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

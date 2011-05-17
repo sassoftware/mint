@@ -11,10 +11,11 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.systemmgr import SystemManager
 from mint.django_rest.rbuilder.inventory.manager.versionmgr import VersionManager
 from mint.django_rest.rbuilder.inventory.manager.repeatermgr import RepeaterManager
-from mint.django_rest.rbuilder.inventory.manager.jobmgr import JobManager
+from mint.django_rest.rbuilder.jobs.manager import JobManager
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager, PackageVersionManager
+from mint.django_rest.rbuilder.projects.manager import ProjectManager
 from mint.django_rest.rbuilder.users.manager import UsersManager, UserGroupsManager, UserGroupMembersManager, UserUserGroupsManager
 from mint.django_rest.rbuilder.notices.manager import UserNoticesManager, GlobalNoticesManager
 
@@ -32,6 +33,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'usersMgr' : UsersManager,
         'userGroupsMgr': UserGroupsManager,
         'userGroupMembersMgr': UserGroupMembersManager,
+        'projectManager' : ProjectManager,
         'userNoticesManager' : UserNoticesManager,
         'globalNoticesManager' : GlobalNoticesManager,
         'userUserGroupsManager' : UserUserGroupsManager,

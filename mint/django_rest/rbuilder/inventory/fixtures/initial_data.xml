@@ -325,62 +325,7 @@
     </field>
   </dataFields> 
 </descriptor>]]></field>
-    </object>
-    <object pk="1" model="inventory.eventtype">
-        <field type="CharField" name="name">system registration</field>
-        <field type="CharField" name="description">System registration</field>
-        <field type="SmallIntegerField" name="priority">110</field>
-    </object>
-    <object pk="2" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system poll</field>
-        <field type="CharField" name="description">On-demand system synchronization</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="3" model="inventory.eventtype">
-        <field type="CharField" name="name">system poll</field>
-        <field type="CharField" name="description">System synchronization</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="4" model="inventory.eventtype">
-        <field type="CharField" name="name">system apply update</field>
-        <field type="CharField" name="description">Scheduled system update</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="5" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system apply update</field>
-        <field type="CharField" name="description">System update</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="6" model="inventory.eventtype">
-        <field type="CharField" name="name">system shutdown</field>
-        <field type="CharField" name="description">Scheduled system shutdown</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="7" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system shutdown</field>
-        <field type="CharField" name="description">System shutdown</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="8" model="inventory.eventtype">
-        <field type="CharField" name="name">system launch wait</field>
-        <field type="CharField" name="description">Launched system network data discovery</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="9" model="inventory.eventtype">
-        <field type="CharField" name="name">system detect management interface</field>
-        <field type="CharField" name="description">System management interface detection</field>
-        <field type="SmallIntegerField" name="priority">50</field>
-    </object>
-    <object pk="10" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system detect management interface</field>
-        <field type="CharField" name="description">On-demand system management interface detection</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
-    <object pk="11" model="inventory.eventtype">
-        <field type="CharField" name="name">immediate system configuration</field>
-        <field type="CharField" name="description">Update system configuration</field>
-        <field type="SmallIntegerField" name="priority">105</field>
-    </object>
+  </object>
   <object pk="2" model="inventory.system">
         <field type="CharField" name="name">rPath Update Service</field>
         <field type="CharField" name="description">Local rPath Update Service</field>
@@ -482,18 +427,6 @@
     <field type="CharField" name="name">non-responsive-credentials</field>
     <field type="CharField" name="description">Not responding: Invalid credentials</field>
     <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
-  </object>
-  <object pk="1" model="inventory.jobstate">
-    <field type="CharField" name="name">Queued</field>
-  </object>
-  <object pk="2" model="inventory.jobstate">
-    <field type="CharField" name="name">Running</field>
-  </object>
-  <object pk="3" model="inventory.jobstate">
-    <field type="CharField" name="name">Completed</field>
-  </object>
-  <object pk="4" model="inventory.jobstate">
-    <field type="CharField" name="name">Failed</field>
   </object>
   <object pk="561f95e06c749a518526703d3c7013d1a1579f57" model="rbuilder.pkicertificates">
     <field type="TextField" name="purpose">hg_ca</field>
@@ -785,25 +718,25 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="DateTimeField" name="time_issued">2010-09-01 15:18:53</field>
     <field type="DateTimeField" name="time_expired">2010-09-01 15:18:53</field>
   </object>
-  <object pk="1" model="rbuilder.products">
-    <field type="CharField" name="host_name">chater-foo.eng.rpath.com</field>
+  <object pk="1" model="projects.project">
+    <field type="CharField" name="hostname">chater-foo.eng.rpath.com</field>
     <field type="CharField" name="name">chater-foo</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="domain_name">eng.rpath.com</field>
     <field type="CharField" name="short_name">chater-foo</field>
     <field type="CharField" name="project_url">http://</field>
-    <field type="CharField" name="repository_host_name">chater-foo.eng.rpath.com</field>
+    <field type="CharField" name="repository_hostname">chater-foo.eng.rpath.com</field>
     <field type="TextField" name="description">chater-foo</field>
-    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="project_type">1</field>
     <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backup_external">0</field>
     <field type="DecimalField" name="time_created">0</field>
     <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="users.User" name="creator_id" rel="ManyToOneRel">1</field>
+    <field to="users.User" name="creator" rel="ManyToOneRel">1</field>
   </object>
-  <object pk="1" model="rbuilder.versions">
-    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">1</field>
+  <object pk="1" model="projects.version">
+    <field to="projects.project" name="project" rel="ManyToOneRel">1</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>

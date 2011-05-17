@@ -7,10 +7,9 @@
 from conary import versions
 
 from django.db import models
-from django.conf import settings
 
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.projects.models import Project
 
 from xobj import xobj
 
@@ -28,12 +27,11 @@ class Package(modellib.XObjIdModel):
                 tag='package')
 
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = "packageindex"
 
     package_id = models.AutoField(primary_key=True, db_column='pkgid')
-    project = modellib.ForeignKey(rbuildermodels.Products,
-        db_column="projectid", ref_name='id')
+    project = modellib.ForeignKey(Project,
+        db_column="projectid")
     name = models.TextField()
     version = models.TextField()
     server_name = models.TextField(db_column="servername")

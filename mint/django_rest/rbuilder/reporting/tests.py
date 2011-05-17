@@ -1,5 +1,6 @@
-from mint.django_rest.rbuilder.models import Images, Products, Versions
-from mint.django_rest.rbuilder.users.models import Users
+from mint.django_rest.rbuilder.models import Images, Versions
+from mint.django_rest.rbuilder.users.models import User
+from mint.django_rest.rbuilder.projects.models import Project
 
 from django.test.client import Client
 
@@ -61,15 +62,15 @@ class ReportTypeDescriptorTestCase(unittest.TestCase):
 class ImagesPerProductTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = Users.objects.create(user_name='user',full_name='User T. Foo',passwd='foo',
+        self.user = User.objects.create(user_name='user',full_name='User T. Foo',passwd='foo',
             email='foo@bar.com', time_created=str(time.time()), time_accessed=str(time.time()),
             active=1)
-        self.product = Products.objects.create(host_name='foo',name='foo Applicance', 
-            namespace='rpath',domain_name='eng.rpath.com',repositoryHostName='foo.eng.rpath.com',
-            prod_type='Appliance',hidden=0,creator_id=self.user,time_created=str(time.time()),
-            time_modified=str(time.time()), short_name='foo')
-        self.version = Versions.objects.create(product_id=self.product,namespace='foo',name='bar',
-            time_created=str(time.time()))
+        self.product = Project.objects.create(hostname='foo',name='foo Applicance', 
+            namespace='rpath',domainname='eng.rpath.com',repositoryHostName='foo.eng.rpath.com',
+            prodtype='Appliance',hidden=0,creatorid=self.user,timecreated=str(time.time()),
+            timemodified=str(time.time()), shortname='foo')
+        self.version = Versions.objects.create(productId=self.product,namespace='foo',name='bar',
+            timecreated=str(time.time()))
             
         dt = datetime.date(2008,1,1)
         timeint = time.mktime(dt.timetuple())
