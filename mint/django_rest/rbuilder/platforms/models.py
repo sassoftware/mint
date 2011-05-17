@@ -1,7 +1,6 @@
 from mint.django_rest.rbuilder.platforms import fields
 from xobj import xobj
 from mint.django_rest.rbuilder import modellib
-from mint.django_rest.rbuilder.platforms import fields
  
 
 class Status(modellib.XObjModel):
@@ -171,7 +170,7 @@ class Platform(modellib.XObjIdModel):
     configurable = fields.BooleanField()
     abstract = fields.BooleanField()
     mirror_permission = fields.BooleanField()
-    repository_url = _RepositoryUrlField()
+    # repository_url = _RepositoryUrlField()
     # contentSources = fields.ModelField(SourceRefs)
     content_sources = fields.UrlField()
     platform_type = fields.CharField()

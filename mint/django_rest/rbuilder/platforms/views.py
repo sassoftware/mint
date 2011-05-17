@@ -11,7 +11,7 @@ class SourceStatusService(service.BaseService):
     def rest_GET(self, request, source_type, short_name):
         return self.get(source_type, short_name)
 
-    def get(self, content_source_type, short_name):
+    def get(self, source_type, short_name):
         return self.mgr.getSourceStatusByName(source_type, short_name)
 
 
