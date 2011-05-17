@@ -93,28 +93,28 @@
   </object>
 
   <object pk="2" model="rbuilder.products">
-    <field type="CharField" name="hostname">postgres.rpath.com</field>
+    <field type="CharField" name="host_name">postgres.rpath.com</field>
     <field type="CharField" name="name">postgres</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">rpath.com</field>
-    <field type="CharField" name="shortname">postgres</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">postgres.rpath.com</field>
+    <field type="CharField" name="domain_name">rpath.com</field>
+    <field type="CharField" name="short_name">postgres</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_host_name">postgres.rpath.com</field>
     <field type="TextField" name="description">postgres</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">2</field>
+    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">2</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
   <object pk="1" model="inventory.stage">
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">2</field>
@@ -123,28 +123,28 @@
   </object>
 
   <object pk="3" model="rbuilder.products">
-    <field type="CharField" name="hostname">httpd.rpath.com</field>
+    <field type="CharField" name="host_name">httpd.rpath.com</field>
     <field type="CharField" name="name">httpd</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">httpd</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">httpd.rpath.com</field>
+    <field type="CharField" name="domain_name">eng.rpath.com</field>
+    <field type="CharField" name="short_name">httpd</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_host_name">httpd.rpath.com</field>
     <field type="TextField" name="description">httpd</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
   <object pk="3" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">3</field>
+    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">3</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
   <object pk="2" model="inventory.stage">
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">3</field>
@@ -153,28 +153,28 @@
   </object>
 
   <object pk="4" model="rbuilder.products">
-    <field type="CharField" name="hostname">jboss.rpath.com</field>
+    <field type="CharField" name="host_name">jboss.rpath.com</field>
     <field type="CharField" name="name">jboss</field>
     <field type="CharField" name="namespace">rpath</field>
-    <field type="CharField" name="domainname">eng.rpath.com</field>
-    <field type="CharField" name="shortname">jboss</field>
-    <field type="CharField" name="projecturl">http://</field>
-    <field type="CharField" name="repositoryHostName">jboss.rpath.com</field>
+    <field type="CharField" name="domain_name">eng.rpath.com</field>
+    <field type="CharField" name="short_name">jboss</field>
+    <field type="CharField" name="project_url">http://</field>
+    <field type="CharField" name="repository_host_name">jboss.rpath.com</field>
     <field type="TextField" name="description">jboss</field>
-    <field type="CharField" name="prodtype">1</field>
-    <field type="CharField" name="commitemail">a@a.com</field>
+    <field type="CharField" name="prod_type">1</field>
+    <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backupexternal">0</field>
-    <field type="DecimalField" name="timecreated">0</field>
-    <field type="DecimalField" name="timemodified">0</field>
+    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="time_modified">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
-    <field to="rbuilder.users" name="creatorid" rel="ManyToOneRel">1</field>
+    <field to="users.users" name="creator_id" rel="ManyToOneRel">1</field>
   </object>
   <object pk="4" model="rbuilder.versions">
-    <field to="rbuilder.products" name="productId" rel="ManyToOneRel">4</field>
+    <field to="rbuilder.products" name="product_id" rel="ManyToOneRel">4</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="timecreated">0</field>
+    <field type="DecimalField" name="time_created">0</field>
   </object>
   <object pk="3" model="inventory.stage">
     <field to="rbuilder.versions" name="major_version" rel="ManyToOneRel">4</field>
@@ -183,16 +183,16 @@
   </object>
 
   <object pk="1" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">vsphere1.eng.rpath.com</field>
+    <field type="CharField" name="target_type">vmware</field>
+    <field type="CharField" name="target_name">vsphere1.eng.rpath.com</field>
   </object>
   <object pk="2" model="rbuilder.targets">
-    <field type="CharField" name="targettype">vmware</field>
-    <field type="CharField" name="targetname">vsphere2.eng.rpath.com</field>
+    <field type="CharField" name="target_type">vmware</field>
+    <field type="CharField" name="target_name">vsphere2.eng.rpath.com</field>
   </object>
   <object pk="3" model="rbuilder.targets">
-    <field type="CharField" name="targettype">ec2</field>
-    <field type="CharField" name="targetname">aws</field>
+    <field type="CharField" name="target_type">ec2</field>
+    <field type="CharField" name="target_name">aws</field>
   </object>
 
   <object pk="2" model="inventory.system">
@@ -270,7 +270,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -376,7 +376,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -482,7 +482,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">2</field>
@@ -589,7 +589,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -695,7 +695,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">8</field>
@@ -802,7 +802,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">12</field>
@@ -908,7 +908,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>
@@ -1014,7 +1014,7 @@ faC7SRCZ/AwFH/wytT+JK6HNKEjLdMjoiulZ9W/GTy/9VtQDtB06
 -----END RSA PRIVATE KEY-----
 </field>
     <field type="CharField" name="ssl_server_certificate">testsystemsslservercertificate</field>
-    <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel">
+    <field to="users.users" name="launching_user" rel="ManyToOneRel">
       <None/>
     </field>
     <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">4</field>

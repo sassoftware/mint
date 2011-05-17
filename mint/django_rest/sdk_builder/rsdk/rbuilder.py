@@ -1,24 +1,22 @@
 from rsdk.Fields import *  # pyflakes=ignore
-from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.sdk import SDKModel, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
 @register
-class Targets(object):
+class Targets(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     targettype = 'CharField'
     targetname = 'CharField'
     targetid = 'IntegerField'
 
 @register
-class Images(object):
+class Images(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     updatedby = 'Users'
     troveversion = 'CharField'
     trovename = 'CharField'
@@ -41,28 +39,25 @@ class Images(object):
     buildcount = 'IntegerField'
 
 @register
-class UserGroups(object):
+class UserGroups(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     usergroupid = 'AutoField'
     usergroup = 'CharField'
 
 @register
-class TargetUserCredentials(object):
+class TargetUserCredentials(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     userid = 'Users'
     targetid = 'Targets'
     targetcredentialsid = 'TargetCredentials'
     id = 'AutoField'
 
 @register
-class Products(object):
+class Products(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     timemodified = 'DecimalField'
     timecreated = 'DecimalField'
     shortname = 'CharField'
@@ -81,10 +76,9 @@ class Products(object):
     backupexternal = 'SmallIntegerField'
 
 @register
-class PkiCertificates(object):
+class PkiCertificates(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     x509_pem = 'TextField'
     time_issued = 'DateTimeUtcField'
     time_expired = 'DateTimeUtcField'
@@ -96,57 +90,51 @@ class PkiCertificates(object):
     ca_serial_index = 'IntegerField'
 
 @register
-class Fault(object):
+class Fault(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     traceback = 'TextField'
     message = 'CharField'
     code = 'IntegerField'
 
 @register
-class UserGroupMembers(object):
+class UserGroupMembers(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     userid = 'Users'
     usergroupid = 'UserGroups'
     id = 'AutoField'
 
 @register
-class TargetImagesDeployed(object):
+class TargetImagesDeployed(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     targetimageid = 'CharField'
     targetid = 'Targets'
     id = 'AutoField'
     fileid = 'IntegerField'
 
 @register
-class DatabaseVersion(object):
+class DatabaseVersion(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     version = 'SmallIntegerField'
     minor = 'SmallIntegerField'
     id = 'AutoField'
 
 @register
-class Members(object):
+class Members(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     userid = 'Users'
     product_id = 'Products'
     level = 'SmallIntegerField'
     id = 'AutoField'
 
 @register
-class Versions(object):
+class Versions(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     timecreated = 'DecimalField'
     product_version_id = 'AutoField'
     product_id = 'Products'
@@ -155,29 +143,26 @@ class Versions(object):
     description = 'TextField'
 
 @register
-class Downloads(object):
+class Downloads(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     timedownloaded = 'CharField'
     ip = 'CharField'
     image_id = 'Images'
     id = 'AutoField'
 
 @register
-class Sessions(object):
+class Sessions(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     sid = 'CharField'
     session_id = 'AutoField'
     data = 'TextField'
 
 @register
-class Releases(object):
+class Releases(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     version = 'CharField'
     updatedby = 'Users'
     timeupdated = 'DecimalField'
@@ -193,10 +178,9 @@ class Releases(object):
     createdby = 'Users'
 
 @register
-class Users(object):
+class Users(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     username = 'CharField'
     userid = 'AutoField'
     timecreated = 'DecimalField'
@@ -210,32 +194,28 @@ class Users(object):
     active = 'SmallIntegerField'
 
 @register
-class Jobs(object):
+class Jobs(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     job_uuid = 'TextField'
     job_id = 'AutoField'
 
 @register
-class TargetCredentials(object):
+class TargetCredentials(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     targetcredentialsid = 'AutoField'
     credentials = 'TextField'
 
 @register
-class Pk(object):
+class Pk(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
 
 @register
-class TargetData(object):
+class TargetData(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     value = 'TextField'
     targetid = 'Targets'
     name = 'CharField'
