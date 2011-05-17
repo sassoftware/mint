@@ -82,9 +82,9 @@ class SourceTypeManager(basemanager.BaseManager):
         return platformModels.SourceType.objects.get(source_type=source_type)
         
     @exposed
-    def getSourceTypes(self,):
+    def getSourceTypes(self):
         SourceTypes = platformModels.SourceTypes()
-        SourceTypes.source_type = platformModels.SourceType.objects.all().filter(source_type=source_type)
+        SourceTypes.source_type = platformModels.SourceType.objects.all()
         return SourceTypes
         
         
