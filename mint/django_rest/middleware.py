@@ -302,6 +302,14 @@ class SerializeXmlMiddleware(BaseMiddleware):
             metrics = request.GET.get('metrics', None)
             if metrics:
                 return response
-            response.write(response.model.to_xml(request))
+
+            format = request.GET.get('format', 'xml')
+            if format == 'json':
+                response.write(response.model.to_json(request))
+                response['Content-Type'] = 'application/json'
+            else:
+                response.write(response.model.to_xml(request))
+                response['Content-Type'] = 'text/xml'
+
         return response
         
