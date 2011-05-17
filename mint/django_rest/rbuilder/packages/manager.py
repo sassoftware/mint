@@ -11,7 +11,7 @@ from dateutil import tz
 from conary import conarycfg
 
 from mint.django_rest.rbuilder.manager import basemanager
-from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.packages import errors
 from mint.django_rest.rbuilder.packages import models
 
@@ -175,9 +175,9 @@ class PackageVersionManager(BaseManager):
 
         params = rmakemodels.FileParams()
         job_uuid, job = repeaterClient.pc_analyzeFiles(params) 
-        inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
-            job_state=inventorymodels.JobState.objects.get(
-                name=inventorymodels.JobState.RUNNING))
+        inventoryJob = jobmodels.Job(job_uuid=job_uuid,
+            job_state=jobmodels.JobState.objects.get(
+                name=jobmodels.JobState.RUNNING))
         inventoryJob.save()
         package_version_job.job = inventoryJob
         package_version_job.save()
@@ -271,9 +271,9 @@ class PackageVersionManager(BaseManager):
             packageName, packageVersion, label, factory, self.cfg.authUser,
             self.cfg.authPass, self.user.email, resultsLocation)
         
-        inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
-            job_state=inventorymodels.JobState.objects.get(
-                name=inventorymodels.JobState.RUNNING))
+        inventoryJob = jobmodels.Job(job_uuid=job_uuid,
+            job_state=jobmodels.JobState.objects.get(
+                name=jobmodels.JobState.RUNNING))
         inventoryJob.save()
         package_version_job.job = inventoryJob
         package_version_job.save()
@@ -288,9 +288,9 @@ class PackageVersionManager(BaseManager):
         repeaterClient = client.Client()
         job_uuid, job = repeaterClient.pc_downloadFiles(urls, resultsLocation)
 
-        inventoryJob = inventorymodels.Job(job_uuid=job_uuid,
-            job_state=inventorymodels.JobState.objects.get(
-                name=inventorymodels.JobState.RUNNING))
+        inventoryJob = jobmodels.Job(job_uuid=job_uuid,
+            job_state=jobmodels.JobState.objects.get(
+                name=jobmodels.JobState.RUNNING))
         inventoryJob.save()
         package_version_job.job = inventoryJob
         package_version_job.save()

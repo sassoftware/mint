@@ -71,8 +71,6 @@ class QuerySet(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = "query_set")
 
-    ref_name = "id"
-
     query_set_id = D(models.AutoField(primary_key=True),
         "The database id for the query set")
     name = D(models.TextField(unique=True),
@@ -83,8 +81,7 @@ class QuerySet(modellib.XObjIdModel):
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
-    children = D(modellib.ManyToManyField("self", symmetrical=False,
-        ref_name="id"),
+    children = D(models.ManyToManyField("self", symmetrical=False),
         "Query sets that are children of this query set")
     filter_entries = D(models.ManyToManyField("FilterEntry"),
         "Defined filter entries for this query set")
@@ -250,7 +247,7 @@ class SystemTag(modellib.XObjIdModel):
     def serialize(self, request=None, values=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
         querySetHref = self.query_tag.query_set.get_absolute_url(request)
-        xobjModel.query_set = modellib.XObjHrefModel(querySetHref, 'id')
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
          
 

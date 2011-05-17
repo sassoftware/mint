@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
 from mint.django_rest.rbuilder.users import views as usersviews
 from mint.django_rest.rbuilder.notices import views as noticesviews
+from mint.django_rest.rbuilder.jobs import views as jobviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -176,22 +177,22 @@ urlpatterns = patterns('',
     #     name='Users'),
 
     # Jobs
-    url(r'^api/inventory/jobs/?$',
-        inventoryviews.InventoryJobsService(),
+    url(r'^api/jobs/?$',
+        jobviews.JobsService(),
         name='Jobs'),
-    url(r'^api/inventory/jobs/(?P<job_id>[a-zA-Z0-9]+)/?$',
-        inventoryviews.InventoryJobsService(),
+    url(r'^api/jobs/(?P<job_id>[a-zA-Z0-9]+)/?$',
+        jobviews.JobsService(),
         name='Job'),
 
     # Job States
-    url(r'^api/inventory/job_states/?$',
-        inventoryviews.InventoryJobStatesService(),
+    url(r'^api/job_states/?$',
+        jobviews.JobStatesService(),
         name='JobStates'),
-    url(r'^api/inventory/job_states/(?P<job_state_id>[a-zA-Z0-9]+)/?$',
-        inventoryviews.InventoryJobStatesService(),
+    url(r'^api/job_states/(?P<job_state_id>[a-zA-Z0-9]+)/?$',
+        jobviews.JobStatesService(),
         name='JobState'),
-    url(r'^api/inventory/job_states/(?P<job_state_id>[a-zA-Z0-9]+)/jobs/?$',
-        inventoryviews.InventoryJobStatesJobsService(),
+    url(r'^api/job_states/(?P<job_state_id>[a-zA-Z0-9]+)/jobs/?$',
+        jobviews.JobStatesJobsService(),
         name='JobStateJobs'),
 
     # Major Versions

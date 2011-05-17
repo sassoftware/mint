@@ -587,41 +587,6 @@ class InventorySystemJobsService(BaseInventoryService):
     def get(self, system_id):
         return self.mgr.getSystemJobs(system_id)
 
-class InventoryJobsService(BaseInventoryService):
-    
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request, job_id=None):
-        return self.get(job_id)
-
-    def get(self, job_id):
-        if job_id:
-            return self.mgr.getJob(job_id)
-        else:
-            return self.mgr.getJobs()
-
-class InventoryJobStatesService(BaseInventoryService):
-
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request, job_state_id=None):
-        return self.get(job_state_id)
-
-    def get(self, job_state_id):
-        if job_state_id:
-            return self.mgr.getJobState(job_state_id)
-        else:
-            return self.mgr.getJobStates()
-
-class InventoryJobStatesJobsService(BaseInventoryService):
-
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request, job_state_id):
-        return self.get(job_state_id)
-
-    def get(self, job_state_id):
-        return self.mgr.getJobsByJobState(job_state_id)
 
 class InventorySystemJobStatesService(BaseInventoryService):
 

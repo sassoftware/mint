@@ -34,7 +34,7 @@ query_sets_xml = """\
       <query_tag id="http://testserver/api/query_sets/1/query_tags/1">
         <name>query-tag-All_Systems-1</name>
         <query_tag_id>1</query_tag_id>
-        <query_set href="http://testserver/api/query_sets/1"/>
+        <query_set id="http://testserver/api/query_sets/1"/>
       </query_tag>
     </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -63,7 +63,7 @@ query_sets_xml = """\
           <query_tag id="http://testserver/api/query_sets/2/query_tags/2">
             <name>query-tag-Active_Systems-2</name>
             <query_tag_id>2</query_tag_id>
-            <query_set href="http://testserver/api/query_sets/2"/>
+            <query_set id="http://testserver/api/query_sets/2"/>
           </query_tag>
         </query_tags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -95,7 +95,7 @@ query_sets_xml = """\
           <query_tag id="http://testserver/api/query_sets/3/query_tags/3">
             <name>query-tag-Inactive_Systems-3</name>
             <query_tag_id>3</query_tag_id>
-            <query_set href="http://testserver/api/query_sets/3"/>
+            <query_set id="http://testserver/api/query_sets/3"/>
           </query_tag>
         </query_tags>
         <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -131,7 +131,7 @@ query_sets_xml = """\
           <query_tag id="http://testserver/api/query_sets/2/query_tags/2">
             <name>query-tag-Active_Systems-2</name>
             <query_tag_id>2</query_tag_id>
-            <query_set href="http://testserver/api/query_sets/2"/>
+            <query_set id="http://testserver/api/query_sets/2"/>
           </query_tag>
         </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -163,7 +163,7 @@ query_sets_xml = """\
           <query_tag id="http://testserver/api/query_sets/3/query_tags/3">
             <name>query-tag-Inactive_Systems-3</name>
             <query_tag_id>3</query_tag_id>
-            <query_set href="http://testserver/api/query_sets/3"/>
+            <query_set id="http://testserver/api/query_sets/3"/>
           </query_tag>
         </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -195,7 +195,7 @@ query_sets_xml = """\
       <query_tag id="http://testserver/api/query_sets/4/query_tags/4">
         <name>query-tag-Physical_Systems-4</name>
         <query_tag_id>4</query_tag_id>
-        <query_set href="http://testserver/api/query_sets/4"/>
+        <query_set id="http://testserver/api/query_sets/4"/>
       </query_tag>
     </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -227,7 +227,7 @@ query_sets_xml = """\
       <query_tag id="http://testserver/api/query_sets/5/query_tags/5">
         <name>query-tag-Systems_named_like_3-5</name>
         <query_tag_id>5</query_tag_id>
-        <query_set href="http://testserver/api/query_sets/5"/>
+        <query_set id="http://testserver/api/query_sets/5"/>
       </query_tag>
     </query_tags>
     <created_date>2011-01-05T00:00:00+00:00</created_date>
@@ -264,7 +264,7 @@ query_set_xml = """\
       <query_tag id="http://testserver/api/query_sets/4/query_tags/4">
         <name>query-tag-Physical_Systems-4</name>
         <query_tag_id>4</query_tag_id>
-        <query_set href="http://testserver/api/query_sets/4"/>
+        <query_set id="http://testserver/api/query_sets/4"/>
       </query_tag>
     </query_tags>
     <created_date>2011-01-26T21:59:59+00:00</created_date>
@@ -298,7 +298,7 @@ query_set_fixtured_xml = """\
     <collection id="http://testserver/api/inventory/systems"/>
    <query_tags>
      <query_tag id="http://testserver/api/query_sets/5/query_tags/5">
-       <query_set href="http://testserver/api/query_sets/5"/>
+       <query_set id="http://testserver/api/query_sets/5"/>
        <name>query-tag-Systems_named_like_3-5</name>
        <query_tag_id>5</query_tag_id>
      </query_tag>
@@ -366,7 +366,7 @@ systems_chosen_post_xml2 = """\
 
 systems_chosen_post_xml3 = """\
 <?xml version="1.0"?>
-<system href="http://testserver/api/inventory/systems/9"/>
+<system id="http://testserver/api/inventory/systems/9"/>
 """
 
 query_set_update_xml = """\
@@ -485,11 +485,11 @@ system_7_xml = """\
   <local_uuid>system-7-local-uuid</local_uuid>
   <system_tags>
     <system_tag id="http://127.0.0.1:8000/api/inventory/systems/7/system_tags/2">
-      <query_tag href="http://127.0.0.1:8000/api/query_sets/5/query_tags/5">query-tag-Systems_named_like_3-5</query_tag>
+      <query_tag id="http://127.0.0.1:8000/api/query_sets/5/query_tags/5">query-tag-Systems_named_like_3-5</query_tag>
       <inclusion_method>
         <name>chosen</name>
       </inclusion_method>
-      <system href="http://127.0.0.1:8000/api/inventory/systems/7"/>
+      <system id="http://127.0.0.1:8000/api/inventory/systems/7"/>
     </system_tag>
   </system_tags>
 </system>
@@ -543,7 +543,7 @@ queryset_post_response_xml2 = """\
   <query_tags>
     <query_tag id="http://testserver/api/query_sets/6/query_tags/6">
       <query_tag_id>6</query_tag_id>
-      <query_set href="http://testserver/api/query_sets/6"/>
+      <query_set id="http://testserver/api/query_sets/6"/>
       <name>query-tag-A_new_query_set-6</name>
     </query_tag>
   </query_tags>
