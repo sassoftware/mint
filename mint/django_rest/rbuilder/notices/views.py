@@ -1,3 +1,9 @@
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml
 

@@ -1,3 +1,9 @@
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from django.db import models
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj

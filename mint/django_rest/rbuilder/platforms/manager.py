@@ -1,19 +1,12 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-# This program is distributed under the terms of the Common Public License,
-# version 1.0. A copy of this license should have been distributed with this
-# source file in a file called LICENSE. If it is not present, the license
-# is always available at http://www.rpath.com/permanent/licenses/CPL-1.0.
-#
-# This program is distributed in the hope that it will be useful, but
-# without any warranty; without even the implied warranty of merchantability
-# or fitness for a particular purpose. See the Common Public License for
-# full details.
+# All Rights Reserved
 #
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.platforms import models as platformModels
+
 
 exposed = basemanager.exposed
 
@@ -21,17 +14,27 @@ exposed = basemanager.exposed
 class SourceStatusManager(basemanager.BaseManager):
     @exposed
     def getSourceStatusByName(self, source_type, short_name):
-        pass
-        
+        status = \
+            platformModels.SourceStatus.objects.all().filter(
+                source_type=source_type, short_name=short_name)
+        return status
+    
     
 class SourceErrorsManager(basemanager.BaseManager):
     @exposed
     def getPlatformContentError(self, source_type, short_name, error_id):
-        pass
+        platformContentError = \
+            platformModels.PlatformContentError.objects.all().filter(
+                source_type=source_type, short_name=short_name, error_id=error_id)
+        return platformContentError
     
     @exposed
     def getPlatformContentErrors(self, source_type, short_name):
-        pass
+        PlatformContentErrors = platformModels.PlatformContentErrors()
+        PlatformContentErrors.platform_content_error = \
+            platformModels.PlatformContentError.objects.all().filter(
+                source_type=source_type, short_name=short_name)
+        return PlatformContentErrors
         
     @exposed
     def updatePlatformContentError(self, source_type, short_name, error_id, resource_error):
@@ -73,13 +76,13 @@ class SourceTypeDescriptorManager(basemanager.BaseManager):
 class SourceTypeStatusTestManager(basemanager.BaseManager):
     @exposed
     def getSourceStatus(self, source):
-        pass
+        return source.content_source_status
         
     
 class SourceTypeManager(basemanager.BaseManager):
     @exposed
     def getSourceType(self, source_type):
-        return platformModels.SourceType.objects.get(source_type=source_type)
+        return platformModels.SourceType.objects.all().filter(source_type=source_type)
         
     @exposed
     def getSourceTypes(self):
@@ -91,7 +94,8 @@ class SourceTypeManager(basemanager.BaseManager):
 class PlatformStatusManager(basemanager.BaseManager):
     @exposed
     def getPlatformStatus(self, platform_id):
-        pass
+        return platformModels.Platform.objects.get(
+            platform_id=platform_id).platform_status
         
     @exposed
     def getPlatformStatusTest(self, platform):
@@ -101,13 +105,15 @@ class PlatformStatusManager(basemanager.BaseManager):
 class PlatformSourceManager(basemanager.BaseManager):
     @exposed
     def getSourcesByPlatform(self, platform_id):
-        pass
+        platform = platformModels.Platform.objects.get(platform_id=platform_id)
+        return platform.content_sources.objects.all()
         
         
 class PlatformSourceTypeManager(basemanager.BaseManager):
     @exposed
     def getSourceTypesByPlatform(self, platform_id):
-        pass
+        platform = platformModels.Platform.objects.get(platform_id=platform_id)
+        return platform.content_source_types.objects.all()
         
         
 class PlatformImageTypeManager(basemanager.BaseManager):

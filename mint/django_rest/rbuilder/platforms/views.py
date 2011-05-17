@@ -1,4 +1,8 @@
-# Create your views here.
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
 
 from django.http import HttpResponse  # pyflakes=ignore
 

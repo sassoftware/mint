@@ -17,6 +17,7 @@ from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
 from mint.django_rest.rbuilder.users import views as usersviews
 from mint.django_rest.rbuilder.notices import views as noticesviews
+from mint.django_rest.rbuilder.platforms import views as platformsviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -169,11 +170,6 @@ urlpatterns = patterns('',
     url(r'^api/inventory/event_types/(?P<event_type_id>\d+)/?$',
         inventoryviews.InventoryEventTypesService(),
         name='EventType'),
-
-    # # Users
-    # url(r'^api/inventory/users/([a-zA-Z0-9]+)/?$',
-    #     inventoryviews.InventoryUsersService(),
-    #     name='Users'),
 
     # Jobs
     url(r'^api/inventory/jobs/?$',
@@ -387,6 +383,17 @@ urlpatterns = patterns('',
     url(r'^api/notices/users/(?P<user_id>\d+)/?$',
         noticesviews.UserNoticesService(),
         name='UserNotices'),
+    
+    # Begin all things platforms
+    # url(r'^api/platforms/?$',
+    #     platformsviews.PlatformService().
+    #     name='Platforms'),
+    #     
+    # url(r'^api/platforms/(?P<platform_id>\d+)/?$',
+    #     platformsviews.PlatformService(),
+    #     'Platform'),
+        
+    
     
 )
 

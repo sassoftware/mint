@@ -1,3 +1,9 @@
+#
+# Copyright (c) 2011 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.notices import models
 
