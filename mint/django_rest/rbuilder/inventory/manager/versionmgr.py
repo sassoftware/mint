@@ -113,7 +113,7 @@ class VersionManager(basemanager.BaseManager):
 
         system.stage = stage
         system.major_version = majorVersion
-        system.appliance = project
+        system.project = project
 
     @exposed
     def updateInstalledSoftware(self, system_id, new_versions):

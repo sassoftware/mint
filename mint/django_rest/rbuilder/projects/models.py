@@ -132,11 +132,13 @@ class Stage(modellib.XObjIdModel):
     view_name = 'ProjectVersionStage'
     _xobj = xobj.XObjMetadata(tag='stage')
     _xobj_hidden_accessors = set(['version_set',])
+    url_key = ['major_version', 'name']
 
     stage_id = models.AutoField(primary_key=True)
     major_version = modellib.DeferredForeignKey(Version, related_name="stages")
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
+
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)

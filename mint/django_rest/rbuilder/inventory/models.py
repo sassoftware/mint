@@ -534,7 +534,7 @@ class System(modellib.XObjIdModel):
         text_field='name')),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.ForeignKey(Project, null=True,
-        text_field='shortname')),
+        text_field='short_name')),
         "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 

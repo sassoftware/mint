@@ -2383,7 +2383,7 @@ system_installed_software_version_stage_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <management_interface id="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <system_events id="http://testserver/api/inventory/systems/3/system_events"/>
-  <project id="http://testserver/api/products/chater-foo">chater-foo</project>
+  <project id="http://testserver/api/projects/chater-foo">chater-foo</project>
   <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
   <system_tags/>
   <has_running_jobs>True</has_running_jobs>
@@ -2482,12 +2482,12 @@ system_installed_software_version_stage_xml = """\
   <credentials id="http://testserver/api/inventory/systems/3/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/3/configuration"/>
   <agent_port>5989</agent_port>
-  <stage id="http://testserver/api/products/chater-foo/versions/1/stages/Development">Development</stage>
+  <stage id="http://testserver/api/projects/chater-foo/versions/1/stages/Development">Development</stage>
   <out_of_date>False</out_of_date>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <target_system_state/>
-  <major_version id="http://testserver/api/products/chater-foo/versions/1">1</major_version>
+  <major_version id="http://testserver/api/projects/chater-foo/versions/1">1</major_version>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <system_state_id>2</system_state_id>
     <description>Initial synchronization pending</description>
