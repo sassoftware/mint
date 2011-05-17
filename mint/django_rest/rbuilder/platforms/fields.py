@@ -120,15 +120,15 @@ class ImageDownloadField(CalculatedField):
         pass
 
 
-class EmailField(Field):
+class EmailField(models.Field):
     pass
 
 
-class DateTimeField(Field):
+class DateTimeField(models.Field):
     pass
 
 
-class ObjectField(Field):
+class ObjectField(models.Field):
     parser = None
     _emptyIsNone = True
 

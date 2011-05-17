@@ -2,29 +2,29 @@
 
 from django.http import HttpResponse
 
-from mint.django_rest.rbuilder import service
-from mint.django_rest.deco import requires, return_xml, access
+from mint.django_rest.rbuilder import service  # pyflakes=ignore
+from mint.django_rest.deco import requires, return_xml, access  # pyflakes=ignore
 
 
 class SourceStatusService(service.BaseService):
     @return_xml
-    def rest_GET(self, request, content_source_type, short_name):
-        return self.get(content_source_type, short_name)
+    def rest_GET(self, request, source_type, short_name):
+        return self.get(source_type, short_name)
 
     def get(self, content_source_type, short_name):
-        return self.mgr.getSourceStatusByName(content_source_type, short_name)
+        return self.mgr.getSourceStatusByName(source_type, short_name)
 
 
 class SourceErrorsService(service.BaseService):
     @return_xml
-    def rest_GET(self, request, content_source_type, short_name, error_id=None):
-        return self.get(content_source_type, short_name, error_id)
+    def rest_GET(self, request, source_type, short_name, error_id=None):
+        return self.get(source_type, short_name, error_id)
 
-    def get(self, content_source_type, short_name, error_id):
+    def get(self, source_type, short_name, error_id):
         if error_id:
-            return self.mgr.getPlatformContentError(content_source_type, short_name, error_id)
+            return self.mgr.getPlatformContentError(source_type, short_name, error_id)
         else:
-            return self.mgr.getPlatformContentErrors(content_source_type, short_name)
+            return self.mgr.getPlatformContentErrors(source_type, short_name)
 
     @return_xml
     @requires('resource_error')
@@ -120,9 +120,9 @@ class PlatformSourceTypeService(service.BaseService):
 class PlatformImageTypeService(service.BaseService):
     @return_xml
     def rest_GET(self, request, platform_id):
-        return self.get(platform_id)
+        return self.get(request, platform_id)
         
-    def get(self, platform_id):
+    def get(self, request, platform_id):
         return self.mgr.getPlatformImageTypeDefs(request, platform_id)
     
     
@@ -166,8 +166,7 @@ class PlatformService(service.BaseService):
     @return_xml
     @requires('platform')
     def rest_POST(self, request, platform):
-        platform_id = self.mgr.createPlatform(platform)
-        return self.mgr.getPlatform(platform_id)
+        return self.mgr.createPlatform(platform)
         
     @return_xml
     @requires('platform')

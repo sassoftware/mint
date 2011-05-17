@@ -12,11 +12,11 @@
 # full details.
 #
 
-from mint.django_rest.rbuilder.platforms import models
-from mint.django_rest.rbuilder.platforms import testsxml
-from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
-from xobj import xobj
-from lxml import etree
+from mint.django_rest.rbuilder.platforms import models  # pyflakes=ignore
+from mint.django_rest.rbuilder.platforms import testsxml  # pyflakes=ignore
+from mint.django_rest.rbuilder.inventory.tests import XMLTestCase  # pyflakes=ignore
+from xobj import xobj  # pyflakes=ignore
+from lxml import etree  # pyflakes=ignore
 
 
 class PlatformsTestCase(XMLTestCase):

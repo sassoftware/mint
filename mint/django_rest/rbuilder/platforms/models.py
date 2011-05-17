@@ -34,9 +34,9 @@ class Source(modellib.XObjIdModel):
         abstract = True
         name = 'content_source'
     
-    content_source_id = fields.CharField()
+    content_source_id = fields.CharField(primary_key=True)
     name = fields.CharField()
-    short_name = fields.CharField()
+    short_name = fields.CharField(unique=True)
     default_source = fields.BooleanField()
     order_index = fields.IntegerField()
     content_source_type = fields.CharField()
