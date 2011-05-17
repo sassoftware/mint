@@ -1,6 +1,6 @@
 # Create your views here.
 
-from django.http import HttpResponse
+from django.http import HttpResponse  # pyflakes=ignore
 
 from mint.django_rest.rbuilder import service  # pyflakes=ignore
 from mint.django_rest.deco import requires, return_xml, access  # pyflakes=ignore

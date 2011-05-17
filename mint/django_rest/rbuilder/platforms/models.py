@@ -215,20 +215,3 @@ class PlatformLoadStatus(modellib.XObjIdModel):
     is_final = fields.BooleanField()
 
     _xobj = xobj.XObjMetadata(tag='platform_load_status')
-
-    
-# class PlatformArchitecture(Architecture):
-#     pass
-#     
-# class PlatformFlavorSet(FlavorSet):
-#     pass
-#     
-# class PlatformContainerFormat(ContainerFormate):
-#     pass
-#     
-# class PlatformBuildTemplates(BuildTemplates):
-#     pass
-#     
-# class PlatformBuildTemplate(BuildTemplate):
-#     pass
-#

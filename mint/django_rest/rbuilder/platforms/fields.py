@@ -138,7 +138,7 @@ class ObjectField(models.Field):
         return self.parser(value)
 
     def value_to_string(self, obj):
-        return str(value)
+        return str(obj)
 
 
 class VersionField(ObjectField):
@@ -151,4 +151,4 @@ class LabelField(ObjectField):
 
 class FlavorField(ObjectField):
     _emptyIsNone = False
-    parser = staticmethod(deps.parseFlavor)
+    # parser = staticmethod(deps.parseFlavor)
