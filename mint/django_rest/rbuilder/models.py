@@ -24,7 +24,7 @@ class Fault(modellib.XObjModel):
 
 class DatabaseVersion(modellib.XObjModel):
     class Meta:
-        db_table = u'databaseversion'
+        db_table = u'DatabaseVersion'
     version = models.SmallIntegerField(null=True)
     minor = models.SmallIntegerField(null=True)
 

@@ -23,6 +23,8 @@ from django.test.client import Client, FakePayload
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import views
+from mint.django_rest.rbuilder.management.commands import syncfulldb
+from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
@@ -137,6 +139,14 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         file(mintCfg, "w")
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
+
+        self.oldDatabaseName = settings.DATABASE_NAME
+        settings.DATABASE_NAME = settings.TEST_DATABASE_NAME
+
+        def getMintDatabase(self):
+            return None
+        basemanager.BaseRbuilderManager.getMintDatabase = getMintDatabase
+
         self.client = Client()
         self.mgr = rbuildermanager.RbuilderManager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
@@ -147,8 +157,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         # Default to 10 items per page in the tests
         settings.PER_PAGE = 10
 
+
     def tearDown(self):
         TestCase.tearDown(self)
+        settings.DATABASE_NAME = self.oldDatabaseName
         self.unmock()
 
     def failUnlessIn(self, needle, haystack):
