@@ -22,6 +22,13 @@ class Fault(modellib.XObjModel):
     message = models.CharField(max_length=8092, null=True)
     traceback = models.TextField(null=True)
 
+class DatabaseVersion(modellib.XObjModel):
+    class Meta:
+        db_table = u'databaseversion'
+    version = models.SmallIntegerField(null=True)
+    minor = models.SmallIntegerField(null=True)
+
+
 # class UserGroups(modellib.XObjModel):
 #     usergroupid = models.AutoField(primary_key=True)
 #     usergroup = models.CharField(unique=True, max_length=128)
