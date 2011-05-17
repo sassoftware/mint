@@ -8,8 +8,6 @@ import urlparse
 
 from django.db import models
 
-from xobj import xobj
-
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usersmodels
 
