@@ -6,7 +6,7 @@ jobs_xml = """\
   <job id="http://testserver/api/jobs/1">
     <job_description>System registration</job_description>
     <time_updated>2010-09-16T13:36:25.939154+00:00</time_updated>
-    <job_state>Running</job_state>
+    <job_state id="http://testserver/api/job_states/2">Running</job_state>
     <job_type>system registration</job_type>
     <time_created>2010-09-16T13:36:25.939042+00:00</time_created>
     <systems/>
@@ -18,7 +18,7 @@ jobs_xml = """\
   <job id="http://testserver/api/jobs/2">
     <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.943043+00:00</time_updated>
-    <job_state>Running</job_state>
+    <job_state id="http://testserver/api/job_states/2">Running</job_state>
     <job_type>system poll</job_type>
     <time_created>2010-09-16T13:36:25.942952+00:00</time_created>
     <systems/>
@@ -30,7 +30,7 @@ jobs_xml = """\
   <job id="http://testserver/api/jobs/3">
     <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T13:36:25.946773+00:00</time_updated>
-    <job_state>Running</job_state>
+    <job_state id="http://testserver/api/job_states/2">Running</job_state>
     <job_type>immediate system poll</job_type>
     <time_created>2010-09-16T13:36:25.946675+00:00</time_created>
     <systems/>
@@ -46,7 +46,7 @@ job_xml = """\
 <job id="http://testserver/api/jobs/1">
   <job_description>System registration</job_description>
   <time_updated>2010-09-16T13:53:18.402208+00:00</time_updated>
-  <job_state>Running</job_state>
+  <job_state id="http://testserver/api/job_states/2">Running</job_state>
   <job_type>system registration</job_type>
   <time_created>2010-09-16T13:53:18.402105+00:00</time_created>
   <systems/>
@@ -95,7 +95,7 @@ systems_jobs_xml = """\
   <job id="http://testserver/api/jobs/1">
     <job_description>System registration</job_description>
     <time_updated>2010-09-16T20:13:13.325788+00:00</time_updated>
-    <job_state>Running</job_state>
+    <job_state id="http://testserver/api/job_states/2">Running</job_state>
     <job_type>system registration</job_type>
     <time_created>2010-09-16T20:13:13.325686+00:00</time_created>
     <systems/>
@@ -107,7 +107,7 @@ systems_jobs_xml = """\
   <job id="http://testserver/api/jobs/2">
     <job_description>System synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.334487+00:00</time_updated>
-    <job_state>Running</job_state>
+    <job_state id="http://testserver/api/job_states/2">Running</job_state>
     <job_type>system poll</job_type>
     <time_created>2010-09-16T20:13:13.334392+00:00</time_created>
     <systems/>
@@ -119,7 +119,7 @@ systems_jobs_xml = """\
   <job id="http://testserver/api/jobs/3">
     <job_description>On-demand system synchronization</job_description>
     <time_updated>2010-09-16T20:13:13.339408+00:00</time_updated>
-    <job_state>Running</job_state>
+    <job_state id="http://testserver/api/job_states/2">Running</job_state>
     <job_type>immediate system poll</job_type>
     <time_created>2010-09-16T20:13:13.339318+00:00</time_created>
     <systems/>
