@@ -23,6 +23,8 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
 from mint.django_rest.rbuilder.projects import models
 
+from rpath_proddef import api1 as proddef
+
 class ProjectManager(basemanager.BaseManager):
 
     def __init__(self, *args, **kwargs):
@@ -286,3 +288,50 @@ class ProjectManager(basemanager.BaseManager):
         members._parents = [project]
         return members
 
+    def getProductVersionDefinitionByProjectVersion(self, projectVersion):
+        project = projectVersion.project
+        pd = proddef.ProductDefinition()
+        pd.setProductShortname(project.short_name)
+        pd.setConaryRepositoryHostname(project.repository_hostname)
+        pd.setConaryNamespace(projectVersion.namespace)
+        pd.setProductVersion(projectVersion.name)
+        cclient = self.reposMgr.getAdminClient(write=False)
+        try:
+            pd.loadFromRepository(cclient)
+        except Exception, e:
+            # XXX could this exception handler be more specific? As written
+            # any error in the proddef module will be masked.
+            raise mint_error.ProductDefinitionVersionNotFound
+        return pd
+
+    @exposed
+    def getStage(self, shortName, projectVersionId, stageName):
+        projectVersion = models.ProjectVersion.objects.get(
+            pk=projectVersionId) 
+        pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
+        pdStages = pd.getStages()
+        pdStage = [s for s in pdStages if s.name == stageName][0]
+        dbStage = models.Stage(name=str(stage.name),
+             label=str(pd.getLabelForStage(stage.name)),
+             hostname=hostname, project_version=projectVersion,
+             Promotable=promotable)
+        return dbStage
+
+    @exposed
+    def getStages(self, shortName, projectVersionId):
+        projectVersion = models.ProjectVersion.objects.get(
+            pk=projectVersionId) 
+        pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
+        stages = models.Stages()
+        stages.stage = []
+        pdStages = pd.getStages()
+        for stage in pdStages:
+            promotable = ((stage.name != stages[-1].name and True) or False)
+            # TODO: now that we've created a model for this stage, should we
+            # save it in the db?
+            dbStage = models.Stage(name=str(stage.name),
+                 label=str(pd.getLabelForStage(stage.name)),
+                 hostname=hostname, project_version=projectVersion,
+                 Promotable=promotable)
+            stages.stage.append(dbStage)
+        return stages

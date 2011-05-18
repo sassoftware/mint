@@ -122,7 +122,6 @@ class ProjectVersion(modellib.XObjIdModel):
     class Meta:
         db_table = u'productversions'
 
-    _xobj_hidden_accessors = set(['stages',])
     _xobj = xobj.XObjMetadata(
         tag="project_version")
     view_name = 'ProjectVersion'
@@ -148,18 +147,19 @@ class ProjectVersion(modellib.XObjIdModel):
 
 class Stage(modellib.XObjIdModel):
     class Meta:
-        db_table = 'inventory_stage'
+        db_table = 'projects_stage'
 
     view_name = 'ProjectVersionStage'
     _xobj = xobj.XObjMetadata(tag='stage')
     _xobj_hidden_accessors = set(['version_set',])
-    url_key = ['major_version', 'name']
+    url_key = ['project_version', 'name']
 
     stage_id = models.AutoField(primary_key=True)
-    major_version = modellib.DeferredForeignKey(ProjectVersion, related_name="stages")
+    project_version = modellib.DeferredForeignKey(ProjectVersion, 
+        related_name="stages", view_name="ProjectVersionStages")
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
-
+    promotable = models.BooleanField(default=False)
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
