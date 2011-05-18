@@ -147,7 +147,7 @@ class ProjectVersion(modellib.XObjIdModel):
 
 class Stage(modellib.XObjIdModel):
     class Meta:
-        db_table = 'projects_stage'
+        db_table = 'inventory_stage'
 
     view_name = 'ProjectVersionStage'
     _xobj = xobj.XObjMetadata(tag='stage')
