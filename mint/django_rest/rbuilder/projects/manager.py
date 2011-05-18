@@ -298,7 +298,7 @@ class ProjectManager(basemanager.BaseManager):
         cclient = self.reposMgr.getAdminClient(write=False)
         try:
             pd.loadFromRepository(cclient)
-        except Exception, e:
+        except Exception:
             # XXX could this exception handler be more specific? As written
             # any error in the proddef module will be masked.
             raise mint_error.ProductDefinitionVersionNotFound
@@ -308,12 +308,14 @@ class ProjectManager(basemanager.BaseManager):
     def getStage(self, shortName, projectVersionId, stageName):
         projectVersion = models.ProjectVersion.objects.get(
             pk=projectVersionId) 
+        project = projectVersion.project
         pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
         pdStages = pd.getStages()
         stage = [s for s in pdStages if s.name == stageName][0]
+        promotable = ((stage.name != stages[-1].name and True) or False)
         dbStage = models.Stage(name=str(stage.name),
              label=str(pd.getLabelForStage(stage.name)),
-             hostname=hostname, project_version=projectVersion,
+             hostname=project.hostname, project_version=projectVersion,
              Promotable=promotable)
         return dbStage
 
@@ -321,6 +323,7 @@ class ProjectManager(basemanager.BaseManager):
     def getStages(self, shortName, projectVersionId):
         projectVersion = models.ProjectVersion.objects.get(
             pk=projectVersionId) 
+        project = projectVersion.project
         pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
         stages = models.Stages()
         stages.stage = []
@@ -331,7 +334,7 @@ class ProjectManager(basemanager.BaseManager):
             # save it in the db?
             dbStage = models.Stage(name=str(stage.name),
                  label=str(pd.getLabelForStage(stage.name)),
-                 hostname=hostname, project_version=projectVersion,
+                 hostname=project.hostname, project_version=projectVersion,
                  Promotable=promotable)
             stages.stage.append(dbStage)
         return stages
