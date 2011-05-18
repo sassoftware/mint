@@ -71,7 +71,7 @@ class ProjectManager(basemanager.BaseManager):
         membership = project.membership.filter(user=self.user)
         if not membership:
             return False
-        membership = membersip[0]
+        membership = membership[0]
         return membership.level == userlevels.OWNER
 
     def validateNamespace(self, namespace):
