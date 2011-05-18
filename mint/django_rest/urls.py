@@ -427,7 +427,66 @@ urlpatterns = patterns('',
         platformsviews.PlatformService(),
         name='Platform'),
         
-    
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_status/?$',
+        platformsviews.PlatformStatusService(),
+        name='PlatformStatus'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_source/?$',
+        platformsviews.PlatformSourceService(),
+        name='PlatformSource'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_source_type/?$',
+        platformsviews.PlatformSourceTypeService(),
+        name='PlatformSourceType'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_image_type/?$',
+        platformsviews.PlatformImageTypeService(),
+        name='PlatformImageType'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_load/(?P<job_id>\d+)/?$',
+        platformsviews.PlatformLoadService(),
+        name='PlatformLoad'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_versions/?$',
+        platformsviews.PlatformVersionService(),
+        name='PlatformVersions'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_versions/(?P<platform_version_id>\d+)/?$',
+        platformsviews.PlatformVersionService(),
+        name='PlatformVersion'),
+        
+    # Do platforms/sources/...
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
+        platformsviews.SourceService(),
+        name='Sources'),
+        
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/?$',
+        platformsviews.SourceService(),
+        name='Source'),
+        
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
+        platformsviews.SourceStatusService(),
+        name='SourceStatus'),
+        
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/?$',
+        platformsviews.SourceErrorService(),
+        name='SourceErrors'),
+        
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/(?P<error_id>\d+)/?$',
+        platformsviews.SourceErrorService(),
+        name='SourceError')
+        
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/source_type_descriptor/?$',
+        platformsviews.SourceTypeDescriptor(),
+        name='SourceTypeDescriptor'),
+        
+    url(r'^api/platforms/sources/source_types/?$',
+        platformsviews.SourceTypeService(),
+        name='SourceTypes'),
+        
+    url(r'^api/platforms/sources/source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
+        platformsviews.SourceTypeService(),
+        name='SourceType'),
   
 )
 
