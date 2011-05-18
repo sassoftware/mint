@@ -310,7 +310,7 @@ class ProjectManager(basemanager.BaseManager):
             pk=projectVersionId) 
         pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
         pdStages = pd.getStages()
-        pdStage = [s for s in pdStages if s.name == stageName][0]
+        stage = [s for s in pdStages if s.name == stageName][0]
         dbStage = models.Stage(name=str(stage.name),
              label=str(pd.getLabelForStage(stage.name)),
              hostname=hostname, project_version=projectVersion,
