@@ -4,7 +4,7 @@
 # All rights reserved.
 #
 
-SUBDIRS = platforms reporting inventory metrics modellib manager querysets packages changelog jobs
+SUBDIRS = platforms reporting inventory metrics modellib manager querysets packages changelog projects jobs
 
 python_files = $(wildcard *.py)
 

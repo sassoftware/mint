@@ -15,10 +15,16 @@ from mint.django_rest.rbuilder.inventory import views as inventoryviews
 from mint.django_rest.rbuilder.querysets import views as querysetviews
 from mint.django_rest.rbuilder.packages import views as packageviews
 from mint.django_rest.rbuilder.changelog import views as changelogviews
+from mint.django_rest.rbuilder.projects import views as projectviews
+from mint.django_rest.rbuilder.users import views as usersviews
+from mint.django_rest.rbuilder.notices import views as noticesviews
+from mint.django_rest.rbuilder.platforms import views as platformsviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
+
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
+
 
 urlpatterns = patterns('',
     # Reporting urls
@@ -168,11 +174,6 @@ urlpatterns = patterns('',
         inventoryviews.InventoryEventTypesService(),
         name='EventType'),
 
-    # Users
-    url(r'^api/inventory/users/([a-zA-Z0-9]+)/?$',
-        inventoryviews.InventoryUsersService(),
-        name='Users'),
-
     # Jobs
     url(r'^api/jobs/?$',
         jobviews.JobsService(),
@@ -243,6 +244,37 @@ urlpatterns = patterns('',
     url(r'^api/changelogs/(?P<change_log_id>\d+)/?$',
         changelogviews.ChangeLogService(),
         name='ChangeLog'),
+
+    # Projects
+    url(r'^api/projects/?$',
+        projectviews.ProjectService(),
+        name='Projects'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/?$',
+        projectviews.ProjectService(),
+        name='Project'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersions'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/members/?$',
+        projectviews.ProjectMemberService(),
+        name='ProjectMembers'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
+        projectviews.ProjectVersionService(),
+        name='ProjectVersion'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+         'stages/(?P<stage_name>[a-zA-Z0-9]+)/?$',
+        projectviews.ProjectVersionStageService(),
+        name='ProjectVersionStage'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImages'),
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/images/(?P<image_id>\d+)/?$',
+        projectviews.ProjectImageService(),
+        name='ProjectImage'),
 
     # Packages
     url(r'^api/packages/?$',
@@ -346,6 +378,116 @@ urlpatterns = patterns('',
         packageviews.PackageBuildJobService(),
         name='PackageBuildJob'),
 
+    # Users
+    url(r'^api/users/?$',
+        usersviews.UsersService(),
+        name='Users'),
+    
+    url(r'^api/users/(?P<user_id>\d+)/?$',
+        usersviews.UsersService(),
+        name='User'),
+        
+    # UserGroups
+    url(r'^api/users/user_groups/?$',
+        usersviews.UserGroupsService(),
+        name='UserGroups'),
+    
+    url(r'^api/users/(?P<user_id>\d+)/user_groups/?$',
+        usersviews.UserUserGroupsService(),
+        name='UserGroups'),
+    
+    url(r'^api/users/user_groups/(?P<user_group_id>\d+)/?$',
+        usersviews.UserGroupsService(),
+        name='UserGroup'),
+        
+    url(r'^api/users/user_groups/(?P<user_group_id>\d+)/user_group_members/?$',
+        usersviews.UserGroupMembersService(),
+        name='UserGroupMembers'),
+        
+    # GlobalNotices
+    url(r'^api/notices/?$',
+        noticesviews.GlobalNoticesService(),
+        name='GlobalNotices'),
+        
+    # UserNotices
+    url(r'^api/users/(?P<user_id>\d+)/notices/?$',
+        noticesviews.UserNoticesService(),
+        name='UserNotices'),
+    
+    url(r'^api/notices/users/(?P<user_id>\d+)/?$',
+        noticesviews.UserNoticesService(),
+        name='UserNotices'),
+    
+    # Begin all things platforms
+    url(r'^api/platforms/?$',
+        platformsviews.PlatformService(),
+        name='Platforms'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/?$',
+        platformsviews.PlatformService(),
+        name='Platform'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_status/?$',
+        platformsviews.PlatformStatusService(),
+        name='PlatformStatus'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_source/?$',
+        platformsviews.PlatformSourceService(),
+        name='PlatformSource'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_source_type/?$',
+        platformsviews.PlatformSourceTypeService(),
+        name='PlatformSourceType'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_image_type/?$',
+        platformsviews.PlatformImageTypeService(),
+        name='PlatformImageType'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_load/(?P<job_id>\d+)/?$',
+        platformsviews.PlatformLoadService(),
+        name='PlatformLoad'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_versions/?$',
+        platformsviews.PlatformVersionService(),
+        name='PlatformVersions'),
+        
+    url(r'^api/platforms/(?P<platform_id>\d+)/platform_versions/(?P<platform_version_id>\d+)/?$',
+        platformsviews.PlatformVersionService(),
+        name='PlatformVersion'),
+        
+    # Do platforms/sources/...
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
+        platformsviews.SourceService(),
+        name='Sources'),
+        
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/?$',
+        platformsviews.SourceService(),
+        name='Source'),
+        
+    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
+        platformsviews.SourceStatusService(),
+        name='SourceStatus'),
+        
+    # url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/?$',
+        # platformsviews.SourceErrorService(),
+        # name='SourceErrors'),
+        
+    # url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/(?P<error_id>\d+)/?$',
+        # platformsviews.SourceErrorService(),
+        # name='SourceError'),
+        
+    # url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/source_type_descriptor/?$',
+        # platformsviews.SourceTypeDescriptor(),
+        # name='SourceTypeDescriptor'),
+        
+    url(r'^api/platforms/sources/source_types/?$',
+        platformsviews.SourceTypeService(),
+        name='SourceTypes'),
+        
+    url(r'^api/platforms/sources/source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
+        platformsviews.SourceTypeService(),
+        name='SourceType'),
+  
 )
 
 

@@ -4,7 +4,6 @@
 #
 # All rights reserved.
 #
-
 import datetime
 from dateutil import parser
 from dateutil import tz
@@ -868,6 +867,12 @@ class XObjModel(models.Model):
             xobj_model = self.serialize(request)
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
+    def to_json(self, request=None, xobj_model=None):
+        import jobj
+        if not xobj_model:
+            xobj_model = self.serialize(request)
+        return jobj.tojson(xobj_model)
+
     def get_url_key(self):
         if type(self.url_key) != type([]):
             url_key = [self.url_key]
@@ -988,6 +993,8 @@ class XObjModel(models.Model):
                     val = xobj.parse(val)
                 elif isinstance(field, HrefField):
                     val = field.serialize_value(request)
+                elif isinstance(field, djangofields.DecimalField):
+                    val = float(val)
                 setattr(xobj_model, key, val)
 
     def serialize_fk_fields(self, xobj_model, fields, request):

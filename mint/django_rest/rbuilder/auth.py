@@ -1,8 +1,8 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-
-from mint.django_rest.rbuilder.models import Users, UserGroups, Sessions
+from mint.django_rest.rbuilder.models import Sessions
+from mint.django_rest.rbuilder.users.models import User, UserGroup
 from hashlib import md5
 import base64
 import cPickle
@@ -43,9 +43,9 @@ def getAuth(request):
         authType, user_pass = auth_header['Authorization'].split(' ', 1)
         if authType == 'Basic':
             try:
-                username, password = base64.decodestring(user_pass
+                user_name, password = base64.decodestring(user_pass
                         ).split(':', 1)
-                return (username, password)
+                return (user_name, password)
             except:
                 pass
     else:
@@ -54,15 +54,15 @@ def getAuth(request):
     return (None, None)
     
 def isAdmin(user):
-     if user is not None and isinstance(user, Users):
-         groups = user.groups.all()
-         admingroup = UserGroups.objects.get(usergroup='MintAdmin')
+     if user is not None and isinstance(user, User):
+         groups = user.user_groups.all()
+         admingroup = UserGroup.objects.get(name='MintAdmin')
          if admingroup in groups:
              return True
      return False
  
 def isAuthenticated(user):
-     if user is not None and isinstance(user, Users):
+     if user is not None and isinstance(user, User):
          return True
      return False
 
@@ -70,17 +70,17 @@ class rBuilderBackend:
 
     def authenticate(self, username=None, password=None):
         try:
-       	    user = Users.objects.get(username=username)
+       	    user = User.objects.get(user_name=username)
             m = md5(user.salt + password)
             if (m.hexdigest() == user.passwd):
        	        return user
-        except Users.DoesNotExist:
+        except User.DoesNotExist:
             pass
 
         return None
 
     def get_user(self, user_id):
         try:
-            return Users.objects.get(pk=user_id)
-        except Users.DoesNotExist:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
             return None

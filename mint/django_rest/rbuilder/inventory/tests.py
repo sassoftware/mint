@@ -23,7 +23,9 @@ from django.test.client import Client, FakePayload
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import views
+from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
@@ -136,6 +138,14 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         file(mintCfg, "w")
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
+
+        self.oldDatabaseName = settings.DATABASE_NAME
+        settings.DATABASE_NAME = settings.TEST_DATABASE_NAME
+
+        def getMintDatabase(self):
+            return None
+        basemanager.BaseRbuilderManager.getMintDatabase = getMintDatabase
+
         self.client = Client()
         self.mgr = rbuildermanager.RbuilderManager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
@@ -146,8 +156,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         # Default to 10 items per page in the tests
         settings.PER_PAGE = 10
 
+
     def tearDown(self):
         TestCase.tearDown(self)
+        settings.DATABASE_NAME = self.oldDatabaseName
         self.unmock()
 
     def failUnlessIn(self, needle, haystack):
@@ -1547,8 +1559,8 @@ class SystemsTestCase(XMLTestCase):
 
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
-        target = rbuildermodels.Targets(pk=1, targettype='testtargettype',
-            targetname='testtargetname')
+        target = rbuildermodels.Targets(pk=1, target_type='testtargettype',
+            target_name='testtargetname')
         target.save()
         system = self._saveSystem()
         system.target = target
@@ -1580,7 +1592,8 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'ssl_client_certificate',
-                            'time_created', 'time_updated'])
+                            'time_created', 'time_updated',
+                            'registration_date'])
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
@@ -2886,7 +2899,7 @@ class SystemVersionsTestCase(XMLTestCase):
                 system.created_date.isoformat())).replace(
              'installed_software/', 'installed_software')
         self.assertXMLEquals(response.content, expected,
-            ignoreNodes = [ 'created_date' ])
+            ignoreNodes = [ 'created_date', 'last_available_update_refresh' ])
 
     def testGetInstalledSoftwareRest(self):
         system = self._saveSystem()
@@ -4136,8 +4149,8 @@ class TargetSystemImportTest(XMLTestCase):
             target_system_id='ec2aws-002').target, None)
 
         for (targetType, targetName, userName, tsystems) in self._targets:
-            tgt = rbuildermodels.Targets.objects.get(targettype=targetType,
-                targetname=targetName)
+            tgt = rbuildermodels.Targets.objects.get(target_type=targetType,
+                target_name=targetName)
             for tsystem in tsystems:
                 # Make sure we linked this system to the target
                 system = models.System.objects.get(target=tgt,
@@ -4147,12 +4160,12 @@ class TargetSystemImportTest(XMLTestCase):
                     for x in system.target_credentials.all())
                 try:
                     tuc = rbuildermodels.TargetUserCredentials.objects.get(
-                        targetid=tgt, userid__username = userName)
+                        target_id=tgt, user_id__user_name = userName)
                 except rbuildermodels.TargetUserCredentials.DoesNotExist:
                     self.fail("System %s not linked to user %s" % (
                         system.target_system_id, userName))
                 self.failUnlessIn(
-                    tuc.targetcredentialsid.targetcredentialsid,
+                    tuc.target_credentials_id.target_credentials_id,
                     cred_ids)
                 self.failUnlessEqual([
                     x.dns_name for x in system.networks.all() ],
@@ -4207,14 +4220,14 @@ class TargetSystemImportTest(XMLTestCase):
 
     def testIsManageable(self):
         # First, make sure these two users have the same credentials
-        user1 = rbuildermodels.Users.objects.get(username='JeanValjean1')
-        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
-        user3 = rbuildermodels.Users.objects.get(username='JeanValjean3')
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
+        user3 = usersmodels.User.objects.get(user_name='JeanValjean3')
         self.failUnlessEqual(
             rbuildermodels.TargetUserCredentials.objects.get(
-                targetid=self.tgt3, userid=user1).targetcredentialsid.pk,
+                target_id=self.tgt3, user_id=user1).target_credentials_id.pk,
             rbuildermodels.TargetUserCredentials.objects.get(
-                targetid=self.tgt3, userid=user2).targetcredentialsid.pk,
+                target_id=self.tgt3, user_id=user2).target_credentials_id.pk,
         )
 
         system = models.System.objects.get(target_system_id='ec2aws-002')
@@ -4240,7 +4253,7 @@ class TargetSystemImportTest(XMLTestCase):
             ignoreNodes=['created_date'])
 
     def testAddLaunchedSystem(self):
-        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
+        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
         self.mgr.user = user2
         params = dict(
             target_system_id = "target-system-id-001",
@@ -4254,14 +4267,14 @@ class TargetSystemImportTest(XMLTestCase):
         system = self.newSystem(**params)
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
-            targetName=self.tgt2.targetname,
-            targetType=self.tgt2.targettype)
+            targetName=self.tgt2.target_name,
+            targetType=self.tgt2.target_type)
         for k, v in params.items():
             self.failUnlessEqual(getattr(system, k), v)
         # Make sure we have credentials
         stc = list(system.target_credentials.all())[0]
         self.failUnlessIn(stc.credentials_id,
-            [ x.targetcredentialsid.targetcredentialsid
+            [ x.target_credentials_id.target_credentials_id
                 for x in user2.targetusercredentials_set.all() ])
         self.failUnlessEqual(system.managing_zone.name,
             models.Zone.LOCAL_ZONE)
@@ -4281,8 +4294,8 @@ class TargetSystemImportTest(XMLTestCase):
 
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
-            targetName=self.tgt2.targetname,
-            targetType=self.tgt2.targettype)
+            targetName=self.tgt2.target_name,
+            targetType=self.tgt2.target_type)
 
         self.failUnlessEqual(system.target_system_name, params['target_system_name'])
         self.failUnlessEqual(system.name, params['name'])

@@ -2596,7 +2596,6 @@ class MigrateTo_56(SchemaMigration):
     def migrate1(self):
         db = self.db
         createTable = schema.createTable
-
         changed = False
 
         changed |= createTable(db, "packages_package_action_type", """
@@ -2879,8 +2878,18 @@ class MigrateTo_56(SchemaMigration):
 
         return True
 
+class MigrateTo_57(SchemaMigration):
+    Version = (57, 0)
+
+    def migrate(self):
+        return True
 
 
+class MigrateTo_58(SchemaMigration):
+    Version = (58, 0)
+
+    def migrate(self):
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
