@@ -268,6 +268,7 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateProjectVersion(self, shortName, projectVersion):
+        project = models.Project.objects.get(short_name=shortName)
         if not self.isProjectOwner(project):
             raise errors.PermissionDenied()
         projectVersion.save()
