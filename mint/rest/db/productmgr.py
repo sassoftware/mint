@@ -520,12 +520,13 @@ class ProductManager(manager.Manager):
         cclient = self.reposMgr.getUserClient()
         name = platformVersion.name
         label = platformVersion.label
+        if str(label) == '':
+            label = None
         # support rebase to latest if special string is sent
         # see RBL-8673
         kwargs = {}
         if name != "rebase-to-latest-on-versionless-platform":
             kwargs['platformVersion'] = platformVersion.revision
-            label = None
         pd.rebase(cclient, label, **kwargs)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
