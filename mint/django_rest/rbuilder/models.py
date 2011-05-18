@@ -22,7 +22,7 @@ class Fault(modellib.XObjModel):
 
 class DatabaseVersion(modellib.XObjModel):
     class Meta:
-        db_table = u'DatabaseVersion'
+        db_table = u'databaseversion'
     version = models.SmallIntegerField(null=True)
     minor = models.SmallIntegerField(null=True)
 
