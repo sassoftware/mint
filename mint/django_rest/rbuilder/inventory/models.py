@@ -19,7 +19,7 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
-from mint.django_rest.rbuilder.projects.models import Project, Version, Stage
+from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, Stage
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 
@@ -530,7 +530,7 @@ class System(modellib.XObjIdModel):
     stage = D(APIReadOnly(modellib.ForeignKey(Stage, null=True, 
         text_field='name')),
         "the project stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(Version, null=True,
+    major_version = D(APIReadOnly(modellib.ForeignKey(ProjectVersion, null=True,
         text_field='name')),
         "the project major version of the system")
     project = D(APIReadOnly(modellib.ForeignKey(Project, null=True,

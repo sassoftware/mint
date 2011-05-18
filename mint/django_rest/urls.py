@@ -258,14 +258,14 @@ urlpatterns = patterns('',
     url(r'api/projects/(?P<short_name>(\w|\-)*)/members/?$',
         projectviews.ProjectMemberService(),
         name='ProjectMembers'),
-    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/?$',
         projectviews.ProjectVersionService(),
         name='ProjectVersion'),
-    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
          'stages/?$',
         projectviews.ProjectVersionStageService(),
         name='ProjectVersionStages'),
-    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_name>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
+    url(r'api/projects/(?P<short_name>(\w|\-)*)/versions/(?P<version_id>[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)/'
          'stages/(?P<stage_name>[a-zA-Z0-9]+)/?$',
         projectviews.ProjectVersionStageService(),
         name='ProjectVersionStage'),
