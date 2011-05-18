@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(56, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(56, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -1300,29 +1300,29 @@ def _createInventorySchema(db, cfg):
             "inventory_system_event_priority", "priority")
         changed = True
 
-    if 'inventory_job_state' not in db.tables:
+    if 'jobs_job_state' not in db.tables:
         cu.execute("""
-            CREATE TABLE inventory_job_state
+            CREATE TABLE jobs_job_state
             (
                 job_state_id %(PRIMARYKEY)s,
                 name VARCHAR NOT NULL UNIQUE
             ) %(TABLEOPTS)s""" % db.keywords)
-        db.tables['inventory_job_state'] = []
+        db.tables['jobs_job_state'] = []
         changed = True
-    changed |= _addTableRows(db, 'inventory_job_state', 'name',
+    changed |= _addTableRows(db, 'jobs_job_state', 'name',
         [
             dict(name='Queued'), dict(name='Running'),
             dict(name='Completed'), dict(name='Failed'), ])
 
-    tableName = 'inventory_job'
+    tableName = 'jobs_job'
     if tableName not in db.tables:
         cu.execute("""
-            CREATE TABLE inventory_job (
+            CREATE TABLE jobs_job (
                 job_id %(PRIMARYKEY)s,
                 job_uuid varchar(64) NOT NULL UNIQUE,
                 job_state_id integer NOT NULL
-                    REFERENCES inventory_job_state,
-                event_type_id integer NOT NULL
+                    REFERENCES jobs_job_state,
+                event_type_id integer
                     REFERENCES inventory_event_type,
                 status_code INTEGER NOT NULL DEFAULT 100,
                 status_text VARCHAR NOT NULL DEFAULT 'Initializing',
@@ -1341,7 +1341,7 @@ def _createInventorySchema(db, cfg):
             CREATE TABLE inventory_system_job (
                 system_job_id %(PRIMARYKEY)s,
                 job_id integer NOT NULL UNIQUE
-                    REFERENCES inventory_job
+                    REFERENCES jobs_job
                     ON DELETE CASCADE,
                 system_id integer NOT NULL
                     REFERENCES inventory_system
@@ -2211,7 +2211,7 @@ def _createPackageSchema(db):
                 REFERENCES "packages_package_action_type"
                     ("package_action_type_id"),
             "job_id" integer
-                REFERENCES "inventory_job" ("job_id"),
+                REFERENCES "jobs_job" ("job_id"),
             "job_data" text,
             "created_date" timestamp with time zone NOT NULL,
             "modified_date" timestamp with time zone NOT NULL,
@@ -2276,7 +2276,7 @@ def _createPackageSchema(db):
                 REFERENCES "packages_package_action_type"
                     ("package_action_type_id"),
             "job_id" integer
-                REFERENCES "inventory_job" ("job_id"),
+                REFERENCES "jobs_job" ("job_id"),
             "job_data" text,
             "created_date" timestamp with time zone NOT NULL,
             "modified_date" timestamp with time zone NOT NULL,
@@ -2331,7 +2331,7 @@ def _createPackageSchema(db):
                 REFERENCES "packages_package_build" ("package_build_id"),
             "package_action_type_id" integer NOT NULL,
             "job_id" integer
-                REFERENCES "inventory_job" ("job_id"),
+                REFERENCES "jobs_job" ("job_id"),
             "job_data" text,
             "created_date" timestamp with time zone NOT NULL,
             "modified_date" timestamp with time zone NOT NULL,

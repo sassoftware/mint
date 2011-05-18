@@ -2588,7 +2588,7 @@ class MigrateTo_55(SchemaMigration):
         return True
 
 class MigrateTo_56(SchemaMigration):
-    Version = (56, 1)
+    Version = (56, 2)
 
     def migrate(self):
         return True
@@ -2866,6 +2866,20 @@ class MigrateTo_56(SchemaMigration):
 
         return True
         
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_job"
+            RENAME TO "jobs_job"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_job_state"
+            RENAME TO "jobs_job_state"
+        """)
+
+        return True
+
+
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
