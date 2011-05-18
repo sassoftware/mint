@@ -312,7 +312,7 @@ class ProjectManager(basemanager.BaseManager):
         pd = self.getProductVersionDefinitionByProjectVersion(projectVersion)
         pdStages = pd.getStages()
         stage = [s for s in pdStages if s.name == stageName][0]
-        promotable = ((stage.name != stages[-1].name and True) or False)
+        promotable = ((stage.name != pdStages[-1].name and True) or False)
         dbStage = models.Stage(name=str(stage.name),
              label=str(pd.getLabelForStage(stage.name)),
              hostname=project.hostname, project_version=projectVersion,
@@ -329,7 +329,7 @@ class ProjectManager(basemanager.BaseManager):
         stages.stage = []
         pdStages = pd.getStages()
         for stage in pdStages:
-            promotable = ((stage.name != stages[-1].name and True) or False)
+            promotable = ((stage.name != pdStages[-1].name and True) or False)
             # TODO: now that we've created a model for this stage, should we
             # save it in the db?
             dbStage = models.Stage(name=str(stage.name),
