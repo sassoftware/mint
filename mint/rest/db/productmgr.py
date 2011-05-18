@@ -525,6 +525,7 @@ class ProductManager(manager.Manager):
         kwargs = {}
         if name != "rebase-to-latest-on-versionless-platform":
             kwargs['platformVersion'] = platformVersion.revision
+            label = None
         pd.rebase(cclient, label, **kwargs)
         pd.saveToRepository(cclient, 
                 'Product Definition commit from rBuilder\n')
