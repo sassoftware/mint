@@ -420,7 +420,7 @@ urlpatterns = patterns('',
     
     # Begin all things platforms
     url(r'^api/platforms/?$',
-        platformsviews.PlatformService().
+        platformsviews.PlatformService(),
         name='Platforms'),
         
     url(r'^api/platforms/(?P<platform_id>\d+)/?$',
