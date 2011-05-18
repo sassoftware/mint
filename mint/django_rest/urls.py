@@ -474,7 +474,7 @@ urlpatterns = patterns('',
         
     url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/(?P<error_id>\d+)/?$',
         platformsviews.SourceErrorService(),
-        name='SourceError')
+        name='SourceError'),
         
     url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/source_type_descriptor/?$',
         platformsviews.SourceTypeDescriptor(),
