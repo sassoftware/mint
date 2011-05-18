@@ -14,18 +14,18 @@ class AbstractSource(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    content_source_id = fields.CharField(primary_key=True)
-    name = fields.CharField(unique=True)
+    content_source_id = fields.CharField(unique=True) # I believe this should be an AutoField/IntegerField
+    name = fields.CharField()
     short_name = fields.CharField(unique=True)
     default_source = fields.BooleanField()
     order_index = fields.IntegerField()
-    content_source_type = fields.CharField()
+    content_source_type = modellib.ForeignKey('SourceType')
     enabled = fields.BooleanField()
     content_source_status = models.ForeignKey('SourceStatus')
-    resource_errors = fields.UrlField()
+    # resource_errors = fields.UrlField() # what the heck does this go to
     
 
-class AbstractStatus(modellib.XObjModel):
+class AbstractStatus(modellib.XObjIdModel):
     class Meta:
         abstract = True
 
@@ -37,13 +37,13 @@ class AbstractStatus(modellib.XObjModel):
 class AbstractPlatform(modellib.XObjIdModel):
     class Meta:
         abstract = True
-        
-    platform_id = fields.CharField()
+    
+    platform_id = fields.CharField(unique=True) # I think this should be an AutoField/IntegerField
     platform_trove_name = fields.CharField()
     repository_host_name = fields.CharField()
     label = fields.CharField()
-    platform_version = fields.CharField()
-    product_version = fields.CharField()
+    platform_version = fields.CharField() # possible fk
+    product_version = fields.CharField() # possible fk
     platform_name = fields.CharField()
     platform_usage_terms = fields.CharField()
     mode = fields.CharField()
@@ -51,25 +51,28 @@ class AbstractPlatform(modellib.XObjIdModel):
     configurable = fields.BooleanField()
     abstract = fields.BooleanField()
     mirror_permission = fields.BooleanField()
-    # repository_url = _RepositoryUrlField()
-    content_sources = models.ManyToManyField('ContentSource', through='Source', db_column='content_source_id')
+    repository_url = modellib.HrefField() # no clue
+    content_sources = models.ManyToManyField('ContentSource', through='Source') # not sure
     platform_type = fields.CharField()
-    platform_status = models.ForeignKey('PlatformSourceStatus')
+    platform_status = models.ForeignKey('PlatformSourceStatus') # not sure this is the correct model to point to
     content_source_types = models.ForeignKey('SourceType', db_column='content_source_type')
-    load = models.ForeignKey('PlatformLoad', db_column='platform_id')
-    image_type_definitions = models.UrlField()
+    load = models.ForeignKey('PlatformLoad')
+    image_type_definitions = modellib.ForeignKey('ImageTypeDefinition') # model doesn't exist yet
     is_platform = fields.BooleanField()
-    platform_versions = modellib.ForeignKey('PlatformVersion', db_column='platform_id')
+    platform_versions = modellib.ForeignKey('PlatformVersion')
 
 
 class Status(AbstractStatus):
     _xobj = xobj.XObjMetadata(tag='status')
     
-    
+
 class SourceStatus(AbstractStatus):
     class Meta:
         verbose_name = 'content_source_status'
-        
+    
+    source_type = modellib.ForeignKey('SourceType')
+    short_name = fields.CharField(unique=True)
+    
     _xobj = xobj.XObjMetadata(tag='source_status')
     
     
@@ -92,15 +95,15 @@ class Source(modellib.XObjIdModel):
     class Meta:
         verbose_name = 'content_source'
     
-    content_source_id = fields.CharField(primary_key=True)
+    content_source_id = fields.CharField(primary_key=True) # believe should be AutoField/IntegerField
     name = fields.CharField()
     short_name = fields.CharField(unique=True)
     default_source = fields.BooleanField()
     order_index = fields.IntegerField()
-    content_source_type = fields.CharField()
+    content_source_type = fields.CharField() # possible fk
     enabled = fields.BooleanField()
     content_source_status = models.ForeignKey('SourceStatus')
-    resource_errors = models.ForeignKey('ResourceError')
+    resource_errors = models.ForeignKey('SourceError') # I think this points to SourceError
     
     _xobj = xobj.XObjMetadata(tag='source')
 
@@ -158,11 +161,11 @@ class SourceType(modellib.XObjIdModel):
     class Meta:
         verbose_name = 'content_source_type'
     
-    content_source_type = fields.CharField(unique=True)
+    content_source_type = fields.CharField()
     required = fields.BooleanField()
     singleton = fields.BooleanField()
-    instances = models.ForeignKey('SourceInstances')
-    config_descriptor = fields.UrlField()
+    instances = models.ManyToManyField('ContentSourceInstances', through='self') # not sure if is correct model to point to, also is this really m2m?
+    config_descriptor = fields.UrlField() # think this points to other restlib model
     # status_test = fields.UrlField() # what the hell is this?
     
     _xobj = xobj.XObjMetadata(tag='source_type')
@@ -207,7 +210,7 @@ class PlatformVersion(modellib.XObjIdModel):
     revision = fields.CharField()
     label = fields.CharField()
     ordering = fields.CharField()
-    platform_id = fields.CharField()
+    platform_id = fields.CharField() # possible fk field
     _xobj = xobj.XObjMetadata(tag='platform_version')
     
 
@@ -243,6 +246,10 @@ class PlatformContentErrors(modellib.Collection):
     
     
 class PlatformContentError(modellib.XObjModel):
+    source_type = modellib.ForeignKey('SourceType')
+    short_name = fields.CharField()
+    error_id = fields.IntegerField()
+    
     _xobj = xobj.XObjMetadata(tag='platform_content_error')
     
     

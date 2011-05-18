@@ -61,7 +61,8 @@ class SourceManager(basemanager.BaseManager):
     def createSource(self, source):
         source.save()
         return source
-        
+    
+    @exposed    
     def deleteSource(self, short_name):
         source = platformModels.Source.objects.get(short_name=short_name)
         source.delete()
@@ -136,7 +137,7 @@ class PlatformVersionManager(basemanager.BaseManager):
     @exposed
     def getPlatformVersion(self, platform_id, platform_version_id):
         return platformModels.PlatformVersion.objects.get(platform_id=platform_id)
-        
+    
     @exposed
     def getPlatformVersions(self, platform_id):
         PlatformVersions = platformModels.PlatformVersions()
