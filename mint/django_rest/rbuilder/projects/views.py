@@ -43,14 +43,30 @@ class ProjectVersionService(service.BaseService):
 
     @access.anonymous
     @return_xml
-    def rest_GET(self, request, short_name, version_name=None):
-        return self.get(short_name, version_name)
+    def rest_GET(self, request, short_name, version_id=None):
+        return self.get(short_name, version_id)
 
-    def get(self, short_name, version_name=None):
-        if version_name:
-            return self.mgr.getProjectVersion(short_name, version_name)
+    def get(self, short_name, version_id=None):
+        if version_id:
+            return self.mgr.getProjectVersion(short_name, version_id)
         else:
             return self.mgr.getProjectVersions(short_name)
+
+    @requires("project_version")
+    @return_xml
+    def rest_POST(self, request, short_name, project_version):
+        return self.mgr.addProjectVersion(short_name, project_version)
+
+    @requires("project_version")
+    @return_xml
+    def rest_PUT(self, request, short_name, version_id, project_version):
+        return self.mgr.updateProjectVersion(short_name, project_version)
+
+    def rest_DELETE(self, request, short_name, version_id):
+        projectVersion = self.get(short_name, version_id)
+        self.mgr.deleteProjectVersion(projectVersion)
+        response = HttpResponse(status=204)
+        return response
 
 class ProjectVersionStageService(service.BaseService):
     pass

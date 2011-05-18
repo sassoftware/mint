@@ -5,9 +5,16 @@
 # All rights reserved.
 #
 
+import re
+
+from conary.lib import util
+
 from mint import helperfuncs
 from mint import mint_error
 from mint import userlevels
+from mint import projects
+from mint import templates
+from mint.templates import groupTemplate
 from mint.rest.db import reposmgr
 
 from mint.django_rest.rbuilder import auth
@@ -57,6 +64,16 @@ class ProjectManager(basemanager.BaseManager):
         else:
             return False
 
+    def isProjectOwner(self, project):
+        # Admins can see all projects
+        if auth.isAdmin(self.user):
+            return True
+        membership = project.membership.filter(user=self.user)
+        if not membership:
+            return False
+        membership = membersip[0]
+        return membership.level == userlevels.OWNER
+
     def validateNamespace(self, namespace):
         # Use the default namespace if one was not provided.
         if namespace is None:
@@ -65,6 +82,14 @@ class ProjectManager(basemanager.BaseManager):
             v = helperfuncs.validateNamespace(namespace)
             if v != True:
                 raise mint_error.InvalidNamespace
+
+    def validateProjectVersionName(self, versionName):
+        validProjectVersion = re.compile('^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*$')
+        if not versionName:
+            raise projects.ProductVersionInvalid
+        if not validProjectVersion.match(versionName):
+            raise projects.ProductVersionInvalid
+        return None
 
     @exposed
     def addProject(self, project):
@@ -104,7 +129,9 @@ class ProjectManager(basemanager.BaseManager):
         if project.hidden == 0 and oldProject.hidden == 1:
             self.restDb.publisher.notify('ProductUnhidden', oldProject.pk)
 
+        project.save()
         self.reposMgr._generateConaryrcFile()
+        return project
 
     @exposed
     def deleteProject(self, project):
@@ -139,7 +166,8 @@ class ProjectManager(basemanager.BaseManager):
 
             # Edit repository perms for non-external projects
             if not project.external:
-                self.reposMgr.editUser(project.fqdn, user.username, level)
+                self.reposMgr.editUser(project.repository_hostname, 
+                    user.username, level)
 
             # Send notification
             if notify:
@@ -147,12 +175,14 @@ class ProjectManager(basemanager.BaseManager):
                     user.userid, project.project_id, oldMember.level, level)
         else:
             # Add membership
-            member = models.Project.member(project=project, user=user, level=level)
+            member = models.Project.member(project=project, user=user, 
+                level=level)
             member.save()
 
             # Add repository perms for non-external projects
             if not project.external:
-                self.reposMgr.addUserByMd5(project.fqdn, user.username,
+                self.reposMgr.addUserByMd5(project.repository_hostname, 
+                    user.username,
                     user.salt, user.password, level)
 
             # Send notification
@@ -175,16 +205,77 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def getProjectVersions(self, shortName):
-        versions = models.Versions()
+        versions = models.ProjectVersions()
         project = models.Project.objects.get(short_name=shortName)
-        versions.version = project.versions.all()
+        versions.project_version = project.versions.all()
         versions._parents = [project]
         return versions
 
     @exposed
     def getProjectVersion(self, shortName, versionId):
-        version = models.Version.objects.get(pk=versionId)
+        version = models.ProjectVersion.objects.get(pk=versionId)
         return version
+
+    @exposed
+    def addProjectVersion(self, shortName, projectVersion):
+        project = models.Project.objects.get(short_name=shortName)
+
+        if not self.isProjectOwner(project):
+            raise errors.PermissionDenied()
+
+        if not projectVersion.namespace:
+            projectVersion.namespace = project.namespace
+
+        self.validateNamespace(projectVersion.namespace)
+        self.validateProjectVersionName(projectVersion.name)
+
+        # initial product definition
+        prodDef = helperfuncs.sanitizeProductDefinition(project.name,
+                        projectVersion.description, project.hostname, 
+                        project.domain_name, 
+                        project.short_name, projectVersion.name,
+                        '', projectVersion.namespace)
+        label = prodDef.getDefaultLabel()
+
+        # validate the label, which will be added later.  This is done
+        # here so the project is not created before this error occurs
+        if projects.validLabel.match(label) == None:
+            raise mint_error.InvalidLabel(label)
+
+        projectVersion.project = project
+        projectVersion.save()
+
+        # TODO: get the correct platformLabel
+        platformLabel = None
+
+        if project.project_type == 'Appliance' or \
+           project.project_type == 'PlatformFoundation':
+            groupName = helperfuncs.getDefaultImageGroupName(project.hostname)
+            className = util.convertPackageNameToClassName(groupName)
+            # convert from unicode
+            recipeStr = str(templates.write(groupTemplate,
+                            cfg = self.cfg,
+                            groupApplianceLabel=platformLabel,
+                            groupName=groupName,
+                            recipeClassName=className,
+                            version=projectVersion.name) + '\n')
+            self.reposMgr.createSourceTrove(project.repository_hostname, 
+                groupName, label, projectVersion.name,
+                {'%s.recipe' % groupName: recipeStr},
+                'Initial appliance image group template')
+
+        return projectVersion
+
+    @exposed
+    def updateProjectVersion(self, shortName, projectVersion):
+        if not self.isProjectOwner(project):
+            raise errors.PermissionDenied()
+        projectVersion.save()
+        return projectVersion
+
+    @exposed
+    def deleteProjectVersion(self, projectVersion):
+        projectVersion.delete()
 
     @exposed
     def getProjectMembers(self, shortName):
