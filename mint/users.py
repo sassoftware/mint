@@ -243,9 +243,9 @@ class Authorization(object):
     @cvar groups: a list dictionaries containing the groups to which the user belongs
     @type groups: list
     """
-    __slots__ = ('authorized', 'user_id', 'user_name', 'email',
-                 'display_email', 'full_name', 'blurb', 'token', 'stagnant',
-                 'groups', 'admin', 'time_accessed')
+    __slots__ = ('authorized', 'userId', 'username', 'email',
+                 'displayEmail', 'fullName', 'blurb', 'token', 'stagnant',
+                 'groups', 'admin', 'timeAccessed')
 
     def __init__(self, **kwargs):
         for key in self.__slots__:
