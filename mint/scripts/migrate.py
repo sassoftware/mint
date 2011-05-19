@@ -2886,9 +2886,18 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 0)
+    Version = (58, 1)
 
     def migrate(self):
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            RENAME "appliance_id" TO "project_id"
+        """)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################

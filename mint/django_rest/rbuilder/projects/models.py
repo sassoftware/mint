@@ -49,7 +49,7 @@ class Project(modellib.XObjIdModel):
     commit_email = models.CharField(max_length=128, null=True, blank=True, 
         db_column="commitemail")
     backup_external = models.SmallIntegerField(default=0,
-        db_column="backup_external")
+        db_column="backupexternal")
     time_created = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timecreated")
     time_modified = models.DecimalField(max_digits=14, decimal_places=3,
@@ -59,7 +59,7 @@ class Project(modellib.XObjIdModel):
         related_name="creator", null=True, db_column="creatorid")
     external = models.SmallIntegerField(default=0)
     disabled = models.SmallIntegerField(default=0)
-    isAppliance = models.SmallIntegerField(default=1)
+    isAppliance = models.SmallIntegerField(default=1, db_column="isappliance")
     version = models.CharField(max_length=128, null=True, blank=True,
         default='')
     database = models.CharField(max_length=128, null=True)
