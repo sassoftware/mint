@@ -49,6 +49,7 @@ class SourceManager(basemanager.BaseManager):
     @exposed
     def getSources(self, source_type):
         Sources = platformModels.Sources()
+        import pdb; pdb.set_trace()
         Sources.source = platformModels.Source.objects.all().filter(content_source_type=source_type)
         return Sources
         

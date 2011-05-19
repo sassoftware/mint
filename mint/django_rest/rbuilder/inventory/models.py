@@ -500,7 +500,7 @@ class System(modellib.XObjIdModel):
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
     launching_user = D(modellib.ForeignKey(usersmodels.User, null=True, 
-        text_field="username"),
+        text_field="user_name"),
         "the user that deployed the system (only applies if system is on a "
         "virtual target)")
     current_state = D(modellib.SerializedForeignKey(
@@ -527,13 +527,13 @@ class System(modellib.XObjIdModel):
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.ForeignKey(Stage, null=True, 
+    stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True, 
         text_field='name')),
         "the project stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(ProjectVersion, null=True,
+    major_version = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
         text_field='name')),
         "the project major version of the system")
-    project = D(APIReadOnly(modellib.ForeignKey(Project, null=True,
+    project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
         text_field='short_name')),
         "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))

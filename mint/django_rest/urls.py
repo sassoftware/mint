@@ -480,11 +480,11 @@ urlpatterns = patterns('',
         # platformsviews.SourceTypeDescriptor(),
         # name='SourceTypeDescriptor'),
         
-    url(r'^api/platforms/sources/source_types/?$',
+    url(r'^api/platforms/source_types/?$',
         platformsviews.SourceTypeService(),
         name='SourceTypes'),
         
-    url(r'^api/platforms/sources/source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
+    url(r'^api/platforms/source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceTypeService(),
         name='SourceType'),
   
