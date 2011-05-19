@@ -31,7 +31,6 @@ class ProjectManager(basemanager.BaseManager):
         basemanager.BaseManager.__init__(self, *args, **kwargs)
         self._reposMgr = None
 
-    @property
     def reposMgr(self):
         if not self._reposMgr:
             self._reposMgr = reposmgr.RepositoryManager(self.cfg, self.restDb,
@@ -105,7 +104,7 @@ class ProjectManager(basemanager.BaseManager):
         project.save()
 
         # Create project repository
-        self.reposMgr.createRepository(project.pk)
+        self.reposMgr().createRepository(project.pk)
 
         # Add current user as project owner
         if self.user:
@@ -132,7 +131,7 @@ class ProjectManager(basemanager.BaseManager):
             self.restDb.publisher.notify('ProductUnhidden', oldProject.pk)
 
         project.save()
-        self.reposMgr._generateConaryrcFile()
+        self.reposMgr()._generateConaryrcFile()
         return project
 
     @exposed
@@ -168,7 +167,7 @@ class ProjectManager(basemanager.BaseManager):
 
             # Edit repository perms for non-external projects
             if not project.external:
-                self.reposMgr.editUser(project.repository_hostname, 
+                self.reposMgr().editUser(project.repository_hostname, 
                     user.username, level)
 
             # Send notification
@@ -183,7 +182,7 @@ class ProjectManager(basemanager.BaseManager):
 
             # Add repository perms for non-external projects
             if not project.external:
-                self.reposMgr.addUserByMd5(project.repository_hostname, 
+                self.reposMgr().addUserByMd5(project.repository_hostname, 
                     user.username,
                     user.salt, user.password, level)
 
@@ -261,7 +260,7 @@ class ProjectManager(basemanager.BaseManager):
                             groupName=groupName,
                             recipeClassName=className,
                             version=projectVersion.name) + '\n')
-            self.reposMgr.createSourceTrove(project.repository_hostname, 
+            self.reposMgr().createSourceTrove(project.repository_hostname, 
                 groupName, label, projectVersion.name,
                 {'%s.recipe' % groupName: recipeStr},
                 'Initial appliance image group template')
@@ -295,7 +294,7 @@ class ProjectManager(basemanager.BaseManager):
         pd.setConaryRepositoryHostname(project.repository_hostname)
         pd.setConaryNamespace(projectVersion.namespace)
         pd.setProductVersion(projectVersion.name)
-        cclient = self.reposMgr.getAdminClient(write=False)
+        cclient = self.reposMgr().getAdminClient(write=False)
         try:
             pd.loadFromRepository(cclient)
         except Exception:
