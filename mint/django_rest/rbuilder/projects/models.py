@@ -28,7 +28,7 @@ class Project(modellib.XObjIdModel):
     class Meta:
         db_table = u"projects"
         
-    _xobj_hidden_accessors = set(['membership'])
+    _xobj_hidden_accessors = set(['membership', 'package_set'])
     view_name = "Project"
     url_key = ["short_name"]
     
@@ -101,7 +101,7 @@ class Members(modellib.Collection):
 
 class Member(modellib.XObjModel):
     project = models.ForeignKey(Project, db_column='projectid',
-        related_name='membership')
+        related_name='membership', primary_key=True)
     user = modellib.DeferredForeignKey(usermodels.User, db_column='userid',
         related_name='project_membership')
     level = models.SmallIntegerField()
