@@ -15,7 +15,7 @@ class AbstractSource(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    content_source_id = models.AutoField(primary_key=True) # I believe this should be an AutoField/IntegerField
+    content_source_id = models.AutoField(primary_key=True)
     name = fields.CharField(max_length=1026)
     short_name = fields.CharField(max_length=1026, unique=True)
     default_source = fields.BooleanField()
@@ -39,7 +39,7 @@ class AbstractPlatform(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    platform_id = models.AutoField(primary_key=True) # I think this should be an AutoField/IntegerField
+    platform_id = models.AutoField(primary_key=True)
     platform_trove_name = fields.CharField(max_length=1026)
     repository_host_name = fields.CharField(max_length=1026)
     label = fields.CharField(max_length=1026)
@@ -61,7 +61,7 @@ class AbstractPlatform(modellib.XObjIdModel):
     load = models.ForeignKey('PlatformLoad')
     # image_type_definitions = modellib.ForeignKey('ImageTypeDefinition') # model doesn't exist yet
     is_platform = fields.BooleanField()
-    platform_versions = modellib.DeferredManyToManyField('PlatformVersion')
+    platform_versions = modellib.DeferredManyToManyField('PlatformVersion', db_column='plaform_id')
 
 
 class Status(AbstractStatus):
