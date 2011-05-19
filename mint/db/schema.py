@@ -1092,9 +1092,10 @@ def _createInventorySchema(db, cfg):
                 "stage_id" %(PRIMARYKEY)s,
                 "name" varchar(256) NOT NULL,
                 "label" text NOT NULL,
-                "major_version_id" integer
+                "project_version_id" integer
                     REFERENCES ProductVersions (productVersionId)
-                    ON DELETE SET NULL
+                    ON DELETE SET NULL,
+                "promotable" bool
             )""" % db.keywords)
         db.tables['inventory_stage'] = []
         changed = True

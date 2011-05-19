@@ -2898,6 +2898,17 @@ class MigrateTo_58(SchemaMigration):
             RENAME "appliance_id" TO "project_id"
         """)
 
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            RENAME "major_version_id" TO "project_version_id"
+        """)
+
+
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            ADD "promotable" bool
+        """)
+
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
