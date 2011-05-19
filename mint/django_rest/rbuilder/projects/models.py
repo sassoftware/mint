@@ -5,6 +5,7 @@
 #
 
 import sys
+import time
 
 from django.db import models
 
@@ -43,7 +44,8 @@ class Project(modellib.XObjIdModel):
         db_column= "projecturl")
     repository_hostname = models.CharField(max_length=255, db_column="fqdn")
     description = models.TextField(null=True, blank=True)
-    project_type = models.CharField(max_length=128, db_column="prodtype")
+    project_type = models.CharField(max_length=128, db_column="prodtype",
+        default="Appliance")
     commit_email = models.CharField(max_length=128, null=True, blank=True, 
         db_column="commitemail")
     backup_external = models.SmallIntegerField(default=0,
@@ -64,16 +66,30 @@ class Project(modellib.XObjIdModel):
     members = modellib.DeferredManyToManyField(usermodels.User, 
         through="Member")
 
+    load_fields = [ short_name ]
+
     def __unicode__(self):
         return self.hostname
         
-    def serialize(self, request):
+    def serialize(self, request=None):
         xobjModel = modellib.XObjIdModel.serialize(self, request)
-        member = self.membership.filter(user=request._authUser)
-        if member:
-            role = member[0].level
-            xobjModel.role = role
+        if request is not None:
+            member = self.membership.filter(user=request._authUser)
+            if member:
+                role = member[0].level
+                xobjModel.role = role
         return xobjModel
+
+    def save(self, *args, **kwargs):
+        # Default project type to Appliance
+        if self.project_type is None:
+            self.project_type = "Appliance"
+
+        if self.time_created is None:
+            self.time_created = str(time.time())
+        if self.time_modified is None:
+            self.time_modified = str(time.time())
+        return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class Members(modellib.Collection):
     class Meta:
@@ -92,23 +108,22 @@ class Member(modellib.XObjModel):
     class Meta:
         db_table = u'projectusers'
 
-class Versions(modellib.Collection):
+class ProjectVersions(modellib.Collection):
     class Meta:
         abstract = True
 
     _xobj = xobj.XObjMetadata(
-                tag = "versions")
+                tag = "project_versions")
     view_name = "ProjectVersions"
-    list_fields = ["version"]
+    list_fields = ["project_version"]
     version = []
 
-class Version(modellib.XObjIdModel):
+class ProjectVersion(modellib.XObjIdModel):
     class Meta:
         db_table = u'productversions'
 
-    _xobj_hidden_accessors = set(['stages',])
     _xobj = xobj.XObjMetadata(
-        tag="version")
+        tag="project_version")
     view_name = 'ProjectVersion'
     url_key = ['project', 'pk']
 
@@ -125,6 +140,11 @@ class Version(modellib.XObjIdModel):
     def __unicode__(self):
         return self.name
         
+    def save(self, *args, **kwargs):
+        if self.time_created is None:
+            self.time_created = str(time.time())
+        return modellib.XObjIdModel.save(self, *args, **kwargs)
+
 class Stage(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_stage'
@@ -132,13 +152,14 @@ class Stage(modellib.XObjIdModel):
     view_name = 'ProjectVersionStage'
     _xobj = xobj.XObjMetadata(tag='stage')
     _xobj_hidden_accessors = set(['version_set',])
-    url_key = ['major_version', 'name']
+    url_key = ['project_version', 'name']
 
     stage_id = models.AutoField(primary_key=True)
-    major_version = modellib.DeferredForeignKey(Version, related_name="stages")
+    project_version = modellib.DeferredForeignKey(ProjectVersion, 
+        related_name="stages", view_name="ProjectVersionStages")
     name = models.CharField(max_length=256)
     label = models.TextField(unique=True)
-
+    promotable = models.BooleanField(default=False)
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
@@ -214,7 +235,7 @@ class Image(modellib.XObjIdModel):
     updated_by = modellib.ForeignKey(usermodels.User, db_column='updatedby',
         related_name='updated_images', null=True)
     build_count = models.IntegerField(null=True, default=0)
-    version = models.ForeignKey(Version, null=True,
+    version = models.ForeignKey(ProjectVersion, null=True,
         db_column='productversionid')
     stage_name = models.CharField(max_length=255, db_column='stageName',
         null=True, blank=True, default='')
