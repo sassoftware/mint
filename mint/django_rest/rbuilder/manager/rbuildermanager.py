@@ -19,6 +19,20 @@ from mint.django_rest.rbuilder.projects.manager import ProjectManager
 from mint.django_rest.rbuilder.users.manager import UsersManager, UserGroupsManager, UserGroupMembersManager, UserUserGroupsManager
 from mint.django_rest.rbuilder.notices.manager import UserNoticesManager, GlobalNoticesManager
 
+from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
+                                                        SourceErrorsManager, \
+                                                        SourceManager, \
+                                                        SourceTypeDescriptorManager, \
+                                                        SourceTypeStatusTestManager, \
+                                                        SourceTypeManager, \
+                                                        PlatformStatusManager, \
+                                                        PlatformSourceManager, \
+                                                        PlatformSourceTypeManager, \
+                                                        PlatformImageTypeManager, \
+                                                        PlatformLoadManager, \
+                                                        PlatformVersionManager, \
+                                                        PlatformManager
+
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
     MANAGERS = {
@@ -34,9 +48,22 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'userGroupsMgr': UserGroupsManager,
         'userGroupMembersMgr': UserGroupMembersManager,
         'projectManager' : ProjectManager,
-        'userNoticesManager' : UserNoticesManager,
-        'globalNoticesManager' : GlobalNoticesManager,
+        'userNoticesMgr' : UserNoticesManager,
+        'globalNoticesMgr' : GlobalNoticesManager,
         'userUserGroupsManager' : UserUserGroupsManager,
+        'sourceStatusMgr' : SourceStatusManager,
+        'sourceErrorsMgr' : SourceErrorsManager,
+        'sourceMgr' : SourceManager,
+        'sourceTypeDescriptorMgr', SourceTypeDescriptorManager,
+        'sourceTypeStatusTestMgr' : SourceTypeStatusTestManager,
+        'sourceTypeMgr' : SourceTypeManager,
+        'platformStatusMgr' : PlatformStatusManager,
+        'platformSourceMgr' : PlatformSourceManager,
+        'platformSourceTypeMgr' : PlatformSourceTypeManager,
+        'platformImageTypeMgr' : PlatformImageTypeManager,
+        'platformLoadMgr' : PlatformLoadManager,
+        'platformVersionMgr' : PlatformVersionManager,
+        'platformMgr' : PlatformManager,
     }
 
     def __init__(self, cfg=None, userName=None):
