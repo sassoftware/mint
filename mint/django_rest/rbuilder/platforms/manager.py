@@ -16,7 +16,7 @@ class SourceStatusManager(basemanager.BaseManager):
     def getSourceStatusByName(self, source_type, short_name):
         status = \
             platformModels.SourceStatus.objects.all().filter(
-                source_type=source_type, short_name=short_name)
+                content_source_type=source_type, short_name=short_name)
         return status
     
     
@@ -25,7 +25,7 @@ class SourceErrorsManager(basemanager.BaseManager):
     def getPlatformContentError(self, source_type, short_name, error_id):
         platformContentError = \
             platformModels.PlatformContentError.objects.all().filter(
-                source_type=source_type, short_name=short_name, error_id=error_id)
+                content_source_type=source_type, short_name=short_name, error_id=error_id)
         return platformContentError
     
     @exposed
@@ -33,7 +33,7 @@ class SourceErrorsManager(basemanager.BaseManager):
         PlatformContentErrors = platformModels.PlatformContentErrors()
         PlatformContentErrors.platform_content_error = \
             platformModels.PlatformContentError.objects.all().filter(
-                source_type=source_type, short_name=short_name)
+                content_source_type=source_type, short_name=short_name)
         return PlatformContentErrors
         
     @exposed
@@ -49,7 +49,7 @@ class SourceManager(basemanager.BaseManager):
     @exposed
     def getSources(self, source_type):
         Sources = platformModels.Sources()
-        Sources.source = platformModels.Source.objects.all().filter(source_type=source_type)
+        Sources.source = platformModels.Source.objects.all().filter(content_source_type=source_type)
         return Sources
         
     @exposed
@@ -83,7 +83,7 @@ class SourceTypeStatusTestManager(basemanager.BaseManager):
 class SourceTypeManager(basemanager.BaseManager):
     @exposed
     def getSourceType(self, source_type):
-        return platformModels.SourceType.objects.all().filter(source_type=source_type)
+        return platformModels.SourceType.objects.all().filter(content_source_type=source_type)
         
     @exposed
     def getSourceTypes(self):

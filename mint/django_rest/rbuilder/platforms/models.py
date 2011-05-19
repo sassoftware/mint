@@ -20,9 +20,9 @@ class AbstractSource(modellib.XObjIdModel):
     short_name = fields.CharField(max_length=1026, unique=True)
     default_source = fields.BooleanField()
     order_index = fields.IntegerField()
-    content_source_type = models.ForeignKey('SourceType')
+    content_source_type = models.ForeignKey('SourceType', db_column='content_source_type')
     enabled = fields.BooleanField()
-    content_source_status = models.ForeignKey('SourceStatus')
+    content_source_status = models.ForeignKey('SourceStatus', null=True)
     # resource_errors = fields.UrlField() # what the heck does this go to
     
 
@@ -32,7 +32,7 @@ class AbstractStatus(modellib.XObjIdModel):
 
     connected = fields.BooleanField()
     valid = fields.BooleanField()
-    message = fields.CharField(max_length=1026)
+    message = models.TextField()
 
 
 class AbstractPlatform(modellib.XObjIdModel):
@@ -72,7 +72,7 @@ class SourceStatus(AbstractStatus):
     class Meta:
         verbose_name = 'content_source_status'
     
-    source_type = modellib.ForeignKey('SourceType')
+    content_source_type = modellib.ForeignKey('SourceType', db_column='content_source_type')
     short_name = fields.CharField(max_length=1026, unique=True)
     
     _xobj = xobj.XObjMetadata(tag='source_status')
@@ -102,7 +102,7 @@ class Source(modellib.XObjIdModel):
     short_name = fields.CharField(max_length=1026, unique=True)
     default_source = fields.BooleanField()
     order_index = fields.IntegerField()
-    content_source_type = models.ForeignKey('SourceType') # possible fk
+    content_source_type = models.ForeignKey('SourceType', db_column='content_source_type')
     enabled = fields.BooleanField()
     content_source_status = models.ForeignKey('SourceStatus')
     # resource_errors = models.ForeignKey('SourceError') # I think this points to SourceError
@@ -167,7 +167,7 @@ class SourceType(modellib.XObjIdModel):
     required = fields.BooleanField()
     singleton = fields.BooleanField()
     # instances = models.ManyToManyField('ContentSourceInstances', through='Source', db_column='content_source_id') # not sure if is correct model to point to, also is this really m2m?
-    instances = models.ForeignKey('SourceInstances', db_column='content_source_id')
+    instances = models.ForeignKey('SourceInstances', db_column='content_source_id', null=True)
     # config_descriptor = fields.UrlField() # think this points to other restlib model
     # status_test = fields.UrlField() # what the hell is this?
     
@@ -249,7 +249,7 @@ class PlatformContentErrors(modellib.Collection):
     
     
 class PlatformContentError(modellib.XObjModel):
-    source_type = modellib.ForeignKey('SourceType')
+    content_source_type = modellib.ForeignKey('SourceType')
     short_name = fields.CharField(max_length=1026)
     error_id = fields.IntegerField()
     
