@@ -67,80 +67,80 @@ class BooleanField(models.BooleanField):
         return 'false'
 
         
-class CalculatedField(models.Field):
-    #TODO : add errors for trying to pass this in.
-    pass
-
-
-class AbstractUrlField(CalculatedField):
-
-    class _Url(models.Model):
-        href = CharField()
-        value = CharField()
-        
-        def __repr__(self):
-            if self.value:
-                return '_Url(%r, value=%r)' % (self.href, self.value)
-            else:
-                return '_Url(%r)' % (self.href)
-
-    def __repr__(self):
-        return 'fields.AbstractUrlField()'
-
-    def getModel(self):
-        return self._Url
-
-    def getModelInstance(self, value, parent, context):
-        modelClass = self.getModel()
-        url = self._getUrl(parent, context)
-        if url is None:
-            return None
-        return modelClass(href=url, value=value)
-
-
-
-class AbsoluteUrlField(CalculatedField):
-    handleNone = True
-
-    def value_to_string(self, obj):
-        pass
-
-
-class ImageDownloadField(CalculatedField):
-    handleNone = True
-
-    def value_to_string(self, obj):
-        pass
-
-
-class EmailField(models.Field):
-    pass
-
-
-class DateTimeField(models.Field):
-    pass
-
-
-class ObjectField(models.Field):
-    parser = None
-    _emptyIsNone = True
-
-    def to_python(self, value):
-        if value is None or (self._emptyIsNone and value == ''):
-            return None
-        return self.parser(value)
-
-    def value_to_string(self, obj):
-        return str(obj)
-
-
-class VersionField(ObjectField):
-    parser = staticmethod(versions.VersionFromString)
-
-
-class LabelField(ObjectField):
-    parser = versions.Label
-
-
-class FlavorField(ObjectField):
-    _emptyIsNone = False
+# class CalculatedField(models.Field):
+#     #TODO : add errors for trying to pass this in.
+#     pass
+# 
+# 
+# class AbstractUrlField(CalculatedField):
+# 
+#     class _Url(models.Model):
+#         href = CharField()
+#         value = CharField()
+#         
+#         def __repr__(self):
+#             if self.value:
+#                 return '_Url(%r, value=%r)' % (self.href, self.value)
+#             else:
+#                 return '_Url(%r)' % (self.href)
+# 
+#     def __repr__(self):
+#         return 'fields.AbstractUrlField()'
+# 
+#     def getModel(self):
+#         return self._Url
+# 
+#     def getModelInstance(self, value, parent, context):
+#         modelClass = self.getModel()
+#         url = self._getUrl(parent, context)
+#         if url is None:
+#             return None
+#         return modelClass(href=url, value=value)
+# 
+# 
+# 
+# class AbsoluteUrlField(CalculatedField):
+#     handleNone = True
+# 
+#     def value_to_string(self, obj):
+#         pass
+# 
+# 
+# class ImageDownloadField(CalculatedField):
+#     handleNone = True
+# 
+#     def value_to_string(self, obj):
+#         pass
+# 
+# 
+# class EmailField(models.Field):
+#     pass
+# 
+# 
+# class DateTimeField(models.Field):
+#     pass
+# 
+# 
+# class ObjectField(models.Field):
+#     parser = None
+#     _emptyIsNone = True
+# 
+#     def to_python(self, value):
+#         if value is None or (self._emptyIsNone and value == ''):
+#             return None
+#         return self.parser(value)
+# 
+#     def value_to_string(self, obj):
+#         return str(obj)
+# 
+# 
+# class VersionField(ObjectField):
+#     parser = staticmethod(versions.VersionFromString)
+# 
+# 
+# class LabelField(ObjectField):
+#     parser = versions.Label
+# 
+# 
+# class FlavorField(ObjectField):
+#     _emptyIsNone = False

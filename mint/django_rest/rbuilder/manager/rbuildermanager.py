@@ -54,7 +54,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'sourceStatusMgr' : SourceStatusManager,
         'sourceErrorsMgr' : SourceErrorsManager,
         'sourceMgr' : SourceManager,
-        'sourceTypeDescriptorMgr', SourceTypeDescriptorManager,
+        'sourceTypeDescriptorMgr': SourceTypeDescriptorManager,
         'sourceTypeStatusTestMgr' : SourceTypeStatusTestManager,
         'sourceTypeMgr' : SourceTypeManager,
         'platformStatusMgr' : PlatformStatusManager,

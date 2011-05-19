@@ -1,4 +1,3 @@
-from mint.django_rest.rbuilder.models import Images, Versions
 from mint.django_rest.rbuilder.users.models import User
 from mint.django_rest.rbuilder.projects.models import Project
 
@@ -69,14 +68,14 @@ class ImagesPerProductTestCase(unittest.TestCase):
             namespace='rpath',domainname='eng.rpath.com',repositoryHostName='foo.eng.rpath.com',
             prodtype='Appliance',hidden=0,creatorid=self.user,timecreated=str(time.time()),
             timemodified=str(time.time()), shortname='foo')
-        self.version = Versions.objects.create(productId=self.product,namespace='foo',name='bar',
+        self.version = Project.Version.objects.create(productId=self.product,namespace='foo',name='bar',
             timecreated=str(time.time()))
             
         dt = datetime.date(2008,1,1)
         timeint = time.mktime(dt.timetuple())
         
         for i in range(0,50):
-            Images.objects.create(name='Image'+str(i),product_id=self.product, created_by=self.user, build_type=1,
+            Project.Image.objects.create(name='Image'+str(i),product_id=self.product, created_by=self.user, build_type=1,
                 time_created=str(timeint), trove_name='foo', trove_version='bar',trove_flavor='baz',
                 trove_last_changed=str(time.time()), deleted=0, stage_name='Development',product_version_id=
                 self.version, build_count=1, status=300)
