@@ -20,7 +20,7 @@ from mint.django_rest.rbuilder.users import views as usersviews
 from mint.django_rest.rbuilder.notices import views as noticesviews
 from mint.django_rest.rbuilder.platforms import views as platformsviews
 from mint.django_rest.rbuilder.jobs import views as jobviews
-
+from mint.django_rest.rbuilder.modulehooks import views as modulehooksviews
 
 handler404 = 'mint.django_rest.handler.handler404'
 handler500 = 'mint.django_rest.handler.handler500'
@@ -487,6 +487,11 @@ urlpatterns = patterns('',
     url(r'^api/platforms/source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceTypeService(),
         name='SourceType'),
+ 
+    # ModuleHooks
+    url(r'^api/module_hooks/?$',
+        modulehooksviews.ModuleHooksService(),
+        name='ModuleHooks')
   
 )
 
