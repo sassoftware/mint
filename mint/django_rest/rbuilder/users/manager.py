@@ -31,11 +31,24 @@ class UsersManager(basemanager.BaseManager):
     def updateUser(self, user_id, user):
         user.save()
         return user
-        
+    
     @exposed
     def deleteUser(self, user_id):
         user = models.User.objects.get(pk=user_id)
         user.delete()
+    
+    def cancelUserAccount(self, username):
+        user_id = self.getUserId(username)
+        self._ensureNoOrphans(user_id)
+        self.filterLastAdmin(username)
+        
+        projectList = models.UserGroupMember.objects.all().filter(user_id=user_id)
+        for membership in projectList:
+            project_id = productmodels.Projects.objects.get(hostname=membership.hostname).project_id
+            pass
+            
+    def _ensureNoOrphans(self, user_id):
+        pass
     
     
 class UserGroupsManager(basemanager.BaseManager):

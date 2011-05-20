@@ -9,7 +9,7 @@ from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 
 
-class ModuleHooks(modellib.XObjModel):
+class ModuleHooks(modellib.Collection):
     class Meta:
         abstract = True
         

@@ -15,12 +15,12 @@ class AbstractSource(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    content_source_id = models.AutoField(primary_key=True)
-    name = fields.CharField(max_length=1026)
+    content_source_id = models.AutoField(primary_key=True) # used to be charfield in old code
+    name = fields.CharField(max_length=1026) # is this unique
     short_name = fields.CharField(max_length=1026, unique=True)
     default_source = fields.BooleanField()
     order_index = fields.IntegerField()
-    content_source_type = models.ForeignKey('SourceType', db_column='content_source_type')
+    content_source_type = models.ForeignKey('SourceType', db_column='content_source_type') # was URLField, not sure what it should actually point to
     enabled = fields.BooleanField()
     content_source_status = models.ForeignKey('SourceStatus', null=True)
     # resource_errors = fields.UrlField() # what the heck does this go to
@@ -39,11 +39,10 @@ class AbstractPlatform(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    platform_id = models.AutoField(primary_key=True)
+    platform_id = models.AutoField(primary_key=True) # used to be a charfield in old code
     platform_trove_name = fields.CharField(max_length=1026)
     repository_host_name = fields.CharField(max_length=1026)
-    label = fields.CharField(max_length=1026)
-    # platform_version = modellib.DeferredForeignKey('PlatformVersion') # possible fk
+    label = fields.CharField(max_length=1026) # fk to something else
     product_version = fields.CharField(max_length=1026) # possible fk
     platform_name = fields.CharField(max_length=1026)
     platform_usage_terms = fields.CharField(max_length=1026)
@@ -61,6 +60,9 @@ class AbstractPlatform(modellib.XObjIdModel):
     load = models.ForeignKey('PlatformLoad')
     # image_type_definitions = modellib.ForeignKey('ImageTypeDefinition') # model doesn't exist yet
     is_platform = fields.BooleanField()
+    # both of platform_version and platform_versions are in original model for platform as URLFields,
+    # not sure if both are necessary and what the URLFields translate to
+    platform_version = modellib.DeferredForeignKey('PlatformVersion') # possible fk
     platform_versions = modellib.DeferredManyToManyField('PlatformVersion', db_column='plaform_id')
 
 
@@ -97,7 +99,7 @@ class Source(modellib.XObjIdModel):
     class Meta:
         verbose_name = 'content_source'
     
-    content_source_id = models.AutoField(primary_key=True) # believe should be AutoField/IntegerField
+    content_source_id = models.AutoField(primary_key=True) # used to be Charfield in old code
     name = fields.CharField(max_length=1026)
     short_name = fields.CharField(max_length=1026, unique=True)
     default_source = fields.BooleanField()
@@ -105,7 +107,7 @@ class Source(modellib.XObjIdModel):
     content_source_type = models.ForeignKey('SourceType', db_column='content_source_type')
     enabled = fields.BooleanField()
     content_source_status = models.ForeignKey('SourceStatus')
-    # resource_errors = models.ForeignKey('SourceError') # I think this points to SourceError
+    # resource_errors = models.ForeignKey('SourceError') # I think this points to SourceError but not sure
     
     _xobj = xobj.XObjMetadata(tag='source')
 
@@ -213,7 +215,7 @@ class PlatformVersion(modellib.XObjIdModel):
     revision = fields.CharField(max_length=1026)
     label = fields.CharField(max_length=1026)
     ordering = fields.CharField(max_length=1026)
-    platform_id = models.ForeignKey('Platform', db_column='platform_id') # possible fk field
+    platform_id = models.ForeignKey('Platform', db_column='platform_id')
     _xobj = xobj.XObjMetadata(tag='platform_version')
     
 
@@ -264,7 +266,7 @@ class PlatformLoad(modellib.XObjIdModel):
     load_uri = fields.CharField(max_length=1026)
     job_id = fields.CharField(max_length=1026)
     platform_id = models.ForeignKey('Platform', db_column='platform_id')
-    # job = fields.UrlField()
+    # job = fields.UrlField() # fk to jobs instance?
     
     _xobj = xobj.XObjMetadata(tag='platform_load')
     

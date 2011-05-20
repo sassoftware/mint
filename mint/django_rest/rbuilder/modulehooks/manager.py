@@ -7,6 +7,8 @@
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.modulehooks import models as modulehooksModels
 import os
+import fnmatch
+
 
 exposed = basemanager.exposed
 
@@ -20,5 +22,5 @@ class ModuleHooksManager(basemanager.BaseManager):
             for file in [filename for filename in files]:
                 if fnmatch.fnmatch(filename, self.mgr.cfg.moduleHooksExt):
                     joined = os.path.join('hooks', file)
-                    ModuleHooks.module_hook.append(modulehooksModels.ModuleHook(joined))
+                    ModuleHooks.module_hook.append(modulehooksModels.ModuleHook(url=joined))
         return ModuleHooks
