@@ -3084,7 +3084,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
                 # Check the product definition to see if this is based on a
                 # Windows platform.
-                if buildDict['productVersionId'] is not None:
+                if buildDict['productVersionId']:
                     pd = self._getProductDefinitionForVersionObj(
                             buildDict['productVersionId'])
                     platInfo = pd.getPlatformInformation()
