@@ -37,15 +37,15 @@ class UsersManager(basemanager.BaseManager):
         user = models.User.objects.get(pk=user_id)
         user.delete()
     
-    def cancelUserAccount(self, username):
-        user_id = self.getUserId(username)
-        self._ensureNoOrphans(user_id)
-        self.filterLastAdmin(username)
-        
-        projectList = models.UserGroupMember.objects.all().filter(user_id=user_id)
-        for membership in projectList:
-            project_id = productmodels.Projects.objects.get(hostname=membership.hostname).project_id
-            pass
+    # def cancelUserAccount(self, username):
+    #     user_id = self.getUserId(username)
+    #     self._ensureNoOrphans(user_id)
+    #     self.filterLastAdmin(username)
+    #     
+    #     projectList = models.UserGroupMember.objects.all().filter(user_id=user_id)
+    #     for membership in projectList:
+    #         project_id = productmodels.Projects.objects.get(hostname=membership.hostname).project_id
+    #         pass
             
     def _ensureNoOrphans(self, user_id):
         pass
