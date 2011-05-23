@@ -24,6 +24,12 @@ from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
 from mint.lib import data as mintdata
 
+# Dict to hold the union of all models' tags as keys, and the model class as
+# values.  Needed so that there is exactly one place to look to determine what
+# model class to use for deserialization of xml.  All models.py should add
+# their models to this dict.
+type_map = {}
+
 def XObjHidden(field):
     """
     Fields implementing this interface will not be serialized in the
@@ -35,12 +41,10 @@ def XObjHidden(field):
 def APIReadOnly(field):
     """
     Fields implementing this interface will not be updated through the
-    external API
+    external API.  If new values are sent for the field, they will be ignored.
     """
     field.APIReadOnly = True
     return field
-
-type_map = {}
 
 class BaseManager(models.Manager):
     """
@@ -51,8 +55,18 @@ class BaseManager(models.Manager):
 
     def load_from_db(self, model_inst):
         """
-        Load a model from the db based on model_inst.  Uses load_fields on the
-        model to look up a corresponding model in the db. 
+        Load an existing model from the db from an existing instance of the
+        model provided in model_inst.  As model representations are provided
+        in xml, an instance of the model is instantiated with the correct
+        field values.  The database needs to be checked to see if that
+        instance has already been saved or not.
+
+        Models will be loaded by either the primary key value on model_inst if
+        one is set, or the load_fields attribute that are defined in the model
+        class.
+
+        This method returns a tuple of the serialized form of the loaded model
+        and the loaded model, or (None, None) if no loaded model was found.
 
         Override this method for more specific behavior for a given model.
         """
@@ -64,13 +78,13 @@ class BaseManager(models.Manager):
 
         try:
             if keyFieldVal:
-                loaded_model = self.get(pk=keyFieldVal)
+                loadedModel = self.get(pk=keyFieldVal)
             elif model_inst.load_fields:   
-                loaded_model = self.get(**model_inst.load_fields_dict())
+                loadedModel = self.get(**model_inst.load_fields_dict())
             else:
                 return None, None
-            oldModel = loaded_model.serialize()
-            return oldModel, loaded_model
+            oldModel = loadedModel.serialize()
+            return oldModel, loadedModel
         except exceptions.ObjectDoesNotExist:
             return None, None
         except exceptions.MultipleObjectsReturned:
@@ -92,31 +106,31 @@ class BaseManager(models.Manager):
 
         # First try to load by an id or href attribute on xobjModel.  This
         # attribute (if present) should a be the full url of the model.
-        loaded_model = self.load_from_href(xobjModel)
-        if loaded_model:
-            oldModel = loaded_model.serialize()
+        loadedModel = self.load_from_href(xobjModel)
+        if loadedModel:
+            oldModel = loadedModel.serialize()
         else:
             # Fall back to loading from the db by model_inst
-            oldModel, loaded_model = self.load_from_db(model_inst)
+            oldModel, loadedModel = self.load_from_db(model_inst)
 
-        # For each field on loaded_model, see if that field is defined on
+        # For each field on loadedModel, see if that field is defined on
         # model_inst, if it is and the value is different, update the value on
-        # loaded_model.  In this case we are most likely handling a PUT or an
+        # loadedModel.  In this case we are most likely handling a PUT or an
         # update to a model.
-        if loaded_model:
-            self.copyFields(loaded_model, model_inst, xobjModel,
+        if loadedModel:
+            self.copyFields(loadedModel, model_inst, xobjModel,
                 withReadOnly=withReadOnly)
-            return oldModel, loaded_model
+            return oldModel, loadedModel
 
         if withReadOnly:
             # Don't touch the old model's fields even if they are read-only
-            return oldModel, loaded_model
+            return oldModel, loadedModel
 
         # We need to remove the read-only fields, added from the xobj model
         for field in model_inst._meta.fields:
             if getattr(field, 'APIReadOnly', None):
                 setattr(model_inst, field.name, None)
-        return oldModel, loaded_model
+        return oldModel, loadedModel
 
     def copyFields(self, dest, src, xobjModel=object(), withReadOnly=False):
         """
