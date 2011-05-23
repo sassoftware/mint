@@ -19,6 +19,8 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.projects.models import Project, ProjectVersion, Stage
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 
 from xobj import xobj
@@ -480,7 +482,7 @@ class System(modellib.XObjIdModel):
         "the date the system was deployed (only applies if system is on a "
         "virtual target)")
     target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, 
-        text_field="targetname"),
+        text_field="target_name"),
         "the virtual target the system was deployed to (only applies if "
         "system is on a virtual target)")
     target_system_id = D(models.CharField(max_length=255,
@@ -515,8 +517,8 @@ class System(modellib.XObjIdModel):
         "system's CIM broker")
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
-    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True, 
-        text_field="username"),
+    launching_user = D(modellib.ForeignKey(usersmodels.User, null=True, 
+        text_field="user_name"),
         "the user that deployed the system (only applies if system is on a "
         "virtual target)")
     current_state = D(modellib.SerializedForeignKey(
@@ -543,17 +545,15 @@ class System(modellib.XObjIdModel):
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, 
-        text_field='name')),
-        "the appliance stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, 
-        null=True,
-        text_field='name')),
-        "the appliance major version of the system")
-    appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, 
-        null=True,
-        text_field='shortname')),
-        "the appliance of the system")
+    stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True, 
+        text_field='name', related_name="systems")),
+        "the project stage of the system")
+    major_version = D(APIReadOnly(modellib.DeferredForeignKey(ProjectVersion, null=True,
+        text_field='name', related_name="systems")),
+        "the project major version of the system")
+    project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
+        text_field='short_name', related_name="systems")),
+        "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
         "the descriptor of available fields to set system configuration "
@@ -675,8 +675,6 @@ class System(modellib.XObjIdModel):
             if j.job_state_id == self.runningJobState.job_state_id])
 
     def serialize(self, request=None):
-        # We are going to replace the jobs node with hrefs. But DO NOT mark
-        # the jobs m2m relationship as hidden, or else the bulk load fails
         jobs = self.jobs.all()
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
@@ -1044,32 +1042,6 @@ class Trove(modellib.XObjIdModel):
         xobj_model.is_top_level_item = True
         return xobj_model
 
-class Stage(modellib.XObjIdModel):
-    class Meta:
-        db_table = 'inventory_stage'
-    view_name = 'Stages'
-    _xobj = xobj.XObjMetadata(tag='stage')
-    _xobj_hidden_accessors = set(['version_set',])
-
-    url_key = ["major_version", "name"]
-
-    stage_id = models.AutoField(primary_key=True)
-    major_version = models.ForeignKey(rbuildermodels.Versions, null=True)
-    name = models.CharField(max_length=256)
-    label = models.TextField(unique=True)
-
-    def get_absolute_url(self, request, *args, **kwargs):
-        if self.major_version:
-            return modellib.XObjIdModel.get_absolute_url(
-                self, request, *args, **kwargs)
-        else:
-            return None
-
-    def serialize(self, request=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model._xobj.text = self.name
-        return xobj_model
-
 class Version(modellib.XObjModel):
     serialize_accessors = False
     class Meta:
@@ -1137,7 +1109,6 @@ class SystemJob(modellib.XObjModel):
 
 class JobSystem(modellib.XObjModel):
     class Meta:
-        managed = settings.MANAGE_RBUILDER_MODELS
         db_table = 'job_system'
     job = models.ForeignKey(rbuildermodels.Jobs, null=False)
     # Django will insist on removing entries from this table when removing a
@@ -1161,5 +1132,8 @@ for mod_obj in sys.modules[__name__].__dict__.values():
         if mod_obj._xobj.tag:
             modellib.type_map[mod_obj._xobj.tag] = mod_obj
 for mod_obj in rbuildermodels.__dict__.values():
+    if hasattr(mod_obj, '_meta'):
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj
+for mod_obj in usersmodels.__dict__.values():
     if hasattr(mod_obj, '_meta'):
         modellib.type_map[mod_obj._meta.verbose_name] = mod_obj

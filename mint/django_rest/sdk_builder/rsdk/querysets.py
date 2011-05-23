@@ -1,29 +1,26 @@
 from rsdk.Fields import *  # pyflakes=ignore
-from rsdk.sdk import SDKClassMeta, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
+from rsdk.sdk import SDKModel, toUnderscore, register, DynamicImportResolver  # pyflakes=ignore
 from xobj.xobj import XObj, XObjMetadata  # pyflakes=ignore
 
 REGISTRY = {}
 TYPEMAP = {}
 
 @register
-class FilterDescriptor(object):
+class FilterDescriptor(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='filter_descriptor')
 
 @register
-class ChosenMembers(object):
+class ChosenMembers(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='chosen_members')
 
 @register
-class SystemTag(object):
+class SystemTag(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     system_tag_id = 'AutoField'
     system = 'inventory.System'
     query_tag = 'QueryTag'
@@ -31,57 +28,50 @@ class SystemTag(object):
     _xobj = XObjMetadata(tag='system_tag')
 
 @register
-class ChildMembers(object):
+class ChildMembers(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='child_members')
 
 @register
-class CollectionId(object):
+class CollectionId(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='collection')
 
 @register
-class InclusionMethod(object):
+class InclusionMethod(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     name = 'TextField'
     inclusion_method_id = 'AutoField'
     _xobj = XObjMetadata(tag='inclusion_method')
 
 @register
-class FilteredMembers(object):
+class FilteredMembers(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='filtered_members')
 
 @register
-class QueryTag(object):
+class QueryTag(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     query_tag_id = 'AutoField'
     query_set = 'QuerySet'
     name = 'TextField'
     _xobj = XObjMetadata(tag='query_tag')
 
 @register
-class AllMembers(object):
+class AllMembers(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     _xobj = XObjMetadata(tag='all_members')
 
 @register
-class FilterEntry(object):
+class FilterEntry(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     value = 'TextField'
     operator = 'TextField'
     filter_entry_id = 'AutoField'
@@ -89,10 +79,9 @@ class FilterEntry(object):
     _xobj = XObjMetadata(tag='filter_entry')
 
 @register
-class QuerySet(object):
+class QuerySet(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
     resource_type = 'TextField'
     query_set_id = 'AutoField'
     name = 'TextField'
@@ -103,22 +92,10 @@ class QuerySet(object):
     _xobj = XObjMetadata(tag='query_set')
 
 @register
-class QuerySets(object):
+class QuerySets(SDKModel):
     """ """
 
-    __metaclass__ = SDKClassMeta
-    start_index = 'IntegerField'
-    previous_page = 'TextField'
-    per_page = 'IntegerField'
-    order_by = 'TextField'
-    num_pages = 'IntegerField'
-    next_page = 'TextField'
-    limit = 'TextField'
-    full_collection = 'TextField'
-    filter_by = 'TextField'
-    end_index = 'IntegerField'
-    count = 'IntegerField'
-    _xobj = XObjMetadata(tag='query_sets',attributes={'count':int,'next_page':str,'num_pages':str,'previous_page':str,'full_collection':str,'filter_by':str,'limit':str,'per_page':str,'order_by':str,'end_index':str,'start_index':str})
+    _xobj = XObjMetadata(tag='query_sets')
     query_set = ['QuerySet']
 
 # DO NOT TOUCH #

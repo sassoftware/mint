@@ -16,15 +16,18 @@ import httplib2
 import urlparse
 from xobj import xobj
 import sys
+import inspect
 
 MIN_ALLOWED_PYTHON_VERSION = (2, 5) # still needs to be tested on 2.5
 MAX_ALLOWED_PYTHON_VERSION = (2, 7, 1)
 VERSION_INFO = sys.version_info
 
+
 if VERSION_INFO[0:2] < MIN_ALLOWED_PYTHON_VERSION:
     raise Exception("Must use python 2.5 or greater")
 elif VERSION_INFO[0:3] > MAX_ALLOWED_PYTHON_VERSION:
     raise Exception("Untested for python versions greater than 2.7.1")
+    
     
 def connect(base_url, auth=None):
     """
@@ -34,32 +37,33 @@ def connect(base_url, auth=None):
     """
     class Client(object):
         """
-        from sdk import packages
+        # Depending on the HTTP method, purgeNode or
+        # purgeType may need to be used (ie: to remove all
+        # empty references to Users before a PUT or POST)
+        
+        from sdk.packages import Package, TYPEMAP
         api = connect('http://server/api/', (username, passwd))
 
-        [GET]
-        api.GET('packages/') # get all packages
-        api.GET('packages/1') # get first package
+        # [GET]
+        got = api.GET('packages/', TYPEMAP) # get all packages
+        got_1 = api.GET('packages/1', TYPEMAP) # get first package
 
-        [POST]
-        pkg = packages.Package() # create
-        pkg.name = 'xobj'
+        # [POST]
+        pkg = Package(name='xobj') # create
         pkg.description = 'A python to xml serialization library'
-        api.POST('packages/', pkg)
+        # ... process package obj further ...
+        doc = xobj.Document()
+        doc.package = pkg
+        posted = api.POST('packages/', doc, TYPEMAP)
 
-        [PUT]
-        pkg2 = api.GET('packages/2')
-        pkg2.name = 'Package 2 Renamed'
-        api.PUT('packages/2', pkg2)
+        # [PUT]
+        pkg_2 = api.GET('packages/2')
+        pkg_2.package.name = 'Package 2 Renamed'
+        # ... process package obj further ...
+        putted = api.PUT('packages/2', pkg_2, TYPEMAP)
 
-        [DELETE]
+        # [DELETE]
         api.DELETE('packages/2')
-
-        [Validate]
-        pkg = api.GET('packages/1')
-        isinstance(pkg.id, URLField) # is True
-        pkg.id = 'bad id' # throws an error
-        pkg.id = 'http://validid.com/' # works
         """
         
         HEADERS = {'content-type':'text/xml'}
@@ -95,4 +99,45 @@ def connect(base_url, auth=None):
             return urlparse.urljoin(self.base_url, relative_url)
             
     return Client()
-    
+
+
+def purgeByType(root, node_type):
+    """
+    removes all nodes that are (sub)classes of a certain type, ie:
+    purgeByType(pkgs, rbuilder.Users)
+    """
+    if isinstance(root, list):
+        for e in root:
+            purgeByType(e, node_type)
+    else:
+        if hasattr(root, '__dict__'):
+            for e_name, child in root.__dict__.items():
+                if issubclass(root.__class__, node_type):
+                    delattr(root, e_name)
+                purgeByType(child, node_type)
+
+
+def purgeByNode(root, node_name):
+    """
+    removes nodes by their name, ie:
+    purgeByNode(pkgs, 'created_by')
+    """
+    if isinstance(root, list):
+        for e in root:
+            purgeByNode(e, node_name)
+    else:
+        if hasattr(root, '__dict__'):
+            for e_name, child in root.__dict__.items():
+                if e_name == node_name:
+                    delattr(root, e_name)
+                purgeByNode(child, node_name)
+                
+                
+def rebind(new, typemap):
+    for tag, model in typemap.items():
+        for name, field in model.__dict__.items():
+            if isinstance(field, list):
+                field = field[0]
+            if inspect.isclass(field):
+                if issubclass(new, field) or issubclass(field, new):
+                    setattr(model, name, new)

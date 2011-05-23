@@ -15,6 +15,23 @@ from mint.django_rest.rbuilder.jobs.manager import JobManager
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.changelog.manager import ChangeLogManager
 from mint.django_rest.rbuilder.packages.manager import PackageManager, PackageVersionManager
+from mint.django_rest.rbuilder.projects.manager import ProjectManager
+from mint.django_rest.rbuilder.users.manager import UsersManager, UserGroupsManager, UserGroupMembersManager, UserUserGroupsManager
+from mint.django_rest.rbuilder.notices.manager import UserNoticesManager, GlobalNoticesManager
+from mint.django_rest.rbuilder.modulehooks.manager import ModuleHooksManager
+from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
+                                                        SourceErrorsManager, \
+                                                        SourceManager, \
+                                                        SourceTypeDescriptorManager, \
+                                                        SourceTypeStatusTestManager, \
+                                                        SourceTypeManager, \
+                                                        PlatformStatusManager, \
+                                                        PlatformSourceManager, \
+                                                        PlatformSourceTypeManager, \
+                                                        PlatformImageTypeManager, \
+                                                        PlatformLoadManager, \
+                                                        PlatformVersionManager, \
+                                                        PlatformManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
@@ -24,10 +41,30 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'repeaterMgr' : RepeaterManager,
         'jobMgr' : JobManager,
         'querySetMgr' : QuerySetManager,
-        'packageMgr' : PackageManager,
         'changeLogMgr' : ChangeLogManager,
         'packageMgr' : PackageManager,
         'packageVersionMgr' : PackageVersionManager,
+        'usersMgr' : UsersManager,
+        'userGroupsMgr': UserGroupsManager,
+        'userGroupMembersMgr': UserGroupMembersManager,
+        'projectManager' : ProjectManager,
+        'userNoticesMgr' : UserNoticesManager,
+        'globalNoticesMgr' : GlobalNoticesManager,
+        'userUserGroupsManager' : UserUserGroupsManager,
+        'sourceStatusMgr' : SourceStatusManager,
+        'sourceErrorsMgr' : SourceErrorsManager,
+        'sourceMgr' : SourceManager,
+        'sourceTypeDescriptorMgr': SourceTypeDescriptorManager,
+        'sourceTypeStatusTestMgr' : SourceTypeStatusTestManager,
+        'sourceTypeMgr' : SourceTypeManager,
+        'platformStatusMgr' : PlatformStatusManager,
+        'platformSourceMgr' : PlatformSourceManager,
+        'platformSourceTypeMgr' : PlatformSourceTypeManager,
+        'platformImageTypeMgr' : PlatformImageTypeManager,
+        'platformLoadMgr' : PlatformLoadManager,
+        'platformVersionMgr' : PlatformVersionManager,
+        'platformMgr' : PlatformManager,
+        'modulehooksMgr' : ModuleHooksManager,
     }
 
     def __init__(self, cfg=None, userName=None):

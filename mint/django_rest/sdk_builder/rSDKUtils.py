@@ -17,6 +17,7 @@
 import inspect
 from xobj import xobj
 from mint.django_rest.sdk_builder import Fields  # pyflakes=ignore
+from mint.django_rest.rbuilder.modellib.collections import Collection
 
 def indent(txt, n=1):
     """
@@ -104,26 +105,31 @@ class ClassStub(object):
 
     
     def bases2src(self):
-        return ', '.join(b.__name__ for b in self.cls.__bases__)
+        # return ', '.join(b.__name__ for b in self.cls.__bases__)
+        return 'SDKModel'
     
     def attrs2src(self):
         # hardcode __metaclass__
-        src = [indent('__metaclass__ = SDKClassMeta')]
+        src = []
         EXCLUDED = ['__module__', '__doc__', '__name__', '__weakref__', '__dict__']
         for k, v in sorted(self.cls.__dict__.items(), reverse=True):
             text = ''
             # don't inline methods (or magic attrs)
             if k in EXCLUDED or inspect.isfunction(v):
                 continue
-            k = toUnderscore(k)
-            # parse attrs and generate src code
-            if isinstance(v, list):
-                text = '%s = [%r]' % (k, self.resolveName(v[0]))
-            elif isinstance(v, xobj.XObjMetadata):
-                text = '_xobj = ' + str(XObjMetadataResolver(v))
             else:
-                text = '%s = %r' % (k, self.resolveName(v))
-            src.append(indent(text))
+                k = toUnderscore(k)
+                # parse attrs and generate src code
+                if isinstance(v, list):
+                    text = '%s = [%r]' % (k, self.resolveName(v[0]))
+                elif isinstance(v, xobj.XObjMetadata):
+                    meta_src = str(XObjMetadataResolver(v))
+                    if not meta_src: continue
+                    text = '_xobj = ' + meta_src
+                else:
+                    text = '%s = %r' % (k, self.resolveName(v))
+                src.append(indent(text))
+                
         return ''.join(src)
     
     def tosrc(self):
@@ -171,9 +177,13 @@ class XObjMetadataResolver(object):
     def resolveText(self):
         return "\'%s\'" % self._xobj.text.strip() if self._xobj.text else ''
     
+    # def resolveMetadata(self):
+    #     return [('tag', self.resolveTag()), ('attributes', self.resolveAttributes()),
+    #             ('text', self.resolveText()), ('elements', self.resolveElements())]
+    
     def resolveMetadata(self):
-        return [('tag', self.resolveTag()), ('attributes', self.resolveAttributes()),
-                ('text', self.resolveText()), ('elements', self.resolveElements())]
+        return [('tag', self.resolveTag()), ('text', self.resolveText()),
+                ('elements', self.resolveElements())]
     
     def __str__(self):
         metadata = self.resolveMetadata()
@@ -190,8 +200,6 @@ def DjangoModelsWrapper(module):
             dep_names = [toCamelCase(m) for m in django_model.list_fields]
             for name in dep_names:
                 model = getattr(module, name, None)
-                if not model:
-                    raise Exception('Extra-module reference inside list_fields not accounted for')
                 new_fields = _convert(model)
                 new = type(model.__name__, (object,), new_fields)
                 fields_dict[name] = [new]
@@ -205,9 +213,12 @@ def _getModelFields(django_model):
     """
     Gets all of a django model's pre-converted fields
     """
+    excluded_fields = [field.name for field in Collection._meta.fields]
     d = {}
     if hasattr(django_model, '_meta'):
         for field in django_model._meta.fields:
+            if issubclass(django_model, Collection) and field.name in excluded_fields:
+                continue
             d[field.name] = field
     return d
 
@@ -223,7 +234,11 @@ def _convertFields(d):
     for k in d:
         new_field = getattr(Fields, d[k].__class__.__name__)
         if issubclass(new_field, classes):
-            new_field = _getReferenced(d[k])
+            ref = _getReferenced(d[k])
+            if hasattr(d[k], 'list_fields'):
+                new_field = [ref]
+            else:
+                new_field = ref
         new_d[k] = new_field
     return new_d
 

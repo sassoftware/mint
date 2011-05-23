@@ -2596,7 +2596,6 @@ class MigrateTo_56(SchemaMigration):
     def migrate1(self):
         db = self.db
         createTable = schema.createTable
-
         changed = False
 
         changed |= createTable(db, "packages_package_action_type", """
@@ -2879,8 +2878,38 @@ class MigrateTo_56(SchemaMigration):
 
         return True
 
+class MigrateTo_57(SchemaMigration):
+    Version = (57, 0)
+
+    def migrate(self):
+        return True
 
 
+class MigrateTo_58(SchemaMigration):
+    Version = (58, 1)
+
+    def migrate(self):
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            RENAME "appliance_id" TO "project_id"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            RENAME "major_version_id" TO "project_version_id"
+        """)
+
+
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            ADD "promotable" bool
+        """)
+
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -275,7 +275,7 @@ system_type_systems_xml="""
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
     <system_tags/>
-    <appliance/>
+    <project/>
     <credentials id="http://testserver/api/inventory/systems/3/credentials"/>
     <configuration id="http://testserver/api/inventory/systems/3/configuration"/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
@@ -479,7 +479,7 @@ management_nodes_xml = """\
   <management_node id="http://testserver/api/inventory/management_nodes/1">
     <agent_port>5989</agent_port>
     <system_tags/>
-    <appliance/>
+    <project/>
     <credentials id="http://testserver/api/inventory/management_nodes/1/credentials"/>
     <configuration id="http://testserver/api/inventory/management_nodes/1/configuration"/>
     <configuration_descriptor id="http://testserver/api/inventory/management_nodes/1/configuration_descriptor"/>
@@ -554,7 +554,7 @@ management_node_xml = """\
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port> 
   <system_tags/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <configuration id="http://testserver/api/inventory/management_nodes/1/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/management_nodes/1/configuration_descriptor"/>
@@ -665,7 +665,7 @@ management_node_post_response_xml = """\
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port> 
   <system_tags/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <configuration id="http://testserver/api/inventory/management_nodes/1/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/management_nodes/1/configuration_descriptor"/>
@@ -775,7 +775,7 @@ management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/inventory/management_nodes/1">
   <agent_port>5989</agent_port>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/management_nodes/1/credentials"/>
   <configuration id="http://testserver/api/inventory/management_nodes/1/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/management_nodes/1/configuration_descriptor"/>
@@ -850,7 +850,7 @@ systems_xml = """\
   <system id="http://testserver/api/inventory/systems/2">
     <agent_port/>
     <system_tags/>
-    <appliance/>
+    <project/>
     <credentials id="http://testserver/api/inventory/systems/2/credentials"/>
     <configuration id="http://testserver/api/inventory/systems/2/configuration"/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/2/configuration_descriptor"/>
@@ -915,7 +915,7 @@ systems_xml = """\
   <system id="http://testserver/api/inventory/systems/3">
     <agent_port>5989</agent_port>
     <system_tags/>
-    <appliance/>
+    <project/>
     <credentials id="http://testserver/api/inventory/systems/3/credentials"/>
     <configuration id="http://testserver/api/inventory/systems/3/configuration"/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
@@ -1117,7 +1117,7 @@ system_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
   <system_tags/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/systems/1/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/1/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/systems/1/configuration_descriptor"/>
@@ -1298,7 +1298,7 @@ system_post_xml_response = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
   <system_tags/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/systems/1/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/1/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/systems/1/configuration_descriptor"/>
@@ -1439,7 +1439,7 @@ system_target_xml = """\
 <system id="http://testserver/api/inventory/systems/1">
   <agent_port>5989</agent_port>
   <system_tags/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/systems/1/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/1/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/systems/1/configuration_descriptor"/>
@@ -1785,7 +1785,7 @@ system_version_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port>5989</agent_port>
   <system_tags/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/systems/3/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
@@ -1990,7 +1990,7 @@ system_available_updates_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <agent_port>5989</agent_port>
   <system_tags/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/systems/3/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/3/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
@@ -2293,7 +2293,7 @@ system_with_target = """\
   <has_active_jobs>False</has_active_jobs>
   <has_running_jobs>False</has_running_jobs>
   <agent_port/>
-  <appliance/>
+  <project/>
   <credentials id="http://testserver/api/inventory/systems/4/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/4/configuration"/>
   <configuration_descriptor id="http://testserver/api/inventory/systems/4/configuration_descriptor"/>
@@ -2446,7 +2446,7 @@ system_installed_software_version_stage_xml = """\
 <system id="http://testserver/api/inventory/systems/3">
   <management_interface id="http://testserver/api/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <system_events id="http://testserver/api/inventory/systems/3/system_events"/>
-  <appliance id="http://testserver/api/products/chater-foo">chater-foo</appliance>
+  <project id="http://testserver/api/projects/chater-foo">chater-foo</project>
   <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
   <system_tags/>
   <has_running_jobs>True</has_running_jobs>
@@ -2548,12 +2548,12 @@ system_installed_software_version_stage_xml = """\
   <credentials id="http://testserver/api/inventory/systems/3/credentials"/>
   <configuration id="http://testserver/api/inventory/systems/3/configuration"/>
   <agent_port>5989</agent_port>
-  <stage id="http://testserver/api/products/chater-foo/versions/1/stages/Development">Development</stage>
+  <stage id="http://testserver/api/projects/chater-foo/versions/1/stages/Development">Development</stage>
   <out_of_date>False</out_of_date>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <target_system_state/>
-  <major_version id="http://testserver/api/products/chater-foo/versions/1">1</major_version>
+  <major_version id="http://testserver/api/projects/chater-foo/versions/1">1</major_version>
   <current_state id="http://testserver/api/inventory/system_states/2">
     <system_state_id>2</system_state_id>
     <description>Initial synchronization pending</description>
@@ -2703,7 +2703,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/2/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/2/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/2">rPath Update Service (Infrastructure)</system_type>
@@ -2769,7 +2769,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/3/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/3/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -2835,7 +2835,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/4/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/4/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -2901,7 +2901,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/5/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/5/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -2967,7 +2967,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/6/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/6/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -3033,7 +3033,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/7/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/7/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -3099,7 +3099,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/8/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/8/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -3165,7 +3165,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/9/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/9/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -3231,7 +3231,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/10/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/10/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
@@ -3297,7 +3297,7 @@ Methods:
     <system_tags/>
     <management_interface/>
     <system_events id="http://testserver/api/inventory/systems/11/system_events"/>
-    <appliance/>
+    <project/>
     <configuration_descriptor id="http://testserver/api/inventory/systems/11/configuration_descriptor"/>
     <has_running_jobs>False</has_running_jobs>
     <system_type id="http://testserver/api/inventory/system_types/1">Inventory</system_type>
