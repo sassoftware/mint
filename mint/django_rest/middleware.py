@@ -302,8 +302,6 @@ class SerializeXmlMiddleware(BaseMiddleware):
             metrics = request.GET.get('metrics', None)
             if metrics:
                 return response
-
             response.write(response.model.to_xml(request))
-
         return response
         

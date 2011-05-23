@@ -19,6 +19,7 @@ from django.db.backends import signals
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 
 from xobj import xobj
 
@@ -53,6 +54,9 @@ signals.connection_created.connect(createTemporaryTables)
 class Pk(object):
     def __init__(self, pk):
         self.pk = pk
+
+    def get_url_key(self, *args, **kwargs):
+        return self.pk
 
 class Inventory(modellib.XObjModel):
 
@@ -129,20 +133,6 @@ class ManagementNodes(modellib.XObjModel):
     def save(self):
         return [s.save() for s in self.management_node]
     
-class EventTypes(modellib.XObjModel):
-
-    XSL = 'eventTypes.xsl'
-
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = 'event_types')
-    list_fields = ['event_type']
-    event_type = []
-
-    def save(self):
-        return [s.save() for s in self.event_type]
-    
 class SystemsLog(modellib.XObjModel):
     class Meta:
         abstract = True
@@ -207,8 +197,7 @@ class Credentials(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
     
 class Configuration(modellib.XObjIdModel):
@@ -228,8 +217,7 @@ class Configuration(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
     
 class ConfigurationDescriptor(modellib.XObjIdModel):
@@ -246,8 +234,7 @@ class ConfigurationDescriptor(modellib.XObjIdModel):
         modellib.XObjIdModel.__init__(self, *args, **kwargs)
 
     def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, model=self,
-            parents=[self._system])
+        self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
 
 class Zone(modellib.XObjIdModel):
@@ -471,8 +458,9 @@ class System(modellib.XObjIdModel):
                 attributes = {'id':str},
                 elements = ['networks', ])
     """
-      networks - a collection of network resources exposed by the system
-      system_events - a link to the collection of system events currently active on this sytem
+    networks - a collection of network resources exposed by the system
+    system_events - a link to the collection of system events currently 
+    active on this sytem
     """
     # need our own object manager for dup detection
     objects = modellib.SystemManager()
@@ -489,21 +477,28 @@ class System(modellib.XObjIdModel):
     # Launch date is nullable, we may get it reported from the hypervisor or
     # physical target, we may not.
     launch_date = D(modellib.DateTimeUtcField(null=True),
-        "the date the system was deployed (only applies if system is on a virtual target)")
-    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, text_field="targetname"),
-        "the virtual target the system was deployed to (only applies if system is on a virtual target)")
+        "the date the system was deployed (only applies if system is on a "
+        "virtual target)")
+    target = D(modellib.ForeignKey(rbuildermodels.Targets, null=True, 
+        text_field="targetname"),
+        "the virtual target the system was deployed to (only applies if "
+        "system is on a virtual target)")
     target_system_id = D(models.CharField(max_length=255,
             null=True),
-        "the system ID as reported by its target (only applies if system is on a virtual target)")
+        "the system ID as reported by its target (only applies if system is "
+        "on a virtual target)")
     target_system_name = D(APIReadOnly(models.CharField(max_length=255,
             null=True)),
-        "the system name as reported by its target (only applies if system is on a virtual target)")
+        "the system name as reported by its target (only applies if system "
+        "is on a virtual target)")
     target_system_description = D(APIReadOnly(models.CharField(max_length=1024,
             null=True)),
-        "the system description as reported by its target (only applies if system is on a virtual target)")
+        "the system description as reported by its target (only applies if "
+        "system is on a virtual target)")
     target_system_state = D(APIReadOnly(models.CharField(max_length=64,
             null=True)),
-        "the system state as reported by its target (only applies if system is on a virtual target)")
+        "the system state as reported by its target (only applies if system "
+        "is on a virtual target)")
     registration_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was registered in inventory (UTC)")
     generated_uuid = D(models.CharField(max_length=64, null=True),
@@ -511,15 +506,19 @@ class System(modellib.XObjIdModel):
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile")
     ssl_client_certificate = D(APIReadOnly(models.CharField(
-            max_length=8092, null=True)),
-        "an x509 certificate of an authorized client that can use the system's CIM broker")
+        max_length=8092, null=True)),
+        "an x509 certificate of an authorized client that can use the "
+        "system's CIM broker")
     ssl_client_key = D(XObjHidden(APIReadOnly(models.CharField(
         max_length=8092, null=True))),
-        "an x509 private key of an authorized client that can use the system's CIM broker")
+        "an x509 private key of an authorized client that can use the "
+        "system's CIM broker")
     ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
         "an x509 public certificate of the system's CIM broker")
-    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True, text_field="username"),
-        "the user that deployed the system (only applies if system is on a virtual target)")
+    launching_user = D(modellib.ForeignKey(rbuildermodels.Users, null=True, 
+        text_field="username"),
+        "the user that deployed the system (only applies if system is on a "
+        "virtual target)")
     current_state = D(modellib.SerializedForeignKey(
             SystemState, null=True, related_name='systems'),
         "the current state of the system")
@@ -528,7 +527,7 @@ class System(modellib.XObjIdModel):
     managing_zone = D(modellib.ForeignKey(Zone, null=False,
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
-    jobs = models.ManyToManyField("Job", through="SystemJob")
+    jobs = models.ManyToManyField(jobmodels.Job, through="SystemJob")
     agent_port = D(models.IntegerField(null=True),
           "the port used by the system's CIM broker")
     state_change_date = XObjHidden(APIReadOnly(modellib.DateTimeUtcField(
@@ -537,23 +536,28 @@ class System(modellib.XObjIdModel):
         "a UUID used to link system events with their returned responses")
     boot_uuid = D(modellib.SyntheticField(),
         "a UUID used for tracking systems registering at startup time")
-    management_interface = D(modellib.ForeignKey(ManagementInterface, null=True, related_name='systems', text_field="description"),
+    management_interface = D(modellib.ForeignKey(ManagementInterface, 
+        null=True, related_name='systems', text_field="description"),
         "the management interface used to communicate with the system")
     credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system")
-    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, text_field='name')),
+    stage = D(APIReadOnly(modellib.ForeignKey("Stage", null=True, 
+        text_field='name')),
         "the appliance stage of the system")
-    major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, null=True,
+    major_version = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Versions, 
+        null=True,
         text_field='name')),
         "the appliance major version of the system")
-    appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, null=True,
+    appliance = D(APIReadOnly(modellib.ForeignKey(rbuildermodels.Products, 
+        null=True,
         text_field='shortname')),
         "the appliance of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
     configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
-        "the descriptor of available fields to set system configuration parameters")
+        "the descriptor of available fields to set system configuration "
+        "parameters")
     network_address = D(NetworkAddress, "Network address for this system")
 
     logged_fields = ['name', 'installed_software']
@@ -644,8 +648,9 @@ class System(modellib.XObjIdModel):
     def runningJobStateIds(self):
         if self._RunningJobStateIds is None:
             self.__class__._RunningJobStateIds = set(
-                Cache.get(JobState, name=x).job_state_id
-                    for x in [ JobState.RUNNING, JobState.QUEUED ])
+                Cache.get(jobmodels.JobState, name=x).job_state_id
+                    for x in [ jobmodels.JobState.RUNNING, 
+                        jobmodels.JobState.QUEUED ])
         return self.__class__._RunningJobStateIds
 
     def areJobsActive(self, iterable):
@@ -655,32 +660,25 @@ class System(modellib.XObjIdModel):
         return False
 
     def hasRunningJobs(self):
-        return bool(self.jobs.filter(job_state__name=JobState.RUNNING))
+        return bool(self.jobs.filter(job_state__name=jobmodels.JobState.RUNNING))
 
     _runningJobState = None
     @property
     def runningJobState(self):
         if self._runningJobState is None:
             self.__class__._runningJobState = \
-                Cache.get(JobState, name=JobState.RUNNING)
+                Cache.get(jobmodels.JobState, name=jobmodels.JobState.RUNNING)
         return self.__class__._runningJobState
 
     def areJobsRunning(self, jobs):
         return bool([j for j in jobs \
             if j.job_state_id == self.runningJobState.job_state_id])
 
-    def serialize(self, request=None, values=None):
+    def serialize(self, request=None):
         # We are going to replace the jobs node with hrefs. But DO NOT mark
         # the jobs m2m relationship as hidden, or else the bulk load fails
-        if values is None:
-            jobs = self.jobs.all()
-        else:
-            # We're popping the jobs data structure from values because its
-            # only purpose is to prevent repeated database hits when we bulk
-            # load
-            jobs = [ x[0] for x in values.pop('jobs', []) ]
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
+        jobs = self.jobs.all()
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model.has_active_jobs = self.areJobsActive(jobs)
         xobj_model.has_running_jobs = self.areJobsRunning(jobs)
 
@@ -688,26 +686,26 @@ class System(modellib.XObjIdModel):
             class CredentialsHref(object): 
                 _xobj = xobj.XObjMetadata(
                             tag='credentials',
-                            attributes={'href':str})
+                            attributes={'id':str})
 
                 def __init__(self, href):
-                    self.href = href
+                    self.id = href
                     
             class ConfigurationHref(object): 
                 _xobj = xobj.XObjMetadata(
                             tag='configuration',
-                            attributes={'href':str})
+                            attributes={'id':str})
 
                 def __init__(self, href):
-                    self.href = href
+                    self.id = href
                     
             class ConfigurationDescriptorHref(object): 
                 _xobj = xobj.XObjMetadata(
                             tag='configuration_descriptor',
-                            attributes={'href':str})
+                            attributes={'id':str})
 
                 def __init__(self, href):
-                    self.href = href
+                    self.id = href
 
             xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
                 '%s/credentials' % self.get_absolute_url(request)))
@@ -726,22 +724,25 @@ class System(modellib.XObjIdModel):
 
             def __init__(self, request, system):
                 self.view_name = 'SystemJobs'
-                self.id = self.get_absolute_url(request, parents=[system],
-                    model=xobj_model)
+                self.id = self.get_absolute_url(request, parents=[system])
                 self.view_name = 'SystemJobStateJobs'
-                parents = [system, Cache.get(JobState, name=JobState.QUEUED)]
+                parents = [system, Cache.get(jobmodels.JobState,
+                    name=jobmodels.JobState.QUEUED)]
                 self.queued_jobs = modellib.XObjHrefModel(
                     self.get_absolute_url(request, parents=parents))
 
-                parents = [system, Cache.get(JobState, name=JobState.COMPLETED)]
+                parents = [system, Cache.get(jobmodels.JobState,
+                    name=jobmodels.JobState.COMPLETED)]
                 self.completed_jobs = modellib.XObjHrefModel(
                     self.get_absolute_url(request, parents=parents))
 
-                parents = [system, Cache.get(JobState, name=JobState.RUNNING)]
+                parents = [system, Cache.get(jobmodels.JobState,
+                    name=jobmodels.JobState.RUNNING)]
                 self.running_jobs = modellib.XObjHrefModel(
                     self.get_absolute_url(request, parents=parents))
 
-                parents = [system, Cache.get(JobState, name=JobState.FAILED)]
+                parents = [system, Cache.get(jobmodels.JobState,
+                    name=jobmodels.JobState.FAILED)]
                 self.failed_jobs = modellib.XObjHrefModel(
                     self.get_absolute_url(request, parents=parents))
                 self.view_name = None
@@ -846,252 +847,12 @@ class InstalledSoftware(modellib.XObjIdModel):
     list_fields = ['trove']
     objects = modellib.InstalledSoftwareManager()
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
             return modellib.XObjIdModel.get_absolute_url(self, request,
-                parents=parents, model=model)
+                parents, *args, **kwargs)
         return request.build_absolute_uri(request.get_full_path())
 
-class EventType(modellib.XObjIdModel):
-    
-    XSL = 'eventType.xsl'
-    
-    class Meta:
-        db_table = 'inventory_event_type'
-    _xobj = xobj.XObjMetadata(tag='event_type')
-    
-     # hide jobs, see https://issues.rpath.com/browse/RBL-7151
-    _xobj_hidden_accessors = set(['jobs'])
-
-    # on-demand events need to be > 100 to be dispatched immediately
-    # DO NOT CHANGE POLL PRIORITIES HERE WITHOUT CHANGING IN schema.py also
-    ON_DEMAND_BASE = 100
-    
-    SYSTEM_POLL = "system poll"
-    SYSTEM_POLL_PRIORITY = 50
-    SYSTEM_POLL_DESC = "System synchronization"
-    
-    SYSTEM_POLL_IMMEDIATE = "immediate system poll"
-    SYSTEM_POLL_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_POLL_IMMEDIATE_DESC = "On-demand system synchronization"
-    
-    SYSTEM_REGISTRATION = "system registration"
-    SYSTEM_REGISTRATION_PRIORITY = ON_DEMAND_BASE + 10
-    SYSTEM_REGISTRATION_DESC = "System registration"
-
-    SYSTEM_APPLY_UPDATE = 'system apply update'
-    SYSTEM_APPLY_UPDATE_PRIORITY = 50
-    SYSTEM_APPLY_UPDATE_DESCRIPTION = 'Scheduled system update'
-        
-    SYSTEM_APPLY_UPDATE_IMMEDIATE = 'immediate system apply update'
-    SYSTEM_APPLY_UPDATE_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION = \
-        'System update'
-
-    SYSTEM_SHUTDOWN = 'system shutdown'
-    SYSTEM_SHUTDOWN_PRIORITY = 50
-    SYSTEM_SHUTDOWN_DESCRIPTION = 'Scheduled system shutdown'
-
-    SYSTEM_DETECT_MANAGEMENT_INTERFACE = 'system detect management interface'
-    SYSTEM_DETECT_MANAGEMENT_INTERFACE_PRIORITY = 50
-    SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC = \
-        "System management interface detection"
-    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE = \
-        'immediate system detect management interface'
-    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_PRIORITY = 105
-    SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC = \
-        "On-demand system management interface detection"
-
-    SYSTEM_SHUTDOWN_IMMEDIATE = 'immediate system shutdown'
-    SYSTEM_SHUTDOWN_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-    SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION = \
-        'System shutdown'
-
-    LAUNCH_WAIT_FOR_NETWORK = 'system launch wait'
-    LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION = "Launched system network data discovery"
-    LAUNCH_WAIT_FOR_NETWORK_PRIORITY = ON_DEMAND_BASE + 5
-    
-    SYSTEM_CONFIG_IMMEDIATE = 'immediate system configuration'
-    SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION = "Update system configuration"
-    SYSTEM_CONFIG_IMMEDIATE_PRIORITY = ON_DEMAND_BASE + 5
-        
-    event_type_id = D(models.AutoField(primary_key=True), "the database id of the event type")
-    EVENT_TYPES = (
-        (SYSTEM_REGISTRATION, SYSTEM_REGISTRATION_DESC),
-        (SYSTEM_POLL_IMMEDIATE, SYSTEM_POLL_IMMEDIATE_DESC),
-        (SYSTEM_POLL, SYSTEM_POLL_DESC),
-        (SYSTEM_APPLY_UPDATE, SYSTEM_APPLY_UPDATE_DESCRIPTION),
-        (SYSTEM_APPLY_UPDATE_IMMEDIATE,
-         SYSTEM_APPLY_UPDATE_IMMEDIATE_DESCRIPTION),
-        (SYSTEM_SHUTDOWN,
-         SYSTEM_SHUTDOWN_DESCRIPTION),
-        (SYSTEM_SHUTDOWN_IMMEDIATE,
-         SYSTEM_SHUTDOWN_IMMEDIATE_DESCRIPTION),
-        (LAUNCH_WAIT_FOR_NETWORK,
-         LAUNCH_WAIT_FOR_NETWORK_DESCRIPTION),
-        (SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-         SYSTEM_DETECT_MANAGEMENT_INTERFACE_DESC),
-        (SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
-         SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE_DESC),
-        (SYSTEM_CONFIG_IMMEDIATE,
-         SYSTEM_CONFIG_IMMEDIATE_DESCRIPTION),
-    )
-    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
-        choices=EVENT_TYPES)), "the event type name (read-only)")
-    description = D(models.CharField(max_length=8092), "the event type description")
-    priority = D(models.SmallIntegerField(db_index=True), "the event type priority where > priority wins")
-
-    @property
-    def requiresManagementInterface(self):
-        if self.name in \
-            [self.SYSTEM_REGISTRATION,
-             self.SYSTEM_POLL_IMMEDIATE,
-             self.SYSTEM_POLL,
-             self.SYSTEM_APPLY_UPDATE,
-             self.SYSTEM_APPLY_UPDATE_IMMEDIATE,
-             self.SYSTEM_SHUTDOWN,
-             self.SYSTEM_SHUTDOWN_IMMEDIATE,
-             self.SYSTEM_CONFIG_IMMEDIATE,
-            ]:
-            return True
-        else:
-            return False
-
-class JobStates(modellib.XObjModel):
-    
-    XSL = 'jobStates.xsl'
-    
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = 'job_states',
-                elements=['job_state'])
-    list_fields = ['job_state']
-    job_state = []
-
-class JobState(modellib.XObjIdModel):
-    
-    XSL = 'jobState.xsl'
-    
-    class Meta:
-        db_table = "inventory_job_state"
-    QUEUED = "Queued"
-    RUNNING = "Running"
-    COMPLETED = "Completed"
-    FAILED = "Failed"
-    choices = (
-        (QUEUED, QUEUED),
-        (RUNNING, RUNNING),
-        (COMPLETED, COMPLETED),
-        (FAILED, FAILED),
-    )
-    _xobj = xobj.XObjMetadata(tag='job_state',
-                attributes = {'id':str})
-
-    job_state_id = D(models.AutoField(primary_key=True), "the database ID for the job state")
-    name = D(models.CharField(max_length=64, unique=True, choices=choices), "the name of the job state")
-
-    load_fields = [ name ]
-
-class Jobs(modellib.XObjIdModel):
-    
-    XSL = 'jobs.xsl'
-    
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = 'jobs',
-                elements=['job'],
-                attributes={'id':str})
-    list_fields = ['job']
-    job = []
-    
-    def get_absolute_url(self, request, parents=None, model=None):
-        """
-        This implementation of get_absolute_url is a bit different since the
-        jobs collection can be serialized on it's own from 2 different places
-        (/api/inventory/jobs or /api/inventory/systems/{systemId}/jobs).  We
-        need to ask the request to build the id for us based on the path.
-        """
-        return request.build_absolute_uri(request.get_full_path())
-
-class Job(modellib.XObjIdModel):
-    
-    XSL = 'job.xsl'
-    
-    class Meta:
-        db_table = 'inventory_job'
-    _xobj = xobj.XObjMetadata(
-                tag = 'job',
-                attributes = {'id':str})
-
-    objects = modellib.JobManager()
-
-    job_id = D(models.AutoField(primary_key=True), "the database id of the job")
-    job_uuid = D(models.CharField(max_length=64, unique=True), "a UUID for job tracking purposes")
-    job_state = D(modellib.InlinedDeferredForeignKey(JobState, visible='name',
-        related_name='jobs'), "the current state of the job")
-    status_code = D(models.IntegerField(default=100), "the current status code of the job, typically an http status code")
-    status_text = D(models.TextField(default='Initializing'), "the message associated with the current status")
-    status_detail = D(XObjHidden(models.TextField(null=True)), "documentation missing")
-    event_type = D(APIReadOnly(modellib.InlinedForeignKey(EventType,
-        visible='name', related_name="jobs")), "documentation missing")
-    time_created = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was created (UTC)")
-    time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True), "the date the job was updated (UTC)")
-    job_type = D(modellib.SyntheticField(), "the job type")
-    job_description = D(modellib.SyntheticField(), "a description of the job")
-
-    load_fields = [ job_uuid ]
-
-    def getRmakeJob(self):
-        # XXX we should be using the repeater client for this
-        from rmake3 import client
-        RMAKE_ADDRESS = 'http://localhost:9998'
-        rmakeClient = client.RmakeClient(RMAKE_ADDRESS)
-        rmakeJobs = rmakeClient.getJobs([self.job_uuid])
-        if rmakeJobs:
-            return rmakeJobs[0]
-        return None
-
-    def setValuesFromRmake(self):
-        runningState = modellib.Cache.get(JobState,
-            name=JobState.RUNNING)
-        if self.job_state_id != runningState.pk:
-            return
-        completedState = modellib.Cache.get(JobState,
-            name=JobState.COMPLETED)
-        failedState = modellib.Cache.get(JobState,
-            name=JobState.FAILED)
-        # This job is still running, we need to poll rmake to get its
-        # status
-        job = self.getRmakeJob()
-        if job:
-            self.status_code = job.status.code
-            self.status_text = job.status.text
-            self.status_detail = job.status.detail
-            if job.status.final:
-                if job.status.completed:
-                    self.job_state = completedState
-                else:
-                    self.job_state = failedState
-            self.save()
-
-    def get_absolute_url(self, request, parents=None, model=None):
-        if parents:
-            if isinstance(parents[0], JobState):
-                self.view_name = 'JobStateJobs'
-        return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
-
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request,
-            values=values)
-        xobj_model.job_type = modellib.Cache.get(self.event_type.__class__,
-            pk=self.event_type_id).name
-        xobj_model.job_description = modellib.Cache.get(
-            self.event_type.__class__, pk=self.event_type_id).description
-        xobj_model.event_type = None
-        return xobj_model
 
 class SystemEvent(modellib.XObjIdModel):
     class Meta:
@@ -1103,7 +864,7 @@ class SystemEvent(modellib.XObjIdModel):
     system_event_id = models.AutoField(primary_key=True)
     system = modellib.DeferredForeignKey(System, db_index=True,
         related_name='system_events')
-    event_type = modellib.DeferredForeignKey(EventType,
+    event_type = modellib.DeferredForeignKey(jobmodels.EventType,
         related_name='system_events')
     time_created = modellib.DateTimeUtcField(auto_now_add=True)
     time_enabled = modellib.DateTimeUtcField(
@@ -1112,16 +873,16 @@ class SystemEvent(modellib.XObjIdModel):
     event_data = models.TextField(null=True)
 
     def dispatchImmediately(self):
-        return self.event_type.priority >= EventType.ON_DEMAND_BASE
+        return self.event_type.priority >= jobmodels.EventType.ON_DEMAND_BASE
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if parents:
-            if isinstance(parents[0], EventType):
+            if isinstance(parents[0], jobmodels.EventType):
                 self.view_name = 'SystemEventsByType'
             elif isinstance(parents[0], System):
                 self.view_name = 'SystemsSystemEvent'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents, *args, **kwargs)
 
     def save(self, *args, **kw):
         if not self.priority:
@@ -1166,13 +927,13 @@ class SystemLog(modellib.XObjIdModel):
     system_log_id = D(models.AutoField(primary_key=True), "the database ID for the system log")
     system = D(modellib.DeferredForeignKey(System, related_name='system_log'), "a entry point to the system this log is for")
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, parents=None, *args, **kwargs):
         if not parents:
             parents = [self.system]
         if isinstance(parents[0], System):
             self.view_name = 'SystemLog'
         return modellib.XObjIdModel.get_absolute_url(self, request,
-            parents=parents, model=model)
+            parents=parents, *args, **kwargs)
 
 class SystemLogEntry(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(
@@ -1205,9 +966,11 @@ class Trove(modellib.XObjIdModel):
         db_table = 'inventory_trove'
         unique_together = (('name', 'version', 'flavor'),)
 
+    _xobj = xobj.XObjMetadata(tag='trove')
+    _xobj_hidden_accessors = set(['package_sources',])
+    
     objects = modellib.TroveManager()
 
-    _xobj = xobj.XObjMetadata(tag='trove')
     trove_id = models.AutoField(primary_key=True)
     name = models.TextField()
     version = modellib.SerializedForeignKey('Version')
@@ -1221,16 +984,13 @@ class Trove(modellib.XObjIdModel):
 
     load_fields = [ name, version, flavor ]
 
-    def get_absolute_url(self, request, parents=None, model=None):
+    def get_absolute_url(self, request, *args, **kwargs):
         """
         model is an optional xobj model to use when computing the URL.
         It helps avoid additional database queries.
         """
         # Build an id to crest
-        if model is None:
-            conaryVersion = self.version.conaryVersion
-        else:
-            conaryVersion = Version.getConaryVersion(model.version)
+        conaryVersion = self.version.conaryVersion
         label = conaryVersion.trailingLabel()
         revision = conaryVersion.trailingRevision()
         shortname = label.getHost().split('.')[0]
@@ -1291,6 +1051,8 @@ class Stage(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='stage')
     _xobj_hidden_accessors = set(['version_set',])
 
+    url_key = ["major_version", "name"]
+
     stage_id = models.AutoField(primary_key=True)
     major_version = models.ForeignKey(rbuildermodels.Versions, null=True)
     name = models.CharField(max_length=256)
@@ -1298,15 +1060,13 @@ class Stage(modellib.XObjIdModel):
 
     def get_absolute_url(self, request, *args, **kwargs):
         if self.major_version:
-            parents = [Pk(self.major_version.productId.shortname),
-                Pk(self.major_version.name), Pk(self.name)]
             return modellib.XObjIdModel.get_absolute_url(
-                self, request, parents)
+                self, request, *args, **kwargs)
         else:
             return None
 
-    def serialize(self, request=None, values=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request, values)
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
         return xobj_model
 
@@ -1371,7 +1131,8 @@ class SystemJob(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag='__systemJob')
     system_job_id = models.AutoField(primary_key=True)
     system = modellib.ForeignKey(System)
-    job = modellib.DeferredForeignKey(Job, unique=True, related_name='systems')
+    job = modellib.DeferredForeignKey(jobmodels.Job, unique=True, 
+        related_name='systems')
     event_uuid = XObjHidden(models.CharField(max_length=64, unique=True))
 
 class JobSystem(modellib.XObjModel):

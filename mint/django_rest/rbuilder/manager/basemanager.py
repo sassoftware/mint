@@ -80,14 +80,20 @@ class BaseRbuilderManager(object):
         if self.cfg is None:
             return None
         if self._restDb is None:
-            from django.conf import settings
-            if settings.DATABASE_ENGINE == 'sqlite3':
-                self.cfg.dbPath = settings.DATABASE_NAME
-            else:
-                self.cfg.dbPath = '%s:%s/%s' % (settings.DATABASE_HOST, 
-                    settings.DATABASE_PORT, settings.DATABASE_NAME)
-            mint_db = database.Database(self.cfg)
+            self.setRestDbPath()
+            mint_db = self.getMintDatabase()
             self._restDb = RestDatabase(self.cfg, mint_db)
             if self._auth:
                 self._restDb.setAuth(self._auth, self._auth.getToken())
         return self._restDb
+
+    def setRestDbPath(self):
+        from django.conf import settings
+        if settings.DATABASE_ENGINE == 'sqlite3':
+            self.cfg.dbPath = settings.DATABASE_NAME
+        else:
+            self.cfg.dbPath = '%s:%s/%s' % (settings.DATABASE_HOST,
+                settings.DATABASE_PORT, settings.DATABASE_NAME)
+
+    def getMintDatabase(self):
+        return database.Database(self.cfg)

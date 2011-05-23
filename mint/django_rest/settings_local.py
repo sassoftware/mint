@@ -15,7 +15,7 @@ try:
     DATABASE_NAME = os.environ['MINT_LOCAL_DB']  # Or path to database file if using sqlite3.
 except:
     DATABASE_NAME = os.path.realpath('../mint-local.db')
-TEST_DATABASE_NAME = '../test-mint-local.db'
+TEST_DATABASE_NAME = os.path.realpath('../test-mint-local.db')
 
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
@@ -24,6 +24,10 @@ AUTHENTICATION_BACKENDS = (
 
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + \
     ('mint.django_rest.middleware.LocalQueryParameterMiddleware',)
+
+installedAppsList = list(INSTALLED_APPS)
+installedAppsList.append('mint.django_rest.sdk_builder')
+INSTALLED_APPS = tuple(installedAppsList)
 
 # Custom setting for if we should manage/create the tables in rbuilder.models
 MANAGE_RBUILDER_MODELS = True
