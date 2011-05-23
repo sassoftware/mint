@@ -5,7 +5,6 @@
 #
 
 from django.db import models
-from conary import versions
 
 
 class ProtectedString(str):

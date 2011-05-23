@@ -39,10 +39,10 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed 
     def getProjects(self):
-        projects = models.Projects()
-        projects.project = [p for p in models.Project.objects.all()
+        allProjects = models.Projects()
+        allProjects.project = [p for p in models.Project.objects.all()
             if self.checkAccess(p)]
-        return projects
+        return allProjects
 
     @exposed
     def getProject(self, shortName):
