@@ -101,6 +101,9 @@ class BaseManager(models.Manager):
 
         If withReadOnly is set to True, read-only fields will also be copied
         This should never be done when src is "unsafe" (i.e. loaded from XML)
+
+        This method returns a tuple of the serialized form of the loaded model
+        and the loaded model, or (None, None) if no loaded model was found.
         """
 
         # First try to load by an id or href attribute on xobjModel.  This
@@ -144,14 +147,21 @@ class BaseManager(models.Manager):
             if not withReadOnly and getattr(field, 'APIReadOnly', None):
                 # Ignore APIReadOnly fields
                 continue
+
             # django throws ObjectDoesNotExist if you try to access a
             # related model that doesn't exist, so just swallow it.
             try:
                 newFieldVal = getattr(src, field.name, None)
             except exceptions.ObjectDoesNotExist:
                 newFieldVal = None
+
+            # Make sure we don't overwrite existing values on dest with fields
+            # that default to None by checking that the field was actually
+            # provided on xobjModel.
             if newFieldVal is None and not hasattr(xobjModel, field.name):
                 continue
+
+            # Set the new value on dest if it differs from the old value.
             oldFieldVal = getattr(dest, field.name)
             if newFieldVal != oldFieldVal:
                 setattr(dest, field.name, newFieldVal)
@@ -159,7 +169,7 @@ class BaseManager(models.Manager):
     def load_or_create(self, model_inst, xobjModel=None, withReadOnly=False):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
-        from the db, if one wasn't found, create one and return it.
+        based on model_inst, if one wasn't found, create one and return it.
         """
         # Load the model from the db.
         oldModel, loaded_model = self.load(model_inst,
@@ -206,43 +216,68 @@ class BaseManager(models.Manager):
         else:
             return None
 
-    def add_fields(self, model, obj, request, save=True):
+    def add_fields(self, model, xobjModel, request, save=True):
         """
-        For each obj attribute, if the attribute matches a field name on
+        For each xobjModel attribute, if the attribute matches a field name on
         model, set the attribute's value on model.
         """
         fields = model.get_field_dict()
         set_fields = []
 
-        for key, val in obj.__dict__.items():
+        for key, val in xobjModel.__dict__.items():
             field = fields.get(key, None)
+
             if field is None:
+                # No field, this attribute does not match a field we know
+                # about.
                 continue
+
             # special case for fields that may not exist at load time or we
             # want to ignore for other reasons
             if key in model.load_ignore_fields:
                 continue
+
+            # If val is an empty string, and it has no elements and no
+            # attributes, then it's not a complex xml element, so the intent
+            # is to set the new value to None on the model.
             if val == '' and not val._xobj.elements \
                 and not val._xobj.attributes:
                 val = None
-            # Special case for FK fields which should be hrefs.
+
+            # Serialized foreign keys are serialized inline, so we need to
+            # load the model for them based on their inline xml
+            # representation.
             elif isinstance(field, SerializedForeignKey):
                 val = field.related.parent_model.objects.load_from_object(val, request, save=save)
+
+            # Foreign keys can be serialized based on a text field, or the
+            # text of an xml elements, try to load the foreign key model if
+            # so.
             elif isinstance(field, ForeignKey) and \
+                 # The field has a text field
                  field.text_field is not None and \
+                 # The value is not None
                  str(val) is not '' and \
+                 # Corner case, make sure the value was read from xml
                  hasattr(val, "_xobj"):
                 lookup = { field.text_field : str(val) }
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
+
+            # Handle other related fields that could be inlined.
             elif isinstance(field, related.RelatedField):
                 parentModel = field.rel.to
                 val = parentModel.objects.load_from_object(val, request,
                         save=save)
+
+            # Handle different combinations of true/True, etc for
+            # BooleanFields.
             elif isinstance(field, (djangofields.BooleanField,
                                     djangofields.NullBooleanField)):
                 val = str(val)
                 val = (val.lower() == str(True).lower())
+
+            # Handle xml fields
             elif isinstance(field, djangofields.XMLField):
                 if not val._xobj.elements:
                     # No children for this element
@@ -254,12 +289,17 @@ class BaseManager(models.Manager):
                     continue
                 val = xobj.toxml(subelement, tag=subelementTag,
                     prettyPrint=False, xml_declaration=False)
+
+            # DateTimeUtcFeilds can not be set to empty string.
             elif isinstance(field, DateTimeUtcField):
                 # Empty string is not valid, explicitly convert to None
                 if val:
                     val = str(val)
                 else:
                     val = None
+
+            # All other cases where val was specified, use Django's
+            # get_prep_value, except in the case of the primary key.
             elif val is not None:
                 if field.primary_key:
                     val = int(val)
@@ -267,34 +307,41 @@ class BaseManager(models.Manager):
                     # Cast to str, django will just do the right thing.
                     val = str(val)
                     val = field.get_prep_value(val)
+
             else:
                 val = None
 
             set_fields.append(key)
             setattr(model, key, val)
 
-        # Preserves values that might already be in the db when we load an
-        # object.  We don't want the default values for fields being set on
-        # model.
+        # Values for fields that are not provided should be preserved.
+        # However, since we've instantiated the model, we've gotten the
+        # default values for all fields.  Make sure those default values don't
+        # get saved, overwriting existing values if they weren't actually
+        # provided.
         for field in model._meta.fields:
             try:
                 value = getattr(model, field.name, None)
             except exceptions.ObjectDoesNotExist:
                 continue
+            # There is a value, and we didn't set the field, so it wasn't
+            # provided.
             if value is not None and field.name not in set_fields:
                 default_val = field.get_default()
-                if default_val == '' and not hasattr(obj, field.name):
+                if default_val == '' and not hasattr(xobjModel, field.name):
                     setattr(model, field.name, None)
 
         return model
 
-    def add_list_fields(self, model, obj, request, save=True):
+    def add_list_fields(self, model, xobjModel, request, save=True):
         """
-        For each list_field on the model, get the objects off of obj, load
+        For each list_field on the model, get the objects off of xobjModel, load
         their corresponding model and add them to our model in a list.
         """
         for key in model.list_fields:
-            flist = getattr(obj, key, None)
+            # xobj deserializes lists by adding a list as an attribute to the
+            # model named after the element.
+            flist = getattr(xobjModel, key, None)
             if type(flist) != type([]):
                 flist = [flist]
             mods = []
@@ -312,7 +359,7 @@ class BaseManager(models.Manager):
 
         return model
 
-    def get_accessors(self, model, obj, request=None):
+    def get_accessors(self, model, xobjModel, request=None):
         """
         Build and return a dict of accessor name and list of accessor
         objects.
@@ -320,7 +367,7 @@ class BaseManager(models.Manager):
         accessors = model.get_accessor_dict()
         ret_accessors = {}
 
-        for key, val in obj.__dict__.items():
+        for key, val in xobjModel.__dict__.items():
             if key in accessors:
                 ret_accessors[key] = []
                 rel_obj_model = accessors[key].model
@@ -342,8 +389,8 @@ class BaseManager(models.Manager):
 
     def add_accessors(self, model, accessors):
         """
-        For each obj attribute, if the attribute matches an accessor name,
-        load all the acccessor models off obj and add them to the model's 
+        For each xobjModel attribute, if the attribute matches an accessor name,
+        load all the acccessor models off xobjModel and add them to the model's 
         accessor.
         """
         for key, val in accessors.items():
@@ -365,10 +412,10 @@ class BaseManager(models.Manager):
         """
         getattr(model, m2m_accessor).clear()
 
-    def add_m2m_accessors(self, model, obj, request):
+    def add_m2m_accessors(self, model, xobjModel, request):
         """
         Populate the many to many accessors on model based on the xobj model
-        in obj.
+        in xobjModel.
         """
         for m2m_accessor, m2m_mgr in model.get_m2m_accessor_dict().items():
             _xobj = getattr(m2m_mgr.model, '_xobj', None)
@@ -377,7 +424,7 @@ class BaseManager(models.Manager):
             else:
                 rel_obj_name = m2m_mgr.target_field_name
 
-            acobj = getattr(obj, m2m_accessor, None)
+            acobj = getattr(xobjModel, m2m_accessor, None)
             objlist = getattr(acobj, rel_obj_name, None)
             if objlist is not None:
                 self.clear_m2m_accessor(model, m2m_accessor)
@@ -393,22 +440,22 @@ class BaseManager(models.Manager):
 
         return model
 
-    def add_synthetic_fields(self, model, obj):
+    def add_synthetic_fields(self, model, xobjModel):
         # Not all models have the synthetic fields option set, so use getattr
         for fieldName in getattr(model._meta, 'synthetic_fields', []):
-            val = getattr(obj, fieldName, None)
+            val = getattr(xobjModel, fieldName, None)
             if val is not None:
                 # XXX for now we assume synthetic fields are char only.
                 val = str(val)
             setattr(model, fieldName, val)
         return model
 
-    def add_abstract_fields(self, model, obj):
+    def add_abstract_fields(self, model, xobjModel):
         abstractFields = getattr(model._meta, 'abstract_fields', None)
         if not abstractFields:
             return model
         for fieldName, mdl in abstractFields.items():
-            val = getattr(obj, fieldName, None)
+            val = getattr(xobjModel, fieldName, None)
             if val is None:
                 continue
             currentVal = getattr(model, fieldName, None)
@@ -422,15 +469,14 @@ class BaseManager(models.Manager):
         return model
 
 
-    def load_from_object(self, obj, request, save=True, load=True):
+    def load_from_object(self, xobjModel, request, save=True, load=True):
         """
-        Given an object (obj) from xobj, create and return the  corresponding
+        Given an object (xobjModel) from xobj, create and return the  corresponding
         model.  If load is True, load the model from the db and apply the
-        updates to it based on obj, otherwise, always create a new model.
+        updates to it based on xobjModel, otherwise, always create a new model.
         
-        obj does not have to be
-        from xobj, but it should match the similar structure of an object that
-        xobj would create from xml.
+        xobjModel does not have to be from xobj, but it should match the
+        similar structure of an object that xobj would create from xml.
         """
         # Every manager has access to the model it's a manager for, create an
         # empty model instance to start with.
@@ -442,9 +488,11 @@ class BaseManager(models.Manager):
 
         # We need access to synthetic fields before loading from the DB, they
         # may be used in load_or_create
-        model = self.add_synthetic_fields(model, obj)
-        model = self.add_fields(model, obj, request, save=save)
-        accessors = self.get_accessors(model, obj, request)
+        model = self.add_synthetic_fields(model, xobjModel)
+        model = self.add_fields(model, xobjModel, request, save=save)
+        accessors = self.get_accessors(model, xobjModel, request)
+
+        # Only try to load the model if load is True.  
         if not load:
             try:
                 model.save()
@@ -453,18 +501,22 @@ class BaseManager(models.Manager):
                 raise e
             oldModel = None
         elif save:
-            oldModel, model = self.load_or_create(model, obj)
+            oldModel, model = self.load_or_create(model, xobjModel)
         else:
-            oldModel, dbmodel = self.load(model, obj)
+            oldModel, dbmodel = self.load(model, xobjModel)
             if dbmodel:
                 model = dbmodel
-        # Copy the synthetic fields again - this is unfortunate
-        model = self.add_synthetic_fields(model, obj)
 
-        model = self.add_m2m_accessors(model, obj, request)
-        model = self.add_list_fields(model, obj, request, save=save)
+        # Copy the synthetic fields again - this is unfortunate
+        model = self.add_synthetic_fields(model, xobjModel)
+
+        model = self.add_m2m_accessors(model, xobjModel, request)
+        model = self.add_list_fields(model, xobjModel, request, save=save)
         model = self.add_accessors(model, accessors)
-        model = self.add_abstract_fields(model, obj)
+        model = self.add_abstract_fields(model, xobjModel)
+
+        # Save a reference to the oldModel on model.  This could be helpful
+        # later on to detect state changes.
         model.oldModel = oldModel
 
         return model
@@ -737,6 +789,13 @@ class XObjModel(models.Model):
     all models.  Adds ability to serialize a model to xml using xobj.
     """
     class __metaclass__(models.Model.__metaclass__):
+        """
+        Metaclass for all models.  
+        Sets the _xobjClass attribute on the class, and consolidates _xobj
+        metadata across all base classes.  Such that attributes/elements in _xobj
+        specified on base classes are consolidated in the subclass as opposed to
+        overwritten.
+        """
         def __new__(cls, name, bases, attrs):
             ret = models.Model.__metaclass__.__new__(cls, name, bases, attrs)
             # Create the xobj class for this model
@@ -746,6 +805,8 @@ class XObjModel(models.Model):
 
             retXObj = getattr(ret, '_xobj', None)
             if retXObj:
+                # Inspect each base class and consolidate the attributes and
+                # elements in _xobj.
                 for base in bases:
                     _xobj = getattr(base, '_xobj', None)
                     if not _xobj:
@@ -766,7 +827,8 @@ class XObjModel(models.Model):
     # All models use our BaseManager as their manager
     objects = BaseManager()
 
-    # Fields that when changed, cause a log to get created.
+    # Fields that when changed, cause a log to get created in the changelog
+    # application.
     logged_fields = []
 
     # Fields which should be serialized/deserialized as lists.  This is a hint
@@ -908,12 +970,29 @@ class XObjModel(models.Model):
         return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
 
     def to_json(self, request=None, xobj_model=None):
+        """
+        Experimental.
+
+        Returns the json serialization of this model.
+        Requires jobj module.
+        """
         import jobj
         if not xobj_model:
             xobj_model = self.serialize(request)
         return jobj.tojson(xobj_model)
 
     def get_url_key(self):
+        """
+        url_key for a model refers to the field values on the model that are
+        used to construct the uniquely identifying parts of the resource url.
+        E.g., given /api/inventory/systems/10, 10 is the primary key on the systems
+        model, thus the primary key field (pk or system_id) is the url_key for
+        the systems model.
+        """
+
+        # url_key should always be a list, since potentially a resource id
+        # could have multiple uniquely identifying parts.
+        # E.g., network might be /api/inventory/systems/10/networks/10
         if type(self.url_key) != type([]):
             url_key = [self.url_key]
         else:
@@ -923,6 +1002,8 @@ class XObjModel(models.Model):
         for uk in url_key:
             if hasattr(self, uk):
                 key_value = getattr(self, uk)
+                # url_keys could potentially be a foreign key field, in which
+                # case we need to ask that model for it's url_key.
                 if hasattr(key_value, "get_url_key"):
                     url_key_values += key_value.get_url_key()
                 else:   
@@ -935,9 +1016,9 @@ class XObjModel(models.Model):
 
     def get_absolute_url(self, request=None, parents=None, view_name=None):
         """
-        Return an absolute url for this model.  Incorporates the same behavior
-        as the django decorator models.pattern, but we use it directly here so
-        that we can generate absolute urls.
+        Return an absolute resource url for this model.  Incorporates the same
+        behavior as the django decorator models.pattern, but we use it
+        directly here so that we can generate absolute urls.
         """
         # Default to class name for the view_name to use during the lookup,
         # allow it to be overriden by a view_name attribute.
