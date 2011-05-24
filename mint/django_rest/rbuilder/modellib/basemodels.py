@@ -254,12 +254,9 @@ class BaseManager(models.Manager):
             # text of an xml elements, try to load the foreign key model if
             # so.
             elif isinstance(field, ForeignKey) and \
-                 # The field has a text field
                  field.text_field is not None and \
-                 # The value is not None
                  str(val) is not '' and \
-                 # Corner case, make sure the value was read from xml
-                 hasattr(val, "_xobj"):
+                 hasattr(val, "_xobj"): 
                 lookup = { field.text_field : str(val) }
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
