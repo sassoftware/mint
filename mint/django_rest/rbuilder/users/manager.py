@@ -35,6 +35,9 @@ class UsersManager(basemanager.BaseManager):
     @exposed
     def deleteUser(self, user_id):
         user = models.User.objects.get(pk=user_id)
+        # projectList = models.UserGroupMembers.objects.all().filter(user_id=user_id)
+        #         for membership in projectList:
+        #             project_id = productmodels.Projects.objects.all().filter(hostname=membership.hostname).project_id
         user.delete()
     
     # def cancelUserAccount(self, username):

@@ -20,11 +20,18 @@ class AbstractSource(modellib.XObjIdModel):
     short_name = fields.CharField(max_length=1026, unique=True)
     default_source = fields.BooleanField()
     order_index = fields.IntegerField()
-    content_source_type = models.ForeignKey('SourceType', db_column='content_source_type') # was URLField, not sure what it should actually point to
+    content_source_type = models.CharField(max_length=1026)
     enabled = fields.BooleanField()
     content_source_status = models.ForeignKey('SourceStatus', null=True)
     # resource_errors = fields.UrlField() # what the heck does this go to
     
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        content_source_type = SourceType.objects.get(content_source_type=self.content_source_type)
+        serialized_content_source_type = content_source_type.serialize(request)
+        xobj_model.content_source_type = serialized_content_source_type
+        return xobj_model
+        
 
 class AbstractStatus(modellib.XObjIdModel):
     class Meta:
@@ -39,11 +46,11 @@ class AbstractPlatform(modellib.XObjIdModel):
     class Meta:
         abstract = True
     
-    platform_id = models.AutoField(primary_key=True) # used to be a charfield in old code
+    platform_id = models.AutoField(primary_key=True)
     platform_trove_name = fields.CharField(max_length=1026)
     repository_host_name = fields.CharField(max_length=1026)
-    label = fields.CharField(max_length=1026) # fk to something else
-    product_version = fields.CharField(max_length=1026) # possible fk
+    label = fields.CharField(max_length=1026)
+    # product_version = fields.CharField(max_length=1026) # not sure if needed or not
     platform_name = fields.CharField(max_length=1026)
     platform_usage_terms = fields.CharField(max_length=1026)
     mode = fields.CharField(max_length=1026)
@@ -52,8 +59,7 @@ class AbstractPlatform(modellib.XObjIdModel):
     abstract = fields.BooleanField()
     mirror_permission = fields.BooleanField()
     # repository_url = modellib.HrefField() # no clue
-    # content_sources = models.ManyToManyField('ContentSources', through='Source', db_column='content_source_id') # not sure
-    content_sources = models.ForeignKey('ContentSources', db_column='content_source_id')
+    content_sources = models.ManyToManyField('ContentSources', through='Source', db_column='content_source_id')
     platform_type = fields.CharField(max_length=1026)
     platform_status = models.ForeignKey('PlatformSourceStatus') # not sure this is the correct model to point to
     content_source_types = models.ForeignKey('SourceType', db_column='content_source_type')
@@ -64,6 +70,16 @@ class AbstractPlatform(modellib.XObjIdModel):
     # not sure if both are necessary and what the URLFields translate to
     platform_version = modellib.DeferredForeignKey('PlatformVersion') # possible fk
     platform_versions = modellib.DeferredManyToManyField('PlatformVersion', db_column='plaform_id')
+    project = models.ForeignKey('rbuilder.projects.project')
+
+    def serialize(self, request=None):
+        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        # xobj_model.repository_url = self.project.getRepositoryUrl()
+        return xobj_model
+
+class PlatformSource(modellib.XObjIdModel):
+    platform = models.ForeignKey('Platform')
+    platform_id = models.ForeignKey()
 
 
 class Status(AbstractStatus):
@@ -168,8 +184,6 @@ class SourceType(modellib.XObjIdModel):
     content_source_type = fields.CharField(max_length=1026)
     required = fields.BooleanField()
     singleton = fields.BooleanField()
-    # instances = models.ManyToManyField('ContentSourceInstances', through='Source', db_column='content_source_id') # not sure if is correct model to point to, also is this really m2m?
-    instances = models.ForeignKey('SourceInstances', db_column='content_source_id', null=True)
     # config_descriptor = fields.UrlField() # think this points to other restlib model
     # status_test = fields.UrlField() # what the hell is this?
     
