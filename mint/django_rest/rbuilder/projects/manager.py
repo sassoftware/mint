@@ -115,6 +115,8 @@ class ProjectManager(basemanager.BaseManager):
                 level=userlevels.OWNER)
             member.save()
 
+        self.restDb.publisher.notify('ProductCreated', project.project_id)
+
         return project
 
     @exposed
@@ -263,7 +265,7 @@ class ProjectManager(basemanager.BaseManager):
                             groupName=groupName,
                             recipeClassName=className,
                             version=projectVersion.name) + '\n')
-            self.reposMgr().createSourceTrove(project.repository_hostname, 
+            self.mgr.createSourceTrove(project.repository_hostname, 
                 groupName, label, projectVersion.name,
                 {'%s.recipe' % groupName: recipeStr},
                 'Initial appliance image group template')
