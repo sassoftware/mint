@@ -78,6 +78,7 @@ class ImageFileList(Model):
 class ImageId(Model):
     class Meta(object):
         name = 'image'
+    id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
 
 class PublishOptions(Model):
