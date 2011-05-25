@@ -1073,7 +1073,9 @@ class ContentSources(object):
         return models.ContentSourceInstances(sources)            
 
     def getStatus(self, source):        
-        sourceInst = self.mgr().contentSourceTypes._getSourceTypeInstance(source)
+        pmgr = self.mgr()
+        sourceInst = pmgr.contentSourceTypes._getSourceTypeInstance(source)
+        dataSources = pmgr.getDataSourcesForContentSourceType(source.contentSourceType)
 
         missing = []
         for field in sourceInst.fields:
@@ -1088,6 +1090,7 @@ class ContentSources(object):
             status = models.SourceStatus(connected=False, valid=False,
                                 message=message)
         else:
+            sourceInst.setDataSources(dataSources)
             ret = sourceInst.status()
             status = models.SourceStatus(connected=ret[0],
                                 valid=ret[1], message=ret[2])
@@ -1154,6 +1157,27 @@ class PlatformManager(manager.Manager):
                 pl = None
            
         return pl
+
+    def getDataSourcesForContentSourceType(self, contentSourceType):
+        pcache = self.platformCache
+        sql = """
+            SELECT DISTINCT platforms.label
+              FROM platformsContentSourceTypes
+              JOIN platforms USING (platformid)
+             WHERE contentSourceType = ?
+        """
+        cu = self.db.db.cursor()
+        cu.execute(sql, (contentSourceType, ))
+        dsset = set()
+        for row in cu:
+            pdef = pcache.get(row[0])
+            if pdef is None:
+                continue
+            contentProvider = pdef.getContentProvider()
+            if contentProvider is None:
+                continue
+            dsset.update(ds.name for ds in contentProvider.dataSources)
+        return dsset
 
     def createPlatform(self, platform, createPlatDef=True):
         platformLabel = platform.label

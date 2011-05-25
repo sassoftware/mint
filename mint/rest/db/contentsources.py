@@ -71,7 +71,7 @@ class Name(Field):
     password = False
 
 class ContentSourceType(object):
-    __slots__ = [ 'proxyMap', '_fieldValues', ]
+    __slots__ = [ 'proxyMap', '_fieldValues', '_dataSources', ]
     fields = []
     model = None
     _ContentSourceTypeName = None
@@ -81,6 +81,7 @@ class ContentSourceType(object):
         self.proxyMap = proxyMap
         self._fieldValues = dict((x.name, x())
             for x in self.__class__.fields)
+        self._dataSources = set()
 
     def __setattr__(self, attr, value):
         if attr in self.__slots__:
@@ -111,6 +112,9 @@ class ContentSourceType(object):
 
     def status(self, *args, **kw):
         raise NotImplementedError
+
+    def setDataSources(self, dataSources):
+        self._dataSources = set(dataSources)
 
 class _RhnSourceType(ContentSourceType):
     xmlrpcUrl = 'XMLRPC'
@@ -174,11 +178,25 @@ class _RepositoryMetadataSourceType(ContentSourceType):
     repomdLabel = None
 
     def status(self):
+        dataSources = sorted(self._dataSources)
+        dataSources.append(self.repomdLabel)
+
+        for ds in dataSources:
+            tup = self._statusOneSource(ds)
+            if tup[0]:
+                # Validated successfully
+                return tup
+        else: # for
+            # Since dataSources has at least one element, tup is defined
+            # Return the last status message
+            return tup
+
+    def _statusOneSource(self, dataSource):
         sourceyum = rpath_capsule_indexer.sourceyum
-        url = "%s/%s" % (self.sourceUrl, self.repomdLabel)
+        url = "%s/%s" % (self.sourceUrl, dataSource)
         authUrl = mintutils.urlAddAuth(url, self.username, self.password)
         try:
-            src = sourceyum.YumRepositorySource(self.repomdLabel, authUrl,
+            src = sourceyum.YumRepositorySource(dataSource, authUrl,
                     proxyMap=self.proxyMap)
             if src.timestamp is None:
                 return (False, False,
@@ -186,8 +204,8 @@ class _RepositoryMetadataSourceType(ContentSourceType):
         except sourceyum.repomd.errors.DownloadError, e:
             return (False, False,
                 'Error validating: %s: %s' % (e.code, e.msg))
-        return (True, True, 'Validated Successfully.')
 
+        return (True, True, 'Validated Successfully.')
 
 class Smt(_RepositoryMetadataSourceType):
     fields = [Name, UsernameOptional, PasswordOptional, SourceUrl]
