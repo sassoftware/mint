@@ -5,6 +5,8 @@
 # All rights reserved.
 #
 
+import StringIO
+
 from django.db import connection
 
 from conary import changelog
