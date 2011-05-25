@@ -116,7 +116,6 @@ class ReposManager(basemanager.BaseManager):
 
     def addUserByMd5(self, repos, username, salt, password, level):
         reposServer = repos.getShimServer()
-        reposServer = self._getRepositoryServer(fqdn)
         role = self._getRoleForLevel(reposServer, level)
         try:
             reposServer.auth.addUserByMD5(username, salt, password)
@@ -137,18 +136,15 @@ class ReposManager(basemanager.BaseManager):
 
     def editUser(self, repos, username, level):
         reposServer = repos.getShimServer()
-        reposServer = self._getRepositoryServer(fqdn)
         role = self._getRoleForLevel(reposServer, level)
         reposServer.auth.setUserRoles(username, [role])
 
     def deleteUser(self, repos, username):
         reposServer = repos.getShimServer()
-        reposServer = self._getRepositoryServer(fqdn)
         reposServer.auth.deleteUserByName(username, deleteRole=False)
 
     def changePassword(self, repos, username, password):
         reposServer = repos.getShimServer()
-        reposServer = self._getRepositoryServer(fqdn)
         reposServer.auth.changePassword(username, password)
 
     def addLabel(self, project, fqdn, url, authInfo):
