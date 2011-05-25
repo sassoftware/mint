@@ -100,11 +100,14 @@ class ProjectManager(basemanager.BaseManager):
         if self.user:
             project.creator = self.user
 
+        if not project.database:
+            project.database = self.cfg.defaultDatabase
+
         # Save the project, we need the pk populated to create the repository
         project.save()
 
         # Create project repository
-        self.reposMgr().createRepository(project.pk)
+        self.mgr.createRepositoryForProject(project)
 
         # Add current user as project owner
         if self.user:

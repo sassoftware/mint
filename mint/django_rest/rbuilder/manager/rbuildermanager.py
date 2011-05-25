@@ -32,6 +32,7 @@ from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
                                                         PlatformLoadManager, \
                                                         PlatformVersionManager, \
                                                         PlatformManager
+from mint.django_rest.rbuilder.repos.manager import ReposManager
 
 class RbuilderManager(basemanager.BaseRbuilderManager):
 
@@ -65,6 +66,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'platformVersionMgr' : PlatformVersionManager,
         'platformMgr' : PlatformManager,
         'modulehooksMgr' : ModuleHooksManager,
+        'reposMgr' : ReposManager,
     }
 
     def __init__(self, cfg=None, userName=None):

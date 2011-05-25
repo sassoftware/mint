@@ -59,7 +59,7 @@ class Project(modellib.XObjIdModel):
         related_name="creator", null=True, db_column="creatorid")
     external = models.SmallIntegerField(default=0)
     disabled = models.SmallIntegerField(default=0)
-    isAppliance = models.SmallIntegerField(default=1, db_column="isappliance")
+    is_appliance = models.SmallIntegerField(default=1, db_column="isappliance")
     version = models.CharField(max_length=128, null=True, blank=True,
         default='')
     database = models.CharField(max_length=128, null=True)
@@ -251,6 +251,33 @@ class Downloads(modellib.XObjModel):
     timedownloaded = models.CharField(max_length=14)
     ip = models.CharField(max_length=64)
     
+class InboundMirror(modellib.XObjModel):
+    _xobj = xobj.XObjMetadata(tag="inbound_mirror")
+    class Meta:
+        db_table = "inboundmirrors"
+
+    inbound_mirror_id = models.AutoField(primary_key=True,
+        db_column="inboundmirrorid")
+    target_project = modellib.ForeignKey(Project,
+        related_name="inbound_mirrors",
+        db_column="targetprojectid")
+    source_labels = models.CharField(max_length=767,
+        db_column="sourcelabels")
+    source_url = models.CharField(max_length=767,
+        db_column="sourceurl")
+    source_auth_type = models.CharField(max_length=32,
+        db_column="sourceauthtype")
+    source_user_name = models.CharField(max_length=254, null=True,
+        db_column="sourceusername")
+    source_password = models.CharField(max_length=254, null=True,
+        db_column="sourcepassword")
+    source_entitlement = models.CharField(max_length=254, null=True,
+        db_column="sourceentitlement")
+    mirror_order = models.IntegerField(default=0, null=True,
+        db_column="mirrororder")
+    all_labels = models.IntegerField(default=0, null=True,
+        db_column="alllabels")
+
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
         if mod_obj._xobj.tag:
