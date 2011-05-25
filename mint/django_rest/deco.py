@@ -85,7 +85,7 @@ def _injectZone(request, xobjModel, modelName, modelClass):
     zone = zones[0]
     propName = 'managing_zone'
     mzone = zoneClass._xobjClass()
-    mzone.href = zone.get_absolute_url(request)
+    mzone.id = zone.get_absolute_url(request)
     setattr(xobjModel, propName, mzone)
 
 HttpAuthenticationRequired = http.HttpResponse(status=401)

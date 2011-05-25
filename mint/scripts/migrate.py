@@ -2587,6 +2587,329 @@ class MigrateTo_55(SchemaMigration):
     def migrate(self):
         return True
 
+class MigrateTo_56(SchemaMigration):
+    Version = (56, 2)
+
+    def migrate(self):
+        return True
+
+    def migrate1(self):
+        db = self.db
+        createTable = schema.createTable
+        changed = False
+
+        changed |= createTable(db, "packages_package_action_type", """
+            CREATE TABLE "packages_package_action_type" (
+                "package_action_type_id" %(PRIMARYKEY)s,
+                "name" text NOT NULL,
+                "description" text NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package", """
+            CREATE TABLE "packages_package" (
+                "package_id" %(PRIMARYKEY)s,
+                "name" TEXT NOT NULL UNIQUE,
+                "description" TEXT,
+                "created_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "modified_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "created_by_id" INTEGER 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" INTEGER
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_version", """
+            CREATE TABLE "packages_package_version" (
+                "package_version_id" %(PRIMARYKEY)s,
+                "package_id" integer NOT NULL 
+                    REFERENCES "packages_package" ("package_id"),
+                "name" text NOT NULL,
+                "description" text,
+                "license" text,
+                "consumable" boolean NOT NULL,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "committed" boolean NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_version_action", """
+            CREATE TABLE "packages_package_version_action" (
+                "package_version_action_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "visible" boolean NOT NULL,
+                "enabled" boolean NOT NULL,
+                "descriptor" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_version_job", """
+            CREATE TABLE "packages_package_version_job" (
+                "package_version_job_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "job_id" integer
+                    REFERENCES "inventory_job" ("job_id"),
+                "job_data" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_version_url", """
+            CREATE TABLE "packages_package_version_url" (
+                "package_version_url_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "url" text NOT NULL,
+                "file_path" text,
+                "downloaded_date" timestamp with time zone,
+                "file_size" integer,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_source", """
+            CREATE TABLE "packages_package_source" (
+                "package_source_id" %(PRIMARYKEY)s,
+                "package_version_id" integer NOT NULL 
+                    REFERENCES "packages_package_version" ("package_version_id"),
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "built" boolean NOT NULL,
+                "trove_id" integer 
+                    REFERENCES "inventory_trove" ("trove_id")
+            )""")
+
+        changed |= createTable(db, "packages_package_source_action", """
+            CREATE TABLE "packages_package_source_action" (
+                "package_source_action_id" %(PRIMARYKEY)s,
+                "package_source_id" integer NOT NULL 
+                    REFERENCES "packages_package_source" ("package_source_id"),
+                "package_action_type_id" integer NOT NULL,
+                "enabled" boolean NOT NULL,
+                "visible" boolean NOT NULL,
+                "descriptor" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_source_job", """
+            CREATE TABLE "packages_package_source_job" (
+                "package_source_job_id" %(PRIMARYKEY)s,
+                "package_source_id" integer NOT NULL 
+                    REFERENCES "packages_package_source" ("package_source_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "job_id" integer
+                    REFERENCES "inventory_job" ("job_id"),
+                "job_data" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer 
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer 
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_build", """
+            CREATE TABLE "packages_package_build" (
+                "package_build_id" %(PRIMARYKEY)s,
+                "package_source_id" integer NOT NULL 
+                    REFERENCES "packages_package_source" ("package_source_id"),
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= createTable(db, "packages_package_build_troves", """
+            CREATE TABLE "packages_package_build_troves" (
+                "id" %(PRIMARYKEY)s,
+                "packagebuild_id" integer NOT NULL
+                    REFERENCES "packages_package_build" ("package_build_id"),
+                "trove_id" integer NOT NULL 
+                    REFERENCES "inventory_trove" ("trove_id"),
+                UNIQUE ("packagebuild_id", "trove_id")
+            )""")
+
+        changed |= createTable(db, "packages_package_build_action", """
+            CREATE TABLE "packages_package_build_action" (
+                "package_build_action_id" %(PRIMARYKEY)s,
+                "package_build_id" integer NOT NULL 
+                    REFERENCES "packages_package_build" ("package_build_id"),
+                "package_action_type_id" integer NOT NULL
+                    REFERENCES "packages_package_action_type"
+                        ("package_action_type_id"),
+                "visible" boolean NOT NULL,
+                "enabled" boolean NOT NULL,
+                "descriptor" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL
+            )""")
+
+        changed |= createTable(db, "packages_package_build_job", """
+            CREATE TABLE "packages_package_build_job" (
+                "package_build_job_id" %(PRIMARYKEY)s,
+                "package_build_id" integer NOT NULL 
+                    REFERENCES "packages_package_build" ("package_build_id"),
+                "package_action_type_id" integer NOT NULL,
+                "job_id" integer
+                    REFERENCES "inventory_job" ("job_id"),
+                "job_data" text,
+                "created_date" timestamp with time zone NOT NULL,
+                "modified_date" timestamp with time zone NOT NULL,
+                "created_by_id" integer
+                    REFERENCES "users" ("userid"),
+                "modified_by_id" integer
+                    REFERENCES "users" ("userid")
+            )""")
+
+        changed |= db.createIndex("packages_package", 
+            "packages_package_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package", 
+            "packages_package_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_version",
+            "packages_package_version_package_id", "package_id")
+        changed |= db.createIndex("packages_package_version",
+            "packages_package_version_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_version_action",
+            "packages_package_version_action_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_version_action",
+            "packages_package_version_action_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_job_id", "job_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_version_job",
+            "packages_package_version_job_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_version_url",
+            "packages_package_version_url_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_version_url",
+            "packages_package_version_url_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_version_url",
+            "packages_package_version_url_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_package_version_id", "package_version_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_source",
+            "packages_package_source_trove_id", "trove_id")
+        changed |= db.createIndex("packages_package_source_action",
+            "packages_package_source_action_package_source_id", "package_source_id")
+        changed |= db.createIndex("packages_package_source_action",
+            "packages_package_source_action_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_package_source_id", "package_source_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_job_id", "job_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_source_job",
+            "packages_package_source_job_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_build",
+            "packages_package_build_package_source_id", "package_source_id")
+        changed |= db.createIndex("packages_package_build",
+            "packages_package_build_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_build",
+            "packages_package_build_modified_by_id", "modified_by_id")
+        changed |= db.createIndex("packages_package_build_action",
+            "packages_package_build_action_package_build_id", "package_build_id")
+        changed |= db.createIndex("packages_package_build_action",
+            "packages_package_build_action_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_package_build_id", "package_build_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_package_action_type_id", "package_action_type_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_job_id", "job_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_created_by_id", "created_by_id")
+        changed |= db.createIndex("packages_package_build_job",
+            "packages_package_build_job_modified_by_id", "modified_by_id")
+
+        return True
+        
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_job"
+            RENAME TO "jobs_job"
+        """)
+        cu.execute("""
+            ALTER TABLE "inventory_job_state"
+            RENAME TO "jobs_job_state"
+        """)
+
+        return True
+
+class MigrateTo_57(SchemaMigration):
+    Version = (57, 0)
+
+    def migrate(self):
+        return True
+
+
+class MigrateTo_58(SchemaMigration):
+    Version = (58, 1)
+
+    def migrate(self):
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("""
+            ALTER TABLE "inventory_system"
+            RENAME "appliance_id" TO "project_id"
+        """)
+
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            RENAME "major_version_id" TO "project_version_id"
+        """)
+
+
+        cu.execute("""
+            ALTER TABLE "inventory_stage"
+            ADD "promotable" bool
+        """)
+
+        return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 

@@ -97,16 +97,19 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.inventory',
     'mint.django_rest.rbuilder.metrics',
     'mint.django_rest.rbuilder.querysets',
-    'mint.django_rest.rbuilder.packages',
     'mint.django_rest.rbuilder.changelog',
+    'mint.django_rest.rbuilder.packageindex',
+    'mint.django_rest.rbuilder.packages',
+    'mint.django_rest.rbuilder.projects',
+    'mint.django_rest.rbuilder.users',
+    'mint.django_rest.rbuilder.notices',
+    'mint.django_rest.rbuilder.jobs',
+    'mint.django_rest.rbuilder.platforms',
 )
 
 AUTHENTICATION_BACKENDS = (
     'mint.django_rest.rbuilder.auth.rBuilderBackend',
 )
-
-# Custom setting for if we should manage/create the tables in rbuilder.models
-MANAGE_RBUILDER_MODELS = False
 
 # Custom settings for pagination
 PER_PAGE = 50

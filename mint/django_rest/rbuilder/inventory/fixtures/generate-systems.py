@@ -14,7 +14,7 @@ SYSTEM_TEMPLATE = """
         <field type="CharField" name="ssl_client_certificate">system-%(systemId)s-ssl-client-certificate</field>
         <field type="CharField" name="ssl_client_key">system-%(systemId)s-ssl-client-key</field>
         <field type="CharField" name="ssl_server_certificate">system-%(systemId)s-ssl-server-certificate</field>
-        <field to="rbuilder.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.trove" name="installed_software" rel="ManyToManyRel"></field>
