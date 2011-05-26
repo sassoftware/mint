@@ -71,11 +71,16 @@ class User(modellib.XObjIdModel):
         'package_source_jobs_last_modified', 'package_builds_last_modified',
         'targetusercredentials_set', 'package_version_jobs_last_modified', 'package_sources_created',
         'system_set', 'package_builds_jobs_last_modified', 'package_sources_last_modified',
-        'usermember', 'package_versions_created', 'packages_created', 'user'])
+        'usermember', 'package_versions_created', 'packages_created', 'user',
+        'created_images', 'updated_images', 'project_membership',
+        'created_releases', 'updated_releases', 'published_releases'])
     
     def __unicode__(self):
         return self.user_name
 
+    def serialize(self, request):
+        deferredUser = User.objects.defer("salt", "passwd").get(pk=self.user_id)
+        return modellib.XObjIdModel.serialize(deferredUser, request)
         
 class UserGroupMembers(modellib.Collection):
     list_fields = ['user_group_member']
