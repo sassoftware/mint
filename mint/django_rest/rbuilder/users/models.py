@@ -77,7 +77,7 @@ class User(modellib.XObjIdModel):
     def __unicode__(self):
         return self.user_name
 
-    def serialize(self, request):
+    def serialize(self, request=None):
         deferredUser = User.objects.defer("salt", "passwd").get(pk=self.user_id)
         return modellib.XObjIdModel.serialize(deferredUser, request)
         
