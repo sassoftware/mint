@@ -1149,7 +1149,7 @@ system_xml = """\
       <netmask>255.255.255.0</netmask>
       <network_id>1</network_id>
       <port_type>lan</port_type>
-      <system href="http://testserver/api/inventory/systems/1"/>
+      <system id="http://testserver/api/inventory/systems/1"/>
       <pinned/>
     </network>
   </networks>

@@ -184,9 +184,10 @@ class ReposManager(basemanager.BaseManager):
                     INSERT INTO repnamemap (fromname, toname)
                     VALUES (%s, %s) """, [localFqdn, fqdn])
                 
-        self._generateConaryrcFile()
+        self.generateConaryrcFile()
 
-    def _generateConaryrcFile(self):
+    @exposed
+    def generateConaryrcFile(self):
         global _cachedCfg
         _cachedCfg = None
         if not self.cfg.createConaryRcFile:

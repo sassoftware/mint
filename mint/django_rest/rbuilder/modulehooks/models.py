@@ -18,5 +18,5 @@ class ModuleHooks(modellib.Collection):
     
 
 class ModuleHook(modellib.XObjModel):
-    url = models.CharField()
+    url = models.TextField()
     _xobj = xobj.XObjMetadata(tag='module_hook')

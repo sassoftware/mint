@@ -15,7 +15,6 @@ from mint import userlevels
 from mint import projects
 from mint import templates
 from mint.templates import groupTemplate
-from mint.rest.db import reposmgr
 
 from mint.django_rest.rbuilder import auth
 from mint.django_rest.rbuilder import errors
@@ -29,13 +28,6 @@ class ProjectManager(basemanager.BaseManager):
 
     def __init__(self, *args, **kwargs):
         basemanager.BaseManager.__init__(self, *args, **kwargs)
-        self._reposMgr = None
-
-    def reposMgr(self):
-        if not self._reposMgr:
-            self._reposMgr = reposmgr.RepositoryManager(self.cfg, self.restDb,
-                self.restDb.auth)
-            return self._reposMgr
 
     @exposed 
     def getProjects(self):
@@ -136,7 +128,7 @@ class ProjectManager(basemanager.BaseManager):
             self.restDb.publisher.notify('ProductUnhidden', oldProject.pk)
 
         project.save()
-        self.reposMgr()._generateConaryrcFile()
+        self.mgr.generateConaryrcFile()
         return project
 
     @exposed
@@ -306,7 +298,7 @@ class ProjectManager(basemanager.BaseManager):
         pd.setConaryRepositoryHostname(project.repository_hostname)
         pd.setConaryNamespace(projectVersion.namespace)
         pd.setProductVersion(projectVersion.name)
-        cclient = self.reposMgr().getAdminClient(write=False)
+        cclient = self.mgr.getAdminClient(write=False)
         try:
             pd.loadFromRepository(cclient)
         except Exception:

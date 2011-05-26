@@ -107,7 +107,7 @@ class VersionManager(basemanager.BaseManager):
         except ObjectDoesNotExist:
             return
 
-        stage, created = models.Stage.objects.get_or_create(major_version=majorVersion,
+        stage, created = models.Stage.objects.get_or_create(project_version=majorVersion,
             label=trove.version.label, name=stage.name)
 
         system.stage = stage

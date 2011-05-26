@@ -174,7 +174,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="211" model="inventory.system">
@@ -206,7 +206,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="212" model="inventory.system">
@@ -238,7 +238,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="213" model="inventory.system">
@@ -270,7 +270,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="214" model="inventory.system">
@@ -302,7 +302,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="215" model="inventory.system">
@@ -334,7 +334,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="216" model="inventory.system">
@@ -366,7 +366,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
   <object pk="217" model="inventory.system">
@@ -398,7 +398,7 @@
         <field type="CharField" name="netmask"><None></None></field>
         <field type="CharField" name="port_type"><None></None></field>
         <field type="NullBooleanField" name="active"><None></None></field>
-        <field type="NullBooleanField" name="required"><None></None></field>
+        <field type="NullBooleanField" name="pinned">False</field>
         <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
   </object>
 
