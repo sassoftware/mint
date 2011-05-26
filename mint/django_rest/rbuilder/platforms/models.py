@@ -40,7 +40,8 @@ class AbstractPlatform(modellib.XObjIdModel):
     # not sure if both are necessary and what the URLFields translate to
     # platform_version = modellib.DeferredForeignKey('PlatformVersion')
     platform_versions = modellib.DeferredManyToManyField('PlatformVersion')
-    project = models.ForeignKey(projectsmodels.Project)
+    project = models.ForeignKey(projectsmodels.Project,
+        related_name="platforms")
 
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
