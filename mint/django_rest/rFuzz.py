@@ -9,6 +9,7 @@ def fuzzIt(module):
             # Fuzzer(model)
             try:
                 Fuzzer(model)
+                print 'success'
             except Exception, e:
                 print 'Could not fuzz data'
                 print e

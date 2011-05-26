@@ -83,12 +83,15 @@ class SourceTypeStatusTestManager(basemanager.BaseManager):
 class SourceTypeManager(basemanager.BaseManager):
     @exposed
     def getSourceType(self, source_type):
-        return platformModels.ContentSourceType.objects.all().filter(content_source_type=source_type)
+        ContentSourceTypes = platformModels.ContentSourceTypes()
+        cst = platformModels.ContentSourceType.objects.all().filter(content_source_type=source_type)
+        ContentSourceTypes.content_source_type = cst
+        return ContentSourceTypes
         
     @exposed
     def getSourceTypes(self):
         ContentSourceTypes = platformModels.ContentSourceTypes()
-        ContentSourceTypes.source_type = platformModels.ContentSourceType.objects.all()
+        ContentSourceTypes.content_source_type = platformModels.ContentSourceType.objects.all()
         return ContentSourceTypes
         
         
@@ -106,15 +109,19 @@ class PlatformStatusManager(basemanager.BaseManager):
 class PlatformSourceManager(basemanager.BaseManager):
     @exposed
     def getSourcesByPlatform(self, platform_id):
+        ContentSources = platformModels.ContentSources()
         platform = platformModels.Platform.objects.get(platform_id=platform_id)
-        return platform.content_sources.objects.all()
+        ContentSources.content_source = platform.content_sources.objects.all()
+        return ContentSources
         
         
 class PlatformSourceTypeManager(basemanager.BaseManager):
     @exposed
     def getSourceTypesByPlatform(self, platform_id):
+        ContentSourceTypes = platformModels.ContentSourceTypes()
         platform = platformModels.Platform.objects.get(platform_id=platform_id)
-        return platform.content_source_types.objects.all()
+        ContentSourceTypes.content_source_type = platform.content_source_types.objects.all()
+        return ContentSourceTypes
         
         
 class PlatformImageTypeManager(basemanager.BaseManager):

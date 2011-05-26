@@ -465,7 +465,7 @@ urlpatterns = patterns('',
         platformsviews.PlatformVersionService(),
         name='PlatformVersion'),
         
-    # Do platforms/sources/...
+    # Do platforms/content_sources/...
     url(r'^api/platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceService(),
         name='ContentSources'),
