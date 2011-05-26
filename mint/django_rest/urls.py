@@ -466,23 +466,23 @@ urlpatterns = patterns('',
         name='PlatformVersion'),
         
     # Do platforms/sources/...
-    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
+    url(r'^api/platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceService(),
-        name='Sources'),
+        name='ContentSources'),
         
-    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/?$',
+    url(r'^api/platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/?$',
         platformsviews.SourceService(),
-        name='Source'),
+        name='ContentSource'),
         
-    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
+    url(r'^api/platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_status/?$',
         platformsviews.SourceStatusService(),
         name='SourceStatus'),
         
-    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/?$',
+    url(r'^api/platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/?$',
         platformsviews.SourceErrorsService(),
         name='SourceErrors'),
         
-    url(r'^api/platforms/sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/(?P<error_id>\d+)/?$',
+    url(r'^api/platforms/content_sources/(?P<source_type>[_a-zA-Z0-9]+)/(?P<short_name>(\w|\-)*)/source_errors/(?P<error_id>\d+)/?$',
         platformsviews.SourceErrorsService(),
         name='SourceError'),
         
@@ -490,13 +490,13 @@ urlpatterns = patterns('',
         # platformsviews.SourceTypeDescriptor(),
         # name='SourceTypeDescriptor'),
         
-    url(r'^api/platforms/source_types/?$',
+    url(r'^api/platforms/content_source_types/?$',
         platformsviews.SourceTypeService(),
-        name='SourceTypes'),
+        name='ContentSourceTypes'),
         
-    url(r'^api/platforms/source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
+    url(r'^api/platforms/content_source_types/(?P<source_type>[_a-zA-Z0-9]+)/?$',
         platformsviews.SourceTypeService(),
-        name='SourceType'),
+        name='ContentSourceType'),
  
     # ModuleHooks
     url(r'^api/module_hooks/?$',

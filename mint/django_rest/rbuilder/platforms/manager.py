@@ -44,14 +44,13 @@ class SourceErrorsManager(basemanager.BaseManager):
 class SourceManager(basemanager.BaseManager):
     @exposed
     def getSource(self, short_name):
-        return platformModels.Source.objects.get(short_name=short_name)
+        return platformModels.ContentSource.objects.get(short_name=short_name)
         
     @exposed
     def getSources(self, source_type):
-        Sources = platformModels.Sources()
-        import pdb; pdb.set_trace()
-        Sources.source = platformModels.Source.objects.all().filter(content_source_type=source_type)
-        return Sources
+        ContentSources = platformModels.ContentSources()
+        ContentSources.content_source = platformModels.ContentSource.objects.all().filter(content_source_type=source_type)
+        return ContentSources
         
     @exposed
     def updateSource(self, short_name, source):
@@ -65,7 +64,7 @@ class SourceManager(basemanager.BaseManager):
     
     @exposed    
     def deleteSource(self, short_name):
-        source = platformModels.Source.objects.get(short_name=short_name)
+        source = platformModels.ContentSource.objects.get(short_name=short_name)
         source.delete()
         
 
@@ -84,13 +83,13 @@ class SourceTypeStatusTestManager(basemanager.BaseManager):
 class SourceTypeManager(basemanager.BaseManager):
     @exposed
     def getSourceType(self, source_type):
-        return platformModels.SourceType.objects.all().filter(content_source_type=source_type)
+        return platformModels.ContentSourceType.objects.all().filter(content_source_type=source_type)
         
     @exposed
     def getSourceTypes(self):
-        SourceTypes = platformModels.SourceTypes()
-        SourceTypes.source_type = platformModels.SourceType.objects.all()
-        return SourceTypes
+        ContentSourceTypes = platformModels.ContentSourceTypes()
+        ContentSourceTypes.source_type = platformModels.ContentSourceType.objects.all()
+        return ContentSourceTypes
         
         
 class PlatformStatusManager(basemanager.BaseManager):

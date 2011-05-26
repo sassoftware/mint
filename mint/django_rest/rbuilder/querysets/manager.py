@@ -20,13 +20,17 @@ class QuerySetManager(basemanager.BaseManager):
 
     tagMethodMap = {
         'system' : 'tagSystems',
+        'user' : 'tagUsers',
     }
     resourceCollectionMap = {
         'system' : 'systems',
+        'user' : 'users',
     }
     tagModelMap = {
         'system' : 'system_tag',
+        'user' : 'user_tag'
     }
+
 
     @exposed
     def getQuerySet(self, querySetId):
