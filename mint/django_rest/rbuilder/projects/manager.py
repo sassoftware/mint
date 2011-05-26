@@ -222,6 +222,11 @@ class ProjectManager(basemanager.BaseManager):
         version = models.ProjectVersion.objects.get(pk=versionId)
         return version
 
+    def setProductVersionDefinition(self, prodDef):
+        cclient = self.mgr.getUserClient()
+        prodDef.saveToRepository(cclient,
+                'Product Definition commit from rBuilder\n')
+
     @exposed
     def addProjectVersion(self, shortName, projectVersion):
         project = models.Project.objects.get(short_name=shortName)
@@ -250,6 +255,8 @@ class ProjectManager(basemanager.BaseManager):
 
         projectVersion.project = project
         projectVersion.save()
+
+        self.setProductVersionDefinition(prodDef)
 
         # TODO: get the correct platformLabel
         platformLabel = None

@@ -251,8 +251,8 @@ class ReposManager(basemanager.BaseManager):
         projectInfo["projectId"] = str(project.pk)
         projectInfo["shortname"] = str(project.short_name)
         projectInfo["fqdn"] = str(project.repository_hostname)
-        projectInfo["external"] = str(project.external)
-        projectInfo["hidden"] = str(project.hidden)
+        projectInfo["external"] = project.external
+        projectInfo["hidden"] = project.hidden
         projectInfo["commitEmail"] = str(project.commit_email)
         projectInfo["database"] = str(project.database)
 
@@ -322,6 +322,7 @@ class ReposManager(basemanager.BaseManager):
         # commit the change set to the repository
         client.getRepos().commitChangeSet(changeSet)
 
+    @exposed
     def getAdminClient(self, write=False):
         """
         Get a conary client object with access to all repositories. If C{write}
@@ -337,6 +338,7 @@ class ReposManager(basemanager.BaseManager):
             userId = reposdbmgr.ANY_READER
         return self.getClient(userId)
 
+    @exposed
     def getUserClient(self):
         """
         Get a conary client with the permissions of the current user. This
@@ -365,6 +367,7 @@ class ReposManager(basemanager.BaseManager):
         """
         return reposdbmgr.MultiShimNetClient(self, userId)
 
+    @exposed
     def getClient(self, userId=None):
         """
         Get a global C{ConaryClient} for this site, optionally constrained to
