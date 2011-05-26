@@ -23,8 +23,11 @@ from django.test.client import Client, FakePayload
 
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import views
+from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager import rbuildermanager
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
+from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
 from mint.lib import x509
 from mint.rest.api import models as restmodels
@@ -135,6 +138,14 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         file(mintCfg, "w")
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
+
+        self.oldDatabaseName = settings.DATABASE_NAME
+        settings.DATABASE_NAME = settings.TEST_DATABASE_NAME
+
+        def getMintDatabase(self):
+            return None
+        basemanager.BaseRbuilderManager.getMintDatabase = getMintDatabase
+
         self.client = Client()
         self.mgr = rbuildermanager.RbuilderManager()
         self.localZone = self.mgr.sysMgr.getLocalZone()
@@ -145,8 +156,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         # Default to 10 items per page in the tests
         settings.PER_PAGE = 10
 
+
     def tearDown(self):
         TestCase.tearDown(self)
+        settings.DATABASE_NAME = self.oldDatabaseName
         self.unmock()
 
     def failUnlessIn(self, needle, haystack):
@@ -356,9 +369,9 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
             statusCode=100, statusText=None, statusDetail=None):
         eventType = self.mgr.sysMgr.eventType(jobType)
         if jobState is None:
-            jobState = models.JobState.RUNNING
+            jobState = jobmodels.JobState.RUNNING
         jobState = self.mgr.sysMgr.jobState(jobState)
-        job = models.Job(job_uuid=jobUuid, event_type=eventType,
+        job = jobmodels.Job(job_uuid=jobUuid, event_type=eventType,
             job_state=jobState, status_code=statusCode,
             status_text=statusText or 'Initializing',
             status_detail=statusDetail)
@@ -984,9 +997,9 @@ class ManagementNodesTestCase(XMLTestCase):
                 'boo!', zone2.zone_id,)
         ]
         self.failUnlessEqual(
-            [ (str(x.node_jid), int(os.path.basename(x.zone.href)),
+            [ (str(x.node_jid), int(os.path.basename(x.zone.id)),
                     str(x.local), str(x.name),
-                    int(os.path.basename(x.managing_zone.href)))
+                    int(os.path.basename(x.managing_zone.id)))
                 for x in nodes ],
             exp)
 
@@ -1228,7 +1241,7 @@ class SystemsTestCase(XMLTestCase):
         self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
         self.mgr.sysMgr.scheduleSystemDetectMgmtInterfaceEvent = \
             self.mock_scheduleSystemDetectMgmtInterfaceEvent
-        models.Job.getRmakeJob = self.mockGetRmakeJob
+        jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
 
     def tearDown(self):
         XMLTestCase.tearDown(self)
@@ -1259,7 +1272,7 @@ class SystemsTestCase(XMLTestCase):
         system2.save()
 
         self._newJob(system, eventUuid, 'rmakejob007',
-            models.EventType.SYSTEM_REGISTRATION)
+            jobmodels.EventType.SYSTEM_REGISTRATION)
 
         xmlTempl = """\
 <system>
@@ -1824,8 +1837,8 @@ class SystemsTestCase(XMLTestCase):
 
     def testGetSystemWithTarget(self):
         models.System.objects.all().delete()
-        target = rbuildermodels.Targets(pk=1, targettype='testtargettype',
-            targetname='testtargetname')
+        target = rbuildermodels.Targets(pk=1, target_type='testtargettype',
+            target_name='testtargetname')
         target.save()
         system = self._saveSystem()
         system.target = target
@@ -1857,7 +1870,8 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
             ignoreNodes = [ 'created_date', 'ssl_client_certificate',
-                            'time_created', 'time_updated'])
+                            'time_created', 'time_updated',
+                            'registration_date'])
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
@@ -2187,9 +2201,9 @@ class SystemsTestCase(XMLTestCase):
         system = self.newSystem(name = 'blippy')
         system.save()
         # Create a job
-        eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
-        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
-            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
+        eventType = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
+        job = jobmodels.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
@@ -2253,9 +2267,9 @@ class SystemsTestCase(XMLTestCase):
         self.mgr.sysMgr.log_system(system1, "Log message from target system")
 
         # Create a job
-        eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
-        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
-            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
+        eventType = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
+        job = jobmodels.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system1, job=job,
             event_uuid=eventUuid)
@@ -2358,10 +2372,10 @@ class SystemsTestCase(XMLTestCase):
         system.save()
 
         # Create a job
-        eventType = models.EventType.objects.get(
-            name = models.EventType.SYSTEM_POLL)
-        job = models.Job(job_uuid=jobUuid, event_type=eventType,
-            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
+        eventType = jobmodels.EventType.objects.get(
+            name = jobmodels.EventType.SYSTEM_POLL)
+        job = jobmodels.Job(job_uuid=jobUuid, event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
@@ -2398,7 +2412,7 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(model.pk, system.pk)
 
         # We expect nothing to be updated, since there's no such job
-        job = models.Job.objects.get(pk=job.pk)
+        job = jobmodels.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, 'Running')
         self.failUnlessEqual(model.lastJob, None)
 
@@ -2411,7 +2425,7 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(model.pk, system.pk)
 
         # We still expect nothing to be updated, since the event_uuid is wrong
-        job = models.Job.objects.get(pk=job.pk)
+        job = jobmodels.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, 'Running')
         self.failUnlessEqual(model.lastJob, None)
 
@@ -2423,7 +2437,7 @@ class SystemsTestCase(XMLTestCase):
         model = models.System.objects.load_from_object(xobjmodel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
-        job = models.Job.objects.get(pk=job.pk)
+        job = jobmodels.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
         self.failUnlessEqual(model.lastJob.pk, job.pk)
         self.failUnlessEqual(job.status_code, statusCode)
@@ -2459,7 +2473,7 @@ class SystemsTestCase(XMLTestCase):
         model = models.System.objects.load_from_object(xobjmodel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
-        job = models.Job.objects.get(pk=job.pk)
+        job = jobmodels.Job.objects.get(pk=job.pk)
         self.failUnlessEqual(job.job_state.name, jobState)
         self.failUnlessEqual(model.lastJob.pk, job.pk)
         self.failUnlessEqual(job.status_code, statusCode)
@@ -2529,9 +2543,9 @@ class SystemsTestCase(XMLTestCase):
         system = self.newSystem(name = 'blippy')
         system.save()
         # Create a job
-        eventType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
-        job = models.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
-            job_state=self.mgr.sysMgr.jobState(models.JobState.RUNNING))
+        eventType = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
+        job = jobmodels.Job(job_uuid = 'rmakeuuid001', event_type=eventType,
+            job_state=self.mgr.sysMgr.jobState(jobmodels.JobState.RUNNING))
         job.save()
         systemJob = models.SystemJob(system=system, job=job,
             event_uuid=eventUuid)
@@ -2769,7 +2783,7 @@ class SystemCertificateTestCase(XMLTestCase):
 class SystemStateTestCase(XMLTestCase):
     def setUp(self):
         XMLTestCase.setUp(self)
-        models.Job.getRmakeJob = self.mockGetRmakeJob
+        jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
     
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
@@ -2786,7 +2800,7 @@ class SystemStateTestCase(XMLTestCase):
         system.save()
 
         self._newJob(system, eventUuid1, jobUuid1,
-            models.EventType.SYSTEM_REGISTRATION)
+            jobmodels.EventType.SYSTEM_REGISTRATION)
 
         params = dict(eventUuid=eventUuid1, jobUuid=jobUuid1, jobState=jobState,
             zoneId=self.localZone.zone_id)
@@ -2824,7 +2838,7 @@ class SystemStateTestCase(XMLTestCase):
         eventUuid2 = 'eventuuid002'
         jobUuid2 = 'rmakeuuid002'
         self._newJob(system, eventUuid2, jobUuid2,
-            models.EventType.SYSTEM_POLL)
+            jobmodels.EventType.SYSTEM_POLL)
 
         params = dict(eventUuid=eventUuid2, jobUuid=jobUuid2, jobState=jobState,
             zoneId=self.localZone.zone_id)
@@ -2870,24 +2884,24 @@ class SystemStateTestCase(XMLTestCase):
             generated_uuid=generatedUuid)
         system.save()
 
-        stateCompleted = self.mgr.sysMgr.jobState(models.JobState.COMPLETED)
-        stateFailed = self.mgr.sysMgr.jobState(models.JobState.FAILED)
+        stateCompleted = self.mgr.sysMgr.jobState(jobmodels.JobState.COMPLETED)
+        stateFailed = self.mgr.sysMgr.jobState(jobmodels.JobState.FAILED)
 
         job1 = self._newJob(system, eventUuid1, jobUuid1,
-            models.EventType.SYSTEM_REGISTRATION)
+            jobmodels.EventType.SYSTEM_REGISTRATION)
         job2 = self._newJob(system, eventUuid2, jobUuid2,
-            models.EventType.SYSTEM_POLL)
+            jobmodels.EventType.SYSTEM_POLL)
         job3 = self._newJob(system, eventUuid3, jobUuid3,
-            models.EventType.SYSTEM_POLL_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         job4 = self._newJob(system, eventUuid4, jobUuid4,
-            models.EventType.SYSTEM_APPLY_UPDATE)
+            jobmodels.EventType.SYSTEM_APPLY_UPDATE)
         job5 = self._newJob(system, eventUuid5, jobUuid5,
-            models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
 
         jobRegNoAuth = self._newJob(system, eventUuid6, jobUuid6,
-            models.EventType.SYSTEM_REGISTRATION, statusCode = 401)
+            jobmodels.EventType.SYSTEM_REGISTRATION, statusCode = 401)
         jobPollNoAuth = self._newJob(system, eventUuid7, jobUuid7,
-            models.EventType.SYSTEM_POLL, statusCode = 401)
+            jobmodels.EventType.SYSTEM_POLL, statusCode = 401)
 
         UNMANAGED = models.SystemState.UNMANAGED
         UNMANAGED_CREDENTIALS_REQUIRED = models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
@@ -3034,7 +3048,7 @@ class SystemVersionsTestCase(XMLTestCase):
         self.sources = []
         rbuildermanager.VersionManager.set_available_updates = \
             self.mock_set_available_updates
-        models.Job.getRmakeJob = self.mockGetRmakeJob
+        jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
 
         self.mockGetStagesCalled = False
         self.mockStages = []
@@ -3163,7 +3177,7 @@ class SystemVersionsTestCase(XMLTestCase):
                 system.created_date.isoformat())).replace(
              'installed_software/', 'installed_software')
         self.assertXMLEquals(response.content, expected,
-            ignoreNodes = [ 'created_date' ])
+            ignoreNodes = [ 'created_date', 'last_available_update_refresh' ])
 
     def testGetInstalledSoftwareRest(self):
         system = self._saveSystem()
@@ -3235,7 +3249,7 @@ class SystemVersionsTestCase(XMLTestCase):
 
         eventUuid = 'eventuuid007'
         jobUuid = 'rmakejob007'
-        self._newJob(system, eventUuid, jobUuid, models.EventType.SYSTEM_POLL)
+        self._newJob(system, eventUuid, jobUuid, jobmodels.EventType.SYSTEM_POLL)
 
         self.failUnlessEqual(
             [ (x.name, (x.version.full, x.version.ordering, x.version.flavor,
@@ -3342,32 +3356,32 @@ class EventTypeTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 401)
         
     def testPutEventType(self):
-        models.EventType.objects.all().delete()
-        event_type = models.EventType(name="foo", description="bar", priority=110)
+        jobmodels.EventType.objects.all().delete()
+        event_type = jobmodels.EventType(name="foo", description="bar", priority=110)
         event_type.save()
         self.assertTrue(event_type.priority == 110)
         response = self._put('/api/inventory/event_types/1/', 
             data=testsxml.event_type_put_xml, content_type='text/xml',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        event_type = models.EventType.objects.get(pk=1)
+        event_type = jobmodels.EventType.objects.get(pk=1)
         self.assertTrue(event_type.priority == 1)
         
     def testPutEventTypeName(self):
         """
         Do not allow changing the event type name https://issues.rpath.com/browse/RBL-7171
         """
-        models.EventType.objects.all().delete()
-        event_type = models.EventType(name=models.EventType.SYSTEM_POLL, description="bar", priority=110)
+        jobmodels.EventType.objects.all().delete()
+        event_type = jobmodels.EventType(name=jobmodels.EventType.SYSTEM_POLL, description="bar", priority=110)
         event_type.save()
-        self.failUnlessEqual(event_type.name, models.EventType.SYSTEM_POLL)
+        self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_POLL)
         response = self._put('/api/inventory/event_types/%d/' % event_type.pk,
             data=testsxml.event_type_put_name_change_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        event_type = models.EventType.objects.get(pk=event_type.pk)
+        event_type = jobmodels.EventType.objects.get(pk=event_type.pk)
         # name should not have changed
-        self.failUnlessEqual(event_type.name, models.EventType.SYSTEM_POLL)
+        self.failUnlessEqual(event_type.name, jobmodels.EventType.SYSTEM_POLL)
 
 class SystemEventTestCase(XMLTestCase):
     
@@ -3401,8 +3415,8 @@ class SystemEventTestCase(XMLTestCase):
         self.mock_dispatchSystemEvent_called = True
     
     def testGetSystemEventsRest(self):
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
-        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
+        act_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
         event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
@@ -3419,7 +3433,7 @@ class SystemEventTestCase(XMLTestCase):
         """
         Ensure requires auth but not admin
         """
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         response = self._get('/api/inventory/system_events/%d/' % event.system_event_id)
@@ -3430,7 +3444,7 @@ class SystemEventTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
     def testGetSystemEventRest(self):
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         response = self._get('/api/inventory/system_events/%d/' % event.system_event_id,
@@ -3441,7 +3455,7 @@ class SystemEventTestCase(XMLTestCase):
     
     def testGetSystemEvent(self):
         # add an event
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         new_event = self.mgr.getSystemEvent(event.system_event_id)
@@ -3449,8 +3463,8 @@ class SystemEventTestCase(XMLTestCase):
         
     def testGetSystemEvents(self):
         # add an event
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
-        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
+        act_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
         event1 = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event1.save()
         event2 = models.SystemEvent(system=self.system,event_type=act_event, priority=act_event.priority)
@@ -3460,7 +3474,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testDeleteSystemEvent(self):
         # add an event
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system,event_type=poll_event, priority=poll_event.priority)
         event.save()
         self.mgr.deleteSystemEvent(event.system_event_id)
@@ -3473,7 +3487,7 @@ class SystemEventTestCase(XMLTestCase):
         network = models.Network(system=local_system)
         network.save()
         local_system.networks.add(network)
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = self.mgr.createSystemEvent(local_system, poll_event)
         assert(event is None)
         assert(self.mock_dispatchSystemEvent_called == False)
@@ -3486,7 +3500,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testSaveSystemEvent(self):
         self._saveSystem()
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent(system=self.system, event_type=poll_event)
         event.save()
         # make sure event priority was set even though we didn't pass it in
@@ -3502,7 +3516,7 @@ class SystemEventTestCase(XMLTestCase):
         assert(self.mock_dispatchSystemEvent_called == False)
         
         # make sure we have our poll event
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=poll_event).get()
         assert(event is not None)
         
@@ -3515,7 +3529,7 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.scheduleSystemPollNowEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called)
         
-        pn_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
+        pn_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=pn_event).get()
         assert(event is not None)
         # should have been enabled immediately
@@ -3530,7 +3544,7 @@ class SystemEventTestCase(XMLTestCase):
         self.mgr.scheduleSystemRegistrationEvent(self.system)
         assert(self.mock_dispatchSystemEvent_called)
         
-        registration_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+        registration_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
         event = models.SystemEvent.objects.filter(system=self.system,event_type=registration_event).get()
         assert(event is not None)
         # should have been enabled immediately
@@ -3550,7 +3564,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testAddSystemRegistrationEvent(self):
         # registration event should be dispatched now
-        registration_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+        registration_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=registration_event, priority=registration_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
@@ -3561,7 +3575,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testAddSystemConfigNowEvent(self):
         # poll now event should be dispatched now
-        config_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_CONFIG_IMMEDIATE)
+        config_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=config_event, priority=config_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
@@ -3572,7 +3586,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testAddSystemPollNowEvent(self):
         # poll now event should be dispatched now
-        poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
+        poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=poll_now_event, priority=poll_now_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
@@ -3583,7 +3597,7 @@ class SystemEventTestCase(XMLTestCase):
         
     def testAddSystemPollEvent(self):
         # poll event should not be dispatched now
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         systemEvent = models.SystemEvent(system=self.system, 
             event_type=poll_event, priority=poll_event.priority,
             time_enabled=datetime.datetime.now(tz.tzutc()))
@@ -3623,8 +3637,8 @@ class SystemEventTestCase(XMLTestCase):
     def testIncompatibleEvents(self):
         def mock__dispatchSystemEvent(self, event):
             system = event.system
-            job = models.Job(job_uuid=str(random.random()),
-                job_state=models.JobState.objects.get(name='Running'),
+            job = jobmodels.Job(job_uuid=str(random.random()),
+                job_state=jobmodels.JobState.objects.get(name='Running'),
                 event_type=event.event_type)
             job.save()
             systemJob = models.SystemJob(job=job, system=system,
@@ -3722,7 +3736,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_REGISTRATION)
+            jobmodels.EventType.SYSTEM_REGISTRATION)
 
         # remove the registration event and ensure we get the on demand poll event next
         event.delete()
@@ -3730,7 +3744,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_POLL_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
 
         # remove the poll now event and ensure we get the standard poll event next
         event.delete()
@@ -3738,7 +3752,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         self.failUnlessEqual(len(events), 1)
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_POLL)
+            jobmodels.EventType.SYSTEM_POLL)
 
         # add another poll event with a higher priority but a future time 
         # and make sure we don't get it (because of the future registration time)
@@ -3768,26 +3782,26 @@ class SystemEventProcessingTestCase(XMLTestCase):
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_REGISTRATION)
+            jobmodels.EventType.SYSTEM_REGISTRATION)
         event.delete()
         
         # make sure next one is poll now event
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_POLL_IMMEDIATE)
+            jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
         self.mgr.sysMgr.processSystemEvents()
         
         # make sure the event was removed and that we have the next poll event 
         # for this system now
         try:
-            poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
+            poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
             event = models.SystemEvent.objects.get(system_event_id=event.system_event_id,
                 event_type=poll_now_event)
             assert(False) # should have failed
         except models.SystemEvent.DoesNotExist:
             pass
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         local_system = poll_event.system_events.all()[0]
         event = models.SystemEvent.objects.get(system=local_system, event_type=poll_event)
         self.failIf(event is None)
@@ -3795,7 +3809,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
     def testProcessSystemEventsNoTrigger(self):
         # make sure registration event doesn't trigger next poll event
         # start with no regular poll events
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
         models.SystemEvent.objects.filter(event_type=poll_event).delete()
         try:
             models.SystemEvent.objects.get(event_type=poll_event)
@@ -3807,7 +3821,7 @@ class SystemEventProcessingTestCase(XMLTestCase):
         events = self.mgr.sysMgr.getSystemEventsForProcessing()
         event = events[0]
         self.failUnlessEqual(event.event_type.name,
-            models.EventType.SYSTEM_REGISTRATION)
+            jobmodels.EventType.SYSTEM_REGISTRATION)
         self.mgr.sysMgr.processSystemEvents()
         
         # should have no poll events still
@@ -3818,9 +3832,9 @@ class SystemEventProcessingTestCase(XMLTestCase):
             pass
 
     def testDispatchSystemEvent(self):
-        poll_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL)
-        poll_now_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_POLL_IMMEDIATE)
-        act_event = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_REGISTRATION)
+        poll_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL)
+        poll_now_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_POLL_IMMEDIATE)
+        act_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION)
 
         system = self.newSystem(name="hey")
         system.save()
@@ -3958,7 +3972,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
 
 
     def testDispatchSystemEvent(self):
-        event = self._setupEvent(models.EventType.SYSTEM_POLL)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_POLL)
         self._dispatchEvent(event)
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
@@ -3992,7 +4006,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             ['uuid000'])
 
     def testDispatchActivateSystemEvent(self):
-        event = self._setupEvent(models.EventType.SYSTEM_REGISTRATION)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_REGISTRATION)
         self._dispatchEvent(event)
 
         cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
@@ -4028,7 +4042,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             [ 'really-unique-id' ])
 
     def testDispatchManagementInterfaceEvent(self):
-        event = self._setupEvent(models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
         self._dispatchEvent(event)
 
         mgmtIfaceParams = self.mgr.repeaterMgr.repeaterClient.ManagementInterfaceParams
@@ -4076,7 +4090,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             domain="Paris")
         self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
             credDict)
-        event = self._setupEvent(models.EventType.SYSTEM_POLL)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_POLL)
         self._dispatchEvent(event)
 
         repClient = self.mgr.repeaterMgr.repeaterClient
@@ -4107,7 +4121,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
         self.system2.credentials = self.mgr.sysMgr.marshalCredentials(
             credDict)
         toInstall = [ "group-foo=/a@b:c/1-2-3", "group-bar=/a@b:c//d@e:f/1-2.1-2.2" ]
-        event = self._setupEvent(models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE,
             eventData=toInstall)
 
         self._dispatchEvent(event)
@@ -4162,11 +4176,11 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             system=systemWmi)
 
         jobCim = self._newJob(systemCim, eventUuid1, jobUuid1,
-            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-            jobState=models.JobState.COMPLETED)
+            jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+            jobState=jobmodels.JobState.COMPLETED)
         jobWmi = self._newJob(systemWmi, eventUuid2, jobUuid2,
-            models.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-            jobState=models.JobState.COMPLETED)
+            jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
+            jobState=jobmodels.JobState.COMPLETED)
 
         repClient = self.mgr.repeaterMgr.repeaterClient
         cimParams = repClient.CimParams
@@ -4207,7 +4221,7 @@ class SystemEventProcessing2TestCase(XMLTestCase):
             [])
 
     def testUpdateCim(self):
-        event = self._setupEvent(models.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
+        event = self._setupEvent(jobmodels.EventType.SYSTEM_APPLY_UPDATE_IMMEDIATE)
         event.delete()
 
         url = "/api/inventory/systems/%s/installed_software" % self.system2.pk
@@ -4413,8 +4427,8 @@ class TargetSystemImportTest(XMLTestCase):
             target_system_id='ec2aws-002').target, None)
 
         for (targetType, targetName, userName, tsystems) in self._targets:
-            tgt = rbuildermodels.Targets.objects.get(targettype=targetType,
-                targetname=targetName)
+            tgt = rbuildermodels.Targets.objects.get(target_type=targetType,
+                target_name=targetName)
             for tsystem in tsystems:
                 # Make sure we linked this system to the target
                 system = models.System.objects.get(target=tgt,
@@ -4424,12 +4438,12 @@ class TargetSystemImportTest(XMLTestCase):
                     for x in system.target_credentials.all())
                 try:
                     tuc = rbuildermodels.TargetUserCredentials.objects.get(
-                        targetid=tgt, userid__username = userName)
+                        target_id=tgt, user_id__user_name = userName)
                 except rbuildermodels.TargetUserCredentials.DoesNotExist:
                     self.fail("System %s not linked to user %s" % (
                         system.target_system_id, userName))
                 self.failUnlessIn(
-                    tuc.targetcredentialsid.targetcredentialsid,
+                    tuc.target_credentials_id.target_credentials_id,
                     cred_ids)
                 self.failUnlessEqual([
                     x.dns_name for x in system.networks.all() ],
@@ -4484,14 +4498,14 @@ class TargetSystemImportTest(XMLTestCase):
 
     def testIsManageable(self):
         # First, make sure these two users have the same credentials
-        user1 = rbuildermodels.Users.objects.get(username='JeanValjean1')
-        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
-        user3 = rbuildermodels.Users.objects.get(username='JeanValjean3')
+        user1 = usersmodels.User.objects.get(user_name='JeanValjean1')
+        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
+        user3 = usersmodels.User.objects.get(user_name='JeanValjean3')
         self.failUnlessEqual(
             rbuildermodels.TargetUserCredentials.objects.get(
-                targetid=self.tgt3, userid=user1).targetcredentialsid.pk,
+                target_id=self.tgt3, user_id=user1).target_credentials_id.pk,
             rbuildermodels.TargetUserCredentials.objects.get(
-                targetid=self.tgt3, userid=user2).targetcredentialsid.pk,
+                target_id=self.tgt3, user_id=user2).target_credentials_id.pk,
         )
 
         system = models.System.objects.get(target_system_id='ec2aws-002')
@@ -4517,7 +4531,7 @@ class TargetSystemImportTest(XMLTestCase):
             ignoreNodes=['created_date'])
 
     def testAddLaunchedSystem(self):
-        user2 = rbuildermodels.Users.objects.get(username='JeanValjean2')
+        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
         self.mgr.user = user2
         params = dict(
             target_system_id = "target-system-id-001",
@@ -4531,14 +4545,14 @@ class TargetSystemImportTest(XMLTestCase):
         system = self.newSystem(**params)
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
-            targetName=self.tgt2.targetname,
-            targetType=self.tgt2.targettype)
+            targetName=self.tgt2.target_name,
+            targetType=self.tgt2.target_type)
         for k, v in params.items():
             self.failUnlessEqual(getattr(system, k), v)
         # Make sure we have credentials
         stc = list(system.target_credentials.all())[0]
         self.failUnlessIn(stc.credentials_id,
-            [ x.targetcredentialsid.targetcredentialsid
+            [ x.target_credentials_id.target_credentials_id
                 for x in user2.targetusercredentials_set.all() ])
         self.failUnlessEqual(system.managing_zone.name,
             models.Zone.LOCAL_ZONE)
@@ -4558,125 +4572,14 @@ class TargetSystemImportTest(XMLTestCase):
 
         system = self.mgr.addLaunchedSystem(system,
             dnsName=dnsName,
-            targetName=self.tgt2.targetname,
-            targetType=self.tgt2.targettype)
+            targetName=self.tgt2.target_name,
+            targetType=self.tgt2.target_type)
 
         self.failUnlessEqual(system.target_system_name, params['target_system_name'])
         self.failUnlessEqual(system.name, params['name'])
         self.failUnlessEqual(system.target_system_description,
             params['target_system_description'])
         self.failUnlessEqual(system.description, params['description'])
-
-class BaseJobsTest(XMLTestCase):
-    def _mock(self):
-        pass
-
-    def setUp(self):
-        XMLTestCase.setUp(self)
-        self._mock()
-
-        eventUuid1 = 'eventuuid001'
-        jobUuid1 = 'rmakeuuid001'
-        eventUuid2 = 'eventuuid002'
-        jobUuid2 = 'rmakeuuid002'
-        eventUuid3 = 'eventuuid003'
-        jobUuid3 = 'rmakeuuid003'
-        system = self._saveSystem()
-
-        self.job1 = self._newJob(system, eventUuid1, jobUuid1,
-            models.EventType.SYSTEM_REGISTRATION)
-        self.job2 = self._newJob(system, eventUuid2, jobUuid2,
-            models.EventType.SYSTEM_POLL)
-        self.job3 = self._newJob(system, eventUuid3, jobUuid3,
-            models.EventType.SYSTEM_POLL_IMMEDIATE)
-
-        self.system = system
-
-class JobsTestCase(BaseJobsTest):
-
-    def _mock(self):
-        models.Job.getRmakeJob = self.mockGetRmakeJob
-
-    def mockGetRmakeJob(self):
-        self.mockGetRmakeJob_called = True
-
-    def testGetJobs(self):
-        response = self._get('/api/inventory/jobs/')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.jobs_xml)
-
-    def testGetJobStates(self):
-        response = self._get('/api/inventory/job_states/')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.job_states_xml)
-
-    def testGetJob(self):
-        response = self._get('/api/inventory/jobs/1/')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.job_xml)
-
-    def testGetJobState(self):
-        response = self._get('/api/inventory/job_states/1/')
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.job_state_xml)
-
-    def testGetSystemJobs(self):
-        response = self._get('/api/inventory/systems/%s/jobs/' % \
-            self.system.pk)
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.systems_jobs_xml)
-
-class Jobs2TestCase(BaseJobsTest):
-    def _mock(self):
-        class DummyStatus(object):
-            def __init__(slf, **kwargs):
-                slf.__dict__.update(kwargs)
-        class DummyJob(object):
-            def __init__(slf, code, text, detail, final, completed, failed):
-                slf.status = DummyStatus(code=code, text=text, detail=detail,
-                    final=final, completed=completed, failed=failed)
-        class Dummy(object):
-            data = dict(
-                rmakeuuid001 = (101, "text 101", "detail 101", False,
-                    False, False),
-                rmakeuuid002 = (202, "text 202", "detail 202", True,
-                    True, False),
-                rmakeuuid003 = (404, "text 404", "detail 404", True,
-                    False, True),
-            )
-            @staticmethod
-            def mockGetRmakeJob(slf):
-                jobUuid = slf.job_uuid
-                code, text, detail, final, completed, failed = Dummy.data[jobUuid]
-                j = DummyJob(code, text, detail, final, completed, failed)
-                return j
-        self.mock(models.Job, 'getRmakeJob', Dummy.mockGetRmakeJob)
-
-    def testGetJobs(self):
-        # Mark job2 as succeeded, to make sure the status doesn't get updated
-        # from the rmake job again (this is a stretch)
-        completedState = models.Cache.get(models.JobState,
-            name=models.JobState.COMPLETED)
-        self.job2.job_state = completedState
-        self.job2.status_code = 299
-        self.job2.status_text = "text 299"
-        self.job2.status_detail = "no such luck"
-        self.job2.save()
-
-        response = self._get('/api/inventory/jobs/')
-        self.assertEquals(response.status_code, 200)
-
-        obj = xobj.parse(response.content)
-        jobs = obj.jobs.job
-
-        self.failUnlessEqual([ str(x.job_state) for x in jobs ],
-            [models.JobState.RUNNING, models.JobState.COMPLETED,
-            models.JobState.FAILED ])
-
-        self.failUnlessEqual([ int(x.status_code) for x in jobs ],
-            [101, 299, 404])
-        self.failUnlessEqual([ x.status_text for x in jobs ],
-            ["text 101", "text 299", "text 404"])
 
 class CollectionTest(XMLTestCase):
     fixtures = ['system_collection']
