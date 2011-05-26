@@ -28,7 +28,8 @@ class Project(modellib.XObjIdModel):
     class Meta:
         db_table = u"projects"
         
-    _xobj_hidden_accessors = set(['membership', 'package_set', 'platforms'])
+    _xobj_hidden_accessors = set(['membership', 'package_set', 
+        'platform_set'])
     view_name = "Project"
     url_key = ["short_name"]
     
