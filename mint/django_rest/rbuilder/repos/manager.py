@@ -5,11 +5,12 @@
 # All rights reserved.
 #
 
-import StringIO
+from StringIO import StringIO
 
 from django.db import connection
 
 from conary import changelog
+from conary.conaryclient import filetypes
 from conary.repository import errors as reposerrors
 
 from mint import helperfuncs
@@ -247,22 +248,22 @@ class ReposManager(basemanager.BaseManager):
 
     def getRepositoryForProject(self, project):
         projectInfo = {}
-        projectInfo["projectId"] = project.pk
-        projectInfo["shortname"] = project.short_name
-        projectInfo["fqdn"] = project.repository_hostname
-        projectInfo["external"] = project.external
-        projectInfo["hidden"] = project.hidden
-        projectInfo["commitEmail"] = project.commit_email
-        projectInfo["database"] = project.database
+        projectInfo["projectId"] = str(project.pk)
+        projectInfo["shortname"] = str(project.short_name)
+        projectInfo["fqdn"] = str(project.repository_hostname)
+        projectInfo["external"] = str(project.external)
+        projectInfo["hidden"] = str(project.hidden)
+        projectInfo["commitEmail"] = str(project.commit_email)
+        projectInfo["database"] = str(project.database)
 
         try:
             label = models.Label.objects.get(project=project)
             projectInfo["localMirror"] = 1
-            projectInfo["url"] = label.url
-            projectInfo["authType"] = label.auth_type
-            projectInfo["username"] = label.user_name
-            projectInfo["entitlement"] = label.entitlement
-            projectInfo["password"] = label.password
+            projectInfo["url"] = str(label.url)
+            projectInfo["authType"] = str(label.auth_type)
+            projectInfo["username"] = str(label.user_name)
+            projectInfo["entitlement"] = str(label.entitlement)
+            projectInfo["password"] = str(label.password)
         except models.Label.DoesNotExist:
             projectInfo["localMirror"] = None
             projectInfo["url"] = None
@@ -273,6 +274,12 @@ class ReposManager(basemanager.BaseManager):
 
         return reposdbmgr.RepositoryHandle(self, projectInfo)
         
+
+    def getRepositoryFromFQDN(self, fqdn):
+        project = projectmodels.Project.objects.get(repository_hostname=fqdn)
+        return self.getRepositoryForProject(project)
+
+    @exposed
     def createSourceTrove(self, fqdn, trovename, buildLabel, 
                           upstreamVersion, streamMap, changeLogMessage,
                           factoryName=None, admin=False, metadata=None):
@@ -297,7 +304,7 @@ class ReposManager(basemanager.BaseManager):
             if hasattr(filestream, 'getContents'):
                 fileobj = filestream
             else:
-                fileobj = self.RegularFile(contents=filestream,
+                fileobj = filetypes.RegularFile(contents=filestream,
                                            config=True)
 
             pathDict[filename] = fileobj
@@ -339,7 +346,7 @@ class ReposManager(basemanager.BaseManager):
         built-in conary proxy. Additionally, site admins will have admin access
         to any repository.
         """
-        if self.auth.isAdmin:
+        if self.auth.admin:
             userId = reposdbmgr.ANY_WRITER
         elif self.auth.userId < 0:
             userId = reposdbmgr.ANONYMOUS

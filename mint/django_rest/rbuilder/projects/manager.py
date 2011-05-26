@@ -265,9 +265,9 @@ class ProjectManager(basemanager.BaseManager):
                             groupName=groupName,
                             recipeClassName=className,
                             version=projectVersion.name) + '\n')
-            self.mgr.createSourceTrove(project.repository_hostname, 
-                groupName, label, projectVersion.name,
-                {'%s.recipe' % groupName: recipeStr},
+            self.mgr.createSourceTrove(str(project.repository_hostname),
+                str(groupName), str(label), str(projectVersion.name),
+                {'%s.recipe' % str(groupName): recipeStr},
                 'Initial appliance image group template')
 
         return projectVersion
