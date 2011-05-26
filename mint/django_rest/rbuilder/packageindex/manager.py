@@ -7,7 +7,7 @@
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.manager.basemanager import exposed
-from mint.django_rest.rbuilder.packages import models
+from mint.django_rest.rbuilder.packageindex import models
 
 class PackageManager(basemanager.BaseManager):
 

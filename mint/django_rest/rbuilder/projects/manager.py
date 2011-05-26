@@ -100,17 +100,22 @@ class ProjectManager(basemanager.BaseManager):
         if self.user:
             project.creator = self.user
 
+        if not project.database:
+            project.database = self.cfg.defaultDatabase
+
         # Save the project, we need the pk populated to create the repository
         project.save()
 
         # Create project repository
-        self.reposMgr().createRepository(project.pk)
+        self.mgr.createRepositoryForProject(project)
 
         # Add current user as project owner
         if self.user:
             member = models.Member(project=project, user=self.user, 
                 level=userlevels.OWNER)
             member.save()
+
+        self.restDb.publisher.notify('ProductCreated', project.project_id)
 
         return project
 
@@ -217,6 +222,11 @@ class ProjectManager(basemanager.BaseManager):
         version = models.ProjectVersion.objects.get(pk=versionId)
         return version
 
+    def setProductVersionDefinition(self, prodDef):
+        cclient = self.mgr.getUserClient()
+        prodDef.saveToRepository(cclient,
+                'Product Definition commit from rBuilder\n')
+
     @exposed
     def addProjectVersion(self, shortName, projectVersion):
         project = models.Project.objects.get(short_name=shortName)
@@ -246,6 +256,8 @@ class ProjectManager(basemanager.BaseManager):
         projectVersion.project = project
         projectVersion.save()
 
+        self.setProductVersionDefinition(prodDef)
+
         # TODO: get the correct platformLabel
         platformLabel = None
 
@@ -260,9 +272,9 @@ class ProjectManager(basemanager.BaseManager):
                             groupName=groupName,
                             recipeClassName=className,
                             version=projectVersion.name) + '\n')
-            self.reposMgr().createSourceTrove(project.repository_hostname, 
-                groupName, label, projectVersion.name,
-                {'%s.recipe' % groupName: recipeStr},
+            self.mgr.createSourceTrove(str(project.repository_hostname),
+                str(groupName), str(label), str(projectVersion.name),
+                {'%s.recipe' % str(groupName): recipeStr},
                 'Initial appliance image group template')
 
         return projectVersion
@@ -333,7 +345,7 @@ class ProjectManager(basemanager.BaseManager):
             # save it in the db?
             dbStage = models.Stage(name=str(stage.name),
                  label=str(pd.getLabelForStage(stage.name)),
-                 hostname=project.hostname, project_version=projectVersion,
-                 Promotable=promotable)
+                 project_version=projectVersion,
+                 promotable=promotable)
             stages.stage.append(dbStage)
         return stages
