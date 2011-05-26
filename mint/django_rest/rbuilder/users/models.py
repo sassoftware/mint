@@ -75,6 +75,9 @@ class User(modellib.XObjIdModel):
     def __unicode__(self):
         return self.user_name
 
+    def serialize(self, request):
+        deferredUser = User.objects.defer("salt", "passwd").get(pk=self.user_id)
+        return modellib.XObjIdModel.serialize(deferredUser, request)
         
 class UserGroupMembers(modellib.Collection):
     list_fields = ['user_group_member']

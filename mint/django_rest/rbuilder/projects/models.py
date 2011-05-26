@@ -185,7 +185,8 @@ class Release(modellib.XObjModel):
         tag='releases')
     view_name = "ProjectRelease"
      
-    release_id = models.AutoField(primary_key=True)
+    release_id = models.AutoField(primary_key=True,
+        db_column='pubreleaseid')
     project = modellib.DeferredForeignKey(Project, db_column='projectid', 
         related_name='releases')
     name = models.CharField(max_length=255, blank=True, default='')
