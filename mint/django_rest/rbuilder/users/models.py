@@ -53,7 +53,6 @@ class User(modellib.XObjIdModel):
     display_email = models.TextField(db_column='displayemail')
     created_date = models.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
     modified_date = models.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
-    accessed_date = models.DecimalField(max_digits=14, decimal_places=3)
     active = models.SmallIntegerField()
     blurb = models.TextField()
     user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
