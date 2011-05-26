@@ -126,6 +126,14 @@ class ProjectManager(basemanager.BaseManager):
         oldProject = models.Project.objects.get(hostname=project.hostname)
         if project.hidden == 0 and oldProject.hidden == 1:
             self.restDb.publisher.notify('ProductUnhidden', oldProject.pk)
+            self.mgr.addUser('.'.join((oldproduct.hostname,
+                                            oldproduct.domain_name)), 
+                                  'anonymous',
+                                  password='anonymous',
+                                  level=userlevels.USER)   
+            self.publisher.notify('ProductUnhidden', oldproduct.id)
+            self.mgr.generateConaryrcFile()
+
 
         project.save()
         self.mgr.generateConaryrcFile()
@@ -164,8 +172,8 @@ class ProjectManager(basemanager.BaseManager):
 
             # Edit repository perms for non-external projects
             if not project.external:
-                self.reposMgr().editUser(project.repository_hostname, 
-                    user.username, level)
+                repos = self.mgr.getRepositoryForProject(project)
+                self.mgr.editUser(repos, user.username, level)
 
             # Send notification
             if notify:
@@ -179,8 +187,8 @@ class ProjectManager(basemanager.BaseManager):
 
             # Add repository perms for non-external projects
             if not project.external:
-                self.reposMgr().addUserByMd5(project.repository_hostname, 
-                    user.username,
+                repos = self.mgr.getRepositoryForProject(project)
+                self.mgr.addUserByMd5(repos, user.username,
                     user.salt, user.password, level)
 
             # Send notification

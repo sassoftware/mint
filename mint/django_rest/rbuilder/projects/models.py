@@ -28,7 +28,7 @@ class Project(modellib.XObjIdModel):
     class Meta:
         db_table = u"projects"
         
-    _xobj_hidden_accessors = set(['membership', 'package_set'])
+    _xobj_hidden_accessors = set(['membership', 'package_set', 'platforms'])
     view_name = "Project"
     url_key = ["short_name"]
     
@@ -78,12 +78,24 @@ class Project(modellib.XObjIdModel):
             if member:
                 role = member[0].level
                 xobjModel.role = role
+        xobjModel.is_appliance = bool(self.is_appliance)
+        xobjModel.hidden = bool(self.hidden)
+        xobjModel.external = bool(self.external)
         return xobjModel
+
+    def setIsAppliance(self):
+        if self.project_type == "Appliance" or \
+           self.project_type == "PlatformFoundation":
+            self.is_appliance = 1
+        else:
+            self.is_appliance = 0
 
     def save(self, *args, **kwargs):
         # Default project type to Appliance
         if self.project_type is None:
             self.project_type = "Appliance"
+
+        self.setIsAppliance()
 
         if self.time_created is None:
             self.time_created = str(time.time())
