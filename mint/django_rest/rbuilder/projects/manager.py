@@ -126,12 +126,12 @@ class ProjectManager(basemanager.BaseManager):
         oldProject = models.Project.objects.get(hostname=project.hostname)
         if project.hidden == 0 and oldProject.hidden == 1:
             self.restDb.publisher.notify('ProductUnhidden', oldProject.pk)
-            self.mgr.addUser('.'.join((oldproduct.hostname,
-                                            oldproduct.domain_name)), 
+            self.mgr.addUser('.'.join((oldProject.hostname,
+                                            oldProject.domain_name)), 
                                   'anonymous',
                                   password='anonymous',
                                   level=userlevels.USER)   
-            self.publisher.notify('ProductUnhidden', oldproduct.id)
+            self.publisher.notify('ProductUnhidden', oldProject.id)
             self.mgr.generateConaryrcFile()
 
 
