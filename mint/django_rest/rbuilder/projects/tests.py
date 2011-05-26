@@ -10,6 +10,8 @@ from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.projects import manager # pyflakes=ignore
 from mint.django_rest.rbuilder.projects import models # pyflakes=ignore
 from mint.django_rest.rbuilder.projects import testsxml # pyflakes=ignore
+from mint.django_rest.rbuilder.repos import manager as reposmanager
+from mint.django_rest.rbuilder.manager import basemanager
 
 from xobj import xobj
 
@@ -20,7 +22,11 @@ class ProjectsTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        mock.mock(manager.ProjectManager, "reposMgr")
+        mock.mock(reposmanager.ReposManager, "createRepositoryForProject")
+        mock.mock(reposmanager.ReposManager, "createSourceTrove")
+        mock.mock(reposmanager.ReposManager, "generateConaryrcFile")
+        mock.mock(basemanager.BaseRbuilderManager, "restDb")
+        mock.mock(manager.ProjectManager, "setProductVersionDefinition")
 
     def testGetProjectsAdmin(self):
         response = self._get('/api/projects/',
