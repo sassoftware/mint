@@ -145,6 +145,16 @@ class ProjectVersion(modellib.XObjIdModel):
             self.time_created = str(time.time())
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
+class Stages(modellib.Collection):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(
+                tag = "stages")
+    view_name = "Stages"
+    list_fields = ["stage"]
+    stage = []
+
 class Stage(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_stage'
@@ -164,6 +174,7 @@ class Stage(modellib.XObjIdModel):
     def serialize(self, request=None):
         xobj_model = modellib.XObjIdModel.serialize(self, request)
         xobj_model._xobj.text = self.name
+        xobj_model.hostname = self.project_version.project.hostname
         return xobj_model
 
 class Release(modellib.XObjModel):

@@ -345,7 +345,7 @@ class ProjectManager(basemanager.BaseManager):
             # save it in the db?
             dbStage = models.Stage(name=str(stage.name),
                  label=str(pd.getLabelForStage(stage.name)),
-                 hostname=project.hostname, project_version=projectVersion,
-                 Promotable=promotable)
+                 project_version=projectVersion,
+                 promotable=promotable)
             stages.stage.append(dbStage)
         return stages
