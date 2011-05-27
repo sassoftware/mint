@@ -7,8 +7,8 @@
     <field type="CharField" name="passwd">01e4b0db27f22eedd63dfeff68166228</field>
     <field type="CharField" name="email">JeanValjean1@rpath.com</field>
     <field type="TextField" name="display_email"/>
-    <field type="DecimalField" name="time_created">1283529921.387</field>
-    <field type="DecimalField" name="time_accessed">1283530359.041</field>
+    <field type="DecimalField" name="created_date">1283529921.387</field>
+    <field type="DecimalField" name="modified_date">1283530359.041</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
   </object>
@@ -19,8 +19,8 @@
     <field type="CharField" name="passwd">01e4b0db27f22eedd63dfeff68166228</field>
     <field type="CharField" name="email">JeanValjean2@rpath.com</field>
     <field type="TextField" name="display_email"/>
-    <field type="DecimalField" name="time_created">1283529921.387</field>
-    <field type="DecimalField" name="time_accessed">1283530359.041</field>
+    <field type="DecimalField" name="created_date">1283529921.387</field>
+    <field type="DecimalField" name="modified_date">1283530359.041</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
   </object>
@@ -31,8 +31,8 @@
     <field type="CharField" name="passwd">01e4b0db27f22eedd63dfeff68166228</field>
     <field type="CharField" name="email">JeanValjean3@rpath.com</field>
     <field type="TextField" name="display_email"/>
-    <field type="DecimalField" name="time_created">1283529921.387</field>
-    <field type="DecimalField" name="time_accessed">1283530359.041</field>
+    <field type="DecimalField" name="created_date">1283529921.387</field>
+    <field type="DecimalField" name="modified_date">1283530359.041</field>
     <field type="SmallIntegerField" name="active">1</field>
     <field type="TextField" name="blurb">null</field>
   </object>
