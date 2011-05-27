@@ -371,7 +371,10 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         mock.mock(proddef.ProductDefinition, 'saveToRepository')
         mock.mock(proddef.ProductDefinition, 'loadFromRepository')
         mock.mock(proddef.ProductDefinition, 'rebase')
-        db.rebaseProductVersionPlatform('foo', '1', 'conary.rpath.com@rpl:1') 
+        platformVersion = models.PlatformVersion(
+            label='conary.rpath.com@rpl:1',
+            name='rebase-to-latest-on-versionless-platform')
+        db.rebaseProductVersionPlatform('foo', '1', platformVersion)
         proddef.ProductDefinition.rebase._mock.assertCalled(cclient,
                                 'conary.rpath.com@rpl:1')
         proddef.ProductDefinition.saveToRepository._mock.assertCalled(cclient,
