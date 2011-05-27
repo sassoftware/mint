@@ -12,8 +12,8 @@
     <field type="CharField" name="project_type">Appliance</field>
     <field type="CharField" name="commit_email">admin@rpath.com</field>
     <field type="SmallIntegerField" name="backup_external">0</field>
-    <field type="DecimalField" name="time_created">1297714268.362</field>
-    <field type="DecimalField" name="time_modified">1297714268.362</field>
+    <field type="DecimalField" name="created_date">1297714268.362</field>
+    <field type="DecimalField" name="modified_date">1297714268.362</field>
     <field type="SmallIntegerField" name="hidden">0</field>
     <field to="users.user" name="creator" rel="ManyToOneRel">1</field>
   </object>
@@ -22,14 +22,14 @@
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="created_date">0</field>
   </object>
   <object pk="3" model="projects.projectversion">
     <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">2</field>
     <field type="TextField" name="description">2</field>
-    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="created_date">0</field>
   </object>
   <object pk="1" model="projects.stage">
     <field to="projects.projectversion" name="project_version" rel="ManyToOneRel">2</field>
@@ -74,8 +74,8 @@
     <field type="CharField" name="project_type">Appliance</field>
     <field type="CharField" name="commit_email">admin@rpath.com</field>
     <field type="SmallIntegerField" name="backup_external">0</field>
-    <field type="DecimalField" name="time_created">1297714268.362</field>
-    <field type="DecimalField" name="time_modified">1297714268.362</field>
+    <field type="DecimalField" name="created_date">1297714268.362</field>
+    <field type="DecimalField" name="modified_date">1297714268.362</field>
     <field type="SmallIntegerField" name="hidden">1</field>
     <field to="users.user" name="creator" rel="ManyToOneRel">1</field>
   </object>
@@ -84,7 +84,7 @@
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="created_date">0</field>
   </object>
   <object pk="7" model="projects.stage">
     <field to="projects.projectversion" name="project_version" rel="ManyToOneRel">4</field>

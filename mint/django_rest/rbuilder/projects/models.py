@@ -4,8 +4,10 @@
 # All Rights Reserved
 #
 
+import datetime
 import sys
 import time
+from dateutil import tz
 
 from django.db import models
 
@@ -51,9 +53,9 @@ class Project(modellib.XObjIdModel):
         db_column="commitemail")
     backup_external = models.SmallIntegerField(default=0,
         db_column="backupexternal")
-    time_created = models.DecimalField(max_digits=14, decimal_places=3,
+    created_date = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timecreated")
-    time_modified = models.DecimalField(max_digits=14, decimal_places=3,
+    modified_date = models.DecimalField(max_digits=14, decimal_places=3,
         blank=True, db_column="timemodified")
     hidden = models.SmallIntegerField(default=0)
     creator = models.ForeignKey(usermodels.User,
@@ -82,6 +84,12 @@ class Project(modellib.XObjIdModel):
         xobjModel.is_appliance = bool(self.is_appliance)
         xobjModel.hidden = bool(self.hidden)
         xobjModel.external = bool(self.external)
+
+        # Convert timestamp fields in the database to our standard UTC format
+        xobjModel.created_date = str(datetime.datetime.fromtimestamp(
+            xobjModel.created_date, tz.tzutc()))
+        xobjModel.modified_date = str(datetime.datetime.fromtimestamp(
+            xobjModel.modified_date, tz.tzutc()))
         return xobjModel
 
     def setIsAppliance(self):
@@ -98,10 +106,10 @@ class Project(modellib.XObjIdModel):
 
         self.setIsAppliance()
 
-        if self.time_created is None:
-            self.time_created = str(time.time())
-        if self.time_modified is None:
-            self.time_modified = str(time.time())
+        if self.created_date is None:
+            self.created_date = str(time.time())
+        if self.modified_date is None:
+            self.modified_date = str(time.time())
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
 class Members(modellib.Collection):
@@ -147,16 +155,23 @@ class ProjectVersion(modellib.XObjIdModel):
     namespace = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     description = models.TextField()
-    time_created = models.DecimalField(max_digits=14, decimal_places=3,
+    created_date = models.DecimalField(max_digits=14, decimal_places=3,
         db_column="timecreated")
 
     def __unicode__(self):
         return self.name
         
     def save(self, *args, **kwargs):
-        if self.time_created is None:
-            self.time_created = str(time.time())
+        if self.created_date is None:
+            self.created_date = str(time.time())
         return modellib.XObjIdModel.save(self, *args, **kwargs)
+
+    def serialize(self, request=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
+        # Convert timestamp fields in the database to our standard UTC format
+        xobjModel.created_date = str(datetime.datetime.fromtimestamp(
+            xobjModel.created_date, tz.tzutc()))
+        return xobjModel
 
 class Stages(modellib.Collection):
     class Meta:

@@ -730,8 +730,8 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="CharField" name="project_type">1</field>
     <field type="CharField" name="commit_email">a@a.com</field>
     <field type="SmallIntegerField" name="backup_external">0</field>
-    <field type="DecimalField" name="time_created">0</field>
-    <field type="DecimalField" name="time_modified">0</field>
+    <field type="DecimalField" name="created_date">0</field>
+    <field type="DecimalField" name="modified_date">0</field>
     <field type="SmallIntegerField" name="hidden">0</field>
     <field to="users.User" name="creator" rel="ManyToOneRel">1</field>
   </object>
@@ -740,6 +740,6 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
     <field type="CharField" name="namespace">rpath</field>
     <field type="CharField" name="name">1</field>
     <field type="TextField" name="description">1</field>
-    <field type="DecimalField" name="time_created">0</field>
+    <field type="DecimalField" name="created_date">0</field>
   </object>
 </django-objects>
