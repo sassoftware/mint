@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 2)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2017,7 +2017,6 @@ def _createQuerySetSchema(db):
         name="Inactive Systems")
     physicalQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="Physical Systems")
-
     allUserQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Users")
 

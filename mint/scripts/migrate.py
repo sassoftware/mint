@@ -2886,7 +2886,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 1)
+    Version = (58, 2)
 
     def migrate(self):
         return True
@@ -2910,6 +2910,43 @@ class MigrateTo_58(SchemaMigration):
         """)
 
         return True
+
+    def migrate2(self):
+        cu = self.db.cursor()
+        schema._addTableRows(db, "querysets_queryset", "name", [
+        dict(name="All Users", resource_type='user',
+              description='All users',
+              created_date=str(datetime.datetime.now(tz.tzutc())),
+              modified_date=str(datetime.datetime.now(tz.tzutc())),
+              can_modify=False)
+        ])
+        
+        schema._addTableRows(db, "querysets_filterentry",
+            'filter_entry_id',
+            [
+             dict(field='user_name', operator='IS_NULL', value="False"),
+             ],
+            ['field', 'operator', 'value'])
+        
+        allUserFiltId = schema._getRowPk(db, "querysets_filterentry", 'filter_entry_id',
+                field="user_name", operator='IS_NULL', value="False")
+
+        allUserQSId = schema._getRowPk(db, "querysets_queryset", "query_set_id", 
+            name="All Users")
+
+        changed |= schema._addTableRows(db, "querysets_querytag", "name",
+             [dict(query_set_id=allUserQSId, name="query-tag-all_users-5"),
+            ])
+
+        changed |= schema._addTableRows(db, "querysets_queryset_filter_entries",
+            'id',
+            [
+             dict(queryset_id=allUserQSId, filterentry_id=allUserFiltId),
+             ],
+            ['queryset_id', 'filterentry_id'])
+
+        return True
+        
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
