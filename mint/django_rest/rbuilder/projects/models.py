@@ -29,7 +29,7 @@ class Project(modellib.XObjIdModel):
         db_table = u"projects"
         
     _xobj_hidden_accessors = set(['membership', 'package_set', 
-        'platform_set'])
+        'platform_set', 'productplatform_set', 'abstractplatform_set'])
     view_name = "Project"
     url_key = ["short_name"]
     
