@@ -12,7 +12,6 @@ import sys
 class GlobalNotices(modellib.Collection):
     class Meta:
         abstract = True
-        db_table = 'notices_globalnotices'
         
     list_fields = ['global_notice']
     _xobj = xobj.XObjMetadata(tag='global_notices')

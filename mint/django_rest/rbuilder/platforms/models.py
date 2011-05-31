@@ -39,7 +39,8 @@ class AbstractPlatform(modellib.XObjIdModel):
     # both of platform_version and platform_versions are in original model for platform as URLFields,
     # not sure if both are necessary and what the URLFields translate to
     # platform_version = modellib.DeferredForeignKey('PlatformVersion')
-    platform_versions = modellib.DeferredManyToManyField('PlatformVersion')
+    # platform_versions = modellib.DeferredManyToManyField('PlatformVersion')
+    platform_versions = modellib.DeferredForeignKey('PlatformVersion')
     project = models.ForeignKey(projectsmodels.Project)
 
     def serialize(self, request=None):
@@ -116,17 +117,20 @@ class PlatformLoad(modellib.XObjIdModel):
 class PlatformBuildTemplates(modellib.Collection):
     class Meta:
         abstract = True
+        
+    list_fields = ['platform_build_template']
     
     
 class PlatformBuildTemplate(modellib.XObjIdModel):
-    pass
+    class Meta:
+        abstract = False
     
 
 class Sources(modellib.Collection):
     class Meta:
         abstract = True
         
-    list_fields = ['source']
+    list_fields = ['content_source']
     
     
 class AbstractSource(modellib.XObjIdModel):
@@ -139,7 +143,7 @@ class AbstractSource(modellib.XObjIdModel):
     order_index = fields.IntegerField()
     content_source_type = models.CharField(max_length=1026)
     enabled = fields.BooleanField()
-    content_source_status = models.ForeignKey('SourceStatus', null=True)
+    # content_source_status = models.ForeignKey('SourceStatus', null=True)
     # resource_errors = fields.UrlField() # what the heck does this go to
     
     def serialize(self, request=None):
@@ -155,7 +159,7 @@ class PlatformContentSource(modellib.XObjIdModel):
     content_source = models.ForeignKey('ContentSource')
    
 
-class NuSource(modellib.XObjIdModel):
+class NuSource(AbstractSource):
     class Meta:
         abstract = True
     
@@ -163,7 +167,7 @@ class NuSource(modellib.XObjIdModel):
     password = fields.ProtectedField()
     
 
-class SmtSource(modellib.XObjIdModel):
+class SmtSource(AbstractSource):
     class Meta:
         abstract = True
     user_name = fields.CharField(max_length=1026)
@@ -171,7 +175,7 @@ class SmtSource(modellib.XObjIdModel):
     source_url = fields.CharField(max_length=1026)
     
     
-class RhnSource(modellib.XObjIdModel):
+class RhnSource(AbstractSource):
     class Meta:
         abstract = True
     
@@ -179,7 +183,7 @@ class RhnSource(modellib.XObjIdModel):
     password = fields.ProtectedField()
     
     
-class SatelliteSource(modellib.XObjIdModel):
+class SatelliteSource(AbstractSource):
     class Meta:
         abstract = True
         

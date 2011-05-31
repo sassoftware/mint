@@ -2945,7 +2945,8 @@ class MigrateTo_58(SchemaMigration):
             ['queryset_id', 'filterentry_id'])
 
         return True
-        
+    
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
