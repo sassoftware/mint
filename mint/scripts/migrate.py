@@ -2980,7 +2980,7 @@ class MigrateTo_58(SchemaMigration):
              ],
             ['queryset_id', 'filterentry_id'])
 
-    def migrate3(self):
+    def migrate4(self):
         schema._addTableRows(self.db, "querysets_queryset", "name", [
         dict(name="All Global Notices", resource_type='global_notice',
               description='All global notices',
