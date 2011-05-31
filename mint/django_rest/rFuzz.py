@@ -6,25 +6,26 @@ import inspect
 def fuzzIt(module):
     for model in module.__dict__.values():
         if inspect.isclass(model):
-            # Fuzzer(model)
             try:
                 Fuzzer(model)
-                print 'Success'
+                print 'Success: %s' % model.__name__
+                print '\n'
             except Exception, e:
-                print 'Could not fuzz data'
+                print 'Could not fuzz data %s' % model.__name__
                 print e
-            print '\n'
+    
+    print '\n'
+            
     for model in Fuzzer.REGISTRY:
         try:
             if not model.Meta.abstract:
                 model.save()
-                print 'Saved'
+                print 'Saved: %s' % model.__name__
             else:
                 print 'Model was abstract, skipping save'
         except Exception, e:
-            print 'Could not save data'
+            print 'Could not save data: %s' % model.__name__ 
             print e
-        print '\n'
 
 
 class Fuzzer(object):
@@ -39,7 +40,6 @@ class Fuzzer(object):
         self.skip_fields = skip_fields if skip_fields else []
         self.m = model()
         if self.m not in Fuzzer.REGISTRY:
-            # import pdb; pdb.set_trace()
             self.fields = dict((f.name, f) for f in model._meta.fields)
             for fname, field in self.fields.items():
                 if isinstance(field, models.ForeignKey):
@@ -47,7 +47,10 @@ class Fuzzer(object):
                         continue
                 elif isinstance(field, models.AutoField):
                     continue
+                elif self.m.Meta.abstract:
+                    continue
                 data = self.dataFuzzer(field)
+                import pdb; pdb.set_trace()
                 setattr(self.m, fname, data)
             Fuzzer.REGISTRY.add(self.m)
         
