@@ -40,6 +40,7 @@ class Users(modellib.Collection):
         
     _xobj = xobj.XObjMetadata(tag='users')
     list_fields = ['user']
+    view_name = 'Users'
 
 
 class User(modellib.XObjIdModel):
