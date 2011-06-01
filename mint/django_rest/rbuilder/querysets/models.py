@@ -12,6 +12,7 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
+from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.querysets import errors
 
 from xobj import xobj
@@ -250,6 +251,30 @@ class SystemTag(modellib.XObjIdModel):
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
          
+         
+class UserTag(modellib.XObjIdModel):
+    class Meta:
+        unique_together = (('user', 'query_tag', 'inclusion_method'),)
+        
+    _xobj = xobj.XObjMetadata(tag='user_tag')
+    
+    user_tag_id = models.AutoField(primary_key=True)
+    user = modellib.ForeignKey(usersmodels.User, related_name='user_tags')
+    query_tag = modellib.ForeignKey(QueryTag, related_name='user_tags', text_field='name')
+    inclusion_method = modellib.SerializedForeignKey(InclusionMethod, related_name='user_tags')
+    
+    load_fields = [user, query_tag, inclusion_method]
+    
+    def get_absolute_url(self, *args, **kwargs):
+        self._parents = [self.user, self]
+        return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
+        
+    def serialize(self, request=None, values=None):
+        xobjModel = modellib.XObjIdModel.serialize(self, reuqest)
+        querySetHref = self.query_tag.query_set.get_absolute_url(request)
+        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
+        return xobjModel
+
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):

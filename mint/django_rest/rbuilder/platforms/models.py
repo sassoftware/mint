@@ -143,7 +143,7 @@ class AbstractSource(modellib.XObjIdModel):
     order_index = fields.IntegerField()
     content_source_type = models.CharField(max_length=1026)
     enabled = fields.BooleanField()
-    # content_source_status = models.ForeignKey('SourceStatus', null=True)
+    content_source_status = models.ForeignKey('SourceStatus', null=True)
     # resource_errors = fields.UrlField() # what the heck does this go to
     
     def serialize(self, request=None):
@@ -252,6 +252,7 @@ class SourceStatus(AbstractStatus):
     class Meta:
         abstract = False
     
+    content_source_status_id = models.AutoField(primary_key=True)
     content_source_type = modellib.ForeignKey('ContentSourceType')
     short_name = fields.CharField(max_length=1026, unique=True)
 
@@ -265,7 +266,7 @@ class PlatformContentErrors(modellib.Collection):
 
 class PlatformContentError(modellib.XObjModel):
     content_source_type = modellib.ForeignKey('ContentSourceType')
-    short_name = fields.CharField(max_length=1026)
+    short_name = fields.CharField(max_length=1026, unique=True)
     error_id = fields.IntegerField()
 
 

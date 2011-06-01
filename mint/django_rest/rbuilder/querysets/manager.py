@@ -120,8 +120,8 @@ class QuerySetManager(basemanager.BaseManager):
     @exposed
     def getQuerySetAllResult(self, querySetId):
         querySet = models.QuerySet.objects.get(pk=querySetId)
-        resourceCollection = self.getResourceCollection(querySet, 
-            self._getQuerySetAllResult(querySet))
+        qsAllResult = self._getQuerySetAllResult(querySet)
+        resourceCollection = self.getResourceCollection(querySet, qsAllResult)
         resourceCollection.view_name = "QuerySetAllResult"
         return resourceCollection
 
