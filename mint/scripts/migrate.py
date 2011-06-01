@@ -2944,7 +2944,7 @@ class MigrateTo_58(SchemaMigration):
              ],
             ['queryset_id', 'filterentry_id'])
 
-        schema.createTable(db, 'querysets_usertag', """
+        schema.createTable(self.db, 'querysets_usertag', """
             CREATE TABLE "querysets_usertag" (
                 "user_tag_id" %(PRIMARYKEY)s,
                 "user_id" INTEGER
