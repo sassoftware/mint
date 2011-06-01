@@ -83,6 +83,9 @@ class User(modellib.XObjIdModel):
         return modellib.XObjIdModel.serialize(deferredUser, request)
         
 class UserGroupMembers(modellib.Collection):
+    class Meta:
+        abstract = True
+        
     list_fields = ['user_group_member']
 
     _xobj = xobj.XObjMetadata(tag='user_group_members')

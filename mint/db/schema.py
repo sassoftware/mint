@@ -2120,6 +2120,25 @@ def _createQuerySetSchema(db):
             UNIQUE ("system_id", "query_tag_id", "inclusion_method_id")
         )""")
 
+    changed |= createTable(db, 'querysets_usertag', """
+        CREATE TABLE "querysets_usertag" (
+            "user_tag_id" %(PRIMARYKEY)s,
+            "user_id" INTEGER
+                REFERENCES "user" ("user_name")
+                ON DELETE CASCADE
+                NOT NULL,
+            "query_tag_id" INTEGER
+                REFERENCES "querysets_querytag" ("query_tag_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            "inclusion_method_id" INTEGER
+                REFERENCES "querysets_inclusionmethod" ("inclusion_method_id")
+                ON DELETE CASCADE
+                NOT NULL,
+            UNIQUE ("user_id", "query_tag_id", "inclusion_method_id")
+        )""")
+
+
     changed |= createTable(db, "querysets_queryset_filter_entries", """
         CREATE TABLE "querysets_queryset_filter_entries" (
             "id" %(PRIMARYKEY)s,
