@@ -1,13 +1,10 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) 2011 rPath, Inc.
 #
 
 import base64
 import errno
 import hmac
-import inspect
 import logging
 import os
 import re
@@ -17,8 +14,6 @@ import stat
 import sys
 import time
 import tempfile
-import urllib
-import weakref
 import StringIO
 
 from mint import buildtypes
@@ -33,7 +28,6 @@ from mint import users
 from mint.lib import data
 from mint.lib import database
 from mint.lib import maillib
-from mint.lib import persistentcache
 from mint.lib import profile
 from mint.lib import siteauth
 from mint.lib.mintutils import ArgFiller
@@ -66,9 +60,11 @@ from conary import versions
 from conary.conaryclient import filetypes
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
+from conary.lib import networking as cny_net
 from conary.lib import sha1helper
 from conary.lib import util
 from conary.lib.http import http_error
+from conary.lib.http import request as cny_req
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
@@ -725,14 +721,18 @@ class MintServer(object):
             # Connect to the rUS via XML-RPC
             urlhostname = hostname
             if ':' not in urlhostname:
-                urlhostname += ':8003'
+                hostport = cny_net.HostPort(urlhostname, 8003)
                 protocol = 'https'
             else:
                 # Hack to allow testsuite, which passes 'hostname:port'
                 # and isn't using HTTPS
+                hostport = cny_net.HostPort(urlhostname)
                 protocol = 'http'
-            url = "%s://%s:%s@%s/rAA/xmlrpc/" % \
-                    (protocol, adminUser, adminPassword, urlhostname)
+
+            url = cny_req.URL(scheme=protocol,
+                    userpass=(adminUser, util.ProtectedString(adminPassword)),
+                    hostport=hostport,
+                    path='/rAA/xmlrpc/')
             transport = proxiedtransport.ProxiedTransport(
                     proxyMap=self.cfg.getProxyMap())
             sp = util.ServerProxy(url, transport=transport)
