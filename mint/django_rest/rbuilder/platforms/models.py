@@ -108,7 +108,7 @@ class PlatformLoads(modellib.Collection):
     
 class PlatformLoad(modellib.XObjIdModel):
     load_uri = fields.CharField(max_length=1026)
-    job_id = fields.CharField(max_length=1026)
+    job_id = fields.IntegerField()
     platform_id = fields.IntegerField()
     # job = fields.UrlField('platforms.load', ['platformId', 'jobId'])
     platform_load_status = models.ForeignKey('PlatformLoadStatus')

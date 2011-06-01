@@ -117,6 +117,8 @@ class Fuzzer(object):
         for fname, field in self.fields.items():
             hsh = id(self.m)
             if isinstance(field, (models.ForeignKey, models.ManyToManyField)):
+                # if field.name == 'load':
+                #     import pdb; pdb.set_trace()
                 if hsh in Fuzzer.FKREGISTRY:
                     continue
                 else:
@@ -161,9 +163,9 @@ class Fuzzer(object):
         return random.choice([True, False])
 
     def fuzzForeignKeyField(self, field):
-        related = field.related.model
-        # instance = Fuzzer(related).m
-        Fuzzer.FKREGISTRY[id(self.m)] = (self.m, field.name, related)
+        related = field.related.parent_model
+        instance = Fuzzer(related).m
+        Fuzzer.FKREGISTRY[id(self.m)] = (self.m, field.name, instance)
 
     def fuzzManyToManyField(self, field):
         import pdb; pdb.set_trace()
