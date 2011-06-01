@@ -270,7 +270,7 @@ class UserTag(modellib.XObjIdModel):
         return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
         
     def serialize(self, request=None, values=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, reuqest)
+        xobjModel = modellib.XObjIdModel.serialize(self, request)
         querySetHref = self.query_tag.query_set.get_absolute_url(request)
         xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
         return xobjModel
