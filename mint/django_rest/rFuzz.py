@@ -162,8 +162,8 @@ class Fuzzer(object):
 
     def fuzzForeignKeyField(self, field):
         related = field.related.model
-        instance = Fuzzer(related).m
-        Fuzzer.FKREGISTRY[hsh] = (self.m, f.name, related)
+        # instance = Fuzzer(related).m
+        Fuzzer.FKREGISTRY[id(self.m)] = (self.m, field.name, related)
 
     def fuzzManyToManyField(self, field):
         import pdb; pdb.set_trace()
