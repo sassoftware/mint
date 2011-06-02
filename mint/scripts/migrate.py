@@ -2886,7 +2886,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 4)
+    Version = (58, 5)
 
     def migrate(self):
         return True
@@ -2962,13 +2962,6 @@ class MigrateTo_58(SchemaMigration):
                 UNIQUE ("user_id", "query_tag_id", "inclusion_method_id")
             )""")
 
-        return True
-    
-
-    def migrate3(self):
-        return True
-
-    def migrate4(self):
         return True
 
 
