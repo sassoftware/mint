@@ -2124,7 +2124,7 @@ def _createQuerySetSchema(db):
         CREATE TABLE "querysets_usertag" (
             "user_tag_id" %(PRIMARYKEY)s,
             "user_id" INTEGER
-                REFERENCES "users_user" ("user_name")
+                REFERENCES "users_user" ("user_id")
                 ON DELETE CASCADE
                 NOT NULL,
             "query_tag_id" INTEGER
