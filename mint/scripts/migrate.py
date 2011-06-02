@@ -2969,9 +2969,7 @@ class MigrateTo_58(SchemaMigration):
         
     def migrate4(self):
         return True
-        
-    def migrate5(self):
-        return True
+
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
