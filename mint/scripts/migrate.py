@@ -2886,7 +2886,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 5)
+    Version = (58, 4)
 
     def migrate(self):
         return True
@@ -2911,7 +2911,13 @@ class MigrateTo_58(SchemaMigration):
 
         return True
 
-    def migrate2(self):
+class MigrateTo_59(SchemaMigration):
+    Version = (59, 0)
+    
+    def migrate(self):
+        return True
+
+    def migrate1(self):
         schema._addTableRows(self.db, "querysets_queryset", "name", [
         dict(name="All Users", resource_type='user',
               description='All users',
