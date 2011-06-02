@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 4)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -2124,7 +2124,7 @@ def _createQuerySetSchema(db):
         CREATE TABLE "querysets_usertag" (
             "user_tag_id" %(PRIMARYKEY)s,
             "user_id" INTEGER
-                REFERENCES "user" ("user_name")
+                REFERENCES "users" ("userid")
                 ON DELETE CASCADE
                 NOT NULL,
             "query_tag_id" INTEGER

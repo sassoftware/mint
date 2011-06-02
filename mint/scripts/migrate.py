@@ -2886,7 +2886,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 2)
+    Version = (58, 4)
 
     def migrate(self):
         return True
@@ -2948,7 +2948,7 @@ class MigrateTo_58(SchemaMigration):
             CREATE TABLE "querysets_usertag" (
                 "user_tag_id" %(PRIMARYKEY)s,
                 "user_id" INTEGER
-                    REFERENCES "users_user" ("user_id")
+                    REFERENCES "users" ("userid")
                     ON DELETE CASCADE
                     NOT NULL,
                 "query_tag_id" INTEGER
@@ -2997,6 +2997,7 @@ class MigrateTo_58(SchemaMigration):
              dict(queryset_id=allUserNoticeQSId, filterentry_id=allUserNoticeFiltId),
              ],
             ['queryset_id', 'filterentry_id'])
+        return True
 
     def migrate4(self):
         schema._addTableRows(self.db, "querysets_queryset", "name", [
@@ -3030,6 +3031,7 @@ class MigrateTo_58(SchemaMigration):
              dict(queryset_id=allGlobalNoticeQSId, filterentry_id=allGlobalNoticeFiltId),
              ],
             ['queryset_id', 'filterentry_id'])
+        return True
 
 
 #### SCHEMA MIGRATIONS END HERE #############################################
