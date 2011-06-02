@@ -2007,16 +2007,6 @@ def _createQuerySetSchema(db):
               created_date=str(datetime.datetime.now(tz.tzutc())),
               modified_date=str(datetime.datetime.now(tz.tzutc())),
               can_modify=False),
-         dict(name='All Global Notices', resource_type='global_notice',
-              description='All global notices',
-              created_date=str(datetime.datetime.now(tz.tzutc())),
-              modified_date=str(datetime.datetime.now(tz.tzutc())),
-              can_modify=False),
-         dict(name='All Notices', resource_type='user_notice',
-              description='All notices',
-              created_date=str(datetime.datetime.now(tz.tzutc())),
-              modified_date=str(datetime.datetime.now(tz.tzutc())),
-              can_modify=False),
         ])
         
     allQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
@@ -2029,10 +2019,6 @@ def _createQuerySetSchema(db):
         name="Physical Systems")
     allUserQSId = _getRowPk(db, "querysets_queryset", "query_set_id", 
         name="All Users")
-    allUserNoticeQSId = _getRowPk(db, 'querysets_queryset', 'query_set_id',
-        name = 'All Notices')
-    allGlobalNoticeQSId = _getRowPk(db, 'querysets_queryset', 'query_set_id',
-        name = 'All Global Notices')
 
 
     changed |= createTable(db, 'querysets_filterentry', """
@@ -2067,11 +2053,6 @@ def _createQuerySetSchema(db):
     allUserFiltId = _getRowPk(db, "querysets_filterentry", 'filter_entry_id',
         field="user_name", operator='IS_NULL', value="False")
 
-    allUserNoticeFiltId = _getRowPk(db, 'querysets_filterentry', 'filter_entry_id',
-        field='notice', operator='IS_NULL', value='False')
-
-    allGlobalNoticeFiltId = _getRowPk(db, 'querysets_filterentry', 'filter_entry_id',
-        field='notice', operator='IS_NULL', value='False')
 
     changed |= createTable(db, 'querysets_querytag', """
         CREATE TABLE "querysets_querytag" (
@@ -2088,8 +2069,6 @@ def _createQuerySetSchema(db):
          dict(query_set_id=inactiveQSId, name="query-tag-Inactive_Systems-3"),
          dict(query_set_id=physicalQSId, name="query-tag-Physical_Systems-4"),
          dict(query_set_id=allUserQSId, name="query-tag-all_users-5"),
-         dict(query_set_id=allUserNoticeQSId, name='query-tag-all_user_notices-6'),
-         dict(query_set_id=allGlobalNoticeQSId, name='query-tag-all_global_notices-7'),
         ])
 
     changed |= createTable(db, 'querysets_inclusionmethod', """
@@ -2159,8 +2138,6 @@ def _createQuerySetSchema(db):
          dict(queryset_id=inactiveQSId, filterentry_id=inactiveFiltId),
          dict(queryset_id=physicalQSId, filterentry_id=physicalFiltId),
          dict(queryset_id=allUserQSId, filterentry_id=allUserFiltId),
-         dict(queryset_id=allUserNoticeQSId, filterentry_id=allUserNoticeFiltId),
-         dict(queryset_id=allGlobalNoticeQSId, filterentry_id=allGlobalNoticeFiltId),
          ],
         ['queryset_id', 'filterentry_id'])
 
