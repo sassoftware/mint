@@ -1,10 +1,18 @@
 import random
 from django.db import models
 import inspect
+from django.db.models.loading import cache
 
+def findAllModels():
+    d = {}
+    for app in cache.get_apps():
+        app_label = app.__name__.split('.')[-2]
+        d[app_label] = app
+    return d
 
 def fuzzIt(module):
     fuzzCollection = []
+    
     for model in module.__dict__.values():
         if inspect.isclass(model):
             try:
@@ -22,6 +30,8 @@ def fuzzIt(module):
             if not fuzz.Meta.abstract:
                 fuzz.save()
                 print 'Saved: %s' % fuzz
+            else:
+                print 'Was abstract, not saving'
         except Exception, e:
             print 'Could not save data %s: %s' % (fuzz, e) 
 
@@ -38,18 +48,24 @@ class Fuzzer(object):
         self.skipped = skip if skip else []
         self.m = model if isinstance(model, models.Model) else model()
         self.fields = dict((f.name, f) for f in model._meta.fields)
+        self.fields.update(getattr(self.m, obscurred) for obscurred in self.m.Meta._obscurred)
         for fname, field in self.fields.items():
             hsh = id(self.m)
             if isinstance(field, (models.ForeignKey, models.ManyToManyField)):
+                import pdb; pdb.set_trace()
                 if hsh in Fuzzer.FKREGISTRY:
+                    import pdb; pdb.set_trace()
                     continue
                 else:
+                    import pdb; pdb.set_trace()
                     instance = self.fuzzForeignKeyField(field)
-                    Fuzzer.FKREGISTRY[id(self.m)] = (self.m, field.name, instance)
+                    Fuzzer.FKREGISTRY[hsh] = (self.m, field.name, instance)
                 setattr(*Fuzzer.FKREGISTRY[hsh])
             else:
                 data = self.fuzzData(field)
                 setattr(self.m, fname, data)
+        import pdb; pdb.set_trace()
+        # self.m.save()
 
     def fuzzData(self, field):
         if isinstance(field, models.AutoField):

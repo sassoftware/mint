@@ -8,6 +8,8 @@ from django.db import models
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 import sys
+from copy import copy
+from django.db.models.options import Options
 
 class UserGroups(modellib.Collection):
     class Meta:
@@ -57,10 +59,12 @@ class User(modellib.XObjIdModel):
     active = models.SmallIntegerField()
     blurb = models.TextField()
     user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
+    is_admin = models.BooleanField(db_column='isAdmin')
     
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
+        _obscurred = ['user_groups']
     
     _xobj = xobj.XObjMetadata(tag='user')
     _xobj_hidden_accessors = set(['creator', 'package_version_urls_last_modified',
