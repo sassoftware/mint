@@ -76,7 +76,7 @@ class User(modellib.XObjIdModel):
         'system_set', 'package_builds_jobs_last_modified', 'package_sources_last_modified',
         'usermember', 'package_versions_created', 'packages_created', 'user',
         'created_images', 'updated_images', 'project_membership',
-        'created_releases', 'updated_releases', 'published_releases'])
+        'created_releases', 'updated_releases', 'published_releases', 'user_tags'])
     
     def __unicode__(self):
         return self.user_name
