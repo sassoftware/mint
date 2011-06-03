@@ -8,8 +8,7 @@ from django.db import models
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 import sys
-from copy import copy
-from django.db.models.options import Options
+
 
 class UserGroups(modellib.Collection):
     class Meta:
