@@ -67,7 +67,7 @@ def _createUsers(db):
             timeCreated         numeric(14,3),
             timeAccessed        numeric(14,3),
             active              smallint,
-            blurb               text
+            blurb               text,
             isAdmin             boolean
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
