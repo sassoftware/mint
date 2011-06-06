@@ -2979,7 +2979,7 @@ class MigrateTo_58(SchemaMigration):
 
     def migrate7(self):
         cu = self.db.cursor()
-        cu.execute("""ALTER TABLE users ADD COLUMN isAdmin bool""")
+        cu.execute("""ALTER TABLE "users" ADD COLUMN "isAdmin" BOOLEAN""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
