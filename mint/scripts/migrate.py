@@ -2886,7 +2886,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 6)
+    Version = (58, 7)
 
     def migrate(self):
         return True
@@ -2974,7 +2974,12 @@ class MigrateTo_58(SchemaMigration):
         return True
 
     def migrate6(self):
-        add_columns(self.db, 'Users', 'isAdmin BOOLEAN')
+        # add_columns(self.db, 'Users', 'isAdmin BOOLEAN')
+        return True
+
+    def migrate7(self):
+        cu = self.db.cursor()
+        cu.execute("""ALTER TABLE Users ADD COLUMN isAdmin BOOLEAN""")
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
