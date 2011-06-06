@@ -2974,7 +2974,7 @@ class MigrateTo_58(SchemaMigration):
         return True
 
     def migrate6(self):
-        add_columns(self.db, 'users', 'isAdmin boolean')
+        add_columns(self.db, 'Users', 'isAdmin boolean')
         return True
 
 #### SCHEMA MIGRATIONS END HERE #############################################
