@@ -63,7 +63,8 @@ class User(modellib.XObjIdModel):
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
-        _obscurred = ['user_groups']
+    
+    _obscurred = ['user_groups']
     
     _xobj = xobj.XObjMetadata(tag='user')
     _xobj_hidden_accessors = set(['creator', 'package_version_urls_last_modified',

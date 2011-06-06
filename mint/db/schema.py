@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(58, 5)
+RBUILDER_DB_VERSION = sqllib.DBversion(58, 6)
 
 
 def _createTrigger(db, table, column = "changed"):
@@ -68,6 +68,7 @@ def _createUsers(db):
             timeAccessed        numeric(14,3),
             active              smallint,
             blurb               text
+            isAdmin             boolean
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
         changed = True

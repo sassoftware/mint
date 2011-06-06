@@ -29,7 +29,7 @@ class AbstractPlatform(modellib.XObjIdModel):
     abstract = fields.BooleanField()
     mirror_permission = fields.BooleanField()
     # repository_url = modellib.HrefField() # no clue
-    # content_sources = models.ManyToManyField('ContentSource', through='PlatformContentSource')
+    # content_sources = models.ManyToManyField('ContentSource', through='ProductPlatformContentSource')
     platform_type = fields.CharField(max_length=1026)
     platform_status = models.ForeignKey('SourceStatus') # not sure this is the correct model to point to
     content_source_types = models.ForeignKey('ContentSourceType')
@@ -59,6 +59,7 @@ class Platforms(modellib.Collection):
 class Platform(AbstractPlatform):
     class Meta:
         abstract = False
+        
     content_sources = models.ManyToManyField('ContentSource', through='PlatformContentSource')
 
 class ProductPlatforms(modellib.Collection):

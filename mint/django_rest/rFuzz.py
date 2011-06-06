@@ -25,15 +25,15 @@ def fuzzIt(module):
     print '\n'
     print '\n'
 
-    for fuzz in fuzzCollection:
-        try:
-            if not fuzz.Meta.abstract:
-                fuzz.save()
-                print 'Saved: %s' % fuzz
-            else:
-                print 'Was abstract, not saving'
-        except Exception, e:
-            print 'Could not save data %s: %s' % (fuzz, e) 
+    # for fuzz in fuzzCollection:
+    #     try:
+    #         if not fuzz.Meta.abstract:
+    #             fuzz.save()
+    #             print 'Saved: %s' % fuzz
+    #         else:
+    #             print 'Was abstract, not saving'
+    #     except Exception, e:
+    #         print 'Could not save data %s: %s' % (fuzz, e) 
 
 
 class Fuzzer(object):
@@ -44,28 +44,49 @@ class Fuzzer(object):
     
     FKREGISTRY = {}
 
-    def __init__(self, model, skip=None):
+    def __init__(self, model, skip=None, force=None):
         self.skipped = skip if skip else []
-        self.m = model if isinstance(model, models.Model) else model()
+        self.forced = force if force else {}
+        self.m = model if isinstance(model, models.Model) else model(pk=random.choice(Fuzzer.integers))
         self.fields = dict((f.name, f) for f in model._meta.fields)
-        self.fields.update(getattr(self.m, obscurred) for obscurred in self.m.Meta._obscurred)
+        
+        if hasattr(self.m, '_obscurred'):
+            self.fields.update(
+                dict((obscurred, getattr(self.m, obscurred)) for obscurred in self.m._obscurred))
+
         for fname, field in self.fields.items():
             hsh = id(self.m)
-            if isinstance(field, (models.ForeignKey, models.ManyToManyField)):
-                import pdb; pdb.set_trace()
+            if isinstance(field, models.ForeignKey):
                 if hsh in Fuzzer.FKREGISTRY:
-                    import pdb; pdb.set_trace()
                     continue
                 else:
-                    import pdb; pdb.set_trace()
                     instance = self.fuzzForeignKeyField(field)
                     Fuzzer.FKREGISTRY[hsh] = (self.m, field.name, instance)
-                setattr(*Fuzzer.FKREGISTRY[hsh])
+                    setattr(*Fuzzer.FKREGISTRY[hsh])
+            elif isinstance(field, models.Manager):
+                if hasattr(field, 'through'):
+                    through = field.through
+                    through_fields = dict((f.name, f) for f in through._meta.fields)
+                    related = {}
+
+                    for tFname, tField in through_fields.items():
+                        if hasattr(tField, 'rel'):
+                            if hasattr(tField.rel, 'to'):
+                                related[tFname] = tField.rel.to
+
+                    data = {}
+
+                    for rFname, rField in related.items():
+                        if isinstance(self.m, rField):
+                            data[rFname] = self.m
+                        elif issubclass(field.model, rField):
+                            data[rFname] = Fuzzer(field.model).m
+                    field.through.objects.create(**data).save()
             else:
                 data = self.fuzzData(field)
                 setattr(self.m, fname, data)
         import pdb; pdb.set_trace()
-        # self.m.save()
+        self.m.save()
 
     def fuzzData(self, field):
         if isinstance(field, models.AutoField):
