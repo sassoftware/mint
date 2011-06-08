@@ -1,7 +1,6 @@
 import random
 from django.db import models
 import inspect
-from django.db.models.loading import cache
 
 class ValidationError(Exception):
     pass
