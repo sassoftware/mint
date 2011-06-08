@@ -22,8 +22,8 @@ class ValidationError(Exception):
 #         _fuzzIt(module)
     
 def fuzzIt(module):
-    models = dict((m.__name__, m) for m in module.__dict__.values() if inspect.isclass(m))
-    for mname, model in models.items():
+    mdls = dict((m.__name__, m) for m in module.__dict__.values() if inspect.isclass(m))
+    for mname, model in mdls.items():
         try:
             f = Fuzzer(model)
             f.fz.instance.save()
@@ -303,7 +303,7 @@ class Fuzzer(object):
             Fuzzer.FKREGISTRY[hsh] = field
         else:
             done = [x[1] for x in self.DONE]
-            rel = Fuzzer(self.fz.instance, skip=done)
+            rel = Fuzzer(self.fz.instance, skip=done)  # pyflakes=ignore
 
     def fuzzM2M(self, fname, field):
         if hasattr(field, 'through'):
