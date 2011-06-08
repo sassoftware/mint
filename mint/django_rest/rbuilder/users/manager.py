@@ -6,6 +6,7 @@
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.users import models
+from mint import server
 
 exposed = basemanager.exposed
 
@@ -24,6 +25,11 @@ class UsersManager(basemanager.BaseManager):
     
     @exposed
     def addUser(self, user):
+        s = server.MintServer(self.cfg)
+        # hack, allows user to be added both to django and to
+        # old DB
+        s.registerNewUser(user.user_name, user.passwd, user.full_name
+            user.email, user.display_email, user.blurb, user.active)
         user.save()
         return user
     

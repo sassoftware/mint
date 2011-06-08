@@ -50,7 +50,7 @@ class User(modellib.XObjIdModel):
     full_name = models.CharField(max_length=128, db_column='fullname')
     # salt has binary data, django is unhappy about that.
     salt = models.TextField() # This field type is a guess.
-    passwd = models.CharField(max_length=254)
+    passwd = modellib.XObjHidden(models.CharField(max_length=254))
     email = models.CharField(max_length=128)
     display_email = models.TextField(db_column='displayemail')
     created_date = models.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
@@ -58,13 +58,12 @@ class User(modellib.XObjIdModel):
     active = models.SmallIntegerField()
     blurb = models.TextField()
     user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
-    is_admin = models.BooleanField(db_column='isAdmin')
+    is_admin = modellib.SyntheticField()
+
     
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
-    
-    _obscurred = ['user_groups']
     
     _xobj = xobj.XObjMetadata(tag='user')
     _xobj_hidden_accessors = set(['creator', 'package_version_urls_last_modified',
@@ -89,7 +88,7 @@ class User(modellib.XObjIdModel):
 class UserGroupMembers(modellib.Collection):
     class Meta:
         abstract = True
-        
+    
     list_fields = ['user_group_member']
 
     _xobj = xobj.XObjMetadata(tag='user_group_members')

@@ -5,8 +5,7 @@
 #
 
 from mint.django_rest.rbuilder import service
-from mint.django_rest.deco import requires, return_xml
-
+from mint.django_rest.deco import requires, return_xml, access
 
 class UsersService(service.BaseService):
     
@@ -23,13 +22,19 @@ class UsersService(service.BaseService):
     @requires('user')
     @return_xml
     def rest_POST(self, request, user):
+        # if user.is_admin:
+        #     # CHANGEME -- find appropriate exception to place here
+        #     raise Exception('only admins can create admin users')
         return self.mgr.addUser(user)
     
     @requires('user')
     @return_xml
     def rest_PUT(self, request, user_id, user):
+        # if user.is_admin:
+        #     pass
         return self.mgr.updateUser(user_id, user)
 
+    @access.admin
     def rest_DELETE(self, request, user_id):
         self.mgr.deleteUser(user_id)
        
