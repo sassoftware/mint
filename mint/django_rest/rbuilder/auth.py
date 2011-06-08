@@ -66,7 +66,10 @@ def isAuthenticated(user):
          return True
      return False
 
-class rBuilderBackend:
+class rBuilderBackend(object):
+    supports_anonymous_user = False
+    supports_inactive_user = False
+    supports_object_permissions = False
 
     def authenticate(self, username=None, password=None):
         try:

@@ -20,6 +20,6 @@ class Command(BaseCommand):
             version=schema.RBUILDER_DB_VERSION.major,
             minor=schema.RBUILDER_DB_VERSION.minor)
         dbVersion.save()
-        db = dbstore.connect(settings.DATABASE_NAME, 'sqlite')
+        db = dbstore.connect(settings.DATABASES['default']['NAME'], 'sqlite')
         version = schema.loadSchema(db, should_migrate=True)
         print "Migrated rBuilder schema to %s" % version

@@ -89,11 +89,11 @@ class BaseRbuilderManager(object):
 
     def setRestDbPath(self):
         from django.conf import settings
-        if settings.DATABASE_ENGINE == 'sqlite3':
-            self.cfg.dbPath = settings.DATABASE_NAME
+        DB = settings.DATABASES['default']
+        if DB['ENGINE'] == 'sqlite3':
+            self.cfg.dbPath = DB['NAME']
         else:
-            self.cfg.dbPath = '%s:%s/%s' % (settings.DATABASE_HOST,
-                settings.DATABASE_PORT, settings.DATABASE_NAME)
+            self.cfg.dbPath = '%s:%s/%s' % (DB['HOST'], DB['PORT'], DB['NAME'])
 
     def getMintDatabase(self):
         return database.Database(self.cfg)
