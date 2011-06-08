@@ -66,6 +66,7 @@ class User(modellib.XObjIdModel):
         db_table = u'users'
     
     _xobj = xobj.XObjMetadata(tag='user')
+    
     _xobj_hidden_accessors = set(['creator', 'package_version_urls_last_modified',
         'packages_last_modified', 'releaseCreator', 'imageCreator', 'package_source_jobs_created',
         'releasePublisher', 'releaseUpdater', 'package_build_jobs_last_modified',
@@ -81,9 +82,9 @@ class User(modellib.XObjIdModel):
     def __unicode__(self):
         return self.user_name
 
-    def serialize(self, request=None):
-        deferredUser = User.objects.defer("salt", "passwd").get(pk=self.user_id)
-        return modellib.XObjIdModel.serialize(deferredUser, request)
+    # def serialize(self, request=None):
+    #     deferredUser = User.objects.defer("salt", "passwd").get(pk=self.user_id)
+    #     return modellib.XObjIdModel.serialize(deferredUser, request)
         
 class UserGroupMembers(modellib.Collection):
     class Meta:
@@ -97,7 +98,6 @@ class UserGroupMembers(modellib.Collection):
 class UserGroupMember(modellib.XObjIdModel):
     
     class Meta:
-        # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'usergroupmembers'
     
     user_group_id = modellib.XObjHidden(modellib.DeferredForeignKey(UserGroup, db_column='usergroupid', related_name='user_members_group_id'))
