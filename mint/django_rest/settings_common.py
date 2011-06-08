@@ -11,12 +11,14 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = 'postgresql_psycopg2'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = 'mint'             # Or path to database file if using sqlite3.
-DATABASE_USER = 'postgres'             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = 'localhost'             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = '6432'             # Set to empty string for default. Not used with sqlite3.
+DATABASES = dict(default=dict(
+    ENGINE = 'django.db.backends.postgresql_psycopg2',
+    NAME = 'mint',                  # Or path to database file if using sqlite3.
+    USER = 'postgres',              # Not used with sqlite3.
+    PASSWORD = '',                  # Not used with sqlite3.
+    HOST = 'localhost',             # Set to empty string for localhost. Not used with sqlite3.
+    PORT = '6432',                  # Set to empty string for default. Not used with sqlite3.
+))
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

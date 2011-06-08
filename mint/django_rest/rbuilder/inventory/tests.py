@@ -139,8 +139,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         from mint import config
         config.RBUILDER_CONFIG = mintCfg
 
-        self.oldDatabaseName = settings.DATABASE_NAME
-        settings.DATABASE_NAME = settings.TEST_DATABASE_NAME
+        self.oldDatabaseName = settings.DATABASES['default']['NAME']
+        settings.DATABASES['default']['NAME'] = settings.TEST_DATABASE_NAME
 
         def getMintDatabase(self):
             return None
@@ -159,7 +159,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def tearDown(self):
         TestCase.tearDown(self)
-        settings.DATABASE_NAME = self.oldDatabaseName
+        settings.DATABASES['default']['NAME'] = self.oldDatabaseName
         self.unmock()
 
     def failUnlessIn(self, needle, haystack):
@@ -3038,7 +3038,7 @@ class SystemVersionsTestCase(XMLTestCase):
         XMLTestCase.setUp(self)
         self.mintConfig = self.mgr.cfg
         from django.conf import settings
-        self.mintConfig.dbPath = settings.DATABASE_NAME
+        self.mintConfig.dbPath = settings.DATABASES['default']['NAME']
         self.mock_scheduleSystemRegistrationEvent_called = False
         self.mock_scheduleSystemPollEvent_called = False
         self.mock_set_available_updates_called = False

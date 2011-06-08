@@ -275,7 +275,7 @@ class BaseManager(models.Manager):
                 val = (val.lower() == str(True).lower())
 
             # Handle xml fields
-            elif isinstance(field, djangofields.XMLField):
+            elif isinstance(field, XMLField):
                 if not val._xobj.elements:
                     # No children for this element
                     continue
@@ -1105,7 +1105,7 @@ class XObjModel(models.Model):
                 elif isinstance(field, (djangofields.BooleanField,
                                         djangofields.NullBooleanField)):
                     val = str(val).lower()
-                elif isinstance(field, djangofields.XMLField):
+                elif isinstance(field, XMLField):
                     if val is None:
                         continue
                     val = xobj.parse(val)
@@ -1436,6 +1436,12 @@ class DeferredForeignKey(ForeignKey, DeferredForeignKeyMixIn):
 class DeferredManyToManyField(models.ManyToManyField,
                               DeferredForeignKeyMixIn):
     pass                              
+
+class XMLField(models.TextField):
+    """
+    django 1.3 deprecated XMLField, but it's still useful for us to mark
+    a field as containing XML
+    """
 
 class DateTimeUtcField(models.DateTimeField):
     """
