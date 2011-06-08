@@ -439,7 +439,7 @@ class BaseManager(models.Manager):
 
     def add_synthetic_fields(self, model, xobjModel):
         # Not all models have the synthetic fields option set, so use getattr
-        for fieldName in getattr(model._meta, 'synthetic_fields', []):
+        for fieldName in getattr(model._meta, 'synthetic_fields', {}):
             val = getattr(xobjModel, fieldName, None)
             if val is not None:
                 # XXX for now we assume synthetic fields are char only.
@@ -1088,8 +1088,11 @@ class XObjModel(models.Model):
         set the value on xobj_model.  Then, remove it from fields, as don't
         want to try to serialize it later.
         """
+        syntheticFields = getattr(self._meta, 'synthetic_fields', {})
         for key, val in self.__dict__.items():
             field = fields.pop(key, None)
+            if field is None:
+                field = syntheticFields.get(key)
             if field is not None:
                 if getattr(field, 'XObjHidden', False):
                     continue
@@ -1291,6 +1294,15 @@ class XObjModel(models.Model):
                     xobjModelVal = val
                 listFieldVals.append(xobjModelVal)
 
+    def serialize_abstract_fields(self, xobj_model, request):
+        abstractFields = getattr(self._meta, 'abstract_fields', dict())
+        for fieldName, field in abstractFields.iteritems():
+            val = getattr(self, fieldName, None)
+            if val is None:
+                continue
+            val = val.serialize(request)
+            setattr(xobj_model, fieldName, val)
+
     def serialize(self, request=None):
         """
         Serialize this model into an object that can be passed blindly into
@@ -1314,6 +1326,7 @@ class XObjModel(models.Model):
             self.serialize_fk_accessors(xobj_model, accessors, request)
         self.serialize_m2m_accessors(xobj_model, m2m_accessors, request)
         self.serialize_list_fields(xobj_model, request)
+        self.serialize_abstract_fields(xobj_model, request)
 
         return xobj_model
 
@@ -1332,11 +1345,11 @@ class XObjIdModel(XObjModel):
         def __new__(cls, name, bases, attrs):
             ret = XObjModel.__metaclass__.__new__(cls, name, bases, attrs)
             # Find synthetic fields
-            ret._meta.synthetic_fields = synth = set()
+            ret._meta.synthetic_fields = synth = dict()
             ret._meta.abstract_fields = abstr = dict()
             for k, v in attrs.items():
                 if isinstance(v, SyntheticField):
-                    synth.add(k)
+                    synth[k] = v
                     # Default the value to None
                     setattr(ret, k, None)
                 meta = getattr(v, '_meta', None)

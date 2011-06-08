@@ -534,9 +534,9 @@ class System(modellib.XObjIdModel):
           "the port used by the system's CIM broker")
     state_change_date = XObjHidden(APIReadOnly(modellib.DateTimeUtcField(
         auto_now_add=True, default=datetime.datetime.now(tz.tzutc()))))
-    event_uuid = D(modellib.SyntheticField(),
+    event_uuid = D(XObjHidden(modellib.SyntheticField()),
         "a UUID used to link system events with their returned responses")
-    boot_uuid = D(modellib.SyntheticField(),
+    boot_uuid = D(XObjHidden(modellib.SyntheticField()),
         "a UUID used for tracking systems registering at startup time")
     management_interface = D(modellib.ForeignKey(ManagementInterface, 
         null=True, related_name='systems', text_field="description"),
@@ -555,7 +555,7 @@ class System(modellib.XObjIdModel):
         text_field='short_name', related_name="systems")),
         "the project of the system")
     configuration = APIReadOnly(XObjHidden(models.TextField(null=True)))
-    configuration_descriptor = D(APIReadOnly(modellib.SyntheticField()), 
+    configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
         "the descriptor of available fields to set system configuration "
         "parameters")
     network_address = D(NetworkAddress, "Network address for this system")
