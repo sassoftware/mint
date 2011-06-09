@@ -25,6 +25,7 @@ class UsersTestCase(XMLTestCase):
 
     def xobjResponse(self, url):
         response = self._get(url, username="admin", password="password")
+        self.failUnlessEqual(response.status_code, 200)
         return self.toXObj(response.content)
 
     def toXObj(self, xml):
@@ -52,7 +53,7 @@ class UsersTestCase(XMLTestCase):
         self.assertEquals(200, response.status_code)
         self.assertEquals(u'dcohn', user_posted.user_name)
         self.assertEquals(u'Dan Cohn', user_posted.full_name)
-        
+
     def testUpdateUser(self):
         response = self._put('/api/users/1',
             data=testsxml.users_put_xml,
@@ -70,6 +71,21 @@ class UsersTestCase(XMLTestCase):
     def testGetUserGroup(self):
         user_group = models.UserGroup.objects.get(pk=1)
         user_group_gotten = self.xobjResponse('/api/user_groups/1')
-   
+
+    def testUserGetIsAdmin(self):
+        user = models.User.objects.get(user_name='admin')
+        self.failUnlessEqual(user.getIsAdmin(), True)
+        user = models.User.objects.get(user_name='testuser')
+        self.failUnlessEqual(user.getIsAdmin(), False)
+        # New user, not saved yet
+        user = models.User(user_name='blah')
+        self.failUnlessEqual(user.getIsAdmin(), False)
+
+    def testIsAdmin(self):
+        user = self.xobjResponse('/api/users/1')
+        self.failUnlessEqual(user.is_admin, "true")
+        user = self.xobjResponse('/api/users/2000')
+        self.failUnlessEqual(user.is_admin, "false")
+
     def testGetUserGroupMembers(self):
         pass

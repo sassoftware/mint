@@ -22,7 +22,6 @@ users_post_xml = \
 <time_accessed>1283530322.49</time_accessed>
 <time_created>1283523987.85</time_created>
 <active>1</active>
-<salt>\\256\\303\\325B)</salt>
 <email>dcohn@rpath.com</email>
 <blurb>something here</blurb>
 </user>

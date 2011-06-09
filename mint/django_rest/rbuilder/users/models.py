@@ -9,6 +9,9 @@ from mint.django_rest.rbuilder import modellib
 from xobj import xobj
 import sys
 
+from mint.django_rest.rbuilder.users import manager_model
+
+from django.db import connection
 
 class UserGroups(modellib.Collection):
     class Meta:
@@ -43,8 +46,8 @@ class Users(modellib.Collection):
     list_fields = ['user']
     view_name = 'Users'
 
-
 class User(modellib.XObjIdModel):
+    objects = manager_model.UserManager()
     user_id = models.AutoField(primary_key=True, db_column='userid')
     user_name = models.CharField(unique=True, max_length=128, db_column='username')
     full_name = models.CharField(max_length=128, db_column='fullname')
@@ -56,18 +59,21 @@ class User(modellib.XObjIdModel):
     display_email = models.TextField(db_column='displayemail')
     created_date = models.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
     modified_date = models.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
-    active = models.SmallIntegerField()
+    active = models.BooleanField()
     blurb = models.TextField()
     user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
     is_admin = modellib.SyntheticField()
+    # Field used for the clear-text password when it is to be
+    # set/changed
+    password = modellib.XObjHidden(modellib.SyntheticField())
 
-    
+
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
-    
+
     _xobj = xobj.XObjMetadata(tag='user')
-    
+
     _xobj_hidden_accessors = set(['creator', 'package_version_urls_last_modified',
         'packages_last_modified', 'releaseCreator', 'imageCreator', 'package_source_jobs_created',
         'releasePublisher', 'releaseUpdater', 'package_build_jobs_last_modified',
@@ -79,14 +85,29 @@ class User(modellib.XObjIdModel):
         'usermember', 'package_versions_created', 'packages_created', 'user',
         'created_images', 'updated_images', 'project_membership',
         'created_releases', 'updated_releases', 'published_releases', 'user_tags'])
-    
+
     def __unicode__(self):
         return self.user_name
 
-    # def serialize(self, request=None):
-    #     deferredUser = User.objects.defer("salt", "passwd").get(pk=self.user_id)
-    #     return modellib.XObjIdModel.serialize(deferredUser, request)
-        
+    def getIsAdmin(self):
+        # A bit of SQL here, so we only do one trip to the db
+        cu = connection.cursor()
+        cu.execute("""
+            SELECT 1
+              FROM UserGroupMembers
+              JOIN UserGroups USING (usergroupid)
+             WHERE UserGroups.usergroup = 'MintAdmin'
+               AND UserGroupMembers.userid = %s
+        """, [self.user_id])
+        row = cu.fetchone()
+        return bool(row)
+
+    def set_is_admin(self):
+        isAdmin = self.getIsAdmin()
+        # Unfortunately we don't have boolean synthetic fields yet, so
+        # let's save the string representation of it
+        self.is_admin = str(bool(isAdmin)).lower()
+
 class UserGroupMembers(modellib.Collection):
     class Meta:
         abstract = True

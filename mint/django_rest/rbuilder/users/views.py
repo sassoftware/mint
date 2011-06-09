@@ -20,7 +20,9 @@ class UsersService(service.BaseService):
             return self.mgr.getUser(user_id)
         else:
             return self.mgr.getUsers()
-    
+
+    # Has to be public, so one can create an account before logging in
+    @access.anonymous
     @requires('user')
     @return_xml
     def rest_POST(self, request, user):

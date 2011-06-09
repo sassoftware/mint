@@ -16,25 +16,37 @@ class UsersManager(basemanager.BaseManager):
     @exposed
     def getUser(self, user_id):
         user = models.User.objects.get(pk=user_id)
+        user.set_is_admin()
         return user
 
     @exposed
     def getUsers(self):
         Users = models.Users()
         Users.user = models.User.objects.all()
+        for user in Users.user:
+            user.set_is_admin()
         return Users
-    
+
     @exposed
     def addUser(self, user):
-        if self.user.is_admin:
-            pass
-        user.save()
+        # Sanitize user fields
+        if not user.display_email:
+            user.display_email = ''
+        if not user.blurb:
+            user.blurb = ''
+        # Create a MintServer object, because that gives us access to
+        # the Users class. We won't use registerNewUser, since that
+        # performs additional checks that are not necessary (all auth
+        # has already been performed)
+        s = server.MintServer(self.cfg, allowPrivate=True)
+        active = True
+        s.users.registerNewUser(user.user_name, user.password, user.full_name,
+            user.email, user.display_email, user.blurb, active)
         return user
-    
+
     @exposed
     def updateUser(self, user_id, user):
-        user.save()
-        return user
+        raise Exception("Not implemented yet")
 
     @exposed
     def deleteUser(self, user_id):
