@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2011 rPath, Inc.
 #
 # All rights reserved.
 #
@@ -48,15 +48,27 @@ def add_columns(db, table, *columns):
     ...     'somethingelse STRING')
     '''
     cu = db.cursor()
-    changed = False
-
+    cu.execute("SELECT * FROM %s LIMIT 1" % (table,))
+    allFields = set(x.lower() for x in cu.fields())
     for column in columns:
-        try:
+        if column.lower() not in allFields:
             cu.execute('ALTER TABLE %s ADD COLUMN %s' % (table, column))
-            changed = True
-        except sqlerrors.DuplicateColumnName:
-            pass
-    return changed
+    return True
+
+
+def drop_columns(db, table, *columns):
+    """
+    Drop each column while ignoring missing columns.
+
+    >>> drop_columns(db, 'Table', 'column1', 'column2')
+    """
+    cu = db.cursor()
+    cu.execute("SELECT * FROM %s LIMIT 1" % (table,))
+    allFields = set(x.lower() for x in cu.fields())
+    for column in columns:
+        if column.lower() in allFields:
+            cu.execute("ALTER TABLE %s DROP %s" % (table, column))
+    return True
 
 
 def drop_tables(db, *tables):
@@ -2886,7 +2898,7 @@ class MigrateTo_57(SchemaMigration):
 
 
 class MigrateTo_58(SchemaMigration):
-    Version = (58, 7)
+    Version = (58, 8)
 
     def migrate(self):
         return True
@@ -2974,13 +2986,15 @@ class MigrateTo_58(SchemaMigration):
         return True
 
     def migrate6(self):
-        # add_columns(self.db, 'Users', 'isAdmin BOOLEAN')
         return True
 
     def migrate7(self):
-        cu = self.db.cursor()
-        cu.execute("""ALTER TABLE "users" ADD COLUMN "isAdmin" BOOLEAN""")
         return True
+
+    def migrate8(self):
+        drop_columns(self.db, 'Users', 'isAdmin')
+        return True
+
 
 #### SCHEMA MIGRATIONS END HERE #############################################
 
