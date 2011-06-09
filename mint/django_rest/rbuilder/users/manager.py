@@ -10,6 +10,7 @@ from mint import server
 
 exposed = basemanager.exposed
 
+from django.db import connection
 
 class UsersManager(basemanager.BaseManager):
     @exposed
@@ -37,15 +38,12 @@ class UsersManager(basemanager.BaseManager):
     def updateUser(self, user_id, user):
         user.save()
         return user
-    
+
     @exposed
     def deleteUser(self, user_id):
-        user = models.User.objects.get(pk=user_id)
-        # projectList = models.UserGroupMembers.objects.all().filter(user_id=user_id)
-        #         for membership in projectList:
-        #             project_id = productmodels.Projects.objects.all().filter(hostname=membership.hostname).project_id
-        user.delete()
-    
+        cu = connection.cursor()
+        cu.execute("DELETE FROM users WHERE userid = %s", [ user_id ])
+
     # def cancelUserAccount(self, username):
     #     user_id = self.getUserId(username)
     #     self._ensureNoOrphans(user_id)

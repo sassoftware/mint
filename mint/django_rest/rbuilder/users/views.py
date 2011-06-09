@@ -7,6 +7,8 @@
 from mint.django_rest.rbuilder import service
 from mint.django_rest.deco import requires, return_xml, access
 
+from django.http import HttpResponse
+
 class UsersService(service.BaseService):
     
     @return_xml
@@ -37,8 +39,8 @@ class UsersService(service.BaseService):
     @access.admin
     def rest_DELETE(self, request, user_id):
         self.mgr.deleteUser(user_id)
-       
-        
+        return HttpResponse(status=204)
+
 class UserGroupsService(service.BaseService):
     @return_xml
     def rest_GET(self, request, user_group_id=None):
@@ -60,9 +62,11 @@ class UserGroupsService(service.BaseService):
     @return_xml
     def rest_PUT(self, request, user_group_id, user_group):
         return self.mgr.updateUserGroup(user_group_id, user_group)
-    
+
+    @access.admin
     def rest_DELETE(self, request, user_group_id):
         self.mgr.deleteUserGroup(user_group_id)
+        return HttpResponse(status=204)
 
 
 class UserUserGroupsService(service.BaseService):
