@@ -1,25 +1,12 @@
 import random
 from django.db import models
 import inspect
+# from mint.django_rest.rbuilder.projects import models as pmodels
+# from mint.django_rest.rbuilder.users import models as umodels
 
 class ValidationError(Exception):
     pass
 
-# def fuzzIt(module, n=100):
-#     models = dict((m.__name__, m) for m in module.__dict__.values() if inspect.isclass(m))
-# 
-#     def _fuzzIt(module):
-#         for mname, model in models.items():
-#             try:
-#                 f = Fuzzer(model)
-#                 f.instance.save()
-#             except Exception, e:
-#                 print "Couldn't fuzz model %s: %s " % (model, e)
-#             print 'Fuzzed %s' % model
-#             # Fuzzer.FKREGISTRY = {}
-#     for i in range(n):
-#         _fuzzIt(module)
-    
 def fuzzIt(module):
     mdls = dict((m.__name__, m) for m in module.__dict__.values() if inspect.isclass(m))
     for mname, model in mdls.items():
@@ -36,187 +23,56 @@ def fuzzIt(module):
         except Exception, e:
             print "Couldn't save instance %s: %s" % (instance, e)
         print 'Fuzzed %s' % instance
-    
-    # for f in collected:
-    #     doDelete = False
-    #     for fname, field in f.fields.items():
-    #         for i in Fuzzer.integers:
-    #             model_cls = f.instance.__class__
-    #             try:
-    #                 m = model_cls.objects.get(pk=i)
-    #                 attr = getattr(m, fname)
-    #                 try:
-    #                     getattr(model_cls, fname).objects.get(pk=attr)
-    #                     # import pdb; pdb.set_trace()
-    #                 except:
-    #                     getattr(model_cls, fname).field.model.objects.get(**{fname:attr})
-    #                     # import pdb; pdb.set_trace()
-    #             except:
-    #                 try:
-    #                     f.instance.delete()
-    #                 except:
-    #                     pass
-    #                 doDelete = True
-    #                 break
-            # if doDelete:
-            #     break
 
-            # 
-            # attr = {field.column:getattr(f.instance, field.column)}
-            # qs = f.instance.__class__.objects.filter(**attr)
-            # if qs:
-            #     pass
-            # else:
-            #     f.instance.delete()
-            #     break
-    
-
-
-
+def toFuzz(mdl):
+    pass
 
 def validate(fuzz):
+    passed = {}
+    failed = {}
     for fname, field in fuzz.fields.items():
-        attr = {field.column:getattr(fuzz.instance, field.column)}
-        passed = {}
+        # attr = {field.column:getattr(fuzz.instance, field.column)}
+        attr = {field.column:getattr(fuzz.instance, fname)}
         try:
             qs = fuzz.instance.__class__.objects.filter(**attr)
-            passed[fname] = qs[0]
+            passed[fname] = (attr, qs)
         except:
-            raise ValidationError('Get failed')
-        return passed
-
-
-# class Fuzzer(object):
-#     
-#     integers = range(0, 1000)
-#     strings = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu']
-#     words = ['the', 'crazy', 'bird', 'walks', 'off', 'pier']
-#     
-#     FKREGISTRY = {}
-#     MDLREGISTRY = {}
-#     
-#     def __init__(self, model, skip=None, force=None):
-#         self.instance = model if isinstance(model, models.Model) else model()
-#         self.skipped = skip if skip else []
-#         self.forced = force if force else {}
-#         self.fields = dict((f.name, f) for f in self.instance._meta.fields)
-# 
-#         Fuzzer.MDLREGISTRY[self.instance.__class__.__name__] = self.instance
-#         
-#         DONE = []
-#         for fname, field in self.fields.items():
-#             
-#             DONE.append(field)
-#             
-#             if fname in self.forced:
-#                 setattr(self.instance, fname, self.forced[fname])
-#                 continue
-#             elif field in self.skipped:
-#                 break
-# 
-#             if isinstance(field, models.ForeignKey):
-#                 hsh = id(field)
-#                 if hsh not in Fuzzer.FKREGISTRY:
-#                     parent_name = field.related.parent_model.__name__
-#                     if parent_name in Fuzzer.MDLREGISTRY:
-#                         fuzzed_model = Fuzzer.MDLREGISTRY[parent_name]
-#                         setattr(self.instance, fname, fuzzed_model)
-#                     else:
-#                         parent = field.related.parent_model
-#                         fuzz = Fuzzer(parent)
-#                         setattr(self.instance, fname, fuzz.instance)
-#                         Fuzzer.MDLREGISTRY[parent.__name__] = parent
-#                     Fuzzer.FKREGISTRY[hsh] = field
-#                 else:
-#                     rel = Fuzzer(self.instance, skip=DONE).instance
-#                     break
-# 
-#             else:
-#                 data = self.fuzzData(field)
-#                 setattr(self.instance, fname, data)       
-#         
-#         self.m2m = self.get_m2m_accessor_dict()
-#         if self.m2m:
-#             for m2mName, m2mAccessor in self.m2m.items():
-#                 if hasattr(field, 'through'):
-#                     through = field.through
-#                     through_fields = dict((f.name, f) for f in through._meta.fields)
-#                     related = {}
-#                     for tFname, tField in through_fields.items():
-#                         if hasattr(tField, 'rel'):
-#                             if hasattr(tField, 'to'):
-#                                 related[tFname] = tField.rel.to
-#                     
-#                     data = {}
-#                     
-#                     for rFname, rField in related.items():
-#                         if isinstance(self.instance, rField):
-#                             data[rFname] = self.instance
-#                         elif issubclass(field.model, rField):
-#                             model_name = field.model.__name__
-#                             if model_name in Fuzzer.MDLREGISTRY:
-#                                 data[rFname] = Fuzzer.MDLREGISTRY[model_name]
-#                             else:
-#                                 data[rFname] = Fuzzer(field.model).instance
-#                     field.through.objects.create(**data).save()
-#         
-#         self.pk = self.instance.pk
-#         # self.instance.save()
-#     
-#     def get_m2m_accessor_dict(self):
-#         m2m_accessors = {}
-#         for m in self.instance._meta.get_m2m_with_model():
-#             f = m[0]
-#             try:
-#                 m2m_accessors[f.name] = getattr(self.instance, f.name)
-#             except ValueError:
-#                 pass
-#         return m2m_accessors
-#         
-#     def fuzzData(self, field):
-#         if isinstance(field, models.AutoField):
-#             return self.fuzzAutoField()
-#         if isinstance(field, models.CharField):
-#             return self.fuzzCharField()
-#         elif isinstance(field, models.IntegerField):
-#             return self.fuzzIntegerField()
-#         elif isinstance(field, models.TextField):
-#             return self.fuzzTextField()
-#         elif isinstance(field, models.BooleanField):
-#             return self.fuzzBooleanField()
-#         elif isinstance(field, models.DecimalField):
-#             return self.fuzzDecimalField()
-#         else:
-#             import pdb; pdb.set_trace()
-# 
-#     def fuzzDecimalField(self):
-#         return random.choice(Fuzzer.integers)
-# 
-#     def fuzzAutoField(self):
-#         return random.choice(Fuzzer.integers)
-# 
-#     def fuzzCharField(self):
-#         return random.choice(Fuzzer.words)
-# 
-#     def fuzzIntegerField(self):
-#         return random.choice(Fuzzer.integers)
-# 
-#     def fuzzTextField(self):
-#         return random.choice(Fuzzer.words)
-# 
-#     def fuzzBooleanField(self):
-#         return random.choice([True, False])
-# 
-# 
-# 
+            failed[fname] = (attr, field)
+    return passed, failed
 
 
 class FuzzyModel(object):
-    def __init__(self, model, *args, **kwargs):
+    def __init__(self, model, **kwargs):
         self.model = model.__class__ if isinstance(model, models.Model) else model
-        self.instance = model if isinstance(model, models.Model) else model()
+        # self.instance = model if isinstance(model, models.Model) else model()
+        self.instance = self.get_or_create(**kwargs)
         self.fields = dict((f.name, f) for f in self.instance._meta.fields)
+    
+    def get_or_create(self, **kwargs):
+        module = inspect.getmodule(self.model)
+        mdlName = self.model.__name__
+        try:
+            qs_all = getattr(module, mdlName).objects.all()
+            qs_filtered = qs_all.filter(**kwargs)
+            instance = self.rand_instance_from_qs(qs_filtered)
+        except Exception, e:
+            instance = self.gen_instance(self.model)
+        return instance
 
+    def rand_instance_from_qs(self, qs):
+        numResults = len(qs)
+        if numResults:
+            rng = range(0, numResults)
+            return qs[random.choice(rng)]
+        else:
+            return self.gen_instance(self.model)
+    
+    def gen_instance(self, model):
+        return model if isinstance(model, models.Model) else model()           
+
+    def save(self):
+        self.instance.save()
+    
     @property
     def SimpleFields(self):
         fields = {}
@@ -245,13 +101,15 @@ class Fuzzer(object):
 
     MDLREGISTRY = {}
     FKREGISTRY = {}
+    M2MREGISTRY = {}
 
     integers = range(0, 1000)
     strings = ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu']
     words = ['the', 'crazy', 'bird', 'walks', 'off', 'pier']
 
-    def __init__(self, model, skip=None, force=None):
-        self.fz = FuzzyModel(model)
+    def __init__(self, model, skip=None, force=None, fz_params=None):
+        self.fz_params = fz_params if fz_params else {}
+        self.fz = FuzzyModel(model, **self.fz_params)
         self.skipped = skip if skip else []
         self.forced = force if force else {}
         self.DONE = []
@@ -287,46 +145,54 @@ class Fuzzer(object):
 
             self.fuzzM2M(fname, accessor)
             self.DONE.append((fname, accessor))
+    
+        self.save()
 
     def fuzzFK(self, fname, field):
         hsh = id(field)
+        parent = field.related.parent_model
         if hsh not in Fuzzer.FKREGISTRY:
-            parent = field.related.parent_model
             if parent.__name__ in Fuzzer.MDLREGISTRY:
                 fuzzedMdl = Fuzzer.MDLREGISTRY[parent.__name__]
                 setattr(self.fz.instance, fname, fuzzedMdl)
             else:
                 fuzz = Fuzzer(parent)
                 setattr(self.fz.instance, fname, fuzz.fz.instance)
-                Fuzzer.MDLREGISTRY[fuzz.fz.instance.__class__.__name__] = fuzz.fz.instance
+                Fuzzer.MDLREGISTRY[fuzz.fz.model.__name__] = fuzz.fz.instance
             Fuzzer.FKREGISTRY[hsh] = field
         else:
-            done = [x[1] for x in self.DONE]
-            rel = Fuzzer(self.fz.instance, skip=done)  # pyflakes=ignore
+            rel = Fuzzer(parent)
+            setattr(self.fz.instance, fname, rel.fz.instance)
 
     def fuzzM2M(self, fname, field):
-        if hasattr(field, 'through'):
-            through = field.through
-            through_fields = dict((f.name, f) for f in through._meta.fields)
-            related = {}
-            for tFname, tField in through_fields.items():
-                if hasattr(tField, 'rel'):
-                    if hasattr(tField.rel, 'to'):
-                        related[tFname] = tField.rel.to
+        hsh = id(field)
+        if hsh not in Fuzzer.M2MREGISTRY:
+            if hasattr(field, 'through'):
+                through = field.through
+                through_fields = dict((f.name, f) for f in through._meta.fields)
+                related = {}
+                for tFname, tField in through_fields.items():
+                    if hasattr(tField, 'rel'):
+                        if hasattr(tField.rel, 'to'):
+                            related[tFname] = tField.rel.to
                         
-            data = {}
+                data = {}
 
-            for rFname, rField in related.items():
-                if isinstance(self.fz.instance, rField):
-                    data[rFname] = self.fz.instance
-                elif issubclass(field.model, rField):
-                    model_name = field.model.__name__
-                    if model_name in Fuzzer.MDLREGISTRY:
-                        data[rFname] = Fuzzer.MDLREGISTRY[model_name]
-                    else:
-                        data[rFname] = Fuzzer(field.model).fz.instance
-
-            field.through.objects.create(**data).save()
+                for rFname, rField in related.items():
+                    if isinstance(self.fz.instance, rField):
+                        data[rFname] = self.fz.instance
+                    elif issubclass(field.model, rField):
+                        model_name = field.model.__name__
+                        if model_name in Fuzzer.MDLREGISTRY:
+                            data[rFname] = Fuzzer.MDLREGISTRY[model_name]
+                        else:
+                            data[rFname] = Fuzzer(field.model).fz.instance
+            
+                for val in data.values():
+                    val.save()
+            
+                field.through(**data).save()
+                Fuzzer.M2MREGISTRY[hsh] = field
 
     def fuzzData(self, fname, field):
         if isinstance(field, models.AutoField):
@@ -362,6 +228,15 @@ class Fuzzer(object):
 
     def fuzzBooleanField(self):
         return random.choice([True, False])
+
+    def save(self):
+        self.fz.save()
+
+    @staticmethod
+    def reset():
+        Fuzzer.MDLREGISTRY = {}
+        Fuzzer.FKREGISTRY = {}
+        Fuzzer.M2MREGISTRY = {}
 
     @classmethod
     def evolve(cls):
