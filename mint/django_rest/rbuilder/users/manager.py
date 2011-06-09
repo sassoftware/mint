@@ -26,11 +26,8 @@ class UsersManager(basemanager.BaseManager):
     
     @exposed
     def addUser(self, user):
-        s = server.MintServer(self.cfg)
-        # hack, allows user to be added both to django and to
-        # old DB
-        s.registerNewUser(user.user_name, user.passwd, user.full_name,
-            user.email, user.display_email, user.blurb, user.active)
+        if self.user.is_admin:
+            pass
         user.save()
         return user
     
