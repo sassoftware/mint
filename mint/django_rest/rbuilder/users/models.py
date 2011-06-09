@@ -48,8 +48,9 @@ class User(modellib.XObjIdModel):
     user_id = models.AutoField(primary_key=True, db_column='userid')
     user_name = models.CharField(unique=True, max_length=128, db_column='username')
     full_name = models.CharField(max_length=128, db_column='fullname')
-    # salt has binary data, django is unhappy about that.
-    salt = models.TextField() # This field type is a guess.
+    # salt and password should be hidden, users shouldn't see crypted
+    # passwords
+    salt = modellib.XObjHidden(models.TextField()) # This field type is a guess.
     passwd = modellib.XObjHidden(models.CharField(max_length=254))
     email = models.CharField(max_length=128)
     display_email = models.TextField(db_column='displayemail')
