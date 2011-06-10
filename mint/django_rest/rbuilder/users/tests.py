@@ -73,7 +73,7 @@ class UsersTestCase(XMLTestCase):
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                         [ userName, fullName, salt, pw, email, displayEmail,
                             now, now, active, blurb ])
-                except IntegrityError, e:
+                except IntegrityError:
                     raise mint_error.UserAlreadyExists()
             def changePassword(slf, username, password):
                 salt, passwd = self._mungePassword(password)
