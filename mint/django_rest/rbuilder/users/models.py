@@ -59,7 +59,7 @@ class User(modellib.XObjIdModel):
     display_email = models.TextField(db_column='displayemail')
     created_date = models.DecimalField(max_digits=14, decimal_places=3, db_column='timecreated')
     modified_date = models.DecimalField(max_digits=14, decimal_places=3, db_column='timeaccessed')
-    active = models.BooleanField()
+    active = modellib.XObjHidden(modellib.APIReadOnly(models.SmallIntegerField()))
     blurb = models.TextField()
     user_groups = modellib.DeferredManyToManyField(UserGroup, through="UserGroupMember", db_column='user_group_id', related_name='group')
     is_admin = modellib.SyntheticField()
@@ -110,8 +110,6 @@ class User(modellib.XObjIdModel):
         self.is_admin = str(bool(isAdmin)).lower()
 
     def save(self):
-        # Make active an integer field
-        self.active = int(bool(self.active))
         # Omit the salt field
         localFields = self._meta.local_fields
         neuteredFields = getattr(self._meta, 'neuteredLocalFields', None)
