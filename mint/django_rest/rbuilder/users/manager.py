@@ -63,7 +63,7 @@ class UsersManager(basemanager.BaseManager):
         # performs additional checks that are not necessary (all auth
         # has already been performed)
         s = server.MintServer(self.cfg, allowPrivate=True)
-        active = True
+        active = 1
         try:
             s.users.registerNewUser(user.user_name, user.password, user.full_name,
                 user.email, user.display_email, user.blurb, active)
