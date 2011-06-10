@@ -110,6 +110,8 @@ class User(modellib.XObjIdModel):
         self.is_admin = str(bool(isAdmin)).lower()
 
     def save(self):
+        # Make active an integer field
+        self.active = int(bool(self.active))
         # Omit the salt field
         localFields = self._meta.local_fields
         neuteredFields = getattr(self._meta, 'neuteredLocalFields', None)
