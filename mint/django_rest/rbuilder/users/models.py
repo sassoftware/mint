@@ -72,7 +72,8 @@ class User(modellib.XObjIdModel):
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
 
-    _xobj = xobj.XObjMetadata(tag='user')
+    _xobj = xobj.XObjMetadata(tag='user', attributes = {'id':str})
+
 
     _xobj_hidden_accessors = set(['creator', 'package_version_urls_last_modified',
         'packages_last_modified', 'releaseCreator', 'imageCreator', 'package_source_jobs_created',

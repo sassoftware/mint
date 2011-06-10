@@ -12,12 +12,17 @@
 # full details.
 #
 
+import time
+from lxml import etree
+from xobj import xobj
+from django.db.utils import IntegrityError
+
+from conary.lib import digestlib
+
+from mint import mint_error
 from mint.django_rest.rbuilder.users import models
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 from mint.django_rest.rbuilder.users import testsxml
-
-from xobj import xobj
-from lxml import etree
 
 class UsersTestCase(XMLTestCase):
 
@@ -43,26 +48,189 @@ class UsersTestCase(XMLTestCase):
         user_gotten = self.xobjResponse('/api/users/1')
         self.assertEquals(unicode(user.user_name), user_gotten.user_name)
         self.assertEquals(unicode(user.full_name), user_gotten.full_name)
-        
+
+    @classmethod
+    def _mungePassword(cls, password):
+        salt = '0' * 4
+        m = digestlib.md5()
+        m.update(salt)
+        m.update(password)
+        return salt, m.hexdigest()
+
+    def mockMint(self):
+        class FakeUsers(object):
+            def registerNewUser(slf, userName, password, fullName,
+                    email, displayEmail, blurb, active):
+                now = "%.3f" % time.time()
+                salt, pw = self._mungePassword(password)
+                u = models.User(user_name=userName, full_name=fullName,
+                    email=email, display_email=displayEmail, blurb=blurb,
+                    salt=salt, passwd=pw, created_date=now, modified_date=now)
+                try:
+                    u.save()
+                except IntegrityError:
+                    raise mint_error.UserAlreadyExists()
+            def changePassword(slf, username, password):
+                u = models.User.objects.get(user_name=username)
+                u.salt, u.passwd = self._mungePassword(password)
+                u.save()
+            def _mungePassword(slf, password):
+                return self._mungePassword(password)
+        class FakeMintServer(object):
+            def __init__(slf, *args, **kwargs):
+                slf.users = FakeUsers()
+            def setPassword(slf, userId, password):
+                u = models.User.objects.get(pk=userId)
+                slf.users.changePassword(u.user_name, password)
+        from mint import server
+        self.mock(server, 'MintServer', FakeMintServer)
+
     def testAddUser(self):
+        self.mockMint()
         response = self._post('/api/users/',
             data=testsxml.users_post_xml,
             username='admin', password='password'
         )
-        user_posted = self.toXObj(response.content)
         self.assertEquals(200, response.status_code)
+        user_posted = self.toXObj(response.content)
         self.assertEquals(u'dcohn', user_posted.user_name)
         self.assertEquals(u'Dan Cohn', user_posted.full_name)
+        self.failUnlessEqual(user_posted.user_id, '2001')
+        user = models.User.objects.get(user_name=user_posted.user_name)
+        self.failUnlessEqual(user.salt, '0' * 4)
+
+        # Try again
+        response = self._post('/api/users/',
+            data=testsxml.users_post_xml,
+            username='admin', password='password'
+        )
+        self.failUnlessEqual(response.status_code, 403)
+        fault = self.toXObj(response.content)
+        self.failUnlessEqual(fault.code, '403')
+        self.failUnlessEqual(fault.message, 'User already exists')
 
     def testUpdateUser(self):
+        self.mockMint()
+        response = self._put('/api/users/10000',
+            data=testsxml.users_put_xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 404)
+
+        # Unauthenticated
+        response = self._put('/api/users/1',
+            data=testsxml.users_put_xml)
+        self.failUnlessEqual(response.status_code, 401)
+
         response = self._put('/api/users/1',
             data=testsxml.users_put_xml,
             username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
         user_putted = self.toXObj(response.content)
-        self.assertEquals(200, response.status_code)
-        self.assertEquals(u'Super Devil', user_putted.full_name)
-        self.assertEquals(u'fear me', user_putted.blurb)
-    
+        self.assertEquals(user_putted.full_name, 'Changed Full Name')
+        self.assertEquals(user_putted.blurb, 'fear me')
+
+        xml = "<user><user_name>foo</user_name></user>"
+        response = self._put('/api/users/1',
+            data=xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 403)
+
+        # Admin sets its own password
+        xml = "<user><password>abc</password></user>"
+        response = self._put('/api/users/1',
+            data=xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        user = models.User.objects.get(pk=1)
+        self.failUnlessEqual(user.salt, '0' * 4)
+
+        # This is still using the old password, should fail
+        xml = "<user><full_name>blabbedy</full_name></user>"
+        response = self._put('/api/users/1',
+            data=xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 401)
+        # This works
+        response = self._put('/api/users/1',
+            data=xml,
+            username='admin', password='abc')
+        self.assertEquals(response.status_code, 200)
+        user = models.User.objects.get(pk=1)
+        self.failUnlessEqual(user.full_name, 'blabbedy')
+
+        # Non-admin user updates another user
+        response = self._put('/api/users/1',
+            data=testsxml.users_put_xml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+
+        xml = "<user><user_name>admin</user_name><full_name>foo</full_name></user>"
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 403)
+
+        # Non-admin user updates itself
+        xml = "<user><full_name>foo</full_name></user>"
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        user = self.toXObj(response.content)
+        self.failUnlessEqual(user.full_name, 'foo')
+        user = models.User.objects.get(pk=user.user_id)
+        self.failUnlessEqual(user.full_name, 'foo')
+
+        # Non-admin sets its own password
+        xml = "<user><password>abcd</password></user>"
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        user = models.User.objects.get(pk=user.user_id)
+        self.failUnlessEqual(user.salt, '0' * 4)
+
+        # This is still using the old password, should fail
+        xml = "<user><full_name>blabbedy</full_name></user>"
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 401)
+        # This works
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='testuser', password='abcd')
+        self.assertEquals(response.status_code, 200)
+        user = models.User.objects.get(pk=1)
+        self.failUnlessEqual(user.full_name, 'blabbedy')
+
+    def testDeleteUser(self):
+        # Can't delete yourself
+        response = self._delete('/api/users/1',
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 403)
+        fault = self.toXObj(response.content)
+        self.failUnlessEqual(fault.code, '403')
+        self.failUnlessEqual(fault.message, 'Users are not allowed to remove themselves')
+
+        # Non-admin
+        response = self._delete('/api/users/2000',
+            username='testuser', password='password')
+        self.failUnlessEqual(response.status_code, 401)
+
+        # Admin deleting another user
+        response = self._delete('/api/users/2000',
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 204)
+
+        # User no longer exists
+        response = self._delete('/api/users/2000',
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 404)
+        fault = self.toXObj(response.content)
+        self.failUnlessEqual(fault.code, '404')
+        self.failUnlessEqual(fault.message, 'The specified user does not exist')
+
     def testGetUserGroups(self):
         user_groups = models.UserGroups.objects.all()
         user_groups_gotten = self.xobjResponse('/api/user_groups/')

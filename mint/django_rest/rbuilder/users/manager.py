@@ -4,15 +4,39 @@
 # All Rights Reserved
 #
 
+from mint.django_rest.rbuilder import errors
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.users import models
-from mint import server
+from mint import mint_error, server
 
 exposed = basemanager.exposed
 
 from django.db import connection
 
+class UserExceptions(object):
+    class BaseException(errors.RbuilderError):
+        pass
+    class UserNotFoundException(BaseException):
+        "The specified user does not exist"
+        status = 404
+    class UserCannotChangeNameException(BaseException):
+        "The user's login name cannot be changed"
+        status = 403
+    class AdminRequiredException(BaseException):
+        "Only administrators are allowed to edit other users"
+        status = 403
+    class UserSelfRemovalException(BaseException):
+        "Users are not allowed to remove themselves"
+        status = 403
+    class MintException(BaseException):
+        def __init__(self, exc):
+            self.msg = exc.msg
+            self.status = exc.status
+            self.kwargs = dict()
+
 class UsersManager(basemanager.BaseManager):
+    exceptions = UserExceptions
+
     @exposed
     def getUser(self, user_id):
         user = models.User.objects.get(pk=user_id)
@@ -40,18 +64,46 @@ class UsersManager(basemanager.BaseManager):
         # has already been performed)
         s = server.MintServer(self.cfg, allowPrivate=True)
         active = True
-        s.users.registerNewUser(user.user_name, user.password, user.full_name,
-            user.email, user.display_email, user.blurb, active)
-        return user
+        try:
+            s.users.registerNewUser(user.user_name, user.password, user.full_name,
+                user.email, user.display_email, user.blurb, active)
+        except (mint_error.PermissionDenied, mint_error.InvalidError), e:
+            raise self.exceptions.MintException(e)
+        return models.User.objects.get(user_name=user.user_name)
+
+    def _setPassword(self, user, password):
+        if not password:
+            return user
+        s = server.MintServer(self.cfg, allowPrivate=True)
+        s.setPassword(user.user_id, password)
+        return models.User.objects.get(user_name=user.user_name)
 
     @exposed
     def updateUser(self, user_id, user):
-        raise Exception("Not implemented yet")
+        if not self._auth.admin:
+            if user_id != str(self.user.user_id):
+                # Non-admin users can only edit themselves
+                raise self.exceptions.AdminRequiredException()
+        dbusers = models.User.objects.filter(pk=user_id)
+        if not dbusers:
+            raise self.exceptions.UserNotFoundException()
+        dbuser = dbusers[0]
+        if user.user_name and user.user_name != dbuser.user_name:
+            raise self.exceptions.UserCannotChangeNameException()
+        # Copy all fields the user may have chosen to change
+        models.User.objects.copyFields(dbuser, user)
+        dbuser.save()
+        dbuser = self._setPassword(dbuser, user.password)
+        return dbuser
 
     @exposed
     def deleteUser(self, user_id):
+        if user_id == str(self.user.user_id):
+            raise self.exceptions.UserSelfRemovalException()
         cu = connection.cursor()
-        cu.execute("DELETE FROM users WHERE userid = %s", [ user_id ])
+        ret = cu.execute("DELETE FROM users WHERE userid = %s", [ user_id ])
+        if not ret.rowcount:
+            raise self.exceptions.UserNotFoundException()
 
     # def cancelUserAccount(self, username):
     #     user_id = self.getUserId(username)

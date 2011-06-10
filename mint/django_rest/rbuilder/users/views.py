@@ -26,16 +26,15 @@ class UsersService(service.BaseService):
     @requires('user')
     @return_xml
     def rest_POST(self, request, user):
-        # if user.is_admin:
-        #     # CHANGEME -- find appropriate exception to place here
-        #     raise Exception('only admins can create admin users')
+        if not user.password:
+            return HttpResponse(status=400)
+        if not user.user_name:
+            return HttpResponse(status=400)
         return self.mgr.addUser(user)
-    
+
     @requires('user')
     @return_xml
     def rest_PUT(self, request, user_id, user):
-        # if user.is_admin:
-        #     pass
         return self.mgr.updateUser(user_id, user)
 
     @access.admin
