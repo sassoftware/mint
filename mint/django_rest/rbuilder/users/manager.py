@@ -80,7 +80,7 @@ class UsersManager(basemanager.BaseManager):
 
     @exposed
     def updateUser(self, user_id, user):
-        if not self._auth.admin:
+        if not self.auth.admin:
             if user_id != str(self.user.user_id):
                 # Non-admin users can only edit themselves
                 raise self.exceptions.AdminRequiredException()

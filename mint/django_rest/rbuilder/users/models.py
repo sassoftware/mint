@@ -109,6 +109,20 @@ class User(modellib.XObjIdModel):
         # let's save the string representation of it
         self.is_admin = str(bool(isAdmin)).lower()
 
+    def save(self):
+        # Omit the salt field
+        localFields = self._meta.local_fields
+        neuteredFields = getattr(self._meta, 'neuteredLocalFields', None)
+        if neuteredFields is None:
+            neuteredFields = [ x for x in localFields if x.name != 'salt' ]
+            self._meta.neuteredLocalFields = neuteredFields
+
+        try:
+            self._meta.local_fields = neuteredFields
+            return super(User, self).save()
+        finally:
+            self._meta.local_fields = localFields
+
 class UserGroupMembers(modellib.Collection):
     class Meta:
         abstract = True

@@ -16,6 +16,7 @@ import time
 from lxml import etree
 from xobj import xobj
 from django.db.utils import IntegrityError
+from django.db import connection
 
 from conary.lib import digestlib
 
@@ -63,17 +64,23 @@ class UsersTestCase(XMLTestCase):
                     email, displayEmail, blurb, active):
                 now = "%.3f" % time.time()
                 salt, pw = self._mungePassword(password)
-                u = models.User(user_name=userName, full_name=fullName,
-                    email=email, display_email=displayEmail, blurb=blurb,
-                    salt=salt, passwd=pw, created_date=now, modified_date=now)
+                cu = connection.cursor()
                 try:
-                    u.save()
-                except IntegrityError:
+                    cu.execute("""
+                        INSERT INTO users (username, fullname, salt, passwd,
+                            email, displayemail, timecreated, timeaccessed,
+                            active, blurb)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        [ userName, fullName, salt, pw, email, displayEmail,
+                            now, now, active, blurb ])
+                except IntegrityError, e:
                     raise mint_error.UserAlreadyExists()
             def changePassword(slf, username, password):
-                u = models.User.objects.get(user_name=username)
-                u.salt, u.passwd = self._mungePassword(password)
-                u.save()
+                salt, passwd = self._mungePassword(password)
+                cu = connection.cursor()
+                cu.execute(
+                    "UPDATE users SET salt=%s, passwd=%s WHERE username=%s",
+                    [ salt, passwd, username ])
             def _mungePassword(slf, password):
                 return self._mungePassword(password)
         class FakeMintServer(object):
