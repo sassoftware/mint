@@ -24,6 +24,7 @@ users_post_xml = \
 <active>1</active>
 <email>dcohn@rpath.com</email>
 <blurb>something here</blurb>
+<is_admin>1</is_admin>
 </user>
 """.strip()
 

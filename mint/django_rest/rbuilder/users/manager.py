@@ -66,7 +66,13 @@ class UsersManager(basemanager.BaseManager):
                 user.email, user.display_email, user.blurb, active)
         except (mint_error.PermissionDenied, mint_error.InvalidError), e:
             raise self.exceptions.MintException(e)
-        return models.User.objects.get(user_name=user.user_name)
+        dbuser = models.User.objects.get(user_name=user.user_name)
+        if self.auth and self.auth.admin:
+            is_admin = self._toBool(user.is_admin)
+            if is_admin:
+                self.setIsAdmin(dbuser, is_admin)
+                dbuser.set_is_admin()
+        return dbuser
 
     def _setPassword(self, user, password):
         if not password:

@@ -96,7 +96,6 @@ class UsersTestCase(XMLTestCase):
         self.mockMint()
         response = self._post('/api/users/',
             data=testsxml.users_post_xml,
-            username='admin', password='password'
         )
         self.assertEquals(200, response.status_code)
         user_posted = self.toXObj(response.content)
@@ -105,16 +104,28 @@ class UsersTestCase(XMLTestCase):
         self.failUnlessEqual(user_posted.user_id, '2001')
         user = models.User.objects.get(user_name=user_posted.user_name)
         self.failUnlessEqual(user.salt, '0' * 4)
+        self.failUnlessEqual(user.getIsAdmin(), False)
 
         # Try again
         response = self._post('/api/users/',
             data=testsxml.users_post_xml,
-            username='admin', password='password'
         )
         self.failUnlessEqual(response.status_code, 403)
         fault = self.toXObj(response.content)
         self.failUnlessEqual(fault.code, '403')
         self.failUnlessEqual(fault.message, 'User already exists')
+
+        # Create new user, now as an admin
+        xml = testsxml.users_post_xml.replace('dcohn', 'testuser001')
+        response = self._post('/api/users/',
+            data=xml,
+            username='admin', password='password'
+        )
+        self.failUnlessEqual(response.status_code, 200)
+        user = self.toXObj(response.content)
+        self.failUnlessEqual(user.is_admin, 'true')
+        user = models.User.objects.get(user_name=user.user_name)
+        self.failUnlessEqual(user.getIsAdmin(), True)
 
     def testUpdateUser(self):
         self.mockMint()
