@@ -77,7 +77,7 @@ class UsersManager(basemanager.BaseManager):
     def _setPassword(self, user, password):
         if not password:
             return user
-        s = server.MintServer(self.cfg, allowPrivate=True)
+        s = server.MintServer(self.cfg, authToken=self.auth.token, allowPrivate=True)
         s.setPassword(user.user_id, password)
         return models.User.objects.get(user_name=user.user_name)
 
