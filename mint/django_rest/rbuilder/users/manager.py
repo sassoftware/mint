@@ -11,7 +11,7 @@ from mint import mint_error, server
 
 exposed = basemanager.exposed
 
-from django.db import connection
+from django.db import connection, IntegrityError
 
 class UserExceptions(object):
     class BaseException(errors.RbuilderError):
@@ -94,7 +94,54 @@ class UsersManager(basemanager.BaseManager):
         models.User.objects.copyFields(dbuser, user)
         dbuser.save()
         dbuser = self._setPassword(dbuser, user.password)
+        if self.auth.admin and user.is_admin is not None:
+            # Admin users cannot drop the admin flag for themselves
+            if user_id != str(self.user.user_id):
+                is_admin = self._toBool(user.is_admin)
+                if dbuser.getIsAdmin() != is_admin:
+                    self.setIsAdmin(dbuser, is_admin)
+        dbuser.set_is_admin()
         return dbuser
+
+    def setIsAdmin(self, user, isAdmin):
+        userGroupId = self.getAdminGroupId()
+        cu = connection.cursor()
+        if isAdmin:
+            try:
+                cu.execute("""
+                    INSERT INTO UserGroupMembers (userId, userGroupId)
+                    VALUES (%s, %s)
+                """, [ user.user_id, userGroupId ])
+            except IntegrityError:
+                pass
+        else:
+            cu.execute("""
+                DELETE FROM UserGroupMembers
+                 WHERE userId = %s
+                   AND userGroupId = %s
+            """, [ user.user_id, userGroupId ])
+        return user
+
+    def getAdminGroupId(self):
+        cu = connection.cursor()
+        cu.execute("SELECT userGroupId FROM UserGroups WHERE userGroup=%s",
+            [ 'MintAdmin' ])
+        row = cu.fetchone()
+        # XXX Error checking if group does not exist
+        return row[0]
+
+    @classmethod
+    def _toBool(cls, val):
+        if val is None:
+            return None
+        if not isinstance(val, basestring):
+            val = str(val)
+        val = val.lower()
+        if val in ('true', 'false'):
+            return val == 'true'
+        if val == '1':
+            return True
+        return False
 
     @exposed
     def deleteUser(self, user_id):

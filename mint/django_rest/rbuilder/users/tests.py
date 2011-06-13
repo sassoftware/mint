@@ -211,6 +211,60 @@ class UsersTestCase(XMLTestCase):
         user = models.User.objects.get(pk=1)
         self.failUnlessEqual(user.full_name, 'blabbedy')
 
+    def testUpdateUserIsAdmin(self):
+        self.mockMint()
+
+        # Non-admin user setting is_admin
+        xml = "<user><is_admin>true</is_admin></user>"
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        user = self.toXObj(response.content)
+        self.failUnlessEqual(user.is_admin, 'false')
+        user = models.User.objects.get(pk=user.user_id)
+        self.failUnlessEqual(user.getIsAdmin(), False)
+
+        # admin user unsetting is_admin
+        xml = "<user><is_admin>false</is_admin></user>"
+        response = self._put('/api/users/1',
+            data=xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        user = self.toXObj(response.content)
+        self.failUnlessEqual(user.is_admin, 'true')
+        user = models.User.objects.get(pk=1)
+        self.failUnlessEqual(user.getIsAdmin(), True)
+
+        # admin user promoting user to admin
+        xml = "<user><is_admin>1</is_admin></user>"
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        user = self.toXObj(response.content)
+        self.failUnlessEqual(user.is_admin, 'true')
+        user = models.User.objects.get(pk=user.user_id)
+        self.failUnlessEqual(user.getIsAdmin(), True)
+
+        # And doing it again
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        user = models.User.objects.get(pk=user.user_id)
+        self.failUnlessEqual(user.getIsAdmin(), True)
+
+        # admin user demoting user from admin
+        xml = "<user><is_admin>0</is_admin></user>"
+        response = self._put('/api/users/2000',
+            data=xml,
+            username='admin', password='password')
+        user = self.toXObj(response.content)
+        self.failUnlessEqual(user.is_admin, 'false')
+        user = models.User.objects.get(pk=user.user_id)
+        self.failUnlessEqual(user.getIsAdmin(), False)
+
     def testDeleteUser(self):
         # Can't delete yourself
         response = self._delete('/api/users/1',
