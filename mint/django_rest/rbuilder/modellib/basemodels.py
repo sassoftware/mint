@@ -13,6 +13,7 @@ from django.db import connection
 from django.db import models
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
+from django.db.models.signals import post_init, post_save
 from django.db.utils import IntegrityError
 from django.core import exceptions
 from django.core import urlresolvers 
@@ -1559,3 +1560,12 @@ class Cache(object):
     @classmethod
     def _cacheData(cls, modelClass):
         return cls._CacheOne(modelClass.objects.all())
+
+# Signal for handling synthetic fields being updated
+def signalHandler_computeSyntheticFields(sender, instance, **kwargs):
+    method = getattr(instance, 'computeSyntheticFields', None)
+    if method is not None:
+        method(sender, **kwargs)
+
+post_init.connect(signalHandler_computeSyntheticFields)
+post_save.connect(signalHandler_computeSyntheticFields)

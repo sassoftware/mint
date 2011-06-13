@@ -67,7 +67,6 @@ class User(modellib.XObjIdModel):
     # set/changed
     password = modellib.XObjHidden(modellib.SyntheticField())
 
-
     class Meta:
         # managed = settings.MANAGE_RBUILDER_MODELS
         db_table = u'users'
@@ -122,6 +121,10 @@ class User(modellib.XObjIdModel):
             return super(User, self).save()
         finally:
             self._meta.local_fields = localFields
+
+    def computeSyntheticFields(self, sender, **kwargs):
+        if self.pk is not None:
+            self.set_is_admin()
 
 class UserGroupMembers(modellib.Collection):
     class Meta:

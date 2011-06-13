@@ -40,15 +40,12 @@ class UsersManager(basemanager.BaseManager):
     @exposed
     def getUser(self, user_id):
         user = models.User.objects.get(pk=user_id)
-        user.set_is_admin()
         return user
 
     @exposed
     def getUsers(self):
         Users = models.Users()
         Users.user = models.User.objects.all()
-        for user in Users.user:
-            user.set_is_admin()
         return Users
 
     @exposed
@@ -100,7 +97,6 @@ class UsersManager(basemanager.BaseManager):
                 is_admin = self._toBool(user.is_admin)
                 if dbuser.getIsAdmin() != is_admin:
                     self.setIsAdmin(dbuser, is_admin)
-        dbuser.set_is_admin()
         return dbuser
 
     def setIsAdmin(self, user, isAdmin):
@@ -120,6 +116,7 @@ class UsersManager(basemanager.BaseManager):
                  WHERE userId = %s
                    AND userGroupId = %s
             """, [ user.user_id, userGroupId ])
+        user.set_is_admin()
         return user
 
     def getAdminGroupId(self):
