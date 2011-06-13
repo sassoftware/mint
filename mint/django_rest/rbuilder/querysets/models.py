@@ -196,7 +196,7 @@ class FilterEntry(modellib.XObjIdModel):
 class QueryTag(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(
                 tag = 'query_tag')
-    _xobj_hidden_accessors = set(['system_tags'])
+    _xobj_hidden_accessors = set(['system_tags', 'user_tags', ])
 
     query_tag_id = models.AutoField(primary_key=True)
     query_set = modellib.ForeignKey("QuerySet", related_name="query_tags", 
