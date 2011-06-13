@@ -11,7 +11,7 @@ from mint import mint_error, server
 
 exposed = basemanager.exposed
 
-from django.db import connection, IntegrityError
+from django.db import connection, IntegrityError, transaction
 
 class UserExceptions(object):
     class BaseException(errors.RbuilderError):
@@ -77,6 +77,9 @@ class UsersManager(basemanager.BaseManager):
     def _setPassword(self, user, password):
         if not password:
             return user
+        # We need to flush everything to the db, or else the mint db
+        # will be deadlocking on the locked row
+        self._commit()
         s = server.MintServer(self.cfg, allowPrivate=True)
         s.auth = self.auth
         s.authToken = self.auth.token
@@ -106,6 +109,12 @@ class UsersManager(basemanager.BaseManager):
                 if dbuser.getIsAdmin() != is_admin:
                     self.setIsAdmin(dbuser, is_admin)
         return dbuser
+
+    def _commit(self):
+        if transaction.is_managed():
+            if transaction.is_dirty():
+                transaction.commit()
+            transaction.leave_transaction_management()
 
     def setIsAdmin(self, user, isAdmin):
         userGroupId = self.getAdminGroupId()
